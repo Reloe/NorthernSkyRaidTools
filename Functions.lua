@@ -68,7 +68,7 @@ function NSAPI:GetSpecs(unit)
 end
 
 
-function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also converts nicknames for Northern Sky/velocity.
+function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also converts nicknames
     if not C_AddOns.IsAddOnLoaded("MRT") then
         error("Addon MRT is disabled, can't read the note")
         return ""
@@ -79,7 +79,7 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
     end
     local note = _G.VMRT.Note.Text1
     local now = GetTime()
-    if (not NSI.RawNote) or NSI.RawNote ~= note or NSI.disable then -- only do this if it's been at least 1 second since the last time this was done or the note has changed within that small time to prevent running it multiple times on the same encounter if there are multiple assignment auras
+    if (not NSI.RawNote) or NSI.RawNote ~= note or NSAPI.disable then -- only do this if it's been at least 1 second since the last time this was done or the note has changed within that small time to prevent running it multiple times on the same encounter if there are multiple assignment auras
         NSI.RawNote = note
 
         -- only return the relevant part of the note as the user might change stuff on their own end
