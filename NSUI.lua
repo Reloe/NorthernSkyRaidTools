@@ -1640,20 +1640,66 @@ Press 'Enter' to hear the TTS]],
     }
 
     local weakaura_options1_table = {
+        
         {
             type = "label",
-            get = function() return "WeakAuras Imports" end,
+            get = function() return "Permanent Auras" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "button",
-            name = "Liberation Raid WA",
-            desc = "Import Liberation of Undermine Raid WeakAuras",
+            name = "Anchor Auras 1440p",
+            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras, scaled for a 1440p Monitor",
             func = function(self)
-                ImportWeakAura("raid_weakaura")
+                ImportWeakAura("anchor_weakaura")
             end,
             nocombat = true,
+            spacement = true
+        },
+
+        {
+            type = "button",
+            name = "Anchor Auras 1080p",
+            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras, scaled for a 1080p Monitor",
+            func = function(self)
+                ImportWeakAura("anchor_weakaura_1080")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
+        {
+            type = "button",
+            name = "External Alert",
+            desc = "Import WeakAura External Alert required for the external macro.",
+            func = function(self)
+                ImportWeakAura("external_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
+
+        {
+            type = "button",
+            name = "Interrupt WA",
+            desc = "Import Interrupt Anchor WeakAura",
+            func = function(self)
+                ImportWeakAura("interrupt_weakaura")
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "label",
+            get = function() return "Raid Auras" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "button",
@@ -1686,37 +1732,16 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
-
-        {
-            type = "button",
-            name = "Anchor Auras",
-            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras.",
-            func = function(self)
-                ImportWeakAura("anchor_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "button",
-            name = "External Alert",
-            desc = "Import WeakAura External Alert required for the external macro.",
-            func = function(self)
-                ImportWeakAura("external_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
+        
         
         {
             type = "button",
-            name = "Interrupt WA",
-            desc = "Import Interrupt Anchor WeakAura",
+            name = "Liberation Raid WA",
+            desc = "Import Liberation of Undermine Raid WeakAuras",
             func = function(self)
-                ImportWeakAura("interrupt_weakaura")
+                ImportWeakAura("raid_weakaura")
             end,
             nocombat = true,
-            spacement = true
         },
 
         {
@@ -1731,7 +1756,7 @@ Press 'Enter' to hear the TTS]],
 
         {
             type = "button",
-            name = "Send WeakAura",
+            name = "Send WeakAura to Raid",
             desc = "Send an individual WeakAura string to the raid.",
             func = function(self)
                 SendWeakAuras()
