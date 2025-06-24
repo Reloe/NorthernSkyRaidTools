@@ -134,10 +134,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.NSUI:Init()
         NSI:InitLDB()
         if WeakAuras.GetData("Northern Sky Externals") then
-            print("Please uninstall the Northern Sky Externals Weakaura to prevent conflicts with the Northern Sky Raid Tools Addon.")
+            print("lease uninstall the |cFF00FFFFPNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
         if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
-            print("Please uninstall the Northern Sky Media Addon as this new Addon takes over all its functionality")
+            print("Please uninstall the |cFF00FFFFPNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end

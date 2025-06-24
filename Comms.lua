@@ -12,7 +12,6 @@ function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everyt
     local message = event
     local argTable = {...}
     local target = ""
-
     local argCount = #argTable
     -- Always send unitID as second argument after event
     local unitID = UnitInRaid("player") and "raid"..UnitInRaid("player") or UnitName("player")
