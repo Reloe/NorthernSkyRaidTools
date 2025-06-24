@@ -1,0 +1,25 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.OAUTH_TOKEN }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 150
+
+      - name: Package And Release
+        uses: BigWigsMods/packager@master
