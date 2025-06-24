@@ -291,6 +291,38 @@ function NSI:UnhaltedNickNameUpdated()
     end    
 end
 
+function NSI:WeakAurasNickNameUpdated()
+    if NSRT.Settings["WA"] then
+        if not C_AddOns.IsAddOnLoaded("CustomNames") then
+            function WeakAuras.GetName(name)
+                return NSAPI:GetName(name, "WA")
+            end
+
+            function WeakAuras.UnitName(unit)
+                local _, realm = UnitName(unit)
+                return NSAPI:GetName(unit, "WA"), realm
+            end
+
+            function WeakAuras.GetUnitName(unit, server)
+                local name = NSAPI:GetName(unit, "WA")
+                if server then
+                    local _, realm = UnitFullName(unit)
+                    if not realm then
+                        realm = GetNormalizedRealmName()
+                    end
+                    name = name.."-"..realm
+                end
+                return name
+            end
+
+            function WeakAuras.UnitFullName(unit)
+                local name, realm = UnitFullName(unit)
+                return NSAPI:GetName(name, "WA"), realm
+            end
+        end
+    end
+end
+
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
     fullCharList = {}
@@ -310,6 +342,35 @@ function NSI:GlobalNickNameUpdate()
                 CharList[nickname] = {}
             end
             CharList[nickname][name] = true
+        end
+        if NSRT.Settings["WA"] then
+            if not C_AddOns.IsAddOnLoaded("CustomNames") then
+                function WeakAuras.GetName(name)
+                    return NSAPI:GetName(name, "WA")
+                end
+
+                function WeakAuras.UnitName(unit)
+                    local _, realm = UnitName(unit)
+                    return NSAPI:GetName(unit, "WA"), realm
+                end
+
+                function WeakAuras.GetUnitName(unit, server)
+                    local name = NSAPI:GetName(unit, "WA")
+                    if server then
+                        local _, realm = UnitFullName(unit)
+                        if not realm then
+                            realm = GetNormalizedRealmName()
+                        end
+                        name = name.."-"..realm
+                    end
+                    return name
+                end
+
+                function WeakAuras.UnitFullName(unit)
+                    local name, realm = UnitFullName(unit)
+                    return NSAPI:GetName(name, "WA"), realm
+                end
+            end
         end
     end
     
@@ -337,36 +398,38 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
 end
 
 function NSI:InitNickNames()
-    if not C_AddOns.IsAddOnLoaded("CustomNames") then
-        function WeakAuras.GetName(name)
-            return NSAPI:GetName(name, "WA")
-        end
-
-        function WeakAuras.UnitName(unit)
-            local _, realm = UnitName(unit)
-            return NSAPI:GetName(unit, "WA"), realm
-        end
-
-        function WeakAuras.GetUnitName(unit, server)
-            local name = NSAPI:GetName(unit, "WA")
-            if server then
-                local _, realm = UnitFullName(unit)
-                if not realm then
-                    realm = GetNormalizedRealmName()
-                end
-                name = name.."-"..realm
-            end
-            return name
-        end
-
-        function WeakAuras.UnitFullName(unit)
-            local name, realm = UnitFullName(unit)
-            return NSAPI:GetName(name, "WA"), realm
-        end
-    end
 
 
     if NSRT.Settings["GlobalNickNames"] then
+        
+        if not C_AddOns.IsAddOnLoaded("CustomNames") then
+            function WeakAuras.GetName(name)
+                return NSAPI:GetName(name, "WA")
+            end
+
+            function WeakAuras.UnitName(unit)
+                local _, realm = UnitName(unit)
+                return NSAPI:GetName(unit, "WA"), realm
+            end
+
+            function WeakAuras.GetUnitName(unit, server)
+                local name = NSAPI:GetName(unit, "WA")
+                if server then
+                    local _, realm = UnitFullName(unit)
+                    if not realm then
+                        realm = GetNormalizedRealmName()
+                    end
+                    name = name.."-"..realm
+                end
+                return name
+            end
+
+            function WeakAuras.UnitFullName(unit)
+                local name, realm = UnitFullName(unit)
+                return NSAPI:GetName(name, "WA"), realm
+            end
+        end
+
     	NSI:MRTNickNameUpdated(false)
     	NSI:BlizzardNickNameUpdated()
     	NSI:OmniCDNickNameUpdated()

@@ -1157,6 +1157,10 @@ function NSUI:Init()
             NSI:MRTNickNameUpdated(true)
         end
 
+        if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
+            NSI:WeakAurasNickNameUpdated()
+        end
+
         wipe(NSUI.OptionsChanged["nicknames"])
     end
 
