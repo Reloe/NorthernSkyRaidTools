@@ -31,17 +31,31 @@ function NSI:GetVersionNumber(type, name, unit)
         local waData = WeakAuras.GetData(name)
         local ver = "WA Missing"
         local url = ""
+        local found = false
         if waData then
             ver = 0
             if waData["url"] then
                 url = waData["url"]
                 ver = tonumber(waData["url"]:match('.*/(%d+)$'))
             end
+            found = true
         end
         local duplicate = false
         for i=2, 10 do -- check for duplicates of the Weakaura
             waData = WeakAuras.GetData(name.." "..i)
-            if waData then duplicate = true break end
+            if waData then
+                local dupver = 0
+                if waData["url"] then
+                    url = waData["url"]
+                    dupver = tonumber(waData["url"]:match('.*/(%d+)$'))
+                end
+                if ver == "WA Missing" or dupver > ver then
+                    ver = dupver -- if the first one is missing, use the duplicate's version
+                end
+                duplicate = found -- by doing this duplicate is only set if the user actually has 2 Auras of this and not just when any aura with a number at the end is found
+                found = true
+                if duplicate then break end
+            end
         end
         return unit, ver, duplicate, url
     elseif type == "Note" then
