@@ -491,7 +491,7 @@ function NSI:InitNickNames()
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
                 local name = UnitName(unit)
                 name = name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
-                return string.sub(name, 1, i)
+                return WeakAuras.WA_Utf8Sub(name, 1, i)
             end
         end
     end
@@ -540,9 +540,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
     end
-    if string.len(nickname) > 12 then
-        nickname = string.sub(nickname, 1, 12)
-    end
+    nickname = WeakAuras.WA_Utf8Sub(nickname, 12)
     NSRT.NickNames[name.."-"..realm] = nickname
     if NSRT.Settings["GlobalNickNames"] then
         fullCharList[name.."-"..realm] = nickname

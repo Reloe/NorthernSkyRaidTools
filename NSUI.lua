@@ -1354,7 +1354,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.Settings["MyNickName"] or "" end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
-                NSRT.Settings["MyNickName"] = string.sub(value, 1, 12)
+                NSRT.Settings["MyNickName"] = WeakAuras.WA_Utf8Sub(value, 12)
             end,
             hooks = {
                 OnEditFocusLost = function(self)
