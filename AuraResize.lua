@@ -96,7 +96,7 @@ function NSAPI:AuraResize(type, positions, regions)
                         local colors = data.border_color
                         if backdrop then
                             backdrop.edgeSize = data.border_size
-                            local offset = data.border_offset
+                            -- local offset = data.border_offset
                             subRegion:SetBackdrop(backdrop)
                         end
                         if colors then
@@ -133,7 +133,7 @@ function NSAPI:AuraResize(type, positions, regions)
                         local colors = data.border_color
                         if backdrop then
                             backdrop.edgeSize = data.border_size
-                            local offset = data.border_offset
+                            -- local offset = data.border_offset
                             subRegion:SetBackdrop(backdrop)
                         end
                         if colors then
