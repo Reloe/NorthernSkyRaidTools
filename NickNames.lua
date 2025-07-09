@@ -491,7 +491,7 @@ function NSI:InitNickNames()
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
                 local name = UnitName(unit)
                 name = name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
-                return WeakAuras.WA_Utf8Sub(name, 1, i)
+                return WeakAuras.WA_Utf8Sub(name, i)
             end
         end
     end
