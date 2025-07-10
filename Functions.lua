@@ -18,7 +18,7 @@ function NSI:IterateGroupMembers(reversed, forceParty)
 end
 
 function NSAPI:Version() -- old version check function from the database WA, for compatibility reasons
-    return 14
+    return 15
 end
 
 function NSI:Print(...)
