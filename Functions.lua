@@ -42,7 +42,7 @@ function NSAPI:Shorten(unit, num, role, AddonName) -- Returns color coded Name/N
         if role ~= "NONE" then
             role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
         else
-            role = nil
+            role = ""
         end
     end
     if classFilename then -- basically "if unit found"
