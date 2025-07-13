@@ -25,6 +25,7 @@ EventHandler.lua
 Externals.lua
 VersionCheck.lua
 SetupManager.lua
+CooldownCheck.lua
 WeakAuras/Imports.lua
 WeakAuras/Links.lua
 

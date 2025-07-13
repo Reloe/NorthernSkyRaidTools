@@ -54,6 +54,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
             NSRT.Settings["DebugLogs"] = NSRT.Settings["DebugLogs"] or false
             NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or {}
+            NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
+            NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 15
+            NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["WA"] = NSRT.NSUI.AutoComplete["WA"] or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
@@ -141,9 +144,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
-        if NSI:Difficultycheck() or NSRT.Settings["Debug"] then -- only care about note comparison in normal, heroic&mythic raid
+        if NSI:Difficultycheck(false, 14) then -- only care about note comparison in normal, heroic&mythic raid
             local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""     
             NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
+        end
+        if NSRT.Settings["CheckCooldowns"] and NSI:Difficultycheck(false, 15) and UnitInRaid("player") then
+            NSI:CheckCooldowns()
         end
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
@@ -232,7 +238,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSAPI_SPEC_REQUEST" then
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)    
-    elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+    elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSI.specs = {}
         for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then
@@ -247,7 +253,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end)
         NSI.MacroPresses = {}
         NSI.Externals:Init()
-    elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck()) or NSRT.Settings["Debug"]) then
+    elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
         if NSRT.Settings["DebugLogs"] then
             if NSI.MacroPresses and next(NSI.MacroPresses) then NSI:Print("Macro Data for Encounter: "..encounterName, NSI.MacroPresses) end
@@ -278,7 +284,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             formattedrange = range
         end
         table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
-        if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
+        if NSI:Difficultycheck(true, 14) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, key, num, req, range, false, expirationTime)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
@@ -295,7 +301,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             formattedrange = range
         end
         table.insert(NSI.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
-        if NSI:Difficultycheck(true) and not dead then -- block incoming requests from dead people
+        if NSI:Difficultycheck(true, 14) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
         end
     elseif e == "NS_EXTERNAL_YES" and ... then

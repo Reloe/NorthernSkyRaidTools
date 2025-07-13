@@ -130,9 +130,9 @@ function NSI:UnitAura(unit, spellID) -- simplify aura checking for myself
     end
 end
 
-function NSI:Difficultycheck(encountercheck) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
+function NSI:Difficultycheck(encountercheck, num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    return NSRT.Settings["Debug"] or ((difficultyID == 14 or difficultyID == 15 or difficultyID == 16) and ((not encountercheck) or NSI:EncounterCheck()))
+    return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or NSI:EncounterCheck()))
 end
 
 function NSI:EncounterCheck()
