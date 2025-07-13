@@ -88,6 +88,7 @@ function NSAPI:AuraResize(type, positions, regions)
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
             region:SetZoom(auraData.zoom)
+            region:SetRegionAlpha(auraData.alpha)
             for i, subRegion in ipairs(region.subRegions) do       
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
@@ -125,6 +126,7 @@ function NSAPI:AuraResize(type, positions, regions)
             region.textureInput = auraData.textureInput
             region.textureSource = auraData.textureSource
             region:UpdateStatusBarTexture()
+            region:SetRegionAlpha(auraData.alpha)
             for i, subRegion in ipairs(region.subRegions) do
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
@@ -166,11 +168,13 @@ function NSAPI:AuraResize(type, positions, regions)
             NSI.AuraSizeData[type] = data.fontSize -- somehow even when setting the height it doesn't update to that value so I'm storing it here instead
             region:SetHeight(data.fontSize)
             region:SetWidth(region.text:GetWidth())
+            region:Color(region.color_r, region.color_g, region.color_b, data.color[4])
             
             
         elseif region.regionType == "texture" or region.regionType == "progresstexture" then
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
+            region:SetRegionAlpha(auraData.alpha)
             for i, subRegion in ipairs(region.subRegions) do
                 if subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
