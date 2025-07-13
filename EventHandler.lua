@@ -55,7 +55,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["DebugLogs"] = NSRT.Settings["DebugLogs"] or false
             NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or {}
             NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
-            NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 15
+            NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
+            NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["WA"] = NSRT.NSUI.AutoComplete["WA"] or {}
