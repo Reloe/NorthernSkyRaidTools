@@ -92,6 +92,7 @@ function NSAPI:AuraResize(type, positions, regions)
             for i, subRegion in ipairs(region.subRegions) do       
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
+                    if not data then break end 
                     if data.type == "subborder" then
                         local backdrop = subRegion:GetBackdrop()
                         local colors = data.border_color
@@ -130,6 +131,7 @@ function NSAPI:AuraResize(type, positions, regions)
             for i, subRegion in ipairs(region.subRegions) do
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
+                    if not data then break end 
                     if data.type == "subborder" then
                         local backdrop = subRegion:GetBackdrop()
                         local colors = data.border_color
