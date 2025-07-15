@@ -159,6 +159,7 @@ function NSAPI:AuraResize(type, positions, regions)
                 elseif subRegion.type == "subtick" then
                     subRegion:SetAutomaticLength(false)
                     subRegion:SetTickLength(auraData.height)
+                    subRegion:SetTickPlacement(subRegion.tick_placements[1])        
                 end
             end
             
