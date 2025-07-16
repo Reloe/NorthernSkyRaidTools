@@ -68,28 +68,25 @@ function NSAPI:GetSpecs(unit)
 end
 
 
-function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also converts nicknames
+function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding. Also converts nicknames
     if not C_AddOns.IsAddOnLoaded("MRT") then
-        error("Addon MRT is disabled, can't read the note")
+        print("Addon MRT is disabled, can't read the note")
         return ""
     end
     if not VMRT.Note.Text1 then
-        error("No MRT Note found")
+        print("No MRT Note found")
         return ""
     end
     local note = _G.VMRT.Note.Text1
-    local now = GetTime()
-    if (not NSI.RawNote) or NSI.RawNote ~= note or NSAPI.disable then -- only do this if it's been at least 1 second since the last time this was done or the note has changed within that small time to prevent running it multiple times on the same encounter if there are multiple assignment auras
+    if (not NSI.RawNote) or NSI.RawNote ~= note then -- only do this if the note has changed or not been checked at all this session
         NSI.RawNote = note
-
-        -- only return the relevant part of the note as the user might change stuff on their own end
-
         local newnote = ""
         local list = false
         local disable = false
         for line in note:gmatch('[^\r\n]+') do
             if line == "nsdisable" then -- global disable all NS Auras for everyone in the raid
                 disable = true
+                if disablecheck then break end -- end early if we found the only thing we care about
             end
             --check for start/end of the name list
             if string.match(line, "ns.*start") or line == "intstart" then -- match any string that starts with "ns" and ends with "start" as well as the interrupt WA
@@ -103,6 +100,7 @@ function NSAPI:GetNote() -- Get rid of extra spaces and color coding. Also conve
             end
         end
         NSAPI.disable = disable
+        if disablecheck then return "" end -- if all we care about is checking if assignments are disabled then just return an empty string early.
         note = newnote
         note = strtrim(note) --trim whitespace
         note = note:gsub("||r", "") -- clean colorcode
