@@ -83,6 +83,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         local newnote = ""
         local list = false
         local disable = false
+        note = strtrim(note) --trim whitespace
         for line in note:gmatch('[^\r\n]+') do
             if line == "nsdisable" then -- global disable all NS Auras for everyone in the raid
                 disable = true
@@ -102,7 +103,6 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         NSAPI.disable = disable
         if disablecheck then return "" end -- if all we care about is checking if assignments are disabled then just return an empty string early.
         note = newnote
-        note = strtrim(note) --trim whitespace
         note = note:gsub("||r", "") -- clean colorcode
         note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode
         local namelist = {}
