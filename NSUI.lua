@@ -37,6 +37,7 @@ NSUI.OptionsChanged = {
 
 -- need to run this code on settings change
 local function PASelfPingChanged()
+    if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
     local macrocount = 0
     local pafound = false
     for i = 1, 120 do
@@ -76,6 +77,7 @@ end
 
 -- need to run this code on settings change
 local function ExternalSelfPingChanged()
+    if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
     local macrocount = 0
     local extfound = false
     for i = 1, 120 do

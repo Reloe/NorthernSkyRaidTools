@@ -72,6 +72,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local extfound = false
         local innervatefound = false
         local macrocount = 0    
+        NSI.NSUI:Init()
+        NSI:InitLDB()
+        if WeakAuras.GetData("Northern Sky Externals") then
+            print("lease uninstall the |cFF00FFFFPNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
+        end
+        if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
+            print("Please uninstall the |cFF00FFFFPNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
+        end
+        if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
             if not macroname then break end
@@ -134,14 +143,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
                 NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
-        end
-        NSI.NSUI:Init()
-        NSI:InitLDB()
-        if WeakAuras.GetData("Northern Sky Externals") then
-            print("lease uninstall the |cFF00FFFFPNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
-        end
-        if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
-            print("Please uninstall the |cFF00FFFFPNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
