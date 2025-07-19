@@ -462,7 +462,8 @@ function NSI.Externals:Init()
                     end
                     for spellID in line:gmatch("check:(%d+)") do -- add a check whether a certain ability is ready before assigning an external - for example if an immunity should be used before the user gets an external
                         NSI.Externals.check[key] = NSI.Externals.check[key] or {}
-                        table.insert(NSI.Externals.check[key], tonumber(spellID))                         
+                        table.insert(NSI.Externals.check[key], tonumber(spellID))        
+                        if not NSI.Externals.AllSpells[spellID] then NSI.Externals.AllSpells[spellID] = true end -- add spells where cooldowns needs to be checked to the equivalent table                 
                     end                        
                     for name, id in line:gmatch("(%S+):(%d+)") do
                         if UnitInRaid(name) and name ~= "spell" then
