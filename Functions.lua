@@ -77,17 +77,32 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         print("No MRT Note found")
         return ""
     end
-    local note = _G.VMRT.Note.Text1
-    if (not NSI.RawNote) or NSI.RawNote ~= note then -- only do this if the note has changed or not been checked at all this session
+    local persnote = _G.VMRT.Note.SelfText or ""
+    persnote =  strtrim(persnote) 
+    NSI.persnotedisable = false
+    if persnote and persnote ~=  "" then
+        for line in persnote:gmatch('[^\r\n]+') do
+            if line == "nsdisable" then
+                NSI.persnotedisable = true
+                NSAPI.disable = true
+                if disablecheck then return "" end
+                break
+            end
+        end
+    end
+    local note = _G.VMRT.Note.Text1 or ""    
+    if (not NSI.RawNote) or NSI.RawNote ~= note or (NSAPI.disable and not disable) then -- only do this if the note has changed or not been checked at all this session
         NSI.RawNote = note
+        NSI.notedisable = false
         local newnote = ""
         local list = false
-        local disable = false
-        note = strtrim(note) --trim whitespace
+        note = strtrim(note)
         for line in note:gmatch('[^\r\n]+') do
             if line == "nsdisable" then -- global disable all NS Auras for everyone in the raid
-                disable = true
-                if disablecheck then break end -- end early if we found the only thing we care about
+                NSAPI.disable = true
+                NSI.notedisable = true
+                if disablecheck then return "" end -- end early if we found the only thing we care about
+                -- would like to just return "" in all cases here but then interrupt aura stops working with nsdisable.
             end
             --check for start/end of the name list
             if string.match(line, "ns.*start") or line == "intstart" then -- match any string that starts with "ns" and ends with "start" as well as the interrupt WA
@@ -100,7 +115,6 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
                 newnote = newnote..line.."\n"
             end
         end
-        NSAPI.disable = disable
         if disablecheck then return "" end -- if all we care about is checking if assignments are disabled then just return an empty string early.
         note = newnote
         note = note:gsub("||r", "") -- clean colorcode
@@ -117,6 +131,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         end
         NSI.Note = note
     end
+    NSAPI.disable = NSI.notedisable or NSI.persnotedisable
     NSI.Note = NSI.Note or ""
     return NSI.Note
 end
