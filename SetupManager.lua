@@ -286,7 +286,7 @@ function NSI:ArrangeGroups(firstcall)
                         for j=1, 40 do
                             if i ~= j then
                                 local u = NSI.Groups.units[j]  
-                                if u and (not u.processed) and indextosubgroup[index] ~= indextosubgroup[UnitInRaid(u.name)] then
+                                if u and (not u.processed) and group ~= indextosubgroup[UnitInRaid(u.name)] then
                                     SetRaidSubgroup(UnitInRaid(u.name), group)
                                     break
                                 end
