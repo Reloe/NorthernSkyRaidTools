@@ -58,6 +58,7 @@ local resstable = {
 
 local spectable = {    
     -- Tanks
+    [0] = 100, -- probably offline/no data, we put them last
     [268]  =  1, -- Brewmaster
     [66]   =  2, -- Prot Pally
     [104]  =  3, -- Guardian Druid
@@ -159,8 +160,8 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                 if v.role == role then
                     local side = ""
                     if role == "TANK" then side = roles["left"].role <= roles["right"].role and "left" or "right" -- for tanks doing a simple left/right split not caring about specs
-                    elseif #sides["left"] >= total["ALL"]+0.5/2 then side = "right" -- if left side is already filled, everyone else goes to the right side
-                    elseif #sides["right"] >= total["right"]/2 then side = "right" -- if right side is already filled, everyone else goes to the left side
+                    elseif #sides["left"] >= total["ALL"]/2 then side = "right" -- if left side is already filled, everyone else goes to the right side
+                    elseif #sides["right"] >= total["ALL"]/2 then side = "left" -- if right side is already filled, everyone else goes to the left side
                     elseif roles["left"].role >= total[role]/2 then side = "right" -- if left side already has half of the total players of that role, rest goes to right side
                     elseif roles["right"].role >= total[role]/2 then side = "left" -- if right side already has half of the total players of that role, rest goes to left side
                     elseif pos["left"][v.pos] >= poscount[v.pos]/2 then side = "right" -- if one side already has enough melee, insert to the other side
@@ -168,14 +169,14 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                     elseif classes["right"][v.class] and not classes["left"][v.class] then side = "left" -- if one side has this class already but the other doesn't
                     elseif classes["left"][v.class] and not classes["right"][v.class] then side = "right" -- if one side has this class already but the other doesn't
                     elseif (not classes["left"][v.class]) and (not classes["right"][v.class]) then -- if neither side has this class yet
-                        return (pos["left"][v.pos] > pos["right"][v.pos] and "right") or "left" -- insert right if left has more of this positoin than right, if those are also equal insert left
+                        side = (pos["left"][v.pos] > pos["right"][v.pos] and "right") or "left" -- insert right if left has more of this positoin than right, if those are also equal insert left
                     elseif v.canress and (bress["left"] <= 1 or bress["right"] <= 1) then side = (bress["left"] <= 1 and bress["left"] <= bress["right"] and "left") or "right" -- give each side up to 2 bresses
                     elseif v.canlust and ((not lust["left"]) or (not lust["right"])) then side = ((not lust["left"]) and "left") or "right" -- give each side a lust
                     elseif specs["left"][v.specid] and not specs["right"][v.specid] then side = "right" -- if one side has this spec already but the other doesn't
                     elseif specs["right"][v.specid] and not specs["left"][v.specid] then side = "left" -- if one side has this spec already but the other doesn't
                     elseif (not specs["left"][v.specid]) and (not specs["right"][v.specid]) then -- if neither side has this spec yet
-                        return (pos["left"][v.pos] > pos["right"][v.pos] and "right") or "left" -- insert right if left has more of this positoin than right, if those are also equal insert left
-                    else return (#sides["left"] > #sides["right"] and "right") or "left" -- should never come to this I think
+                        side = (pos["left"][v.pos] > pos["right"][v.pos] and "right") or "left" -- insert right if left has more of this positoin than right, if those are also equal insert left
+                    else side = (#sides["left"] > #sides["right"] and "right") or "left" -- should never come to this I think
                     end
 
                     if side ~= "" then
@@ -224,7 +225,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             end
             NSI.Groups.units = units
             NSI:ArrangeGroups(true)
-        else            
+        else         
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
@@ -242,7 +243,6 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             NSI.Groups.units = units
             NSI:ArrangeGroups(true)
         end
-        
     end    
 end
 
@@ -271,7 +271,7 @@ function NSI:ArrangeGroups(firstcall)
         local v = NSI.Groups.units[i]    
         if NSI.Groups.Processed >= NSI.Groups.total then NSI.Groups.Processing = false break end
         if v and not v.processed then 
-            local group = Round((i+4)/5)
+            local group = math.ceil(i/5)
             local subgroupposition = i % 5 == 0 and 5 or i % 5
             local position = ((group-1)*5)+subgroupposition
             local index = UnitInRaid(v.name)
