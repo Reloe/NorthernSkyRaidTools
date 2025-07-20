@@ -104,9 +104,9 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
             elseif argType == "table" then
                 argValue = LibDeflate:DecodeForWoWAddonChannel(argValue)
                 argValue = LibDeflate:DecompressDeflate(argValue)
-                local success, table = LibSerialize:Deserialize(argValue)
+                local success, t = LibSerialize:Deserialize(argValue)
                 if success then
-                    argValue = table
+                    argValue = t
                 else
                     argValue = ""
                 end

@@ -369,7 +369,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     local now = GetTime()
     local k = unit..spellID
     local G = UnitGUID(unit)
-    local rangecheck = range == "skip" or (range and range[G] and NSI.Externals.range[spellID] >= range[G].range) -- change to UnitGUID(unit) for next tier
+    local rangecheck = range == "skip" or (range and type(range) == "table" and range[G] and NSI.Externals.range[spellID] >= range[G].range)
     local giver, realm = UnitName(unit)
     local blocked = NSI.Externals.block[key] and NSI.Externals.block[key][spellID] and NSI.Externals.block[key][spellID][giver]
     local yourself = UnitIsUnit(unit, unitID)
