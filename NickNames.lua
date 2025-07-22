@@ -152,7 +152,13 @@ end
 
 function NSI:MRTUpdateNoteDisplay(noteFrame)
     local note = noteFrame and noteFrame.text and noteFrame.text:GetText()
-    if not note then return end
+    if (not note) or (not NSRT.Settings["MRT"]) then return end
+    if NSI.RawNoteFrame and note == NSI.RawNoteFrame and NSI.NewNoteFrame then -- don't recalculate nicknames if the note didn't change
+        NSI.LastNoteUpdate = GetTime()
+        noteFrame.text:SetText(NSI.NewNoteFrame)
+        return
+    end
+    NSI.RawNoteFrame = note
     local namelist = {}
     local colorlist = {}
     for name in note:gmatch("%S+") do -- finding all strings
@@ -173,6 +179,7 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
             note = note:gsub("|c%x%x%x%x%x%x%x%x"..notename.."|r", v.name)
         end
     end
+    NSI.NewNoteFrame = note
     noteFrame.text:SetText(note)
 end
 
