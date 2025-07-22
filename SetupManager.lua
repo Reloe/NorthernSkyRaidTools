@@ -255,7 +255,7 @@ function NSI:ArrangeGroups(firstcall)
         NSI.Groups.Processed = 0 
         NSI.Groups.ProcessStart = now 
     end
-    if NSI.Groups.ProcessStart and now > NSI.Groups.ProcessStart+10 then NSI.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
+    if NSI.Groups.ProcessStart and now > NSI.Groups.ProcessStart+15 then NSI.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indextosubgroup = {}
