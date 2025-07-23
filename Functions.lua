@@ -200,3 +200,27 @@ function NSI:SendWAString(str)
         NSI:Broadcast("NSI_WA_SYNC", "RAID", str)
     end
 end
+
+function NSI:SpecToName(specid)
+    local _, specName, _, icon, _, classFile = GetSpecializationInfoByID(specid)
+    if not specName then return "" end
+    local color = GetClassColorObj(classFile)
+    return "\124T"..icon..":10:10:0:0:64:64:4:60:4:60\124t"..color:WrapTextInColorCode(specName)
+end
+
+function NSAPI:SpecName(unit)
+    local specid = 0
+    if unit then specid = NSAPI:GetSpecs(unit) or WeakAuras.SpecForUnit(unit) or 0 end
+    local _, specName, _, icon, _, classFile, className = GetSpecializationInfoByID(specid)
+    if not specName then -- if we didn't get the specid can at least try to return the role icon       
+        local role = UnitGroupRolesAssigned(unit)
+        if role ~= "NONE" then
+            role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
+        else
+            role = ""
+        end
+        return role, "", "" 
+    end
+    local color = GetClassColorObj(classFile)
+    return "\124T"..icon..":10:10:0:0:64:64:4:60:4:60\124t", color:WrapTextInColorCode(specName), color:WrapTextInColorCode(className)
+end
