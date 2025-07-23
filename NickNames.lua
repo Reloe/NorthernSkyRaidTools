@@ -158,6 +158,7 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
         noteFrame.text:SetText(NSI.NewNoteFrame)
         return
     end
+    if NSI:EncounterCheck(true) then return end -- don't update note during encounters as this causes lag. This means it won't be functional if people are using Timers within the note but don't really have a great workaround for that
     NSI.RawNoteFrame = note
     local namelist = {}
     local colorlist = {}

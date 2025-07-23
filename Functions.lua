@@ -148,8 +148,8 @@ function NSI:Difficultycheck(encountercheck, num) -- check if current difficulty
     return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or NSI:EncounterCheck()))
 end
 
-function NSI:EncounterCheck()
-    return WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]
+function NSI:EncounterCheck(skipdebug)
+    return WeakAuras.CurrentEncounter or (NSRT.Settings["Debug"] and not skipdebug)
 end
 
 -- this one is public as I want to use it in WeakAuras as well
