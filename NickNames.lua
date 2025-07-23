@@ -163,13 +163,13 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
     local namelist = {}
     local colorlist = {}
     for name in note:gmatch("%S+") do -- finding all strings
-        local charname = NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") -- getting color coded nickname for this character
+        local charname = UnitExists(name) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") or name -- getting color coded nickname for this character
         if charname ~= name then         
             namelist[name] = {name = charname, color = false}
         end
     end                
     for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
-        local charname =  NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") -- getting color coded nickname for this character
+        local charname =  UnitExists(name) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") or name -- getting color coded nickname for this character
         if charname ~= name then
             namelist[name] = {name = charname, color = true}
         end
