@@ -9,7 +9,7 @@ local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 -- this is needed because the database WA will overwrite the global NSAPI which would cause newer functions to be nil
 hooksecurefunc("setglobal", function(name, _)
     if name == "NSAPI" then
-        print("Please uninstall the |cFF00FFFFPNorthern Sky Functions & Database Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon. Reload UI afterwards.")
+        print("Please uninstall the |cFF00FFFFNorthern Sky Functions & Database Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon. Reload UI afterwards.")
         NSAPI = NSAPI2
     end
 end)
