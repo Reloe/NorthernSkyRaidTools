@@ -8,6 +8,7 @@ f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -50,6 +51,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
             NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 2
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
+            NSRT.Settings["AutoImport"] = NSRT.Settings["AutoImport"] or false
+            NSRT.Settings["AutoImportRaidWA"] = NSRT.Settings["AutoImportRaidWA"] or false
+            NSRT.Settings["ImportWhitelist"] = NSRT.Settings["ImportWhitelist"] or {}
             NSRT.Settings["VersionCheckRemoveResponse"] = NSRT.Settings["VersionCheckRemoveResponse"] or false
             NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
             NSRT.Settings["DebugLogs"] = NSRT.Settings["DebugLogs"] or false
@@ -67,6 +71,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI.OmniCDNickNamesHook = false 
             NSI:InitNickNames()
         end
+    elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
+        NSI:AutoImport()
     elseif e == "PLAYER_LOGIN" and wowevent then
         local pafound = false
         local extfound = false
@@ -75,10 +81,20 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.NSUI:Init()
         NSI:InitLDB()
         if WeakAuras.GetData("Northern Sky Externals") then
-            print("lease uninstall the |cFF00FFFFPNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
+            print("lease uninstall the |cFF00FFFFNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
         if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
-            print("Please uninstall the |cFF00FFFFPNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
+            print("Please uninstall the |cFF00FFFFNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
+        end
+        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
+            local name, realm = UnitName("player")
+            if not realm then
+                realm = GetNormalizedRealmName()
+            end
+            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
+                NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
+            end
         end
         if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
         for i=1, 120 do
@@ -133,16 +149,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         elseif not innervatefound then
             macrocount = macrocount+1
             CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
-        end
-        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
-        if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
-            local name, realm = UnitName("player")
-            if not realm then
-                realm = GetNormalizedRealmName()
-            end
-            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
-                NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
-            end
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end

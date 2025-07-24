@@ -1,5 +1,10 @@
 local _, NSI = ... -- Internal namespace
-
+--[[
+local lib = LibStub("CallbackHandler-1.0")
+NSI.callbacks = {
+    lib:New(NSI, "RegisterCallback", "UnregisterCallback", "UnregisterAllCallbacks")
+}
+NSI:RegisterCallback("NS_WA_UPDATED", ON_WA_UPDATE)]]
 -- Function from WeakAuras, thanks rivers
 function NSI:IterateGroupMembers(reversed, forceParty)
     local unit = (not forceParty and IsInRaid()) and 'raid' or 'party'
@@ -35,24 +40,31 @@ function NSI:Print(...)
     end
 end
 
-function NSAPI:Shorten(unit, num, role, AddonName) -- Returns color coded Name/Nickname
-    local classFilename = unit and select(2, UnitClass(unit))
+function NSAPI:Shorten(unit, num, role, AddonName, combined) -- Returns color coded Name/Nickname
+    local classFile = unit and select(2, UnitClass(unit))
     if role then -- create role icon if requested
-        role = UnitGroupRolesAssigned(unit)
-        if role ~= "NONE" then
-            role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
-        else
-            role = ""
+        local specid = 0
+        if unit then specid = NSAPI:GetSpecs(unit) or WeakAuras.SpecForUnit(unit) or 0 end
+        local icon = select(4, GetSpecializationInfoByID(specid))
+        if icon then -- if we didn't get the specid can at least try to return the role icon     
+            role = "\124T"..icon..":12:12:0:0:64:64:4:60:4:60\124t"
+        else  
+            role = UnitGroupRolesAssigned(unit)
+            if role ~= "NONE" then
+                role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
+            else
+                role = ""
+            end
         end
     end
-    if classFilename then -- basically "if unit found"
+    if classFile then -- basically "if unit found"
         local name = UnitName(unit)
-        local color = GetClassColorObj(classFilename)
+        local color = GetClassColorObj(classFile)
         name = num and WeakAuras.WA_Utf8Sub(NSAPI:GetName(name, AddonName), num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
-            return color:WrapTextInColorCode(name), role
+            return combined and role..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or role
         else
-            return name, role
+            return combined and role..name or name, combined and "" or role
         end
     else
         return unit, "" -- return input if nothing was found
@@ -208,19 +220,39 @@ function NSI:SpecToName(specid)
     return "\124T"..icon..":10:10:0:0:64:64:4:60:4:60\124t"..color:WrapTextInColorCode(specName)
 end
 
-function NSAPI:SpecName(unit)
-    local specid = 0
-    if unit then specid = NSAPI:GetSpecs(unit) or WeakAuras.SpecForUnit(unit) or 0 end
-    local _, specName, _, icon, _, classFile, className = GetSpecializationInfoByID(specid)
-    if not specName then -- if we didn't get the specid can at least try to return the role icon       
-        local role = UnitGroupRolesAssigned(unit)
-        if role ~= "NONE" then
-            role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
-        else
-            role = ""
-        end
-        return role, "", "" 
+local function ON_WA_UPDATE(updated, name, arg2)
+    table.remove(NSI.importtable, 1)    
+    if #NSI.importtable > 0 then
+        WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
     end
-    local color = GetClassColorObj(classFile)
-    return "\124T"..icon..":10:10:0:0:64:64:4:60:4:60\124t", color:WrapTextInColorCode(specName), color:WrapTextInColorCode(className)
+end
+
+function NSI:AutoImport()
+    NSI.importtable = {}
+    if NSRT.Settings["AutoImportRaidWA"] then        
+        local waData = WeakAuras.GetData(NSI.RaidWAData.name)
+        local version = waData and waData.url and waData.url:match("%d+$") or 0
+        version = version and tonumber(version) or 0
+        if (NSI.RaidWAData.version > version or not version) and NSI.RaidWAData.string then
+            table.insert(NSI.importtable, NSI.RaidWAData.string)
+        end
+    end
+    if NSRT.Settings["AutoImport"] and WagoAppCompanionData then
+        for k, v in pairs(WagoAppCompanionData["slugs"]) do
+            if NSRT.Settings["ImportWhitelist"][k] or NSRT.Settings["Debug"] then
+                local data = WagoAppCompanionData["slugs"][k]
+                if data and data.wagoVersion then
+                    local waData = WeakAuras.GetData(data.name)
+                    local version = waData and waData.url and waData.url:match("%d+$") or 0
+                    version = version and tonumber(version) or 0
+                    if version ~= 0 and tonumber(data.wagoVersion) > version then
+                        table.insert(NSI.importtable, WagoAppCompanionData["slugs"][k].encoded)
+                    end
+                end
+            end
+        end
+    end    
+    if #NSI.importtable > 0 then
+        WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
+    end
 end
