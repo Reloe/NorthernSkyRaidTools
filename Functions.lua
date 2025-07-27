@@ -256,3 +256,27 @@ function NSI:AutoImport()
         WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
     end
 end
+
+
+function NSI:AddWhitelistURL(url, name)
+    local id = ""
+    if url:match("^%w+$") then 
+        id = url
+    else
+        id = url:match("wago%.io/([%w_]+)")
+    end
+    NSRT.Settings["UpdateWhitelist"][id] = {name = name, url = url}
+end
+
+
+function NSI:RemoveWhitelistURL(url, name)
+    local id = ""
+    if url:match("^%w+$") then 
+        id = url
+    else
+        id = url:match("wago%.io/([%w_]+)")
+    end
+    if NSRT.Settings["UpdateWhitelist"][id] then
+        NSRT.Settings["UpdateWhitelist"][id] = nil
+    end
+end

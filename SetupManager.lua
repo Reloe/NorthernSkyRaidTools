@@ -107,8 +107,6 @@ local spectable = {
 }
 
 
--- for testing default: /run NSAPI:SplitGroupInit(false, true, false)
--- for testing split: /run NSAPI:SplitGroupInit(false, false, false)
 function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, healer
     local units = {}
     local lastgroup = Flex and 6 or 4
@@ -270,7 +268,7 @@ function NSI:ArrangeGroups(firstcall)
     for i=1, 40 do -- position in table is where the player should end up in, v.index is their current position.
         local v = NSI.Groups.units[i]    
         if NSI.Groups.Processed >= NSI.Groups.total then NSI.Groups.Processing = false break end
-        if v and not v.processed then 
+        if v and (not v.processed) and (not UnitAffectingCombat(v.name)) then 
             local group = math.ceil(i/5)
             local subgroupposition = i % 5 == 0 and 5 or i % 5
             local position = ((group-1)*5)+subgroupposition
@@ -294,7 +292,7 @@ function NSI:ArrangeGroups(firstcall)
                         end
                         break
                     end
-                elseif indextosubgroup[index] ~= indextosubgroup[postoindex[position]]  then -- check if the player we need to swap with is in a different subgroup
+                elseif indextosubgroup[index] ~= indextosubgroup[postoindex[position]] and not UnitAffectingCombat("raid"..postoindex[position]) then -- check if the player we need to swap with is in a different subgroup
                     SwapRaidSubgroup(postoindex[position], index)
                     v.processed = true
                     NSI.Groups.Processed = NSI.Groups.Processed+1
@@ -303,7 +301,7 @@ function NSI:ArrangeGroups(firstcall)
                     local found = false
                     for j=1, 40 do
                         local u = NSI.Groups.units[j]
-                        if u and (not u.processed) and (not UnitIsUnit(v.name, u.name)) and indextosubgroup[index] ~= indextosubgroup[UnitInRaid(u.name)] then
+                        if u and (not u.processed) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indextosubgroup[index] ~= indextosubgroup[UnitInRaid(u.name)] then
                             SwapRaidSubgroup(UnitInRaid(u.name), index)
                             found = true
                             break
@@ -329,8 +327,9 @@ function NSI:ArrangeGroups(firstcall)
     end
 end
 
--- Change to NSI once integrated into the UI
-function NSAPI:SplitGroupInit(Flex, default, odds)
-    NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
-    C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
+function NSI:SplitGroupInit(Flex, default, odds)
+    if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
+        NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
+        C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
+    end
 end
