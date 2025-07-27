@@ -22,8 +22,8 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
-function NSAPI:Version() -- old version check function from the database WA, for compatibility reasons
-    return 15
+function NSAPI:Version() -- function for version check WA
+    return 16
 end
 
 function NSI:Print(...)
@@ -83,16 +83,16 @@ end
 function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding. Also converts nicknames
     if not C_AddOns.IsAddOnLoaded("MRT") then
         print("Addon MRT is disabled, can't read the note")
-        return ""
+        return "empty"
     end
     if not VMRT.Note.Text1 then
         print("No MRT Note found")
-        return ""
+        return "empty"
     end
     local persnote = _G.VMRT.Note.SelfText or ""
     persnote =  strtrim(persnote) 
     NSI.persnotedisable = false
-    if persnote and persnote ~=  "" then
+    if persnote and persnote ~= "" then
         for line in persnote:gmatch('[^\r\n]+') do
             if line == "nsdisable" then
                 NSI.persnotedisable = true
