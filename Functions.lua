@@ -229,29 +229,38 @@ end
 
 function NSI:AutoImport()
     NSI.importtable = {}
+    NSI.imports = {}
     if NSRT.Settings["AutoUpdateRaidWA"] then
         local waData = WeakAuras.GetData(NSI.RaidWAData.name)
         local version = waData and waData.url and waData.url:match("%d+$") or 0
         version = version and tonumber(version) or 0
         if (NSI.RaidWAData.version > version or not version) and NSI.RaidWAData.string then
+            NSI.imports[waData.url] = true
             table.insert(NSI.importtable, NSI.RaidWAData.string)
         end
     end
     if NSRT.Settings["AutoUpdateWA"] and WagoAppCompanionData then
-        for k, v in pairs(WagoAppCompanionData["slugs"]) do
-            if NSRT.Settings["UpdateWhitelist"][k] or NSRT.Settings["Debug"] then
-                local data = WagoAppCompanionData["slugs"][k]
+        for k, v in pairs(WagoAppCompanionData["ids"]) do 
+            if NSRT.Settings["UpdateWhitelist"][k] or NSRT.Settings["Debug"] then      
+                local data = WagoAppCompanionData["slugs"][v]
                 if data and data.wagoVersion then
-                    local waData = WeakAuras.GetData(data.name)
-                    local version = waData and waData.url and waData.url:match("%d+$") or 0
+                    local url = ""
+                    for a, b in pairs(WeakAurasSaved.displays) do
+                        if b.wagoID == k then
+                            url = b.url
+                            break
+                        end
+                    end
+                    local version = url and url ~= "" and url:match("%d+$") or 0
                     version = version and tonumber(version) or 0
-                    if version ~= 0 and tonumber(data.wagoVersion) > version then
-                        table.insert(NSI.importtable, WagoAppCompanionData["slugs"][k].encoded)
+                    if version ~= 0 and tonumber(data.wagoVersion) > version and not NSI.imports[url] then
+                        NSI.imports[url] = true
+                        table.insert(NSI.importtable, WagoAppCompanionData["slugs"][v].encoded)
                     end
                 end
             end
         end
-    end    
+    end
     if #NSI.importtable > 0 then
         WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
     end
