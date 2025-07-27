@@ -229,7 +229,7 @@ end
 
 function NSI:AutoImport()
     NSI.importtable = {}
-    if NSRT.Settings["AutoImportRaidWA"] then        
+    if NSRT.Settings["AutoUpdateRaidWA"] then
         local waData = WeakAuras.GetData(NSI.RaidWAData.name)
         local version = waData and waData.url and waData.url:match("%d+$") or 0
         version = version and tonumber(version) or 0
@@ -237,9 +237,9 @@ function NSI:AutoImport()
             table.insert(NSI.importtable, NSI.RaidWAData.string)
         end
     end
-    if NSRT.Settings["AutoImport"] and WagoAppCompanionData then
+    if NSRT.Settings["AutoUpdateWA"] and WagoAppCompanionData then
         for k, v in pairs(WagoAppCompanionData["slugs"]) do
-            if NSRT.Settings["ImportWhitelist"][k] or NSRT.Settings["Debug"] then
+            if NSRT.Settings["UpdateWhitelist"][k] or NSRT.Settings["Debug"] then
                 local data = WagoAppCompanionData["slugs"][k]
                 if data and data.wagoVersion then
                     local waData = WeakAuras.GetData(data.name)

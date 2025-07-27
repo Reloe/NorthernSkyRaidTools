@@ -51,9 +51,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
             NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 2
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
-            NSRT.Settings["AutoImport"] = NSRT.Settings["AutoImport"] or false
-            NSRT.Settings["AutoImportRaidWA"] = NSRT.Settings["AutoImportRaidWA"] or false
-            NSRT.Settings["ImportWhitelist"] = NSRT.Settings["ImportWhitelist"] or {}
+            NSRT.Settings["AutoUpdateWA"] = NSRT.Settings["AutoUpdateWA"] or false
+            NSRT.Settings["AutoUpdateRaidWA"] = NSRT.Settings["AutoUpdateRaidWA"] or false
+            NSRT.Settings["UpdateWhitelist"] = NSRT.Settings["UpdateWhitelist"] or {}
             NSRT.Settings["VersionCheckRemoveResponse"] = NSRT.Settings["VersionCheckRemoveResponse"] or false
             NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
             NSRT.Settings["DebugLogs"] = NSRT.Settings["DebugLogs"] or false
