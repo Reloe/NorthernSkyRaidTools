@@ -163,14 +163,14 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
     local namelist = {}
     local colorlist = {}
     for name in note:gmatch("%S+") do -- finding all strings
-        local charname = UnitExists(name) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") or name -- getting color coded nickname for this character
-        if charname ~= name then         
+        local charname = (UnitExists(name) or CharList[name] or fullNameList[name]) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") or name -- getting color coded nickname for this character
+        if charname ~= name then
             namelist[name] = {name = charname, color = false}
         end
     end                
     for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
-        local charname =  UnitExists(name) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") or name -- getting color coded nickname for this character
-        if charname ~= name then
+        local charname = (UnitExists(name) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT")) or name -- getting color coded nickname for this character
+        if charname ~= name and not namelist[name] then
             namelist[name] = {name = charname, color = true}
         end
     end
@@ -410,6 +410,20 @@ function NSI:InitNickNames()
 
     if NSRT.Settings["GlobalNickNames"] then
         
+        for fullname, nickname in pairs(NSRT.NickNames) do
+            local name, realm = strsplit("-", fullname)
+            fullCharList[fullname] = nickname
+            fullNameList[name] = nickname
+            if not sortedCharList[nickname] then
+                sortedCharList[nickname] = {}
+            end
+            sortedCharList[nickname][fullname] = true
+            if not CharList[nickname] then
+                CharList[nickname] = {}
+            end
+            CharList[nickname][name] = true
+        end
+
         if not C_AddOns.IsAddOnLoaded("CustomNames") then
             function WeakAuras.GetName(name)
                 return NSAPI:GetName(name, "WA")
@@ -441,19 +455,6 @@ function NSI:InitNickNames()
     	NSI:MRTNickNameUpdated(false)
     	NSI:BlizzardNickNameUpdated()
     	NSI:OmniCDNickNameUpdated()
-        for fullname, nickname in pairs(NSRT.NickNames) do
-            local name, realm = strsplit("-", fullname)
-            fullCharList[fullname] = nickname
-            fullNameList[name] = nickname
-            if not sortedCharList[nickname] then
-                sortedCharList[nickname] = {}
-            end
-            sortedCharList[nickname][fullname] = true
-            if not CharList[nickname] then
-                CharList[nickname] = {}
-            end
-            CharList[nickname][name] = true
-        end
     end
 
     if Grid2 then
