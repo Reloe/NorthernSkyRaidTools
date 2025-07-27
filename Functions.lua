@@ -239,7 +239,7 @@ function NSI:AutoImport()
     end
     if NSRT.Settings["AutoImport"] and WagoAppCompanionData then
         for k, v in pairs(WagoAppCompanionData["slugs"]) do
-            if NSRT.Settings["ImportWhitelist"][k] or NSRT.Settings["Debug"] then
+            if NSRT.Settings["UpdateWhitelist"][k] or NSRT.Settings["Debug"] then
                 local data = WagoAppCompanionData["slugs"][k]
                 if data and data.wagoVersion then
                     local waData = WeakAuras.GetData(data.name)
@@ -254,5 +254,23 @@ function NSI:AutoImport()
     end    
     if #NSI.importtable > 0 then
         WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
+    end
+end
+
+
+function NSI:AddWhitelistURL(url, name)
+    local id = ""
+    if url:match("^%w+$") then 
+        id = url
+    else
+        id = url:match("wago%.io/([%w_]+)")
+    end
+    NSRT.Settings["UpdateWhitelist"][url] = {name = name, id = id}
+end
+
+
+function NSI:RemoveWhitelistURL(url, name)
+    if NSRT.Settings["UpdateWhitelist"][url] then
+        NSRT.Settings["UpdateWhitelist"][url] = nil
     end
 end
