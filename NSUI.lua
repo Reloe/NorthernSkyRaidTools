@@ -4,10 +4,17 @@ local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 local WA = _G["WeakAuras"]
 
-local window_width = 800
+local window_width = 900
 local window_height = 515
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
+local TABS_LIST = {
+    { name = "General",   text = "General" },
+    { name = "Nicknames", text = "Nicknames" },
+    { name = "Externals", text = "Externals" },
+    { name = "Versions",  text = "Versions" },
+    { name = "WeakAuras", text = "WeakAuras" },
+}
 local authorsString = "By Reloe & Rav"
 
 local options_text_template = DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE")
@@ -732,19 +739,316 @@ local function BuildNicknameEditUI()
     return nicknames_edit_frame
 end
 
+-- build cooldown type options
+local cooldown_types = { "Spell", "Item" }
+local function build_cooldown_type_options()
+    local t = {}
+    for i = 1, #cooldown_types do
+        tinsert(t, {
+            label = cooldown_types[i],
+            value = cooldown_types[i],
+            onclick = function(_, _, value)
+                cooldown_type = value
+            end
+        })
+    end
+    return t
+end
+local selected_spec = 268 -- Default to Brewmaster i guess
+local function build_spec_options()
+    local t = {}
+    -- Group specs by class
+    local classSpecs = NSI.CLASS_SPECIALIZATION_MAP
+
+    -- Add specs sorted by class
+    for className, specs in pairs(classSpecs) do
+        for _, specId in ipairs(specs) do
+            tinsert(t, {
+                label = NSI:SpecToName(specId),
+                value = specId,
+            })
+        end
+    end
+    return t
+end
+local function BuildCooldownsEditUI()
+    local cooldowns_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Cooldowns Management", "CooldownsEditFrame", {
+        DontRightClickClose = true
+    })
+    cooldowns_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+
+    local function PrepareData(data)
+        local data = {}
+        for specId, cooldowns in pairs(NSRT.CooldownList) do
+            if cooldowns.spell then
+                for id, cooldown in pairs(cooldowns.spell) do
+                    tinsert(data,
+                        { spec = specId, id = id, offset = cooldown.offset, type = "Spell", name = cooldown.name })
+                end
+            end
+            if cooldowns.item then
+                for id, cooldown in pairs(cooldowns.item) do
+                    tinsert(data,
+                        { spec = specId, id = id, offset = cooldown.offset, type = "Item", name = cooldown.name })
+                end
+            end
+        end
+        table.sort(data, function(a, b)
+            if a.spec ~= b.spec then
+                return a.spec < b.spec
+            end
+            return a.type > b.type
+        end)
+        return data
+    end
+
+    local function MasterRefresh(self)
+        local data = PrepareData()
+        self:SetData(data)
+        self:Refresh()
+
+        -- NSI:Print(DevTools_Dump(NSRT.CooldownList))
+    end
+
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local cooldownData = data[index]
+            if cooldownData then
+                local line = self:GetLine(i)
+
+                line.spec = cooldownData.spec
+                line.name = cooldownData.name
+                line.id = cooldownData.id
+                line.offset = cooldownData.offset
+                line.type = cooldownData.type
+
+                line.specText.text = NSI:SpecToName(line.spec)
+                line.typeDropdown:Select(line.type)
+                line.idTextEntry.text = line.id
+                line.offsetSlider:SetValue(line.offset)
+                if line.name == "ERROR" then
+                    line.spellIcon:SetTexture(134400)
+                    line.__background:SetVertexColor(1, 0, 0, 1)
+                elseif cooldownData.type == "Spell" then
+                    line.spellIcon:SetTexture(C_Spell.GetSpellTexture(line.id))
+                    line.__background:SetVertexColor(1, 1, 1, 0.7608)
+                else
+                    line.spellIcon:SetTexture(C_Item.GetItemIconByID(line.id))
+                    line.__background:SetVertexColor(1, 1, 1, 0.7608)
+                end
+                -- line:Show()
+            end
+        end
+    end
+
+    local function createLineFunc(self, index)
+        local parent = self
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        -- Specialization text
+        line.specText = DF:CreateLabel(line, "")
+        line.specText:SetPoint("LEFT", line, "LEFT", 5, 0)
+        line.specText:SetWidth(100)
+
+        line.typeDropdown = DF:CreateDropDown(line, function() return build_cooldown_type_options() end,
+            nil, 70)
+        line.typeDropdown:SetTemplate(options_dropdown_template)
+        line.typeDropdown:SetPoint("LEFT", line.specText, "RIGHT", 5, 0)
+        line.typeDropdown:SetHook("OnOptionSelected", function(self, _, value)
+            local newType = value
+            NSI:Print("new value selected: " .. newType)
+            local oldType = line.type
+            if oldType == newType then return end
+
+            if newType == "Spell" then
+                NSI:RemoveTrackedCooldown(line.spec, line.id, string.lower(oldType))
+                NSI:AddTrackedCooldown(line.spec, line.id, "spell", line.offset)
+            else
+                NSI:RemoveTrackedCooldown(line.spec, line.id, string.lower(oldType))
+                NSI:AddTrackedCooldown(line.spec, line.id, "item", line.offset)
+            end
+
+            line.type = newType
+            parent:MasterRefresh()
+        end)
+
+        line.spellIcon = DF:CreateTexture(line, 134400, 18, 18)
+        line.spellIcon:SetPoint("LEFT", line.typeDropdown, "RIGHT", 5, 0)
+        line.spellIcon:SetScript("OnEnter", function(self)
+            local parent = self:GetParent()
+            if parent.id then
+                if parent.type == "Spell" then
+                    GameTooltip:SetOwner(self, "ANCHOR_CURSOR_RIGHT")
+                    GameTooltip:SetSpellByID(parent.id)
+                else
+                    GameTooltip:SetOwner(self, "ANCHOR_CURSOR_RIGHT")
+                    GameTooltip:SetItemByID(parent.id)
+                end
+                GameTooltip:Show()
+            end
+        end)
+        line.spellIcon:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
+        -- Spell ID text
+        line.idTextEntry = DF:CreateTextEntry(line, function(self, _, value)
+            if line.type == "Spell" then
+                line.spellIcon:SetTexture(C_Spell.GetSpellTexture(value))
+            else
+                line.spellIcon:SetTexture(C_Item.GetItemIconByID(value))
+            end
+        end, 120, 20)
+        line.idTextEntry:SetTemplate(options_dropdown_template)
+        -- line.idTextEntry:SetPoint("LEFT", line, "LEFT", 130, 0)
+        line.idTextEntry:SetPoint("LEFT", line.spellIcon, "RIGHT", 5, 0)
+        line.idTextEntry:SetScript("OnEnterPressed", function(self)
+            local oldId = line.id
+            local newId = self:GetText()
+            if oldId == newId then return end
+
+            if line.type == "Spell" then
+                NSI:RemoveTrackedCooldown(line.spec, oldId, "spell")
+                NSI:AddTrackedCooldown(line.spec, newId, "spell", line.offset)
+            else
+                NSI:RemoveTrackedCooldown(line.spec, oldId, "item")
+                NSI:AddTrackedCooldown(line.spec, newId, "item", line.offset)
+            end
+
+            line.id = newId
+            parent:MasterRefresh()
+        end)
+
+        line.offsetSlider = DF:CreateSlider(line, 50, 20, -10, 10, 1, 0, false)
+        line.offsetSlider:SetTemplate(options_slider_template)
+        line.offsetSlider:SetPoint("LEFT", line.idTextEntry, "RIGHT", 5, 0)
+        line.offsetSlider:SetHook("OnValueChanged", function(self, fixedValue, value)
+            NSI:RemoveTrackedCooldown(line.spec, line.id, line.type)
+            NSI:AddTrackedCooldown(line.spec, line.id, line.type, value)
+            line.offset = value
+            parent:MasterRefresh()
+        end)
+
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function()
+            NSI:RemoveTrackedCooldown(line.spec, line.id, line.type)
+            self:SetData(NSRT.CooldownList)
+            self:MasterRefresh()
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        -- line.deleteButton:SetFontFace(expressway)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+
+
+        return line
+    end
+
+    local scrollLines = 15
+    local cooldowns_edit_scrollbox = DF:CreateScrollBox(cooldowns_edit_frame, "$parentCooldownsEditScrollBox", refresh,
+        {},
+        445, 300, scrollLines, 20, createLineFunc)
+    cooldowns_edit_frame.scrollbox = cooldowns_edit_scrollbox
+    cooldowns_edit_scrollbox:SetPoint("TOPLEFT", cooldowns_edit_frame, "TOPLEFT", 10, -50)
+    cooldowns_edit_scrollbox.MasterRefresh = MasterRefresh
+    DF:ReskinSlider(cooldowns_edit_scrollbox)
+
+    for i = 1, scrollLines do
+        cooldowns_edit_scrollbox:CreateLine(createLineFunc)
+    end
+
+    local spec_header = DF:CreateLabel(cooldowns_edit_frame, "Specialization", 11)
+    spec_header:SetPoint("TOPLEFT", cooldowns_edit_frame, "TOPLEFT", 15, -30)
+    spec_header:SetWidth(100)
+
+    local type_header = DF:CreateLabel(cooldowns_edit_frame, "Type", 11)
+    type_header:SetPoint("LEFT", spec_header, "RIGHT", 5, 0)
+    type_header:SetWidth(70)
+
+    local id_header = DF:CreateLabel(cooldowns_edit_frame, "Spell/Item ID", 11)
+    id_header:SetWidth(120)
+    id_header:SetPoint("LEFT", type_header, "RIGHT", 28, 0)
+
+    local offset_header = DF:CreateLabel(cooldowns_edit_frame, "Offset", 11)
+    offset_header:SetPoint("LEFT", id_header, "RIGHT", 5, 0)
+
+
+    cooldowns_edit_scrollbox:SetScript("OnShow", function(self)
+        selected_spec = GetSpecializationInfo(GetSpecialization())
+        self:MasterRefresh()
+    end)
+
+    local label_width = 80
+    -- Add new tracked cooldown section
+    local new_spec_label = DF:CreateLabel(cooldowns_edit_frame, "Specialization:", 11)
+    new_spec_label:SetPoint("TOPLEFT", cooldowns_edit_scrollbox, "BOTTOMLEFT", 0, -20)
+    new_spec_label:SetWidth(label_width)
+
+    local new_spec_dropdown = DF:CreateDropDown(cooldowns_edit_frame, function() return build_spec_options() end,
+        GetSpecializationInfo(GetSpecialization()), 120)
+    new_spec_dropdown:SetPoint("LEFT", new_spec_label, "RIGHT", 10, 0)
+    new_spec_dropdown:SetTemplate(options_dropdown_template)
+
+    local new_type_label = DF:CreateLabel(cooldowns_edit_frame, "Type:", 11)
+    new_type_label:SetPoint("LEFT", new_spec_dropdown, "RIGHT", 10, 0)
+    new_type_label:SetWidth(label_width / 2)
+
+    local new_type_dropdown = DF:CreateDropDown(cooldowns_edit_frame, function() return build_cooldown_type_options() end,
+        cooldown_types[1], 120)
+    new_type_dropdown:SetPoint("LEFT", new_type_label, "RIGHT", 10, 0)
+    new_type_dropdown:SetTemplate(options_dropdown_template)
+
+    local new_id_label = DF:CreateLabel(cooldowns_edit_frame, "Spell/Item ID:", 11)
+    new_id_label:SetPoint("BOTTOMLEFT", cooldowns_edit_frame, "BOTTOMLEFT", 10, 10)
+    new_id_label:SetWidth(label_width)
+
+    local new_id_text_entry = DF:CreateTextEntry(cooldowns_edit_frame, function() end, 120, 20)
+    new_id_text_entry:SetPoint("LEFT", new_id_label, "RIGHT", 10, 0)
+    new_id_text_entry:SetTemplate(options_dropdown_template)
+
+    local new_offset_label = DF:CreateLabel(cooldowns_edit_frame, "Offset:", 11)
+    new_offset_label:SetPoint("LEFT", new_id_text_entry, "RIGHT", 10, 0)
+    new_offset_label:SetWidth(label_width / 2)
+
+    local new_offset_slider = DF:CreateSlider(cooldowns_edit_frame, 120, 20, -10, 10, 1, 0, false)
+    new_offset_slider:SetPoint("LEFT", new_offset_label, "RIGHT", 10, 0)
+    new_offset_slider:SetTemplate(options_slider_template)
+
+    local add_button = DF:CreateButton(cooldowns_edit_frame, function()
+        local spec = new_spec_dropdown:GetValue()
+        local type = new_type_dropdown:GetValue()
+        local id = new_id_text_entry:GetText()
+        local offset = new_offset_slider:GetValue()
+        if spec and id ~= "" then
+            NSI:AddTrackedCooldown(spec, id, type, offset)
+            new_id_text_entry:SetText("")
+            new_offset_slider:SetValue(0)
+            cooldowns_edit_scrollbox:MasterRefresh()
+        end
+    end, 60, 20, "Add")
+    add_button:SetPoint("LEFT", new_type_dropdown, "RIGHT", 10, 0)
+    add_button:SetTemplate(options_button_template)
+
+    cooldowns_edit_frame:Hide()
+    return cooldowns_edit_frame
+end
 function NSUI:Init()
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
     NSUI:SetScale(NSRT.NSUI.scale)
 
     -- Create the tab container
-    local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", {
-        { name = "General",   text = "General" },
-        { name = "Nicknames", text = "Nicknames" },
-        { name = "Externals", text = "Externals" },
-        { name = "Versions",  text = "Versions" },
-        { name = "WeakAuras",   text = "WeakAuras" },
-    }, {
+    local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
         width = window_width,
         height = window_height - 5,
         backdrop_color = { 0, 0, 0, 0.2 },
@@ -757,6 +1061,7 @@ function NSUI:Init()
     local general_tab = tabContainer:GetTabFrameByName("General")
     local nicknames_tab = tabContainer:GetTabFrameByName("Nicknames")
     local externals_tab = tabContainer:GetTabFrameByName("Externals")
+    local cooldowns_tab = tabContainer:GetTabFrameByName("Cooldowns")
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
     local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
 
@@ -1344,6 +1649,61 @@ Press 'Enter' to hear the TTS]],
             end,
             id = "MACRO NS PA Macro",
         },   
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Cooldowns Options" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Cooldown Checking",
+            desc = "Enable cooldown checking for your cooldowns on ready check.",
+            get = function() return NSRT.Settings["CheckCooldowns"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["CHECK_COOLDOWNS"] = true
+                NSRT.Settings["CheckCooldowns"] = value
+            end,
+            nocombat = true
+        },
+        {
+            type = "range",
+            name = "Pull Timer",
+            desc = "Pull timer used for cooldown checking.",
+            get = function() return NSRT.Settings["CooldownThreshold"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["CooldownThreshold"] = value
+            end,
+            min = 10,
+            max = 60,
+            step = 1,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Unready on Cooldown",
+            desc = "Automatically unready if a tracked spell is on cooldown.",
+            get = function() return NSRT.Settings["UnreadyOnCooldown"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["UNREADY_ON_COOLDOWN"] = true
+                NSRT.Settings["UnreadyOnCooldown"] = value
+            end,
+            nocombat = true
+        },
+        {
+            type = "button",
+            name = "Edit Cooldowns",
+            desc = "Edit the cooldowns checked on the ready check.",
+            func = function(self)
+                if not NSUI.cooldowns_frame:IsShown() then
+                    NSUI.cooldowns_frame:Show()
+                end
+            end,
+            nocombat = true
+        }
     }
 
     local nicknames_options1_table = {
@@ -1828,6 +2188,7 @@ Press 'Enter' to hear the TTS]],
     -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame = BuildNicknameEditUI()
+    NSUI.cooldowns_frame = BuildCooldownsEditUI()
 
     -- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")

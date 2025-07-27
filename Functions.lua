@@ -205,7 +205,7 @@ function NSI:SpecToName(specid)
     local _, specName, _, icon, _, classFile = GetSpecializationInfoByID(specid)
     if not specName then return "" end
     local color = GetClassColorObj(classFile)
-    return "\124T"..icon..":10:10:0:0:64:64:4:60:4:60\124t"..color:WrapTextInColorCode(specName)
+    return "\124T" .. icon .. ":10:10:0:0:64:64:4:60:4:60\124t" .. " " .. color:WrapTextInColorCode(specName)
 end
 
 function NSAPI:SpecName(unit)
