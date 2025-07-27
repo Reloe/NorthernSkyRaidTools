@@ -265,12 +265,18 @@ function NSI:AddWhitelistURL(url, name)
     else
         id = url:match("wago%.io/([%w_]+)")
     end
-    NSRT.Settings["UpdateWhitelist"][url] = {name = name, id = id}
+    NSRT.Settings["UpdateWhitelist"][id] = {name = name, url = url}
 end
 
 
 function NSI:RemoveWhitelistURL(url, name)
-    if NSRT.Settings["UpdateWhitelist"][url] then
-        NSRT.Settings["UpdateWhitelist"][url] = nil
+    local id = ""
+    if url:match("^%w+$") then 
+        id = url
+    else
+        id = url:match("wago%.io/([%w_]+)")
+    end
+    if NSRT.Settings["UpdateWhitelist"][id] then
+        NSRT.Settings["UpdateWhitelist"][id] = nil
     end
 end
