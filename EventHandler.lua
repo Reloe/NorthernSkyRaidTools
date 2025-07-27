@@ -153,8 +153,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         if NSI:Difficultycheck(false, 14) then -- only care about note comparison in normal, heroic&mythic raid
-            local hashed = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""     
-            NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
+            local note = NSAPI:GetNote()
+            if note ~= "empty" then
+                local hashed = NSAPI:GetHash(note) or ""     
+                NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
+            end
         end
         if NSRT.Settings["CheckCooldowns"] and NSI:Difficultycheck(false, 15) and UnitInRaid("player") then
             NSI:CheckCooldowns()
@@ -243,13 +246,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
+        NSAPI.HasNSRT[unit] = true
     elseif e == "NSAPI_SPEC_REQUEST" then
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)    
     elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSI.specs = {}
+        NSAPI.HasNSRT = {}
         for u in NSI:IterateGroupMembers() do
             if UnitIsVisible(u) then
+                NSAPI.HasNSRT[u] = false
                 NSI.specs[u] = WeakAuras.SpecForUnit(u)
             end
         end
