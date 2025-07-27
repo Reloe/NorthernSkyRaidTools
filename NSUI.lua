@@ -1410,6 +1410,133 @@ function NSUI:Init()
         return popup
     end
 
+    -- WeakAuras whitelist popup
+    local function WhitelistPopup()
+        local parent = NSUI
+        local whitelisted_wa_edit_frame = DF:CreateSimplePanel(parent, 400, window_height / 2,
+            "WeakAuras Update Whitelist",
+            "WhitelistWAEditFrame", {
+                DontRightClickClose = true,
+                NoScripts = true
+            })
+        whitelisted_wa_edit_frame:ClearAllPoints()
+        whitelisted_wa_edit_frame:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 2)
+        whitelisted_wa_edit_frame:Hide()
+
+
+        local function PrepareData()
+            local data = {}
+            for _, v in pairs(NSRT.Settings['UpdateWhitelist']) do
+                tinsert(data, { url = v.url, name = v.name })
+            end
+            return data
+        end
+
+        local function MasterRefresh(self)
+            local data = PrepareData()
+            self:SetData(data)
+            self:Refresh()
+        end
+
+        local function refresh(self, data, offset, totalLines)
+            for i = 1, totalLines do
+                local index = i + offset
+                local whitelistData = data[index]
+                if whitelistData then
+                    local line = self:GetLine(i)
+
+                    line.name = whitelistData.name
+                    line.url = whitelistData.url
+
+                    line.nameText:SetText(line.name)
+                    line.urlTextEntry:SetText(line.url)
+                end
+            end
+        end
+
+        local function createLineFunc(self, index)
+            local parent = self
+            local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+            line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+            line:SetSize(self:GetWidth() - 2, self.LineHeight)
+            DF:ApplyStandardBackdrop(line)
+
+            -- Name text
+            line.nameText = DF:CreateLabel(line, "", 9.5, "white")
+            line.nameText:SetWidth(120)
+            line.nameText:SetTemplate(options_text_template)
+            line.nameText:SetPoint("LEFT", line, "LEFT", 5, 0)
+
+            line.urlTextEntry = DF:CreateTextEntry(line, function() end, 200, 20)
+            line.urlTextEntry:SetAutoSelectTextOnFocus(true)
+            line.urlTextEntry:SetTemplate(options_dropdown_template)
+            line.urlTextEntry:SetPoint("LEFT", line.nameText, "RIGHT", 5, 0)
+
+            -- Delete button
+            line.deleteButton = DF:CreateButton(line, function()
+                NSI:RemoveWhitelistURL(line.url, line.name)
+                self:MasterRefresh()
+            end, 12, 12)
+            line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+            line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+            line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+
+            line.deleteButton:GetNormalTexture():SetDesaturated(true)
+            line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+            line.deleteButton:GetPushedTexture():SetDesaturated(true)
+            line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+            return line
+        end
+
+        local presetScrollLines = 9
+        local whitelisted_wa_edit_scrollbox = DF:CreateScrollBox(whitelisted_wa_edit_frame,
+            "$parentWhitelistedWAEditScrollBox", refresh, {}, 360,
+            window_height / 2 - 75, presetScrollLines, 20, createLineFunc)
+        whitelisted_wa_edit_scrollbox:SetPoint("TOPLEFT", whitelisted_wa_edit_frame, "TOPLEFT", 10, -30)
+        -- version_presets_edit_scrollbox:SetPoint("BOTTOMRIGHT", version_presets_edit_frame, "BOTTOMRIGHT", -25, 30)
+        whitelisted_wa_edit_scrollbox.MasterRefresh = MasterRefresh
+        DF:ReskinSlider(whitelisted_wa_edit_scrollbox)
+
+        for i = 1, presetScrollLines do
+            whitelisted_wa_edit_scrollbox:CreateLine(createLineFunc)
+        end
+
+        whitelisted_wa_edit_scrollbox:SetScript("OnShow", function(self)
+            self:MasterRefresh()
+        end)
+
+        -- Add new preset
+        local new_name_label = DF:CreateLabel(whitelisted_wa_edit_frame, "Name:", 11)
+        new_name_label:SetWidth(35)
+        new_name_label:SetPoint("TOPLEFT", whitelisted_wa_edit_scrollbox, "BOTTOMLEFT", 0, -20)
+
+        local new_name_entry = DF:CreateTextEntry(whitelisted_wa_edit_frame, function() end, 100, 20)
+        new_name_entry:SetPoint("LEFT", new_name_label, "RIGHT", 5, 0)
+        new_name_entry:SetTemplate(options_dropdown_template)
+
+        local new_url_label = DF:CreateLabel(whitelisted_wa_edit_frame, "URL:", 11)
+        new_url_label:SetWidth(30)
+        new_url_label:SetPoint("LEFT", new_name_entry, "RIGHT", 10, 0)
+
+        local new_url_entry = DF:CreateTextEntry(whitelisted_wa_edit_frame, function() end, 120, 20)
+        new_url_entry:SetPoint("LEFT", new_url_label, "RIGHT", 5, 0)
+        new_url_entry:SetTemplate(options_dropdown_template)
+
+        local add_button = DF:CreateButton(whitelisted_wa_edit_frame, function()
+            local name = new_name_entry:GetText()
+            local url = new_url_entry:GetText()
+            NSI:AddWhitelistURL(url, name)
+            whitelisted_wa_edit_scrollbox:MasterRefresh()
+            new_name_entry:SetText("")
+            new_url_entry:SetText("")
+        end, 60, 20, "New")
+        add_button:SetPoint("BOTTOMRIGHT", whitelisted_wa_edit_frame, "BOTTOMRIGHT", -10, 10)
+        add_button:SetTemplate(options_button_template)
+
+        return whitelisted_wa_edit_frame
+    end
+    NSUI.whitelisted_wa_edit_frame = WhitelistPopup()
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
 
@@ -2094,6 +2221,56 @@ Press 'Enter' to hear the TTS]],
             type = "breakline"
         },
 
+        {
+            type = "label",
+            get = function() return "WeakAura Updates" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Auto Update WL WA",
+            desc = "Automatically update whitelisted WeakAuras. (Requires WeakAuras Companion Desktop Application)",
+            get = function() return NSRT.Settings["AutoUpdateWA"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.weakaura["AUTO_UPDATE_WA"] = true
+                NSRT.Settings["AutoUpdateWA"] = value
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Auto Update Raid WA",
+            desc = "Automatically updates or imports the current season's raid Northern Sky WeakAuras.",
+            get = function() return NSRT.Settings["AutoUpdateRaidWA"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.weakaura["AUTO_UPDATE_RAID_WA"] = true
+                NSRT.Settings["AutoUpdateRaidWA"] = value
+            end,
+        },
+
+        {
+            type = "blank",
+        },
+
+        {
+            type = "button",
+            name = "Whitelist WeakAuras",
+            desc = "Whitelist WeakAura URLs for auto updating.",
+            func = function(self)
+                if not NSUI.whitelisted_wa_edit_frame:IsShown() then
+                    NSUI.whitelisted_wa_edit_frame:Show()
+                else
+                    NSUI.whitelisted_wa_edit_frame:Hide()
+                end
+            end,
+            spacement = true
+        },
+
+        {
+            type = "breakline"
+        },
         {
             type = "label",
             get = function() return "WeakAuras Sharing" end,
