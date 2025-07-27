@@ -2234,7 +2234,6 @@ Press 'Enter' to hear the TTS]],
             desc = "Automatically update whitelisted WeakAuras. (Requires WeakAuras Companion Desktop Application)",
             get = function() return NSRT.Settings["AutoUpdateWA"] end,
             set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.weakaura["AUTO_UPDATE_WA"] = true
                 NSRT.Settings["AutoUpdateWA"] = value
             end,
         },
@@ -2245,7 +2244,6 @@ Press 'Enter' to hear the TTS]],
             desc = "Automatically updates or imports the current season's raid Northern Sky WeakAuras.",
             get = function() return NSRT.Settings["AutoUpdateRaidWA"] end,
             set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.weakaura["AUTO_UPDATE_RAID_WA"] = true
                 NSRT.Settings["AutoUpdateRaidWA"] = value
             end,
         },
