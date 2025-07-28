@@ -46,9 +46,9 @@ function NSAPI:Shorten(unit, num, role, AddonName, combined) -- Returns color co
         local specid = 0
         if unit then specid = NSAPI:GetSpecs(unit) or WeakAuras.SpecForUnit(unit) or 0 end
         local icon = select(4, GetSpecializationInfoByID(specid))
-        if icon then -- if we didn't get the specid can at least try to return the role icon     
+        if icon then -- if we didn't get the specid can at least try to return the role icon
             role = "\124T"..icon..":12:12:0:0:64:64:4:60:4:60\124t"
-        else  
+        else
             role = UnitGroupRolesAssigned(unit)
             if role ~= "NONE" then
                 role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
@@ -90,7 +90,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         return "empty"
     end
     local persnote = _G.VMRT.Note.SelfText or ""
-    persnote =  strtrim(persnote) 
+    persnote =  strtrim(persnote)
     NSI.persnotedisable = false
     if persnote and persnote ~= "" then
         for line in persnote:gmatch('[^\r\n]+') do
@@ -102,7 +102,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
             end
         end
     end
-    local note = _G.VMRT.Note.Text1 or ""    
+    local note = _G.VMRT.Note.Text1 or ""
     if (not NSI.RawNote) or NSI.RawNote ~= note or (NSAPI.disable and not disable) then -- only do this if the note has changed or not been checked at all this session
         NSI.RawNote = note
         NSI.notedisable = false
@@ -110,6 +110,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         local list = false
         note = strtrim(note)
         for line in note:gmatch('[^\r\n]+') do
+            line = strtrim(line)
             if line == "nsdisable" then -- global disable all NS Auras for everyone in the raid
                 NSAPI.disable = true
                 NSI.notedisable = true
@@ -221,7 +222,7 @@ function NSI:SpecToName(specid)
 end
 
 local function ON_WA_UPDATE(updated, name, arg2)
-    table.remove(NSI.importtable, 1)    
+    table.remove(NSI.importtable, 1)
     if #NSI.importtable > 0 then
         WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
     end
@@ -239,8 +240,8 @@ function NSI:AutoImport()
         end
     end
     if NSRT.Settings["AutoUpdateWA"] and WagoAppCompanionData then
-        for k, v in pairs(WagoAppCompanionData["ids"]) do             
-            if NSRT.Settings["UpdateWhitelist"][v] or NSRT.Settings["Debug"] then      
+        for k, v in pairs(WagoAppCompanionData["ids"]) do
+            if NSRT.Settings["UpdateWhitelist"][v] or NSRT.Settings["Debug"] then
                 local data = WagoAppCompanionData["slugs"][v]
                 if data and data.wagoVersion then
                     local url = ""
@@ -268,7 +269,7 @@ end
 
 function NSI:AddWhitelistURL(url, name)
     local id = ""
-    if url:match("^%w+$") then 
+    if url:match("^%w+$") then
         id = url
     else
         id = url:match("wago%.io/([%w_]+)")
@@ -279,7 +280,7 @@ end
 
 function NSI:RemoveWhitelistURL(url, name)
     local id = ""
-    if url:match("^%w+$") then 
+    if url:match("^%w+$") then
         id = url
     else
         id = url:match("wago%.io/([%w_]+)")
