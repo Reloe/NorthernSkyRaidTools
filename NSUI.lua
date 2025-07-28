@@ -763,13 +763,17 @@ local function build_spec_options()
 
     -- Add specs sorted by class
     for className, specs in pairs(classSpecs) do
-        for _, specId in ipairs(specs) do
+        for _, specId in pairs(specs) do
             tinsert(t, {
                 label = NSI:SpecToName(specId),
                 value = specId,
+                className = className,
             })
         end
     end
+    table.sort(t, 
+                function(a, b) return a.className < b.className                               
+            end)
     return t
 end
 local function BuildCooldownsEditUI()
@@ -1790,7 +1794,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Enable Cooldown Checking",
-            desc = "Enable cooldown checking for your cooldowns on ready check.",
+            desc = "Enable cooldown checking for your cooldowns on ready check. This is only active in Heroic and Mythic Raids.",
             get = function() return NSRT.Settings["CheckCooldowns"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["CHECK_COOLDOWNS"] = true
