@@ -235,13 +235,12 @@ function NSI:AutoImport()
         local version = waData and waData.url and waData.url:match("%d+$") or 0
         version = version and tonumber(version) or 0
         if (NSI.RaidWAData.version > version or not version) and NSI.RaidWAData.string then
-            NSI.imports[waData.url] = true
             table.insert(NSI.importtable, NSI.RaidWAData.string)
         end
     end
     if NSRT.Settings["AutoUpdateWA"] and WagoAppCompanionData then
-        for k, v in pairs(WagoAppCompanionData["ids"]) do 
-            if NSRT.Settings["UpdateWhitelist"][k] or NSRT.Settings["Debug"] then      
+        for k, v in pairs(WagoAppCompanionData["ids"]) do             
+            if NSRT.Settings["UpdateWhitelist"][v] or NSRT.Settings["Debug"] then      
                 local data = WagoAppCompanionData["slugs"][v]
                 if data and data.wagoVersion then
                     local url = ""
