@@ -209,14 +209,26 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
-                units[count] = v
+                if UnitIsGroupLeader(v.unitid) then -- if this person is the raid leader he needs to be put in the first position of each subgroup
+                    local num = math.floor((i - 1) / 5) * 5 + 1 -- this will result in 1, 6, 11 etc. Basically first position of a subgroup
+                    if units[num] then units[count] = units[num] end -- put whoever was already in the first position of the subgroup into the current position
+                    units[num] = v -- put the leader in the first position of the subgroup
+                else
+                    units[count] = v      
+                end
                 count = count+1
                 if count > 5 then count = 11 end
                 if count > 15 then count = 21 end
             end
             count = 6            
             for i, v in ipairs(sides["right"]) do
-                units[count] = v
+                if UnitIsGroupLeader(v.unitid) then 
+                    local num = math.floor((i - 1) / 5) * 5 + 1 
+                    if units[num] then units[count] = units[num] end 
+                    units[num] = v 
+                else
+                    units[count] = v      
+                end
                 count = count+1
                 if count > 10 then count = 16 end
                 if count > 20 then count = 26 end
@@ -227,7 +239,13 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
-                units[count] = v
+                if UnitIsGroupLeader(v.unitid) then 
+                    local num = math.floor((i - 1) / 5) * 5 + 1 
+                    if units[num] then units[count] = units[num] end 
+                    units[num] = v 
+                else
+                    units[count] = v      
+                end
                 count = count+1
             end
             if total["ALL"] > 20 then count = 16 
@@ -235,7 +253,13 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             else count = 6
             end
             for i, v in ipairs(sides["right"]) do
-                units[count] = v
+                if UnitIsGroupLeader(v.unitid) then 
+                    local num = math.floor((i - 1) / 5) * 5 + 1 
+                    if units[num] then units[count] = units[num] end 
+                    units[num] = v 
+                else
+                    units[count] = v      
+                end
                 count = count+1
             end
             NSI.Groups.units = units
@@ -328,8 +352,14 @@ function NSI:ArrangeGroups(firstcall)
 end
 
 function NSI:SplitGroupInit(Flex, default, odds)
-    if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
-        NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
-        C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
+    if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") and not NSI.Groups.Processing then
+        local now = GetTime()
+        if not NSI.LastGroupSort or NSI.LastGroupSort < now - 5 then
+            NSI.LastGroupSort = GetTime()
+            NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
+            C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
+        else
+            print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
+        end
     end
 end
