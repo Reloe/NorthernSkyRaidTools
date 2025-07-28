@@ -14,6 +14,7 @@ local TABS_LIST = {
     { name = "Externals", text = "Externals" },
     { name = "Versions",  text = "Versions" },
     { name = "WeakAuras", text = "WeakAuras" },
+    { name = "SetupManager", text = "Setup Manager"},
 }
 local authorsString = "By Reloe & Rav"
 
@@ -1064,6 +1065,7 @@ function NSUI:Init()
     local cooldowns_tab = tabContainer:GetTabFrameByName("Cooldowns")
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
     local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
+    local setupmanager_tab = tabContainer:GetTabFrameByName("SetupManager")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
@@ -2295,6 +2297,59 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
         },
     }
+    local setupmanager_options1_table = {
+        
+        { type = "label", get = function() return "Mythic" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        {
+            type = "button",
+            name = "20 Man Default",
+            desc = "Sorts the first 4 groups into a default order (tanks - melee - ranged - healer)",
+            func = function(self)
+                NSI:SplitGroupInit(false, true, false)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        
+        {
+            type = "button",
+            name = "20 Man Split",
+            desc = "Splits the group evenly into 2 groups of 10. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs",
+            func = function(self)
+                NSI:SplitGroupInit(false, false, false)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        
+        {
+            type = "breakline"
+        },
+        
+        { type = "label", get = function() return "Flex" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        {
+            type = "button",
+            name = "Flex Default",
+            desc = "Sorts the first 6 groups into a default order (tanks - melee - ranged - healer)",
+            func = function(self)
+                NSI:SplitGroupInit(true, true, false)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        
+        {
+            type = "button",
+            name = "Flex Split",
+            desc = "Splits the group evenly into 2 groups. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs",
+            func = function(self)
+                NSI:SplitGroupInit(true, false, false)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
+    }
 
     -- Build options menu for each tab
     DF:BuildMenu(general_tab, general_options1_table, 10, -100, window_height - 10, false, options_text_template,
@@ -2309,6 +2364,9 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(weakaura_tab, weakaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         weakaura_callback)
+    DF:BuildMenu(setupmanager_tab, setupmanager_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        setupmanager_callback)
 
     -- Add SUF Setup guide tooltip button thingy
 
