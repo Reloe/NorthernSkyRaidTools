@@ -80,7 +80,8 @@ NSI.CLASS_SPECIALIZATION_MAP = {
     ["Rogue"] = { 259, 260, 261 },
     ["Shaman"] = { 262, 263, 264 },
     ["Warlock"] = { 265, 266, 267 },
-    ["Warrior"] = { 71, 72, 73 }
+    ["Warrior"] = { 71, 72, 73 },
+    ["ALL"] = { 1 },
 }
 
 function NSI:GetAllSpecializationIDs()
@@ -90,31 +91,60 @@ function NSI:GetAllSpecializationIDs()
     end
     return ids
 end
+
 function NSI:CheckCooldowns()
     local spec = GetSpecializationInfo(GetSpecialization())
-    if NSRT.CooldownList and NSRT.CooldownList[spec] then
+    if NSRT.CooldownList then
         local now = GetTime()
-        if NSRT.CooldownList[spec]["spell"] then
+        local highest = {text = "", time = 0}
+        if NSRT.CooldownList[spec] and NSRT.CooldownList[spec]["spell"] then
             for k, v in pairs(NSRT.CooldownList[spec]["spell"]) do
                 local cooldown = C_Spell.GetSpellCooldown(k)
                 local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - now
                 if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
-                    if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
-                    SendChatMessage("NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining).." seconds.", "RAID")
+                    if timeRemaining+v.offset > highest.time then
+                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                    end
                 end
             end
         end
-        if NSRT.CooldownList[spec]["item"] then    
+        if NSRT.CooldownList[spec] and NSRT.CooldownList[spec]["item"] then    
             for k, v in pairs(NSRT.CooldownList[spec]["item"]) do
                 local startTime, duration = C_Item.GetItemCooldown(k)
                 local timeRemaining = duration and duration ~= 0 and duration + startTime - now
                 if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
-                    if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
-                    SendChatMessage("NSRT: My " .. v.name .. " is on cooldown for " .. Round(timeRemaining) ..
-                    " seconds.", "RAID")
+                    if timeRemaining+v.offset > highest.time then
+                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                    end
                 end
             end
-        end        
+        end     
+        if NSRT.CooldownList[1] and NSRT.CooldownList[1]["spell"] then
+            for k, v in pairs(NSRT.CooldownList[1]["spell"]) do
+                local cooldown = C_Spell.GetSpellCooldown(k)
+                local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - now
+                if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
+                    if timeRemaining+v.offset > highest.time then
+                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                    end
+                end
+            end
+        end
+        if NSRT.CooldownList[1] and NSRT.CooldownList[1]["item"] then            
+            for k, v in pairs(NSRT.CooldownList[1]["item"]) do
+                local startTime, duration = C_Item.GetItemCooldown(k)
+                local timeRemaining = duration and duration ~= 0 and duration + startTime - now
+                if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
+                    if timeRemaining+v.offset > highest.time then
+                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                    end
+                end
+            end
+        end
+        if highest.time > 0 then            
+            if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
+            SendChatMessage(highest.text, "RAID")
+        end
     end
 end
 
