@@ -214,6 +214,7 @@ function NSI:SendWAString(str)
 end
 
 function NSI:SpecToName(specid)
+    if specid == 1 then return "\124T" .. 135724 .. ":10:10:0:0:64:64:4:60:4:60\124t" .. " " .. "All Specs" end
     local _, specName, _, icon, _, classFile = GetSpecializationInfoByID(specid)
     if not specName then return "" end
     local color = GetClassColorObj(classFile)
