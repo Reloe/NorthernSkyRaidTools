@@ -94,6 +94,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
     NSI.persnotedisable = false
     if persnote and persnote ~= "" then
         for line in persnote:gmatch('[^\r\n]+') do
+            line = strtrim(line)
             if line == "nsdisable" then
                 NSI.persnotedisable = true
                 NSAPI.disable = true
