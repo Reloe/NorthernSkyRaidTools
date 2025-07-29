@@ -246,7 +246,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         NSI.specs = NSI.specs or {}
         NSI.specs[unit] = tonumber(spec)
-        NSAPI.HasNSRT = NSAPI.HasNRT or {}
+        NSAPI.HasNSRT = NSAPI.HasNSRT or {}
         NSAPI.HasNSRT[unit] = true
     elseif e == "NSAPI_SPEC_REQUEST" then
         local specid = GetSpecializationInfo(GetSpecialization())

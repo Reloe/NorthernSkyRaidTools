@@ -1,10 +1,5 @@
 local _, NSI = ... -- Internal namespace
---[[
-local lib = LibStub("CallbackHandler-1.0")
-NSI.callbacks = {
-    lib:New(NSI, "RegisterCallback", "UnregisterCallback", "UnregisterAllCallbacks")
-}
-NSI:RegisterCallback("NS_WA_UPDATED", ON_WA_UPDATE)]]
+
 -- Function from WeakAuras, thanks rivers
 function NSI:IterateGroupMembers(reversed, forceParty)
     local unit = (not forceParty and IsInRaid()) and 'raid' or 'party'
@@ -187,7 +182,7 @@ function NSAPI:GetHash(text)
 end
 
 
-function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal", NSRT.TTSVoice)
+function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
   if NSRT.Settings["TTS"] then
       local num = voice or NSRT.Settings["TTSVoice"]
         C_VoiceChat.SpeakText(
