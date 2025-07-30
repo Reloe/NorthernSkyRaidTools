@@ -140,6 +140,15 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
     end) -- a < b low first, a > b high first
     NSI.Groups.total = total["ALL"]
     if default then
+        for i=1, 40 do
+            local v = units[i]
+            if v and UnitIsGroupLeader(v.unitid) then
+                local num = math.floor((i - 1) / 5) * 5 + 1
+                if units[num] then units[i] = units[num] end 
+                units[num] = v 
+                break
+            end 
+        end
         NSI.Groups.units = units
         NSI:ArrangeGroups(true)
     else
@@ -268,7 +277,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
     end    
 end
 
-function NSI:ArrangeGroups(firstcall)
+function NSI:ArrangeGroups(firstcall, finalcheck)
     if not firstcall and not NSI.Groups.Processing then return end
     local now = GetTime()
     if firstcall then 
@@ -276,75 +285,113 @@ function NSI:ArrangeGroups(firstcall)
         NSI.Groups.Processing = true 
         NSI.Groups.Processed = 0 
         NSI.Groups.ProcessStart = now 
+        for i=1, 40 do
+            local group = math.ceil(i/5)
+            local subgrouppos = i % 5 == 0 and 5 or i % 5
+            if NSI.Groups.units[i] then
+                NSI.Groups.units[i].group = group
+                NSI.Groups.units[i].subgrouppos = subgrouppos
+                NSI.Groups.units[i].pos= ((group-1)*5)+subgrouppos
+            end
+        end
     end
     if NSI.Groups.ProcessStart and now > NSI.Groups.ProcessStart+15 then NSI.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
-    local indextosubgroup = {}
+    local indexlink = {}
+    for i=1, 40 do indexlink[i] = {} end 
     for i=1, 40 do
         local name, _, subgroup = GetRaidRosterInfo(i)
         if not name then break end
         groupSize[subgroup] = groupSize[subgroup]+1
         postoindex[((subgroup-1)*5)+groupSize[subgroup]] = i 
-        indextosubgroup[i] = subgroup
+        indexlink[i] = {subgroup = subgroup, pos = ((subgroup-1)*5)+groupSize[subgroup]}
     end
 
-    for i=1, 40 do -- position in table is where the player should end up in, v.index is their current position.
+    if NSI.Groups.Processed >= NSI.Groups.total then 
+        if finalcheck then
+            local allprocessed = true
+            for i=1, 40 do
+                local v = NSI.Groups.units[i]
+                if v then 
+                    local index = UnitInRaid(v.name)
+                    if postoindex[v.pos] ~= index then
+                        v.processed = false
+                        allprocessed = false
+                        NSI.Groups.Processed = NSI.Groups.Processed-1
+                    end
+                end
+            end
+            if allprocessed then
+                NSI.Groups.Processing = false
+                return
+            end
+        else
+            NSI:ArrangeGroups(false, true)
+            return
+        end
+    end
+
+    for i=1, 40 do -- position in table is where the player should end up in
         local v = NSI.Groups.units[i]    
-        if NSI.Groups.Processed >= NSI.Groups.total then NSI.Groups.Processing = false break end
         if v and (not v.processed) and (not UnitAffectingCombat(v.name)) then 
-            local group = math.ceil(i/5)
-            local subgroupposition = i % 5 == 0 and 5 or i % 5
-            local position = ((group-1)*5)+subgroupposition
             local index = UnitInRaid(v.name)
-            if postoindex[position] ~= index then -- check if player is already in correct spot
-                if groupSize[group] < subgroupposition and indextosubgroup[index] ~= group then
-                    if groupSize[group]+1 == subgroupposition then -- next free spot is in the correct position
-                        SetRaidSubgroup(index, group)
-                        v.processed = true
-                        NSI.Groups.Processed = NSI.Groups.Processed+1
+            local indexgoal = postoindex[v.pos]
+            if indexgoal ~= index then -- check if player is already in correct spot
+                if groupSize[v.group] < v.subgrouppos and indexlink[index].subgroup ~= v.group then
+                    if groupSize[v.group]+1 == v.subgrouppos then -- next free spot is in the correct position. It's not guranteed to end up in the correct position anyway so need to check on next call
+                        SetRaidSubgroup(index, v.group)
                         break
                     else -- if not enough players are in the group to move this player to the desired spot we need to put someone who is not in the correct position yet there.
                         for j=1, 40 do
                             if i ~= j then
                                 local u = NSI.Groups.units[j]  
-                                if u and (not u.processed) and group ~= indextosubgroup[UnitInRaid(u.name)] then
-                                    SetRaidSubgroup(UnitInRaid(u.name), group)
+                                if u and (not u.processed) and v.group ~= indextosubgroup[UnitInRaid(u.name)] then
+                                    SetRaidSubgroup(UnitInRaid(u.name), v.group)
                                     break
                                 end
                             end
                         end
                         break
                     end
-                elseif indextosubgroup[index] ~= indextosubgroup[postoindex[position]] and not UnitAffectingCombat("raid"..postoindex[position]) then -- check if the player we need to swap with is in a different subgroup
-                    SwapRaidSubgroup(postoindex[position], index)
+                elseif indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
+                    SwapRaidSubgroup(indexgoal, index)
                     v.processed = true
                     NSI.Groups.Processed = NSI.Groups.Processed+1
                     break
-                else -- the 2 players to swap are in the same group so we instead swap with someone random that hasn't been processed yet
+                else -- the 2 players to swap are in the same group so we instead swap with someone else
                     local found = false
-                    for j=1, 40 do
-                        local u = NSI.Groups.units[j]
-                        if u and (not u.processed) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indextosubgroup[index] ~= indextosubgroup[UnitInRaid(u.name)] then
-                            SwapRaidSubgroup(UnitInRaid(u.name), index)
-                            found = true
-                            break
-                        end
-                    end             
-                    if not found then -- if we were somehow unable to find anyone we can swap this person with, try to put him into an empty group at the end instead                    
-                        for j = 8, 1, -1 do
-                            if groupSize[j] < 5 then
-                                SetRaidSubgroup(index, j)
-                                break                                
+                    local u = NSI.Groups.units[indexlink[index].pos] -- first try to swap with the person who is meant to be in the position this player is in
+                    if u and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and u.pos == indexlink[index].pos and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
+                        SwapRaidSubgroup(UnitInRaid(u.name), index)
+                        found = true
+                    end
+                    if not found then -- next try to swap with someone who is not in the correct position yet
+                        for j=1, 40 do
+                            local u = NSI.Groups.units[j]
+                            if u and (not u.processed) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
+                                SwapRaidSubgroup(UnitInRaid(u.name), index)
+                                found = true
+                                break
                             end
-                        end
+                        end     
+                    end        
+                    if not found then -- if we were somehow unable to find anyone we can swap this person with, swap them with someone who was already processed but not the raid leader  
+                        for j=1, 40 do
+                            local u = NSI.Groups.units[j]
+                            if u and (not UnitIsGroupLeader(u.name)) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
+                                SwapRaidSubgroup(UnitInRaid(u.name), index)
+                                found = true
+                                break
+                            end
+                        end   
                     end  
                     break
                 end
             else -- character is already in the correct position
                 v.processed = true
                 NSI.Groups.Processed = NSI.Groups.Processed+1
-                NSI:ArrangeGroups()
+                NSI:ArrangeGroups(false, finalcheck)
                 break
             end
         end        
@@ -352,8 +399,9 @@ function NSI:ArrangeGroups(firstcall)
 end
 
 function NSI:SplitGroupInit(Flex, default, odds)
-    if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") and not NSI.Groups.Processing then
+    if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
+        if NSI.Groups.Processing and NSI.Groups.ProcessStart and now < NSI.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
         if not NSI.LastGroupSort or NSI.LastGroupSort < now - 5 then
             NSI.LastGroupSort = GetTime()
             NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
