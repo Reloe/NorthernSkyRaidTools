@@ -46,7 +46,7 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         if nickname and NSRT.Settings["Translit"] then
             nickname = LibTranslit:Transliterate(nickname)
         end
-        if NSRT.Settings["Translit"] then
+        if NSRT.Settings["Translit"] and not nickname then
             name = LibTranslit:Transliterate(name)
         end
         return nickname or name
