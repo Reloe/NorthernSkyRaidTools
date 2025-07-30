@@ -263,7 +263,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         -- broadcast spec info
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
-        C_Timer.After(0.5, function()
+        C_Timer.After(1, function()
             WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
         end)
         NSI.MacroPresses = {}

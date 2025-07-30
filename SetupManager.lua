@@ -151,7 +151,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         local lust = {["left"] = false, ["right"] = false}
         local bress = {["left"] = 0, ["right"] = 0}
         for i=1, 3 do
-            local role = i == 1 and "TANK" or i == 2 and "DAMAGER" or i == 3 and "HEALER"
+            local role = (i == 1 and "TANK") or (i == 2 and "HEALER") or (i == 3 and "DAMAGER")
             roles["left"].role = 0
             roles["right"].role = 0
             for _, v in ipairs(units) do
