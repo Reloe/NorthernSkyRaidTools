@@ -99,51 +99,73 @@ function NSI:CheckCooldowns()
         local highest = {text = "", time = 0}
         if NSRT.CooldownList[spec] and NSRT.CooldownList[spec]["spell"] then
             for k, v in pairs(NSRT.CooldownList[spec]["spell"]) do
-                local cooldown = C_Spell.GetSpellCooldown(k)
-                local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - now
-                if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
-                    if timeRemaining+v.offset > highest.time then
-                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                local charges = C_Spell.GetSpellCharges(k)
+                if charges then
+                    local timeRemaining = charges.cooldownStartTime ~= 0 and charges.cooldownDuration + charges.cooldownStartTime - now
+                    timeRemaining = timeRemaining and timeRemaining + ((charges.maxCharges - charges.currentCharges - 1) * charges.cooldownDuration)
+                    if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
+                        if timeRemaining+v.offset > highest.time then
+                            highest = {name = v.name, time = timeRemaining+v.offset}
+                        end
+                    end
+                else
+                    local cooldown = C_Spell.GetSpellCooldown(k)
+                    local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - now
+                    if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
+                        if timeRemaining+v.offset > highest.time then
+                            highest = {name = v.name, time = timeRemaining+v.offset}
+                        end
                     end
                 end
             end
         end
         if NSRT.CooldownList[spec] and NSRT.CooldownList[spec]["item"] then    
             for k, v in pairs(NSRT.CooldownList[spec]["item"]) do
-                local startTime, duration = C_Item.GetItemCooldown(k)
+                local startTime, duration = C_Container.GetItemCooldown(k)
                 local timeRemaining = duration and duration ~= 0 and duration + startTime - now
                 if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
                     if timeRemaining+v.offset > highest.time then
-                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                            highest = {name = v.name, time = timeRemaining+v.offset}
                     end
                 end
             end
         end     
         if NSRT.CooldownList[1] and NSRT.CooldownList[1]["spell"] then
             for k, v in pairs(NSRT.CooldownList[1]["spell"]) do
-                local cooldown = C_Spell.GetSpellCooldown(k)
-                local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - now
-                if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
-                    if timeRemaining+v.offset > highest.time then
-                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                local charges = C_Spell.GetSpellCharges(k)
+                if charges then
+                    local timeRemaining = charges.cooldownStartTime ~= 0 and charges.cooldownDuration + charges.cooldownStartTime - now
+                    timeRemaining = timeRemaining and timeRemaining + ((charges.maxCharges - charges.currentCharges - 1) * charges.cooldownDuration)
+                    if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
+                        if timeRemaining+v.offset > highest.time then
+                            highest = {name = v.name, time = timeRemaining+v.offset}
+                        end
+                    end
+                else
+                    local cooldown = C_Spell.GetSpellCooldown(k)
+                    local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - now
+                    if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
+                        if timeRemaining+v.offset > highest.time then
+                            highest = {name = v.name, time = timeRemaining+v.offset}
+                        end
                     end
                 end
             end
         end
         if NSRT.CooldownList[1] and NSRT.CooldownList[1]["item"] then            
             for k, v in pairs(NSRT.CooldownList[1]["item"]) do
-                local startTime, duration = C_Item.GetItemCooldown(k)
+                local startTime, duration = C_Container.GetItemCooldown(k)
                 local timeRemaining = duration and duration ~= 0 and duration + startTime - now
                 if timeRemaining and timeRemaining+v.offset > NSRT.Settings["CooldownThreshold"] then
                     if timeRemaining+v.offset > highest.time then
-                        highest = {text = "NSRT: My "..v.name.." is on cooldown for "..Round(timeRemaining+v.offset).." seconds.", time = timeRemaining+v.offset}
+                        highest = {name = v.name, time = timeRemaining+v.offset}
                     end
                 end
             end
         end
         if highest.time > 0 then            
             if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
-            SendChatMessage(highest.text, "RAID")
+            SendChatMessage("NSRT: My "..highest.name.." is on cooldown for "..Round(highest.time).." seconds.", "RAID")
         end
     end
 end
