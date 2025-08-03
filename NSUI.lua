@@ -383,7 +383,7 @@ local function BuildVersionCheckUI(parent)
         
         local text = component_name_entry:GetText()
         local component_type = component_type_dropdown:GetValue()
-        if text and text ~= ""  and not tContains(NSRT.NSUI.AutoComplete[component_type], text) then
+        if text and text ~= ""  and component_type ~= "Note" and not tContains(NSRT.NSUI.AutoComplete[component_type], text) then
             tinsert(NSRT.NSUI.AutoComplete[component_type], text)
         end
 
