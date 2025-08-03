@@ -131,7 +131,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         local namelist = {}
         for name in note:gmatch("%S+") do -- finding all strings
             local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true)
-            if name ~= charname and not namelist[name] then
+            if name ~= charname and UnitExists(charname) and not namelist[name] then
                 namelist[name] = charname
             end
         end
