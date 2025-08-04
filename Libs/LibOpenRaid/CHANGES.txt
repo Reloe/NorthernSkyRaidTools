@@ -1,5 +1,139 @@
 Changes since tag v10.2.0.118
 
+commit 8bab6252365022b8e6e91a04d09cd6ed1f72a6a7
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon May 19 15:05:04 2025 -0300
+
+    Ensure the global config spell table exists.
+
+commit f3c94987f7423a80f36c83c5b3eaf29fa2624e34
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon May 19 15:00:34 2025 -0300
+
+    Added latency compensation and faster ticks for interrupt spells.
+
+commit 333c76f929b5a4dd81d4276fb76a21dd1a0bac8d
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun May 11 11:37:34 2025 -0300
+
+    Version Bump
+
+commit b9c74390012f7ee4efc741f0e2c50974b06c3849
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun May 11 11:36:21 2025 -0300
+
+    Fix comm bigger than 255 bytes being ignore.
+
+commit fd7b6a04e830abe746d6987b9978bf538d091cb3
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri May 9 14:38:53 2025 -0300
+
+    Fix itemlink string manipulation
+
+commit 90aa1e5133a1629dcf7c77eab631ee91da033c36
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun May 4 20:13:59 2025 -0300
+
+    Version Bump
+
+commit 1469a81181447ea38c45cacb8498038b13ee0988
+Author: Elehiggle <Elehiggle@users.noreply.github.com>
+Date:   Mon May 5 01:04:41 2025 +0200
+
+    Fix broken itemLink parsing
+    
+    As per new itemLink changes introducing itemQuality as first property.
+
+commit 1469a81181447ea38c45cacb8498038b13ee0988
+Author: Elehiggle <Elehiggle@users.noreply.github.com>
+Date:   Mon May 5 01:04:41 2025 +0200
+
+    Fix broken itemLink parsing
+    
+    As per new itemLink changes introducing itemQuality as first property.
+
+commit e54bc05cc9d6ac2d5ff814c5b48d5d39c4be7dfa
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat May 3 17:03:39 2025 -0300
+
+    Mists of Pandaria support
+
+commit 124f9444d104cc234be67f5e990b86a44e044a9e
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat Apr 26 12:17:32 2025 -0300
+
+    Version UP
+
+commit 3d608c51faebb9557168225fa339ac0bb87d8584
+Author: Lynn <kjarli@gmail.com>
+Date:   Sat Apr 26 11:18:12 2025 +0200
+
+    Removed leftover prints
+    
+    Not sure if you want to keep them for debugging purposes with a debug tag instead (can close this PR if so)
+
+commit 3d608c51faebb9557168225fa339ac0bb87d8584
+Author: Lynn <kjarli@gmail.com>
+Date:   Sat Apr 26 11:18:12 2025 +0200
+
+    Removed leftover prints
+    
+    Not sure if you want to keep them for debugging purposes with a debug tag instead (can close this PR if so)
+
+commit a9a1a5d16c80b7962189010455191ea8c4e0780e
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Thu Apr 24 15:23:18 2025 -0300
+
+    Fixed an issue with Paladin blessing of Warning and Protection not triggering the cooldown usage when only one of them is talented.
+
+commit 1f32f2845aec4a4e67c55ea27ac428f16f6e3c8a
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Thu Apr 24 12:56:22 2025 -0300
+
+    Version Bump
+
+commit d983d82e7ad63ff97887dd95f1d81b0ce6e95780
+Author: m33shoq <91337254+m33shoq@users.noreply.github.com>
+Date:   Thu Apr 24 18:45:17 2025 +0300
+
+    fix nil error for m+ summary
+
+commit d983d82e7ad63ff97887dd95f1d81b0ce6e95780
+Author: m33shoq <91337254+m33shoq@users.noreply.github.com>
+Date:   Thu Apr 24 18:45:17 2025 +0300
+
+    fix nil error for m+ summary
+
+commit 5add0eb41f49a0a1ef458e63ccedcfc54d9f509a
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Apr 22 18:05:23 2025 -0300
+
+    Added Heartseeking Health Injector (engineering tinker) to healing potions.
+
+commit 92834e9587553e3ad5120bfe9345f47679320a93
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Apr 18 17:46:48 2025 -0300
+
+    Version Up for new merges.
+
+commit 974c20b1ff402d3a632bc594b53a20ed9b909102
+Author: Lynn <kjarli@gmail.com>
+Date:   Fri Apr 18 19:38:35 2025 +0200
+
+    Change warrior disrupting should to be an interrupt instead of CC
+
+commit 974c20b1ff402d3a632bc594b53a20ed9b909102
+Author: Lynn <kjarli@gmail.com>
+Date:   Fri Apr 18 19:38:35 2025 +0200
+
+    Change warrior disrupting should to be an interrupt instead of CC
+
+commit 974c20b1ff402d3a632bc594b53a20ed9b909102
+Author: Lynn <kjarli@gmail.com>
+Date:   Fri Apr 18 19:38:35 2025 +0200
+
+    Change warrior disrupting should to be an interrupt instead of CC
+
 commit d9a0599748b4c96e929b4033786b43e4f57c3997
 Author: Tercio Jose <terciob19@hotmail.com>
 Date:   Sun Apr 13 15:28:08 2025 -0300
@@ -145,6 +279,18 @@ Date:   Fri Oct 18 16:40:06 2024 +0100
     Update ThingsToMantain_WarWithin.lua
     
     Fix Celestial Alignment (Druid) spellID
+
+commit 05f0d12908caf72b1d4413894ec96e236ede085f
+Author: Eli White <github@eli-white.com>
+Date:   Sun Oct 13 17:48:00 2024 -0700
+
+    Add support for transmitting Rating
+    
+    When playing with my friends, we want to see what dungeon to do based on what will give the most rating. We normally have to ask each other "what's your lowest". This commit adds support to automatically communicate dungeon rating information, to power a UI like `/keys`.
+    
+    This is essentially transmitting the entirety of `C_PlayerInfo.GetPlayerMythicPlusRatingSummary("player")`, with the additional ClassID information so my UI can color player names.
+    
+    I've validated this code with my friends in my own addon here: https://legacy.curseforge.com/wow/addons/details-mythic-group-rating
 
 commit b40cfb7193ad087d37960bc4c3570a4de70a0fa4
 Author: Tercio Jose <terciob19@hotmail.com>

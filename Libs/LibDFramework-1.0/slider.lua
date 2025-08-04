@@ -1024,6 +1024,7 @@ end
 ---@field GetCapsule fun(self:df_button):df_button capsule only exists in the actual frame of the encapsulated widget
 ---@field SetCheckedTexture fun(self:df_button, texture:string)
 ---@field SetChecked fun(self:df_button, value:boolean)
+---@field GetChecked fun(self:df_button):boolean
 ---@field CreateExtraSpaceToClick fun(self:df_button, label:df_label, widgetWidth:number?, highlight:any?):button
 
 
@@ -1103,7 +1104,10 @@ function DF:NewSwitch(parent, container, name, member, width, height, leftText, 
 
 	slider.invert_colors = colorInverted
 
-	slider:SetScript("OnClick", SwitchOnClick)
+	--print(slider:GetObjectType()) --slider
+	----print(slider.widget:GetObjectType()) --button
+	slider.widget:SetScript("OnClick", SwitchOnClick)
+	--slider:SetScript("OnClick", SwitchOnClick)
 
 	slider:SetValue(defaultValue)
 

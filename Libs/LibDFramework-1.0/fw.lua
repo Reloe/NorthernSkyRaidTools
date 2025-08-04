@@ -1,6 +1,6 @@
 
 
-local dversion = 591
+local dversion = 612
 local major, minor = "DetailsFramework-1.0", dversion
 local DF, oldminor = LibStub:NewLibrary(major, minor)
 
@@ -54,6 +54,8 @@ local SPELLBOOK_BANK_PET = Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.P
 local IsPassiveSpell = IsPassiveSpell or C_Spell.IsSpellPassive
 local GetOverrideSpell = C_SpellBook and C_SpellBook.GetOverrideSpell or C_Spell.GetOverrideSpell or GetOverrideSpell
 local HasPetSpells = HasPetSpells or C_SpellBook.HasPetSpells
+local GetSpecialization = GetSpecialization or C_SpecializationInfo.GetSpecialization
+local GetSpecializationInfo = GetSpecializationInfo or C_SpecializationInfo.GetSpecializationInfo
 local spellBookPetEnum = Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Pet or "pet"
 
 SMALL_NUMBER = 0.000001
@@ -144,7 +146,7 @@ end
 ---return if the wow version the player is playing is a classic version of wow
 ---@return boolean
 function DF.IsTimewalkWoW()
-    if (buildInfo < 50000) then        return true    end
+    if (buildInfo < 60000) then        return true    end
 	return false
 end
 
@@ -233,7 +235,7 @@ end
 ---@return boolean
 function DF.IsNonRetailWowWithRetailAPI()
     local _, _, _, buildInfo = GetBuildInfo()
-    if (buildInfo < 50000 and buildInfo >= 30401) or (buildInfo < 20000 and buildInfo >= 11404) then
+    if (buildInfo < 60000 and buildInfo >= 30401) or (buildInfo < 20000 and buildInfo >= 11404) then
         return true
     end
 	return false
@@ -376,44 +378,51 @@ end
 ---@param specId number?
 ---@return string
 function DF.UnitGroupRolesAssigned(unitId, bUseSupport, specId)
-	if (not DF.IsTimewalkWoW()) then --Was function exist check. TBC has function, returns NONE. -Flamanis 5/16/2022
-		local role = UnitGroupRolesAssigned(unitId)
+    local role
 
-		if (specId == 1473 and bUseSupport) then
-			return "SUPPORT"
-		end
+    if (specId == 1473 and bUseSupport) then
+        return "SUPPORT"
+    end
 
-		if (role == "NONE" and UnitIsUnit(unitId, "player")) then
-			local specializationIndex = GetSpecialization() or 0
-			local id, name, description, icon, role, primaryStat = GetSpecializationInfo(specializationIndex)
-			if (id == 1473 and bUseSupport) then
-				return "SUPPORT"
-			end
-			return id and role or "NONE"
-		end
+    if (UnitGroupRolesAssigned) then
+        role = UnitGroupRolesAssigned(unitId)
+    end
 
-		return role
-	else
-		--attempt to guess the role by the player spec
-		local classLoc, className = UnitClass(unitId)
-		if (className == "MAGE" or className == "ROGUE" or className == "HUNTER" or className == "WARLOCK") then
-			return "DAMAGER"
-		end
+    if (role == "NONE") then
+        if (GetSpecialization) then
+            if (UnitIsUnit(unitId, "player")) then
+                local specializationIndex = GetSpecialization() or 0
+                local id, name, description, icon, role, primaryStat = GetSpecializationInfo(specializationIndex)
+                if (id == 1473 and bUseSupport) then
+                    return "SUPPORT"
+                end
+                return id and role or "NONE"
+            end
+        else
+            --attempt to guess the role by the player spec
+            local classLoc, className = UnitClass(unitId)
+            if (className == "MAGE" or className == "ROGUE" or className == "HUNTER" or className == "WARLOCK") then
+                return "DAMAGER"
+            end
 
-		if (Details) then
-			--attempt to get the role from Details! Damage Meter
-			local guid = UnitGUID(unitId)
-			if (guid) then
-				local role = Details.cached_roles[guid]
-				if (role) then
-					return role
-				end
-			end
-		end
+            if (Details) then
+                --attempt to get the role from Details! Damage Meter
+                local guid = UnitGUID(unitId)
+                if (guid) then
+                    role = Details.cached_roles[guid]
+                    if (role) then
+                        return role
+                    end
+                end
+            end
 
-		local role = DF:GetRoleByClassicTalentTree()
-		return role
-	end
+            if (UnitIsUnit(unitId, "player")) then
+                role = DF:GetRoleByClassicTalentTree()
+            end
+        end
+    end
+
+    return role
 end
 
 ---return the specializationid of the player it self
@@ -795,7 +804,8 @@ function DF.table.setfrompath(t, path, value)
 		local lastTable
 		local lastKey
 
-		for key in path:gmatch("[%w_]+") do
+		--for key in path:gmatch("[%w_]+") do
+		for key in path:gmatch("[^%.%[%]]+") do
 			lastTable = t
 			lastKey = key
 
@@ -4086,7 +4096,14 @@ function DF:CreateGlowOverlay(parent, antsColor, glowColor)
 		frameName = string.sub(frameName, string.len(frameName)-49)
 	end
 
-	local glowFrame = CreateFrame("frame", frameName, parent, "ActionBarButtonSpellActivationAlert")
+	local glowFrame
+	if (buildInfo >= 110107) then --24-05-2025: in the 11.1.7 patch, the template used here does not exist anymore, replacement used
+		glowFrame = CreateFrame("frame", frameName, parent, "ActionButtonSpellAlertTemplate")
+	else
+		glowFrame = CreateFrame("frame", frameName, parent, "ActionBarButtonSpellActivationAlert")
+	end
+
+	--local glowFrame = CreateFrame("frame", frameName, parent)
 	glowFrame:HookScript("OnShow", glow_overlay_onshow)
 	glowFrame:HookScript("OnHide", glow_overlay_onhide)
 
@@ -4746,7 +4763,7 @@ function DF:GetCurrentSpecId()
 end
 
 local specs_per_class = {
-	["DEMONHUNTER"] = {577, 581},
+	["DEMONHUNTER"] = {577, 581}, --havoc, vengence
 	["DEATHKNIGHT"] = {250, 251, 252},
 	["WARRIOR"] = {71, 72, 73},
 	["MAGE"] = {62, 63, 64},
