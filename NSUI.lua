@@ -2015,7 +2015,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["MRT"] = value
             end,
             name = "Enable MRT Nicknames",
-            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display. Nicknames in Assignments will still work with this disabled.",
+            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display. Nicknames in Assignments will still work with this disabled as long as you have the character data.",
             nocombat = true
         },
         {

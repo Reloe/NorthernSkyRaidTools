@@ -24,12 +24,12 @@ end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
     local unitname = UnitExists(str) and UnitName(str) or str
-    if NSRT.Settings["Translit"] then
-        unitname = LibTranslit:Transliterate(unitname)
-    end
     -- check if setting for the requesting addon is enabled, if not return the original name.
     -- if no AddonName is given we assume it's from an old WeakAura as they never specified
-    if (not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName]) then
+    if ((not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName])) and AddonName ~= "Note" then
+        if NSRT.Settings["Translit"] then
+            unitname = LibTranslit:Transliterate(unitname)
+        end
         return unitname
     end
 
@@ -62,8 +62,8 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
     end
 end
 
-function NSAPI:GetChar(name, nick) -- Returns Char in Raid from Nickname or Character Name with nick = true
-    name = nick and NSAPI:GetName(name) or name
+function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickname or Character Name with nick = true
+    name = nick and NSAPI:GetName(name, AddonName) or name
     if UnitExists(name) and UnitIsConnected(name) then return name end
     local chars = NSAPI:GetCharacters(name)
     if chars then
@@ -333,10 +333,6 @@ end
 
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
-    fullCharList = {}
-    fullNameList = {}
-    sortedCharList = {}
-    CharList = {}
     if NSRT.Settings["GlobalNickNames"] then
         for fullname, nickname in pairs(NSRT.NickNames) do
             local name, realm = strsplit("-", fullname)
@@ -408,21 +404,22 @@ end
 function NSI:InitNickNames()
 
 
+    for fullname, nickname in pairs(NSRT.NickNames) do
+        local name, realm = strsplit("-", fullname)
+        fullCharList[fullname] = nickname
+        fullNameList[name] = nickname
+        if not sortedCharList[nickname] then
+            sortedCharList[nickname] = {}
+        end
+        sortedCharList[nickname][fullname] = true
+        if not CharList[nickname] then
+            CharList[nickname] = {}
+        end
+        CharList[nickname][name] = true
+    end
+
     if NSRT.Settings["GlobalNickNames"] then
         
-        for fullname, nickname in pairs(NSRT.NickNames) do
-            local name, realm = strsplit("-", fullname)
-            fullCharList[fullname] = nickname
-            fullNameList[name] = nickname
-            if not sortedCharList[nickname] then
-                sortedCharList[nickname] = {}
-            end
-            sortedCharList[nickname][fullname] = true
-            if not CharList[nickname] then
-                CharList[nickname] = {}
-            end
-            CharList[nickname][name] = true
-        end
 
         if not C_AddOns.IsAddOnLoaded("CustomNames") then
             function WeakAuras.GetName(name)
@@ -551,17 +548,17 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
     end
     nickname = WeakAuras.WA_Utf8Sub(nickname, 12)
     NSRT.NickNames[name.."-"..realm] = nickname
+    fullCharList[name.."-"..realm] = nickname
+    fullNameList[name] = nickname
+    if not sortedCharList[nickname] then
+        sortedCharList[nickname] = {}
+    end
+    sortedCharList[nickname][name.."-"..realm] = true
+    if not CharList[nickname] then
+        CharList[nickname] = {}
+    end
+    CharList[nickname][name] = true
     if NSRT.Settings["GlobalNickNames"] then
-        fullCharList[name.."-"..realm] = nickname
-        fullNameList[name] = nickname
-        if not sortedCharList[nickname] then
-            sortedCharList[nickname] = {}
-        end
-        sortedCharList[nickname][name.."-"..realm] = true
-        if not CharList[nickname] then
-            CharList[nickname] = {}
-        end
-        CharList[nickname][name] = true
         NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
     end
 end

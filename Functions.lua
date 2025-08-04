@@ -130,7 +130,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode
         local namelist = {}
         for name in note:gmatch("%S+") do -- finding all strings
-            local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true)
+            local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true, "Note")
             if name ~= charname and UnitExists(charname) and not namelist[name] then
                 namelist[name] = charname
             end
