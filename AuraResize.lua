@@ -50,19 +50,23 @@ function NSAPI:AuraPosition(type, pos, reg)
             local max = anchorData.limit            
             max = #reg <= max and #reg or max
             for i =1, max do
-                local height
-                if reg[i].region.regionType == "text" then
-                    height = NSI.AuraSizeData[type]+space or reg[i].region.height+space                    
+                if reg[i].region.state.ignorepos then -- if there are scenarios I don't want a state to be moved, specifically when using Sparks
+                    pos[i] = {Xoffset, Yoffset}
                 else
-                    height = reg[i].region.height+space
+                    local height
+                    if reg[i].region.regionType == "text" then
+                        height = NSI.AuraSizeData[type]+space or reg[i].region.height+space                    
+                    else
+                        height = reg[i].region.height+space
+                    end
+                    local width = reg[i].region.width+space
+                    pos[i] = {
+                        Xoffset,
+                        Yoffset,
+                    }
+                    Xoffset = Xoffset+((width)*directionX)
+                    Yoffset = Yoffset+((height)*directionY)
                 end
-                local width = reg[i].region.width+space
-                pos[i] = {
-                    Xoffset,
-                    Yoffset,
-                }
-                Xoffset = Xoffset+((width)*directionX)
-                Yoffset = Yoffset+((height)*directionY)
             end
         elseif type == "Circle" then            
             for i, region in ipairs(reg) do
@@ -123,6 +127,7 @@ function NSAPI:AuraResize(type, positions, regions)
         elseif region.regionType == "aurabar" then
             region:SetRegionWidth(auraData.width)
             region:SetRegionHeight(auraData.height)
+            region:SetSparkHeight(auraData.height)
             region.texture = auraData.texture
             region.textureInput = auraData.textureInput
             region.textureSource = auraData.textureSource
