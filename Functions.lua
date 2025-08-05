@@ -236,23 +236,49 @@ function NSI:AutoImport()
             table.insert(NSI.importtable, NSI.RaidWAData.string)
         end
     end
-    if NSRT.Settings["AutoUpdateWA"] and WagoAppCompanionData then
-        for k, v in pairs(WagoAppCompanionData["ids"]) do
-            if NSRT.Settings["UpdateWhitelist"][v] or NSRT.Settings["Debug"] then
-                local data = WagoAppCompanionData["slugs"][v]
-                if data and data.wagoVersion then
+    if NSRT.Settings["AutoUpdateWA"] then
+        local WAdata = WeakAurasCompanionData and WeakAurasCompanionData.WeakAuras and WeakAurasCompanionData.WeakAuras.slugs
+        local WagoData = WagoAppCompanionData 
+        if WAdata then
+            for k, v in pairs(WAdata) do
+                if NSRT.Settings["UpdateWhitelist"][k] then
                     local url = ""
                     for a, b in pairs(WeakAurasSaved.displays) do
-                        if b.wagoID == k then
-                            url = b.url
-                            break
+                        if b.url then
+                            if (b.url:match("^%w+$") or b.url:match("wago%.io/([%w_]+)")) == k then 
+                                url = b.url
+                                break
+                            end
                         end
                     end
                     local version = url and url ~= "" and url:match("%d+$") or 0
                     version = version and tonumber(version) or 0
-                    if version ~= 0 and tonumber(data.wagoVersion) > version and not NSI.imports[url] then
+                    if version ~= 0 and tonumber(v.wagoVersion) > version and not NSI.imports[url] then
                         NSI.imports[url] = true
-                        table.insert(NSI.importtable, WagoAppCompanionData["slugs"][v].encoded)
+                        table.insert(NSI.importtable, v.encoded)
+                    end
+                end
+            end
+        end
+        
+        if wagoData then
+            for k, v in pairs(WagoAppCompanionData["ids"]) do
+                if NSRT.Settings["UpdateWhitelist"][v] or NSRT.Settings["Debug"] then
+                    local data = WagoAppCompanionData["slugs"][v]
+                    if data and data.wagoVersion then
+                        local url = ""
+                        for a, b in pairs(WeakAurasSaved.displays) do
+                            if b.wagoID == k then
+                                url = b.url
+                                break
+                            end
+                        end
+                        local version = url and url ~= "" and url:match("%d+$") or 0
+                        version = version and tonumber(version) or 0
+                        if version ~= 0 and tonumber(data.wagoVersion) > version and not NSI.imports[url] then
+                            NSI.imports[url] = true
+                            table.insert(NSI.importtable, WagoAppCompanionData["slugs"][v].encoded)
+                        end
                     end
                 end
             end
@@ -265,13 +291,8 @@ end
 
 
 function NSI:AddWhitelistURL(url, name)
-    local id = ""
-    if url:match("^%w+$") then
-        id = url
-    else
-        id = url:match("wago%.io/([%w_]+)")
-    end
-    NSRT.Settings["UpdateWhitelist"][id] = {name = name, url = url}
+    local id = url:match("^%w+$") or url:match("wago%.io/([%w_]+)")
+    if id and url and name then NSRT.Settings["UpdateWhitelist"][id] = {name = name, url = url} end
 end
 
 
