@@ -80,6 +80,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local macrocount = 0    
         NSI.NSUI:Init()
         NSI:InitLDB()
+        if NSRT.Settings["Debug"] then
+            print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
+        end
         if WeakAuras.GetData("Northern Sky Externals") then
             print("Please uninstall the |cFF00FFFFNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
