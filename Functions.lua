@@ -218,7 +218,7 @@ function NSI:SpecToName(specid)
     return "\124T" .. icon .. ":10:10:0:0:64:64:4:60:4:60\124t" .. " " .. color:WrapTextInColorCode(specName)
 end
 
-local function ON_WA_UPDATE(updated, name, arg2)
+local function ON_WA_UPDATE()
     table.remove(NSI.importtable, 1)
     if #NSI.importtable > 0 then
         WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
@@ -228,7 +228,25 @@ end
 function NSI:AutoImport()
     NSI.importtable = {}
     NSI.imports = {}
-    if NSRT.Settings["AutoUpdateRaidWA"] then
+    if NSRT.Settings["AutoUpdateRaidWA"] then        
+        if WeakAurasCompanionData then
+            local WeakAurasData = {
+                slugs = {
+                    ["NSManaforge"] = {
+                        name = NSI.RaidWAData.name,
+                        author = "Reloe",
+                        wagoVersion = tostring(NSI.RaidWAData.version),
+                        wagoSemver = NSI.RaidWAData.wagoVersion,
+                        source = "Northern Sky Raid Tools",
+                        versionNote = NSI.RaidWAData.versionNote,
+                        logo = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\NSLogo.blp",
+                        refreshLogo = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\NSLogo.blp",
+                        encoded = NSI.RaidWAData.string
+                    }
+                }
+            }
+            WeakAuras.AddCompanionData(WeakAurasData)
+        end
         local waData = WeakAuras.GetData(NSI.RaidWAData.name)
         local version = waData and waData.url and waData.url:match("%d+$") or 0
         version = version and tonumber(version) or 0
