@@ -201,7 +201,7 @@ local function BuildVersionCheckUI(parent)
     version_check_button:SetTemplate(options_button_template)
     version_check_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -130)
     version_check_button:SetHook("OnShow", function(self)
-        if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
+        if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"]) then
             self:Enable()
         else
             self:Disable()

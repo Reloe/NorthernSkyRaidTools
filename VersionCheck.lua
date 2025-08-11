@@ -1,7 +1,7 @@
 local _, NSI = ... -- Internal namespace
 
 function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Note"
-    if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then
+    if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"]) then
         local unit, ver, duplicate, url = NSI:GetVersionNumber(type, name, unit)
         NSI:VersionResponse({name = UnitName("player"), version = "No Response", duplicate = false})
         NSI:Broadcast("NSI_VERSION_REQUEST", "RAID", type, name)
