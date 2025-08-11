@@ -20,10 +20,11 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "debug" then
         if NSRT.Settings["Debug"] then
             NSRT.Settings["Debug"] = false
+            print("|cFF00FFFFNSRT|r Debug mode is now disabled")
         else
             NSRT.Settings["Debug"] = true
+            print("|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing.")
         end
-        print("|cFF00FFFFNSRT|r Debug mode is now "..(NSRT.Settings["Debug"] and "enabled" or "disabled"))
     elseif msg == "cd" then
         if NSI.NSUI.cooldowns_frame:IsShown() then
             NSI.NSUI.cooldowns_frame:Hide()
