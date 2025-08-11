@@ -93,6 +93,7 @@ function NSAPI:AuraResize(type, positions, regions)
             region:SetRegionHeight(auraData.height)
             region:SetZoom(auraData.zoom)
             region:SetRegionAlpha(auraData.alpha)
+            region:SetHideCountdownNumbers(auraData.cooldownTextDisabled)
             for i, subRegion in ipairs(region.subRegions) do       
                 if subRegion.type == "subborder" then
                     local data = auraData.subRegions[i]
@@ -110,10 +111,12 @@ function NSAPI:AuraResize(type, positions, regions)
                         end
                         subRegion:SetVisible(data.border_visible)
                     end
-                end
-                if subRegion.type == "subtext" then
+                elseif subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
                     if not data then break end 
+                    if subRegion.text_text == "%p" then
+                        subRegion:SetVisible(data.text_visible)
+                    end     
                     if data.type == "subtext" then
                         subRegion:SetXOffset(data.text_anchorXOffset)
                         subRegion:SetYOffset(data.text_anchorYOffset)
@@ -150,8 +153,7 @@ function NSAPI:AuraResize(type, positions, regions)
                         end
                         subRegion:SetVisible(data.border_visible)
                     end
-                end
-                if subRegion.type == "subtext" then
+                elseif subRegion.type == "subtext" then
                     local data = auraData.subRegions[i]
                     if not data then break end
                     if data.type == "subtext" then
