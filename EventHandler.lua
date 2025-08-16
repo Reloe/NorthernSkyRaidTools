@@ -198,7 +198,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if WeakAuras.CurrentEncounter then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
-        if UnitExists(unit) and (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then
+        if UnitExists(unit) then
             local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
             NSI:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
         end
