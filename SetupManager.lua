@@ -219,7 +219,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             local count = 1
             for i, v in ipairs(sides["left"]) do
                 if UnitIsGroupLeader(v.unitid) then -- if this person is the raid leader he needs to be put in the first position of each subgroup
-                    local num = math.floor((i - 1) / 5) * 5 + 1 -- this will result in 1, 6, 11 etc. Basically first position of a subgroup
+                    local num = math.floor((count - 1) / 5) * 5 + 1 -- this will result in 1, 6, 11 etc. Basically first position of a subgroup
                     if units[num] then units[count] = units[num] end -- put whoever was already in the first position of the subgroup into the current position
                     units[num] = v -- put the leader in the first position of the subgroup
                 else
@@ -232,7 +232,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             count = 6            
             for i, v in ipairs(sides["right"]) do
                 if UnitIsGroupLeader(v.unitid) then 
-                    local num = math.floor((i - 1) / 5) * 5 + 1 
+                    local num = math.floor((count - 1) / 5) * 5 + 1 
                     if units[num] then units[count] = units[num] end 
                     units[num] = v 
                 else
@@ -249,7 +249,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             local count = 1
             for i, v in ipairs(sides["left"]) do
                 if UnitIsGroupLeader(v.unitid) then 
-                    local num = math.floor((i - 1) / 5) * 5 + 1 
+                    local num = math.floor((count - 1) / 5) * 5 + 1 
                     if units[num] then units[count] = units[num] end 
                     units[num] = v 
                 else
@@ -263,7 +263,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             end
             for i, v in ipairs(sides["right"]) do
                 if UnitIsGroupLeader(v.unitid) then 
-                    local num = math.floor((i - 1) / 5) * 5 + 1 
+                    local num = math.floor((count - 1) / 5) * 5 + 1 
                     if units[num] then units[count] = units[num] end 
                     units[num] = v 
                 else
@@ -354,7 +354,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                         end
                         break
                     end
-                elseif indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
+                elseif indexgoal and indexlink[index].subgroup and indexlink[indexgoal].subgroup and indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and UnitExists("raid"..indexgoal) and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
                     SwapRaidSubgroup(indexgoal, index)
                     v.processed = true
                     NSI.Groups.Processed = NSI.Groups.Processed+1
