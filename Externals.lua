@@ -37,6 +37,28 @@ local Netherwalk = 196555
 local Cloak = 31224
 local Icebound = 48792
 local Innervate = 29166
+local Dispersion = 47585
+
+NSI.Externals.NameToID = {
+    ["Sac"]        = 6940,
+    ["Bop"]        = 1022,
+    ["Spellbop"]   = 204018,
+    ["Painsup"]    = 33206,
+    ["GS1"]        = 47788,
+    ["GS2"]        = 255312,
+    ["Bark"]       = 102342,
+    ["Cocoon"]     = 116849,
+    ["TD"]         = 357170,
+    ["LoH"]        = 633,
+    ["Bubble"]     = 642,
+    ["Block"]      = 45438,
+    ["Turtle"]     = 186265,
+    ["Netherwalk"] = 196555,
+    ["Cloak"]      = 31224,
+    ["Icebound"]   = 48792,
+    ["Innervate"]  = 29166,
+    ["Dispersion"]  = 47585,
+}
 
 NSI.Externals.prio = {
     -- Life Cocoon, Time Dilation, Pain Suppression, Ironbark, Sac, Guardian  Spiritx2, Lay on Hands
@@ -63,7 +85,17 @@ NSI.Externals.AllSpells = { -- 1 = if a mechanic requests multiple externals thi
     [Cloak] = true, -- Cloak
     [Icebound] = true, -- Icebound Fortitude
     [Innervate] = true, -- Innervate
+    [Dispersion] = true, -- Dispersion
 }
+
+NSI.Externals.Immunes = {
+    [Bubble] = true, -- Divine Shield
+    [Block] = true, -- Ice Block
+    [Turtle] = true, -- Turtle
+    [Netherwalk] = true, -- Netherwalk
+    [Cloak] = true, -- Cloak
+}
+
 
 local callbacks = {
     CooldownListUpdate = function(...) NSI.Externals:UpdateSpell(...) end,
@@ -121,6 +153,29 @@ NSI.Externals.range = {
     [Innervate] = 45, -- Innervate
 }
 
+function NSAPI:SpellReadyCheck(unit, Immunes, spellID, duration)
+    local i = UnitInRaid(unit)
+    if not i then return false end
+    local now = GetTime()
+    local ready = false
+    if spellID then
+        if type(spellID) == "string" then
+            spellID = NSI.Externals.NameToID[spellID]
+        end
+        if spellID and type(spellID == "number") then
+            local key = "raid"..i..spellID
+            ready = NSI.Externals.ready[key] or (duration and NSI.Externals.Cooldown[key] and now+duration > NSI.Externals.Cooldown[key])
+        end
+    end
+    if Immunes and not ready then
+        for k, _ in pairs(NSI.Externals.Immunes) do
+            local key = "raid"..i..k            
+            ready = NSI.Externals.ready[key] or (duration and NSI.Externals.Cooldown[key] and now+duration > NSI.Externals.Cooldown[key])
+            if ready then break end
+        end
+    end
+    return ready
+end
 
 function NSI.Externals:getprio(unit) -- encounter/phase based priority list
     local enc = WeakAuras.CurrentEncounter and WeakAuras.CurrentEncounter.id
@@ -153,29 +208,27 @@ end
 
 function NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
     if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
-    if UnitIsUnit("player", NSI.Externals.target) then
-        if unit and UnitExists(unit) and spellID and cooldownInfo and NSI.Externals.AllSpells[spellID] then
-            if UnitInRaid(unit) then
-                unit = "raid"..UnitInRaid(unit)
-            end
-            if type(spellID) == "table" then
-                for id, info in pairs(spellID) do
-                    NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
-                    NSI.Externals.known[spellID][unit] = true
-                    local k = unit..id
-                    local ready, _, timeleft, charges, _, expires = lib.GetCooldownStatusFromCooldownInfo(cooldownInfo)
-                    NSI.Externals.Cooldown[k] = expires
-                    NSI.Externals.ready[k] = ready or charges >= 1
-                end
-            else
+    if unit and UnitExists(unit) and spellID and cooldownInfo and NSI.Externals.AllSpells[spellID] then
+        if UnitInRaid(unit) then
+            unit = "raid"..UnitInRaid(unit)
+        end
+        if type(spellID) == "table" then
+            for id, info in pairs(spellID) do
                 NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
                 NSI.Externals.known[spellID][unit] = true
-                local k = unit..spellID
+                local k = unit..id
                 local ready, _, timeleft, charges, _, expires = lib.GetCooldownStatusFromCooldownInfo(cooldownInfo)
                 NSI.Externals.Cooldown[k] = expires
                 NSI.Externals.ready[k] = ready or charges >= 1
-                return true
             end
+        else
+            NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
+            NSI.Externals.known[spellID][unit] = true
+            local k = unit..spellID
+            local ready, _, timeleft, charges, _, expires = lib.GetCooldownStatusFromCooldownInfo(cooldownInfo)
+            NSI.Externals.Cooldown[k] = expires
+            NSI.Externals.ready[k] = ready or charges >= 1
+            return true
         end
     end
 end
@@ -410,8 +463,8 @@ function NSI.Externals:Init()
             break
         end
     end
-    if UnitIsUnit("player", NSI.Externals.target) then
-        NSI.Externals:UpdateExternals()
+    NSI.Externals:UpdateExternals()
+    if UnitIsUnit("player", NSI.Externals.target) then        
         local note = NSAPI:GetNote()
         local list = false
         local key = ""
