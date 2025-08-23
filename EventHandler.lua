@@ -47,7 +47,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
             NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
             NSRT.Settings["MRTNoteComparison"] = NSRT.Settings["MRTNoteComparison"] or false
-            NSRT.Settings["TTS"] = NSRT.Settings["TTS"] or true
+            if NSRT.Settings["TTS"] == nil then NSRT.Settings["TTS"] = true end
             NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
             NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 2
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
