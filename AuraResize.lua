@@ -31,13 +31,29 @@ end
 function NSAPI:AuraPosition(type, pos, reg) 
     local auraname = NSI.auranames[type].." Group"
     local anchorData = NSI.groupData[auraname] or WeakAuras.GetData(auraname)
+    local directionX = 0
+    local directionY = 0
+    local space = 0
+    local Xoffset = 0
+    local Yoffset = 0
+    local max = 0
     if anchorData then
-        if type ~= "Circle" then
-            local directionX = (anchorData.grow == "RIGHT" and 1) or (anchorData.grow == "LEFT" and -1) or 0
-            local directionY = (anchorData.grow == "UP" and 1) or (anchorData.grow == "DOWN" and -1) or 0
-            local space = anchorData.space
-            local Xoffset = 0
-            local Yoffset = 0
+        directionX = (anchorData.grow == "RIGHT" and 1) or (anchorData.grow == "LEFT" and -1) or 0
+        directionY = (anchorData.grow == "UP" and 1) or (anchorData.grow == "DOWN" and -1) or 0
+        space = anchorData.space
+        Xoffset = -reg[1].parent.xOffset     
+        Yoffset = -reg[1].parent.yOffset
+        max = anchorData.limit    
+
+    else  -- use default settings if anchors aren't installed        
+        directionX = (type == "Icons" or type == "Big Icons" or type == "Tank Icons" or type == "CoTank Icons") and 1 or 0
+        directionY = (type == "Bars" or type == "Texts" or type == "Assignment" or type == "Overview" or type == "Tank Bars" or type == "Big Bars") and 1 or 0
+        space = -1
+        Xoffset = 0
+        Yoffset = 0
+        max = 4
+    end
+    if type ~= "Circle" then
             -- old code that doesn't seem to be neccesary anymore after changing anchors to individual aura instead of the group but keeping it here just in case
            --[[ if WeakAuras.IsOptionsOpen() then
                 local height = reg[1].region.height
@@ -46,33 +62,35 @@ function NSAPI:AuraPosition(type, pos, reg)
                 end
                 Xoffset = -reg[1].region.width*directionX
                 Yoffset = height*directionY*-1
-            end     ]]                   
-            local max = anchorData.limit            
-            max = #reg <= max and #reg or max
-            for i =1, max do
-                if reg[i].region.state.ignorepos then -- if there are scenarios I don't want a state to be moved, specifically when using Sparks
-                    pos[i] = {Xoffset, Yoffset}
-                else
-                    local height
-                    if reg[i].region.regionType == "text" then
-                        height = NSI.AuraSizeData[type]+space or reg[i].region.height+space                    
+            end     ]]                           
+        max = #reg <= max and #reg or max
+        for i =1, max do
+            if reg[i].region.state.ignorepos then -- if there are scenarios I don't want a state to be moved, specifically when using Sparks
+                pos[i] = {Xoffset, Yoffset}
+            else
+                local height
+                if reg[i].region.regionType == "text" then
+                    if not anchorData then
+                        height = reg[i].data.height
                     else
-                        height = reg[i].region.height+space
-                    end
-                    local width = reg[i].region.width+space
-                    pos[i] = {
-                        Xoffset,
-                        Yoffset,
-                    }
-                    Xoffset = Xoffset+((width)*directionX)
-                    Yoffset = Yoffset+((height)*directionY)
+                        height = NSI.AuraSizeData[type] and NSI.AuraSizeData[type]+space or reg[i].region.height+space         
+                    end           
+                else
+                    height = reg[i].region.height+space
                 end
+                local width = reg[i].region.width+space
+                pos[i] = {
+                    Xoffset-reg[i].data.xOffset,
+                    Yoffset-reg[i].data.yOffset,
+                }
+                Xoffset = Xoffset+((width)*directionX)
+                Yoffset = Yoffset+((height)*directionY)
             end
-        elseif type == "Circle" then            
-            for i, region in ipairs(reg) do
-                pos[i] = {0, 0}
-            end          
         end
+    elseif type == "Circle" then            
+        for i, region in ipairs(reg) do
+            pos[i] = {0, 0}
+        end          
     end
     return pos
 end
