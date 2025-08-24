@@ -71,9 +71,9 @@ function NSAPI:AuraPosition(type, pos, reg)
                 local height
                 if reg[i].region.regionType == "text" then
                     if not anchorData then
-                        height = reg[i].data.height
+                        height = reg[i].region.height
                     else
-                        height = NSI.AuraSizeData[type] and NSI.AuraSizeData[type]+space or reg[i].region.height+space         
+                        height = NSI.AuraSizeData[type] and NSI.AuraSizeData[type]+space or reg[i].region.height+space    
                     end           
                 else
                     height = reg[i].region.height+space
