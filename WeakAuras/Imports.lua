@@ -17,8 +17,8 @@ end
 local version = 65 -- increase this every time we update raid WA string
 NSI.RaidWAData = {
     version = version,
-    versionNote = "Dimensius fixes",
-    name = "add excess Mass Assign Aura for Dimensius, bunch of misc changes for dimensius", -- change this to current season
+    versionNote = "add excess Mass Assign Aura for Dimensius, bunch of misc changes for dimensius",
+    name = "Northern Sky Manaforge Omega", -- change this to current season
     string = WeakAura_Imports.raid_weakaura_manaforge, -- change this to current season
     wagoVersion = "1.0."..(version-1).."-"..version,
 }
