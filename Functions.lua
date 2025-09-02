@@ -224,6 +224,19 @@ local function ON_WA_UPDATE()
         WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
     end
 end
+function NSAPI:GUIDInfo(unit)
+    if UnitExists(unit) then
+        local G = UnitGUID(unit)
+        local unitType, _, _, _, _, npcID, spawnUID = strsplit("-", G)
+        if unitType == "Creature" or unitType == "Vehicle" then
+            local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
+            local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
+            local spawnIndex = bit.rshift(bit.band(tonumber(string.sub(spawnUID, 1, 5), 16), 0xffff8), 3)
+
+            return npcID, spawnIndex
+        end
+    end
+end
 
 function NSI:AutoImport()
     NSI.importtable = {}
