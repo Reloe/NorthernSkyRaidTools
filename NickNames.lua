@@ -151,6 +151,7 @@ function NSI:BlizzardNickNameUpdated()
 end
 
 function NSI:MRTUpdateNoteDisplay(noteFrame)
+    if 1 then return end -- disabling MRT Note nickname replacement for now as it is too laggy
     local note = noteFrame and noteFrame.text and noteFrame.text:GetText()
     if (not note) or (not NSRT.Settings["MRT"]) then return end
     if NSI.RawNoteFrame and note == NSI.RawNoteFrame and NSI.NewNoteFrame then -- don't recalculate nicknames if the note didn't change
