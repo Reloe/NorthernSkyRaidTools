@@ -937,6 +937,7 @@ local function BuildCooldownsEditUI()
             line.offset = value
             parent:MasterRefresh()
         end)
+        line.offsetSlider:SetTooltip("When you use the cooldown relative to the start of the encounter.")
 
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
