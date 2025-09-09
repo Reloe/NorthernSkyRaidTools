@@ -2248,6 +2248,22 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true,
         },
+        {
+            type = "label",
+            get = function() return "Other Misc Auras" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "button",
+            name = "Manaforge Pace WA",
+            desc = "Import Manaforge Omega Pace WA",            
+            func = function(self)
+                ImportWeakAura("pace_weakaura_manaforge")
+            end,
+            nocombat = true,
+            spacement = true,
+        },
 
         {
             type = "breakline"
