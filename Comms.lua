@@ -80,7 +80,7 @@ end
 local function ReceiveComm(text, chan, sender, whisper, internal)
     local argTable = {strsplit(del, text)}
     local event = argTable[1]
-    if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and allowedcomms[event]) then -- block addon msg's from outside the raid, only exception being a the guild nickname comms. 
+    if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and allowedcomms[event]) then -- block addon msg's from outside the raid, only exception being the guild nickname comms. 
         local formattedArgTable = {}
         table.remove(argTable, 1)
         if whisper then

@@ -9,6 +9,7 @@ f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("CHALLENGE_MODE_START")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -73,6 +74,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
         NSI:AutoImport()
+        NSI.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
     elseif e == "PLAYER_LOGIN" and wowevent then
         local pafound = false
         local extfound = false
@@ -253,7 +255,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSAPI.HasNSRT[unit] = true
     elseif e == "NSAPI_SPEC_REQUEST" then
         local specid = GetSpecializationInfo(GetSpecialization())
-        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)    
+        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)            
+    elseif e == "CHALLENGE_MODE_START" and (wowevent or NSRT.Settings["Debug"]) then
+        NSI.Externals:Init(true)
     elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSI.specs = {}
         NSAPI.HasNSRT = {}
@@ -302,7 +306,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             formattedrange = range
         end
         table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
-        if NSI:Difficultycheck(true, 14) and not dead then -- block incoming requests from dead people
+        if (C_ChallengeMode.IsChallengeModeActive() or NSI:Difficultycheck(true, 14)) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, key, num, req, range, false, expirationTime)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
@@ -319,7 +323,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             formattedrange = range
         end
         table.insert(NSI.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
-        if NSI:Difficultycheck(true, 14) and not dead then -- block incoming requests from dead people
+        if (C_ChallengeMode.IsChallengeModeActive() or NSI:Difficultycheck(true, 14)) and not dead then -- block incoming requests from dead people
             NSI.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
         end
     elseif e == "NS_EXTERNAL_YES" and ... then

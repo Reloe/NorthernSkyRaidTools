@@ -207,19 +207,21 @@ end
 
 
 function NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
-    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
-    if unit and UnitExists(unit) and spellID and cooldownInfo and NSI.Externals.AllSpells[spellID] then
+    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"] or C_ChallengeMode.IsChallengeModeActive()) then return end
+    if unit and UnitExists(unit) and spellID and cooldownInfo and (NSI.Externals.AllSpells[spellID] or type(spellID) == "table") then
         if UnitInRaid(unit) then
             unit = "raid"..UnitInRaid(unit)
         end
         if type(spellID) == "table" then
             for id, info in pairs(spellID) do
-                NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
-                NSI.Externals.known[spellID][unit] = true
-                local k = unit..id
-                local ready, _, timeleft, charges, _, expires = lib.GetCooldownStatusFromCooldownInfo(cooldownInfo)
-                NSI.Externals.Cooldown[k] = expires
-                NSI.Externals.ready[k] = ready or charges >= 1
+                if NSI.Externals.AllSpells[id] then
+                    NSI.Externals.known[id] = NSI.Externals.known[id] or {}
+                    NSI.Externals.known[id][unit] = true
+                    local k = unit..id
+                    local ready, _, timeleft, charges, _, expires = lib.GetCooldownStatusFromCooldownInfo(info)
+                    NSI.Externals.Cooldown[k] = expires
+                    NSI.Externals.ready[k] = ready or charges >= 1
+                end
             end
         else
             NSI.Externals.known[spellID] = NSI.Externals.known[spellID] or {}
@@ -234,7 +236,7 @@ function NSI.Externals:UpdateSpell(unit, spellID, cooldownInfo)
 end
 
 function NSI.Externals:UpdateExternals()
-    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"]) then return end
+    if not (WeakAuras.CurrentEncounter or NSRT.Settings["Debug"] or C_ChallengeMode.IsChallengeModeActive()) then return end
     local allUnitsCooldown = lib.GetAllUnitsCooldown()
     NSI.Externals.known = {}
     NSI.Externals.ready = {}
@@ -254,7 +256,7 @@ end
 -- /run NSAPI:ExternalRequest()
 function NSAPI:ExternalRequest(key, num) -- optional arguments
     local now = GetTime()
-    if NSI:EncounterCheck() and ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
+    if (C_ChallengeMode.IsChallengeModeActive() or NSI:EncounterCheck()) and ((not NSI.Externals.lastrequest) or (NSI.Externals.lastrequest < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest = now
         key = key or "default"
         num = num or 1
@@ -262,23 +264,29 @@ function NSAPI:ExternalRequest(key, num) -- optional arguments
 
         for u in NSI:IterateGroupMembers() do
             local r = select(2, WeakAuras.GetRange(u)) or 60
-            range[UnitGUID(u)] = {range = r, name = NSAPI:Shorten(u, 12)}
+            range[UnitGUID(u)] = {range = r, name = NSAPI:Shorten(u, 12)}            
+            if (NSI.Externals.target == "") and (UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u))) then -- should fix reload/dc issues
+                NSI.Externals.target = u
+            end
         end
-        NSAPI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", NSI.Externals.target, key, num, true, range, 0)    -- request external
+        NSI:Broadcast("NS_EXTERNAL_REQ", "WHISPER", UnitName(NSI.Externals.target), key, num, true, range, 0)    -- request external
     end
 end
 
 -- /run NSAPI:Innervate:Request()
 function NSAPI:InnervateRequest()    
     local now = GetTime()
-    if NSI:EncounterCheck() and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
+    if (C_ChallengeMode.IsChallengeModeActive() or NSI:EncounterCheck()) and ((not NSI.Externals.lastrequest2) or (NSI.Externals.lastrequest2 < now - 4)) and not NSAPI:DeathCheck("player") then -- spam, encounter and death protection
         NSI.Externals.lastrequest2 = now
         local range = {}
         for u in NSI:IterateGroupMembers() do
             local r = select(2, WeakAuras.GetRange(u)) or 60
             range[UnitGUID(u)] = {range = r, name = NSAPI:Shorten(u, 12)}
+            if (NSI.Externals.target == "") and (UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u))) then -- should fix reload/dc issues
+                NSI.Externals.target = u
+            end
         end
-        NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", NSI.Externals.target, key, num, true, range, 0)    -- request external
+        NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", UnitName(NSI.Externals.target), key, num, true, range, 0)    -- request external
     end
 end
 
@@ -291,7 +299,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate, expirati
     local sender = realm and name.."-"..realm or name
     local found = 0
     local count = 0
-    local duration = (NSI.Externals.OnlyReady[key] and 0) or expirationTime-now-1
+    local duration = (NSI.Externals.OnlyReady and NSI.Externals.OnlyReady[key] and 0) or expirationTime-now-1
     NSI.Externals.assigned = {}
     if innervate then
         for unit, _ in pairs(NSI.Externals.known[Innervate]) do
@@ -312,7 +320,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate, expirati
             if assigned then count = count+1 end
             if count >= 1 then return end
         end        
-        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "Innervate")   
+        NSI:Broadcast("NS_EXTERNAL_NO", "WHISPER", UnitName(unitID), "Innervate")   
         return
     end
     if key == "default" then
@@ -378,8 +386,8 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate, expirati
 
     -- continue with default prio if nothing was found yet
     if not NSI.Externals.prio[key] then key = "default" end -- if no specific prio was found, use default prio
-    if NSI.Externals.SkipDefault[key] then
-        NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")      
+    if NSI.Externals.SkipDefault and NSI.Externals.SkipDefault[key] then
+        NSI:Broadcast("NS_EXTERNAL_NO", "WHISPER", UnitName(unitID), "nilcheck")      
         return
     end
     for i, spellID in ipairs(NSI.Externals.prio[key]) do -- go through spellid's in prio order
@@ -410,7 +418,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate, expirati
         end
     end
     -- No External Left
-    NSAPI:Broadcast("NS_EXTERNAL_NO", "WHISPER", unitID, "nilcheck")   
+    NSI:Broadcast("NS_EXTERNAL_NO", "WHISPER", UnitName(unitID), "nilcheck")   
 end
 
 function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellID, sender, allowCD) -- unitID = requester, unit = unit that shall give the external
@@ -442,9 +450,9 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     then
         table.insert(NSI.AssignedExternals, {automated = not req, receiver = NSAPI:Shorten(unitID), giver = NSAPI:Shorten(unit), spellID = spellID, key = key, time = Round(now-NSI.Externals.pull)}) -- for debug printing later
         NSI.Externals.requested[k] = now -- set spell to requested
-        NSAPI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data
-        NSAPI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", unit, sender, spellID) -- send External Alert
-        NSAPI:Broadcast("NS_EXTERNAL_YES", "WHISPER", unitID, giver, spellID) -- send Confirmation
+        NSI:Broadcast("NS_EXTERNAL_LIST", "RAID", unit, sender, spellID) -- send List Data  
+        NSI:Broadcast("NS_EXTERNAL_GIVE", "WHISPER", UnitName(unit), sender, spellID) -- send External Alert
+        NSI:Broadcast("NS_EXTERNAL_YES", "WHISPER", UnitName(unitID), giver, spellID) -- send Confirmation
         if not NSI.Externals.stacks[spellID] then
             NSI.Externals.assigned[spellID] = true
         end
@@ -454,8 +462,8 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, unit, spellI
     end
 end
 
-function NSI.Externals:Init()
-    NSI.Externals.target = "raid1"
+function NSI.Externals:Init(group)
+    if not group then NSI.Externals.target = "raid1" end
     NSI.Externals.pull = GetTime()
     for u in NSI:IterateGroupMembers() do
         if UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u)) then
