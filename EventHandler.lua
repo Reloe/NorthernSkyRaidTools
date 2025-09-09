@@ -192,15 +192,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_VERSION_CHECK" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
-        local unit, ver, duplicate = ...        
-        NSI:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate})
+        local unit, ver, duplicate, ignoreCheck = ...        
+        NSI:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) then
-            local u, ver, duplicate = NSI:GetVersionNumber(type, name, unit)
-            NSI:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate)
+            local u, ver, duplicate, _, ignoreCheck = NSI:GetVersionNumber(type, name, unit)
+            NSI:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate, ignoreCheck)
         end
     elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end

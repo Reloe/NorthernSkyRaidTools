@@ -2,17 +2,17 @@ local _, NSI = ... -- Internal namespace
 
 function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Note"
     if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"]) then
-        local unit, ver, duplicate, url = NSI:GetVersionNumber(type, name, unit)
-        NSI:VersionResponse({name = UnitName("player"), version = "No Response", duplicate = false})
+        local unit, ver, duplicate, url, ignore = NSI:GetVersionNumber(type, name, "player")
+        NSI:VersionResponse({name = UnitName("player"), version = "No Response", duplicate = duplicate, ignoreCheck = ignore})
         NSI:Broadcast("NSI_VERSION_REQUEST", "RAID", type, name)
         for unit in NSI:IterateGroupMembers() do
             if UnitInRaid(unit) and not UnitIsUnit("player", unit) then
                 local index = UnitInRaid(unit) 
                 local response = select(8, GetRaidRosterInfo(index)) and "No Response" or "Offline"
-                NSI:VersionResponse({name = UnitName(unit), version = response, duplicate = false})
+                NSI:VersionResponse({name = UnitName(unit), version = response, duplicate = false, ignoreCheck = false})
             end
         end
-        return {name = UnitName("player"), version = ver, duplicate = duplicate}, url
+        return {name = UnitName("player"), version = ver, duplicate = duplicate, ignoreCheck = ignore}, url
     end
 end
 function NSI:VersionResponse(data)
@@ -20,13 +20,20 @@ function NSI:VersionResponse(data)
 end
 
 
-function NSI:GetVersionNumber(type, name, unit)    
+function NSI:GetVersionNumber(type, name, unit)
+    local ignoreCheck = false
+    for u in NSI:IterateGroupMembers() do
+       if C_FriendList.IsIgnored(u) then
+            ignoreCheck = true
+            break
+       end 
+    end
     if type == "Addon" then
         local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "Addon Missing"
         if ver ~= "Addon Missing" then
             ver = C_AddOns.IsAddOnLoaded(name) and ver or "Addon not enabled"
         end
-        return unit, ver, false, ""
+        return unit, ver, false, "", ignoreCheck
     elseif type == "WA" then
         local waData = WeakAuras.GetData(name)
         local ver = "WA Missing"
@@ -57,7 +64,7 @@ function NSI:GetVersionNumber(type, name, unit)
                 if duplicate then break end
             end
         end
-        return unit, ver, duplicate, url
+        return unit, ver, duplicate, url, ignoreCheck
     elseif type == "Note" then
         local note = NSAPI:GetNote()
         local hashed
@@ -67,6 +74,6 @@ function NSI:GetVersionNumber(type, name, unit)
             hashed = C_AddOns.GetAddOnMetadata("MRT", "Version") and "MRT not enabled" or "MRT not installed"
         end
     
-        return unit, hashed, false, ""
+        return unit, hashed, false, "", ignoreCheck
     end
 end

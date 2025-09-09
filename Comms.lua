@@ -99,7 +99,7 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
                 argValue = tonumber(argValue)
                 tonext = nil
             elseif argType == "boolean" then
-                argValue = argValue == "true"
+                argValue = argValue == "true" or false
                 tonext = nil
             elseif argType == "table" then
                 argValue = LibDeflate:DecodeForWoWAddonChannel(argValue)
@@ -112,7 +112,7 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
                 end
                 tonext = nil
             end
-            if argValue and argType then
+            if (argValue or argValue == false) and argType then
                 if argValue == "" then
                     table.insert(formattedArgTable, false)
                 else

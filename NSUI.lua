@@ -217,6 +217,9 @@ local function BuildVersionCheckUI(parent)
     local duplicate_header = DF:CreateLabel(parent, "Duplicate", 11)
     duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
+    local ignore_header = DF:CreateLabel(parent, "Ignore Check", 11)
+    ignore_header:SetPoint("LEFT", duplicate_header, "RIGHT", 50, 0)
+
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
@@ -227,11 +230,13 @@ local function BuildVersionCheckUI(parent)
                 local name = thisData.name
                 local version = thisData.version
                 local duplicate = thisData.duplicate
+                local ignore = thisData.ignoreCheck
                 local nickname = NSAPI:Shorten(name)
 
                 line.name:SetText(nickname)
                 line.version:SetText(version)
                 line.duplicates:SetText(duplicate and "Yes" or "No")
+                line.ignorelist:SetText(ignore and "Yes" or "No")
 
                 -- version number color                
                 if version and version == "Offline" then
@@ -248,11 +253,17 @@ local function BuildVersionCheckUI(parent)
                 else
                     line.duplicates:SetTextColor(0, 1, 0, 1)
                 end
+
+                if ignore then
+                    line.ignorelist:SetTextColor(1, 0, 0, 1)
+                else
+                    line.ignorelist:SetTextColor(0, 1, 0, 1)
+                end
                 
                 line:SetScript("OnClick", function(self)
                     local message = ""
                     local now = GetTime()
-                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and not thisData.duplicate) or thisData.version == "No Response" then return end                    
+                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.duplicate) and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end                    
                     NSI.VersionCheckData.lastclick[name] = now
                     if NSI.VersionCheckData.type == "WA" then
                         local url = NSI.VersionCheckData.url ~= "" and NSI.VersionCheckData.url or NSI.VersionCheckData.name
@@ -264,7 +275,7 @@ local function BuildVersionCheckUI(parent)
                             else 
                                 message = message.." Please also delete the duplicate WeakAura"
                             end
-                        end
+                        end                        
                     elseif NSI.VersionCheckData.type == "Addon" then
                         if thisData.version == "Addon not enabled" then message = "Please enable the Addon: '"..NSI.VersionCheckData.name.."'"
                         elseif thisData.version == "Addon Missing" then message = "Please install the Addon: '"..NSI.VersionCheckData.name.."'"
@@ -273,6 +284,13 @@ local function BuildVersionCheckUI(parent)
                         if thisData.version == "MRT not enabled" then message = "Please enable MRT"
                         elseif thisData.version == "MRT not installed" then message = "Please install MRT"
                         else return end
+                    end
+                    if thisData.ignoreCheck then
+                        if message == "" then 
+                            message = "You have someone from the raid on your ignore list. Please remove them fron the list."
+                        else 
+                            message = message.." You also have someone from the raid on your ignore list."
+                        end
                     end
                     NSI.VersionCheckData.lastclick[name] = GetTime()
                     SendChatMessage(message, "WHISPER", nil, name)
@@ -300,15 +318,23 @@ local function BuildVersionCheckUI(parent)
         version:SetWidth(100)
         version:SetJustifyH("LEFT")
         version:SetFont(expressway, 12, "OUTLINE")
-        version:SetPoint("LEFT", name, "RIGHT", 110, 0)
+        version:SetPoint("LEFT", name, "RIGHT", 115, 0)
         line.version = version
 
         local duplicates = line:CreateFontString(nil, "OVERLAY")
         duplicates:SetWidth(100)
         duplicates:SetJustifyH("LEFT")
         duplicates:SetFont(expressway, 12, "OUTLINE")
-        duplicates:SetPoint("LEFT", version, "RIGHT", 30, 0)
+        duplicates:SetPoint("LEFT", version, "RIGHT", 45, 0)
         line.duplicates = duplicates
+
+        
+        local ignorelist = line:CreateFontString(nil, "OVERLAY")
+        ignorelist:SetWidth(100)
+        ignorelist:SetJustifyH("LEFT")
+        ignorelist:SetFont(expressway, 12, "OUTLINE")
+        ignorelist:SetPoint("LEFT", duplicates, "RIGHT", 5, 0)
+        line.ignorelist = ignorelist
 
         return line
     end
@@ -351,9 +377,8 @@ local function BuildVersionCheckUI(parent)
     version_check_scrollbox.name_map = {}
     local addData = function(self, data, url)
         local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
-
         if self.name_map[data.name] then
-            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and not data.duplicate then
+            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and (not data.duplicate) and (not data.ignoreCheck) then
                 table.remove(currentData, self.name_map[data.name])
                 for k, v in pairs(self.name_map) do
                     if v > self.name_map[data.name] then
