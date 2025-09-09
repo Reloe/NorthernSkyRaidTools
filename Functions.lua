@@ -105,6 +105,8 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         local newnote = ""
         local list = false
         note = strtrim(note)
+        note = note:gsub("||r", "") -- clean colorcode
+        note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode        
         for line in note:gmatch('[^\r\n]+') do
             line = strtrim(line)
             if line == "nsdisable" then -- global disable all NS Auras for everyone in the raid
@@ -126,9 +128,28 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         end
         if disablecheck then return "" end -- if all we care about is checking if assignments are disabled then just return an empty string early.
         note = newnote
-        note = note:gsub("||r", "") -- clean colorcode
-        note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode
         local namelist = {}
+        local groupsdone = {}
+        for group in note:gmatch("[gG]roup(%d+)") do
+            local num = tonumber(group)
+            local names = ""
+            if num and num >=1 and num <= 8 and not groupsdone[num] then
+                groupsdone[num] = true
+                for i=1, 40 do
+                    local name, _, subgroup = GetRaidRosterInfo(i)
+                    if name and subgroup == num then
+                        if names == "" then
+                            names = name
+                        else
+                            names = names.." "..name
+                        end
+                    end
+                end
+            end
+            if names ~= "" then
+                note = note:gsub("[gG]roup"..group, names)
+            end
+        end
         for name in note:gmatch("%S+") do -- finding all strings
             local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true, "Note")
             if name ~= charname and UnitExists(charname) and not namelist[name] then
@@ -137,7 +158,7 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         end
         for nickname, charname in pairs(namelist) do
             note = note:gsub("(%f[%w])"..nickname.."(%f[%W])", "%1"..charname.."%2")
-        end
+        end        
         NSI.Note = note
     end
     NSAPI.disable = NSI.notedisable or NSI.persnotedisable
