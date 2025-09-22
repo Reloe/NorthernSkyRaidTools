@@ -99,8 +99,8 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         end
     end
     local note = _G.VMRT.Note.Text1 or ""
-    if (not NSI.RawNote) or NSI.RawNote ~= note or (NSAPI.disable and not disable) then -- only do this if the note has changed or not been checked at all this session
-        NSI.RawNote = note
+    if (not NSI.RawNote) or NSI.RawNote ~= note then -- only do this if the note has changed or not been checked at all this session
+        NSAPI.UseLiquid = false
         NSI.notedisable = false
         local newnote = ""
         local list = false
@@ -109,16 +109,16 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode        
         for line in note:gmatch('[^\r\n]+') do
             line = strtrim(line)
-            if line == "nsdisable" then -- global disable all NS Auras for everyone in the raid
+            if strlower(line) == "nsuseliquid" then
+                NSAPI.UseLiquid = true
+            elseif strlower(line) == "nsdisable" then -- global disable all NS Assign Auras for everyone in the raid
                 NSAPI.disable = true
                 NSI.notedisable = true
-                if disablecheck then return "" end -- end early if we found the only thing we care about
-                -- would like to just return "" in all cases here but then interrupt aura stops working with nsdisable.
-            end
+                if disablecheck then return "" end -- end early if we found the only thing we care about would like to just return "" in all cases here but then interrupt aura stops working with nsdisable.      
             --check for start/end of the name list
-            if string.match(line, "ns.*start") or line == "intstart" then -- match any string that starts with "ns" and ends with "start" as well as the interrupt WA
+            elseif string.match(line, "ns.*start") or strlower(line) == "intstart" then -- match any string that starts with "ns" and ends with "start" as well as the interrupt WA
                 list = true
-            elseif string.match(line, "ns.*end") or line == "intend" then
+            elseif string.match(line, "ns.*end") or strlower(line) == "intend" then
                 list = false
                 newnote = newnote..line.."\n"
             end
@@ -160,7 +160,8 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
             note = note:gsub("(%f[%w])"..nickname.."(%f[%W])", "%1"..charname.."%2")
         end        
         NSI.Note = note
-    end
+    end    
+    NSI.RawNote = _G.VMRT.Note.Text1 or ""
     NSAPI.disable = NSI.notedisable or NSI.persnotedisable
     NSI.Note = NSI.Note or ""
     return NSI.Note
