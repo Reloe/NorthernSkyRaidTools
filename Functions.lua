@@ -167,10 +167,16 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
     return NSI.Note
 end
 
-function NSI:UnitAura(unit, spellID) -- simplify aura checking for myself
-    if unit and UnitExists(unit) and spellID then
-        local spell = C_Spell.GetSpellInfo(spellID)
-        return spell and C_UnitAuras.GetAuraDataBySpellName(unit, spell.name)
+function NSAPI:UnitAura(unit, spell) -- simplify aura checking for myself
+    if unit and UnitExists(unit) and spell then
+        if type(spell) == "string" or not C_UnitAuras.GetUnitAuraBySpellID then
+            local spelltable = C_Spell.GetSpellInfo(spell)
+            return spelltable and C_UnitAuras.GetAuraDataBySpellName(unit, spelltable.name)
+        elseif type(spell) == "number" then 
+            return C_UnitAuras.GetUnitAuraBySpellID(unit, spell)
+        else
+            return false
+        end
     end
 end
 
@@ -186,7 +192,7 @@ end
 -- this one is public as I want to use it in WeakAuras as well
 function NSAPI:DeathCheck(unit)
     if unit and UnitExists(unit) then
-        return (UnitIsDead(unit) and not UnitIsFeignDeath(unit)) or NSI:UnitAura(unit, 27827)
+        return (UnitIsDead(unit) and not UnitIsFeignDeath(unit)) or NSAPI:UnitAura(unit, 27827)
     end
 end
 

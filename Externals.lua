@@ -210,9 +210,9 @@ end
 function NSI.Externals:extracheck(unit, unitID, key, spellID) -- additional check if the person can actually give the external, like checking if they are in range / on the same side / stunned
     -- unit = giver, unitID = receiver, key = prioname
     local enc = WeakAuras.CurrentEncounter and WeakAuras.CurrentEncounter.id
-    if key == "Kyveza" and spellID == Bop and NSI:UnitAura(unitID, 437343) then -- do not assign BoP if the person already has queensbane because at that point it was requested too late
+    if key == "Kyveza" and spellID == Bop and NSAPI:UnitAura(unitID, 437343) then -- do not assign BoP if the person already has queensbane because at that point it was requested too late
         return false
-    elseif key == "Condemnation" and spellID == sac and NSI:UnitAura(unitID, 438974) then -- do not assign sac if that pally also has the mechanic
+    elseif key == "Condemnation" and spellID == sac and NSAPI:UnitAura(unitID, 438974) then -- do not assign sac if that pally also has the mechanic
         return false
     else
         return true -- need to return false if it should not be assigned
@@ -350,7 +350,7 @@ function NSI.Externals:Request(unitID, key, num, req, range, innervate, expirati
     end
     if NSI.Externals.check[key] then -- see if an immunity or other assigned self cd's are available first
         for i, spellID in ipairs(NSI.Externals.check[key]) do
-            if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not NSI:UnitAura(unitID, 25771) then -- check forebearance
+            if (spellID ~= 1022 and spellID ~= 204018 and spellID ~= 633 and spellID ~= 204018) or not NSAPI:UnitAura(unitID, 25771) then -- check forebearance
                 local check = unitID..spellID
                 if NSI.Externals.ready[check] then return end
             end
@@ -466,7 +466,7 @@ function NSI.Externals:AssignExternal(unitID, key, num, req, range, G, spellID, 
             and not (spellID == Sac and yourself) -- no self sac
             and not (UnitIsDead(unit)) -- only doing normal death check instead of also checking for angel form because angel form can still give the external
             and not (yourself and req) -- don't assign own external if it was specifically requested, only on automation
-            and not (NSI:UnitAura(unitID, 25771) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
+            and not (NSAPI:UnitAura(unitID, 25771) and (spellID == Bop or spellID == Spellbop or spellID == LoH)) --Forebearance check
             and not blocked -- spell isn't specifically blocked for this key
             and not NSI.Externals.assigned[spellID] -- same spellid isn't already assigned unless it stacks
     then
