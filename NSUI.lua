@@ -1702,14 +1702,14 @@ function NSUI:Init()
         {
             type = "range",
             name = "TTS Voice",
-            desc = "Voice to use for TTS",
+            desc = "Voice to use for TTS. Most users will only have ~2 different voices. Higher numbers exist for Mac users or those that have installed a lot of voicepacks",
             get = function() return NSRT.Settings["TTSVoice"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.general["TTS_VOICE"] = true
                 NSRT.Settings["TTSVoice"] = value 
             end,
             min = 1,
-            max = 5,
+            max = 30,
         },
         {
             type = "range",
