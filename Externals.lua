@@ -151,12 +151,14 @@ NSI.Externals.range = {
     [Innervate] = 45, -- Innervate
 }
 
-function NSAPI:AddExternal(spellID, range, immune, stacks, addtoprio, UpdateAll)
+function NSAPI:AddExternal(spellID, range, immune, stacks, addtoprio, UpdateAll, name) -- allows adding spells to be tracked. For example on soul hunters when you'd want to check for Dispersion.
+    if type(spellID) == "string" then spellID = tonumber(spellID) end
     if type(spellID) == "number" then
         NSI.Externals.AllSpells[spellID] = true
         NSI.Externals.range[spellID] = range or 40
         NSI.Externals.Immunes[spellID] = immune
         NSI.Externals.stacks[spellID] = stacks
+        if name then NSI.Externals.NameToID[name] = spellID end
         if addtoprio then
             if type(addtoprio) == "string" and NSI.Externals.prio[addtoprio] then
                 table.insert(NSI.Externals.prio[addtoprio], spellID)
@@ -185,10 +187,12 @@ function NSAPI:SpellReadyCheck(unit, Immunes, spellID, duration)
         end
     end
     if Immunes and not ready then
-        for k, _ in pairs(NSI.Externals.Immunes) do
-            local key = UnitGUID(unit)..k            
-            ready = NSI.Externals.ready[key] or (duration and NSI.Externals.Cooldown[key] and now+duration > NSI.Externals.Cooldown[key])
-            if ready then break end
+        for k, v in pairs(NSI.Externals.Immunes) do
+            if v then
+                local key = UnitGUID(unit)..k            
+                ready = NSI.Externals.ready[key] or (duration and NSI.Externals.Cooldown[key] and now+duration > NSI.Externals.Cooldown[key])
+                if ready then break end
+            end
         end
     end
     return ready
@@ -298,13 +302,13 @@ function NSAPI:InnervateRequest()
         NSI.Externals.lastrequest2 = now
         local range = {}
         for u in NSI:IterateGroupMembers() do
-            local r = select(2, WeakAuras.GetRange(u)) or 60
+            local r = select(2, WeakAuras.GetRange(u)) or 25 -- function fails for a few classes while in combat
             range[UnitGUID(u)] = {range = r, name = NSAPI:Shorten(u, 12)}
             if (NSI.Externals.target == "") and (UnitIsVisible(u) and (UnitIsGroupLeader(u) or UnitIsGroupAssistant(u))) then -- should fix reload/dc issues
                 NSI.Externals.target = u
             end
         end
-        NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", UnitName(NSI.Externals.target), key, num, true, range, 0)    -- request external
+        NSI:Broadcast("NS_INNERVATE_REQ", "WHISPER", UnitName(NSI.Externals.target), key, num, true, range, 0) -- request external
     end
 end
 
