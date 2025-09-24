@@ -33,10 +33,6 @@ LSM:Register("sound","|cFF4BAAC8Break|r", [[Interface\Addons\NorthernSkyRaidTool
 LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars
 LSM:Register("statusbar","Atrocity", [[Interface\Addons\NorthernSkyRaidTools\Media\StatusBars\Atrocity]])
--- Open WA Options
-function NSMedia.OpenWA()
-    WeakAuras.OpenOptions()
-end
 
 -- Memes for Break-Timer
 NSMedia.BreakMemes = {
@@ -50,25 +46,4 @@ NSMedia.BreakMemes = {
     {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ponkyBanane.blp]], 256, 174},
     {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ponkyDespair.blp]], 256, 166},
     {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\docPog.blp]], 195, 211},
-}
-
--- Memes for WA updating
-NSMedia.UpdateMemes = {
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ZarugarPeace.blp]], 256, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ZarugarChad.blp]], 256, 147},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\TherzBayern.blp]], 256, 24},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\senfisaur.blp]], 256, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\schinky.blp]], 256, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\TizaxHose.blp]], 202, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ponkyBanane.blp]], 256, 174},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ponkyDespair.blp]], 256, 166},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\docPog.blp]], 195, 211},
-}
-
-NSMedia.EncounterPics = {
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Spider.blp]], 256, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Worm.blp]], 256, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Parasite.blp]], 256, 256},
-    {[[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\OvinaxBG.blp]], 256, 256},
-
 }

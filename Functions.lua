@@ -182,6 +182,16 @@ function NSAPI:UnitAura(unit, spell) -- simplify aura checking for myself
     end
 end
 
+function NSAPI:TTSCountdown(num)
+    for i= num, 1, -1 do
+        if i == num then 
+            NSAPI:TTS(i)
+        else
+            C_Timer.After(num-i, function() NSAPI:TTS(i) end)
+        end
+    end
+end
+
 function NSI:Difficultycheck(encountercheck, num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
     return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or NSI:EncounterCheck()))
@@ -211,18 +221,24 @@ function NSAPI:GetHash(text)
     return math.fmod(counter, 4294967291) -- 2^32 - 5: Prime (and different from the prime in the loop)
 end
 
-
+local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
   if NSRT.Settings["TTS"] then
-      local num = voice or NSRT.Settings["TTSVoice"]
+    sound = tostring(sound)
+    local handle = select(2, PlaySoundFile(path..sound..".ogg", "Master"))  
+    if handle then
+        PlaySoundFile(path..sound..".ogg", "Master")
+    else
+        local num = voice or NSRT.Settings["TTSVoice"]
         C_VoiceChat.SpeakText(
-                num,
-                sound,
-                Enum.VoiceTtsDestination.LocalPlayback,
-                C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-                NSRT.Settings["TTSVolume"]
+            num,
+            sound,
+            Enum.VoiceTtsDestination.LocalPlayback,
+            C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
+            NSRT.Settings["TTSVolume"]
         )
-     end
+        end
+    end
 end
 
 function NSAPI:PrivateAura()
