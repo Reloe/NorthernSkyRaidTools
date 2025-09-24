@@ -99,7 +99,9 @@ function NSAPI:GetNote(disablecheck) -- Get rid of extra spaces and color coding
         end
     end
     local note = _G.VMRT.Note.Text1 or ""
-    if (not NSI.RawNote) or NSI.RawNote ~= note or NSAPI.disable then -- only do this if the note has changed or not been checked at all this session or if the global disable is currently true
+    local now = GetTime()
+    if (not NSI.RawNote) or NSI.RawNote ~= note or NSAPI.disable or ((not NSI.LastNote) or now > NSI.LastNote+2) then
+        NSI.LastNote = now
         NSAPI.UseLiquid = false
         NSI.notedisable = false
         local newnote = ""
