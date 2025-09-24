@@ -405,6 +405,8 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if not NSI.LastGroupSort or NSI.LastGroupSort < now - 5 then
             NSI.LastGroupSort = GetTime()
             NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
+            local difficultyID = select(3, GetInstanceInfo()) or 0
+            if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
         else
             print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")

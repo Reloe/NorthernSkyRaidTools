@@ -2345,11 +2345,10 @@ Press 'Enter' to hear the TTS]],
     }
     local setupmanager_options1_table = {
         
-        { type = "label", get = function() return "Mythic" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "button",
-            name = "20 Man Default",
-            desc = "Sorts the first 4 groups into a default order (tanks - melee - ranged - healer)",
+            name = "Default Arrangement",
+            desc = "Sorts groups into a default order (tanks - melee - ranged - healer)",
             func = function(self)
                 NSI:SplitGroupInit(false, true, false)
             end,
@@ -2359,8 +2358,8 @@ Press 'Enter' to hear the TTS]],
         
         {
             type = "button",
-            name = "20 Man Split",
-            desc = "Splits the group evenly into 2 groups of 10. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs",
+            name = "Split Groups",
+            desc = "Splits the group evenly into 2 groups. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs",
             func = function(self)
                 NSI:SplitGroupInit(false, false, false)
             end,
@@ -2368,32 +2367,6 @@ Press 'Enter' to hear the TTS]],
             spacement = true
         },
         
-        {
-            type = "breakline"
-        },
-        
-        { type = "label", get = function() return "Flex" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
-        {
-            type = "button",
-            name = "Flex Default",
-            desc = "Sorts the first 6 groups into a default order (tanks - melee - ranged - healer)",
-            func = function(self)
-                NSI:SplitGroupInit(true, true, false)
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        
-        {
-            type = "button",
-            name = "Flex Split",
-            desc = "Splits the group evenly into 2 groups. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs",
-            func = function(self)
-                NSI:SplitGroupInit(true, false, false)
-            end,
-            nocombat = true,
-            spacement = true
-        },
 
     }
 
