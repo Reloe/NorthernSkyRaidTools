@@ -51,10 +51,10 @@ function NSAPI:AuraPosition(type, pos, reg)
         space = -1
         Xoffset = 0
         Yoffset = 0
-        max = 4
+        max = 3
     end
     if type ~= "Circle" then
-            -- old code that doesn't seem to be neccesary anymore after changing anchors to individual aura instead of the group but keeping it here just in case
+            -- old code that doesn't seem to be neccesary anymore after changing anchors to individual aura instead of the group but keeping it here just in case I ever need it
            --[[ if WeakAuras.IsOptionsOpen() then
                 local height = reg[1].region.height
                 if reg[1].region.regionType == "text" then
