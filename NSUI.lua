@@ -1647,6 +1647,7 @@ function NSUI:Init()
     end
 
     -- options
+    local client = IsWindowsClient()
     local general_options1_table = {
         { type = "label", get = function() return "General Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
@@ -1702,14 +1703,14 @@ function NSUI:Init()
         {
             type = "range",
             name = "TTS Voice",
-            desc = "Voice to use for TTS. Most users will only have ~2 different voices. Higher numbers exist for Mac users or those that have installed a lot of voicepacks",
+            desc = "Voice to use for TTS. Most users will only have ~2 different voices. These voices depend on your installed language packs.",
             get = function() return NSRT.Settings["TTSVoice"] end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.general["TTS_VOICE"] = true
                 NSRT.Settings["TTSVoice"] = value 
             end,
             min = 1,
-            max = 30,
+            max = client and 20 or 100, -- up to 20 TTS voices for windows users, otherwise go to 100 for Mac users
         },
         {
             type = "range",
