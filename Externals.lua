@@ -494,6 +494,7 @@ function NSI.Externals:Init(group)
             break
         end
     end
+    NSAPI.Leader = NSI.Externals.target -- expose "leader" to public API so it can be used to send assignments
     NSI.Externals:UpdateExternals()
     if UnitIsUnit("player", NSI.Externals.target) then        
         local note = NSAPI:GetNote()
