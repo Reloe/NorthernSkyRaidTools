@@ -70,6 +70,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.Assigns = ""
+            self.Timer = {}
             self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then

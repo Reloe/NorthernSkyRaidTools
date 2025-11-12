@@ -244,23 +244,33 @@ function NSAPI:GetHash(text)
 end
 
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
-function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
-  if NSRT.Settings["TTS"] then
-    sound = tostring(sound)
-    local handle = select(2, PlaySoundFile(path..sound..".ogg", "Master"))  
-    if handle then
-        PlaySoundFile(path..sound..".ogg", "Master")
-    else
-        local num = voice or NSRT.Settings["TTSVoice"]
-        C_VoiceChat.SpeakText(
-            num,
-            sound,
-            Enum.VoiceTtsDestination.LocalPlayback,
-            C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-            NSRT.Settings["TTSVolume"]
-        )
+function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
+    if NSRT.Settings["TTS"] then
+        sound = tostring(sound)
+        local handle = select(2, PlaySoundFile(path..sound..".ogg", "Master"))  
+        if handle then
+            PlaySoundFile(path..sound..".ogg", "Master")
+        else
+            local num = voice or NSRT.Settings["TTSVoice"]
+            if NSI:IsMidnight() then
+                C_VoiceChat.SpeakText(
+                    num,
+                    sound,
+                    C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
+                    NSRT.Settings["TTSVolume"],
+                    overlap
+                )
+            else
+                C_VoiceChat.SpeakText(
+                    num,
+                    sound,
+                    Enum.VoiceTtsDestination.LocalPlayback,
+                    C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
+                    NSRT.Settings["TTSVolume"]
+                )
+            end
         end
-    end
+    end    
 end
 
 function NSAPI:PrivateAura()
@@ -418,16 +428,156 @@ function NSI:ProcessAssigns()
             for value in line:gmatch("[^|]+") do
                 table.insert(values, value)
             end
-            local phase, time, name, text, TTS, spellID = values[1], values[2], values[3], values[4], values[5], values[6]
+            local phase = line:gmatch("ph:(%d+)")
+            local time = line:gmatch("time:(%d+)")
+            local name = line:gmatch("name:(%s+)")
+            local text = line:gmatch("text:(%s+)")
+            local TTS = line:gmatch("TTS:(%s+)")
+            local spellID = line:gmatch("spellID:(%d+)")
+            local dur = line:gmatch("dur:(%d+)")
             if phase and time and name and (text or spellID) then
                 if name == "everyone" or name:match(UnitName("player")) or name:match(UnitGroupRolesAssigned("player")) or name:match(NSAPI:GetName("player", "GlobalNickNames")) then     
                     phase = tonumber(phase)
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
-                    table.insert(self.ProcessedAssigns[phase], {time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID)})
+                    table.insert(self.ProcessedAssigns[phase], {time = tonumber(time), text = text, TTS = (TTS == "yes" and text) or TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
         end
-        DevTool:AddData(self.ProcessedAssigns)
     end
 end
 -- /run NSAPI:Broadcast("NS_ASSIGN_SHARE", "RAID", "EncounterID:2400\n1|20|everyone|xdtext|123\n2|20|TANK\n3|30|Reloe\n4|40|Relowindi")
+
+function NSI:CreateFontString()
+    
+end
+
+function NSI:CreateText()
+    self.AssignText = self.AssignText or {}
+    for i=1, 100 do
+        if self.AssignText[i] and not self.AssignText[i]:IsShown() then 
+            return self.AssignText[i] 
+        end
+        if not self.AssignText[i] then
+            local xOffset, yOffset = -200, 200
+            local Font = self.LSM:Fetch("font", "PT Sans Narrow Bold")
+            local FontSize = 50
+            yOffset = yOffset + (i-1) * FontSize
+            self.AssignText[i] = UIParent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.AssignText[i]:SetPoint("LEFT", UIParent, "CENTER", xOffset, yOffset)
+            self.AssignText[i]:SetFont(Font, FontSize, "OUTLINE")
+            self.AssignText[i]:SetShadowColor(0, 0, 0, 1)
+            self.AssignText[i]:SetShadowOffset(0, 0)
+            self.AssignText[i]:SetTextColor(1, 1, 1, 1)
+            return self.AssignText[i]
+        end
+    end
+end
+
+function NSI:CreateIcon(spellID)
+    self.AssignIcon = self.AssignIcon or {}
+    local icon = C_Spell.GetSpellInfo(spellID).iconID
+    for i=1, 100 do
+        if self.AssignIcon[i] and not self.AssignIcon[i]:IsShown() then 
+            self.AssignIcon[i].Icon:SetTexture(icon)
+            return self.AssignIcon[i] 
+        end
+        if not self.AssignIcon[i] then
+            local xOffset, yOffset = -400, 400
+            local xTextOffset, yTextOffset = 0, 0
+            local Font = self.LSM:Fetch("font", "PT Sans Narrow Bold")
+            local Size = 80
+            local FontSize = 22
+            yOffset = yOffset + (i-1) * Size
+            self.AssignIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self.AssignIcon[i]:SetSize(Size, Size)
+            self.AssignIcon[i]:SetPoint("CENTER", UIParent, "CENTER", xOffset, yOffset)
+            self.AssignIcon[i].Icon = self.AssignIcon[i]:CreateTexture(nil, "ARTWORK")
+            self.AssignIcon[i].Icon:SetAllPoints(self.AssignIcon[i])
+            self.AssignIcon[i].Icon:SetTexture(icon)
+            self.AssignIcon[i].Border = CreateFrame("Frame", nil, self.AssignIcon[i], "BackdropTemplate")
+            self.AssignIcon[i].Border:SetAllPoints(self.AssignIcon[i])
+            self.AssignIcon[i].Border:SetBackdrop({
+                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                edgeSize = 1
+            })
+            self.AssignIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
+            self.AssignIcon[i].Text = self.AssignIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.AssignIcon[i].Text:SetPoint("LEFT", self.AssignIcon[i], "RIGHT", xTextOffset, yTextOffset)
+            self.AssignIcon[i].Text:SetFont(Font, FontSize, "OUTLINE")
+            self.AssignIcon[i].Text:SetShadowColor(0, 0, 0, 1)
+            self.AssignIcon[i].Text:SetShadowOffset(0, 0)
+            self.AssignIcon[i].Text:SetTextColor(1, 1, 1, 1)
+            return self.AssignIcon[i]
+        end
+    end
+end
+
+function NSI:DisplayReminder(info)
+    local dur = info.dur or 8
+    info.dur = dur
+    local rem = math.ceil((dur - (GetTime()-info.startTime))*10)/10 -- Round to 1 Decimal
+    if rem <= 0 then
+        return
+    end
+    rem = (rem % 1 == 0) and string.format("%.1f", rem) or rem
+    local text = info.text ~= "" and info.text.." - ("..rem..")" or rem
+    text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")
+    local id = info.id
+    local phase = info.phase
+    local spellID = info.spellID
+    local F
+    if spellID then -- display icon if we have a spellID    
+        F = self:CreateIcon(spellID)
+        F.Text:SetText(text)
+        F:Show()
+    else
+        F = self:CreateText()
+        F:SetText(text)
+        F:Show()
+    end    
+    if info.TTS and info.TTS ~= "" and info.TTS ~= "false" then
+        local TTS = (info.TTS == "true" and info.text) or (info.TTS == info.text and info.text) or info.TTS
+        NSAPI:TTS(TTS)
+    end
+    self.Timer[phase] = self.Timer[phase] or {}
+    self.Timer[phase][id] = C_Timer.NewTimer(0.1, function()
+        self.Timer[phase][id] = nil
+        self:UpdateReminderDisplay(info, F)
+    end)
+end
+
+function NSI:UpdateReminderDisplay(info, F)
+    local rem = math.ceil((info.dur - (GetTime()-info.startTime))*10)/10 -- Round to 1 Decimal
+    if rem <= 0 then
+        F:Hide()
+        return
+    end
+    rem = (rem % 1 == 0) and string.format("%.1f", rem) or rem
+    local text = info.text ~= "" and info.text.." - ("..rem..")" or rem
+    text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")
+    local phase = info.phase
+    local id = info.id
+    if info.spellID then
+        F.Text:SetText(text)
+    else
+        F:SetText(text)
+    end    
+    self.Timer[phase][id] = C_Timer.NewTimer(0.1, function()
+        self.Timer[phase][id] = nil
+        self:UpdateReminderDisplay(info, F)
+    end)
+end
+
+function NSAPI:TestDisplay()
+    if NSRT.Settings["Debug"] then
+        local now = GetTime()
+        local info1 = {text = "Use Defensive", TTS = "false", phase = 1, id = 1, dur = 5, startTime = now}
+        local info2 = {text = "This is the Icon display", TTS = "false", phase = 1, id = 2, spellID = 774, startTime = now}
+        local info3 = {text = "Stack at {rt7}", TTS = "Stack on X", phase = 2, id = 1, dur = 8, startTime = now}
+        local info4 = {text = "This is another Icon display", TTS = "", phase = 2, id = 2, dur = 10, spellID = 8936, startTime = now}
+        NSI:DisplayReminder(info1)
+        NSI:DisplayReminder(info2)
+        NSI:DisplayReminder(info3)
+        NSI:DisplayReminder(info4)
+    end
+end
