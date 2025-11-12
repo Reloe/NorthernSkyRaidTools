@@ -1,4 +1,4 @@
-## Interface: 110200
+## Interface: 120000
 
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
@@ -28,6 +28,7 @@ SetupManager.lua
 CooldownCheck.lua
 WeakAuras/Imports.lua
 WeakAuras/Links.lua
+ReadyCheck.lua
 
 # UI
 NSUI.lua
