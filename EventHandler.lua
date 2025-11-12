@@ -62,6 +62,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
             NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
             NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
+            NSRT.Settings["RebuffCheck"] = NSRT.Settings["RebuffCheck"] or false
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["WA"] = NSRT.NSUI.AutoComplete["WA"] or {}
@@ -73,6 +74,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
+        if NSI:IsMidnight() then return end
         NSI:AutoImport()
         NSI.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
     elseif e == "PLAYER_LOGIN" and wowevent then
@@ -101,6 +103,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
+        if NSI:IsMidnight() then return end
         if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
@@ -167,6 +170,24 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.Settings["CheckCooldowns"] and NSI:Difficultycheck(false, 15) and UnitInRaid("player") then
             NSI:CheckCooldowns()
         end
+        NSI.specs = {}
+        NSAPI.HasNSRT = {}
+        for u in NSI:IterateGroupMembers() do
+            if UnitIsVisible(u) then
+                NSAPI.HasNSRT[u] = false
+                NSI.specs[u] = false
+            end
+        end
+        -- broadcast spec info
+        local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
+        C_Timer.After(1, function()
+            NSI:EventHandler("NSAPI_READY_CHECK", false, true)
+        end)
+    elseif e == "NSAPI_READY_CHECK" and internal then
+        if NSRT.Settings["RebuffCheck"] then
+            NSI:BuffCheck()
+        end
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
         if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
@@ -181,6 +202,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif e == "UNIT_AURA" and (NSI.Externals and NSI.Externals.target) and ((UnitIsUnit(NSI.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
+        if NSI:IsMidnight() then return end
         local unit, info = ...
         if not NSI.Externals.AllowedUnits[unit] then return end
         if info and info.addedAuras then
@@ -257,8 +279,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)            
     elseif e == "CHALLENGE_MODE_START" and (wowevent or NSRT.Settings["Debug"]) then
+        if NSI:IsMidnight() then return end
         NSI.Externals:Init(true)
     elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+        if NSI:IsMidnight() then return end
         NSI.specs = {}
         NSAPI.HasNSRT = {}
         for u in NSI:IterateGroupMembers() do
@@ -277,12 +301,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSI.Externals:Init()
     elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
-        if NSRT.Settings["DebugLogs"] then
-            if NSI.MacroPresses and next(NSI.MacroPresses) then NSI:Print("Macro Data for Encounter: "..encounterName, NSI.MacroPresses) end
-            if NSI.AssignedExternals and next(NSI.AssignedExternals) then NSI:Print("Assigned Externals for Encounter: "..encounterName, NSI.AssignedExternals) end
-            NSI.AssignedExternals = {}
-            NSI.MacroPresses = {}
-        end        
         C_Timer.After(1, function()
             if NSI.SyncNickNamesStore then
                 NSI:EventHandler("NSI_NICKNAMES_SYNC", false, true, NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable, NSI.SyncNickNamesStore.channel)
@@ -292,7 +310,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSI:EventHandler("NSI_WA_SYNC", false, true, NSI.WAString.unit, NSI.WAString.string)
             end
         end)
+        if NSI:IsMidnight() then return end
+        if NSRT.Settings["DebugLogs"] then
+            if NSI.MacroPresses and next(NSI.MacroPresses) then NSI:Print("Macro Data for Encounter: "..encounterName, NSI.MacroPresses) end
+            if NSI.AssignedExternals and next(NSI.AssignedExternals) then NSI:Print("Assigned Externals for Encounter: "..encounterName, NSI.AssignedExternals) end
+            NSI.AssignedExternals = {}
+            NSI.MacroPresses = {}
+        end        
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
+        if NSI:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
         local dead = NSAPI:DeathCheck(unitID)        
         NSI.MacroPresses = NSI.MacroPresses or {}
@@ -310,6 +336,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI.Externals:Request(unitID, key, num, req, range, false, expirationTime)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
+        if NSI:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
         local dead = NSAPI:DeathCheck(unitID)      
         NSI.MacroPresses = NSI.MacroPresses or {}
@@ -327,9 +354,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
         end
     elseif e == "NS_EXTERNAL_YES" and ... then
+        if NSI:IsMidnight() then return end
         local _, unit, spellID = ...
         NSI:DisplayExternal(spellID, unit)
-    elseif e == "NS_EXTERNAL_NO" then        
+    elseif e == "NS_EXTERNAL_NO" then   
+        if NSI:IsMidnight() then return end     
         local unit, innervate = ...      
         if innervate == "Innervate" then
             NSI:DisplayExternal("NoInnervate")
@@ -337,10 +366,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI:DisplayExternal()
         end
     elseif e == "NS_EXTERNAL_GIVE" and ... then
+        if NSI:IsMidnight() then return end
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
     elseif e == "NS_PAMACRO" and (internal or NSRT.Settings["Debug"]) then
+        if NSI:IsMidnight() then return end
         local unitID = ...
         if unitID and UnitExists(unitID) and NSRT.Settings["DebugLogs"] then
             NSI.MacroPresses = NSI.MacroPresses or {}
