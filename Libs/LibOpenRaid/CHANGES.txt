@@ -1,30 +1,22 @@
-Changes since tag v11.2.0.168
+Changes since tag v11.2.0.171
 
-commit a12619998064bdf76e0a4357d7b296360b1e0577
+commit 26e8113f2215ae42b14ac6d2c5b14d859ec51185
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sun Aug 17 12:05:56 2025 -0300
+Date:   Tue Oct 21 13:55:46 2025 -0300
 
-    Bump Version
+    Add Midnight things to maintain
 
-commit 330d600e431bf7c35eb1247645256faa0f974ef2
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sun Aug 17 12:05:39 2025 -0300
-
-    Fix Metamorphosis for Havoc.
-
-commit c3a10c5ceb2aecfd4b6897fb48d793f1ac11a287
+commit b929fd5a1899acee54035c4d333f0dae684adfa6
 Author: asakawa <54901700+asaka-wa@users.noreply.github.com>
-Date:   Sun Aug 17 12:07:57 2025 +0100
-
-    Update LibOpenRaid.lua
-    
-    bump version for mage addition
-
-commit 83c4217116af2e229c0f08e688cd8e2cc609a17a
-Author: asakawa <54901700+asaka-wa@users.noreply.github.com>
-Date:   Sun Aug 17 12:07:12 2025 +0100
+Date:   Thu Sep 18 12:13:54 2025 +0100
 
     Update ThingsToMantain_WarWithin.lua
     
-    Add Gravity Lapse - Mage
+    Updated Breath of Sindragosa spellID and CD
+
+commit 4f58647ff4795e757ade593dfafc2cae20d655a1
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Sep 8 23:11:14 2025 -0300
+
+    MOP cc updates; RETAIL potions updates.
 
