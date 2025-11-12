@@ -181,13 +181,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
+        if UnitIsGroupLeader("player") then
+          --  NSI:Broadcast("NS_ASSIGN_SHARE", "RAID", NSI.Assigns)
+        end
+        NSI.Difference = {}
         C_Timer.After(1, function()
             NSI:EventHandler("NSAPI_READY_CHECK", false, true)
+            NSI:EventHandler("NS_COMPARE_ASSIGNS", false, true)
         end)
     elseif e == "NSAPI_READY_CHECK" and internal then
         if NSRT.Settings["RebuffCheck"] then
             NSI:BuffCheck()
-        end
+        end        
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
         if WeakAuras.CurrentEncounter then return end
         if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
@@ -377,6 +382,38 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI.MacroPresses = NSI.MacroPresses or {}
             NSI.MacroPresses["Private Aura"] = NSI.MacroPresses["Private Aura"] or {}
             table.insert(NSI.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull)})
+        end
+    elseif e == "NS_COMPARE_ASSIGNS" and (internal or NSRT.Settings["Debug"]) then        
+        C_Timer.After(1, function()
+            NSI:EventHandler("NS_COMPARE_RESULT", false, true)
+        end)
+        NSI:Broadcast("NS_ASSIGN_COMPARE", "RAID", NSI.Assigns)    
+    elseif e == "NS_ASSIGN_SHARE" and (internal or NSRT.Settings["Debug"]) then
+        local unit, assigntable = ...
+        if UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit) then
+            NSI.Assigns = assigntable
+        end
+    elseif e == "NS_ASSIGN_COMPARE" and (internal or NSRT.Settings["Debug"]) then
+        local unit, assigntable = ...
+        if UnitIsVisible(unit) then
+            NSI.Difference = NSI.Difference or {}
+            if assigntable and not NSI.Assigns then
+                local name = UnitName("player")
+                table.insert(NSI.Difference, name)
+            elseif (NSI.Assigns and not assigntable) or NSI.Assigns ~= assigntable then
+                local name = UnitName(unit)
+                table.insert(NSI.Difference, name)
+            end
+        end
+    elseif e == "NS_COMPARE_RESULT" and (internal or NSRT.Settings["Debug"]) then
+        if NSI.Difference and next(NSI.Difference) ~= nil then
+            local displaytext = ""
+            for k, v in ipairs(NSI.Difference) do
+                local name, specicon, roleicon = NSAPI:Shorten(v, 8, true, "GlobalNickNames", false, true)
+                displaytext = displaytext..specicon..roleicon..name
+            end
+            -- print(displaytext)
+            -- missing display function for now            
         end
     end
 end
