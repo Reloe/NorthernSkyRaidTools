@@ -39,6 +39,10 @@ function NSI:Print(...)
     end
 end
 
+function NSI:Restricted()
+    return (self:IsMidnight() and GetRestrictedActionStatus(0)) or (WeakAuras and WeakAuras.CurrentEncounter)
+end
+
 function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
     local classFile = unit and select(2, UnitClass(unit))
     if specicon then
@@ -212,7 +216,7 @@ end
 
 function NSI:Difficultycheck(encountercheck, num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or NSI:EncounterCheck()))
+    return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or self:EncounterCheck()))
 end
 
 function NSI:EncounterCheck(skipdebug)
@@ -270,7 +274,7 @@ end
 
 function NSI:SendWAString(str)
     if str and str ~= "" and type(str) == "string" then
-        NSI:Broadcast("NSI_WA_SYNC", "RAID", str)
+        self:Broadcast("NSI_WA_SYNC", "RAID", str)
     end
 end
 
@@ -303,32 +307,32 @@ function NSAPI:GUIDInfo(unit)
 end
 
 function NSI:AutoImport()
-    NSI.importtable = {}
-    NSI.imports = {}
+    self.importtable = {}
+    self.imports = {}
     if NSRT.Settings["AutoUpdateRaidWA"] then        
         if WeakAurasCompanionData then
             local WeakAurasData = {
                 slugs = {
                     ["NSManaforge"] = {
-                        name = NSI.RaidWAData.name,
+                        name = self.RaidWAData.name,
                         author = "Reloe",
-                        wagoVersion = tostring(NSI.RaidWAData.version),
-                        wagoSemver = NSI.RaidWAData.wagoVersion,
+                        wagoVersion = tostring(self.RaidWAData.version),
+                        wagoSemver = self.RaidWAData.wagoVersion,
                         source = "Northern Sky Raid Tools",
-                        versionNote = NSI.RaidWAData.versionNote,
+                        versionNote = self.RaidWAData.versionNote,
                         logo = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\NSLogo.blp",
                         refreshLogo = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\NSLogo.blp",
-                        encoded = NSI.RaidWAData.string
+                        encoded = self.RaidWAData.string
                     }
                 }
             }
             WeakAuras.AddCompanionData(WeakAurasData)
         end
-        local waData = WeakAuras.GetData(NSI.RaidWAData.name)
+        local waData = WeakAuras.GetData(self.RaidWAData.name)
         local version = waData and waData.url and waData.url:match("%d+$") or 0
         version = version and tonumber(version) or 0
-        if (NSI.RaidWAData.version > version or not version) and NSI.RaidWAData.string then
-            table.insert(NSI.importtable, NSI.RaidWAData.string)
+        if (self.RaidWAData.version > version or not version) and self.RaidWAData.string then
+            table.insert(self.importtable, self.RaidWAData.string)
         end
     end
     if NSRT.Settings["AutoUpdateWA"] then
@@ -348,9 +352,9 @@ function NSI:AutoImport()
                     end
                     local version = url and url ~= "" and url:match("%d+$") or 0
                     version = version and tonumber(version) or 0
-                    if version ~= 0 and tonumber(v.wagoVersion) > version and not NSI.imports[url] then
-                        NSI.imports[url] = true
-                        table.insert(NSI.importtable, v.encoded)
+                    if version ~= 0 and tonumber(v.wagoVersion) > version and not self.imports[url] then
+                        self.imports[url] = true
+                        table.insert(self.importtable, v.encoded)
                     end
                 end
             end
@@ -370,17 +374,17 @@ function NSI:AutoImport()
                         end
                         local version = url and url ~= "" and url:match("%d+$") or 0
                         version = version and tonumber(version) or 0
-                        if version ~= 0 and tonumber(data.wagoVersion) > version and not NSI.imports[url] then
-                            NSI.imports[url] = true
-                            table.insert(NSI.importtable, WagoAppCompanionData["slugs"][v].encoded)
+                        if version ~= 0 and tonumber(data.wagoVersion) > version and not self.imports[url] then
+                            self.imports[url] = true
+                            table.insert(self.importtable, WagoAppCompanionData["slugs"][v].encoded)
                         end
                     end
                 end
             end
         end
     end
-    if #NSI.importtable > 0 then
-        WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
+    if #self.importtable > 0 then
+        WeakAuras.Import(self.importtable[1], nil, ON_WA_UPDATE)
     end
 end
 
@@ -402,3 +406,28 @@ function NSI:RemoveWhitelistURL(url, name)
         NSRT.Settings["UpdateWhitelist"][id] = nil
     end
 end
+
+function NSI:ProcessAssigns()
+    if self.Assigns and self.Assigns ~= "" then
+        self.ProcessedAssigns = {}
+        for line in self.Assigns:gmatch('[^\r\n]+') do
+            if line:find("EncounterID:") then
+                self.ProcessedAssigns.EncounterID = line:match("EncounterID:(%d+)")
+            end
+            local values = {}
+            for value in line:gmatch("[^|]+") do
+                table.insert(values, value)
+            end
+            local phase, time, name, text, spellID = values[1], values[2], values[3], values[4], values[5]
+            if phase and time and name and (text or spellID) then
+                if name == "everyone" or name:match(UnitName("player")) or name:match(UnitGroupRolesAssigned("player")) or name:match(NSAPI:GetName("player", "GlobalNickNames")) then     
+                    phase = tonumber(phase)
+                    self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
+                    table.insert(self.ProcessedAssigns[phase], {time = tonumber(time), text = text, spellID = spellID and tonumber(spellID)})
+                end
+            end
+        end
+        DevTool:AddData(self.ProcessedAssigns)
+    end
+end
+-- /run NSAPI:Broadcast("NS_ASSIGN_SHARE", "RAID", "EncounterID:2400\n1|20|everyone|xdtext|123\n2|20|TANK\n3|30|Reloe\n4|40|Relowindi")
