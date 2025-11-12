@@ -418,12 +418,12 @@ function NSI:ProcessAssigns()
             for value in line:gmatch("[^|]+") do
                 table.insert(values, value)
             end
-            local phase, time, name, text, spellID = values[1], values[2], values[3], values[4], values[5]
+            local phase, time, name, text, TTS, spellID = values[1], values[2], values[3], values[4], values[5], values[6]
             if phase and time and name and (text or spellID) then
                 if name == "everyone" or name:match(UnitName("player")) or name:match(UnitGroupRolesAssigned("player")) or name:match(NSAPI:GetName("player", "GlobalNickNames")) then     
                     phase = tonumber(phase)
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
-                    table.insert(self.ProcessedAssigns[phase], {time = tonumber(time), text = text, spellID = spellID and tonumber(spellID)})
+                    table.insert(self.ProcessedAssigns[phase], {time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID)})
                 end
             end
         end
