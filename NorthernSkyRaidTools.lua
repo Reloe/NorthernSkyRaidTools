@@ -36,6 +36,6 @@ function NSI:InitLDB()
             LDBIcon:AddButtonToCompartment("NSRT")
         end
 
-        NSI.databroker = databroker
+        self.databroker = databroker
     end
 end

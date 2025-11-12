@@ -138,10 +138,10 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             return spectable[a.specid] < spectable[b.specid]
         end
     end) -- a < b low first, a > b high first
-    NSI.Groups.total = total["ALL"]
+    self.Groups.total = total["ALL"]
     if default then
         units = self:ShiftLeader(units)
-        NSI.Groups.units = units
+        self.Groups.units = units
         self:ArrangeGroups(true)
     else
         local sides = {["left"] = {}, ["right"] = {}}
@@ -208,7 +208,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         end) -- a < b low first, a > b high first
         sides["left"] = self:ShiftLeader(sides["left"])
         sides["right"] = self:ShiftLeader(sides["right"])
-        if NSI.Groups.Odds then
+        if self.Groups.Odds then
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
@@ -224,7 +224,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                 if count > 10 then count = 16 end
                 if count > 20 then count = 26 end
             end
-            NSI.Groups.units = units
+            self.Groups.units = units
             self:ArrangeGroups(true)
         else         
             units = {}
@@ -241,7 +241,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                 units[count] = v      
                 count = count+1
             end
-            NSI.Groups.units = units
+            self.Groups.units = units
             self:ArrangeGroups(true)
         end
     end    
@@ -275,24 +275,24 @@ function NSI:ShiftLeader(group)
 end
 
 function NSI:ArrangeGroups(firstcall, finalcheck)
-    if not firstcall and not NSI.Groups.Processing then return end
+    if not firstcall and not self.Groups.Processing then return end
     local now = GetTime()
     if firstcall then 
-        NSI:Print("Split Table Data:", NSI.Groups.units)
-        NSI.Groups.Processing = true 
-        NSI.Groups.Processed = 0 
-        NSI.Groups.ProcessStart = now 
+        self:Print("Split Table Data:", self.Groups.units)
+        self.Groups.Processing = true 
+        self.Groups.Processed = 0 
+        self.Groups.ProcessStart = now 
         for i=1, 40 do
             local group = math.ceil(i/5)
             local subgrouppos = i % 5 == 0 and 5 or i % 5
-            if NSI.Groups.units[i] then
-                NSI.Groups.units[i].group = group
-                NSI.Groups.units[i].subgrouppos = subgrouppos
-                NSI.Groups.units[i].pos= ((group-1)*5)+subgrouppos
+            if self.Groups.units[i] then
+                self.Groups.units[i].group = group
+                self.Groups.units[i].subgrouppos = subgrouppos
+                self.Groups.units[i].pos= ((group-1)*5)+subgrouppos
             end
         end
     end
-    if NSI.Groups.ProcessStart and now > NSI.Groups.ProcessStart+15 then NSI.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
+    if self.Groups.ProcessStart and now > self.Groups.ProcessStart+15 then self.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indexlink = {}
@@ -305,32 +305,32 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
         indexlink[i] = {subgroup = subgroup, pos = ((subgroup-1)*5)+groupSize[subgroup]}
     end
 
-    if NSI.Groups.Processed >= NSI.Groups.total then 
+    if self.Groups.Processed >= self.Groups.total then 
         if finalcheck then
             local allprocessed = true
             for i=1, 40 do
-                local v = NSI.Groups.units[i]
+                local v = self.Groups.units[i]
                 if v then 
                     local index = UnitInRaid(v.name)
                     if postoindex[v.pos] ~= index then
                         v.processed = false
                         allprocessed = false
-                        NSI.Groups.Processed = NSI.Groups.Processed-1
+                        self.Groups.Processed = self.Groups.Processed-1
                     end
                 end
             end
             if allprocessed then
-                NSI.Groups.Processing = false
+                self.Groups.Processing = false
                 return
             end
         else
-            NSI:ArrangeGroups(false, true)
+            self:ArrangeGroups(false, true)
             return
         end
     end
 
     for i=1, 40 do -- position in table is where the player should end up in
-        local v = NSI.Groups.units[i]    
+        local v = self.Groups.units[i]    
         if v and (not v.processed) and (not UnitAffectingCombat(v.name)) then 
             local index = UnitInRaid(v.name)
             local indexgoal = postoindex[v.pos]
@@ -342,7 +342,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                     else -- if not enough players are in the group to move this player to the desired spot we need to put someone who is not in the correct position yet there.
                         for j=1, 40 do
                             if i ~= j then
-                                local u = NSI.Groups.units[j]  
+                                local u = self.Groups.units[j]  
                                 if u and (not u.processed) and v.group ~= indextosubgroup[UnitInRaid(u.name)] then
                                     SetRaidSubgroup(UnitInRaid(u.name), v.group)
                                     break
@@ -354,18 +354,18 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                 elseif indexgoal and indexlink[index].subgroup and indexlink[indexgoal].subgroup and indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and UnitExists("raid"..indexgoal) and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
                     SwapRaidSubgroup(indexgoal, index)
                     v.processed = true
-                    NSI.Groups.Processed = NSI.Groups.Processed+1
+                    self.Groups.Processed = self.Groups.Processed+1
                     break
                 else -- the 2 players to swap are in the same group so we instead swap with someone else
                     local found = false
-                    local u = NSI.Groups.units[indexlink[index].pos] -- first try to swap with the person who is meant to be in the position this player is in
+                    local u = self.Groups.units[indexlink[index].pos] -- first try to swap with the person who is meant to be in the position this player is in
                     if u and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and u.pos == indexlink[index].pos and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
                         SwapRaidSubgroup(UnitInRaid(u.name), index)
                         found = true
                     end
                     if not found then -- next try to swap with someone who is not in the correct position yet
                         for j=1, 40 do
-                            local u = NSI.Groups.units[j]
+                            local u = self.Groups.units[j]
                             if u and (not u.processed) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
                                 SwapRaidSubgroup(UnitInRaid(u.name), index)
                                 found = true
@@ -375,7 +375,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                     end        
                     if not found then -- if we were somehow unable to find anyone we can swap this person with, swap them with someone who was already processed but not the raid leader  
                         for j=1, 40 do
-                            local u = NSI.Groups.units[j]
+                            local u = self.Groups.units[j]
                             if u and (not UnitIsGroupLeader(u.name)) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
                                 SwapRaidSubgroup(UnitInRaid(u.name), index)
                                 found = true
@@ -387,8 +387,8 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                 end
             else -- character is already in the correct position
                 v.processed = true
-                NSI.Groups.Processed = NSI.Groups.Processed+1
-                NSI:ArrangeGroups(false, finalcheck)
+                self.Groups.Processed = self.Groups.Processed+1
+                self:ArrangeGroups(false, finalcheck)
                 break
             end
         end        
@@ -398,13 +398,13 @@ end
 function NSI:SplitGroupInit(Flex, default, odds)
     if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
-        if NSI.Groups.Processing and NSI.Groups.ProcessStart and now < NSI.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
-        if not NSI.LastGroupSort or NSI.LastGroupSort < now - 5 then
-            NSI.LastGroupSort = GetTime()
-            NSI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
+        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
+        if not self.LastGroupSort or self.LastGroupSort < now - 5 then
+            self.LastGroupSort = GetTime()
+            self:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
-            C_Timer.After(2, function() NSI:SortGroup(Flex, default, odds) end)
+            C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
         else
             print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
         end

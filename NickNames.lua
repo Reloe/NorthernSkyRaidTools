@@ -86,8 +86,8 @@ function NSI:NickNameUpdated(nickname)
     end
     local oldnick = NSRT.NickNames[name .. "-" .. realm]
     if (not oldnick) or oldnick ~= nickname then
-        NSI:SendNickName("Any")
-        NSI:NewNickName("player", nickname, name, realm)
+        self:SendNickName("Any")
+        self:NewNickName("player", nickname, name, realm)
     end
 end
 
@@ -95,11 +95,11 @@ end
 function NSI:Grid2NickNameUpdated(all, unit)
     if Grid2 then
         if all then
-            for u in NSI:IterateGroupMembers() do
+            for u in self:IterateGroupMembers() do
                 Grid2Status:UpdateIndicators(u)
             end
         else
-            for u in NSI:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
+            for u in self:IterateGroupMembers() do -- if unit is in group refresh grid2 display, could be a guild message instead
                 if unit then
                     if UnitExists(unit) and UnitIsUnit(u, unit) then
                         Grid2Status:UpdateIndicators(u)
@@ -115,14 +115,14 @@ end
 
 -- Wipe NickName Database
 function NSI:WipeNickNames()
-    NSI:WipeCellDB()
+    self:WipeCellDB()
     NSRT.NickNames = {}
     fullCharList = {}
     fullNameList = {}
     sortedCharList = {}
     CharList = {}
     -- all addons that need a display update, which is basically all but WA
-    NSI:UpdateNickNameDisplay(true)
+    self:UpdateNickNameDisplay(true)
 end
 
 function NSI:WipeCellDB()
@@ -139,8 +139,8 @@ function NSI:WipeCellDB()
 end
 
 function NSI:BlizzardNickNameUpdated()
-    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not NSI.BlizzardNickNamesHook then
-        NSI.BlizzardNickNamesHook = true
+    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not self.BlizzardNickNamesHook then
+        self.BlizzardNickNamesHook = true
         hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
             if frame:IsForbidden() or not frame.unit then
                 return
@@ -154,13 +154,13 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
     if 1 then return end -- disabling MRT Note nickname replacement for now as it is too laggy
     local note = noteFrame and noteFrame.text and noteFrame.text:GetText()
     if (not note) or (not NSRT.Settings["MRT"]) then return end
-    if NSI.RawNoteFrame and note == NSI.RawNoteFrame and NSI.NewNoteFrame then -- don't recalculate nicknames if the note didn't change
-        NSI.LastNoteUpdate = GetTime()
-        noteFrame.text:SetText(NSI.NewNoteFrame)
+    if self.RawNoteFrame and note == self.RawNoteFrame and self.NewNoteFrame then -- don't recalculate nicknames if the note didn't change
+        self.LastNoteUpdate = GetTime()
+        noteFrame.text:SetText(self.NewNoteFrame)
         return
     end
-    if NSI:EncounterCheck(true) then return end -- don't update note during encounters as this causes lag. This means it won't be functional if people are using Timers within the note but don't really have a great workaround for that
-    NSI.RawNoteFrame = note
+    if self:EncounterCheck(true) then return end -- don't update note during encounters as this causes lag. This means it won't be functional if people are using Timers within the note but don't really have a great workaround for that
+    self.RawNoteFrame = note
     local namelist = {}
     local colorlist = {}
     for name in note:gmatch("%S+") do -- finding all strings
@@ -181,17 +181,17 @@ function NSI:MRTUpdateNoteDisplay(noteFrame)
             note = note:gsub("|c%x%x%x%x%x%x%x%x"..notename.."|r", v.name)
         end
     end
-    NSI.NewNoteFrame = note
+    self.NewNoteFrame = note
     noteFrame.text:SetText(note)
 end
 
 function NSI:MRTNickNameUpdated(skipcheck)
     if C_AddOns.IsAddOnLoaded("MRT") then
         if skipcheck or NSRT.Settings["MRT"] then -- on init we only do this if the player has MRT Nicknames enabled, also whenever the setting changes we skip the setting check
-            NSI:MRTUpdateNoteDisplay(MRTNote)
+            self:MRTUpdateNoteDisplay(MRTNote)
         end
-        if NSRT.Settings["MRT"] and GMRT and GMRT.F and not NSI.MRTNickNamesHook then        
-            NSI.MRTNickNamesHook = true
+        if NSRT.Settings["MRT"] and GMRT and GMRT.F and not self.MRTNickNamesHook then        
+            self.MRTNickNamesHook = true
             GMRT.F:RegisterCallback(
                 "RaidCooldowns_Bar_TextName",
                 function(event, bar, data)
@@ -203,17 +203,10 @@ function NSI:MRTNickNameUpdated(skipcheck)
             GMRT.F:RegisterCallback(
                 "Note_UpdateText", 
                 function(event, noteFrame)
-                    NSI:MRTUpdateNoteDisplay(noteFrame)
+                    self:MRTUpdateNoteDisplay(noteFrame)
                 end    
             )
         end
-    end
-end
-
-function NSI:OmniCDNickNameUpdated()
-    if NSRT.Settings["OmniCD"] and C_AddOns.IsAddOnLoaded("OmniCD") and not NSI.OmniCDNickNamesHook then
-        NSI.OmniCDNickNamesHook = true
-        -- Add OmniCD Hook
     end
 end
 
@@ -222,7 +215,7 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
     if CellDB then
         if NSRT.Settings["Cell"] and NSRT.Settings["GlobalNickNames"] then
             if all then -- update all units
-                for u in NSI:IterateGroupMembers() do
+                for u in self:IterateGroupMembers() do
                     local name, realm = UnitFullName(u)
                     if not realm then
                         realm = GetNormalizedRealmName()
@@ -234,7 +227,7 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                             CellDB.nicknames.list[i] = name.."-"..realm..":"..nick
                             Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nick)
                         else -- insert if it doesn't exist yet
-                            NSI:CellInsertName(name, realm, nick, true)
+                            self:CellInsertName(name, realm, nick, true)
                         end
                     end
                 end
@@ -249,7 +242,7 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                 end
             elseif unit then -- if the function was called for a sepcific unit
                 local ingroup = false
-                for u in NSI:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
+                for u in self:IterateGroupMembers() do -- if unit is in group refresh cell display, could be a guild message instead
                     if UnitExists(unit) and UnitIsUnit(u, unit) then
                         ingroup = true
                         break
@@ -263,14 +256,14 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                             Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
                         end
                     else
-                        NSI:CellInsertName(name, realm, nickname, ingroup)
+                        self:CellInsertName(name, realm, nickname, ingroup)
                     end
                 else -- if no old nickname, just insert the new one
-                    NSI:CellInsertName(name, realm, nickname, ingroup)
+                    self:CellInsertName(name, realm, nickname, ingroup)
                 end
             end
         else
-            NSI:WipeCellDB()
+            self:WipeCellDB()
         end
     end
 end
@@ -376,13 +369,13 @@ function NSI:GlobalNickNameUpdate()
     end
     
     -- instant display update for all addons
-    NSI:UpdateNickNameDisplay(true)
+    self:UpdateNickNameDisplay(true)
 end
 
 
 
 function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)    
-    NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before doing any changes to the nickname database
+    self:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before doing any changes to the nickname database
     if nickname == ""  and NSRT.NickNames[name.."-"..realm] then
         NSRT.NickNames[name.."-"..realm] = nil
         fullCharList[name.."-"..realm] = nil
@@ -390,12 +383,11 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
         sortedCharList[nickname] = nil
         CharList[nickname] = nil
     end     
-    NSI:Grid2NickNameUpdated(unit)
-    NSI:ElvUINickNameUpdated()
-    NSI:UnhaltedNickNameUpdated()
-    NSI:BlizzardNickNameUpdated()
-    NSI:MRTNickNameUpdated(true)
-    NSI:OmniCDNickNameUpdated()
+    self:Grid2NickNameUpdated(unit)
+    self:ElvUINickNameUpdated()
+    self:UnhaltedNickNameUpdated()
+    self:BlizzardNickNameUpdated()
+    self:MRTNickNameUpdated(true)
 end
 
 function NSI:InitNickNames()
@@ -445,9 +437,8 @@ function NSI:InitNickNames()
             end
         end
 
-    	NSI:MRTNickNameUpdated(false)
-    	NSI:BlizzardNickNameUpdated()
-    	NSI:OmniCDNickNameUpdated()
+    	self:MRTNickNameUpdated(false)
+    	self:BlizzardNickNameUpdated()
     end
 
     if Grid2 then
@@ -510,9 +501,9 @@ end
 function NSI:SendNickName(channel, requestback)
     requestback = requestback or false
     local now = GetTime()
-    if (NSI.LastNickNameSend and NSI.LastNickNameSend > now-0.25) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't let user spam nicknames
-    if requestback and (NSI.LastNickNameSend and NSI.LastNickNameSend > now-2) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't overspam on forming raid
-    NSI.LastNickNameSend = now
+    if (self.LastNickNameSend and self.LastNickNameSend > now-0.25) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't let user spam nicknames
+    if requestback and (self.LastNickNameSend and self.LastNickNameSend > now-2) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't overspam on forming raid
+    self.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or WeakAuras.CurrentEncounter then return end
     local name, realm = UnitFullName("player")
@@ -521,10 +512,10 @@ function NSI:SendNickName(channel, requestback)
     end
     if nickname then
         if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) and (channel == "Any" or channel == "RAID") then
-            NSI:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, requestback, "RAID")
+            self:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, requestback, "RAID")
         end
         if (NSRT.Settings["ShareNickNames"] == 2 or NSRT.Settings["ShareNickNames"] == 3) and (channel == "Any" or channel == "GUILD") then
-            NSI:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, requestback, "GUILD") 
+            self:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, requestback, "GUILD") 
         end
     end
 end
@@ -539,7 +530,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
     local oldnick = NSRT.NickNames[name.."-"..realm]      
     if oldnick and oldnick == nickname then  return end -- stop early if we already have this exact nickname  
     if nickname == "" then
-        NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
+        self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
     end
     nickname = WeakAuras.WA_Utf8Sub(nickname, 12)
@@ -555,7 +546,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
     end
     CharList[nickname][name] = true
     if NSRT.Settings["GlobalNickNames"] then
-        NSI:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
+        self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
     end
 end
 
@@ -578,36 +569,36 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
                 end
             end
         end
-        NSI:GlobalNickNameUpdate()
+        self:GlobalNickNameUpdate()
     end
 end
 
 function NSI:SyncNickNames()
     local now = GetTime()
-    if (NSI.LastNickNameSync and NSI.LastNickNameSync > now-4) or (NSRT.Settings["NickNamesSyncSend"] == 3) then return end -- don't let user spam syncs / end early if set to none
-    NSI.LastNickNameSync = now
+    if (self.LastNickNameSync and self.LastNickNameSync > now-4) or (NSRT.Settings["NickNamesSyncSend"] == 3) then return end -- don't let user spam syncs / end early if set to none
+    self.LastNickNameSync = now
     local channel = NSRT.Settings["NickNamesSyncSend"] == 1 and "RAID" or "GUILD"
-    NSI:Broadcast("NSI_NICKNAMES_SYNC", channel, NSRT.NickNames, channel) -- channel is either GUILD or RAID
+    self:Broadcast("NSI_NICKNAMES_SYNC", channel, NSRT.NickNames, channel) -- channel is either GUILD or RAID
 end
 
 function NSI:SyncNickNamesAccept(nicknametable)
     for name, nickname in pairs(nicknametable) do
         NSRT.NickNames[name] = nickname
     end
-    NSI:GlobalNickNameUpdate()
+    self:GlobalNickNameUpdate()
 end
 
 function NSI:AddNickName(name, realm, nickname) -- keeping the nickname empty acts as removing the nickname for that character
     if name and realm and nickname then
         local unit
         if UnitExists(name) then
-            for u in NSI:IterateGroupMembers() do
+            for u in self:IterateGroupMembers() do
                 if UnitIsUnit(u, name) then
                     unit = u
                     break
                 end
             end
         end
-        NSI:NewNickName(unit, nickname, name, realm, channel)
+        self:NewNickName(unit, nickname, name, realm, channel)
     end
 end

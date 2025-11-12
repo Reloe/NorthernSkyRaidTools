@@ -86,7 +86,7 @@ NSI.CLASS_SPECIALIZATION_MAP = {
 
 function NSI:GetAllSpecializationIDs()
     local ids = {}
-    for k, v in pairs(NSI.SPECIALIZATION_MAP) do
+    for k, v in pairs(self.SPECIALIZATION_MAP) do
         tinsert(ids, v)
     end
     return ids

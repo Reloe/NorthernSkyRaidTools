@@ -33,7 +33,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["MRT"] = NSRT.Settings["MRT"] or false
             NSRT.Settings["Cell"] = NSRT.Settings["Cell"] or false
             NSRT.Settings["Grid2"] = NSRT.Settings["Grid2"] or false
-            NSRT.Settings["OmniCD"] = NSRT.Settings["OmniCD"] or false
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
             NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
             NSRT.Settings["Translit"] = NSRT.Settings["Translit"] or false
@@ -68,22 +67,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.NSUI.AutoComplete["WA"] = NSRT.NSUI.AutoComplete["WA"] or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
 
-            NSI.BlizzardNickNamesHook = false
-            NSI.MRTNickNamesHook = false
-            NSI.OmniCDNickNamesHook = false 
-            NSI:InitNickNames()
+            self.BlizzardNickNamesHook = false
+            self.MRTNickNamesHook = false
+            self.Assigns = ""
+            self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
-        if NSI:IsMidnight() then return end
-        NSI:AutoImport()
-        NSI.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
+        if self:IsMidnight() then return end
+        self:AutoImport()
+        self.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
     elseif e == "PLAYER_LOGIN" and wowevent then
         local pafound = false
         local extfound = false
         local innervatefound = false
         local macrocount = 0    
-        NSI.NSUI:Init()
-        NSI:InitLDB()
+        self.NSUI:Init()
+        self:InitLDB()
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end
@@ -93,17 +92,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
             print("Please uninstall the |cFF00FFFFNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
         end
-        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if self:Restricted() then return end
+        if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
             local name, realm = UnitName("player")
             if not realm then
                 realm = GetNormalizedRealmName()
             end
             if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
-                NSI:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
+                self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
-        if NSI:IsMidnight() then return end
+        if self:IsMidnight() then return end
         if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
@@ -159,43 +159,44 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
-        if WeakAuras.CurrentEncounter then return end
-        if NSI:Difficultycheck(false, 15) then -- only care about note comparison in normal, heroic&mythic raid
+        if self:Restricted() then return end
+        if self:Difficultycheck(false, 15) then -- only care about note comparison in normal, heroic&mythic raid
             local note = NSAPI:GetNote()
             if note ~= "empty" then
                 local hashed = NSAPI:GetHash(note) or ""     
-                NSI:Broadcast("MRT_NOTE", "RAID", hashed)   
+                self:Broadcast("MRT_NOTE", "RAID", hashed)   
             end
         end
-        if NSRT.Settings["CheckCooldowns"] and NSI:Difficultycheck(false, 15) and UnitInRaid("player") then
-            NSI:CheckCooldowns()
+        if NSRT.Settings["CheckCooldowns"] and self:Difficultycheck(false, 15) and UnitInRaid("player") then
+            self:CheckCooldowns()
         end
-        NSI.specs = {}
+        self.specs = {}
         NSAPI.HasNSRT = {}
-        for u in NSI:IterateGroupMembers() do
+        for u in self:IterateGroupMembers() do
             if UnitIsVisible(u) then
                 NSAPI.HasNSRT[u] = false
-                NSI.specs[u] = false
+                self.specs[u] = false
             end
         end
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
-          --  NSI:Broadcast("NS_ASSIGN_SHARE", "RAID", NSI.Assigns)
+            self:Broadcast("NS_ASSIGN_SHARE", "RAID", self.Assigns)
         end
-        NSI.Difference = {}
+        self.Difference = {}
         C_Timer.After(1, function()
-            NSI:EventHandler("NSAPI_READY_CHECK", false, true)
-            NSI:EventHandler("NS_COMPARE_ASSIGNS", false, true)
+            self:EventHandler("NSAPI_READY_CHECK", false, true)
+            self:EventHandler("NS_COMPARE_ASSIGNS", false, true)
         end)
     elseif e == "NSAPI_READY_CHECK" and internal then
+        if self:Restricted() then return end
         if NSRT.Settings["RebuffCheck"] then
-            NSI:BuffCheck()
+            self:BuffCheck()
         end        
     elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
-        if WeakAuras.CurrentEncounter then return end
-        if NSRT.Settings["MyNickName"] then NSI:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if self:Restricted() then return end
+        if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
         if WeakAuras.CurrentEncounter then return end
@@ -206,47 +207,48 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSAPI:DisplayText("MRT Note Mismatch detected", 5)
             end
         end
-    elseif e == "UNIT_AURA" and (NSI.Externals and NSI.Externals.target) and ((UnitIsUnit(NSI.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
-        if NSI:IsMidnight() then return end
+    elseif e == "UNIT_AURA" and (self.Externals and self.Externals.target) and ((UnitIsUnit(self.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
+        if self:IsMidnight() then return end
         local unit, info = ...
-        if not NSI.Externals.AllowedUnits[unit] then return end
+        if not self.Externals.AllowedUnits[unit] then return end
         if info and info.addedAuras then
             for _, v in ipairs(info.addedAuras) do
-                if NSI.Externals.Automated[v.spellId] then
-                    local key = NSI.Externals.Automated[v.spellId]
-                    local num = (key and NSI.Externals.Amount[key..v.spellId])
-                    NSI:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip", v.expirationTime)
+                if self.Externals.Automated[v.spellId] then
+                    local key = self.Externals.Automated[v.spellId]
+                    local num = (key and self.Externals.Amount[key..v.spellId])
+                    self:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip", v.expirationTime)
                 end
             end
         end
     elseif e == "NSI_VERSION_CHECK" and (internal or NSRT.Settings["Debug"]) then
-        if WeakAuras.CurrentEncounter then return end
+        if self:Restricted() then return end
         local unit, ver, duplicate, ignoreCheck = ...        
-        NSI:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate, ignoreCheck = ignoreCheck})
+        self:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and (internal or NSRT.Settings["Debug"]) then
-        if WeakAuras.CurrentEncounter then return end
+        if self:Restricted() then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) then
-            local u, ver, duplicate, _, ignoreCheck = NSI:GetVersionNumber(type, name, unit)
-            NSI:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate, ignoreCheck)
+            local u, ver, duplicate, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
+            self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate, ignoreCheck)
         end
     elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSRT.Settings["Debug"]) then
-        if WeakAuras.CurrentEncounter then return end
+        if self:Restricted() then return end
         local unit, nickname, name, realm, requestback, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
-        if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then NSI:SendNickName(channel, false) end -- send nickname back to the person who requested it
-        NSI:NewNickName(unit, nickname, name, realm, channel)
+        if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
+        self:NewNickName(unit, nickname, name, realm, channel)
 
     elseif e == "PLAYER_REGEN_ENABLED" and (wowevent or NSRT.Settings["Debug"]) then
-        C_Timer.After(1, function()
-            if NSI.SyncNickNamesStore then
-                NSI:EventHandler("NSI_NICKNAMES_SYNC", false, true, NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable, NSI.SyncNickNamesStore.channel)
-                NSI.SyncNickNamesStore = nil
+        C_Timer.After(1, function()            
+            if self:Restricted() then return end
+            if self.SyncNickNamesStore then
+                self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
+                self.SyncNickNamesStore = nil
             end
-            if NSI.WAString and NSI.WAString.unit and NSI.WAString.string then
-                NSI:EventHandler("NSI_WA_SYNC", false, true, NSI.WAString.unit, NSI.WAString.string)
-                NSI.WAString = nil
+            if self.WAString and self.WAString.unit and self.WAString.string then
+                self:EventHandler("NSI_WA_SYNC", false, true, self.WAString.unit, self.WAString.string)
+                self.WAString = nil
             end
         end)
     elseif e == "NSI_NICKNAMES_SYNC" and (internal or NSRT.Settings["Debug"]) then
@@ -254,10 +256,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local setting = NSRT.Settings["NickNamesSyncAccept"]
         if (setting == 3 or (setting == 2 and channel == "GUILD") or (setting == 1 and channel == "RAID") and (not C_ChallengeMode.IsChallengeModeActive())) then 
             if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't accept sync requests from yourself
-            if UnitAffectingCombat("player") or WeakAuras.CurrentEncounter then
-                NSI.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable, channel = channel}
+            if self:Restricted() or UnitAffectingCombat("player") then
+                self.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable, channel = channel}
             else
-                NSI:NickNamesSyncPopup(unit, nicknametable)    
+                self:NickNamesSyncPopup(unit, nicknametable)    
             end
         end
     elseif e == "NSI_WA_SYNC" and (internal or NSRT.Settings["Debug"]) then
@@ -266,34 +268,35 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if setting == 3 then return end
         if UnitExists(unit) and not UnitIsUnit("player", unit) then
             if setting == 2 or (GetGuildInfo(unit) == GetGuildInfo("player")) then -- only accept this from same guild to prevent abuse
-                if UnitAffectingCombat("player") or WeakAuras.CurrentEncounter then
-                    NSI.WAString = {unit = unit, string = str}
+                if self:Restricted() or UnitAffectingCombat("player") then
+                    self.WAString = {unit = unit, string = str}
                 else
-                    NSI:WAImportPopup(unit, str)
+                    self:WAImportPopup(unit, str)
                 end
             end
         end
 
     elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
         local unit, spec = ...
-        NSI.specs = NSI.specs or {}
-        NSI.specs[unit] = tonumber(spec)
+        self.specs = self.specs or {}
+        self.specs[unit] = tonumber(spec)
         NSAPI.HasNSRT = NSAPI.HasNSRT or {}
         NSAPI.HasNSRT[unit] = true
     elseif e == "NSAPI_SPEC_REQUEST" then
+        if self:Restricted() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)            
     elseif e == "CHALLENGE_MODE_START" and (wowevent or NSRT.Settings["Debug"]) then
-        if NSI:IsMidnight() then return end
-        NSI.Externals:Init(true)
-    elseif e == "ENCOUNTER_START" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        if NSI:IsMidnight() then return end
-        NSI.specs = {}
+        if self:IsMidnight() then return end
+        self.Externals:Init(true)
+    elseif e == "ENCOUNTER_START" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+        if self:IsMidnight() then return end
+        self.specs = {}
         NSAPI.HasNSRT = {}
-        for u in NSI:IterateGroupMembers() do
+        for u in self:IterateGroupMembers() do
             if UnitIsVisible(u) then
                 NSAPI.HasNSRT[u] = false
-                NSI.specs[u] = WeakAuras.SpecForUnit(u)
+                self.specs[u] = WeakAuras.SpecForUnit(u)
             end
         end
         -- broadcast spec info
@@ -302,32 +305,33 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         C_Timer.After(1, function()
             WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
         end)
-        NSI.MacroPresses = {}
-        NSI.Externals:Init()
-    elseif e == "ENCOUNTER_END" and ((wowevent and NSI:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
+        self.MacroPresses = {}
+        self.Externals:Init()
+    elseif e == "ENCOUNTER_END" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
         C_Timer.After(1, function()
-            if NSI.SyncNickNamesStore then
-                NSI:EventHandler("NSI_NICKNAMES_SYNC", false, true, NSI.SyncNickNamesStore.unit, NSI.SyncNickNamesStore.nicknametable, NSI.SyncNickNamesStore.channel)
-                NSI.SyncNickNamesStore = nil
+            if self:Restricted() then return end
+            if self.SyncNickNamesStore then
+                self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
+                self.SyncNickNamesStore = nil
             end
-            if NSI.WAString and NSI.WAString.unit and NSI.WAString.string then
-                NSI:EventHandler("NSI_WA_SYNC", false, true, NSI.WAString.unit, NSI.WAString.string)
+            if self.WAString and self.WAString.unit and self.WAString.string then
+                self:EventHandler("NSI_WA_SYNC", false, true, self.WAString.unit, self.WAString.string)
             end
         end)
-        if NSI:IsMidnight() then return end
+        if self:IsMidnight() then return end
         if NSRT.Settings["DebugLogs"] then
-            if NSI.MacroPresses and next(NSI.MacroPresses) then NSI:Print("Macro Data for Encounter: "..encounterName, NSI.MacroPresses) end
-            if NSI.AssignedExternals and next(NSI.AssignedExternals) then NSI:Print("Assigned Externals for Encounter: "..encounterName, NSI.AssignedExternals) end
-            NSI.AssignedExternals = {}
-            NSI.MacroPresses = {}
+            if self.MacroPresses and next(self.MacroPresses) then self:Print("Macro Data for Encounter: "..encounterName, self.MacroPresses) end
+            if self.AssignedExternals and next(self.AssignedExternals) then self:Print("Assigned Externals for Encounter: "..encounterName, self.AssignedExternals) end
+            self.AssignedExternals = {}
+            self.MacroPresses = {}
         end        
-    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        if NSI:IsMidnight() then return end
+    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
+        if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
         local dead = NSAPI:DeathCheck(unitID)        
-        NSI.MacroPresses = NSI.MacroPresses or {}
-        NSI.MacroPresses["Externals"] = NSI.MacroPresses["Externals"] or {}
+        self.MacroPresses = self.MacroPresses or {}
+        self.MacroPresses["Externals"] = self.MacroPresses["Externals"] or {}
         local formattedrange = {}
         if type(range) == "table" then
             for k, v in pairs(range) do
@@ -336,16 +340,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             formattedrange = range
         end
-        table.insert(NSI.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
-        if (C_ChallengeMode.IsChallengeModeActive() or NSI:Difficultycheck(true, 14)) and not dead then -- block incoming requests from dead people
-            NSI.Externals:Request(unitID, key, num, req, range, false, expirationTime)
+        table.insert(self.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
+        if (C_ChallengeMode.IsChallengeModeActive() or self:Difficultycheck(true, 14)) and not dead then -- block incoming requests from dead people
+            self.Externals:Request(unitID, key, num, req, range, false, expirationTime)
         end
-    elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(NSI.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        if NSI:IsMidnight() then return end
+    elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
+        if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
         local dead = NSAPI:DeathCheck(unitID)      
-        NSI.MacroPresses = NSI.MacroPresses or {}
-        NSI.MacroPresses["Innervate"] = NSI.MacroPresses["Innervate"] or {}
+        self.MacroPresses = self.MacroPresses or {}
+        self.MacroPresses["Innervate"] = self.MacroPresses["Innervate"] or {}
         local formattedrange = {}
         if type(range) == "table" then
             for k, v in pairs(range) do
@@ -354,65 +358,66 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             formattedrange = range
         end
-        table.insert(NSI.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
-        if (C_ChallengeMode.IsChallengeModeActive() or NSI:Difficultycheck(true, 14)) and not dead then -- block incoming requests from dead people
-            NSI.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
+        table.insert(self.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
+        if (C_ChallengeMode.IsChallengeModeActive() or self:Difficultycheck(true, 14)) and not dead then -- block incoming requests from dead people
+            self.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
         end
     elseif e == "NS_EXTERNAL_YES" and ... then
-        if NSI:IsMidnight() then return end
+        if self:IsMidnight() then return end
         local _, unit, spellID = ...
-        NSI:DisplayExternal(spellID, unit)
+        self:DisplayExternal(spellID, unit)
     elseif e == "NS_EXTERNAL_NO" then   
-        if NSI:IsMidnight() then return end     
+        if self:IsMidnight() then return end     
         local unit, innervate = ...      
         if innervate == "Innervate" then
-            NSI:DisplayExternal("NoInnervate")
+            self:DisplayExternal("NoInnervate")
         else
-            NSI:DisplayExternal()
+            self:DisplayExternal()
         end
     elseif e == "NS_EXTERNAL_GIVE" and ... then
-        if NSI:IsMidnight() then return end
+        if self:IsMidnight() then return end
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
     elseif e == "NS_PAMACRO" and (internal or NSRT.Settings["Debug"]) then
-        if NSI:IsMidnight() then return end
+        if self:IsMidnight() then return end
         local unitID = ...
         if unitID and UnitExists(unitID) and NSRT.Settings["DebugLogs"] then
-            NSI.MacroPresses = NSI.MacroPresses or {}
-            NSI.MacroPresses["Private Aura"] = NSI.MacroPresses["Private Aura"] or {}
-            table.insert(NSI.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-NSI.Externals.pull)})
+            self.MacroPresses = self.MacroPresses or {}
+            self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
+            table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull)})
         end
-    elseif e == "NS_COMPARE_ASSIGNS" and (internal or NSRT.Settings["Debug"]) then        
+    elseif e == "NS_COMPARE_ASSIGNS" and (internal or NSRT.Settings["Debug"]) then   
+        if self:Restricted() then return end    
         C_Timer.After(1, function()
-            NSI:EventHandler("NS_COMPARE_RESULT", false, true)
+            self:EventHandler("NS_COMPARE_RESULT", false, true)
         end)
-        NSI:Broadcast("NS_ASSIGN_COMPARE", "RAID", NSI.Assigns)    
+        self:Broadcast("NS_ASSIGN_COMPARE", "RAID", self.Assigns)    
     elseif e == "NS_ASSIGN_SHARE" and (internal or NSRT.Settings["Debug"]) then
         local unit, assigntable = ...
         if UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit) then
-            NSI.Assigns = assigntable
+            self.Assigns = assigntable
+            self:ProcessAssigns()
         end
     elseif e == "NS_ASSIGN_COMPARE" and (internal or NSRT.Settings["Debug"]) then
         local unit, assigntable = ...
         if UnitIsVisible(unit) then
-            NSI.Difference = NSI.Difference or {}
-            if assigntable and not NSI.Assigns then
+            self.Difference = self.Difference or {}
+            if assigntable and not self.Assigns then
                 local name = UnitName("player")
-                table.insert(NSI.Difference, name)
-            elseif (NSI.Assigns and not assigntable) or NSI.Assigns ~= assigntable then
+                table.insert(self.Difference, name)
+            elseif (self.Assigns and not assigntable) or self.Assigns ~= assigntable then
                 local name = UnitName(unit)
-                table.insert(NSI.Difference, name)
+                table.insert(self.Difference, name)
             end
         end
     elseif e == "NS_COMPARE_RESULT" and (internal or NSRT.Settings["Debug"]) then
-        if NSI.Difference and next(NSI.Difference) ~= nil then
+        if self.Difference and next(self.Difference) ~= nil then
             local displaytext = ""
-            for k, v in ipairs(NSI.Difference) do
+            for k, v in ipairs(self.Difference) do
                 local name, specicon, roleicon = NSAPI:Shorten(v, 8, true, "GlobalNickNames", false, true)
                 displaytext = displaytext..specicon..roleicon..name
             end
-            -- print(displaytext)
             -- missing display function for now            
         end
     end
