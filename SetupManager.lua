@@ -140,17 +140,9 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
     end) -- a < b low first, a > b high first
     NSI.Groups.total = total["ALL"]
     if default then
-        for i=1, 40 do
-            local v = units[i]
-            if v and UnitIsGroupLeader(v.unitid) then
-                local num = math.floor((i - 1) / 5) * 5 + 1
-                if units[num] then units[i] = units[num] end 
-                units[num] = v 
-                break
-            end 
-        end
+        units = self:ShiftLeader(units)
         NSI.Groups.units = units
-        NSI:ArrangeGroups(true)
+        self:ArrangeGroups(true)
     else
         local sides = {["left"] = {}, ["right"] = {}}
         local classes = {["left"] = {}, ["right"] = {}}
@@ -214,47 +206,31 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                 return spectable[a.specid] < spectable[b.specid]
             end
         end) -- a < b low first, a > b high first
+        sides["left"] = self:ShiftLeader(sides["left"])
+        sides["right"] = self:ShiftLeader(sides["right"])
         if NSI.Groups.Odds then
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
-                if UnitIsGroupLeader(v.unitid) then -- if this person is the raid leader he needs to be put in the first position of each subgroup
-                    local num = math.floor((count - 1) / 5) * 5 + 1 -- this will result in 1, 6, 11 etc. Basically first position of a subgroup
-                    if units[num] then units[count] = units[num] end -- put whoever was already in the first position of the subgroup into the current position
-                    units[num] = v -- put the leader in the first position of the subgroup
-                else
-                    units[count] = v      
-                end
+                units[count] = v      
                 count = count+1
                 if count > 5 then count = 11 end
                 if count > 15 then count = 21 end
             end
             count = 6            
             for i, v in ipairs(sides["right"]) do
-                if UnitIsGroupLeader(v.unitid) then 
-                    local num = math.floor((count - 1) / 5) * 5 + 1 
-                    if units[num] then units[count] = units[num] end 
-                    units[num] = v 
-                else
-                    units[count] = v      
-                end
+                units[count] = v      
                 count = count+1
                 if count > 10 then count = 16 end
                 if count > 20 then count = 26 end
             end
             NSI.Groups.units = units
-            NSI:ArrangeGroups(true)
+            self:ArrangeGroups(true)
         else         
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
-                if UnitIsGroupLeader(v.unitid) then 
-                    local num = math.floor((count - 1) / 5) * 5 + 1 
-                    if units[num] then units[count] = units[num] end 
-                    units[num] = v 
-                else
-                    units[count] = v      
-                end
+                units[count] = v      
                 count = count+1
             end
             if total["ALL"] > 20 then count = 16 
@@ -262,19 +238,40 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             else count = 6
             end
             for i, v in ipairs(sides["right"]) do
-                if UnitIsGroupLeader(v.unitid) then 
-                    local num = math.floor((count - 1) / 5) * 5 + 1 
-                    if units[num] then units[count] = units[num] end 
-                    units[num] = v 
-                else
-                    units[count] = v      
-                end
+                units[count] = v      
                 count = count+1
             end
             NSI.Groups.units = units
-            NSI:ArrangeGroups(true)
+            self:ArrangeGroups(true)
         end
     end    
+end
+
+function NSI:ShiftLeader(group)
+    if not group then return end
+    local currentpos = 0
+    local goalpos = 0
+    for i, v in ipairs(group) do
+        if UnitIsGroupLeader(v.unitid) then
+            currentpos = i
+            -- for tanks put them first in their current group, for others put them first in not the first group so they don't appear above the tanks unless there are less than 6 players available.
+            goalpos = (v.role == "TANK" and math.floor((i - 1) / 5) * 5 + 1) or (i > 5 and math.floor((i - 1) / 5) * 5 + 1) or (#sides["right"] > 5 and 6) or 1
+        end
+    end
+    if goalpos ~= 0 and currentpos ~= goalpos then
+        local leaderunit = group[currentpos]
+        if currentpos > goalpos then -- leader is currently after the goal position
+            for i=currentpos, goalpos+1, -1 do
+                group[i] = group[i-1] -- move everyone one position back
+            end
+        else -- leader is currently before the goal position
+            for i=currentpos, goalpos-1 do
+                group[i] = group[i+1] -- move everyone one position forward
+            end
+        end
+        group[goalpos] = leaderunit
+    end
+    return group
 end
 
 function NSI:ArrangeGroups(firstcall, finalcheck)
