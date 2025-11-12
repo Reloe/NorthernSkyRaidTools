@@ -70,7 +70,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.Assigns = ""
-            self.Timer = {}
+            self.ReminderTimer = {}
+            self.UpdateTimer = {}
             self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
@@ -291,7 +292,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:IsMidnight() then return end
         self.Externals:Init(true)
     elseif e == "ENCOUNTER_START" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        if self:IsMidnight() then return end
+        if self:IsMidnight() or NSRT.Settings["Debug"] then 
+            if (not self.ProcessedAssigns) or not (next(self.ProcessedAssigns)) then
+                self:ProcessAssigns()
+            end
+            if self.ProcessedAssigns and next(self.ProcessedAssigns) then
+                self.Phase = 1
+                self.AssignText = {}
+                self.AssignIcon = {}
+                self:StartReminders(self.Phase)
+            end
+            return 
+        end
         self.specs = {}
         NSAPI.HasNSRT = {}
         for u in self:IterateGroupMembers() do
@@ -310,6 +322,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.Externals:Init()
     elseif e == "ENCOUNTER_END" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
+        if self:IsMidnight() then
+            self.ReminderTimer = nil
+            NSI:HideAllReminders()
+        end
         C_Timer.After(1, function()
             if self:Restricted() then return end
             if self.SyncNickNamesStore then

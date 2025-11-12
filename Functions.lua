@@ -424,32 +424,24 @@ function NSI:ProcessAssigns()
             if line:find("EncounterID:") then
                 self.ProcessedAssigns.EncounterID = line:match("EncounterID:(%d+)")
             end
-            local values = {}
-            for value in line:gmatch("[^|]+") do
-                table.insert(values, value)
-            end
-            local phase = line:gmatch("ph:(%d+)")
-            local time = line:gmatch("time:(%d+)")
-            local name = line:gmatch("name:(%s+)")
-            local text = line:gmatch("text:(%s+)")
-            local TTS = line:gmatch("TTS:(%s+)")
-            local spellID = line:gmatch("spellID:(%d+)")
-            local dur = line:gmatch("dur:(%d+)")
+            local phase = line:match("phase:(%d+)")
+            local time = line:match("time:(%d*%.?%d+)")
+            local name = line:match("name:([^;]+)")
+            local text = line:match("text:([^;]+)")
+            local TTS = line:match("TTS:([^;]+)")
+            local spellID = line:match("spellID:(%d+)")
+            local dur = line:match("dur:(%d+)")
             if phase and time and name and (text or spellID) then
                 if name == "everyone" or name:match(UnitName("player")) or name:match(UnitGroupRolesAssigned("player")) or name:match(NSAPI:GetName("player", "GlobalNickNames")) then     
                     phase = tonumber(phase)
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
-                    table.insert(self.ProcessedAssigns[phase], {time = tonumber(time), text = text, TTS = (TTS == "yes" and text) or TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
+                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, time = tonumber(time), text = text, TTS = (TTS == "yes" and text) or TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
         end
     end
 end
 -- /run NSAPI:Broadcast("NS_ASSIGN_SHARE", "RAID", "EncounterID:2400\n1|20|everyone|xdtext|123\n2|20|TANK\n3|30|Reloe\n4|40|Relowindi")
-
-function NSI:CreateFontString()
-    
-end
 
 function NSI:CreateText()
     self.AssignText = self.AssignText or {}
@@ -514,6 +506,7 @@ end
 
 function NSI:DisplayReminder(info)
     local dur = info.dur or 8
+    info.startTime = GetTime()
     info.dur = dur
     local rem = math.ceil((dur - (GetTime()-info.startTime))*10)/10 -- Round to 1 Decimal
     if rem <= 0 then
@@ -526,7 +519,7 @@ function NSI:DisplayReminder(info)
     local phase = info.phase
     local spellID = info.spellID
     local F
-    if spellID then -- display icon if we have a spellID    
+    if spellID and spellID ~= "false" then -- display icon if we have a spellID    
         F = self:CreateIcon(spellID)
         F.Text:SetText(text)
         F:Show()
@@ -539,9 +532,9 @@ function NSI:DisplayReminder(info)
         local TTS = (info.TTS == "true" and info.text) or (info.TTS == info.text and info.text) or info.TTS
         NSAPI:TTS(TTS)
     end
-    self.Timer[phase] = self.Timer[phase] or {}
-    self.Timer[phase][id] = C_Timer.NewTimer(0.1, function()
-        self.Timer[phase][id] = nil
+    self.UpdateTimer = self.UpdateTimer or {}
+    self.UpdateTimer[id] = C_Timer.NewTimer(0.05, function()
+        self.UpdateTimer[id] = nil
         self:UpdateReminderDisplay(info, F)
     end)
 end
@@ -557,15 +550,36 @@ function NSI:UpdateReminderDisplay(info, F)
     text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")
     local phase = info.phase
     local id = info.id
-    if info.spellID then
+    if info.spellID and info.spellID ~= "false" then
         F.Text:SetText(text)
     else
         F:SetText(text)
     end    
-    self.Timer[phase][id] = C_Timer.NewTimer(0.1, function()
-        self.Timer[phase][id] = nil
+    self.UpdateTimer[id] = C_Timer.NewTimer(0.05, function()
+        self.UpdateTimer[id] = nil
         self:UpdateReminderDisplay(info, F)
     end)
+end
+
+function NSI:StartReminders(phase)
+    self:HideAllReminders()
+    self.ReminderTimer = {}
+    self.UpdateTimer = {}
+    for i, v in ipairs(self.ProcessedAssigns[phase]) do
+        self.ReminderTimer[i] = C_Timer.NewTimer(v.time, function()
+            self.ReminderTimer[i] = nil
+            self:DisplayReminder(v)
+        end)
+    end
+end
+
+function NSI:HideAllReminders()
+    for i=1, 100 do
+        local F1 = self.AssignText[i]
+        local F2 = self.AssignIcon[i]
+        if F1 then F1:Hide() end
+        if F2 then F2:Hide() end
+    end
 end
 
 function NSAPI:TestDisplay()
