@@ -39,34 +39,48 @@ function NSI:Print(...)
     end
 end
 
-function NSAPI:Shorten(unit, num, role, AddonName, combined) -- Returns color coded Name/Nickname
+function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
     local classFile = unit and select(2, UnitClass(unit))
-    if role then -- create role icon if requested
+    if specicon then
         local specid = 0
-        if unit then specid = NSAPI:GetSpecs(unit) or WeakAuras.SpecForUnit(unit) or 0 end
+        if unit then specid = NSAPI:GetSpecs(unit) or 0 end
         local icon = select(4, GetSpecializationInfoByID(specid))
-        if icon then -- if we didn't get the specid can at least try to return the role icon
-            role = "\124T"..icon..":12:12:0:0:64:64:4:60:4:60\124t"
-        else
-            role = UnitGroupRolesAssigned(unit)
-            if role ~= "NONE" then
-                role = CreateAtlasMarkup(GetIconForRole(role), 0, 0)
+        if icon then 
+            specicon = "\124T"..icon..":12:12:0:0:64:64:4:60:4:60\124t"
+        elseif not roleicon then -- if we didn't get the specid can at least try to return the role icon unless that one was specifically requested as well
+            specicon = UnitGroupRolesAssigned(unit)
+            if specicon ~= "NONE" then
+                specicon = CreateAtlasMarkup(GetIconForRole(specicon), 0, 0)
             else
-                role = ""
+                specicon = ""
             end
+        else
+            specicon = ""
         end
+    else
+        specicon = ""
+    end
+    if roleicon then
+        roleicon = UnitGroupRolesAssigned(unit)
+        if roleicon ~= "NONE" then
+            roleicon = CreateAtlasMarkup(GetIconForRole(roleicon), 0, 0)
+        else
+            roleicon = ""
+        end
+    else
+        roleicon = ""
     end
     if classFile then -- basically "if unit found"
         local name = UnitName(unit)
         local color = GetClassColorObj(classFile)
         name = num and WeakAuras.WA_Utf8Sub(NSAPI:GetName(name, AddonName), num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
-            return combined and role..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or role
+            return combined and specicon..roleicon..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or specicon, combined and "" or roleicon
         else
-            return combined and role..name or name, combined and "" or role
+            return combined and specicon..roleicon..name or name, combined and "" or specicon, combined and "" or roleicon
         end
     else
-        return unit, "" -- return input if nothing was found
+        return unit, "", "" -- return input if nothing was found
     end
 end
 
