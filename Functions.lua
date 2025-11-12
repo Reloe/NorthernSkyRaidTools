@@ -21,6 +21,10 @@ function NSAPI:Version() -- function for version check WA
     return 18
 end
 
+function NSI:IsMidnight()
+  return select(4, GetBuildInfo()) >= 120000
+end
+
 function NSI:Print(...)
     if NSRT.Settings["DebugLogs"] then
         if DevTool then
