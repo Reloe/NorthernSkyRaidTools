@@ -1,154 +1,36 @@
-Changes since tag v11.1.0.591
+tag 7023f03d87c4ec2c0d4cb7b6539c0d5a4bfb21a0 v11.2.626
+Author:	Tercio Jose <terciob19@hotmail.com>
+Date:	Tue Oct 21 13:50:33 2025 -0300
 
-commit 2d2b8c7a9c822316d0a34c08220f7ebdc64fb3dd
-Author: cont1nuity <continuity@gmx.net>
-Date:   Thu Jun 26 20:44:11 2025 +0200
-
-    - enable absorb API for MoP classic
-
-commit dcc890f35449061af823a023b33cc1782c0d620e
-Author: cont1nuity <continuity@gmx.net>
-Date:   Wed Jun 18 09:44:01 2025 +0200
-
-    - fix glow template
-
-commit 2b3a27566c369f34e943333c5ff80704dd6d40a9
-Author: cont1nuity <continuity@gmx.net>
-Date:   Wed Jun 18 09:43:52 2025 +0200
-
-    - fix CM changes, closes #22
-
-commit 2ed187cf5bc74d1166c7933168d7f3dd601b7eb6
-Author: cont1nuity <continuity@gmx.net>
-Date:   Wed Jun 18 09:43:26 2025 +0200
-
-    - toc update
-
-commit f5b77294232a799c9a96b11179f63d4cf0590010
+commit 87e21257d2b2c4f4081aaa9c3928ed2647099a30
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat Jun 7 20:32:50 2025 -0300
+Date:   Tue Oct 21 13:49:51 2025 -0300
 
-    Fix SetFromPath gmatch pattern
+    Midnight Support
 
-commit d458cc8b291fbaa00eec2967dd957865a80d75ea
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat Jun 7 11:33:17 2025 -0300
+commit f316af04ec6283090c81f861bd4b80942c9d9c6c
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Oct 1 15:26:08 2025 +0200
 
-    Fix ToC
+    - fix the at least mop check
 
-commit 379a0d6e14db3691cd5c9805b365bb62ba75eb7f
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat Jun 7 11:01:12 2025 -0300
+commit f6a43f2a816b108d10c4c5251b0e84096589d71e
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Sep 30 21:10:38 2025 +0200
 
-    General Improvements
-
-commit 1adb8e43335684594c7d01b780c67273389d2fe2
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue May 13 18:07:49 2025 -0300
-
-    Added methods: :IsText() to identify if the dropdown has a textentry and :GetTextEntry()
-
-commit b91bc3abf22035b447b592ed93a82fdbb6a24939
-Author: Flamanis <Flamanis@users.noreply.github.com>
-Date:   Sat May 10 17:12:46 2025 -0500
-
-    Update UnitGroupRolesAssigned for best compatibility (#20)
+    - don't check api but game version
     
-    * Update UnitGroupRolesAssigned for best compatibility
-    
-    * Bump version number
-    
-    * Proper version number update
+    Cell_Unitframes adds this global API... Shame on them!
 
-commit a75fe3ceda0cc0c8bd9846e1c309131bd05adf09
-Author: cont1nuity <continuity@gmx.net>
-Date:   Sun May 4 20:52:12 2025 +0200
-
-    - re-enable this glow
-
-commit 6eea28c0765e97c58311c0951d9ba74f0351933f
-Author: Flamanis <Flamanis@users.noreply.github.com>
-Date:   Sat May 3 17:01:04 2025 -0500
-
-    Bump version number
-
-commit 6eea28c0765e97c58311c0951d9ba74f0351933f
-Author: Flamanis <Flamanis@users.noreply.github.com>
-Date:   Sat May 3 17:01:04 2025 -0500
-
-    Bump version number
-
-commit 031cb4000722d7693e468c7539c98b24cd6d73ad
-Author: Flamanis <Flamanis@users.noreply.github.com>
-Date:   Sat May 3 16:58:17 2025 -0500
-
-    Update IsNonRetailWowWithRetailAPI
-
-commit 5f77f6d0756b7288ae0ee17d5b580e1144456483
+commit 5c5d5b4b3559a8fa5c452c13775e177f5a881dde
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat May 3 17:02:19 2025 -0300
+Date:   Tue Sep 30 15:45:07 2025 -0300
 
-    Mists of Pandaria support
+    Header Updates
 
-commit 9796df4ae0e3b64cb4eaec2c43cd7e2a2586c71c
+commit 51e2f9f31e53e89c336c972b2e3e1e4f3878e61a
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Fri May 2 21:11:48 2025 -0300
+Date:   Wed Sep 24 19:54:03 2025 -0300
 
-    Converted df_icon to a button.
-
-commit 1d99c57066ec9631c92654de2b101293373bca01
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Apr 29 19:25:38 2025 -0300
-
-    Add key 'callWithNoText' for textentry, if true it'll call the OnEnterPressed callback even if the text is ""
-
-commit a1040b452376147e2528e82f6364cd75cb5be230
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Fri Apr 25 15:59:35 2025 -0300
-
-    ToC Update
-
-commit eb0c3667cd8ffd12a4a6d20127d274fb615db3dc
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Apr 22 17:58:15 2025 -0300
-
-    Added Cooltip "UseTrilinearLeft" and right option.
-
-commit 085ef85c252ea654642977cedd0a14d8b52d8993
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sun Apr 20 13:25:08 2025 -0300
-
-    Added mage polymorph variation.
-
-commit b955a92f1e42593e17dcf1a6487767034d4b83b5
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sun Apr 13 15:27:14 2025 -0300
-
-    Added Dropdown.OnCreateOptionFrame and Dropdown.OnUpdateOptionFrame for more control over the options when the dropdown is opened.
-
-commit cd8e4e9977eaf7502bfd5543b4f12df13133e09b
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat Apr 12 18:05:49 2025 -0300
-
-    Added dropdown:UseSimpleHeader(value)
-
-commit 21d597f7931c4a1222a65eaaa751be2eca18c390
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Thu Apr 10 19:58:57 2025 -0300
-
-    Added DF:CreateDropdownWithText(), this is a dropdown with a text entry.
-
-commit 894e98fb99d3016e42f96213f41d38ac54115abf
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Fri Apr 4 21:04:10 2025 -0300
-
-    Bug fixes
-
-commit 15dceec9c54c2dac5013c50cc13c75e836ef4e34
-Author: cont1nuity <continuity@gmx.net>
-Date:   Fri Mar 21 15:18:29 2025 +0100
-
-    - SetColorRGB is no longer available
-    
-    fixes Tercioo/Plater-Nameplates/issues/274
+    Header implementations.
 

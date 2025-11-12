@@ -141,6 +141,40 @@ local onLeaveHighlight = function(self)
     end
 end
 
+local processTexture = function(widget, widgetTable)
+    widget = widget.widget or widget
+
+    if (widgetTable.texture) then
+        local texture = widget.IconTexture
+        if (not texture) then
+            texture = widget:CreateTexture(nil, "overlay")
+            texture:SetPoint("left", widget, "right", 2, 0)
+            widget.IconTexture = texture
+        end
+
+        local textureToSet = widgetTable.texture
+        if (type(textureToSet) == "string" or type(textureToSet) == "number") then
+            texture:SetTexture(textureToSet)
+            texture:SetSize(widgetTable.texture_width or (widget:GetHeight()-2), widgetTable.texture_height or (widget:GetHeight()-2))
+        end
+
+        if (widget.hasLabel and widget.hasLabel.widget) then
+            widget.hasLabel.widget.originalPoint = widget.hasLabel.widget.originalPoint or {widget.hasLabel.widget:GetPoint(1)}
+            widget.hasLabel.widget:ClearAllPoints()
+            widget.hasLabel.widget:SetPoint("left", texture, "right", 2, 0)
+        end
+    else
+        if (widget.IconTexture and widget.IconTexture:IsShown()) then
+            widget.IconTexture:Hide()
+
+            if (widget.hasLabel and widget.hasLabel.widget and widget.hasLabel.widget.originalPoint) then
+                widget.hasLabel.widget:ClearAllPoints()
+                widget.hasLabel.widget:SetPoint(unpack(widget.hasLabel.widget.originalPoint))
+            end
+        end
+    end
+end
+
 --control the highlight color, if true, use color one, if false, use color two
 --color one: .2, .2, .2, 0.5
 --color two: .3, .3, .3, 0.5
@@ -414,6 +448,8 @@ local setToggleProperties = function(parent, widget, widgetTable, currentXOffset
         maxWidgetWidth = widget:GetWidth()
     end
 
+    processTexture(widget, widgetTable)
+
     onWidgetSetInUse(widget, widgetTable)
 
     return maxColumnWidth, maxWidgetWidth, extraPaddingY
@@ -621,7 +657,7 @@ local setExecuteProperties = function(parent, widget, widgetTable, currentXOffse
     if (bAlignAsPairs) then
         PixelUtil.SetPoint(label, "topleft", widget:GetParent(), "topleft", currentXOffset, currentYOffset)
         PixelUtil.SetPoint(widget.widget, "left", label, "left", nAlignAsPairsLength, 0)
-
+        label:SetText(">")
         if (not widget.highlightFrame) then
             local highlightFrame = createOptionHighlightFrame(widget, label, (widgetWidth or 140) + nAlignAsPairsLength + 5)
             widget.highlightFrame = highlightFrame
@@ -1673,6 +1709,10 @@ function detailsFramework:BuildMenu(parent, menuOptions, xOffset, yOffset, heigh
     end --end loop
 
     if (bUseScrollFrame) then
+        if (biggestColumnHeight == 0) then
+            biggestColumnHeight = currentYOffset
+        end
+
         parent:SetHeight(biggestColumnHeight * -1)
         canvasFrame:GetParent().RefreshOptions = function()
             parent:RefreshOptions()
