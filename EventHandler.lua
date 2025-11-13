@@ -26,6 +26,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
             if not NSRT.Settings then NSRT.Settings = {} end
+            NSRT.Reminders = NSRT.Reminders or {}
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -162,12 +163,21 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if self:Restricted() then return end
-        if self:Difficultycheck(false, 15) then -- only care about note comparison in normal, heroic&mythic raid
+        if self:Difficultycheck(false, 14) then -- only care about note comparison in normal, heroic&mythic raid
             local note = NSAPI:GetNote()
             if note ~= "empty" then
                 local hashed = NSAPI:GetHash(note) or ""     
                 self:Broadcast("MRT_NOTE", "RAID", hashed)   
             end
+        end
+        if (self:IsMidnight() and not self:Restricted() and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"] then
+            if UnitIsGroupLeader("player") then
+                self:Broadcast("NS_ASSIGN_SHARE", "RAID", self.Assigns)
+            end
+            self.Difference = {}
+            C_Timer.After(1, function()
+                self:EventHandler("NS_COMPARE_ASSIGNS", false, true)
+            end)
         end
         if NSRT.Settings["CheckCooldowns"] and self:Difficultycheck(false, 15) and UnitInRaid("player") then
             self:CheckCooldowns()
@@ -183,13 +193,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
-        if UnitIsGroupLeader("player") then
-            self:Broadcast("NS_ASSIGN_SHARE", "RAID", self.Assigns)
-        end
-        self.Difference = {}
         C_Timer.After(1, function()
             self:EventHandler("NSAPI_READY_CHECK", false, true)
-            self:EventHandler("NS_COMPARE_ASSIGNS", false, true)
         end)
     elseif e == "NSAPI_READY_CHECK" and internal then
         if self:Restricted() then return end

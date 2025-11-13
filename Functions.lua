@@ -25,6 +25,10 @@ function NSI:IsMidnight()
   return select(4, GetBuildInfo()) >= 120000
 end
 
+function NSI:Restricted()
+    return (self:IsMidnight() and GetRestrictedActionStatus(0)) or (WeakAuras and WeakAuras.CurrentEncounter)
+end
+
 function NSI:Print(...)
     if NSRT.Settings["DebugLogs"] then
         if DevTool then
@@ -39,9 +43,6 @@ function NSI:Print(...)
     end
 end
 
-function NSI:Restricted()
-    return (self:IsMidnight() and GetRestrictedActionStatus(0)) or (WeakAuras and WeakAuras.CurrentEncounter)
-end
 
 function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
     local classFile = unit and select(2, UnitClass(unit))
@@ -220,7 +221,7 @@ function NSI:Difficultycheck(encountercheck, num) -- check if current difficulty
 end
 
 function NSI:EncounterCheck(skipdebug)
-    return WeakAuras.CurrentEncounter or (NSRT.Settings["Debug"] and not skipdebug)
+    return self:Restricted() or (NSRT.Settings["Debug"] and not skipdebug)
 end
 
 -- this one is public as I want to use it in WeakAuras as well
@@ -594,4 +595,15 @@ function NSAPI:TestDisplay()
         NSI:DisplayReminder(info3)
         NSI:DisplayReminder(info4)
     end
+end
+
+function NSI:SetReminder(name)
+    if NSRT.Reminders[name] then
+        self.Assigns = NSRT.Reminders[name]
+    end
+end
+
+function NSI:ImportReminder(name, values)
+    NSRT.Reminders[name] = values
+    -- NSI:UpdateReminderList()
 end
