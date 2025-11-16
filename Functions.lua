@@ -436,13 +436,12 @@ function NSI:ProcessAssigns()
                 if name == "everyone" or name:match(UnitName("player")) or name:match(UnitGroupRolesAssigned("player")) or name:match(NSAPI:GetName("player", "GlobalNickNames")) then     
                     phase = tonumber(phase)
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
-                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, time = tonumber(time), text = text, TTS = (TTS == "yes" and text) or TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
+                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
         end
     end
 end
--- /run NSAPI:Broadcast("NS_ASSIGN_SHARE", "RAID", "EncounterID:2400\n1|20|everyone|xdtext|123\n2|20|TANK\n3|30|Reloe\n4|40|Relowindi")
 
 function NSI:CreateText()
     self.AssignText = self.AssignText or {}
@@ -529,8 +528,8 @@ function NSI:DisplayReminder(info)
         F:SetText(text)
         F:Show()
     end    
-    if info.TTS and info.TTS ~= "" and info.TTS ~= "false" then
-        local TTS = (info.TTS == "true" and info.text) or (info.TTS == info.text and info.text) or info.TTS
+    if info.TTS and info.TTS ~= "" and strlower(info.TTS) ~= "false" then
+        local TTS = (strlower(info.TTS) == "true" and info.text) or (info.TTS == info.text and info.text) or info.TTS
         NSAPI:TTS(TTS)
     end
     self.UpdateTimer = self.UpdateTimer or {}
@@ -563,6 +562,7 @@ function NSI:UpdateReminderDisplay(info, F)
 end
 
 function NSI:StartReminders(phase)
+    print("starting timers for phase:", phase)
     self:HideAllReminders()
     self.ReminderTimer = {}
     self.UpdateTimer = {}
@@ -576,10 +576,18 @@ end
 
 function NSI:HideAllReminders()
     for i=1, 100 do
-        local F1 = self.AssignText[i]
-        local F2 = self.AssignIcon[i]
-        if F1 then F1:Hide() end
-        if F2 then F2:Hide() end
+        if self.AssignText then
+            local F = self.AssignText[i]
+            if F then F:Hide() end
+        end
+        if self.AssignIcon then
+            local F = self.AssignIcon[i]
+            if F then F:Hide() end
+        end
+        if self.AssignBar then            
+            local F = self.AssignBar[i]
+            if F then F:Hide() end
+        end
     end
 end
 
@@ -606,4 +614,45 @@ end
 function NSI:ImportReminder(name, values)
     NSRT.Reminders[name] = values
     -- NSI:UpdateReminderList()
+end
+
+
+
+NSI.EncounterDetections = {
+   -- [123] = {0, 10, 15, 20} [EncounterID] = {P1, P2, P3, etc} First is always 0 because it is for P1 which we start in.
+}
+
+function NSI:DetectPhaseChange()
+    local now = GetTime()
+    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and self.EncounterDetections[self.EncounterID] and self.EncounterDetections[self.EncounterID][self.Phase+1]
+    if needed then
+        table.insert(self.Timelines, now+1)
+        local count = 0
+        for i, v in ipairs(self.Timelines) do
+            if v > now then
+                count = count+1
+                if count > needed then
+                    self.Phase = self.Phase+1
+                    self:StartReminders(phase)
+                    self.PhaseSwapTime = now
+                    break
+                end
+            end           
+        end
+    end
+end
+
+-- /run NSAPI:DebugReminder(2400)
+-- Debug has to be run before pulling. If player isn't raidlead it needs to be done after ready check.
+function NSAPI:DebugReminder(EncounterID)
+    if NSRT.Settings["Debug"] then
+        local text = "EncounterID:"..EncounterID.."\nphase:1;time:5;name:Relowindi;text:Stack on {rt7};TTS:Stack on Red;spellID:774;dur:10;"
+        text = text.."\n".."phase:1;time:20;name:Relowindi;text:Spread;TTS:true;spellID:774;dur:10;"
+        text = text.."\n".."phase:2;time:10;name:Relowindi;text:Check for Debuff;TTS:true;dur:10"
+        if not NSI.EncounterDetections[EncounterID] then
+            NSI.EncounterDetections[EncounterID] = {0, 8, 8}
+        end
+        NSI.Assigns = text
+        NSI:ProcessAssigns()
+    end
 end

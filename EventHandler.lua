@@ -10,6 +10,11 @@ f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("CHALLENGE_MODE_START")
+if NSI:IsMidnight() then
+    f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
+    f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
+    f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
+end
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -303,10 +308,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             if self.ProcessedAssigns and next(self.ProcessedAssigns) then
                 self.Phase = 1
+                self.PhaseSwapTime = now
                 self.AssignText = {}
                 self.AssignIcon = {}
+                self.AssignBar = {}
                 self:StartReminders(self.Phase)
             end
+            self.Timelines = {}
+            self.EncounterID = ...
             return 
         end
         self.specs = {}
@@ -329,6 +338,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, encounterName = ...
         if self:IsMidnight() then
             self.ReminderTimer = nil
+            self.Timelines = {}
+            print("encounter end, setting to 0")
             NSI:HideAllReminders()
         end
         C_Timer.After(1, function()
@@ -347,7 +358,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self.AssignedExternals and next(self.AssignedExternals) then self:Print("Assigned Externals for Encounter: "..encounterName, self.AssignedExternals) end
             self.AssignedExternals = {}
             self.MacroPresses = {}
-        end        
+        end      
+    elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and (wowevent or NSRT.Settings["Debug"]) then  
+        self:DetectPhaseChange()
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
@@ -417,7 +430,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NS_ASSIGN_COMPARE", "RAID", self.Assigns)    
     elseif e == "NS_ASSIGN_SHARE" and (internal or NSRT.Settings["Debug"]) then
         local unit, assigntable = ...
-        if UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit) then
+        if UnitIsGroupLeader(unit) then
             self.Assigns = assigntable
             self:ProcessAssigns()
         end
