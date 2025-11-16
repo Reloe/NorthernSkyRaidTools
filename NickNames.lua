@@ -24,6 +24,7 @@ end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
     local unitname = UnitExists(str) and UnitName(str) or str
+    if NSI:IsMidnight() and issecretvalue(unitname) then return unitname end
     -- check if setting for the requesting addon is enabled, if not return the original name.
     -- if no AddonName is given we assume it's from an old WeakAura as they never specified
     if ((not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName])) and AddonName ~= "Note" then
@@ -42,6 +43,7 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         if not realm then
             realm = GetNormalizedRealmName()
         end
+        if NSI:IsMidnight() and (issecretvalue(name) or issecretvalue(realm)) then return name end
         local nickname = name and realm and fullCharList[name.."-"..realm]
         if nickname and NSRT.Settings["Translit"] then
             nickname = LibTranslit:Transliterate(nickname)
