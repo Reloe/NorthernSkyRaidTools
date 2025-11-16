@@ -876,6 +876,7 @@ local auraUnitId
 
 local handleBuffAura = function(aura)
     local auraInfo = C_UnitAuras.GetAuraDataByAuraInstanceID(auraUnitId, aura.auraInstanceID)
+    if 1 then return end
     if (auraInfo) then
         local spellId = auraInfo.spellId
         if (auraSpellID == spellId) then
@@ -930,6 +931,7 @@ end
 ---@return number duration
 ---@return number buffDuration
 function openRaidLib.CooldownManager.GetPlayerCooldownStatus(spellId)
+    if 1 then return end
     --check if is a charge spell
     local spellData = LIB_OPEN_RAID_COOLDOWNS_INFO[spellId]
     if (spellData) then

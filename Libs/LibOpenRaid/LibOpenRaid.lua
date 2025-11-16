@@ -38,7 +38,7 @@ BUGS:
 ---@alias castername string
 ---@alias castspellid string
 ---@alias schedulename string
-
+if select(4, GetBuildInfo()) >= 120000 then return end
 local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo or GetSpecializationInfo
 
