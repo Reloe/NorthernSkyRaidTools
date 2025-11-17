@@ -85,6 +85,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
+        C_AddOns.LoadAddOn("WeakAuras")
         if self:IsMidnight() or not WeakAuras then return end
         self:AutoImport()
         self.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
