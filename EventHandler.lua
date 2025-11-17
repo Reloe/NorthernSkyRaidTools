@@ -319,6 +319,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.AssignBar = self.AssignBar or {}
                 self.ReminderTimer = self.ReminderTimer or {}
                 self.AllGlows = self.AllGlows or {}
+                self.LGF.GetUnitFrame("player")
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}

@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 _G["NSAPI"] = {}
 NSI.specs = {}
 NSI.LCG = LibStub("LibCustomGlow-1.0")
-NSI.GF = LibStub("LibGetFrame-1.0")
+NSI.LGF = LibStub("LibGetFrame-1.0")
 local NSAPI2 = NSAPI
 
 local LDB = LibStub("LibDataBroker-1.1")

@@ -152,7 +152,7 @@ function NSI:CreateUnitFrameIcon(info)
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     local unit = NSAPI:GetChar(info.glowunit, true)
     if not UnitExists(unit) then return end
-    local F = self.GF.GetUnitFrame(unit)
+    local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     for i=1, 20 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
@@ -443,7 +443,7 @@ function NSI:GlowFrame(unit, id)
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
     if not UnitExists(unit) then return end
-    local F = self.GF.GetUnitFrame(unit)
+    local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows[F] = id
@@ -454,7 +454,7 @@ function NSI:HideGlow(unit, id)
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
     if not UnitExists(unit) then return end
-    local F = self.GF.GetUnitFrame(unit)
+    local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     self.AllGlows[F] = nil
     self.LCG.PixelGlow_Stop(F, id)
