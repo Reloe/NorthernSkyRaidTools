@@ -523,7 +523,7 @@ local function Init(noDelay)
   end)
   ScanForUnitFrames(noDelay)
 end
-
+Init(true)
 function lib.GetUnitFrame(target, opt)
   if type(GetFramesCacheListener) ~= "table" then
     Init(true)
