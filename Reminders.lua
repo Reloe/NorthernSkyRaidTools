@@ -88,7 +88,7 @@ function NSI:SetProperties(F, info)
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
         local unit, _, spellID = ...
-        if (NSI:Restricted() or UnitIsUnit(unit, "player")) and spellID == info.spellID and self:IsShown() then
+        if (not issecretvalue(spellID)) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
             self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             self:Hide()
         end
@@ -151,8 +151,9 @@ function NSI:CreateUnitFrameIcon(info)
     self.UnitIcon = self.UnitIcon or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     local unit = NSAPI:GetChar(info.glowunit, true)
-    if not UnitExists(unit) then return end
-    local F = self.LGF.GetUnitFrame(unit)
+    local i = UnitInRaid(unit)
+    if (not UnitExists(unit)) or (not i)then return end
+    local F = self.RaidFrames["raid"..i]
     if not F then return end
     for i=1, 20 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
@@ -409,12 +410,12 @@ end
 -- or /run NSAPI:DebugReminder(2400, true) to test outside of combat
 function NSAPI:DebugReminder(EncounterID, startnow)
     if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nphase:1;time:2;name:Relowindi;text:Stack on {rt7};glowunit:Reloe;sound:Stack;TTS:Stack on Red;dur:10;"
-        text = text.."\n".."phase:1;time:6;name:monk;text:Use Fort Brew;TTS:true;glowunit:Relowindi;spellID:115203;dur:10;"
-        text = text.."\n".."phase:2;time:2;name:tank;text:Use Ring;TTS:true;spellID:116844;dur:10;"
-        text = text.."\n".."phase:2;time:6;name:Reloe;text:Spread;TTS:true;dur:10;"
-        text = text.."\n".."phase:3;time:2;name:268;text:Check for Debuff;TTS:true;dur:10"
-        text = text.."\n".."phase:3;time:6;name:everyone;text:Lust on Senfi;glowunit:Reloe;spellID:116841;TTS:true;dur:10"
+        local text = "EncounterID:"..EncounterID.."\nphase:1;time:2;name:Relowindi;text:Stack on {rt7};sound:Stack;TTS:Stack on Red;dur:10;"
+        text = text.."\n".."phase:1;time:7;name:monk;text:Use Fort Brew;TTS:true;spellID:115203;dur:10;"
+        text = text.."\n".."phase:1;time:12;name:everyone;text:Lust on Reloe;glowunit:Reloe;spellID:116841;TTS:true;dur:10"
+        text = text.."\n".."phase:2;time:2;name:Reloe;text:Spread;TTS:true;dur:10;"
+        text = text.."\n".."phase:2;time:7;name:268;text:Run out if Debuff;TTS:true;dur:10"
+        text = text.."\n".."phase:2;time:12;name:tank;text:Use Ring;TTS:true;spellID:116844;dur:10;"
         if not NSI.EncounterDetections[EncounterID] then
             NSI.EncounterDetections[EncounterID] = {0, 8, 8}
         end
@@ -422,10 +423,7 @@ function NSAPI:DebugReminder(EncounterID, startnow)
         NSI:ProcessAssigns()
         if startnow then
             NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
-            C_Timer.After(12, function()
-                NSAPI:DebugNextPhase(10)
-            end)
-            C_Timer.After(24, function()
+            C_Timer.After(20, function()
                 NSAPI:DebugNextPhase(10)
             end)
         end
@@ -442,8 +440,9 @@ function NSI:GlowFrame(unit, id)
     local color = {0, 1, 0, 1}
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
-    if not UnitExists(unit) then return end
-    local F = self.LGF.GetUnitFrame(unit)
+    local i = UnitInRaid(unit)
+    if (not UnitExists(unit)) or (not i) then return end
+    local F = self.RaidFrames["raid"..i]
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows[F] = id
@@ -453,9 +452,27 @@ end
 function NSI:HideGlow(unit, id)    
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
-    if not UnitExists(unit) then return end
-    local F = self.LGF.GetUnitFrame(unit)
+    local i = UnitInRaid(unit)
+    if (not UnitExists(unit)) or (not i) then return end
+    local F = self.RaidFrames["raid"..i]
     if not F then return end
     self.AllGlows[F] = nil
     self.LCG.PixelGlow_Stop(F, id)
+end
+
+function NSI:StoreFrames(init)
+    self.RaidFrames = {}
+    if init then
+        local MyFrame = self.LGF.GetUnitFrame("player")
+        C_Timer.After(1, function()
+            NSI:StoreFrames(false)
+        end)
+        return
+    end
+    for unit in self:IterateGroupMembers() do
+        local F = self.LGF.GetUnitFrame(unit)
+        if F then
+            self.RaidFrames[unit] = F
+        end
+    end
 end

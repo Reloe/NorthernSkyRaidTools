@@ -22,7 +22,7 @@ function NSI:BuffCheck()
         for unit in self:IterateGroupMembers() do
             local specID = self.specs and self.specs[unit] or select(3, UnitClass(unit)) -- if specdata exists we use that, otherwise class which means maybe some useless buffs are being done.
             if specID and (class == 5 or class == 13 or class == 11 or class == 7 or tContains(buffrequired[class], specID)) then
-                local buffed = self:UnitAura(unit, spellID)
+                local buffed = NSAPI:UnitAura(unit, spellID)
                 if (not buffed) or buffed == "" then
                     NSAPI:TTS("Rebuff")
                     break

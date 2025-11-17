@@ -180,11 +180,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:Broadcast("MRT_NOTE", "RAID", hashed)   
             end
         end
-        if (self:IsMidnight() and not self:Restricted() and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"] then
+        if (self:IsMidnight() and (not self:Restricted()) and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"] then
             if UnitIsGroupLeader("player") then
                 self:Broadcast("NS_ASSIGN_SHARE", "RAID", self.Assigns)
             end
             self.Difference = {}
+            self:StoreFrames(true)
             C_Timer.After(1, function()
                 self:EventHandler("NS_COMPARE_ASSIGNS", false, true)
             end)
@@ -318,8 +319,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.AssignIcon = self.AssignIcon or {}
                 self.AssignBar = self.AssignBar or {}
                 self.ReminderTimer = self.ReminderTimer or {}
+                self.RaidFrames = self.RaidFrames or {}
                 self.AllGlows = self.AllGlows or {}
-                self.LGF.GetUnitFrame("player")
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}
