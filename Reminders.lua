@@ -20,7 +20,19 @@ function NSI:ProcessAssigns()
             local dur = line:match("dur:(%d+)")
             local sound = line:match("sound:([^;]+)")
             if phase and time and name and (text or spellID) then
-                if name == "everyone" or name:match(UnitName("player")) or name:match(UnitGroupRolesAssigned("player")) or name:match(NSAPI:GetName("player", "GlobalNickNames")) then     
+                name = strlower(name)
+                local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+                local pos = self.spectable[specid]
+                pos = (pos <= 19 and pos >= 7 and "meleedps") or (pos <= 33 and pos >= 20 and "rangeddps")
+                if 
+                name == "everyone" or 
+                name:match(strlower(UnitName("player"))) or 
+                name:match(strlower(UnitGroupRolesAssigned("player"))) or 
+                name:match(strlower(NSAPI:GetName("player", "GlobalNickNames"))) or 
+                name:match(specid) or
+                name:match(strlower(select(2, UnitClass("player")))) or
+                (pos and name:match(pos))
+                then     
                     phase = tonumber(phase)
                     text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
@@ -60,17 +72,30 @@ function NSI:CreateText(info)
     end
 end
 
+function NSI:SetProperties(F, info)
+    local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
+    F.Icon:SetTexture(icon)
+    F.TimerText:SetTextColor(1, 1, 0, 1)
+    if F.Swipe then F.Swipe:SetCooldown(GetTime(), info.dur) end
+    F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    F:SetScript("OnEvent", function(self, e, ...)
+        local unit, _, spellID = ...
+        if (not issecretvalue(unit)) and UnitIsUnit(unit, "player") and spellID == info.spellID and self:IsShown() then
+            self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            self:Hide()
+        end
+    end)
+    F:SetScript("OnUpdate", function()
+        NSI:UpdateReminderDisplay(info, F)
+    end)
+end
+
 function NSI:CreateIcon(spellID, info)
     self.AssignIcon = self.AssignIcon or {}
     local icon = C_Spell.GetSpellInfo(spellID).iconID
     for i=1, 20 do
         if self.AssignIcon[i] and not self.AssignIcon[i]:IsShown() then 
-            self.AssignIcon[i].Icon:SetTexture(icon)
-            self.AssignIcon[i].TimerText:SetTextColor(1, 1, 0, 1)
-            self.AssignIcon[i].Swipe:SetCooldown(GetTime(), info.dur)
-            self.AssignIcon[i]:SetScript("OnUpdate", function()
-                NSI:UpdateReminderDisplay(info, self.AssignIcon[i])
-            end)
+            self:SetProperties(self.AssignIcon[i], info)
             return self.AssignIcon[i] 
         end
         if not self.AssignIcon[i] then
@@ -87,7 +112,6 @@ function NSI:CreateIcon(spellID, info)
             self.AssignIcon[i]:SetPoint("CENTER", UIParent, "CENTER", xOffset, yOffset)
             self.AssignIcon[i].Icon = self.AssignIcon[i]:CreateTexture(nil, "ARTWORK")
             self.AssignIcon[i].Icon:SetAllPoints(self.AssignIcon[i])
-            self.AssignIcon[i].Icon:SetTexture(icon)
             self.AssignIcon[i].Border = CreateFrame("Frame", nil, self.AssignIcon[i], "BackdropTemplate")
             self.AssignIcon[i].Border:SetAllPoints(self.AssignIcon[i])
             self.AssignIcon[i].Border:SetBackdrop({
@@ -105,18 +129,14 @@ function NSI:CreateIcon(spellID, info)
             self.AssignIcon[i].Swipe:SetAllPoints()
             self.AssignIcon[i].Swipe:SetDrawEdge(false)
             self.AssignIcon[i].Swipe:SetReverse(true)
-            self.AssignIcon[i].Swipe:SetCooldown(GetTime(), info.dur)
             self.AssignIcon[i].Swipe:SetHideCountdownNumbers(true)
             self.AssignIcon[i].TimerText = self.AssignIcon[i].Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             self.AssignIcon[i].TimerText:SetPoint("CENTER", self.AssignIcon[i].Swipe, "CENTER", xTimer, yTimer)
             self.AssignIcon[i].TimerText:SetFont(Font, TimerFontSize, "OUTLINE")
             self.AssignIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
             self.AssignIcon[i].TimerText:SetShadowOffset(0, 0)
-            self.AssignIcon[i].TimerText:SetTextColor(1, 1, 0, 1)
-            self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)
-            self.AssignIcon[i]:SetScript("OnUpdate", function()
-                NSI:UpdateReminderDisplay(info, self.AssignIcon[i])
-            end)
+           -- self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)            
+            self:SetProperties(self.AssignIcon[i], info)
             return self.AssignIcon[i]
         end
     end
@@ -126,11 +146,8 @@ function NSI:CreateBar(spellID, info)
     self.AssignBar = self.AssignBar or {}
     local icon = C_Spell.GetSpellInfo(spellID).iconID
     for i=1, 20 do
-        if self.AssignBar[i] and not self.AssignBar[i]:IsShown() then 
-            self.AssignBar[i].Icon:SetTexture(icon)
-            self.AssignBar[i]:SetScript("OnUpdate", function()
-                NSI:UpdateReminderDisplay(info, self.AssignBar[i])
-            end)
+        if self.AssignBar[i] and not self.AssignBar[i]:IsShown() then                 
+            self:SetProperties(self.AssignBar[i], info)
             return self.AssignBar[i] 
         end
         if not self.AssignBar[i] then
@@ -165,7 +182,6 @@ function NSI:CreateBar(spellID, info)
             self.AssignBar[i].Icon = self.AssignBar[i]:CreateTexture(nil, "ARTWORK")
             self.AssignBar[i].Icon:SetPoint("RIGHT", self.AssignBar[i], "LEFT", xIcon, yIcon)
             self.AssignBar[i].Icon:SetSize(Height, Height)
-            self.AssignBar[i].Icon:SetTexture(icon)
             self.AssignBar[i].Text = self.AssignBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             self.AssignBar[i].Text:SetPoint("LEFT", self.AssignBar[i].Icon, "RIGHT", xTextOffset, yTextOffset)
             self.AssignBar[i].Text:SetFont(Font, FontSize, "OUTLINE")
@@ -176,12 +192,8 @@ function NSI:CreateBar(spellID, info)
             self.AssignBar[i].TimerText:SetPoint("RIGHT", self.AssignBar[i], "RIGHT", xTimer, yTimer)
             self.AssignBar[i].TimerText:SetFont(Font, FontSize, "OUTLINE")
             self.AssignBar[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.AssignBar[i].TimerText:SetShadowOffset(0, 0)
-            self.AssignBar[i].TimerText:SetTextColor(1, 1, 1, 1)
-
-            self.AssignBar[i]:SetScript("OnUpdate", function()
-                NSI:UpdateReminderDisplay(info, self.AssignBar[i])
-            end)
+            self.AssignBar[i].TimerText:SetShadowOffset(0, 0)            
+            self:SetProperties(self.AssignBar[i], info)
             return self.AssignBar[i]
         end
     end
@@ -192,13 +204,17 @@ function NSI:DisplayReminder(info)
     info.startTime = GetTime()
     info.dur = dur
     local rem = info.dur - (GetTime() - info.startTime)
-    if rem <= 0 then
+    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or (not info.spellID and rem <= 0) then
         return
     end
     local remString
     if rem < 3 then
-        rem = math.floor(rem * 10 + 0.5) / 10
-        remString = string.format("%.1f", rem)
+        if rem < 0 then 
+            remString = "" 
+        else
+            rem = math.floor(rem * 10 + 0.5) / 10
+            remString = string.format("%.1f", rem)
+        end
     else
         remString = tostring(math.ceil(rem))
     end
@@ -239,14 +255,19 @@ end
 
 function NSI:UpdateReminderDisplay(info, F)
     local rem = info.dur - (GetTime() - info.startTime)
-    if rem <= 0 then
+    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or (not info.spellID and rem <= 0) then
+        F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         F:Hide()
         return
     end
     local remString
     if rem < 3 then
-        rem = math.floor(rem * 10 + 0.5) / 10
-        remString = string.format("%.1f", rem)
+        if rem < 0 then 
+            remString = "" 
+        else
+            rem = math.floor(rem * 10 + 0.5) / 10
+            remString = string.format("%.1f", rem)
+        end
     else
         remString = tostring(math.ceil(rem))
     end
@@ -276,8 +297,10 @@ function NSI:StartReminders(phase)
 end
 
 function NSI:HideAllReminders()
-    for i, v in ipairs(self.ReminderTimer) do
-        v:Cancel()
+    if self.ReminderTimer then
+        for i, v in ipairs(self.ReminderTimer) do
+            v:Cancel()
+        end
     end
     for i=1, 20 do
         if self.AssignText then
@@ -286,11 +309,11 @@ function NSI:HideAllReminders()
         end
         if self.AssignIcon then
             local F = self.AssignIcon[i]
-            if F then F:Hide() end
+            if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
         end
         if self.AssignBar then            
             local F = self.AssignBar[i]
-            if F then F:Hide() end
+            if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
         end
     end
 end
@@ -317,7 +340,7 @@ function NSI:DetectPhaseChange()
                 count = count+1
                 if count > needed then
                     self.Phase = self.Phase+1
-                    self:StartReminders(phase)
+                    self:StartReminders(self.Phase)
                     self.PhaseSwapTime = now
                     break
                 end
@@ -331,11 +354,12 @@ end
 -- or /run NSAPI:DebugReminder(2400, true) to test outside of combat
 function NSAPI:DebugReminder(EncounterID, startnow)
     if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nphase:1;time:5;name:Relowindi;text:Stack on {rt7};sound:Stack;TTS:Stack on Red;dur:10;"
-        text = text.."\n".."phase:1;time:9;name:Relowindi;text:Use Fort Brew;TTS:true;spellID:243435;dur:10;"
-        text = text.."\n".."phase:1;time:17;name:Relowindi;text:Use Ring;TTS:true;spellID:116844;dur:10;"
-        text = text.."\n".."phase:1;time:25;name:Relowindi;text:Spread;TTS:true;dur:10;"
-        text = text.."\n".."phase:2;time:10;name:Relowindi;text:Check for Debuff;TTS:true;dur:10"
+        local text = "EncounterID:"..EncounterID.."\nphase:1;time:3;name:meleedps;text:Stack on {rt7};sound:Stack;TTS:Stack on Red;dur:10;"
+        text = text.."\n".."phase:1;time:8;name:monk;text:Use Fort Brew;TTS:true;spellID:243435;dur:10;"
+        text = text.."\n".."phase:2;time:3;name:damager;text:Use Ring;TTS:true;spellID:116844;dur:10;"
+        text = text.."\n".."phase:2;time:8;name:Reloe;text:Spread;TTS:true;dur:10;"
+        text = text.."\n".."phase:3;time:3;name:269;text:Check for Debuff;TTS:true;dur:10"
+        text = text.."\n".."phase:3;time:8;name:everyone;text:Lust on Senfi;spellID:116841;TTS:true;dur:10"
         if not NSI.EncounterDetections[EncounterID] then
             NSI.EncounterDetections[EncounterID] = {0, 8, 8}
         end
@@ -343,6 +367,18 @@ function NSAPI:DebugReminder(EncounterID, startnow)
         NSI:ProcessAssigns()
         if startnow then
             NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
+            C_Timer.After(15, function()
+                NSAPI:DebugNextPhase(10)
+            end)
+            C_Timer.After(30, function()
+                NSAPI:DebugNextPhase(10)
+            end)
         end
+    end
+end
+
+function NSAPI:DebugNextPhase(num)
+    for i=1, num do
+        NSI:EventHandler("ENCOUNTER_TIMELINE_EVENT_ADDED")
     end
 end
