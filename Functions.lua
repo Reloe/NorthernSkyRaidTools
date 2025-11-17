@@ -78,7 +78,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     if classFile then -- basically "if unit found"
         local name = UnitName(unit)
         local color = GetClassColorObj(classFile)
-        name = num and WeakAuras.WA_Utf8Sub(NSAPI:GetName(name, AddonName), num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
+        name = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
             return combined and specicon..roleicon..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or specicon, combined and "" or roleicon
         else
@@ -321,6 +321,7 @@ end
 function NSI:AutoImport()
     self.importtable = {}
     self.imports = {}
+    if not WeakAuras then return end
     if NSRT.Settings["AutoUpdateRaidWA"] then        
         if WeakAurasCompanionData then
             local WeakAurasData = {
@@ -417,4 +418,35 @@ function NSI:RemoveWhitelistURL(url, name)
     if NSRT.Settings["UpdateWhitelist"][id] then
         NSRT.Settings["UpdateWhitelist"][id] = nil
     end
+end
+
+function NSI:Utf8Sub(str, startChar, endChar)
+    if not str then return str end
+    local startIndex, endIndex = 1, #str
+    local currentIndex, currentChar = 1, 0
+
+    while currentIndex <= #str do
+        currentChar = currentChar + 1
+
+        if currentChar == startChar then
+            startIndex = currentIndex
+        end
+        if endChar and currentChar > endChar then
+            endIndex = currentIndex - 1
+            break
+        end
+        
+        local c = string.byte(str, currentIndex)
+        if c < 0x80 then
+            currentIndex = currentIndex + 1
+        elseif c < 0xE0 then
+            currentIndex = currentIndex + 2
+        elseif c < 0xF0 then
+            currentIndex = currentIndex + 3
+        else
+            currentIndex = currentIndex + 4
+        end
+    end
+
+    return string.sub(str, startIndex, endIndex)
 end
