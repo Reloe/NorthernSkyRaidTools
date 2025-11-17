@@ -317,6 +317,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.AssignIcon = self.AssignIcon or {}
                 self.AssignBar = self.AssignBar or {}
                 self.ReminderTimer = {}
+                self.AllGlows = {}
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}
@@ -345,7 +346,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Timelines = {}
             print("encounter end, setting to 0")
             NSI:HideAllReminders()
-            self.ReminderTimer = nil
+            self.ReminderTimer = {}
         end
         C_Timer.After(1, function()
             if self:Restricted() then return end
