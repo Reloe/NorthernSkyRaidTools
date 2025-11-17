@@ -35,6 +35,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Reminders = NSRT.Reminders or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
+            NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
             NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
@@ -311,10 +312,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             if self.ProcessedAssigns and next(self.ProcessedAssigns) then
                 self.Phase = 1
-                self.PhaseSwapTime = now
+                self.PhaseSwapTime = GetTime()
                 self.AssignText = self.AssignText or {}
                 self.AssignIcon = self.AssignIcon or {}
                 self.AssignBar = self.AssignBar or {}
+                self.ReminderTimer = {}
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}
@@ -340,10 +342,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ENCOUNTER_END" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
         if self:IsMidnight() then
-            self.ReminderTimer = nil
             self.Timelines = {}
             print("encounter end, setting to 0")
             NSI:HideAllReminders()
+            self.ReminderTimer = nil
         end
         C_Timer.After(1, function()
             if self:Restricted() then return end
