@@ -65,6 +65,7 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
 end
 
 function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickname or Character Name with nick = true
+    if UnitExists(name) and UnitIsConnected(name) then return name end
     name = nick and NSAPI:GetName(name, AddonName) or name
     if UnitExists(name) and UnitIsConnected(name) then return name end
     local chars = NSAPI:GetCharacters(name)
