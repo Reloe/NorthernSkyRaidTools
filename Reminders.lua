@@ -19,6 +19,7 @@ function NSI:ProcessAssigns()
             local spellID = line:match("spellID:(%d+)")
             local dur = line:match("dur:(%d+)")
             local sound = line:match("sound:([^;]+)")
+            local glowunit = line:match("glowunit:([^;]+)")
             if phase and time and name and (text or spellID) then
                 name = strlower(name)
                 local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
@@ -36,7 +37,7 @@ function NSI:ProcessAssigns()
                     phase = tonumber(phase)
                     text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
-                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
+                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
         end
@@ -47,9 +48,7 @@ function NSI:CreateText(info)
     self.AssignText = self.AssignText or {}
     for i=1, 20 do
         if self.AssignText[i] and not self.AssignText[i]:IsShown() then 
-            self.AssignText[i]:SetScript("OnUpdate", function()
-                NSI:UpdateReminderDisplay(info, self.AssignText[i])
-            end)
+            self:SetProperties(self.AssignText[i], info)
             return self.AssignText[i] 
         end
         if not self.AssignText[i] then
@@ -64,35 +63,41 @@ function NSI:CreateText(info)
             self.AssignText[i].Text:SetShadowColor(0, 0, 0, 1)
             self.AssignText[i].Text:SetShadowOffset(0, 0)
             self.AssignText[i].Text:SetTextColor(1, 1, 1, 1)
-            self.AssignText[i]:SetScript("OnUpdate", function()
-                NSI:UpdateReminderDisplay(info, self.AssignText[i])
-            end)
+            self:SetProperties(self.AssignText[i], info)
             return self.AssignText[i]
         end
     end
 end
 
 function NSI:SetProperties(F, info)
+    F:SetScript("OnUpdate", function()
+        NSI:UpdateReminderDisplay(info, F)
+    end)
+    F:SetScript("OnHide", function()
+        NSI:HideGlow(info.glowunit, "p"..info.phase.."id"..info.id)
+    end)
+    if not info.spellID then return end
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     F.Icon:SetTexture(icon)
-    F.TimerText:SetTextColor(1, 1, 0, 1)
-    if F.Swipe then F.Swipe:SetCooldown(GetTime(), info.dur) end
+    if F.Swipe then 
+        F.Swipe:SetCooldown(GetTime(), info.dur) 
+        F.TimerText:SetTextColor(1, 1, 0, 1)
+    elseif F.TimerText then
+        F.TimerText:SetTextColor(1, 1, 1, 1)
+    end
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
         local unit, _, spellID = ...
-        if (not issecretvalue(unit)) and UnitIsUnit(unit, "player") and spellID == info.spellID and self:IsShown() then
+        if ((not issecretvalue(unit)) and UnitIsUnit(unit, "player")) or (issecretvalue(UnitIsUnit(unit, "player"))) and spellID == info.spellID and self:IsShown() then
             self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             self:Hide()
         end
     end)
-    F:SetScript("OnUpdate", function()
-        NSI:UpdateReminderDisplay(info, F)
-    end)
 end
 
-function NSI:CreateIcon(spellID, info)
+function NSI:CreateIcon(info)
     self.AssignIcon = self.AssignIcon or {}
-    local icon = C_Spell.GetSpellInfo(spellID).iconID
+    local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     for i=1, 20 do
         if self.AssignIcon[i] and not self.AssignIcon[i]:IsShown() then 
             self:SetProperties(self.AssignIcon[i], info)
@@ -135,16 +140,51 @@ function NSI:CreateIcon(spellID, info)
             self.AssignIcon[i].TimerText:SetFont(Font, TimerFontSize, "OUTLINE")
             self.AssignIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
             self.AssignIcon[i].TimerText:SetShadowOffset(0, 0)
-           -- self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)            
+            self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)            
             self:SetProperties(self.AssignIcon[i], info)
             return self.AssignIcon[i]
         end
     end
 end
 
-function NSI:CreateBar(spellID, info)
+function NSI:CreateUnitFrameIcon(info)    
+    self.UnitIcon = self.UnitIcon or {}
+    local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
+    local unit = NSAPI:GetChar(info.glowunit, true)
+    if not UnitExists(unit) then return end
+    local F = self.GF.GetUnitFrame(unit)
+    if not F then return end
+    for i=1, 20 do
+        if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
+            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", xOffset, yOffset)
+            self:SetProperties(self.UnitIcon[i], info)
+            return self.UnitIcon[i] 
+        end
+        if not self.UnitIcon[i] then
+            local xOffset, yOffset = 0, 0
+            local Size = 25
+            self.UnitIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self.UnitIcon[i]:SetSize(Size, Size)
+            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", xOffset, yOffset)
+            self.UnitIcon[i].Icon = self.UnitIcon[i]:CreateTexture(nil, "ARTWORK")
+            self.UnitIcon[i].Icon:SetAllPoints(self.UnitIcon[i])
+            self.UnitIcon[i].Icon:SetTexture(icon)
+            self.UnitIcon[i].Border = CreateFrame("Frame", nil, self.UnitIcon[i], "BackdropTemplate")
+            self.UnitIcon[i].Border:SetAllPoints(self.UnitIcon[i])
+            self.UnitIcon[i].Border:SetBackdrop({
+                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                edgeSize = 1
+            })
+            self.UnitIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)       
+            self:SetProperties(self.UnitIcon[i], info)
+            return self.UnitIcon[i]
+        end
+    end
+end
+
+function NSI:CreateBar(info)
     self.AssignBar = self.AssignBar or {}
-    local icon = C_Spell.GetSpellInfo(spellID).iconID
+    local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     for i=1, 20 do
         if self.AssignBar[i] and not self.AssignBar[i]:IsShown() then                 
             self:SetProperties(self.AssignBar[i], info)
@@ -220,14 +260,14 @@ function NSI:DisplayReminder(info)
     end
     local remString = (rem % 1 == 0) and string.format("%.1f", rem) or rem
     local text = info.text ~= "" and info.text or ""
-    local F
+    local F    
     if info.spellID then -- display icon if we have a spellID    
         if NSRT.ReminderSettings.Bars then
-            F = self:CreateBar(info.spellID, info)
+            F = self:CreateBar(info)
             F:SetMinMaxValues(0, info.dur)
             F:SetValue(0)
         else
-            F = self:CreateIcon(info.spellID, info)
+            F = self:CreateIcon(info)
         end
         F.Text:SetText(text)
         F.TimerText:SetText(remString)
@@ -237,6 +277,13 @@ function NSI:DisplayReminder(info)
         F.Text:SetText(text.." - ("..remString..")" or remString)
         F:Show()
     end    
+    if info.glowunit then
+        self:GlowFrame(info.glowunit, "p"..info.phase.."id"..info.id)  
+        if info.spellID then
+            local UnitIcon = self:CreateUnitFrameIcon(info) 
+            UnitIcon:Show()
+        end
+    end
     local sound = info.sound and self.LSM:Fetch("sound", info.sound)
     if sound and sound ~= 1 then
         PlaySoundFile(sound, "Master")
@@ -273,22 +320,23 @@ function NSI:UpdateReminderDisplay(info, F)
     end
     local text = info.text ~= "" and info.text.." - ("..remString..")" or remString
     if info.spellID and type(info.spellID) == "number" then
-        if NSRT.ReminderSettings.Bars then
+        if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
         else
-            if rem <= 3 then
+            if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
             end
         end
-        F.TimerText:SetText(remString)
+        if F.TimerText then F.TimerText:SetText(remString) end
     else
         F.Text:SetText(text)
     end    
 end
 
 function NSI:StartReminders(phase)
-    print("starting timers for phase:", phase)
     self:HideAllReminders()
+    self.AllGlows = {}
+    self.ReminderTimer = {}
     for i, v in ipairs(self.ProcessedAssigns[phase]) do
         self.ReminderTimer[i] = C_Timer.NewTimer(v.time, function()
             self:DisplayReminder(v)
@@ -302,6 +350,9 @@ function NSI:HideAllReminders()
             v:Cancel()
         end
     end
+    for k, v in pairs(self.AllGlows) do
+        self.LCG.PixelGlow_Stop(k, v)
+    end
     for i=1, 20 do
         if self.AssignText then
             local F = self.AssignText[i]
@@ -313,6 +364,10 @@ function NSI:HideAllReminders()
         end
         if self.AssignBar then            
             local F = self.AssignBar[i]
+            if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
+        end
+        if self.UnitIcon then
+            local F = self.UnitIcon[i]
             if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
         end
     end
@@ -354,12 +409,12 @@ end
 -- or /run NSAPI:DebugReminder(2400, true) to test outside of combat
 function NSAPI:DebugReminder(EncounterID, startnow)
     if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nphase:1;time:3;name:meleedps;text:Stack on {rt7};sound:Stack;TTS:Stack on Red;dur:10;"
-        text = text.."\n".."phase:1;time:8;name:monk;text:Use Fort Brew;TTS:true;spellID:243435;dur:10;"
-        text = text.."\n".."phase:2;time:3;name:damager;text:Use Ring;TTS:true;spellID:116844;dur:10;"
-        text = text.."\n".."phase:2;time:8;name:Reloe;text:Spread;TTS:true;dur:10;"
-        text = text.."\n".."phase:3;time:3;name:269;text:Check for Debuff;TTS:true;dur:10"
-        text = text.."\n".."phase:3;time:8;name:everyone;text:Lust on Senfi;spellID:116841;TTS:true;dur:10"
+        local text = "EncounterID:"..EncounterID.."\nphase:1;time:2;name:Relowindi;text:Stack on {rt7};glowunit:Relod;sound:Stack;TTS:Stack on Red;dur:10;"
+        text = text.."\n".."phase:1;time:6;name:monk;text:Use Fort Brew;TTS:true;glowunit:Relowindi;spellID:243435;dur:10;"
+        text = text.."\n".."phase:2;time:2;name:tank;text:Use Ring;TTS:true;spellID:116844;dur:10;"
+        text = text.."\n".."phase:2;time:6;name:Reloe;text:Spread;TTS:true;dur:10;"
+        text = text.."\n".."phase:3;time:2;name:268;text:Check for Debuff;TTS:true;dur:10"
+        text = text.."\n".."phase:3;time:6;name:everyone;text:Lust on Senfi;glowunit:Reloe;spellID:116841;TTS:true;dur:10"
         if not NSI.EncounterDetections[EncounterID] then
             NSI.EncounterDetections[EncounterID] = {0, 8, 8}
         end
@@ -367,10 +422,10 @@ function NSAPI:DebugReminder(EncounterID, startnow)
         NSI:ProcessAssigns()
         if startnow then
             NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
-            C_Timer.After(15, function()
+            C_Timer.After(12, function()
                 NSAPI:DebugNextPhase(10)
             end)
-            C_Timer.After(30, function()
+            C_Timer.After(24, function()
                 NSAPI:DebugNextPhase(10)
             end)
         end
@@ -381,4 +436,26 @@ function NSAPI:DebugNextPhase(num)
     for i=1, num do
         NSI:EventHandler("ENCOUNTER_TIMELINE_EVENT_ADDED")
     end
+end
+
+function NSI:GlowFrame(unit, id)
+    local color = {0, 1, 0, 1}
+    if not unit then return end
+    unit = NSAPI:GetChar(unit, true)
+    if not UnitExists(unit) then return end
+    local F = self.GF.GetUnitFrame(unit)
+    if not F then return end
+    self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
+    self.AllGlows[F] = id
+    self.LCG.PixelGlow_Start(F, color, 10, 0.2, 10, 4, 0, 0, true, id)
+end
+
+function NSI:HideGlow(unit, id)    
+    if not unit then return end
+    unit = NSAPI:GetChar(unit, true)
+    if not UnitExists(unit) then return end
+    local F = self.GF.GetUnitFrame(unit)
+    if not F then return end
+    self.AllGlows[F] = nil
+    self.LCG.PixelGlow_Stop(F, id)
 end
