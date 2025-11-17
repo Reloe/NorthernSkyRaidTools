@@ -316,8 +316,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.AssignText = self.AssignText or {}
                 self.AssignIcon = self.AssignIcon or {}
                 self.AssignBar = self.AssignBar or {}
-                self.ReminderTimer = {}
-                self.AllGlows = {}
+                self.ReminderTimer = self.ReminderTimer or {}
+                self.AllGlows = self.AllGlows or {}
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}
