@@ -2,14 +2,16 @@ local _, NSI = ... -- Internal namespace
 local f = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
-f:RegisterEvent("UNIT_AURA")
 f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("CHALLENGE_MODE_START")
+if not NSI:IsMidnight() then
+    f:RegisterEvent("UNIT_AURA")
+    f:RegisterEvent("CHALLENGE_MODE_START")
+end
 if NSI:IsMidnight() then
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
@@ -32,6 +34,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.NickNames then NSRT.NickNames = {} end
             if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Reminders = NSRT.Reminders or {}
+            NSRT.ReminderSettings = NSRT.ReminderSettings or {}
+            NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -77,7 +81,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MRTNickNamesHook = false
             self.Assigns = ""
             self.ReminderTimer = {}
-            self.UpdateTimer = {}
             self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
@@ -309,9 +312,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self.ProcessedAssigns and next(self.ProcessedAssigns) then
                 self.Phase = 1
                 self.PhaseSwapTime = now
-                self.AssignText = {}
-                self.AssignIcon = {}
-                self.AssignBar = {}
+                self.AssignText = self.AssignText or {}
+                self.AssignIcon = self.AssignIcon or {}
+                self.AssignBar = self.AssignBar or {}
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}
