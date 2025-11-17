@@ -1,6 +1,5 @@
 local _, NSI = ... -- Internal namespace
 NSI.LSM = LibStub("LibSharedMedia-3.0")
-NSI.Glow = LibStub("LibCustomGlow-1.0")
 NSMedia = {}
 --Sounds
 NSI.LSM:Register("sound","|cFF4BAAC8Macro|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\macro.mp3]])
