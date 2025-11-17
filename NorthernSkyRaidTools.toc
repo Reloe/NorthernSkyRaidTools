@@ -16,8 +16,9 @@ Libs\libs.xml
 
 # Main Files
 NorthernSkyRaidTools.lua
-Media.lua
 Functions.lua
+Reminders.lua
+Media.lua
 AuraResize.lua
 Comms.lua
 NickNames.lua
