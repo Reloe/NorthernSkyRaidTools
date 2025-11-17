@@ -7,7 +7,7 @@ end)
 NSI.Groups = {}
 NSI.Groups.Processing = false
 
-local meleetable = { -- ignoring tanks for this
+NSI.meleetable = { -- ignoring tanks for this
     [263]  = true, -- Shaman: Enhancement
     [255]  = true, -- Hunter: Survival
     [259]  = true, -- Rogue: Assassination  
@@ -25,7 +25,7 @@ local meleetable = { -- ignoring tanks for this
     [270]  = true, -- Monk: Mistweaver
 }
 
-local lusttable = {
+NSI.lusttable = {
     [263]  = true, -- Shaman: Enhancement
     [255]  = true, -- Hunter: Survival
     [1473] = true, -- Evoker: Augmentation
@@ -40,7 +40,7 @@ local lusttable = {
     [264]  = true, -- Shaman: Restoration
 }
 
-local resstable = {    
+NSI.resstable = {    
     [66]   =  true, -- Prot Pally
     [104]  =  true, -- Guardian Druid
     [250]  =  true, -- Blood DK
@@ -56,7 +56,7 @@ local resstable = {
     [105]  = true, -- Druid: Restoration
 }
 
-local spectable = {    
+NSI.spectable = {    
     -- Tanks
     [0] = 100, -- probably offline/no data, we put them last
     [268]  =  1, -- Brewmaster
@@ -82,28 +82,29 @@ local spectable = {
     [577]  = 19, -- Demon Hunter: Havoc
 
     -- Ranged
-    [1473] = 20, -- Evoker: Augmentation
-    [1467] = 21, -- Evoker: Devastation
-    [253]  = 22, -- Hunter: Beast Mastery
-    [254]  = 23, -- Hunter: Marksmanship
-    [262]  = 24, -- Shaman: Elemental 
-    [258]  = 25, -- Priest: Shadow
-    [102]  = 26, -- Druid: Balance
-    [64]   = 27, -- Mage: Frost
-    [62]   = 28, -- Mage: Arcane
-    [63]   = 29, -- Mage: Fire
-    [265]  = 30, -- Warlock: Affliction 
-    [266]  = 31, -- Warlock: Demonology  
-    [267]  = 32, -- Warlock: Destruction    
+    [1480] = 20, -- Demon Hunter: Devourer
+    [1473] = 21, -- Evoker: Augmentation
+    [1467] = 22, -- Evoker: Devastation
+    [253]  = 23, -- Hunter: Beast Mastery
+    [254]  = 24, -- Hunter: Marksmanship
+    [262]  = 25, -- Shaman: Elemental 
+    [258]  = 26, -- Priest: Shadow
+    [102]  = 27, -- Druid: Balance
+    [64]   = 28, -- Mage: Frost
+    [62]   = 29, -- Mage: Arcane
+    [63]   = 30, -- Mage: Fire
+    [265]  = 31, -- Warlock: Affliction 
+    [266]  = 32, -- Warlock: Demonology  
+    [267]  = 33, -- Warlock: Destruction    
     
     -- Healers
-    [65]   = 33, -- Paladin: Holy
-    [270]  = 34, -- Monk: Mistweaver
-    [1468] = 35, -- Evoker: Preservation
-    [105]  = 36, -- Druid: Restoration
-    [264]  = 37, -- Shaman: Restoration
-    [256]  = 38, -- Priest: Discipline 
-    [257]  = 39, -- Priest: Holy
+    [65]   = 34, -- Paladin: Holy
+    [270]  = 35, -- Monk: Mistweaver
+    [1468] = 36, -- Evoker: Preservation
+    [105]  = 37, -- Druid: Restoration
+    [264]  = 38, -- Shaman: Restoration
+    [256]  = 39, -- Priest: Discipline 
+    [257]  = 40, -- Priest: Holy
 }
 
 
@@ -123,11 +124,11 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         if subgroup <= lastgroup then
             total[role] = total[role]+1
             total["ALL"] = total["ALL"]+1
-            local melee = meleetable[specid]
+            local melee = self.meleetable[specid]
             local pos = 0
             pos = (role == "TANK" and 5) or (melee and (role == "DAMAGER" and 1 or 2)) or (role == "DAMAGER" and 3) or 4 -- different counting for melee dps and melee healers
             poscount[pos] = poscount[pos]+1
-            table.insert(units, {name = UnitName(unit), processed = false, unitid = unit, specid = specid, index = i, role = role, class = class, pos = pos, canlust = lusttable[class], canress = resstable[class], GUID = UnitGUID(unit)})
+            table.insert(units, {name = UnitName(unit), processed = false, unitid = unit, specid = specid, index = i, role = role, class = class, pos = pos, canlust = self.lusttable[class], canress = self.resstable[class], GUID = UnitGUID(unit)})
         end
     end    
     table.sort(units, -- default sorting with tanks - melee - ranged - healer
@@ -135,7 +136,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         if a.specid == b.specid then
             return a.GUID < b.GUID
         else
-            return spectable[a.specid] < spectable[b.specid]
+            return self.spectable[a.specid] < self.spectable[b.specid]
         end
     end) -- a < b low first, a > b high first
     self.Groups.total = total["ALL"]
@@ -195,7 +196,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             if a.specid == b.specid then
                 return a.GUID < b.GUID
             else
-                return spectable[a.specid] < spectable[b.specid]
+                return self.spectable[a.specid] < self.spectable[b.specid]
             end
         end) -- a < b low first, a > b high first        
         table.sort(sides["right"], -- sort again within each table with tanks - melee - ranged - healer
@@ -203,7 +204,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             if a.specid == b.specid then
                 return a.GUID < b.GUID
             else
-                return spectable[a.specid] < spectable[b.specid]
+                return self.spectable[a.specid] < self.spectable[b.specid]
             end
         end) -- a < b low first, a > b high first
         sides["left"] = self:ShiftLeader(sides["left"])
