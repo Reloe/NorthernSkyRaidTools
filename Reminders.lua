@@ -409,8 +409,8 @@ end
 -- or /run NSAPI:DebugReminder(2400, true) to test outside of combat
 function NSAPI:DebugReminder(EncounterID, startnow)
     if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nphase:1;time:2;name:Relowindi;text:Stack on {rt7};glowunit:Relod;sound:Stack;TTS:Stack on Red;dur:10;"
-        text = text.."\n".."phase:1;time:6;name:monk;text:Use Fort Brew;TTS:true;glowunit:Relowindi;spellID:243435;dur:10;"
+        local text = "EncounterID:"..EncounterID.."\nphase:1;time:2;name:Relowindi;text:Stack on {rt7};glowunit:Reloe;sound:Stack;TTS:Stack on Red;dur:10;"
+        text = text.."\n".."phase:1;time:6;name:monk;text:Use Fort Brew;TTS:true;glowunit:Relowindi;spellID:115203;dur:10;"
         text = text.."\n".."phase:2;time:2;name:tank;text:Use Ring;TTS:true;spellID:116844;dur:10;"
         text = text.."\n".."phase:2;time:6;name:Reloe;text:Spread;TTS:true;dur:10;"
         text = text.."\n".."phase:3;time:2;name:268;text:Check for Debuff;TTS:true;dur:10"
