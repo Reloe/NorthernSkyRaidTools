@@ -88,7 +88,7 @@ function NSI:SetProperties(F, info)
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
         local unit, _, spellID = ...
-        if ((not issecretvalue(unit)) and UnitIsUnit(unit, "player")) or (issecretvalue(UnitIsUnit(unit, "player"))) and spellID == info.spellID and self:IsShown() then
+        if (NSI:Restricted() or UnitIsUnit(unit, "player")) and spellID == info.spellID and self:IsShown() then
             self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             self:Hide()
         end
