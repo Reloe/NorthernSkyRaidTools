@@ -253,7 +253,6 @@ local  pUpdate = function(self,elapsed)
 end
 
 function lib.PixelGlow_Start(r,color,N,frequency,length,th,xOffset,yOffset,border,key,frameLevel)
-    print("in start", key)
     if not r then
         return
     end
