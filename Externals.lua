@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 -- Todo
 -- Add self cd's to allspells to possibly check those being available before externals are automatically assigned
 
-if NSI:IsMidnight() then return end
+if NSI:IsMidnight() or not WeakAuras then return end
 
 local lib = LibStub:GetLibrary("LibOpenRaid-1.0")
 NSI.Externals = {}

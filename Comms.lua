@@ -126,7 +126,7 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
             end
         end
         NSI:EventHandler(event, false, internal, unpack(formattedArgTable))
-        WeakAuras.ScanEvents(event, unpack(formattedArgTable))
+        if WeakAuras then WeakAuras.ScanEvents(event, unpack(formattedArgTable)) end
     end
 end
 

@@ -85,7 +85,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
-        if self:IsMidnight() then return end
+        if self:IsMidnight() or not WeakAuras then return end
         self:AutoImport()
         self.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
     elseif e == "PLAYER_LOGIN" and wowevent then
@@ -98,7 +98,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end
-        if WeakAuras.GetData("Northern Sky Externals") then
+        if WeakAuras and WeakAuras.GetData("Northern Sky Externals") then
             print("Please uninstall the |cFF00FFFFNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
         end
         if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
@@ -215,7 +215,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
     elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
-        if WeakAuras.CurrentEncounter then return end
+        if self:Restricted() then return end
         local _, hashed = ...     
         if hashed ~= "" then
             local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
@@ -329,7 +329,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         for u in self:IterateGroupMembers() do
             if UnitIsVisible(u) then
                 NSAPI.HasNSRT[u] = false
-                self.specs[u] = WeakAuras.SpecForUnit(u)
+                self.specs[u] = WeakAuras and WeakAuras.SpecForUnit(u) or 0
             end
         end
         -- broadcast spec info

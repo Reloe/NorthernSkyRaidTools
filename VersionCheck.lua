@@ -35,7 +35,7 @@ function NSI:GetVersionNumber(type, name, unit)
         end
         return unit, ver, false, "", ignoreCheck
     elseif type == "WA" then
-        local waData = WeakAuras.GetData(name)
+        local waData = WeakAuras and WeakAuras.GetData(name)
         local ver = "WA Missing"
         local url = ""
         local found = false
@@ -49,7 +49,7 @@ function NSI:GetVersionNumber(type, name, unit)
         end
         local duplicate = false
         for i=2, 10 do -- check for duplicates of the Weakaura
-            waData = WeakAuras.GetData(name.." "..i)
+            waData = WeakAuras and WeakAuras.GetData(name.." "..i)
             if waData then
                 local dupver = 0
                 if waData["url"] then

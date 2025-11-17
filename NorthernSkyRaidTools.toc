@@ -1,11 +1,9 @@
 ## Interface: 120000
-
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe, Rav
 ## DefaultState: Enable
-## Dependencies: WeakAuras
 ## SavedVariables: NSRT
 ## Category: Northern Sky
 ## X-Curse-Project-ID: 954018

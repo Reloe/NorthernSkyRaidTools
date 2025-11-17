@@ -297,7 +297,7 @@ function NSI:UnhaltedNickNameUpdated()
 end
 
 function NSI:WeakAurasNickNameUpdated()
-    if NSRT.Settings["WA"] and not C_AddOns.IsAddOnLoaded("CustomNames") then
+    if NSRT.Settings["WA"] and WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
         function WeakAuras.GetName(name)
             return NSAPI:GetName(name, "WA")
         end
@@ -342,7 +342,7 @@ function NSI:GlobalNickNameUpdate()
             end
             CharList[nickname][name] = true
         end
-        if NSRT.Settings["WA"] and not C_AddOns.IsAddOnLoaded("CustomNames") then
+        if NSRT.Settings["WA"] and WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
             function WeakAuras.GetName(name)
                 return NSAPI:GetName(name, "WA")
             end
@@ -412,7 +412,7 @@ function NSI:InitNickNames()
 
     if NSRT.Settings["GlobalNickNames"] then        
 
-        if NSRT.Settings["WA"] and not C_AddOns.IsAddOnLoaded("CustomNames") then
+        if NSRT.Settings["WA"] and WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
             function WeakAuras.GetName(name)
                 return NSAPI:GetName(name, "WA")
             end
@@ -487,7 +487,7 @@ function NSI:InitNickNames()
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
                 local name = UnitName(unit)
                 name = name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
-                return WeakAuras.WA_Utf8Sub(name, i)
+                return NSI:Utf8Sub(name, i)
             end
         end
     end
@@ -508,7 +508,7 @@ function NSI:SendNickName(channel, requestback)
     if requestback and (self.LastNickNameSend and self.LastNickNameSend > now-2) or NSRT.Settings["ShareNickNames"] == 4 then return end -- don't overspam on forming raid
     self.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
-    if (not nickname) or WeakAuras.CurrentEncounter then return end
+    if (not nickname) or self:Restricted() then return end
     local name, realm = UnitFullName("player")
     if not realm then
         realm = GetNormalizedRealmName()
@@ -524,7 +524,7 @@ function NSI:SendNickName(channel, requestback)
 end
 
 function NSI:NewNickName(unit, nickname, name, realm, channel)
-    if WeakAuras.CurrentEncounter then return end
+    if self:Restricted() then return end
     if unit ~= "player" and NSRT.Settings["AcceptNickNames"] ~= 3 then
         if channel == "GUILD" and NSRT.Settings["AcceptNickNames"] ~= 2 then return end
         if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
@@ -536,7 +536,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
     end
-    nickname = WeakAuras.WA_Utf8Sub(nickname, 12)
+    nickname = self:Utf8Sub(nickname, 12)
     NSRT.NickNames[name.."-"..realm] = nickname
     fullCharList[name.."-"..realm] = nickname
     fullNameList[name] = nickname
