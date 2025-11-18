@@ -37,6 +37,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
             NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
+            NSRT.ReminderSettings.SpellTTS = NSRT.ReminderSettings.SpellTTS or false
+            NSRT.ReminderSettings.TextTTS = NSRT.ReminderSettings.TextTTS or false
+            NSRT.ReminderSettings.SpellDuration = NSRT.ReminderSettings.SpellDuration or 10
+            NSRT.ReminderSettings.TextDuration = NSRT.ReminderSettings.TextDuration or 10
+            NSRT.ReminderSettings.SpellCountdown = NSRT.ReminderSettings.SpellCountdown or 0
+            NSRT.ReminderSettings.TextCountdown = NSRT.ReminderSettings.TextCountdown or 0
+            NSRT.ReminderSettings.SpellName = NSRT.ReminderSettings.SpellName or false
+            NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
+            NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -321,6 +330,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.ReminderTimer = self.ReminderTimer or {}
                 self.RaidFrames = self.RaidFrames or {}
                 self.AllGlows = self.AllGlows or {}
+                self.PlayedSound = {}
+                self.StartedCountdown = {}
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}

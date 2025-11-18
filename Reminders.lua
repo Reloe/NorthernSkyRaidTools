@@ -11,33 +11,69 @@ function NSI:ProcessAssigns()
             if line:find("EncounterID:") then
                 self.ProcessedAssigns.EncounterID = line:match("EncounterID:(%d+)")
             end
-            local phase = line:match("phase:(%d+)")
+            local phase = line:match("ph:(%d+)")
             local time = line:match("time:(%d*%.?%d+)")
-            local name = line:match("name:([^;]+)")
+            local tag = line:match("tag:([^;]+)")
             local text = line:match("text:([^;]+)")
             local TTS = line:match("TTS:([^;]+)")
-            local spellID = line:match("spellID:(%d+)")
+            local countdown = line:match("countdown:(%d+)")
+            local spellID = line:match("spellid:(%d+)")
             local dur = line:match("dur:(%d+)")
             local sound = line:match("sound:([^;]+)")
             local glowunit = line:match("glowunit:([^;]+)")
-            if phase and time and name and (text or spellID) then
-                name = strlower(name)
+            if time and tag and (text or spellID) then
+                tag = strlower(tag)
                 local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
                 local pos = self.spectable[specid]
                 pos = (pos <= 19 and pos >= 7 and "meleedps") or (pos <= 33 and pos >= 20 and "rangeddps")
-                if 
-                name == "everyone" or 
-                name:match(strlower(UnitName("player"))) or 
-                name:match(strlower(UnitGroupRolesAssigned("player"))) or 
-                name:match(strlower(NSAPI:GetName("player", "GlobalNickNames"))) or 
-                name:match(specid) or
-                name:match(strlower(select(2, UnitClass("player")))) or
-                (pos and name:match(pos))
+                if tag == "everyone" or 
+                tag:match(strlower(UnitName("player"))) or 
+                tag:match(strlower(UnitGroupRolesAssigned("player"))) or 
+                tag:match(strlower(NSAPI:GetName("player", "GlobalNickNames"))) or 
+                tag:match(specid) or
+                tag:match(strlower(select(2, UnitClass("player")))) or
+                (pos and tag:match(pos))
                 then     
+                    spellID = spellID and tonumber(spellID)
+                    -- convert to booleans
+                    if TTS == "true" then TTS = true end
+                    if TTS == "false" then TTS = false end
+                    -- default to user settings if not overwritten by the reminders
+                    if TTS == nil then 
+                        if spellID then
+                            TTS = NSRT.ReminderSettings.SpellTTS
+                        else
+                            TTS = NSRT.ReminderSettings.TextTTS
+                        end                    
+                    end
+                    if dur == nil then 
+                        if spellID then
+                            dur = NSRT.ReminderSettings.SpellDuration 
+                        else
+                            dur = NSRT.ReminderSettings.TextDuration 
+                        end
+                    end
+                    if countdown == nil then
+                        if spellID then
+                            countdown = NSRT.ReminderSettings.SpellCountdown
+                        else
+                            countdown = NSRT.ReminderSettings.TextCountdown
+                        end
+                        if countdown == 0 then countdown = false end
+                    end
+                    if not phase then phase = 1 end
                     phase = tonumber(phase)
-                    text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")
+                    if text then text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t") end                    
+                    if NSRT.ReminderSettings.SpellName and spellID then -- display spellname if text is empty, also make TTS that spellname
+                        if (not text) and C_Spell.GetSpellInfo(spellID) then 
+                            local spellName = C_Spell.GetSpellInfo(spellID).name
+                            text = spellName or ""
+                            TTS = TTS and type(TTS) ~= "string" and spellName
+                        end 
+                    end       
+                    if countdown then countdown = tonumber(countdown) end
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
-                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
+                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
         end
@@ -69,9 +105,9 @@ function NSI:CreateText(info)
     end
 end
 
-function NSI:SetProperties(F, info)
+function NSI:SetProperties(F, info, skipsound)
     F:SetScript("OnUpdate", function()
-        NSI:UpdateReminderDisplay(info, F)
+        NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
     F:SetScript("OnHide", function()
         NSI:HideGlow(info.glowunit, "p"..info.phase.."id"..info.id)
@@ -152,13 +188,13 @@ function NSI:CreateUnitFrameIcon(info)
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     local unit = NSAPI:GetChar(info.glowunit, true)
     local i = UnitInRaid(unit)
-    if (not UnitExists(unit)) or (not i)then return end
+    if (not UnitExists(unit)) or (not i) then return end
     local F = self.RaidFrames["raid"..i]
     if not F then return end
     for i=1, 20 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
             self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", xOffset, yOffset)
-            self:SetProperties(self.UnitIcon[i], info)
+            self:SetProperties(self.UnitIcon[i], info, true)
             return self.UnitIcon[i] 
         end
         if not self.UnitIcon[i] then
@@ -177,7 +213,7 @@ function NSI:CreateUnitFrameIcon(info)
                 edgeSize = 1
             })
             self.UnitIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)       
-            self:SetProperties(self.UnitIcon[i], info)
+            self:SetProperties(self.UnitIcon[i], info, true)
             return self.UnitIcon[i]
         end
     end
@@ -282,27 +318,22 @@ function NSI:DisplayReminder(info)
         self:GlowFrame(info.glowunit, "p"..info.phase.."id"..info.id)  
         if info.spellID then
             local UnitIcon = self:CreateUnitFrameIcon(info) 
-            UnitIcon:Show()
-        end
-    end
-    local sound = info.sound and self.LSM:Fetch("sound", info.sound)
-    if sound and sound ~= 1 then
-        PlaySoundFile(sound, "Master")
-        return      
-    elseif info.TTS and info.TTS ~= "" and strlower(info.TTS) ~= "false" then
-        local TTS = (strlower(info.TTS) == "true" and info.text) or (info.TTS == info.text and info.text) or info.TTS
-        sound = self.LSM:Fetch("sound", TTS)
-        if sound and sound ~= 1 then
-            PlaySoundFile(sound, "Master")
-            return
-        else
-            NSAPI:TTS(TTS)
+            if UnitIcon then UnitIcon:Show() end
         end
     end
 end
 
-function NSI:UpdateReminderDisplay(info, F)
+function NSI:UpdateReminderDisplay(info, F, skipsound)
     local rem = info.dur - (GetTime() - info.startTime)
+    local SoundTimer = info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer
+    if rem <= SoundTimer and (not self.PlayedSound["ph"..info.phase.."id"..info.id]) and (not skipsound) then
+        self:PlayReminderSound(info)
+        self.PlayedSound["ph"..info.phase.."id"..info.id] = true
+    end
+    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["ph"..info.phase.."id"..info.id]) and (not skipsound) then
+        NSAPI:TTSCountdown(info.countdown)
+        self.StartedCountdown["ph"..info.phase.."id"..info.id] = true
+    end
     if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or (not info.spellID and rem <= 0) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         F:Hide()
@@ -319,7 +350,7 @@ function NSI:UpdateReminderDisplay(info, F)
     else
         remString = tostring(math.ceil(rem))
     end
-    local text = info.text ~= "" and info.text.." - ("..remString..")" or remString
+    local text = info.text and info.text ~= "" and info.text.." - ("..remString..")" or remString
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
@@ -334,12 +365,31 @@ function NSI:UpdateReminderDisplay(info, F)
     end    
 end
 
+function NSI:PlayReminderSound(info)
+    local sound = info.sound and self.LSM:Fetch("sound", info.sound)
+    if sound and sound ~= 1 then
+        PlaySoundFile(sound, "Master")
+        return      
+    elseif info.TTS then
+        local TTS = (type(info.TTS) == "string" and info.TTS) or (info.text and info.text ~= "" and info.text) or ""
+        sound = self.LSM:Fetch("sound", TTS)
+        if sound and sound ~= 1 then
+            PlaySoundFile(sound, "Master")
+            return
+        else
+            NSAPI:TTS(TTS)
+        end
+    end
+end
+
 function NSI:StartReminders(phase)
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}
+    if not self.ProcessedAssigns[phase] then return end
     for i, v in ipairs(self.ProcessedAssigns[phase]) do
-        self.ReminderTimer[i] = C_Timer.NewTimer(v.time, function()
+        local time = math.max(v.time-v.dur, 0)
+        self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
             self:DisplayReminder(v)
         end)
     end
@@ -410,12 +460,12 @@ end
 -- or /run NSAPI:DebugReminder(2400, true) to test outside of combat
 function NSAPI:DebugReminder(EncounterID, startnow)
     if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nphase:1;time:2;name:Relowindi;text:Stack on {rt7};sound:Stack;TTS:Stack on Red;dur:10;"
-        text = text.."\n".."phase:1;time:7;name:monk;text:Use Fort Brew;TTS:true;spellID:115203;dur:10;"
-        text = text.."\n".."phase:1;time:12;name:everyone;text:Lust on Reloe;glowunit:Reloe;spellID:116841;TTS:true;dur:10"
-        text = text.."\n".."phase:2;time:2;name:Reloe;text:Spread;TTS:true;dur:10;"
-        text = text.."\n".."phase:2;time:7;name:268;text:Run out if Debuff;TTS:true;dur:10"
-        text = text.."\n".."phase:2;time:12;name:tank;text:Use Ring;TTS:true;spellID:116844;dur:10;"
+        local text = "EncounterID:"..EncounterID.."\nph:1;time:10;tag:Relowindi;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;"
+        text = text.."\n".."time:15;tag:monk;TTS:true;spellid:115203;"
+        text = text.."\n".."ph:1;time:20;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;"
+        text = text.."\n".."ph:2;time:12;tag:Reloe;text:Spread;TTS:true;dur:10;"
+        text = text.."\n".."ph:2;time:15;tag:268;text:Run out if Debuff;TTS:true;dur:10"
+        text = text.."\n".."ph:2;time:20;tag:tank;text:Use Ring;TTS:true;spellid:116844;dur:10;"
         if not NSI.EncounterDetections[EncounterID] then
             NSI.EncounterDetections[EncounterID] = {0, 8, 8}
         end
