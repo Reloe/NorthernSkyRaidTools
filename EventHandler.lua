@@ -16,6 +16,7 @@ if NSI:IsMidnight() then
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
+    f:RegisterEvent("MINIMAP_PING")
 end
 
 f:SetScript("OnEvent", function(self, e, ...)
@@ -189,7 +190,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:Broadcast("MRT_NOTE", "RAID", hashed)   
             end
         end
-        if (self:IsMidnight() and (not self:Restricted()) and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"] then
+        if (self:IsMidnight() and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"] then
             if UnitIsGroupLeader("player") then
                 self:Broadcast("NS_ASSIGN_SHARE", "RAID", self.Assigns)
             end
@@ -318,6 +319,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.Externals:Init(true)
     elseif e == "ENCOUNTER_START" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         if self:IsMidnight() or NSRT.Settings["Debug"] then 
+            self.EncounterID = ...
             if (not self.ProcessedAssigns) or not (next(self.ProcessedAssigns)) then
                 self:ProcessAssigns()
             end
@@ -332,10 +334,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.AllGlows = self.AllGlows or {}
                 self.PlayedSound = {}
                 self.StartedCountdown = {}
+                self:AddAssignments(self.EncounterID)
                 self:StartReminders(self.Phase)
             end
             self.Timelines = {}
-            self.EncounterID = ...
             return 
         end
         self.specs = {}
@@ -358,9 +360,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, encounterName = ...
         if self:IsMidnight() then
             self.Timelines = {}
-            print("encounter end, setting to 0")
             NSI:HideAllReminders()
             self.ReminderTimer = {}
+            self.AllGlows = {}
         end
         C_Timer.After(1, function()
             if self:Restricted() then return end
@@ -434,13 +436,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    elseif e == "NS_PAMACRO" and (internal or NSRT.Settings["Debug"]) then
-        if self:IsMidnight() then return end
-        local unitID = ...
-        if unitID and UnitExists(unitID) and NSRT.Settings["DebugLogs"] then
+    elseif ((e == "NS_PAMACRO" and not self:IsMidnight()) or (self:IsMidnight() and e == "MINIMAP_PING")) and (internal or NSRT.Settings["Debug"]) then
+        local unitID = ...        
+        if unitID and UnitExists(unitID) then
+            local i = UnitInRaid(unitID)
+            unitID = i and "raid"..i
+            if not unitID then return end
+            self.LastPress = self.LastPress or {}
+            local now = GetTime()
+            if self.LastPress[unitID] and self.LastPress[unitID] > now+5 then return end
+            self.LastPress[unitID] = now
+            -- do assignement stuff
+            if not NSRT.Settings["DebugLogs"] then return end            
+            local time = self.Externals and self.Externals.pull or now
             self.MacroPresses = self.MacroPresses or {}
             self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
-            table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull)})
+            table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(now-time)})
         end
     elseif e == "NS_COMPARE_ASSIGNS" and (internal or NSRT.Settings["Debug"]) then   
         if self:Restricted() then return end    

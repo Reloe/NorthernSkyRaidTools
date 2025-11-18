@@ -278,15 +278,29 @@ end
 function NSAPI:PrivateAura()
     local now = GetTime()
     if (not NSAPI.LastPAMacro) or NSAPI.LastPAMacro < now-4 then -- putting this into global NSAPI namespace to allow auras to reset it if ever required
-        NSAPI.LastPAMacro = now
-        WeakAuras.ScanEvents("NS_PA_MACRO", true) -- this is for backwards compatibility
-        NSI:Broadcast("NS_PAMACRO", "RAID", "nilcheck") -- this will be used going forward, slightly different wording to prevent issues with old auras
+        if NSI:IsMidnight() then
+            Minimap:PingLocation()
+            NSAPI.LastPAMacro = now
+        else
+            NSAPI.LastPAMacro = now
+            WeakAuras.ScanEvents("NS_PA_MACRO", true) -- this is for backwards compatibility
+            NSI:Broadcast("NS_PAMACRO", "RAID", "nilcheck") -- this will be used going forward, slightly different wording to prevent issues with old auras
+        end
     end
 end
 
 function NSI:SendWAString(str)
     if str and str ~= "" and type(str) == "string" then
         self:Broadcast("NSI_WA_SYNC", "RAID", str)
+    end
+end
+
+function NSI:GetSubGroup(unit)
+    for i=1, 40 do
+        local name, _, subgroup = GetRaidRosterInfo(i)
+        if name and UnitIsUnit(name, unit) then
+            return subgroup
+        end
     end
 end
 
