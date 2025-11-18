@@ -34,11 +34,11 @@ BUGS:
     - after a /reload, it is not starting new tickers for spells under cooldown
 
 --]=]
-
+if select(4, GetBuildInfo()) >= 120000 then return end
 ---@alias castername string
 ---@alias castspellid string
 ---@alias schedulename string
-if select(4, GetBuildInfo()) >= 120000 then return end
+
 local GetSpecialization = C_SpecializationInfo and C_SpecializationInfo.GetSpecialization or GetSpecialization
 local GetSpecializationInfo = C_SpecializationInfo and C_SpecializationInfo.GetSpecializationInfo or GetSpecializationInfo
 
@@ -59,7 +59,7 @@ end
 
 local major = "LibOpenRaid-1.0"
 
-local CONST_LIB_VERSION = 173
+local CONST_LIB_VERSION = 171
 
 if (LIB_OPEN_RAID_MAX_VERSION) then
     if (CONST_LIB_VERSION <= LIB_OPEN_RAID_MAX_VERSION) then

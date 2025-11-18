@@ -179,7 +179,6 @@ do
 
 		--spellId of healing from potions
 		LIB_OPEN_RAID_HEALING_POTIONS = {
-			[1238009] = true, --Invigorating Healing Potion
 			[431416] = true, --Healing Potion algari
 			[431419] = true, --Cavedweller's Delight
 			[452767] = true, --Heartseeking Health Injector (engineering tinker)
@@ -240,9 +239,7 @@ do
 			--defensive potions
 			[6262] = {cooldown = 60,	duration = 0,	specs = {},	talent = false,	charges = 1, class = "", type = 10}, --Healthstone
 			[431419] = {cooldown = 300,	duration = 0,	specs = {},	talent = false,	charges = 1, class = "", type = 10, shareid = 101},	--Refreshing Potion
-			[431416] = {cooldown = 300, duration = 0, specs = {}, talent = false, charges = 1, class = "", type = 10, sharedid = 102},	--Algari Healing Potion
-			[1231009] = {cooldown = 300, duration = 0, specs = {}, talent = false, charges = 1, class = "", type = 10, sharedid = 102},	--Invigorating Healing Potion
-			[452767] = {cooldown = 120, duration = 0, specs = {}, talent = false, charges = 1, class = "", type = 10, sharedid = 102},	--Heartseeking Health Injector (engineering tinker)
+			[431416] = {cooldown = 300, duration = 0, specs = {}, talent = false, charges = 1, class = "", type = 10, sharedid = 102},	--Healing Potion algari
 
 			--attack potions
 			[431914] = {cooldown = 300,	duration = 20,	specs = {},	talent = false,	charges = 1, class = "", type = 11, shareid = 101}, --[Potion of Unwavering Focus |A:Professions-ChatIcon-Quality-Tier3:17:18::1|a]
@@ -575,7 +572,7 @@ do
 			[221562] = {cooldown = 45,	duration = 5,	specs = {250},				talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 8}, --Asphyxiate
 			[108194] = {cooldown = 45,	duration = 4,	specs = {251, 252},			talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 8}, --Asphyxiate
 			[207167] = {cooldown = 60,	duration = 5,	specs = {251},				talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 8}, --Blinding Sleet
-			[1249658] = {cooldown = 90,	duration = 5,	specs = {251},				talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 1}, --Breath of Sindragosa
+			[152279] = {cooldown = 120,	duration = 5,	specs = {251},				talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 1}, --Breath of Sindragosa
 			[49028] = {cooldown = 120,	duration = 8,	specs = {250},				talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 1}, --Dancing Rune Weapon
 			[48743] = {cooldown = 120,	duration = 15,	specs = {250, 251, 252},	talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 2}, --Death Pact
 			[47568] = {cooldown = 120,	duration = 20,	specs = {251},				talent = false,	charges = 1,	class = "DEATHKNIGHT",	type = 1}, --Empower Rune Weapon
