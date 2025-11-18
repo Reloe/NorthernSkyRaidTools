@@ -9,18 +9,17 @@ function NSI:ProcessAssigns()
         self.ProcessedAssigns = {}
         for line in self.Assigns:gmatch('[^\r\n]+') do
             if line:find("EncounterID:") then
-                self.ProcessedAssigns.EncounterID = line:match("EncounterID:(%d+)")
+                local encID = line:match("EncounterID:(%d+)")
+                if encID then encID = tonumber(encID) self.ProcessedAssigns.EncounterID = encID end
+                if encID ~= self.EncounterID then -- don't add reminders not matching the current encounter
+                    self.ProcessedAssigns = {}
+                    return
+                end
             end
-            local phase = line:match("ph:(%d+)")
-            local time = line:match("time:(%d*%.?%d+)")
             local tag = line:match("tag:([^;]+)")
+            local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
-            local TTS = line:match("TTS:([^;]+)")
-            local countdown = line:match("countdown:(%d+)")
             local spellID = line:match("spellid:(%d+)")
-            local dur = line:match("dur:(%d+)")
-            local sound = line:match("sound:([^;]+)")
-            local glowunit = line:match("glowunit:([^;]+)")
             if time and tag and (text or spellID) then
                 tag = strlower(tag)
                 local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
@@ -33,7 +32,13 @@ function NSI:ProcessAssigns()
                 tag:match(specid) or
                 tag:match(strlower(select(2, UnitClass("player")))) or
                 (pos and tag:match(pos))
-                then     
+                then                         
+                    local phase = line:match("ph:(%d+)")
+                    local TTS = line:match("TTS:([^;]+)")
+                    local countdown = line:match("countdown:(%d+)")
+                    local dur = line:match("dur:(%d+)")
+                    local sound = line:match("sound:([^;]+)")
+                    local glowunit = line:match("glowunit:([^;]+)")
                     spellID = spellID and tonumber(spellID)
                     -- convert to booleans
                     if TTS == "true" then TTS = true end
@@ -72,7 +77,7 @@ function NSI:ProcessAssigns()
                         end 
                     end       
                     if countdown then countdown = tonumber(countdown) end
-                    self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}             
+                    self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}    
                     table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
@@ -401,8 +406,10 @@ function NSI:HideAllReminders()
             v:Cancel()
         end
     end
-    for k, v in pairs(self.AllGlows) do
-        self.LCG.PixelGlow_Stop(k, v)
+    if self.AllGlows then
+        for k, v in pairs(self.AllGlows) do
+            self.LCG.PixelGlow_Stop(k, v)
+        end
     end
     for i=1, 20 do
         if self.AssignText then
@@ -447,35 +454,11 @@ function NSI:DetectPhaseChange()
                 if count > needed then
                     self.Phase = self.Phase+1
                     self:StartReminders(self.Phase)
+                    self.Timelines = {}
                     self.PhaseSwapTime = now
                     break
                 end
             end           
-        end
-    end
-end
-
--- /run NSAPI:DebugReminder(2400)
--- Debug has to be run before pulling. If player isn't raidlead it needs to be done after ready check.
--- or /run NSAPI:DebugReminder(2400, true) to test outside of combat
-function NSAPI:DebugReminder(EncounterID, startnow)
-    if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nph:1;time:10;tag:Relowindi;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;"
-        text = text.."\n".."time:15;tag:monk;TTS:true;spellid:115203;"
-        text = text.."\n".."ph:1;time:20;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;"
-        text = text.."\n".."ph:2;time:12;tag:Reloe;text:Spread;TTS:true;dur:10;"
-        text = text.."\n".."ph:2;time:15;tag:268;text:Run out if Debuff;TTS:true;dur:10"
-        text = text.."\n".."ph:2;time:20;tag:tank;text:Use Ring;TTS:true;spellid:116844;dur:10;"
-        if not NSI.EncounterDetections[EncounterID] then
-            NSI.EncounterDetections[EncounterID] = {0, 8, 8}
-        end
-        NSI.Assigns = text
-        NSI:ProcessAssigns()
-        if startnow then
-            NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
-            C_Timer.After(20, function()
-                NSAPI:DebugNextPhase(10)
-            end)
         end
     end
 end
@@ -526,3 +509,51 @@ function NSI:StoreFrames(init)
         end
     end
 end
+
+function NSAPI:DebugReminder(EncounterID, startnow)
+    if NSRT.Settings["Debug"] then
+        local text = "EncounterID:"..EncounterID.."\nph:1;time:10;tag:Relowindi;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;"
+        text = text.."\n".."time:15;tag:monk;TTS:true;spellid:115203;"
+        text = text.."\n".."ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;"
+        text = text.."\n".."ph:2;time:10;tag:Reloe;text:Spread;TTS:true;dur:10;"
+        text = text.."\n".."ph:2;time:15;tag:268;text:Run out if Debuff;TTS:true;dur:10"
+        text = text.."\n".."ph:2;time:25;tag:tank;text:Use Ring;TTS:true;spellid:116844;dur:10;"
+        if not NSI.EncounterDetections[EncounterID] then
+            NSI.EncounterDetections[EncounterID] = {0, 8, 8}
+        end
+        NSI.Assigns = text
+        NSI:ProcessAssigns()
+        if startnow then
+            NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
+            C_Timer.After(20, function()
+                NSAPI:DebugNextPhase(10)
+            end)
+        end
+    end
+end
+
+function NSI:AddAssignments(id)
+    if NSRT.Settings["Debug"] and (id == 2900 or id == 3306 or id == 3182 or id == 3176 or id == 3177 or id == 3179 or id == 3178 or id == 3180) then -- all raid tests debug & 1st Boss Cinderbrew
+        local phase, countdown, glowunit, sound, time, spellID, dur = 1, 3, false, false, 20, false, 10
+        local subgroup = math.random(1, 4)
+        local text = subgroup <= 2 and "|cFF00FF00SOAK|r" or "|cFFFF0000DON'T SOAK|r"
+        local TTS = subgroup <= 2 and "Soak" or "Don't Soak"   
+        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
+        table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = time, text = text, TTS = TTS, spellID = spellID, dur = dur})
+        phase = 2
+        text = subgroup <= 2 and "|cFF00FF00Go Left" or "|cFFFF0000Go Right"
+        TTS = subgroup <= 2 and "Go Left" or "Go Right"self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
+        table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = time, text = text, TTS = TTS, spellID = spellID, dur = dur})
+    end
+end
+
+-- /run NSAPI:DebugReminder(3306)
+-- /run NSAPI:DebugReminder(3176)
+-- /run NSAPI:DebugReminder(3177)
+-- /run NSAPI:DebugReminder(3179)
+-- /run NSAPI:DebugReminder(3182)
+-- /run NSAPI:DebugReminder(3178)
+-- /run NSAPI:DebugReminder(3180)
+-- /run NSAPI:DebugReminder(2900)
+-- Debug has to be run before pulling. If player isn't raidlead it needs to be done after ready check.
+-- /run NSAPI:DebugReminder(2900, true) to test outside of combat
