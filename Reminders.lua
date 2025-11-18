@@ -70,12 +70,16 @@ function NSI:ProcessAssigns()
                     phase = tonumber(phase)
                     if text then text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t") end                    
                     if NSRT.ReminderSettings.SpellName and spellID then -- display spellname if text is empty, also make TTS that spellname
-                        if (not text) and C_Spell.GetSpellInfo(spellID) then 
-                            local spellName = C_Spell.GetSpellInfo(spellID).name
-                            text = spellName or ""
-                            TTS = TTS and type(TTS) ~= "string" and spellName
+                        local spell = C_Spell.GetSpellInfo(spellID) 
+                        if spell and not text then 
+                            text = spell.name or ""
+                            TTS = TTS and type(TTS) ~= "string" and spell.name
                         end 
-                    end       
+                    end
+                    if TTS and type(TTS) ~= "string" and spellID then -- TTS is enabled but it's still empty, which means text was empty so we should play the spellname TTS instead
+                        local spell = C_Spell.GetSpellInfo(spellID)
+                        TTS = spell and spell.name
+                    end
                     if countdown then countdown = tonumber(countdown) end
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}    
                     table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
@@ -85,77 +89,113 @@ function NSI:ProcessAssigns()
     end
 end
 
-function NSI:CreateText(info)
-    self.AssignText = self.AssignText or {}
+function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
     for i=1, 20 do
-        if self.AssignText[i] and not self.AssignText[i]:IsShown() then 
-            self:SetProperties(self.AssignText[i], info)
-            return self.AssignText[i] 
+        local F = self.AssignText and self.AssignText[i]
+        if F then
+            local s = NSRT.ReminderSettings.TextSettings
+            F.Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
-        if not self.AssignText[i] then
-            local xOffset, yOffset = -200, 200
-            local Font = self.LSM:Fetch("font", "PT Sans Narrow Bold")
-            local FontSize = 50
-            yOffset = yOffset + (i-1) * FontSize
-            self.AssignText[i] = CreateFrame("Frame", nil, UIParent)
-            self.AssignText[i].Text = self.AssignText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignText[i].Text:SetPoint("LEFT", UIParent, "CENTER", xOffset, yOffset)
-            self.AssignText[i].Text:SetFont(Font, FontSize, "OUTLINE")
-            self.AssignText[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.AssignText[i].Text:SetShadowOffset(0, 0)
-            self.AssignText[i].Text:SetTextColor(1, 1, 1, 1)
-            self:SetProperties(self.AssignText[i], info)
-            return self.AssignText[i]
+        F = self.AssignIcon and self.AssignIcon[i]
+        if F then
+            local s = NSRT.ReminderSettings.IconSettings
+            F:SetSize(s.Size, s.Size)
+            F:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Size)
+            F.Icon:SetAllPoints(F)
+            F.Border:SetAllPoints(F)
+            F.Text:SetPoint("LEFT", F, "RIGHT", s.xTextOffset, s.yTextOffset)
+            F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+        end
+        F = self.UnitIcon and self.UnitIcon[i]
+        if F then
+            local s = NSRT.ReminderSettings.UnitIconSettings
+            F:SetSize(s.Size, s.Size) -- not setting points in this one because this is repeated every time the frame is shown as it needs a new frame to anchor to anyway
+        end
+        F = self.AssignBar and self.AssignBar[i]
+        if F then
+            local s = NSRT.ReminderSettings.BarSettings
+            F:SetSize(s.Width, s.Height)
+            F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
+            F:SetStatusBarColor(unpack(s.colors))
+            F:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Height)
+            F.Border:SetAllPoints(F)
+            F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
+            F.Icon:SetSize(s.Height, s.Height)
+            F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
     end
 end
 
-function NSI:SetProperties(F, info, skipsound)
+function NSI:SetProperties(F, info, skipsound, s)
     F:SetScript("OnUpdate", function()
         NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
     F:SetScript("OnHide", function()
         NSI:HideGlow(info.glowunit, "p"..info.phase.."id"..info.id)
-    end)
+    end)    
     if not info.spellID then return end
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     F.Icon:SetTexture(icon)
     if F.Swipe then 
         F.Swipe:SetCooldown(GetTime(), info.dur) 
-        F.TimerText:SetTextColor(1, 1, 0, 1)
+        if NSRT.ReminderSettings.HideTimerText then 
+            F.TimerText:Hide() 
+        else
+            F.TimerText:SetTextColor(1, 1, 0, 1)
+        end
     elseif F.TimerText then
         F.TimerText:SetTextColor(1, 1, 1, 1)
     end
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
         local unit, _, spellID = ...
-        if (not issecretvalue(spellID)) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
+        if (NSI:IsMidnight() and not issecretvalue(spellID)) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
             self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             self:Hide()
         end
     end)
 end
 
+function NSI:CreateText(info)
+    self.AssignText = self.AssignText or {}
+    local s = NSRT.ReminderSettings.TextSettings
+    for i=1, 20 do
+        if self.AssignText[i] and not self.AssignText[i]:IsShown() then 
+            self:SetProperties(self.AssignText[i], info, false, s)
+            return self.AssignText[i] 
+        end
+        if not self.AssignText[i] then            
+            self.AssignText[i] = CreateFrame("Frame", nil, UIParent)
+            self.AssignText[i].Text = self.AssignText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.AssignText[i].Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
+            self.AssignText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            self.AssignText[i].Text:SetShadowColor(0, 0, 0, 1)
+            self.AssignText[i].Text:SetShadowOffset(0, 0)
+            self.AssignText[i].Text:SetTextColor(1, 1, 1, 1)
+            self:SetProperties(self.AssignText[i], info, false, s)
+            return self.AssignText[i]
+        end
+    end
+end
+
 function NSI:CreateIcon(info)
     self.AssignIcon = self.AssignIcon or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID
+    local s = NSRT.ReminderSettings.IconSettings
     for i=1, 20 do
         if self.AssignIcon[i] and not self.AssignIcon[i]:IsShown() then 
-            self:SetProperties(self.AssignIcon[i], info)
+            self:SetProperties(self.AssignIcon[i], info, false, s)
             return self.AssignIcon[i] 
         end
         if not self.AssignIcon[i] then
-            local xOffset, yOffset = -400, 400
-            local xTextOffset, yTextOffset = 0, 0
-            local xTimer, yTimer = 0, 0
-            local Font = self.LSM:Fetch("font", "PT Sans Narrow Bold")
-            local Size = 80
-            local FontSize = 22
-            local TimerFontSize = 40
-            yOffset = yOffset + (i-1) * Size
             self.AssignIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.AssignIcon[i]:SetSize(Size, Size)
-            self.AssignIcon[i]:SetPoint("CENTER", UIParent, "CENTER", xOffset, yOffset)
+            self.AssignIcon[i]:SetSize(s.Size, s.Size)
+            self.AssignIcon[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Size)
             self.AssignIcon[i].Icon = self.AssignIcon[i]:CreateTexture(nil, "ARTWORK")
             self.AssignIcon[i].Icon:SetAllPoints(self.AssignIcon[i])
             self.AssignIcon[i].Border = CreateFrame("Frame", nil, self.AssignIcon[i], "BackdropTemplate")
@@ -166,8 +206,8 @@ function NSI:CreateIcon(info)
             })
             self.AssignIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
             self.AssignIcon[i].Text = self.AssignIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignIcon[i].Text:SetPoint("LEFT", self.AssignIcon[i], "RIGHT", xTextOffset, yTextOffset)
-            self.AssignIcon[i].Text:SetFont(Font, FontSize, "OUTLINE")
+            self.AssignIcon[i].Text:SetPoint("LEFT", self.AssignIcon[i], "RIGHT", s.xTextOffset, s.yTextOffset)
+            self.AssignIcon[i].Text:SetFont(s.Font, s.FontSize, "OUTLINE")
             self.AssignIcon[i].Text:SetShadowColor(0, 0, 0, 1)
             self.AssignIcon[i].Text:SetShadowOffset(0, 0)
             self.AssignIcon[i].Text:SetTextColor(1, 1, 1, 1)
@@ -177,16 +217,18 @@ function NSI:CreateIcon(info)
             self.AssignIcon[i].Swipe:SetReverse(true)
             self.AssignIcon[i].Swipe:SetHideCountdownNumbers(true)
             self.AssignIcon[i].TimerText = self.AssignIcon[i].Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignIcon[i].TimerText:SetPoint("CENTER", self.AssignIcon[i].Swipe, "CENTER", xTimer, yTimer)
-            self.AssignIcon[i].TimerText:SetFont(Font, TimerFontSize, "OUTLINE")
+            self.AssignIcon[i].TimerText:SetPoint("CENTER", self.AssignIcon[i].Swipe, "CENTER", s.xTimer, s.yTimer)
+            self.AssignIcon[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
             self.AssignIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
             self.AssignIcon[i].TimerText:SetShadowOffset(0, 0)
-            self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)            
-            self:SetProperties(self.AssignIcon[i], info)
+            self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)                        
+            self:SetProperties(self.AssignIcon[i], info, false, s)
             return self.AssignIcon[i]
         end
     end
 end
+
+
 
 function NSI:CreateUnitFrameIcon(info)    
     self.UnitIcon = self.UnitIcon or {}
@@ -196,18 +238,17 @@ function NSI:CreateUnitFrameIcon(info)
     if (not UnitExists(unit)) or (not i) then return end
     local F = self.RaidFrames["raid"..i]
     if not F then return end
+    local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, 20 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
-            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", xOffset, yOffset)
-            self:SetProperties(self.UnitIcon[i], info, true)
+            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", s.xOffset, s.yOffset)
+            self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i] 
         end
-        if not self.UnitIcon[i] then
-            local xOffset, yOffset = 0, 0
-            local Size = 25
+        if not self.UnitIcon[i] then            
             self.UnitIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.UnitIcon[i]:SetSize(Size, Size)
-            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", xOffset, yOffset)
+            self.UnitIcon[i]:SetSize(s.Size, s.Size)
+            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", s.xOffset, s.yOffset)
             self.UnitIcon[i].Icon = self.UnitIcon[i]:CreateTexture(nil, "ARTWORK")
             self.UnitIcon[i].Icon:SetAllPoints(self.UnitIcon[i])
             self.UnitIcon[i].Icon:SetTexture(icon)
@@ -218,7 +259,7 @@ function NSI:CreateUnitFrameIcon(info)
                 edgeSize = 1
             })
             self.UnitIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)       
-            self:SetProperties(self.UnitIcon[i], info, true)
+            self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i]
         end
     end
@@ -227,33 +268,23 @@ end
 function NSI:CreateBar(info)
     self.AssignBar = self.AssignBar or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID
+    local s = NSRT.ReminderSettings.BarSettings
     for i=1, 20 do
         if self.AssignBar[i] and not self.AssignBar[i]:IsShown() then                 
-            self:SetProperties(self.AssignBar[i], info)
+            self:SetProperties(self.AssignBar[i], info, false, s)
             return self.AssignBar[i] 
         end
-        if not self.AssignBar[i] then
-            local Width, Height = 240, 30
-            local xOffset, yOffset = 400, 0
-            local xIcon, yIcon = 0, 0
-            local xTextOffset, yTextOffset = 2, 0
-            local xTimer, yTimer = -2, 0
-            local Font = self.LSM:Fetch("font", "PT Sans Narrow Bold")
-            local Texture = "Atrocity"
-            local Size = 80
-            local FontSize = 22
-            local colors = {1, 0, 0, 1}
-            yOffset = yOffset + (i-1) * Height
+        if not self.AssignBar[i] then            
             self.AssignBar[i] = CreateFrame("StatusBar", nil, UIParent, "BackdropTemplate")
             self.AssignBar[i]:SetBackdrop({ 
             bgFile = "Interface\\Buttons\\WHITE8x8", 
             tileSize = 0,
             }) 
-            self.AssignBar[i]:SetSize(Width, Height)
-            self.AssignBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", Texture))
-            self.AssignBar[i]:SetStatusBarColor(unpack(colors))
+            self.AssignBar[i]:SetSize(s.Width, s.Height)
+            self.AssignBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
+            self.AssignBar[i]:SetStatusBarColor(unpack(s.colors))
             self.AssignBar[i]:SetBackdropColor(0, 0, 0, 0.5)
-            self.AssignBar[i]:SetPoint("CENTER", UIParent, "CENTER", xOffset, yOffset)
+            self.AssignBar[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Height)
             self.AssignBar[i].Border = CreateFrame("Frame", nil, self.AssignBar[i], "BackdropTemplate")
             self.AssignBar[i].Border:SetAllPoints(self.AssignBar[i])
             self.AssignBar[i].Border:SetBackdrop({
@@ -262,20 +293,20 @@ function NSI:CreateBar(info)
             })
             self.AssignBar[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
             self.AssignBar[i].Icon = self.AssignBar[i]:CreateTexture(nil, "ARTWORK")
-            self.AssignBar[i].Icon:SetPoint("RIGHT", self.AssignBar[i], "LEFT", xIcon, yIcon)
-            self.AssignBar[i].Icon:SetSize(Height, Height)
+            self.AssignBar[i].Icon:SetPoint("RIGHT", self.AssignBar[i], "LEFT", s.xIcon, s.yIcon)
+            self.AssignBar[i].Icon:SetSize(s.Height, s.Height)
             self.AssignBar[i].Text = self.AssignBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignBar[i].Text:SetPoint("LEFT", self.AssignBar[i].Icon, "RIGHT", xTextOffset, yTextOffset)
-            self.AssignBar[i].Text:SetFont(Font, FontSize, "OUTLINE")
+            self.AssignBar[i].Text:SetPoint("LEFT", self.AssignBar[i].Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
+            self.AssignBar[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.AssignBar[i].Text:SetShadowColor(0, 0, 0, 1)
             self.AssignBar[i].Text:SetShadowOffset(0, 0)
             self.AssignBar[i].Text:SetTextColor(1, 1, 1, 1)
             self.AssignBar[i].TimerText = self.AssignBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignBar[i].TimerText:SetPoint("RIGHT", self.AssignBar[i], "RIGHT", xTimer, yTimer)
-            self.AssignBar[i].TimerText:SetFont(Font, FontSize, "OUTLINE")
+            self.AssignBar[i].TimerText:SetPoint("RIGHT", self.AssignBar[i], "RIGHT", s.xTimer, s.yTimer)
+            self.AssignBar[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
             self.AssignBar[i].TimerText:SetShadowColor(0, 0, 0, 1)
             self.AssignBar[i].TimerText:SetShadowOffset(0, 0)            
-            self:SetProperties(self.AssignBar[i], info)
+            self:SetProperties(self.AssignBar[i], info, false, s)
             return self.AssignBar[i]
         end
     end

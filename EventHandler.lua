@@ -47,6 +47,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellName = NSRT.ReminderSettings.SpellName or false
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
+            NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
+            NSRT.ReminderSettings.IconSettings = NSRT.ReminderSettings.IconSettings or {xOffset = -400, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 40, Size = 80}
+            NSRT.ReminderSettings.BarSettings = NSRT.ReminderSettings.BarSettings or {Width = 240, Height = 30, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = 400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 22}
+            NSRT.ReminderSettings.TextSettings = NSRT.ReminderSettings.TextSettings or {xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
+            NSRT.ReminderSettings.UnitIconSettings = NSRT.ReminderSettings.UnitIconSettings or {xOffset = 0, yOffset = 0, Size = 25}
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
