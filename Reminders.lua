@@ -66,8 +66,8 @@ function NSI:ProcessAssigns()
                         end
                         if countdown == 0 then countdown = false end
                     end
+                    phase = phase and tonumber(phase)
                     if not phase then phase = 1 end
-                    phase = tonumber(phase)
                     if text then text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t") end                    
                     if NSRT.ReminderSettings.SpellName and spellID then -- display spellname if text is empty, also make TTS that spellname
                         local spell = C_Spell.GetSpellInfo(spellID) 
@@ -80,9 +80,8 @@ function NSI:ProcessAssigns()
                         local spell = C_Spell.GetSpellInfo(spellID)
                         TTS = spell and spell.name
                     end
-                    if countdown then countdown = tonumber(countdown) end
                     self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}    
-                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
+                    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})
                 end
             end
         end
@@ -473,8 +472,15 @@ function NSI:ImportReminder(name, values)
     -- NSI:UpdateReminderList()
 end
 
-function NSI:DetectPhaseChange()
+function NSI:DetectPhaseChange(e)
     local now = GetTime()
+    if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
+        self.TimeLinesDebug = self.TimeLinesDebug or {}
+        self.TimeLinesDebug.EncounterID= self.TimeLinesDebug.EncounterID or self.EncounterID
+        self.TimeLinesDebug[self.Phase] = self.TimeLinesDebug[self.Phase] or {}
+        self.TimeLinesDebug[self.Phase][e] = self.TimeLinesDebug[self.Phase][e] or {}
+        table.insert(self.TimeLinesDebug[self.Phase][e], now)
+    end
     local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and self.EncounterDetections[self.EncounterID] and self.EncounterDetections[self.EncounterID][self.Phase+1]
     if needed then
         table.insert(self.Timelines, now+1)
@@ -550,7 +556,7 @@ function NSAPI:DebugReminder(EncounterID, startnow)
         text = text.."\n".."ph:2;time:15;tag:268;text:Run out if Debuff;TTS:true;dur:10"
         text = text.."\n".."ph:2;time:25;tag:tank;text:Use Ring;TTS:true;spellid:116844;dur:10;"
         if not NSI.EncounterDetections[EncounterID] then
-            NSI.EncounterDetections[EncounterID] = {0, 8, 8}
+            NSI.EncounterDetections[EncounterID] = {0, 8, 8, 8}
         end
         NSI.Assigns = text
         NSI:ProcessAssigns()

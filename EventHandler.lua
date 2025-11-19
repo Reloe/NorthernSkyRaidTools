@@ -131,7 +131,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
-        if self:IsMidnight() then return end
         if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
         for i=1, 120 do
             local macroname = C_Macro.GetMacroName(i)
@@ -328,21 +327,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if (not self.ProcessedAssigns) or not (next(self.ProcessedAssigns)) then
                 self:ProcessAssigns()
             end
+            self.Phase = 1
+            self.PhaseSwapTime = GetTime()
+            self.AssignText = self.AssignText or {}
+            self.AssignIcon = self.AssignIcon or {}
+            self.AssignBar = self.AssignBar or {}
+            self.ReminderTimer = self.ReminderTimer or {}
+            self.RaidFrames = self.RaidFrames or {}
+            self.AllGlows = self.AllGlows or {}
+            self.PlayedSound = {}
+            self.StartedCountdown = {}
+            self.Timelines = {}
+            self.TimeLinesDebug = {}
             if self.ProcessedAssigns and next(self.ProcessedAssigns) then
-                self.Phase = 1
-                self.PhaseSwapTime = GetTime()
-                self.AssignText = self.AssignText or {}
-                self.AssignIcon = self.AssignIcon or {}
-                self.AssignBar = self.AssignBar or {}
-                self.ReminderTimer = self.ReminderTimer or {}
-                self.RaidFrames = self.RaidFrames or {}
-                self.AllGlows = self.AllGlows or {}
-                self.PlayedSound = {}
-                self.StartedCountdown = {}
                 self:AddAssignments(self.EncounterID)
                 self:StartReminders(self.Phase)
             end
-            self.Timelines = {}
             return 
         end
         self.specs = {}
@@ -364,6 +364,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ENCOUNTER_END" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
         if self:IsMidnight() then
+            if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
+                DevTool:AddData(self.TimeLinesDebug)
+                NSRT.TimeLinesDebug = NSRT.TimeLinesDebug or {}
+                print("writing encounter data to SV")
+                table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
+            end
             self.Timelines = {}
             NSI:HideAllReminders()
             self.ReminderTimer = {}
@@ -387,7 +393,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MacroPresses = {}
         end      
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and (wowevent or NSRT.Settings["Debug"]) then  
-        self:DetectPhaseChange()
+        self:DetectPhaseChange(e)
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...

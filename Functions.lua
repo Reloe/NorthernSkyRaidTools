@@ -100,11 +100,9 @@ end
 
 function NSAPI:GetNote(disablecheck, rawonly) -- Get rid of extra spaces and color coding. Also converts nicknames
     if not C_AddOns.IsAddOnLoaded("MRT") then
-        print("Addon MRT is disabled, can't read the note")
         return "empty"
     end
     if not VMRT.Note.Text1 then
-        print("No MRT Note found")
         return "empty"
     end
     local persnote = _G.VMRT.Note.SelfText or ""
@@ -248,11 +246,11 @@ end
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
-        sound = tostring(sound)
         local handle = select(2, PlaySoundFile(path..sound..".ogg", "Master"))  
         if handle then
             PlaySoundFile(path..sound..".ogg", "Master")
         else
+            sound = tostring(sound)
             local num = voice or NSRT.Settings["TTSVoice"]
             if NSI:IsMidnight() then
                 C_VoiceChat.SpeakText(
