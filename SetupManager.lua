@@ -256,7 +256,7 @@ function NSI:ShiftLeader(group)
         if UnitIsGroupLeader(v.unitid) then
             currentpos = i
             -- for tanks put them first in their current group, for others put them first in not the first group so they don't appear above the tanks unless there are less than 6 players available.
-            goalpos = (v.role == "TANK" and math.floor((i - 1) / 5) * 5 + 1) or (i > 5 and math.floor((i - 1) / 5) * 5 + 1) or (#sides["right"] > 5 and 6) or 1
+            goalpos = (v.role == "TANK" and math.floor((i - 1) / 5) * 5 + 1) or (i > 5 and math.floor((i - 1) / 5) * 5 + 1) or (#group > 5 and 6) or 1
         end
     end
     if goalpos ~= 0 and currentpos ~= goalpos then
@@ -402,6 +402,7 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
+            self.specs = {}
             self:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
