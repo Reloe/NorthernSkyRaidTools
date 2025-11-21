@@ -11,10 +11,10 @@ f:RegisterEvent("PLAYER_ENTERING_WORLD")
 if not NSI:IsMidnight() then
     f:RegisterEvent("UNIT_AURA")
     f:RegisterEvent("CHALLENGE_MODE_START")
+    f:RegisterEvent("GROUP_ROSTER_UPDATE")
 end
 if NSI:IsMidnight() then
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
-    f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
     f:RegisterEvent("MINIMAP_PING")
 end
@@ -48,7 +48,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
-            NSRT.ReminderSettings.IconSettings = NSRT.ReminderSettings.IconSettings or {xOffset = -400, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 40, Size = 80}
+            NSRT.ReminderSettings.IconSettings = NSRT.ReminderSettings.IconSettings or {xOffset = -400, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 30, TimerFontSize = 40, Size = 80}
             NSRT.ReminderSettings.BarSettings = NSRT.ReminderSettings.BarSettings or {Width = 240, Height = 30, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = 400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 22}
             NSRT.ReminderSettings.TextSettings = NSRT.ReminderSettings.TextSettings or {xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
             NSRT.ReminderSettings.UnitIconSettings = NSRT.ReminderSettings.UnitIconSettings or {xOffset = 0, yOffset = 0, Size = 25}
@@ -321,12 +321,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "CHALLENGE_MODE_START" and (wowevent or NSRT.Settings["Debug"]) then
         if self:IsMidnight() then return end
         self.Externals:Init(true)
+    elseif e == "GROUP_ROSTER_UPDATE" and (wowevent or NSRT.Settings["Debug"])then
+        if self:Restricted() or not self:Difficultycheck(false, 14) then return end
+        self:StoreFrames(true)
     elseif e == "ENCOUNTER_START" and ((wowevent and self:Difficultycheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         if self:IsMidnight() or NSRT.Settings["Debug"] then 
             self.EncounterID = ...
-            if (not self.ProcessedAssigns) or not (next(self.ProcessedAssigns)) then
-                self:ProcessAssigns()
-            end
+            self:ProcessAssigns()
             self.Phase = 1
             self.PhaseSwapTime = GetTime()
             self.AssignText = self.AssignText or {}
@@ -339,10 +340,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.StartedCountdown = {}
             self.Timelines = {}
             self.TimeLinesDebug = {}
-            if self.ProcessedAssigns and next(self.ProcessedAssigns) then
-                self:AddAssignments(self.EncounterID)
-                self:StartReminders(self.Phase)
-            end
+            self:AddAssignments(self.EncounterID)
+            self:StartReminders(self.Phase)
             return 
         end
         self.specs = {}
@@ -370,10 +369,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 print("writing encounter data to SV")
                 table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
             end
-            self.Timelines = {}
             NSI:HideAllReminders()
+            self.Timelines = {}
             self.ReminderTimer = {}
-            self.AllGlows = {}
+            self.AllGlows = {}            
         end
         C_Timer.After(1, function()
             if self:Restricted() then return end
@@ -393,7 +392,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MacroPresses = {}
         end      
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and (wowevent or NSRT.Settings["Debug"]) then  
-        self:DetectPhaseChange(e)
+        if not self:Difficultycheck(false, 14) then return end -- only care about timelines in raid
+        if self:Restricted() or NSRT.Settings["Debug"] then self:DetectPhaseChange(e) end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
