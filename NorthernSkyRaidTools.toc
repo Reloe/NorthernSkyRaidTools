@@ -28,6 +28,7 @@ CooldownCheck.lua
 WeakAuras/Imports.lua
 WeakAuras/Links.lua
 ReadyCheck.lua
+Assignments.lua
 
 # UI
 NSUI.lua
