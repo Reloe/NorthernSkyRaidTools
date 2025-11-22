@@ -1,7 +1,8 @@
 local _, NSI = ... -- Internal namespace
 
-function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS)
-    self.ProcessedAssigns = self.ProcessedAssigns or {}
+function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+    self.ProcessedReminder = self.ProcessedReminder or {}
+    self.ProcessedReminder[encID] = self.ProcessedReminder[encID] or {}
     spellID = spellID and tonumber(spellID)
     -- convert to booleans
     if TTS == "true" then TTS = true end
@@ -28,7 +29,14 @@ function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellI
             countdown = NSRT.ReminderSettings.TextCountdown
         end
         if countdown == 0 then countdown = false end
-     end
+    end
+    if TTSTimer == nil then
+        if spellID then
+            TTSTimer = NSRT.ReminderSettings.SpellTTSTimer
+        else
+            TTSTimer = NSRT.ReminderSettings.TextTTSTimer
+        end
+    end
     phase = phase and tonumber(phase)
     if not phase then phase = 1 end
     if text then text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t") end                    
@@ -46,31 +54,28 @@ function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellI
         local spell = C_Spell.GetSpellInfo(spellID)
         TTS = spell and spell.name
     end
-    self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}    
-    table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})      
+    self.ProcessedReminder[encID][phase] = self.ProcessedReminder[encID][phase] or {}    
+    table.insert(self.ProcessedReminder[encID][phase], {TTSTimer = TTSTimer, phase = phase, id = #self.ProcessedReminder[encID][phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})      
 end
 
-function NSI:ProcessAssigns()
-    self.ProcessedAssigns = {}
-    if self.Assigns and self.Assigns ~= "" then
+function NSI:ProcessReminder()
+    self.ProcessedReminder = {}
+    if self.Reminder and self.Reminder ~= "" then
         local subgroup = self:GetSubGroup("player")        
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         local pos = self.spectable[specid]
+        local encID = 0
         pos = (pos <= 19 and pos >= 7 and "meleedps") or (pos <= 33 and pos >= 20 and "rangeddps")
-        for line in self.Assigns:gmatch('[^\r\n]+') do
+        for line in self.Reminder:gmatch('[^\r\n]+') do
             if line:find("EncounterID:") then
-                local encID = line:match("EncounterID:(%d+)")
-                if encID then encID = tonumber(encID) self.ProcessedAssigns.EncounterID = encID end
-                if encID ~= self.EncounterID then -- don't add reminders not matching the current encounter
-                    self.ProcessedAssigns = {}
-                    return
-                end
+                encID = line:match("EncounterID:(%d+)")
+                if encID then encID = tonumber(encID) end
             end
             local tag = line:match("tag:([^;]+)")
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
-            if time and tag and subgroup and (text or spellID) then
+            if time and tag and subgroup and (text or spellID) and encID and encID ~= 0 then
                 tag = strlower(tag)
                 if tag == "everyone" or 
                 tag:match(strlower(UnitName("player"))) or 
@@ -87,7 +92,7 @@ function NSI:ProcessAssigns()
                     local dur = line:match("dur:(%d+)")
                     local sound = line:match("sound:([^;]+)")
                     local glowunit = line:match("glowunit:([^;]+)")
-                    self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS)
+                    self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID)
                 end
             end
         end
@@ -96,13 +101,13 @@ end
 
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
     for i=1, 20 do
-        local F = self.AssignText and self.AssignText[i]
+        local F = self.ReminderText and self.ReminderText[i]
         if F then
             local s = NSRT.ReminderSettings.TextSettings
             F.Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
-        F = self.AssignIcon and self.AssignIcon[i]
+        F = self.ReminderIcon and self.ReminderIcon[i]
         if F then
             local s = NSRT.ReminderSettings.IconSettings
             F:SetSize(s.Size, s.Size)
@@ -118,7 +123,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local s = NSRT.ReminderSettings.UnitIconSettings
             F:SetSize(s.Size, s.Size) -- not setting points in this one because this is repeated every time the frame is shown as it needs a new frame to anchor to anyway
         end
-        F = self.AssignBar and self.AssignBar[i]
+        F = self.ReminderBar and self.ReminderBar[i]
         if F then
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
@@ -167,68 +172,68 @@ function NSI:SetProperties(F, info, skipsound, s)
 end
 
 function NSI:CreateText(info)
-    self.AssignText = self.AssignText or {}
+    self.ReminderText = self.ReminderText or {}
     local s = NSRT.ReminderSettings.TextSettings
     for i=1, 20 do
-        if self.AssignText[i] and not self.AssignText[i]:IsShown() then 
-            self:SetProperties(self.AssignText[i], info, false, s)
-            return self.AssignText[i] 
+        if self.ReminderText[i] and not self.ReminderText[i]:IsShown() then 
+            self:SetProperties(self.ReminderText[i], info, false, s)
+            return self.ReminderText[i] 
         end
-        if not self.AssignText[i] then            
-            self.AssignText[i] = CreateFrame("Frame", nil, UIParent)
-            self.AssignText[i].Text = self.AssignText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignText[i].Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
-            self.AssignText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.AssignText[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.AssignText[i].Text:SetShadowOffset(0, 0)
-            self.AssignText[i].Text:SetTextColor(1, 1, 1, 1)
-            self:SetProperties(self.AssignText[i], info, false, s)
-            return self.AssignText[i]
+        if not self.ReminderText[i] then            
+            self.ReminderText[i] = CreateFrame("Frame", nil, UIParent)
+            self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.ReminderText[i].Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
+            self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
+            self.ReminderText[i].Text:SetShadowOffset(0, 0)
+            self.ReminderText[i].Text:SetTextColor(1, 1, 1, 1)
+            self:SetProperties(self.ReminderText[i], info, false, s)
+            return self.ReminderText[i]
         end
     end
 end
 
 function NSI:CreateIcon(info)
-    self.AssignIcon = self.AssignIcon or {}
+    self.ReminderIcon = self.ReminderIcon or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     local s = NSRT.ReminderSettings.IconSettings
     for i=1, 20 do
-        if self.AssignIcon[i] and not self.AssignIcon[i]:IsShown() then 
-            self:SetProperties(self.AssignIcon[i], info, false, s)
-            return self.AssignIcon[i] 
+        if self.ReminderIcon[i] and not self.ReminderIcon[i]:IsShown() then 
+            self:SetProperties(self.ReminderIcon[i], info, false, s)
+            return self.ReminderIcon[i] 
         end
-        if not self.AssignIcon[i] then
-            self.AssignIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.AssignIcon[i]:SetSize(s.Size, s.Size)
-            self.AssignIcon[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Size)
-            self.AssignIcon[i].Icon = self.AssignIcon[i]:CreateTexture(nil, "ARTWORK")
-            self.AssignIcon[i].Icon:SetAllPoints(self.AssignIcon[i])
-            self.AssignIcon[i].Border = CreateFrame("Frame", nil, self.AssignIcon[i], "BackdropTemplate")
-            self.AssignIcon[i].Border:SetAllPoints(self.AssignIcon[i])
-            self.AssignIcon[i].Border:SetBackdrop({
+        if not self.ReminderIcon[i] then
+            self.ReminderIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self.ReminderIcon[i]:SetSize(s.Size, s.Size)
+            self.ReminderIcon[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Size)
+            self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
+            self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
+            self.ReminderIcon[i].Border = CreateFrame("Frame", nil, self.ReminderIcon[i], "BackdropTemplate")
+            self.ReminderIcon[i].Border:SetAllPoints(self.ReminderIcon[i])
+            self.ReminderIcon[i].Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.AssignIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self.AssignIcon[i].Text = self.AssignIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignIcon[i].Text:SetPoint("LEFT", self.AssignIcon[i], "RIGHT", s.xTextOffset, s.yTextOffset)
-            self.AssignIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.AssignIcon[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.AssignIcon[i].Text:SetShadowOffset(0, 0)
-            self.AssignIcon[i].Text:SetTextColor(1, 1, 1, 1)
-            self.AssignIcon[i].Swipe = CreateFrame("Cooldown", nil, self.AssignIcon[i], "CooldownFrameTemplate")
-            self.AssignIcon[i].Swipe:SetAllPoints()
-            self.AssignIcon[i].Swipe:SetDrawEdge(false)
-            self.AssignIcon[i].Swipe:SetReverse(true)
-            self.AssignIcon[i].Swipe:SetHideCountdownNumbers(true)
-            self.AssignIcon[i].TimerText = self.AssignIcon[i].Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignIcon[i].TimerText:SetPoint("CENTER", self.AssignIcon[i].Swipe, "CENTER", s.xTimer, s.yTimer)
-            self.AssignIcon[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            self.AssignIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.AssignIcon[i].TimerText:SetShadowOffset(0, 0)
-            self.AssignIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)                        
-            self:SetProperties(self.AssignIcon[i], info, false, s)
-            return self.AssignIcon[i]
+            self.ReminderIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
+            self.ReminderIcon[i].Text = self.ReminderIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.ReminderIcon[i].Text:SetPoint("LEFT", self.ReminderIcon[i], "RIGHT", s.xTextOffset, s.yTextOffset)
+            self.ReminderIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            self.ReminderIcon[i].Text:SetShadowColor(0, 0, 0, 1)
+            self.ReminderIcon[i].Text:SetShadowOffset(0, 0)
+            self.ReminderIcon[i].Text:SetTextColor(1, 1, 1, 1)
+            self.ReminderIcon[i].Swipe = CreateFrame("Cooldown", nil, self.ReminderIcon[i], "CooldownFrameTemplate")
+            self.ReminderIcon[i].Swipe:SetAllPoints()
+            self.ReminderIcon[i].Swipe:SetDrawEdge(false)
+            self.ReminderIcon[i].Swipe:SetReverse(true)
+            self.ReminderIcon[i].Swipe:SetHideCountdownNumbers(true)
+            self.ReminderIcon[i].TimerText = self.ReminderIcon[i].Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.ReminderIcon[i].TimerText:SetPoint("CENTER", self.ReminderIcon[i].Swipe, "CENTER", s.xTimer, s.yTimer)
+            self.ReminderIcon[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            self.ReminderIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
+            self.ReminderIcon[i].TimerText:SetShadowOffset(0, 0)
+            self.ReminderIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)                        
+            self:SetProperties(self.ReminderIcon[i], info, false, s)
+            return self.ReminderIcon[i]
         end
     end
 end
@@ -271,48 +276,48 @@ function NSI:CreateUnitFrameIcon(info)
 end
 
 function NSI:CreateBar(info)
-    self.AssignBar = self.AssignBar or {}
+    self.ReminderBar = self.ReminderBar or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     local s = NSRT.ReminderSettings.BarSettings
     for i=1, 20 do
-        if self.AssignBar[i] and not self.AssignBar[i]:IsShown() then                 
-            self:SetProperties(self.AssignBar[i], info, false, s)
-            return self.AssignBar[i] 
+        if self.ReminderBar[i] and not self.ReminderBar[i]:IsShown() then                 
+            self:SetProperties(self.ReminderBar[i], info, false, s)
+            return self.ReminderBar[i] 
         end
-        if not self.AssignBar[i] then            
-            self.AssignBar[i] = CreateFrame("StatusBar", nil, UIParent, "BackdropTemplate")
-            self.AssignBar[i]:SetBackdrop({ 
+        if not self.ReminderBar[i] then            
+            self.ReminderBar[i] = CreateFrame("StatusBar", nil, UIParent, "BackdropTemplate")
+            self.ReminderBar[i]:SetBackdrop({ 
             bgFile = "Interface\\Buttons\\WHITE8x8", 
             tileSize = 0,
             }) 
-            self.AssignBar[i]:SetSize(s.Width, s.Height)
-            self.AssignBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            self.AssignBar[i]:SetStatusBarColor(unpack(s.colors))
-            self.AssignBar[i]:SetBackdropColor(0, 0, 0, 0.5)
-            self.AssignBar[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Height)
-            self.AssignBar[i].Border = CreateFrame("Frame", nil, self.AssignBar[i], "BackdropTemplate")
-            self.AssignBar[i].Border:SetAllPoints(self.AssignBar[i])
-            self.AssignBar[i].Border:SetBackdrop({
+            self.ReminderBar[i]:SetSize(s.Width, s.Height)
+            self.ReminderBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
+            self.ReminderBar[i]:SetStatusBarColor(unpack(s.colors))
+            self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.5)
+            self.ReminderBar[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Height)
+            self.ReminderBar[i].Border = CreateFrame("Frame", nil, self.ReminderBar[i], "BackdropTemplate")
+            self.ReminderBar[i].Border:SetAllPoints(self.ReminderBar[i])
+            self.ReminderBar[i].Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.AssignBar[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self.AssignBar[i].Icon = self.AssignBar[i]:CreateTexture(nil, "ARTWORK")
-            self.AssignBar[i].Icon:SetPoint("RIGHT", self.AssignBar[i], "LEFT", s.xIcon, s.yIcon)
-            self.AssignBar[i].Icon:SetSize(s.Height, s.Height)
-            self.AssignBar[i].Text = self.AssignBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignBar[i].Text:SetPoint("LEFT", self.AssignBar[i].Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
-            self.AssignBar[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.AssignBar[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.AssignBar[i].Text:SetShadowOffset(0, 0)
-            self.AssignBar[i].Text:SetTextColor(1, 1, 1, 1)
-            self.AssignBar[i].TimerText = self.AssignBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.AssignBar[i].TimerText:SetPoint("RIGHT", self.AssignBar[i], "RIGHT", s.xTimer, s.yTimer)
-            self.AssignBar[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            self.AssignBar[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.AssignBar[i].TimerText:SetShadowOffset(0, 0)            
-            self:SetProperties(self.AssignBar[i], info, false, s)
-            return self.AssignBar[i]
+            self.ReminderBar[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
+            self.ReminderBar[i].Icon = self.ReminderBar[i]:CreateTexture(nil, "ARTWORK")
+            self.ReminderBar[i].Icon:SetPoint("RIGHT", self.ReminderBar[i], "LEFT", s.xIcon, s.yIcon)
+            self.ReminderBar[i].Icon:SetSize(s.Height, s.Height)
+            self.ReminderBar[i].Text = self.ReminderBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.ReminderBar[i].Text:SetPoint("LEFT", self.ReminderBar[i].Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
+            self.ReminderBar[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            self.ReminderBar[i].Text:SetShadowColor(0, 0, 0, 1)
+            self.ReminderBar[i].Text:SetShadowOffset(0, 0)
+            self.ReminderBar[i].Text:SetTextColor(1, 1, 1, 1)
+            self.ReminderBar[i].TimerText = self.ReminderBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.ReminderBar[i].TimerText:SetPoint("RIGHT", self.ReminderBar[i], "RIGHT", s.xTimer, s.yTimer)
+            self.ReminderBar[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            self.ReminderBar[i].TimerText:SetShadowColor(0, 0, 0, 1)
+            self.ReminderBar[i].TimerText:SetShadowOffset(0, 0)            
+            self:SetProperties(self.ReminderBar[i], info, false, s)
+            return self.ReminderBar[i]
         end
     end
 end
@@ -366,7 +371,7 @@ end
 
 function NSI:UpdateReminderDisplay(info, F, skipsound)
     local rem = info.dur - (GetTime() - info.startTime)
-    local SoundTimer = info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer
+    local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
     if rem <= SoundTimer and (not self.PlayedSound["ph"..info.phase.."id"..info.id]) and (not skipsound) then
         self:PlayReminderSound(info)
         self.PlayedSound["ph"..info.phase.."id"..info.id] = true
@@ -427,8 +432,10 @@ function NSI:StartReminders(phase)
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}
-    if not self.ProcessedAssigns[phase] then return end
-    for i, v in ipairs(self.ProcessedAssigns[phase]) do
+    local encID = self.EncounterID
+    if not self.ProcessedReminder[encID] then return end
+    if not self.ProcessedReminder[encID][phase] then return end
+    for i, v in ipairs(self.ProcessedReminder[encID][phase]) do
         local time = math.max(v.time-v.dur, 0)
         self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
             if self:Restricted() or NSRT.Settings["Debug"] then 
@@ -452,16 +459,16 @@ function NSI:HideAllReminders()
         end
     end
     for i=1, 20 do
-        if self.AssignText then
-            local F = self.AssignText[i]
+        if self.ReminderText then
+            local F = self.ReminderText[i]
             if F then F:Hide() end
         end
-        if self.AssignIcon then
-            local F = self.AssignIcon[i]
+        if self.ReminderIcon then
+            local F = self.ReminderIcon[i]
             if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
         end
-        if self.AssignBar then            
-            local F = self.AssignBar[i]
+        if self.ReminderBar then            
+            local F = self.ReminderBar[i]
             if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
         end
         if self.UnitIcon then
@@ -473,7 +480,8 @@ end
 
 function NSI:SetReminder(name)
     if NSRT.Reminders[name] then
-        self.Assigns = NSRT.Reminders[name]
+        self.Reminder = NSRT.Reminders[name]
+        self:ProcessReminder()
     end
 end
 
@@ -575,8 +583,8 @@ function NSAPI:DebugReminder(EncounterID, startnow)
         if not NSI.EncounterDetections[EncounterID] then
             NSI.EncounterDetections[EncounterID] = {0, 8, 8, 8}
         end
-        NSI.Assigns = text
-        NSI:ProcessAssigns()
+        NSI.Reminder = text
+        NSI:ProcessReminder()
         if startnow then
             NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
             C_Timer.After(40, function()
@@ -596,36 +604,3 @@ end
 -- /run NSAPI:DebugReminder(2900)
 -- Debug has to be run before pulling. If player isn't raidlead it needs to be done after ready check.
 -- /run NSAPI:DebugReminder(2900, true) to test outside of combat
-
-
-function NSI:AddAssignments(id)
-    if not NSRT.Settings["Debug"] then return end
-    if id == 3182 then
-        local phase, countdown, glowunit, sound, time, spellID, dur, TTS = 1, 3, "Reloe", false, 10, 115203, 8
-        local text = false
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS)
-
-        local phase, countdown, glowunit, sound, time, spellID, dur, TTS = 1, false, false, "Soak", 20, false, 8
-        local text = "Soak"
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS)
-
-        local phase, countdown, glowunit, sound, time, spellID, dur, TTS = 1, false, false, false, 25, false, 8
-        local text = "Balls"
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS)
-        
-    elseif (id == 2900 or id == 3306 or id == 3176 or id == 3177 or id == 3179 or id == 3178 or id == 3180) then -- all raid tests debug & 1st Boss Cinderbrew
-        local phase, countdown, glowunit, sound, time, spellID, dur = 1, 3, false, false, 20, false, 10
-        local subgroup = math.random(1, 4)
-        local text = subgroup <= 2 and "|cFF00FF00SOAK|r" or "|cFFFF0000DON'T SOAK|r"
-        local TTS = subgroup <= 2 and "Soak" or "Don't Soak"   
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = time, text = text, TTS = TTS, spellID = spellID, dur = dur})
-        phase = 2
-        text = subgroup <= 2 and "|cFF00FF00Go Left" or "|cFFFF0000Go Right"
-        TTS = subgroup <= 2 and "Go Left" or "Go Right"self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        table.insert(self.ProcessedAssigns[phase], {phase = phase, id = #self.ProcessedAssigns[phase]+1, countdown = countdown, glowunit = glowunit, sound = sound, time = time, text = text, TTS = TTS, spellID = spellID, dur = dur})
-    end
-end
