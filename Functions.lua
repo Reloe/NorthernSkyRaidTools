@@ -43,6 +43,17 @@ function NSI:Print(...)
     end
 end
 
+function NSI:SortTable(t, reversed)
+    table.sort(t, 
+        function(a, b)
+            if a.prio == b.prio then -- sort by GUID if same spec
+                return (reversed and b.GUID > a.GUID) or a.GUID < b.GUID
+            else
+                return (reversed and a.prio > b.prio) or a.prio < b.prio
+            end
+    end) -- a < b low first, a > b high first
+    return t
+end
 
 function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
     local classFile = unit and select(2, UnitClass(unit))
@@ -214,7 +225,7 @@ function NSAPI:TTSCountdown(num)
     end
 end
 
-function NSI:Difficultycheck(encountercheck, num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
+function NSI:DifficultyCheck(encountercheck, num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
     return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or self:EncounterCheck()))
 end
