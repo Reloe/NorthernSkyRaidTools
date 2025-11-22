@@ -328,7 +328,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.Externals:Init(true)
     elseif e == "GROUP_ROSTER_UPDATE" and (wowevent or NSRT.Settings["Debug"])then
         if self:Restricted() or not self:DifficultyCheck(false, 14) then return end
-        self:StoreFrames(true)
+        self:StoreFrames(false)
     elseif e == "ENCOUNTER_START" and ((wowevent and self:DifficultyCheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         if self:IsMidnight() or NSRT.Settings["Debug"] then 
             self.EncounterID = ...

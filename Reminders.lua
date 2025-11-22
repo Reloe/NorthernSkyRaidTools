@@ -553,7 +553,8 @@ function NSI:StoreFrames(init)
     self.RaidFrames = {}
     if init then
         local MyFrame = self.LGF.GetUnitFrame("player")
-        C_Timer.After(1, function()
+        if self.FrameStoreTimer then self.FrameStoreTimer:Cancel() end
+        self.FrameStoreTimer = C_Timer.NewTimer(1, function()
             NSI:StoreFrames(false)
         end)
         return
