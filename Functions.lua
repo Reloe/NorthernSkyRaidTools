@@ -227,11 +227,7 @@ end
 
 function NSI:DifficultyCheck(encountercheck, num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    return NSRT.Settings["Debug"] or ((difficultyID <= 16 and difficultyID >= num) and ((not encountercheck) or self:EncounterCheck()))
-end
-
-function NSI:EncounterCheck(skipdebug)
-    return self:Restricted() or (NSRT.Settings["Debug"] and not skipdebug)
+    return NSRT.Settings["Debug"] or (difficultyID <= 16 and difficultyID >= num)
 end
 
 -- this one is public as I want to use it in WeakAuras as well

@@ -3,7 +3,7 @@ local _, NSI = ... -- Internal namespace
 function NSI:AddAssignments(encID)
     local subgroup = self:GetSubGroup("player")
     local text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, TTSTimer
-    if encID == 3306 and self:DifficultyCheck(false, 16) then -- Chimaerus
+    if encID == 3306 and self:DifficultyCheck(16) then -- Chimaerus
         -- debuff is 5s, display starts 5s before debuff application but sound is played on application
         dur = 10
         TTSTimer = 5
@@ -20,7 +20,7 @@ function NSI:AddAssignments(encID)
         time = 290.5
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         return
-    elseif encID == 3178 and self:DifficultyCheck(false, 16) then -- Dragons
+    elseif encID == 3178 and self:DifficultyCheck(16) then -- Dragons
         -- breath cast is 4s, display starts earlier and sound is played at start of the cast
         dur = 10
         TTSTimer = 4
@@ -37,7 +37,7 @@ function NSI:AddAssignments(encID)
         time = 246.1
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         return
-    elseif encID == 3180 and self:DifficultyCheck(false, 16) then -- Council
+    elseif encID == 3180 and self:DifficultyCheck(16) then -- Council
         -- debuff duration is 10s so we start display&sound at the same time
         dur = 10
         TTSTimer = 10
