@@ -104,24 +104,27 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         local F = self.ReminderText and self.ReminderText[i]
         if F then
             local s = NSRT.ReminderSettings.TextSettings
-            F.Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
+            local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
+            F:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + offset)      
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
         F = self.ReminderIcon and self.ReminderIcon[i]
         if F then
             local s = NSRT.ReminderSettings.IconSettings
-            F:SetSize(s.Size, s.Size)
-            F:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Size)
+            F:SetSize(s.Width, s.Height)
+            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
+            F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
             F.Icon:SetAllPoints(F)
             F.Border:SetAllPoints(F)
             F.Text:SetPoint("LEFT", F, "RIGHT", s.xTextOffset, s.yTextOffset)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
         F = self.UnitIcon and self.UnitIcon[i]
         if F then
             local s = NSRT.ReminderSettings.UnitIconSettings
-            F:SetSize(s.Size, s.Size) -- not setting points in this one because this is repeated every time the frame is shown as it needs a new frame to anchor to anyway
+            F:SetSize(s.Width, s.Height) -- not setting points in this one because this is repeated every time the frame is shown as it needs a new frame to anchor to anyway
         end
         F = self.ReminderBar and self.ReminderBar[i]
         if F then
@@ -129,7 +132,8 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(s.colors))
-            F:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Height)
+            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
+            F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
             F.Border:SetAllPoints(F)
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
@@ -172,17 +176,20 @@ function NSI:SetProperties(F, info, skipsound, s)
 end
 
 function NSI:CreateText(info)
-    self.ReminderText = self.ReminderText or {}
+    self.ReminderText = self.ReminderText or {}    
     local s = NSRT.ReminderSettings.TextSettings
     for i=1, 20 do
         if self.ReminderText[i] and not self.ReminderText[i]:IsShown() then 
             self:SetProperties(self.ReminderText[i], info, false, s)
             return self.ReminderText[i] 
         end
-        if not self.ReminderText[i] then            
+        if not self.ReminderText[i] then      
             self.ReminderText[i] = CreateFrame("Frame", nil, UIParent)
+            self.ReminderText[i]:SetSize(1, 1)
+            local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
+            self.ReminderText[i]:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + offset)      
             self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderText[i].Text:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.FontSize)
+            self.ReminderText[i].Text:SetPoint("LEFT", self.ReminderText[i], "CENTER", 0, 0)
             self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderText[i].Text:SetShadowOffset(0, 0)
@@ -204,8 +211,9 @@ function NSI:CreateIcon(info)
         end
         if not self.ReminderIcon[i] then
             self.ReminderIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.ReminderIcon[i]:SetSize(s.Size, s.Size)
-            self.ReminderIcon[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Size)
+            self.ReminderIcon[i]:SetSize(s.Width, s.Height)
+            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
+            self.ReminderIcon[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + offset)
             self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
             self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
             self.ReminderIcon[i].Border = CreateFrame("Frame", nil, self.ReminderIcon[i], "BackdropTemplate")
@@ -251,14 +259,14 @@ function NSI:CreateUnitFrameIcon(info)
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, 20 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
-            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", s.xOffset, s.yOffset)
+            self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
             self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i] 
         end
         if not self.UnitIcon[i] then            
             self.UnitIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.UnitIcon[i]:SetSize(s.Size, s.Size)
-            self.UnitIcon[i]:SetPoint("CENTER", F, "CENTER", s.xOffset, s.yOffset)
+            self.UnitIcon[i]:SetSize(s.Width, s.Height)
+            self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
             self.UnitIcon[i].Icon = self.UnitIcon[i]:CreateTexture(nil, "ARTWORK")
             self.UnitIcon[i].Icon:SetAllPoints(self.UnitIcon[i])
             self.UnitIcon[i].Icon:SetTexture(icon)
@@ -294,7 +302,8 @@ function NSI:CreateBar(info)
             self.ReminderBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             self.ReminderBar[i]:SetStatusBarColor(unpack(s.colors))
             self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.5)
-            self.ReminderBar[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + (i-1) * s.Height)
+            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
+            self.ReminderBar[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + offset)
             self.ReminderBar[i].Border = CreateFrame("Frame", nil, self.ReminderBar[i], "BackdropTemplate")
             self.ReminderBar[i].Border:SetAllPoints(self.ReminderBar[i])
             self.ReminderBar[i].Border:SetBackdrop({
@@ -327,7 +336,7 @@ function NSI:DisplayReminder(info)
     info.startTime = GetTime()
     info.dur = dur
     local rem = info.dur - (GetTime() - info.startTime)
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or (not info.spellID and rem <= 0) then
+    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((not info.spellID) and rem <= 0) then
         return
     end
     local remString
@@ -361,7 +370,7 @@ function NSI:DisplayReminder(info)
         F:Show()
     end    
     if info.glowunit then
-        self:GlowFrame(info.glowunit, "p"..info.phase.."id"..info.id)  
+        self:GlowFrame(info.glowunit, "p"..info.phase.."id"..info.id)
         if info.spellID then
             local UnitIcon = self:CreateUnitFrameIcon(info) 
             if UnitIcon then UnitIcon:Show() end
@@ -485,8 +494,17 @@ function NSI:SetReminder(name)
     end
 end
 
-function NSI:ImportReminder(name, values)
+function NSI:ImportReminder(name, values, activate)
+
+    if not name then name = "Default Reminder" end
+    if NSRT.Reminders[name] then
+        self:ImportReminder(name.." 2", values, activate)
+        return
+    end
     NSRT.Reminders[name] = values
+    if activate then
+        self:SetReminder(name)
+    end
     -- NSI:UpdateReminderList()
 end
 
@@ -605,3 +623,12 @@ end
 -- /run NSAPI:DebugReminder(2900)
 -- Debug has to be run before pulling. If player isn't raidlead it needs to be done after ready check.
 -- /run NSAPI:DebugReminder(2900, true) to test outside of combat
+
+-- Import this string and then run debug (need to be in raidgroup)
+--[[
+EncounterID:2900
+ph:1;time:10;tag:Senfi Group1;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;
+time:15;tag:monk;TTS:true;spellid:115203;
+ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;
+]]
+-- /run NSAPI:Broadcast("NSAPI_REM_DEBUG", "RAID", 2900)
