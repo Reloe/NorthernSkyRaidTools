@@ -48,10 +48,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
-            NSRT.ReminderSettings.IconSettings = NSRT.ReminderSettings.IconSettings or {xOffset = -400, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 30, TimerFontSize = 40, Size = 80}
-            NSRT.ReminderSettings.BarSettings = NSRT.ReminderSettings.BarSettings or {Width = 240, Height = 30, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = 400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 22}
-            NSRT.ReminderSettings.TextSettings = NSRT.ReminderSettings.TextSettings or {xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
-            NSRT.ReminderSettings.UnitIconSettings = NSRT.ReminderSettings.UnitIconSettings or {xOffset = 0, yOffset = 0, Size = 25}
+            if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
+                NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -400, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80}
+            end
+            if (not NSRT.ReminderSettings.BarSettings) or (not NSRT.ReminderSettings.BarSettings.GrowDirection) then
+                NSRT.ReminderSettings.BarSettings = {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", Width = 240, Height = 30, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = 400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 22}
+            end
+            if (not NSRT.ReminderSettings.TextSettings) or (not NSRT.ReminderSettings.TextSettings.GrowDirection) then
+                NSRT.ReminderSettings.TextSettings =  {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
+            end
+            if (not NSRT.ReminderSettings.UnitIconSettings) or (not NSRT.ReminderSettings.UnitIconSettings.Position) then
+                NSRT.ReminderSettings.UnitIconSettings = {Position = "CENTER", xOffset = 0, yOffset = 0, Width = 25, Height = 25}
+            end
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -97,6 +105,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MRTNickNamesHook = false
             self.Reminder = ""
             self.ReminderTimer = {}
+            self.PlayedSound = {}
+            self.StartedCountdown = {}
             self:InitNickNames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
@@ -331,6 +341,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:StoreFrames(false)
     elseif e == "ENCOUNTER_START" and ((wowevent and self:DifficultyCheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         if self:IsMidnight() or NSRT.Settings["Debug"] then 
+            if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
+                self:ProcessReminder()
+            end
             self.EncounterID = ...
             self.Phase = 1
             self.PhaseSwapTime = GetTime()
