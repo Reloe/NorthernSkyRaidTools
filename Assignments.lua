@@ -109,8 +109,10 @@ function NSI:AddAssignments(encID)
         local text = subgroup <= 2 and "|cFF00FF00SOAK|r" or "|cFFFF0000DON'T SOAK|r"
         local TTS = subgroup <= 2 and "Soak" or "Don't Soak"   
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        phase = 2
+        phase = 1
+        time = 30
         text = subgroup <= 2 and "|cFF00FF00Go Left" or "|cFFFF0000Go Right"
+        spellID = 774
         TTS = subgroup <= 2 and "Go Left" or "Go Right"
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
     end
