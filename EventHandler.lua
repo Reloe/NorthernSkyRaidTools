@@ -17,6 +17,7 @@ if NSI:IsMidnight() then
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
     f:RegisterEvent("MINIMAP_PING")
+    f:RegisterEvent("START_PLAYER_COUNTDOWN")
 end
 
 f:SetScript("OnEvent", function(self, e, ...)
@@ -44,7 +45,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.TextDuration = NSRT.ReminderSettings.TextDuration or 10
             NSRT.ReminderSettings.SpellCountdown = NSRT.ReminderSettings.SpellCountdown or 0
             NSRT.ReminderSettings.TextCountdown = NSRT.ReminderSettings.TextCountdown or 0
-            NSRT.ReminderSettings.SpellName = NSRT.ReminderSettings.SpellName or false
+            NSRT.ReminderSettings.SpellName = NSRT.ReminderSettings.SpellName or true
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
@@ -195,16 +196,24 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             macrocount = macrocount+1
             CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
         end
+    elseif e == "START_PLAYER_COUNTDOWN" and (wowevent or NSRT.Settings["Debug"]) then -- do basically the same thing as ready check in case one of them is skipped
+        if self:Restricted() or not self:DifficultyCheck(14) then return end
+        self:StoreFrames(true)
+        local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+        self:Broadcast("NSI_SPEC", "RAID", specid)
+        if UnitIsGroupLeader("player") then
+            self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder)
+        end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if self:Restricted() then return end
-        if self:DifficultyCheck(false, 14) then -- only care about note comparison in normal, heroic&mythic raid
+        if self:DifficultyCheck(14) then -- only care about note comparison in normal, heroic&mythic raid
             local note = NSAPI:GetNote()
             if note ~= "empty" then
                 local hashed = NSAPI:GetHash(note) or ""     
                 self:Broadcast("MRT_NOTE", "RAID", hashed)   
             end
         end
-        if (self:IsMidnight() and self:DifficultyCheck(false, 14)) or NSRT.Settings["Debug"] then
+        if (self:IsMidnight() and self:DifficultyCheck(14)) or NSRT.Settings["Debug"] then
             if UnitIsGroupLeader("player") then
                 self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder)
             end
@@ -214,7 +223,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:EventHandler("NS_COMPARE_REMINDER", false, true)
             end)
         end
-        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(false, 15) and UnitInRaid("player") then
+        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then
             self:CheckCooldowns()
         end
         self.specs = {}
@@ -230,7 +239,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
-        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
+        self:Broadcast("NSI_SPEC", "RAID", specid)
         C_Timer.After(1, function()
             self:EventHandler("NSAPI_READY_CHECK", false, true)
         end)
@@ -320,8 +329,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-
-    elseif e == "NSAPI_SPEC" then -- Should technically rename to "NSI_SPEC" but need to keep this open for the global broadcast to be compatible with the database WA
+        
+    elseif e == "NSI_SPEC" and internal and self:IsMidnight() then -- renamed for Midnight
+        local unit, spec = ...
+        self.specs = self.specs or {}
+        local G = UnitGUID(unit)
+        G = issecretvalue(G) and "" or G
+        self.specs[unit] = tonumber(spec)
+        self.HasNSRT = self.HasNSRT or {}
+        self.HasNSRT[unit] = true
+    elseif e == "NSAPI_SPEC" and not self:IsMidnight() then -- pre midnight
         local unit, spec = ...
         self.specs = self.specs or {}
         local G = UnitGUID(unit)
@@ -337,9 +354,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:IsMidnight() then return end
         self.Externals:Init(true)
     elseif e == "GROUP_ROSTER_UPDATE" and (wowevent or NSRT.Settings["Debug"])then
-        if self:Restricted() or not self:DifficultyCheck(false, 14) then return end
+        if self:Restricted() or not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
-    elseif e == "ENCOUNTER_START" and ((wowevent and self:DifficultyCheck(false, 14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+    elseif e == "ENCOUNTER_START" and ((wowevent and self:DifficultyCheck(14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         if self:IsMidnight() or NSRT.Settings["Debug"] then 
             if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
                 self:ProcessReminder()
@@ -377,7 +394,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end)
         self.MacroPresses = {}
         self.Externals:Init()
-    elseif e == "ENCOUNTER_END" and ((wowevent and self:DifficultyCheck(false, 14)) or NSRT.Settings["Debug"]) then
+    elseif e == "ENCOUNTER_END" and ((wowevent and self:DifficultyCheck(14)) or NSRT.Settings["Debug"]) then
         local _, encounterName = ...
         if self:IsMidnight() then
             if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
@@ -408,7 +425,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MacroPresses = {}
         end      
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and (wowevent or NSRT.Settings["Debug"]) then  
-        if not self:DifficultyCheck(false, 14) then return end -- only care about timelines in raid
+        if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
         if self:Restricted() or NSRT.Settings["Debug"] then self:DetectPhaseChange(e) end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
@@ -425,7 +442,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             formattedrange = range
         end
         table.insert(self.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
-        if (C_ChallengeMode.IsChallengeModeActive() or self:DifficultyCheck(true, 14)) and not dead then -- block incoming requests from dead people
+        if (C_ChallengeMode.IsChallengeModeActive() or (self:DifficultyCheck(14) and not self:Restricted())) and not dead then -- block incoming requests from dead people
             self.Externals:Request(unitID, key, num, req, range, false, expirationTime)
         end
     elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
@@ -443,7 +460,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             formattedrange = range
         end
         table.insert(self.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
-        if (C_ChallengeMode.IsChallengeModeActive() or self:DifficultyCheck(true, 14)) and not dead then -- block incoming requests from dead people
+        if (C_ChallengeMode.IsChallengeModeActive() or (self:DifficultyCheck(14) and not self:Restricted())) and not dead then -- block incoming requests from dead people
             self.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
         end
     elseif e == "NS_EXTERNAL_YES" and ... then
