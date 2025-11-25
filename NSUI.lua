@@ -15,6 +15,7 @@ local TABS_LIST = {
     { name = "Versions",  text = "Versions" },
     { name = "WeakAuras", text = "WeakAuras" },
     { name = "SetupManager", text = "Setup Manager"},
+    { name = "Reminders", text = "Reminders"}
 }
 local authorsString = "By Reloe & Rav"
 
@@ -1096,6 +1097,7 @@ function NSUI:Init()
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
     local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
     local setupmanager_tab = tabContainer:GetTabFrameByName("SetupManager")
+    local reminder_tab = tabContainer:GetTabFrameByName("Reminders")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
@@ -1380,6 +1382,54 @@ function NSUI:Init()
         return t
     end
 
+    local build_media_options = function(typename, settingname, isTexture)
+        local list = NSI.LSM:List(isTexture and "statusbar" or "font")
+        local t = {}
+        for i, font in ipairs(list) do
+            tinsert(t, {
+                label = font,
+                value = i,
+                onclick = function(_, _, value)
+                    NSRT.ReminderSettings[typename][settingname] = list[value]
+                    NSI:UpdateExistingFrames()
+                end
+            })
+        end
+        return t
+    end
+
+    local build_raidframeicon_options = function()
+        local list = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
+        local t = {}
+        for i, v in ipairs(list) do
+            tinsert(t, {
+                label = v,
+                value = i,
+                onclick = function(_, _, value)
+                    NSRT.ReminderSettings.UnitIconSettings.Position = list[value]        
+                    NSI:UpdateExistingFrames()
+                end
+            })
+        end
+        return t
+    end
+
+    local build_growdirection_options = function(SettingName)
+        local list = {"Up", "Down"}
+        local t = {}
+        for i, v in ipairs(list) do
+            tinsert(t, {
+                label = v,
+                value = i,
+                onclick = function(_, _, value)
+                    NSRT.ReminderSettings[SettingName]["GrowDirection"] = list[value]
+                    NSI:UpdateExistingFrames()
+                end
+            })
+        end
+        return t
+    end
+
     local function WipeNickNames()
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Wipe Nicknames", "NSRTWipeNicknamesPopup")
         popup:SetFrameStrata("DIALOG")
@@ -1436,6 +1486,32 @@ function NSUI:Init()
             popup.test_string_text_box:SetText("")
             popup:Hide()
         end, 280, 20, "Send")
+        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+        popup.import_confirm_button:SetTemplate(options_button_template)
+
+        return popup
+    end
+
+    local function ImportReminderString()
+        local popup = DF:CreateSimplePanel(NSUI, 800, 500, "Import Reminder String", "NSUIReminderImport", {
+            DontRightClickClose = true
+        })
+        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        popup:SetFrameLevel(100)
+
+        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ReminderTextEdit", true, false, true)
+        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+        DF:ApplyStandardBackdrop(popup.test_string_text_box)
+        DF:ReskinSlider(popup.test_string_text_box.scroll)
+        popup.test_string_text_box:SetFocus()
+
+        popup.import_confirm_button = DF:CreateButton(popup, function()
+            local import_string = popup.test_string_text_box:GetText()
+            NSI:ImportReminder(false, import_string, true) -- import string with default name for now and make it the current active reminder
+            popup.test_string_text_box:SetText("")
+            popup:Hide()
+        end, 280, 20, "Import")
         popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
         popup.import_confirm_button:SetTemplate(options_button_template)
 
@@ -2164,7 +2240,6 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
         },
     }
-
     local weakaura_options1_table = {
         
         {
@@ -2367,8 +2442,519 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
-        
+    }
 
+    local reminder_options1_table = {
+        --[[
+        {
+            type = "button",
+            name = "Text Settings",
+            desc = "Open the Settings for Text-Reminders",
+            func = function(self)
+                
+            end,
+            nocombat = true,
+            spacement = true
+        },]]
+        --[[
+        {
+            type = "button",
+            name = "Icon/Bar Settings",
+            desc = "Open the Settings for Icon/Bar-Reminders",
+            func = function(self)
+                
+            end,
+            nocombat = true,
+            spacement = true
+        },]]
+        {
+            type = "label",
+            get = function() return "Spell Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "TTS",
+            desc = "Whether a TTS sound should be played",
+            get = function() return NSRT.ReminderSettings["SpellTTS"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["SpellTTS"] = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "TTSTimer",
+            desc = "At how much remaining Time the TTS should be played",
+            get = function() return NSRT.ReminderSettings["SpellTTSTimer"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["SpellTTSTimer"] = value
+            end,
+            min = 0,
+            max = 20,
+            nocombat = true,
+        },
+
+        {
+            type = "range",
+            name = "Duration",
+            desc = "How long a reminder should be shown for",
+            get = function() return NSRT.ReminderSettings["SpellDuration"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["SpellDuration"] = value
+            end,
+            min = 5,
+            max = 20,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Countdown",
+            desc = "Whether or not you want a countdown for these reminders. 0 = disabled",
+            get = function() return NSRT.ReminderSettings["SpellCountdown"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["SpellCountdown"] = value
+            end,
+            min = 0,
+            max = 5,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "SpellName",
+            desc = "Display the SpellName if no text is provided",
+            get = function() return NSRT.ReminderSettings["SpellName"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["SpellName"] = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Bars",
+            desc = "Show Progress Bars instead of icons",
+            get = function() return NSRT.ReminderSettings["Bars"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["Bars"] = value
+            end,
+            nocombat = true,
+        },               
+        {
+            type = "range",
+            boxfirst = true,
+            name = "Sticky",
+            desc = "Keep Reminders shown for X seconds if the spell hasn't been pressed yet",
+            get = function() return NSRT.ReminderSettings["Sticky"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["Sticky"] = value
+            end,
+            nocombat = true,
+            min = 0,
+            max = 10,
+        },
+        {
+            type = "label",
+            get = function() return "Icon Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
+            values = function() return build_growdirection_options("IconSettings") end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Timer Text",
+            desc = "Hides the Timer Text shown on the Icon",
+            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTimerText"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Width",
+            desc = "Width of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Width = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Height",
+            desc = "Height of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Height = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.IconSettings.Font end,
+            values = function() return build_media_options("IconSettings", "Font") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font Size",
+            get = function() return NSRT.ReminderSettings.IconSettings.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.FontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Timer-Text Font-Size",
+            desc = "Font Size of the Timer-Text",
+            get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.TimerFontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Text Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.ReminderSettings.TextSettings.GrowDirection end,
+            values = function() return build_growdirection_options("TextSettings") end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "TTS",
+            desc = "Whether a TTS sound should be played",
+            get = function() return NSRT.ReminderSettings["TextTTS"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["TextTTS"] = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "TTSTimer",
+            desc = "At how much remaining Time the TTS should be played",
+            get = function() return NSRT.ReminderSettings["TextTTSTimer"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["TextTTSTimer"] = value
+            end,
+            min = 0,
+            max = 20,
+            nocombat = true,
+        },
+
+        {
+            type = "range",
+            name = "Duration",
+            desc = "How long a reminder should be shown for",
+            get = function() return NSRT.ReminderSettings["TextDuration"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["TextDuration"] = value
+            end,
+            min = 5,
+            max = 20,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Countdown",
+            desc = "Whether or not you want a countdown for these reminders. 0 = disabled",
+            get = function() return NSRT.ReminderSettings["TextCountdown"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["TextCountdown"] = value
+            end,
+            min = 0,
+            max = 5,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.TextSettings.Font end,
+            values = function() return build_media_options("TextSettings", "Font") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font Size",
+            get = function() return NSRT.ReminderSettings.TextSettings.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TextSettings.FontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "label",
+            get = function() return "Bar Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.ReminderSettings.BarSettings.GrowDirection end,
+            values = function() return build_growdirection_options("BarSettings") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Bar-Width",
+            desc = "Width of the Bar",
+            get = function() return NSRT.ReminderSettings.BarSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.BarSettings.Width = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 80,
+            max = 500,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Bar-Height",
+            desc = "Height of the Bar",
+            get = function() return NSRT.ReminderSettings.BarSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.BarSettings.Height = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 10,
+            max = 100,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Texture",
+            desc = "Texture",
+            get = function() return NSRT.ReminderSettings.BarSettings.Texture end,
+            values = function() return build_media_options("BarSettings", "Texture", true) end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.BarSettings.Font end,
+            values = function() return build_media_options("BarSettings", "Font") end,            
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font Size",
+            get = function() return NSRT.ReminderSettings.BarSettings.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.BarSettings.FontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 15,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Timer-Text Font-Size",
+            desc = "Font Size of the Timer-Text",
+            get = function() return NSRT.ReminderSettings.BarSettings.TimerFontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.BarSettings.TimerFontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 15,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = "Bar-Color",
+            desc = "Color of the Bars",
+            get = function() return NSRT.ReminderSettings.BarSettings.colors end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.BarSettings.colors = {r, g, b, a}
+                NSI:UpdateExistingFrames()
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Raidframe Icon Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "range",
+            name = "Icon-Width",
+            desc = "Width of the Icon",
+            get = function() return NSRT.ReminderSettings.UnitIconSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.UnitIconSettings.Width = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 5,
+            max = 60,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Height",
+            desc = "Height of the Icon",
+            get = function() return NSRT.ReminderSettings.UnitIconSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.UnitIconSettings.Height = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 5,
+            max = 60,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Position",
+            desc = "position on the raidframe",
+            get = function() return NSRT.ReminderSettings.UnitIconSettings.Position end,
+            values = function() return build_raidframeicon_options() end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "x-Offset",
+            desc = "",
+            get = function() return NSRT.ReminderSettings.UnitIconSettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.UnitIconSettings.xOffset= value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 5,
+            max = 60,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "y-Offset",
+            desc = "",
+            get = function() return NSRT.ReminderSettings.UnitIconSettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.UnitIconSettings.yOffset = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 5,
+            max = 60,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview",
+            desc = "Preview Reminders",
+            func = function(self)
+                NSI:UpdateExistingFrames()
+                NSI.PlayedSound = {}
+                NSI.StartedCountdown = {}
+                local info1 = {
+                    text = "Personals", 
+                    phase = 1, 
+                    id = 1, 
+                    TTS = NSRT.ReminderSettings.TextTTS, 
+                    TTSTimer = NSRT.ReminderSettings.TextTTSTimer, 
+                    countdown = NSRT.ReminderSettings.TextCountdown,
+                    dur = NSRT.ReminderSettings.TextDuration,
+                }
+                NSI:DisplayReminder(info1)
+                local info2 = {
+                    text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t", 
+                    phase = 1, 
+                    id = 2, 
+                    TTS = false,
+                    TTSTimer = NSRT.ReminderSettings.TextTTSTimer, 
+                    countdown = false,
+                    dur = NSRT.ReminderSettings.TextDuration,
+                }
+                NSI:DisplayReminder(info2)
+                local info3 = {
+                    text = "Give Ironbark", 
+                    spellID = 102342,
+                    phase = 1, 
+                    id = 3, 
+                    TTS = NSRT.ReminderSettings.SpellTTS, 
+                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer, 
+                    countdown = NSRT.ReminderSettings.SpellCountdown,
+                    dur = NSRT.ReminderSettings.SpellDuration,
+                    glowunit = "player",
+                }
+                NSI:DisplayReminder(info3)
+                local info4 = {
+                    text = "Use Fort Brew", 
+                    spellID = 115203,
+                    phase = 1, 
+                    id = 4, 
+                    TTS = false,
+                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer, 
+                    countdown = false,
+                    dur = NSRT.ReminderSettings.SpellDuration,
+                }
+                NSI:DisplayReminder(info4)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Import Reminder",
+            desc = "Import Reminder String and make it the current active one",
+            func = function(self)
+                ImportReminderString()
+            end,
+            nocombat = true,
+            spacement = true
+        },
     }
 
     -- Build options menu for each tab
@@ -2387,6 +2973,9 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(setupmanager_tab, setupmanager_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         setupmanager_callback)
+    DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        reminder_callback)
 
     -- Add SUF Setup guide tooltip button thingy
 
