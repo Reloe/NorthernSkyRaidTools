@@ -234,7 +234,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSAPI.HasNSRT[u] = false
                 self.specs[u] = false
                 local G = UnitGUID(u)
-                self.GUIDS[u] = (issecretvalue(G) and "") or G
+                self.GUIDS[u] = self:IsMidnight() and issecretvalue(G) and "" or G
             end
         end
         -- broadcast spec info
@@ -342,7 +342,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, spec = ...
         self.specs = self.specs or {}
         local G = UnitGUID(unit)
-        G = issecretvalue(G) and "" or G
+        G = self:IsMidnight() and issecretvalue(G) and "" or G
         self.specs[unit] = tonumber(spec)
         NSAPI.HasNSRT = NSAPI.HasNSRT or {}
         NSAPI.HasNSRT[unit] = true
