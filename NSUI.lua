@@ -2896,6 +2896,7 @@ Press 'Enter' to hear the TTS]],
             desc = "Preview Reminders",
             func = function(self)
                 NSI:UpdateExistingFrames()
+                NSI.AllGlows = NSI.AllGlows or {}
                 NSI.PlayedSound = {}
                 NSI.StartedCountdown = {}
                 local info1 = {
