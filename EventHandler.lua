@@ -530,8 +530,5 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             -- missing display function for now            
         end
-    elseif e == "NSAPI_REM_DEBUG" and NSRT.Settings["Debug"] then
-        local unit, encID = ...
-        NSI:DebugAssignments(encID)
     end
 end

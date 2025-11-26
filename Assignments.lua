@@ -118,9 +118,9 @@ function NSI:AddAssignments(encID)
     end
 end
 
-function NSI:DebugAssignments(encID)
+function NSAPI:DebugAssignments(encID)
     NSI:EventHandler("READY_CHECK", true)
     C_Timer.After(2, function()
-        NSI:EventHandler("ENCOUNTER_START", true, false, encID)
+        NSI:EventHandler("ENCOUNTER_START", true, false, encID) -- will also trigger reminders but don't have a great way to do only assignments
     end)
 end

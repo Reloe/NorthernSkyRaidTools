@@ -1,5 +1,16 @@
 local _, NSI = ... -- Internal namespace
 
+local symbols = {
+    star = 1,
+    circle = 2,
+    diamond = 3,
+    triangle = 4,
+    moon = 5,
+    square = 6,
+    cross = 7,
+    skull = 8,
+}
+
 function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[encID] = self.ProcessedReminder[encID] or {}
@@ -39,7 +50,16 @@ function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellI
     end
     phase = phase and tonumber(phase)
     if not phase then phase = 1 end
-    if text then text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t") end                    
+    local rawtext = text
+    if text then 
+        text = text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
+            local id = symbols[name]
+            if id then
+                return "{rt" .. id .. "}"
+            end
+        end)
+        text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
+    end         
     if NSRT.ReminderSettings.SpellName and spellID then -- display spellname if text is empty, also make TTS that spellname
         local spell = C_Spell.GetSpellInfo(spellID) 
         if spell and not text then 
@@ -48,14 +68,14 @@ function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellI
         end 
     end
     if TTS and text and type(TTS) == "boolean" then
-        TTS = text
+        TTS = rawtext
     end
     if TTS and type(TTS) ~= "string" and spellID then -- TTS is enabled but it's still empty, which means text was empty so we should play the spellname TTS instead
         local spell = C_Spell.GetSpellInfo(spellID)
         TTS = spell and spell.name
     end
     self.ProcessedReminder[encID][phase] = self.ProcessedReminder[encID][phase] or {}    
-    table.insert(self.ProcessedReminder[encID][phase], {TTSTimer = TTSTimer, phase = phase, id = #self.ProcessedReminder[encID][phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})      
+    table.insert(self.ProcessedReminder[encID][phase], {TTSTimer = TTSTimer, rawtext = rawtext, phase = phase, id = #self.ProcessedReminder[encID][phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})      
 end
 
 function NSI:ProcessReminder()
@@ -426,7 +446,7 @@ function NSI:PlayReminderSound(info)
         PlaySoundFile(sound, "Master")
         return      
     elseif info.TTS then
-        local TTS = (type(info.TTS) == "string" and info.TTS) or (info.text and info.text ~= "" and info.text) or ""
+        local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext  and info.rawtext ~= "" and info.rawtext) or ""
         sound = self.LSM:Fetch("sound", TTS)
         if sound and sound ~= 1 then
             PlaySoundFile(sound, "Master")
@@ -495,7 +515,6 @@ function NSI:SetReminder(name)
 end
 
 function NSI:ImportReminder(name, values, activate)
-
     if not name then name = "Default Reminder" end
     if NSRT.Reminders[name] then
         self:ImportReminder(name.." 2", values, activate)
@@ -591,23 +610,39 @@ function NSAPI:DebugNextPhase(num)
     end
 end
 
-function NSAPI:DebugReminder(EncounterID, startnow)
+function NSAPI:DebugReminder(EncounterID, startnow, nextphase)
     if NSRT.Settings["Debug"] then
-        local text = "EncounterID:"..EncounterID.."\nph:1;time:10;tag:Senfi Group1;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;"
-        text = text.."\n".."time:15;tag:monk;TTS:true;spellid:115203;"
-        text = text.."\n".."ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;"
-        text = text.."\n".."ph:2;time:10;tag:Reloe;text:Spread;TTS:true;dur:10;"
-        text = text.."\n".."ph:2;time:15;tag:268;text:Run out if Debuff;TTS:true;dur:10"
-        text = text.."\n".."ph:2;time:25;tag:tank;text:Use Ring;TTS:true;spellid:116844;dur:10;"
         if not NSI.EncounterDetections[EncounterID] then
             NSI.EncounterDetections[EncounterID] = {0, 8, 8, 8}
         end
-        NSI.Reminder = text
+        if (not NSI.Reminder) or NSI.Reminder == "" then -- default to preset reminders if none were set
+            local text = "EncounterID:"..EncounterID.."\nph:1;time:10;tag:Senfi Group1;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;"
+            text = text.."\n".."time:15;tag:monk;TTS:true;spellid:115203;"
+            text = text.."\n".."ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;"
+            text = text.."\n".."ph:2;time:10;tag:Reloe;text:Spread;TTS:true;dur:10;"
+            text = text.."\n".."ph:2;time:15;tag:268;text:Run out if Debuff;TTS:true;dur:10"
+            text = text.."\n".."ph:2;time:25;tag:tank;text:Use Ring;TTS:true;spellid:116844;dur:10;"
+            NSI.Reminder = text
+        end
         NSI:ProcessReminder()
-        if startnow then
-            NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
+        if startnow then -- not doing encounter start to specifically test reminders instead of also having assignments
+            NSI.EncounterID = EncounterID
+            NSI.Phase = 1
+            NSI.PhaseSwapTime = GetTime()
+            NSI.ReminderText = NSI.ReminderText or {}
+            NSI.ReminderIcon = NSI.ReminderIcon or {}
+            NSI.ReminderBar = NSI.ReminderBar or {}
+            NSI.ReminderTimer = NSI.ReminderTimer or {}
+            NSI.RaidFrames = NSI.RaidFrames or {}
+            NSI.AllGlows = NSI.AllGlows or {}
+            NSI.PlayedSound = {}
+            NSI.StartedCountdown = {}
+            NSI.Timelines = {}
+            NSI.TimeLinesDebug = {}
+            NSI:StartReminders(NSI.Phase)
+            if not nextphase then return end
             C_Timer.After(40, function()
-                -- NSAPI:DebugNextPhase(10)
+                NSAPI:DebugNextPhase(10)
             end)
         end
     end
@@ -621,14 +656,13 @@ end
 -- /run NSAPI:DebugReminder(3178)
 -- /run NSAPI:DebugReminder(3180)
 -- /run NSAPI:DebugReminder(2900)
--- Debug has to be run before pulling. If player isn't raidlead it needs to be done after ready check.
--- /run NSAPI:DebugReminder(2900, true) to test outside of combat
 
 -- Import this string and then run debug (need to be in raidgroup)
 --[[
 EncounterID:2900
-ph:1;time:10;tag:Senfi Group1;text:Stack on {rt7};sound:Stack;countdown:3;TTS:Stack on Red;dur:8;
+ph:1;time:10;tag:Senfi Group1;text:Stack on {cross};sound:Stack;countdown:3;dur:8;
 time:15;tag:monk;TTS:true;spellid:115203;
 ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;
+
+/run NSAPI:DebugReminder(2900, true, true)
 ]]
--- /run NSAPI:Broadcast("NSAPI_REM_DEBUG", "RAID", 2900)
