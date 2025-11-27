@@ -2897,6 +2897,7 @@ Press 'Enter' to hear the TTS]],
             func = function(self)
                 NSI:UpdateExistingFrames()
                 NSI.AllGlows = NSI.AllGlows or {}
+                NSI:StoreFrames()
                 NSI.PlayedSound = {}
                 NSI.StartedCountdown = {}
                 local info1 = {
@@ -2955,6 +2956,18 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true,
             spacement = true
+        },
+        {
+            type = "color",
+            name = "Glow-Color",
+            desc = "Color of Raidframe Glows",
+            get = function() return NSRT.ReminderSettings.GlowSettings.colors end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.GlowSettings.colors = {r, g, b, a}
+            end,
+            hasAlpha = true,
+            nocombat = true
+
         },
     }
 
