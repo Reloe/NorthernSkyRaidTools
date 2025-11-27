@@ -85,7 +85,7 @@ function NSI:ProcessReminder()
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         local pos = self.spectable[specid]
         local encID = 0
-        pos = (pos <= 19 and pos >= 7 and "meleedps") or (pos <= 33 and pos >= 20 and "rangeddps")
+        pos = ((pos <= 19 or pos == 34 or pos == 35) and "melee") or (((pos <= 33 and pos >= 20) or pos >= 36) and "ranged")
         for line in self.Reminder:gmatch('[^\r\n]+') do
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
@@ -251,6 +251,7 @@ function NSI:CreateIcon(info)
             self.ReminderIcon[i].Text:SetTextColor(1, 1, 1, 1)
             self.ReminderIcon[i].Swipe = CreateFrame("Cooldown", nil, self.ReminderIcon[i], "CooldownFrameTemplate")
             self.ReminderIcon[i].Swipe:SetAllPoints()
+            self.ReminderIcon[i].Swipe:SetDrawBling(false)
             self.ReminderIcon[i].Swipe:SetDrawEdge(false)
             self.ReminderIcon[i].Swipe:SetReverse(true)
             self.ReminderIcon[i].Swipe:SetHideCountdownNumbers(true)
@@ -571,7 +572,8 @@ function NSI:GlowFrame(unit, id)
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows[F] = id
-    self.LCG.PixelGlow_Start(F, color, 10, 0.2, 10, 4, 0, 0, true, id)
+    local s = NSRT.ReminderSettings.GlowSettings
+    self.LCG.PixelGlow_Start(F, s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id)
 end
 
 function NSI:HideGlow(unit, id)    
@@ -664,5 +666,5 @@ ph:1;time:10;tag:Senfi Group1;text:Stack on {cross};sound:Stack;countdown:3;dur:
 time:15;tag:monk;TTS:true;spellid:115203;
 ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:true;
 
-/run NSAPI:DebugReminder(2900, true, true)
+/run NSAPI:DebugReminder(3306, true, false)
 ]]
