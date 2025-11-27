@@ -74,6 +74,13 @@ function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellI
         local spell = C_Spell.GetSpellInfo(spellID)
         TTS = spell and spell.name
     end
+    if glowunit then
+        local glowtable = {}
+        for name in glowunit:gmatch("(%w+)") do
+            table.insert(glowtable, name)
+        end
+        glowunit = glowtable
+    end
     self.ProcessedReminder[encID][phase] = self.ProcessedReminder[encID][phase] or {}    
     table.insert(self.ProcessedReminder[encID][phase], {TTSTimer = TTSTimer, rawtext = rawtext, phase = phase, id = #self.ProcessedReminder[encID][phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})      
 end
@@ -169,9 +176,11 @@ function NSI:SetProperties(F, info, skipsound, s)
     F:SetScript("OnUpdate", function()
         NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
-    F:SetScript("OnHide", function()
-        NSI:HideGlow(info.glowunit, "p"..info.phase.."id"..info.id)
-    end)    
+    if info.glowunit then
+        F:SetScript("OnHide", function()        
+            NSI:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
+        end)    
+    end
     if not info.spellID then return end
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     F.Icon:SetTexture(icon)
@@ -269,10 +278,10 @@ end
 
 
 
-function NSI:CreateUnitFrameIcon(info)    
+function NSI:CreateUnitFrameIcon(info, name)    
     self.UnitIcon = self.UnitIcon or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
-    local unit = NSAPI:GetChar(info.glowunit, true)
+    local unit = NSAPI:GetChar(name, true)
     local i = UnitInRaid(unit)
     if (not UnitExists(unit)) or (not i) then return end
     local F = self.RaidFrames["raid"..i]
@@ -391,10 +400,12 @@ function NSI:DisplayReminder(info)
         F:Show()
     end    
     if info.glowunit then
-        self:GlowFrame(info.glowunit, "p"..info.phase.."id"..info.id)
-        if info.spellID then
-            local UnitIcon = self:CreateUnitFrameIcon(info) 
-            if UnitIcon then UnitIcon:Show() end
+        for i, name in ipairs(info.glowunit) do
+            self:GlowFrame(name, "p"..info.phase.."id"..info.id)
+            if info.spellID then
+                local UnitIcon = self:CreateUnitFrameIcon(info, name) 
+                if UnitIcon then UnitIcon:Show() end
+            end
         end
     end
 end
@@ -568,6 +579,7 @@ function NSI:GlowFrame(unit, id)
     unit = NSAPI:GetChar(unit, true)
     local i = UnitInRaid(unit)
     if (not UnitExists(unit)) or (not i) then return end
+    id = unit..id
     local F = self.RaidFrames["raid"..i]
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
@@ -576,15 +588,18 @@ function NSI:GlowFrame(unit, id)
     self.LCG.PixelGlow_Start(F, s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id)
 end
 
-function NSI:HideGlow(unit, id)    
-    if not unit then return end
-    unit = NSAPI:GetChar(unit, true)
-    local i = UnitInRaid(unit)
-    if (not UnitExists(unit)) or (not i) then return end
-    local F = self.RaidFrames["raid"..i]
-    if not F then return end
-    self.AllGlows[F] = nil
-    self.LCG.PixelGlow_Stop(F, id)
+function NSI:HideGlows(units, id)    
+    if not units then return end
+    for i, unit in ipairs(units) do
+        unit = NSAPI:GetChar(unit, true)
+        local i = UnitInRaid(unit)
+        if (not UnitExists(unit)) or (not i) then return end
+        local newid = unit..id
+        local F = self.RaidFrames["raid"..i]
+        if not F then return end
+        self.AllGlows[F] = nil
+        self.LCG.PixelGlow_Stop(F, newid) 
+    end
 end
 
 function NSI:StoreFrames(init)
