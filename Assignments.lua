@@ -14,10 +14,16 @@ function NSI:AddAssignments(encID)
         time = 72.1
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         text = subgroup <= 2 and "SOAK" or "DON'T SOAK"
-        time = 237.8
+        time = 130
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         text = subgroup >= 3 and "SOAK" or "DON'T SOAK"
+        time = 237.8
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup <= 2 and "SOAK" or "DON'T SOAK"
         time = 290.5
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup >= 3 and "SOAK" or "DON'T SOAK"
+        time = 350
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         return
     elseif encID == 3178 and self:DifficultyCheck(16) then -- Dragons
@@ -84,37 +90,6 @@ function NSI:AddAssignments(encID)
         time = 446.3
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         return
-    end
-    if not NSRT.Settings["Debug"] then return end
-    -- debug stuff only
-    if encID == 3182 then
-        local phase, countdown, glowunit, sound, time, spellID, dur, TTS = 1, 3, "Reloe", false, 10, 115203, 8
-        local text = false
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-
-        local phase, countdown, glowunit, sound, time, spellID, dur, TTS = 1, false, false, "Soak", 20, false, 8
-        local text = "Soak"
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-
-        local phase, countdown, glowunit, sound, time, spellID, dur, TTS = 1, false, false, false, 25, false, 8
-        local text = "Balls"
-        self.ProcessedAssigns[phase] = self.ProcessedAssigns[phase] or {}
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        
-    elseif (encID == 2900 or encID == 3306 or encID == 3176 or encID == 3177 or encID == 3179 or encID == 3178 or encID == 3180) then -- all raid tests debug & 1st Boss Cinderbrew
-        local phase, countdown, glowunit, sound, time, spellID, dur = 1, 3, false, false, 20, false, 10
-        local subgroup = math.random(1, 4)
-        local text = subgroup <= 2 and "|cFF00FF00SOAK|r" or "|cFFFF0000DON'T SOAK|r"
-        local TTS = subgroup <= 2 and "Soak" or "Don't Soak"   
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        phase = 1
-        time = 30
-        text = subgroup <= 2 and "|cFF00FF00Go Left" or "|cFFFF0000Go Right"
-        spellID = 774
-        TTS = subgroup <= 2 and "Go Left" or "Go Right"
-        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
     end
 end
 
