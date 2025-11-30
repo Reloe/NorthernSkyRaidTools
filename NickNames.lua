@@ -49,7 +49,7 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
             nickname = LibTranslit:Transliterate(nickname)
         end
         if NSRT.Settings["Translit"] and not nickname then
-            name = LibTranslit:Transliterate(name)
+            name = NSI:IsMidnight() and issecretvalue(name) and name or LibTranslit:Transliterate(name)
         end
         return nickname or name
     else
@@ -487,7 +487,7 @@ function NSI:InitNickNames()
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
                 local name = UnitName(unit)
                 name = name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
-                return NSI:Utf8Sub(name, i)
+                return NSI:Utf8Sub(name, 1, i)
             end
         end
     end
@@ -536,7 +536,7 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
     end
-    nickname = self:Utf8Sub(nickname, 12)
+    nickname = self:Utf8Sub(nickname, 1, 12)
     NSRT.NickNames[name.."-"..realm] = nickname
     fullCharList[name.."-"..realm] = nickname
     fullNameList[name] = nickname
