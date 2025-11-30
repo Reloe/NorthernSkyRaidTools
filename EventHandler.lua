@@ -506,36 +506,36 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
             table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(now-time)})
         end
-    elseif e == "NS_COMPARE_REMINDER" and (internal or NSRT.Settings["Debug"]) then   
+    elseif e == "NS_COMPARE_REMINDER" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then   
         if self:Restricted() then return end    
         C_Timer.After(1, function()
             self:EventHandler("NS_REM_COMPARE_RESULT", false, true)
         end)
-        self:Broadcast("NS_REM_COMPARE", "RAID", self.Reminder)    
-    elseif e == "NS_REM_SHARE" and (internal or NSRT.Settings["Debug"]) then
+        self:Broadcast("NS_REM_COMPARE", "RAID", NSAPI:GetHash(self.Reminder))    
+    elseif e == "NS_REM_SHARE" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then
         local unit, assigntable = ...
         if UnitIsGroupLeader(unit) then
             self.Reminder = assigntable
             self:ProcessReminder()
         end
-    elseif e == "NS_REM_COMPARE" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NS_REM_COMPARE" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then
         local unit, remindertable = ...
         if UnitIsVisible(unit) then
             self.Difference = self.Difference or {}
             if remindertable and not self.Reminder then
                 local name = UnitName("player")
                 table.insert(self.Difference, name)
-            elseif (self.Reminder and not remindertable) or self.Reminder ~= remindertable then
+            elseif (self.Reminder and not remindertable) or NSAPI:GetHash(self.Reminder) ~= remindertable then
                 local name = UnitName(unit)
                 table.insert(self.Difference, name)
             end
         end
-    elseif e == "NS_CREM_COMPARE_RESULT" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NS_CREM_COMPARE_RESULT" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then
         if self.Difference and next(self.Difference) ~= nil then
             local displaytext = ""
             for k, v in ipairs(self.Difference) do
                 local name, specicon, roleicon = NSAPI:Shorten(v, 8, true, "GlobalNickNames", false, true)
-                displaytext = displaytext..specicon..roleicon..name
+                displaytext = displaytext..specicon..roleicon..name.."\n"
             end
             -- missing display function for now            
         end
