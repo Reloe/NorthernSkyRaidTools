@@ -89,7 +89,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     if classFile then -- basically "if unit found"
         local name = UnitName(unit)
         local color = GetClassColorObj(classFile)
-        name = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
+        name = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
             return combined and specicon..roleicon..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or specicon, combined and "" or roleicon
         else
