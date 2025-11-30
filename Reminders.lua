@@ -86,14 +86,21 @@ function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellI
 end
 
 function NSI:ProcessReminder()
+    local str = ""
     self.ProcessedReminder = {}
-    if self.Reminder and self.Reminder ~= "" then
+    if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
+    if NSRT.ReminderSettings.MRTNote then 
+        print("mrt enabled")
+        local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
+        str = note and str ~= "" and str.."\n"..note or note or str
+    end
+    if str ~= "" then
         local subgroup = self:GetSubGroup("player")        
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         local pos = self.spectable[specid]
         local encID = 0
         pos = ((pos <= 19 or pos == 34 or pos == 35) and "melee") or (((pos <= 33 and pos >= 20) or pos >= 36) and "ranged")
-        for line in self.Reminder:gmatch('[^\r\n]+') do
+        for line in str:gmatch('[^\r\n]+') do
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
                 if encID then encID = tonumber(encID) end
@@ -520,8 +527,9 @@ function NSI:HideAllReminders()
 end
 
 function NSI:SetReminder(name)
-    if NSRT.Reminders[name] then
+    if name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
+        NSRT.ActiveReminder = name
         self:ProcessReminder()
     end
 end
