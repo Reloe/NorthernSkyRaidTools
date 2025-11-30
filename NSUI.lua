@@ -5,7 +5,7 @@ local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 local WA = _G["WeakAuras"]
 
 local window_width = 900
-local window_height = 515
+local window_height = 550
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local TABS_LIST = {
@@ -1952,7 +1952,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.Settings["MyNickName"] or "" end,
             set = function(self, fixedparam, value) 
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
-                NSRT.Settings["MyNickName"] = WeakAuras.WA_Utf8Sub(value, 12)
+                NSRT.Settings["MyNickName"] = NSI:Utf8Sub(value, 1, 12)
             end,
             hooks = {
                 OnEditFocusLost = function(self)
@@ -2468,6 +2468,28 @@ Press 'Enter' to hear the TTS]],
             spacement = true
         },]]
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Raidleader Reminder",
+            desc = "Enables reminders set by the raidleader",
+            get = function() return NSRT.ReminderSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "MRT Note Reminder",
+            desc = "Enables reminders entered into MRT note",
+            get = function() return NSRT.ReminderSettings.MRTNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.MRTNote = value
+            end,
+            nocombat = true,
+        },
+        {
             type = "label",
             get = function() return "Spell Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -2929,7 +2951,7 @@ Press 'Enter' to hear the TTS]],
                     TTSTimer = NSRT.ReminderSettings.SpellTTSTimer, 
                     countdown = NSRT.ReminderSettings.SpellCountdown,
                     dur = NSRT.ReminderSettings.SpellDuration,
-                    glowunit = "player",
+                    glowunit = {"player"},
                 }
                 NSI:DisplayReminder(info3)
                 local info4 = {
@@ -2953,6 +2975,17 @@ Press 'Enter' to hear the TTS]],
             desc = "Import Reminder String and make it the current active one",
             func = function(self)
                 ImportReminderString()
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Clear Reminder",
+            desc = "Clear the current active reminder",
+            func = function(self)
+                NSI.Reminder = ""
+                NSRT.ActiveReminder = nil
             end,
             nocombat = true,
             spacement = true

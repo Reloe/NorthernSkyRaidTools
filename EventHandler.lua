@@ -36,7 +36,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.NickNames then NSRT.NickNames = {} end
             if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Reminders = NSRT.Reminders or {}
+            NSRT.ActiveReminder = NSRT.ActiveReminder or nil
+            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
+            if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
+            NSRT.ReminderSettings.MRTNote = NSRT.ReminderSettings.MRTNote or false -- enable for MRT note
             NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
             NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
             if NSRT.ReminderSettings.SpellTTS == nil then NSRT.ReminderSettings.SpellTTS = true end
@@ -201,6 +205,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "START_PLAYER_COUNTDOWN" and (wowevent or NSRT.Settings["Debug"]) then -- do basically the same thing as ready check in case one of them is skipped
         if self:Restricted() or not self:DifficultyCheck(14) then return end
+        if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self:StoreFrames(true)
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
@@ -209,6 +214,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if self:Restricted() then return end
+        self.LastBroadcast = GetTime()
         if self:DifficultyCheck(14) then -- only care about note comparison in normal, heroic&mythic raid
             local note = NSAPI:GetNote()
             if note ~= "empty" then
@@ -226,7 +232,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:EventHandler("NS_COMPARE_REMINDER", false, true)
             end)
         end
-        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then
+        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
             self:CheckCooldowns()
         end
         self.specs = {}
