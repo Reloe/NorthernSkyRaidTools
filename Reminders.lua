@@ -108,6 +108,7 @@ function NSI:ProcessReminder()
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
+            if self.TestingReminder and not subgroup then subgroup = 1 end
             if time and tag and subgroup and (text or spellID) and encID and encID ~= 0 then
                 tag = strlower(tag)
                 if tag == "everyone" or 
@@ -531,7 +532,7 @@ function NSI:StartReminders(phase)
     for i, v in ipairs(self.ProcessedReminder[encID][phase]) do
         local time = math.max(v.time-v.dur, 0)
         self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-            if self:Restricted() then 
+            if self:Restricted() or self.TestingReminder then 
                 self:DisplayReminder(v) 
             else
                 self:HideAllReminders()
@@ -573,6 +574,15 @@ function NSI:HideAllReminders()
     end
 end
 
+function NSI:GetAllReminderNames()
+    local list = {}
+    for k, v in pairs(NSRT.Reminders) do
+        table.insert(list, k)
+    end
+    table.sort(list, function(a, b) return a < b end)
+    return list
+end
+
 function NSI:SetReminder(name)
     if name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
@@ -581,9 +591,39 @@ function NSI:SetReminder(name)
     end
 end
 
+function NSI:RemoveReminder(name)
+    if name and NSRT.Reminders[name] then
+        NSRT.Reminders[name] = nil
+        if NSRT.ActiveReminder == name then
+            self.Reminder = ""
+            NSRT.ActiveReminder = ""
+        end
+    end
+end
+
+function NSI:ImportFullReminderString(str)
+    local name = ""
+    local values = ""
+    for line in str:gmatch('[^\r\n]+') do
+        if line:find("EncounterID:") and line:find("Name:") then
+            if values ~= "" then -- meaning we reached a new boss line as the previous one has values already
+                self:ImportReminder(name, values)
+                values = ""
+            end
+            name = line:match("Name:([^;]+)")
+            values = line.."\n"
+        elseif name ~= "" then
+            values = values..line.."\n"
+        end
+    end
+    if values ~= "" and name ~= "" then -- importing the last boss
+        self:ImportReminder(name, values)
+    end
+end
+
 function NSI:ImportReminder(name, values, activate)
     if not name then name = "Default Reminder" end
-    if NSRT.Reminders[name] then
+    if NSRT.Reminders[name] and not name == "Default Reminder" then -- for default reminder we just overwrite for now
         self:ImportReminder(name.." 2", values, activate)
         return
     end
