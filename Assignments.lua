@@ -3,47 +3,72 @@ local _, NSI = ... -- Internal namespace
 function NSI:AddAssignments(encID)
     local subgroup = self:GetSubGroup("player")
     local text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, TTSTimer
-    if encID == 3306 and self:DifficultyCheck(16) then -- Chimaerus
+    local Assignments = self.Assignments and self.Assignments[self.EncounterID]
+    if not Assignments then return end
+    local isMythic = self:DifficultyCheck(16)
+    if encID == 1024 and isMythic and Assignments.Soaks then -- Beta Test
+        dur = 10
+        TTSTimer = 5
+        text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        time = 19.4
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        time = 35.1
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        time = 50
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        time = 65
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        time = 80
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        time = 95
+        self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+        return
+    elseif encID == 3306 and isMythic and Assignments.Soaks then -- Chimaerus
         -- debuff is 5s, display starts 5s before debuff application but sound is played on application
         dur = 10
         TTSTimer = 5
-        text = subgroup <= 2 and "SOAK" or "DON'T SOAK"
+        text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 19.4
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup >= 3 and "SOAK" or "DON'T SOAK"
+        text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 72.1
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup <= 2 and "SOAK" or "DON'T SOAK"
+        text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 130
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup >= 3 and "SOAK" or "DON'T SOAK"
+        text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 237.8
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup <= 2 and "SOAK" or "DON'T SOAK"
+        text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 290.5
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup >= 3 and "SOAK" or "DON'T SOAK"
+        text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 350
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         return
-    elseif encID == 3178 and self:DifficultyCheck(16) then -- Dragons
+    elseif encID == 3178 and isMythic and Assignments.Soaks then -- Dragons
         -- breath cast is 4s, display starts earlier and sound is played at start of the cast
         dur = 10
         TTSTimer = 4
-        text = subgroup == 2 and "SOAK" or "DON'T SOAK"
+        text = subgroup == 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 54.4
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup == 3 and "SOAK" or "DON'T SOAK"
+        text = subgroup == 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 156.1
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup == 2 and "SOAK" or "DON'T SOAK"
+        text = subgroup == 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 201.2
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
-        text = subgroup == 3 and "SOAK" or "DON'T SOAK"
+        text = subgroup == 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         time = 246.1
         self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
         return
-    elseif encID == 3180 and self:DifficultyCheck(16) then -- Council
+    elseif encID == 3180 and isMythic and Assignments.Soaks then -- Council
         -- debuff duration is 10s so we start display&sound at the same time
         dur = 10
         TTSTimer = 10
