@@ -75,5 +75,8 @@ function NSI:GetVersionNumber(type, name, unit)
         end
     
         return unit, hashed, false, "", ignoreCheck
+    elseif type == "Reminder" then
+        local reminder = self.Reminder and self.Reminder ~= "" and NSAPI:GetHash(self.Reminder) or "Reminder Missing"
+        return unit, reminder, false, "", ignoreCheck
     end
 end
