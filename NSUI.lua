@@ -3056,9 +3056,6 @@ Press 'Enter' to hear the TTS]],
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3306] = NSRT.AssignmentSettings[3306] or {}
                 NSRT.AssignmentSettings[3306].Soaks = value
-                --
-                NSRT.AssignmentSettings[1024] = NSRT.AssignmentSettings[1024] or {}
-                NSRT.AssignmentSettings[1024].Soaks = value
                 self.Assignments = NSRT.AssignmentSettings
             end,
             nocombat = true,
