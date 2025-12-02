@@ -38,6 +38,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Reminders = NSRT.Reminders or {}
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
             self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+            NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
             NSRT.ReminderSettings.MRTNote = NSRT.ReminderSettings.MRTNote or false -- enable for MRT note
@@ -210,7 +211,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
-            self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder)
+            self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
+                self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
         if self:Restricted() then return end
@@ -222,9 +224,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:Broadcast("MRT_NOTE", "RAID", hashed)   
             end
         end
-        if (self:IsMidnight() and self:DifficultyCheck(14)) or NSRT.Settings["Debug"] then
+        if self:IsMidnight() and self:DifficultyCheck(14) then
             if UnitIsGroupLeader("player") then
-                self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder)
+                self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
+                self.Assignments = NSRT.AssignmentSettings
             end
             self.Difference = {}
             self:StoreFrames(true)
@@ -251,7 +254,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
         C_Timer.After(1, function()
             self:EventHandler("NSAPI_READY_CHECK", false, true)
-        end)
+        end)        
+    elseif e == "NS_REM_SHARE"  and internal then
+        local unit, remindertable, assigntable = ...
+        if UnitIsGroupLeader(unit) then
+            if NSRT.ReminderSettings.enabled then
+                self.Reminder = remindertable
+                self:ProcessReminder()
+            end
+            self.Assignments = assigntable
+        end
     elseif e == "NSAPI_READY_CHECK" and internal then
         if self:Restricted() then return end
         if NSRT.Settings["RebuffCheck"] then
@@ -261,7 +273,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
-    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and internal then
         if self:Restricted() then return end
         local _, hashed = ...     
         if hashed ~= "" then
@@ -270,7 +282,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSAPI:DisplayText("MRT Note Mismatch detected", 5)
             end
         end
-    elseif e == "UNIT_AURA" and (self.Externals and self.Externals.target) and ((UnitIsUnit(self.Externals.target, "player") and wowevent) or NSRT.Settings["Debug"]) then
+    elseif e == "UNIT_AURA" and (self.Externals and self.Externals.target) and (UnitIsUnit(self.Externals.target, "player") and wowevent) then
         if self:IsMidnight() then return end
         local unit, info = ...
         if not self.Externals.AllowedUnits[unit] then return end
@@ -283,11 +295,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-    elseif e == "NSI_VERSION_CHECK" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
         local unit, ver, duplicate, ignoreCheck = ...        
         self:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate, ignoreCheck = ignoreCheck})
-    elseif e == "NSI_VERSION_REQUEST" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NSI_VERSION_REQUEST" and internal then
         if self:Restricted() then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
@@ -295,14 +307,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local u, ver, duplicate, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
             self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate, ignoreCheck)
         end
-    elseif e == "NSI_NICKNAMES_COMMS" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NSI_NICKNAMES_COMMS" and internal then
         if self:Restricted() then return end
         local unit, nickname, name, realm, requestback, channel = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
         if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
         self:NewNickName(unit, nickname, name, realm, channel)
 
-    elseif e == "PLAYER_REGEN_ENABLED" and (wowevent or NSRT.Settings["Debug"]) then
+    elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
         C_Timer.After(1, function()            
             if self:Restricted() then return end
             if self.SyncNickNamesStore then
@@ -314,7 +326,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.WAString = nil
             end
         end)
-    elseif e == "NSI_NICKNAMES_SYNC" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NSI_NICKNAMES_SYNC" and internal then
         local unit, nicknametable, channel = ...
         local setting = NSRT.Settings["NickNamesSyncAccept"]
         if (setting == 3 or (setting == 2 and channel == "GUILD") or (setting == 1 and channel == "RAID") and (not C_ChallengeMode.IsChallengeModeActive())) then 
@@ -325,7 +337,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:NickNamesSyncPopup(unit, nicknametable)    
             end
         end
-    elseif e == "NSI_WA_SYNC" and (internal or NSRT.Settings["Debug"]) then
+    elseif e == "NSI_WA_SYNC" and internal then
         local unit, str = ...
         local setting = NSRT.Settings["WeakAurasImportAccept"]
         if setting == 3 then return end
@@ -359,10 +371,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
         NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)            
-    elseif e == "CHALLENGE_MODE_START" and (wowevent or NSRT.Settings["Debug"]) then
+    elseif e == "CHALLENGE_MODE_START" and wowevent then
         if self:IsMidnight() then return end
         self.Externals:Init(true)
-    elseif e == "GROUP_ROSTER_UPDATE" and (wowevent or NSRT.Settings["Debug"])then
+    elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         if self:Restricted() or not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
     elseif e == "ENCOUNTER_START" and ((wowevent and self:DifficultyCheck(14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
@@ -414,7 +426,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSI:HideAllReminders()
             self.Timelines = {}
             self.ReminderTimer = {}
-            self.AllGlows = {}            
+            self.AllGlows = {}          
+            self.ProcessedReminder = nil
         end
         C_Timer.After(1, function()
             if self:Restricted() then return end
@@ -489,7 +502,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    elseif ((e == "NS_PAMACRO" and not self:IsMidnight()) or (self:IsMidnight() and e == "MINIMAP_PING")) and (internal or NSRT.Settings["Debug"]) then
+    elseif ((e == "NS_PAMACRO" and not self:IsMidnight()) or (self:IsMidnight() and e == "MINIMAP_PING")) and internal then
         local unitID = ...        
         if unitID and UnitExists(unitID) then
             local i = UnitInRaid(unitID)
@@ -505,39 +518,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MacroPresses = self.MacroPresses or {}
             self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
             table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(now-time)})
-        end
-    elseif e == "NS_COMPARE_REMINDER" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then   
-        if self:Restricted() then return end    
-        C_Timer.After(1, function()
-            self:EventHandler("NS_REM_COMPARE_RESULT", false, true)
-        end)
-        self:Broadcast("NS_REM_COMPARE", "RAID", NSAPI:GetHash(self.Reminder))    
-    elseif e == "NS_REM_SHARE" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then
-        local unit, assigntable = ...
-        if UnitIsGroupLeader(unit) then
-            self.Reminder = assigntable
-            self:ProcessReminder()
-        end
-    elseif e == "NS_REM_COMPARE" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then
-        local unit, remindertable = ...
-        if UnitIsVisible(unit) then
-            self.Difference = self.Difference or {}
-            if remindertable and not self.Reminder then
-                local name = UnitName("player")
-                table.insert(self.Difference, name)
-            elseif (self.Reminder and not remindertable) or NSAPI:GetHash(self.Reminder) ~= remindertable then
-                local name = UnitName(unit)
-                table.insert(self.Difference, name)
-            end
-        end
-    elseif e == "NS_CREM_COMPARE_RESULT" and NSRT.ReminderSettings.enabled and (internal or NSRT.Settings["Debug"]) then
-        if self.Difference and next(self.Difference) ~= nil then
-            local displaytext = ""
-            for k, v in ipairs(self.Difference) do
-                local name, specicon, roleicon = NSAPI:Shorten(v, 8, true, "GlobalNickNames", false, true)
-                displaytext = displaytext..specicon..roleicon..name.."\n"
-            end
-            -- missing display function for now            
-        end
+        end 
     end
 end
