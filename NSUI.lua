@@ -817,12 +817,12 @@ local function ImportReminderString(name)
     DF:ApplyStandardBackdrop(popup.test_string_text_box)
     DF:ReskinSlider(popup.test_string_text_box.scroll)
     popup.test_string_text_box:SetFocus()
-    popup.test_string_text_box:SetText(NSI.Reminder or "")
+    popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
         NSI:ImportFullReminderString(import_string)
-        popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
+        popup.test_string_text_box:SetText("")
         NSUI.reminders_frame:Hide()
         NSUI.reminders_frame:Show()
         popup:Hide()
@@ -834,7 +834,7 @@ local function ImportReminderString(name)
 end
 
 local function BuildRemindersEditUI()
-    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 380, 370, "Reminders Management", "RemindersEditFrame", {
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 380, 410, "Reminders Management", "RemindersEditFrame", {
         DontRightClickClose = true
     })
     reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -856,13 +856,51 @@ local function BuildRemindersEditUI()
     end
     
     local Active_Text = DF:CreateLabel(reminders_edit_frame, "Active Reminder", 11)
-    Active_Text:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 15, -30)
-    Active_Text:SetWidth(250)
+    Active_Text:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 50)
+    Active_Text:SetWidth(380)
     if NSRT.ActiveReminder and NSRT.ActiveReminder ~= "" then
         Active_Text.text = "Active Reminder: " .. NSRT.ActiveReminder
     else
         Active_Text.text = "Active Reminder: None"
     end
+
+    -- Import Button
+    local ImportButton = DF:CreateButton(reminders_edit_frame, function()
+        ImportReminderString()
+        end, 120, 24, "Import Reminder"
+    )
+    ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
+    ImportButton:SetTemplate(options_button_template)
+
+    -- Clear Button
+    local ClearButton = DF:CreateButton(reminders_edit_frame, function()
+        NSRT.ActiveReminder = nil
+        NSI.Reminder = ""
+        Active_Text.text = "Active Reminder: None"
+        end, 120, 24, "Clear Reminder"
+    )
+    ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
+    ClearButton:SetTemplate(options_button_template)
+
+    -- Test Button
+    local TestButton = DF:CreateButton(reminders_edit_frame, function()
+        if NSI.TestingReminder then
+            NSI.TestingReminder = false
+            NSI:HideAllReminders()
+        else
+            local str = NSRT.Reminders[NSRT.ActiveReminder]
+            if not str then return end
+            local encID = str:match("EncounterID:(%d+)")
+            if not encID then return end
+            NSI.EncounterID = tonumber(encID)
+            NSI.TestingReminder = true
+            NSI:ProcessReminder()
+            NSI:StartReminders(1)
+        end
+    end, 120, 24, "Test Reminder"
+    )
+    TestButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
+    TestButton:SetTemplate(options_button_template)
 
     local function createLineFunc(self, index)
         local parent = self
@@ -935,7 +973,7 @@ local function BuildRemindersEditUI()
         {},
         340, 300, scrollLines, 20, createLineFunc)
     reminders_edit_frame.scrollbox = reminders_edit_scrollbox
-    reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -50)
+    reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -40)
     reminders_edit_scrollbox.MasterRefresh = MasterRefresh
     DF:ReskinSlider(reminders_edit_scrollbox)
     reminders_edit_scrollbox:SetScript("OnShow", function(self)
@@ -3106,45 +3144,13 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Import Reminder",
-            desc = "Import one or multiple Bosses",
-            func = function(self)
-                ImportReminderString()
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "button",
-            name = "Show All Reminders",
+            name = "Reminders Overview",
             desc = "Shows a list of all Reminders",
             func = function(self)
                 if not NSUI.reminders_frame:IsShown() then
                     NSUI.reminders_frame:Show()
                 else
                     NSUI.reminders_frame:Hide()
-                end
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "button",
-            name = "Test Current Reminder",
-            desc = "Starts/Stops a test run of the currently active reminder. This requires you to be in a raidgroup.",
-            func = function(self)
-                if NSI.TestingReminder then
-                    NSI.TestingReminder = false
-                    NSI:HideAllReminders()
-                else
-                    local str = NSRT.Reminders[NSRT.ActiveReminder]
-                    if not str then return end
-                    local encID = str:match("EncounterID:(%d+)")
-                    if not encID then return end
-                    NSI.EncounterID = tonumber(encID)
-                    NSI.TestingReminder = true
-                    NSI:ProcessReminder()
-                    NSI:StartReminders(1)
                 end
             end,
             nocombat = true,
