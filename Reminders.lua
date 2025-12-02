@@ -90,7 +90,6 @@ function NSI:ProcessReminder()
     self.ProcessedReminder = {}
     if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
     if NSRT.ReminderSettings.MRTNote then 
-        print("mrt enabled")
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
         str = note and str ~= "" and str.."\n"..note or note or str
     end
@@ -134,15 +133,19 @@ function NSI:ProcessReminder()
 end
 
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
-    for i=1, 20 do
-        local F = self.ReminderText and self.ReminderText[i]
+    local parent = self.ReminderText or {}
+    for i=1, #parent do
+        local F = parent[i]
         if F then
             local s = NSRT.ReminderSettings.TextSettings
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
             F:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + offset)      
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
-        F = self.ReminderIcon and self.ReminderIcon[i]
+    end
+    parent = self.ReminderIcon or {}
+    for i=1, #parent do
+        local F = parent[i]
         if F then
             local s = NSRT.ReminderSettings.IconSettings
             F:SetSize(s.Width, s.Height)
@@ -155,12 +158,18 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
-        F = self.UnitIcon and self.UnitIcon[i]
+    end
+    parent = self.UnitIcon or {}
+    for i=1, #parent do
+        local F = parent[i]
         if F then
             local s = NSRT.ReminderSettings.UnitIconSettings
             F:SetSize(s.Width, s.Height) -- not setting points in this one because this is repeated every time the frame is shown as it needs a new frame to anchor to anyway
         end
-        F = self.ReminderBar and self.ReminderBar[i]
+    end
+    parent = self.ReminderBar or {}
+    for i=1, #parent do
+        local F = parent[i]
         if F then
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
@@ -179,15 +188,42 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     end
 end
 
+function NSI:ArrangeStates(Type)
+    local F = (Type == "Texts" and self.ReminderText) or (Type == "Icons" and self.ReminderIcon) or (Type == "Bars" and self.ReminderBar)
+    if not F then return end
+    local s = (Type == "Texts" and NSRT.ReminderSettings.TextSettings) or (Type == "Icons" and NSRT.ReminderSettings.IconSettings) or (Type == "Bars" and NSRT.ReminderSettings.BarSettings)
+    local pos = {}
+    for i=1, #F do
+        if F[i] and F[i]:IsShown() then
+            table.insert(pos, {num = i, id = F[i].info.id, expires = F[i].info.expires})
+        end
+    end
+    table.sort(pos, function(a, b) 
+        if a.expires == b.expires then
+            return a.id < b.id
+        else
+            return a.expires < b.expires
+        end
+    end)
+    for i, v in ipairs(pos) do
+        local diff = Type == "Texts" and s.FontSize or s.Height
+        local offset = s.GrowDirection == "Up" and (i-1) * diff or -(i-1) * diff
+        F[v.num]:ClearAllPoints()
+        F[v.num]:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
+    end
+end
+
 function NSI:SetProperties(F, info, skipsound, s)
     F:SetScript("OnUpdate", function()
         NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
-    if info.glowunit then
-        F:SetScript("OnHide", function()        
+    F:SetScript("OnHide", function()        
+        if info.glowunit then
             NSI:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
-        end)    
-    end
+        end
+        NSI:ArrangeStates(F.Type)
+    end)    
+    F.info = info
     if not info.spellID then return end
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     F.Icon:SetTexture(icon)
@@ -214,7 +250,7 @@ end
 function NSI:CreateText(info)
     self.ReminderText = self.ReminderText or {}    
     local s = NSRT.ReminderSettings.TextSettings
-    for i=1, 20 do
+    for i=1, #self.ReminderText+1 do
         if self.ReminderText[i] and not self.ReminderText[i]:IsShown() then 
             self:SetProperties(self.ReminderText[i], info, false, s)
             return self.ReminderText[i] 
@@ -240,7 +276,7 @@ function NSI:CreateIcon(info)
     self.ReminderIcon = self.ReminderIcon or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     local s = NSRT.ReminderSettings.IconSettings
-    for i=1, 20 do
+    for i=1, #self.ReminderIcon+1 do
         if self.ReminderIcon[i] and not self.ReminderIcon[i]:IsShown() then 
             self:SetProperties(self.ReminderIcon[i], info, false, s)
             return self.ReminderIcon[i] 
@@ -294,7 +330,7 @@ function NSI:CreateUnitFrameIcon(info, name)
     local F = self.RaidFrames["raid"..i]
     if not F then return end
     local s = NSRT.ReminderSettings.UnitIconSettings
-    for i=1, 20 do
+    for i=1, #self.UnitIcon+1 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
             self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
             self:SetProperties(self.UnitIcon[i], info, true, s)
@@ -324,7 +360,7 @@ function NSI:CreateBar(info)
     self.ReminderBar = self.ReminderBar or {}
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     local s = NSRT.ReminderSettings.BarSettings
-    for i=1, 20 do
+    for i=1, #self.ReminderBar+1 do
         if self.ReminderBar[i] and not self.ReminderBar[i]:IsShown() then                 
             self:SetProperties(self.ReminderBar[i], info, false, s)
             return self.ReminderBar[i] 
@@ -369,10 +405,12 @@ function NSI:CreateBar(info)
 end
 
 function NSI:DisplayReminder(info)
+    local now = GetTime()
     local dur = info.dur or 8
-    info.startTime = GetTime()
+    info.startTime = now
     info.dur = dur
-    local rem = info.dur - (GetTime() - info.startTime)
+    info.expires = now + dur
+    local rem = info.dur - (now - info.startTime)
     if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((not info.spellID) and rem <= 0) then
         return
     end
@@ -395,14 +433,20 @@ function NSI:DisplayReminder(info)
             F = self:CreateBar(info)
             F:SetMinMaxValues(0, info.dur)
             F:SetValue(0)
+            self:ArrangeStates("Bars")
+            F.Type = "Bars"
         else
             F = self:CreateIcon(info)
+            self:ArrangeStates("Icons")
+            F.Type = "Icons"
         end
         F.Text:SetText(text)
         F.TimerText:SetText(remString)
         F:Show()
     else
         F = self:CreateText(info)
+        self:ArrangeStates("Texts")
+        F.Type = "Texts"
         F.Text:SetText(text.." - ("..remString..")" or remString)
         F:Show()
     end    
@@ -465,7 +509,7 @@ function NSI:PlayReminderSound(info)
         PlaySoundFile(sound, "Master")
         return      
     elseif info.TTS then
-        local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext  and info.rawtext ~= "" and info.rawtext) or ""
+        local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext and info.rawtext ~= "" and info.rawtext) or ""
         sound = self.LSM:Fetch("sound", TTS)
         if sound and sound ~= 1 then
             PlaySoundFile(sound, "Master")
@@ -506,23 +550,25 @@ function NSI:HideAllReminders()
             self.LCG.PixelGlow_Stop(k, v)
         end
     end
-    for i=1, 20 do
-        if self.ReminderText then
-            local F = self.ReminderText[i]
-            if F then F:Hide() end
-        end
-        if self.ReminderIcon then
-            local F = self.ReminderIcon[i]
-            if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
-        end
-        if self.ReminderBar then            
-            local F = self.ReminderBar[i]
-            if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
-        end
-        if self.UnitIcon then
-            local F = self.UnitIcon[i]
-            if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
-        end
+    local parent = self.ReminderText or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F then F:Hide() end
+    end
+    parent = self.ReminderIcon or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
+    end
+    parent = self.ReminderBar or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
+    end
+    parent = self.UnitIcon or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
     end
 end
 
