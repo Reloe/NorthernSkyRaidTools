@@ -506,7 +506,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    elseif ((e == "NS_PAMACRO" and not self:IsMidnight()) or (self:IsMidnight() and e == "MINIMAP_PING")) and internal then
+    elseif (e == "NS_PAMACRO" and internal and not self:IsMidnight()) or (self:IsMidnight() and e == "MINIMAP_PING") then
         local unitID = ...        
         if unitID and UnitExists(unitID) then
             local i = UnitInRaid(unitID)
@@ -514,10 +514,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not unitID then return end
             self.LastPress = self.LastPress or {}
             local now = GetTime()
-            if self.LastPress[unitID] and self.LastPress[unitID] > now+5 then return end
+            if self.LastPress[unitID] and self.LastPress[unitID] < now+5 then return end
             self.LastPress[unitID] = now
             -- do assignement stuff
-            if not NSRT.Settings["DebugLogs"] then return end            
+            if not NSRT.Settings["DebugLogs"] then return end        
+            print(unitID, "pressed their Macro")    
             local time = self.Externals and self.Externals.pull or now
             self.MacroPresses = self.MacroPresses or {}
             self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
