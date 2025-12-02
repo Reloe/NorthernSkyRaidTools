@@ -195,7 +195,7 @@ function NSI:ArrangeStates(Type)
     local pos = {}
     for i=1, #F do
         if F[i] and F[i]:IsShown() then
-            table.insert(pos, {num = i, id = F[i].info.id, expires = F[i].info.expires})
+            table.insert(pos, {Frame = F[i], id = F[i].info.id, expires = F[i].info.expires})
         end
     end
     table.sort(pos, function(a, b) 
@@ -208,8 +208,8 @@ function NSI:ArrangeStates(Type)
     for i, v in ipairs(pos) do
         local diff = Type == "Texts" and s.FontSize or s.Height
         local offset = s.GrowDirection == "Up" and (i-1) * diff or -(i-1) * diff
-        F[v.num]:ClearAllPoints()
-        F[v.num]:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
+        v.Frame:ClearAllPoints()
+        v.Frame:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
     end
 end
 
@@ -433,22 +433,23 @@ function NSI:DisplayReminder(info)
             F = self:CreateBar(info)
             F:SetMinMaxValues(0, info.dur)
             F:SetValue(0)
+            F:Show()
             self:ArrangeStates("Bars")
             F.Type = "Bars"
         else
             F = self:CreateIcon(info)
+            F:Show()
             self:ArrangeStates("Icons")
             F.Type = "Icons"
         end
         F.Text:SetText(text)
         F.TimerText:SetText(remString)
-        F:Show()
     else
         F = self:CreateText(info)
-        self:ArrangeStates("Texts")
         F.Type = "Texts"
         F.Text:SetText(text.." - ("..remString..")" or remString)
         F:Show()
+        self:ArrangeStates("Texts")
     end    
     if info.glowunit then
         for i, name in ipairs(info.glowunit) do
@@ -530,7 +531,7 @@ function NSI:StartReminders(phase)
     for i, v in ipairs(self.ProcessedReminder[encID][phase]) do
         local time = math.max(v.time-v.dur, 0)
         self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-            if self:Restricted() or NSRT.Settings["Debug"] then 
+            if self:Restricted() then 
                 self:DisplayReminder(v) 
             else
                 self:HideAllReminders()
