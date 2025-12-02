@@ -803,8 +803,38 @@ local function build_spec_options()
             end)
     return t
 end
+
+local function ImportReminderString(name)
+    local popup = DF:CreateSimplePanel(NSUI, 800, 500, "Import Reminder String", "NSUIReminderImport", {
+        DontRightClickClose = true
+    })
+    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    popup:SetFrameLevel(100)
+
+    popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ReminderTextEdit", true, false, true)
+    popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+    popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+    DF:ApplyStandardBackdrop(popup.test_string_text_box)
+    DF:ReskinSlider(popup.test_string_text_box.scroll)
+    popup.test_string_text_box:SetFocus()
+    popup.test_string_text_box:SetText(NSI.Reminder or "")
+
+    popup.import_confirm_button = DF:CreateButton(popup, function()
+        local import_string = popup.test_string_text_box:GetText()
+        NSI:ImportFullReminderString(import_string)
+        popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
+        NSUI.reminders_frame:Hide()
+        NSUI.reminders_frame:Show()
+        popup:Hide()
+    end, 280, 20, "Import")
+    popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+    popup.import_confirm_button:SetTemplate(options_button_template)
+
+    return popup
+end
+
 local function BuildRemindersEditUI()
-    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 300, 370, "Reminders Management", "RemindersEditFrame", {
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 380, 370, "Reminders Management", "RemindersEditFrame", {
         DontRightClickClose = true
     })
     reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -819,8 +849,8 @@ local function BuildRemindersEditUI()
             local reminderData = data[index]
             if reminderData then
                 local line = self:GetLine(i)
-                line.name = reminderData
-                line.nameTextEntry.text = reminderData
+                line.name = reminderData.name
+                line.nameTextEntry.text = reminderData.name
             end
         end
     end
@@ -843,7 +873,7 @@ local function BuildRemindersEditUI()
 
         
 
-        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-57, line:GetHeight())
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-106, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
         line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
         line.nameTextEntry:SetScript("OnEnterPressed", function(self)
@@ -876,10 +906,9 @@ local function BuildRemindersEditUI()
         line.deleteButton:GetNormalTexture():SetDesaturated(true)
         line.deleteButton:GetHighlightTexture():SetDesaturated(true)
         line.deleteButton:GetPushedTexture():SetDesaturated(true)
-        -- line.deleteButton:SetFontFace(expressway)
         line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
 
-        
+        -- Load Button
         line.LoadButton = DF:CreateButton(line, function()
             local name = line.nameTextEntry:GetText()
             if name ~= "" then
@@ -887,8 +916,16 @@ local function BuildRemindersEditUI()
                 Active_Text.text = "Active Reminder: " .. name
             end
         end, 40, 20, "Load")
-        line.LoadButton:SetPoint("RIGHT", line.deleteButton, "RIGHT", -15, 0)
+        line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
         line.LoadButton:SetTemplate(options_button_template)
+
+        -- Show Button
+        line.ShowButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            ImportReminderString(name)
+        end, 40, 20, "Show")
+        line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
+        line.ShowButton:SetTemplate(options_button_template)
 
         return line
     end
@@ -896,7 +933,7 @@ local function BuildRemindersEditUI()
     local scrollLines = 15
     local reminders_edit_scrollbox = DF:CreateScrollBox(reminders_edit_frame, "$parentRemindersEditScrollBox", refresh,
         {},
-        260, 300, scrollLines, 20, createLineFunc)
+        340, 300, scrollLines, 20, createLineFunc)
     reminders_edit_frame.scrollbox = reminders_edit_scrollbox
     reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -50)
     reminders_edit_scrollbox.MasterRefresh = MasterRefresh
@@ -1596,33 +1633,6 @@ function NSUI:Init()
             popup.test_string_text_box:SetText("")
             popup:Hide()
         end, 280, 20, "Send")
-        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
-        popup.import_confirm_button:SetTemplate(options_button_template)
-
-        return popup
-    end
-
-    local function ImportReminderString()
-        local popup = DF:CreateSimplePanel(NSUI, 800, 500, "Import Reminder String", "NSUIReminderImport", {
-            DontRightClickClose = true
-        })
-        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        popup:SetFrameLevel(100)
-
-        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ReminderTextEdit", true, false, true)
-        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
-        DF:ApplyStandardBackdrop(popup.test_string_text_box)
-        DF:ReskinSlider(popup.test_string_text_box.scroll)
-        popup.test_string_text_box:SetFocus()
-        popup.test_string_text_box:SetText(NSI.Reminder or "")
-
-        popup.import_confirm_button = DF:CreateButton(popup, function()
-            local import_string = popup.test_string_text_box:GetText()
-            NSI:ImportFullReminderString(import_string)
-            popup.test_string_text_box:SetText("")
-            popup:Hide()
-        end, 280, 20, "Import")
         popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
         popup.import_confirm_button:SetTemplate(options_button_template)
 
@@ -3111,6 +3121,8 @@ Press 'Enter' to hear the TTS]],
             func = function(self)
                 if not NSUI.reminders_frame:IsShown() then
                     NSUI.reminders_frame:Show()
+                else
+                    NSUI.reminders_frame:Hide()
                 end
             end,
             nocombat = true,

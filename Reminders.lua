@@ -1,5 +1,17 @@
 local _, NSI = ... -- Internal namespace
 
+NSI.EncounterOrder = {
+    [3176] = 1, -- Imperator
+    [3177] = 2, -- Vorasius
+    [3179] = 3, -- Fallen-King
+    [3178] = 4, -- Dragons
+    [3180] = 5, -- Lightblinded Vanguard
+    [3181] = 6, -- Crown of the Cosmos
+    [3306] = 7, -- Chimaerus
+    [3182] = 8, -- Belo'ren
+    [3183] = 9, -- Midnight Falls
+}
+
 local symbols = {
     star = 1,
     circle = 2,
@@ -577,9 +589,19 @@ end
 function NSI:GetAllReminderNames()
     local list = {}
     for k, v in pairs(NSRT.Reminders) do
-        table.insert(list, k)
+        local encID = v:match("EncounterID:(%d+)")
+        if encID then
+            encID = self.EncounterOrder[tonumber(encID)]
+            table.insert(list, {name = k, order = encID})
+        end
     end
-    table.sort(list, function(a, b) return a < b end)
+    table.sort(list, function(a, b) 
+        if a.order == b.order then
+            return a.name < b.name
+        else
+            return a.order < b.order 
+        end
+    end)
     return list
 end
 
