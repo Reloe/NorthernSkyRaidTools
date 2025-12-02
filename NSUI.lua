@@ -2735,6 +2735,18 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             min = 0,
             max = 10,
+        },        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Timer Text",
+            desc = "Hides the Timer Text shown on the Icon",
+            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTimerText"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
         },
         {
             type = "label",
@@ -2748,18 +2760,6 @@ Press 'Enter' to hear the TTS]],
             desc = "Grow Direction",
             get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
             values = function() return build_growdirection_options("IconSettings") end,
-            nocombat = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Hide Timer Text",
-            desc = "Hides the Timer Text shown on the Icon",
-            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings["HideTimerText"] = value
-                NSI:UpdateExistingFrames()
-            end,
             nocombat = true,
         },
         {
