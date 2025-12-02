@@ -37,6 +37,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Reminders = NSRT.Reminders or {}
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
+            self.Reminder = ""
             self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
@@ -112,7 +113,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
 
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
-            self.Reminder = ""
             self.ReminderTimer = {}
             self.PlayedSound = {}
             self.StartedCountdown = {}
@@ -210,6 +210,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
                 self:ProcessReminder()
             end
+            self.TestingReminder = false
             self.EncounterID = ...
             if NSRT.Settings["Debug"] and self.EncounterID == 1024 then self.EncounterID = 3306 end -- change encounterid for debugging
             self.Phase = 1
@@ -253,6 +254,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
             end
             NSI:HideAllReminders()
+            self.TestingReminder = false
             self.Timelines = {}
             self.ReminderTimer = {}
             self.AllGlows = {}          
