@@ -142,7 +142,7 @@ end
 
 -- version check ui
 local component_type = "WA"
-local checkable_components = { "WA", "Addon", "Note" }
+local checkable_components = { "WA", "Addon", "Note", "Reminder"}
 local function build_checkable_components_options()
     local t = {}
     for i = 1, #checkable_components do
@@ -380,7 +380,7 @@ local function BuildVersionCheckUI(parent)
     local addData = function(self, data, url)
         local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
         if self.name_map[data.name] then
-            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and (not data.duplicate) and (not data.ignoreCheck) then
+            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.duplicate) and (not data.ignoreCheck) then
                 table.remove(currentData, self.name_map[data.name])
                 for k, v in pairs(self.name_map) do
                     if v > self.name_map[data.name] then
@@ -410,11 +410,11 @@ local function BuildVersionCheckUI(parent)
         
         local text = component_name_entry:GetText()
         local component_type = component_type_dropdown:GetValue()
-        if text and text ~= ""  and component_type ~= "Note" and not tContains(NSRT.NSUI.AutoComplete[component_type], text) then
+        if text and text ~= ""  and component_type ~= "Note" and component_type ~= "Reminder" and not tContains(NSRT.NSUI.AutoComplete[component_type], text) then
             tinsert(NSRT.NSUI.AutoComplete[component_type], text)
         end
 
-        if not text or text == "" and component_type ~= "Note" then return end
+        if not text or text == "" and component_type ~= "Note" and component_type ~= "Reminder" then return end
         
         local now = GetTime()
         if NSI.LastVersionCheck and NSI.LastVersionCheck > now-2 then return end -- don't let user spam requests
@@ -803,6 +803,116 @@ local function build_spec_options()
             end)
     return t
 end
+local function BuildRemindersEditUI()
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 300, 370, "Reminders Management", "RemindersEditFrame", {
+        DontRightClickClose = true
+    })
+    reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    local function MasterRefresh(self)
+        local data = NSI:GetAllReminderNames()
+        self:SetData(data)
+        self:Refresh()
+    end
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local reminderData = data[index]
+            if reminderData then
+                local line = self:GetLine(i)
+                line.name = reminderData
+                line.nameTextEntry.text = reminderData
+            end
+        end
+    end
+    
+    local Active_Text = DF:CreateLabel(reminders_edit_frame, "Active Reminder", 11)
+    Active_Text:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 15, -30)
+    Active_Text:SetWidth(250)
+    if NSRT.ActiveReminder and NSRT.ActiveReminder ~= "" then
+        Active_Text.text = "Active Reminder: " .. NSRT.ActiveReminder
+    else
+        Active_Text.text = "Active Reminder: None"
+    end
+
+    local function createLineFunc(self, index)
+        local parent = self
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        
+
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-57, line:GetHeight())
+        line.nameTextEntry:SetTemplate(options_dropdown_template)
+        line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
+        line.nameTextEntry:SetScript("OnEnterPressed", function(self)
+            local oldname = line.name
+            if not oldname then return end
+            local newname = self:GetText()
+            if oldname == newname then return end
+            NSRT.Reminders[newname] = NSRT.Reminders[oldname]
+            if NSRT.ActiveReminder == oldname then
+                Active_Text.text = "Active Reminder: " .. newname
+                NSRT.ActiveReminder = newname
+            end
+            NSRT.Reminders[oldname] = nil
+            line.name = newname
+            parent:MasterRefresh()
+        end)
+        
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function()
+            if NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
+                Active_Text.text = "Active Reminder: None"
+            end
+            NSI:RemoveReminder(line.name)
+            self:SetData(NSI:GetAllReminderNames())
+            self:MasterRefresh()
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        -- line.deleteButton:SetFontFace(expressway)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+        
+        line.LoadButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            if name ~= "" then
+                NSI:SetReminder(name)
+                Active_Text.text = "Active Reminder: " .. name
+            end
+        end, 40, 20, "Load")
+        line.LoadButton:SetPoint("RIGHT", line.deleteButton, "RIGHT", -15, 0)
+        line.LoadButton:SetTemplate(options_button_template)
+
+        return line
+    end
+
+    local scrollLines = 15
+    local reminders_edit_scrollbox = DF:CreateScrollBox(reminders_edit_frame, "$parentRemindersEditScrollBox", refresh,
+        {},
+        260, 300, scrollLines, 20, createLineFunc)
+    reminders_edit_frame.scrollbox = reminders_edit_scrollbox
+    reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -50)
+    reminders_edit_scrollbox.MasterRefresh = MasterRefresh
+    DF:ReskinSlider(reminders_edit_scrollbox)
+    reminders_edit_scrollbox:SetScript("OnShow", function(self)
+        self:MasterRefresh()
+    end)
+
+    for i = 1, scrollLines do
+        reminders_edit_scrollbox:CreateLine(createLineFunc)
+    end
+
+    reminders_edit_frame:Hide()
+    return reminders_edit_frame
+end
+
 local function BuildCooldownsEditUI()
     local cooldowns_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Cooldowns Management", "CooldownsEditFrame", {
         DontRightClickClose = true
@@ -981,8 +1091,6 @@ local function BuildCooldownsEditUI()
         line.deleteButton:GetPushedTexture():SetDesaturated(true)
         -- line.deleteButton:SetFontFace(expressway)
         line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
-
-
 
         return line
     end
@@ -1507,10 +1615,11 @@ function NSUI:Init()
         DF:ApplyStandardBackdrop(popup.test_string_text_box)
         DF:ReskinSlider(popup.test_string_text_box.scroll)
         popup.test_string_text_box:SetFocus()
+        popup.test_string_text_box:SetText(NSI.Reminder or "")
 
         popup.import_confirm_button = DF:CreateButton(popup, function()
             local import_string = popup.test_string_text_box:GetText()
-            NSI:ImportReminder(false, import_string, true) -- import string with default name for now and make it the current active reminder
+            NSI:ImportFullReminderString(import_string)
             popup.test_string_text_box:SetText("")
             popup:Hide()
         end, 280, 20, "Import")
@@ -2914,6 +3023,20 @@ Press 'Enter' to hear the TTS]],
             max = 60,
             nocombat = true,
         },
+        
+        {
+            type = "color",
+            name = "Glow-Color",
+            desc = "Color of Raidframe Glows",
+            get = function() return NSRT.ReminderSettings.GlowSettings.colors end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.GlowSettings.colors = {r, g, b, a}
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        },
+
         {
             type = "button",
             name = "Preview",
@@ -2974,7 +3097,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "button",
             name = "Import Reminder",
-            desc = "Import Reminder String and make it the current active one",
+            desc = "Import one or multiple Bosses",
             func = function(self)
                 ImportReminderString()
             end,
@@ -2983,26 +3106,37 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Clear Reminder",
-            desc = "Clear the current active reminder",
+            name = "Show All Reminders",
+            desc = "Shows a list of all Reminders",
             func = function(self)
-                NSI.Reminder = ""
-                NSRT.ActiveReminder = nil
+                if not NSUI.reminders_frame:IsShown() then
+                    NSUI.reminders_frame:Show()
+                end
             end,
             nocombat = true,
             spacement = true
         },
         {
-            type = "color",
-            name = "Glow-Color",
-            desc = "Color of Raidframe Glows",
-            get = function() return NSRT.ReminderSettings.GlowSettings.colors end,
-            set = function(self, r, g, b, a)
-                NSRT.ReminderSettings.GlowSettings.colors = {r, g, b, a}
+            type = "button",
+            name = "Test Current Reminder",
+            desc = "Starts/Stops a test run of the currently active reminder. This requires you to be in a raidgroup.",
+            func = function(self)
+                if NSI.TestingReminder then
+                    NSI.TestingReminder = false
+                    NSI:HideAllReminders()
+                else
+                    local str = NSRT.Reminders[NSRT.ActiveReminder]
+                    if not str then return end
+                    local encID = str:match("EncounterID:(%d+)")
+                    if not encID then return end
+                    NSI.EncounterID = tonumber(encID)
+                    NSI.TestingReminder = true
+                    NSI:ProcessReminder()
+                    NSI:StartReminders(1)
+                end
             end,
-            hasAlpha = true,
-            nocombat = true
-
+            nocombat = true,
+            spacement = true
         },
     }
     local assignments_options1_table = {        
@@ -3122,6 +3256,7 @@ Press 'Enter' to hear the TTS]],
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame = BuildNicknameEditUI()
     NSUI.cooldowns_frame = BuildCooldownsEditUI()
+    NSUI.reminders_frame = BuildRemindersEditUI()
 
     -- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
