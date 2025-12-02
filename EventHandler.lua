@@ -204,7 +204,78 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             macrocount = macrocount+1
             CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
         end
-    elseif e == "START_PLAYER_COUNTDOWN" and (wowevent or NSRT.Settings["Debug"]) then -- do basically the same thing as ready check in case one of them is skipped
+        
+    elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+        if self:IsMidnight() then             
+            if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
+                self:ProcessReminder()
+            end
+            self.EncounterID = ...
+            if NSRT.Settings["Debug"] and self.EncounterID == 1024 then self.EncounterID = 3306 end -- change encounterid for debugging
+            self.Phase = 1
+            self.PhaseSwapTime = GetTime()
+            self.ReminderText = self.ReminderText or {}
+            self.ReminderIcon = self.ReminderIcon or {}
+            self.ReminderBar = self.ReminderBar or {}
+            self.ReminderTimer = self.ReminderTimer or {}
+            self.RaidFrames = self.RaidFrames or {}
+            self.AllGlows = self.AllGlows or {}
+            self.PlayedSound = {}
+            self.StartedCountdown = {}
+            self.Timelines = {}
+            self.TimeLinesDebug = {}
+            self:AddAssignments(self.EncounterID)
+            self:StartReminders(self.Phase)
+            return 
+        end
+        self.specs = {}
+        NSAPI.HasNSRT = {}
+        for u in self:IterateGroupMembers() do
+            if UnitIsVisible(u) then
+                NSAPI.HasNSRT[u] = false
+                self.specs[u] = WeakAuras and WeakAuras.SpecForUnit(u) or 0
+            end
+        end
+        -- broadcast spec info
+        local specid = GetSpecializationInfo(GetSpecialization())
+        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
+        C_Timer.After(1, function()
+            WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
+        end)
+        self.MacroPresses = {}
+        self.Externals:Init()
+    elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
+        local _, encounterName = ...
+        if self:IsMidnight() then
+            if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
+                DevTool:AddData(self.TimeLinesDebug)
+                NSRT.TimeLinesDebug = NSRT.TimeLinesDebug or {}
+                table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
+            end
+            NSI:HideAllReminders()
+            self.Timelines = {}
+            self.ReminderTimer = {}
+            self.AllGlows = {}          
+            self.ProcessedReminder = nil
+        end
+        C_Timer.After(1, function()
+            if self:Restricted() then return end
+            if self.SyncNickNamesStore then
+                self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
+                self.SyncNickNamesStore = nil
+            end
+            if self.WAString and self.WAString.unit and self.WAString.string then
+                self:EventHandler("NSI_WA_SYNC", false, true, self.WAString.unit, self.WAString.string)
+            end
+        end)
+        if self:IsMidnight() then return end
+        if NSRT.Settings["DebugLogs"] then
+            if self.MacroPresses and next(self.MacroPresses) then self:Print("Macro Data for Encounter: "..encounterName, self.MacroPresses) end
+            if self.AssignedExternals and next(self.AssignedExternals) then self:Print("Assigned Externals for Encounter: "..encounterName, self.AssignedExternals) end
+            self.AssignedExternals = {}
+            self.MacroPresses = {}
+        end      
+    elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self:Restricted() or not self:DifficultyCheck(14) then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self:StoreFrames(true)
@@ -214,7 +285,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
                 self.Assignments = NSRT.AssignmentSettings
         end
-    elseif e == "READY_CHECK" and (wowevent or NSRT.Settings["Debug"]) then
+    elseif e == "READY_CHECK" and wowevent then
         if self:Restricted() then return end
         self.LastBroadcast = GetTime()
         if self:DifficultyCheck(14) then -- only care about note comparison in normal, heroic&mythic raid
@@ -269,7 +340,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.Settings["RebuffCheck"] then
             self:BuffCheck()
         end        
-    elseif e == "GROUP_FORMED" and (wowevent or NSRT.Settings["Debug"]) then 
+    elseif e == "GROUP_FORMED" and wowevent then 
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
 
@@ -377,76 +448,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         if self:Restricted() or not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
-    elseif e == "ENCOUNTER_START" and ((wowevent and self:DifficultyCheck(14)) or NSRT.Settings["Debug"]) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        if self:IsMidnight() or NSRT.Settings["Debug"] then 
-            if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
-                self:ProcessReminder()
-            end
-            self.EncounterID = ...
-            self.Phase = 1
-            self.PhaseSwapTime = GetTime()
-            self.ReminderText = self.ReminderText or {}
-            self.ReminderIcon = self.ReminderIcon or {}
-            self.ReminderBar = self.ReminderBar or {}
-            self.ReminderTimer = self.ReminderTimer or {}
-            self.RaidFrames = self.RaidFrames or {}
-            self.AllGlows = self.AllGlows or {}
-            self.PlayedSound = {}
-            self.StartedCountdown = {}
-            self.Timelines = {}
-            self.TimeLinesDebug = {}
-            self:AddAssignments(self.EncounterID)
-            self:StartReminders(self.Phase)
-            return 
-        end
-        self.specs = {}
-        NSAPI.HasNSRT = {}
-        for u in self:IterateGroupMembers() do
-            if UnitIsVisible(u) then
-                NSAPI.HasNSRT[u] = false
-                self.specs[u] = WeakAuras and WeakAuras.SpecForUnit(u) or 0
-            end
-        end
-        -- broadcast spec info
-        local specid = GetSpecializationInfo(GetSpecialization())
-        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
-        C_Timer.After(1, function()
-            WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
-        end)
-        self.MacroPresses = {}
-        self.Externals:Init()
-    elseif e == "ENCOUNTER_END" and ((wowevent and self:DifficultyCheck(14)) or NSRT.Settings["Debug"]) then
-        local _, encounterName = ...
-        if self:IsMidnight() then
-            if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
-                DevTool:AddData(self.TimeLinesDebug)
-                NSRT.TimeLinesDebug = NSRT.TimeLinesDebug or {}
-                table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
-            end
-            NSI:HideAllReminders()
-            self.Timelines = {}
-            self.ReminderTimer = {}
-            self.AllGlows = {}          
-            self.ProcessedReminder = nil
-        end
-        C_Timer.After(1, function()
-            if self:Restricted() then return end
-            if self.SyncNickNamesStore then
-                self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
-                self.SyncNickNamesStore = nil
-            end
-            if self.WAString and self.WAString.unit and self.WAString.string then
-                self:EventHandler("NSI_WA_SYNC", false, true, self.WAString.unit, self.WAString.string)
-            end
-        end)
-        if self:IsMidnight() then return end
-        if NSRT.Settings["DebugLogs"] then
-            if self.MacroPresses and next(self.MacroPresses) then self:Print("Macro Data for Encounter: "..encounterName, self.MacroPresses) end
-            if self.AssignedExternals and next(self.AssignedExternals) then self:Print("Assigned Externals for Encounter: "..encounterName, self.AssignedExternals) end
-            self.AssignedExternals = {}
-            self.MacroPresses = {}
-        end      
-    elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and (wowevent or NSRT.Settings["Debug"]) then  
+    elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
         if self:Restricted() or NSRT.Settings["Debug"] then self:DetectPhaseChange(e) end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
