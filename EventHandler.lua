@@ -514,8 +514,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not unitID then return end
             self.LastPress = self.LastPress or {}
             local now = GetTime()
-            if self.LastPress[unitID] and self.LastPress[unitID] < now+5 then return end
-            self.LastPress[unitID] = now
+            if self.LastPress[UnitName(unitID)] and self.LastPress[UnitName(unitID)] > now-5 then return end
+            self.LastPress[UnitName(unitID)] = now
             -- do assignement stuff
             if not NSRT.Settings["DebugLogs"] then return end        
             print(unitID, "pressed their Macro")    
