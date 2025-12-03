@@ -284,7 +284,6 @@ function NSI:CreateText(info)
         end
         if not self.ReminderText[i] then      
             self.ReminderText[i] = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
-            self.ReminderText[i]:SetSize(1, 1)
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
             self.ReminderText[i]:SetPoint("BOTTOMLEFT", "NSUITextMover", "BOTTOMLEFT", 0, 0 + offset)
             self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUITextMover", "TOPRIGHT", 0, 0 + offset)
