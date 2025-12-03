@@ -3090,6 +3090,14 @@ Press 'Enter' to hear the TTS]],
             name = "Preview",
             desc = "Preview Reminders",
             func = function(self)
+                if NSI.IsInPreview then
+                    NSI.IsInPreview = false
+                    NSI:ToggleMoveFrames(false)
+                    NSI:HideAllReminders()
+                    return
+                end
+                NSI.IsInPreview = true
+                NSI:ToggleMoveFrames(true)
                 NSI:UpdateExistingFrames()
                 NSI.AllGlows = NSI.AllGlows or {}
                 NSI:StoreFrames()
