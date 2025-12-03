@@ -116,7 +116,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.PlayedSound = {}
             self.StartedCountdown = {}
-            self:InitNickNames()
+            self:InitNickNames()            
+            self:CreateMoveFrames()
         end
     elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
         C_AddOns.LoadAddOn("WeakAuras")

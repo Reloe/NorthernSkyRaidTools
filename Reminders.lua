@@ -226,11 +226,11 @@ function NSI:ArrangeStates(Type)
         local offset = s.GrowDirection == "Up" and (i-1) * diff or -(i-1) * diff
         v.Frame:ClearAllPoints()
         if Type == "Texts" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUITextMover", "BOTTOMLEFT", 0, 0 + offset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUITextMover", "TOPRIGHT", 0, 0 + offset)
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
         elseif Type == "Icons" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIIconMover", "BOTTOMLEFT", 0, 0 + offset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIIconMover", "TOPRIGHT", 0, 0 + offset)
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0, 0 + offset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0, 0 + offset)
         elseif Type == "Bars" then
             v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
             v.Frame:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
@@ -285,8 +285,8 @@ function NSI:CreateText(info)
         if not self.ReminderText[i] then      
             self.ReminderText[i] = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
-            self.ReminderText[i]:SetPoint("BOTTOMLEFT", "NSUITextMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUITextMover", "TOPRIGHT", 0, 0 + offset)
+            self.ReminderText[i]:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
+            self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
             self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             self.ReminderText[i].Text:SetPoint("LEFT", self.ReminderText[i], "LEFT", 0, 0)
             self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
@@ -311,8 +311,8 @@ function NSI:CreateIcon(info)
         if not self.ReminderIcon[i] then
             self.ReminderIcon[i] = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIIconMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIIconMover", "TOPRIGHT", 0, 0 + offset)
+            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0, 0 + offset)
+            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0, 0 + offset)
             self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
             self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
             self.ReminderIcon[i].Border = CreateFrame("Frame", nil, self.ReminderIcon[i], "BackdropTemplate")
@@ -752,46 +752,40 @@ function NSI:StoreFrames(init)
     end
 end
 
-function NSI:ToggleMoveFrames(Show)
-    if Show then
-        if not self.IconMover then
-            local s = NSRT.ReminderSettings.IconSettings
-            self.IconMover = CreateFrame("Frame", 'NSUIIconMover', UIParent, "BackdropTemplate")
-            self:MoveFrameInit(self.IconMover, "IconSettings")
-            self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
-        else
-            self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
-        end
-        if not self.BarMover then
-            local s = NSRT.ReminderSettings.BarSettings
-            self.BarMover = CreateFrame("Frame", 'NSUIReminderBarMover', UIParent, "BackdropTemplate")
-            self:MoveFrameInit(self.BarMover, "BarSettings")
-            self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
-        else
-            self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
-        end
-        if not self.TextMover then
-            local s = NSRT.ReminderSettings.TextSettings
-            self.TextMover = CreateFrame("Frame", 'NSUITextMover', UIParent, "BackdropTemplate")
-            self.TextMover.Text = self.TextMover:CreateFontString('TextMoverText', "OVERLAY", "GameFontNormal")
-            self.TextMover.Text:SetPoint("LEFT", self.TextMover, "LEFT", 0, 0)
-            self.TextMover.Text:SetTextColor(1, 1, 1, 0)
-            self:MoveFrameInit(self.TextMover, "TextSettings", true)   
-            self:MoveFrameSettings(self.TextMover, s, true)   
-        else
-            local s = NSRT.ReminderSettings.TextSettings 
-            self.TextMover.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")      
-            self:MoveFrameSettings(self.TextMover, s, true)
-        end
-
-        self.IconMover:Show()
-        self.BarMover:Show()
-        self.TextMover:Show()
+function NSI:CreateMoveFrames(Show)
+    if not self.IconMover then
+        self.IconMover = CreateFrame("Frame", 'NSUIReminderIconMover', UIParent, "BackdropTemplate")
+        self:MoveFrameInit(self.IconMover, "IconSettings")
+        self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
     else
-        self.IconMover:Hide()
-        self.BarMover:Hide()
-        self.TextMover:Hide()
+        self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
     end
+    if not self.BarMover then
+        self.BarMover = CreateFrame("Frame", 'NSUIReminderBarMover', UIParent, "BackdropTemplate")
+        self:MoveFrameInit(self.BarMover, "BarSettings")
+        self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
+    else
+        self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
+    end
+     if not self.TextMover then
+        self.TextMover = CreateFrame("Frame", 'NSUIReminderTextMover', UIParent, "BackdropTemplate")
+        self.TextMover.Text = self.TextMover:CreateFontString('TextMoverText', "OVERLAY", "GameFontNormal")
+        self.TextMover.Text:SetPoint("LEFT", self.TextMover, "LEFT", 0, 0)
+        self.TextMover.Text:SetTextColor(1, 1, 1, 0)
+        self:MoveFrameInit(self.TextMover, "TextSettings", true)   
+        self:MoveFrameSettings(self.TextMover, NSRT.ReminderSettings.TextSettings, true)   
+    else
+        local s = NSRT.ReminderSettings.TextSettings 
+        self.TextMover.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")      
+        self:MoveFrameSettings(self.TextMover, s, true)
+    end
+
+    self.IconMover:Show()
+    self.BarMover:Show()
+    self.TextMover:Show()
+    self.IconMover.Border:Hide()
+    self.BarMover.Border:Hide()
+    self.TextMover.Border:Hide()
 end        
 
 
@@ -810,7 +804,7 @@ function NSI:MoveFrameSettings(F, s, text)
 end
 
 function NSI:MoveFrameInit(F, s, text)
-    if F then                
+    if F then             
         F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate") 
         F.Border:SetAllPoints(F)
         F.Border:SetBackdrop({
@@ -818,11 +812,8 @@ function NSI:MoveFrameInit(F, s, text)
                 edgeSize = 2
             })
         F.Border:SetBackdropBorderColor(1, 1, 1, 1)  
-        F:SetMovable(true)
+        F.Border:Hide()
         F:SetFrameStrata("DIALOG")
-        F:EnableMouse(true)
-        F:RegisterForDrag("LeftButton")
-        F:SetClampedToScreen(true)
         F:SetScript("OnDragStart", function(self)
             self:StartMoving()
         end)
@@ -838,6 +829,20 @@ function NSI:MoveFrameInit(F, s, text)
             self:UpdateExistingFrames() 
         end)
     end
+end
+
+function NSI:ToggleMoveFrames(F, Unlock)
+    if Unlock then
+        F:SetMovable(true)
+        F:EnableMouse(true)
+        F:RegisterForDrag("LeftButton")
+        F:SetClampedToScreen(true)
+        F.Border:Show()
+    else
+        F.Border:Hide()
+        F:SetMovable(false)
+        F:EnableMouse(false)
+    end    
 end
 
 function NSAPI:DebugNextPhase(num)

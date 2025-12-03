@@ -3088,16 +3088,20 @@ Press 'Enter' to hear the TTS]],
         {
             type = "button",
             name = "Preview",
-            desc = "Preview Reminders",
+            desc = "Preview Reminders and unlock their anchors to move them around",
             func = function(self)
                 if NSI.IsInPreview then
                     NSI.IsInPreview = false
-                    NSI:ToggleMoveFrames(false)
                     NSI:HideAllReminders()
+                    for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                        NSI:ToggleMoveFrames(NSI[v], false)
+                    end
                     return
                 end
                 NSI.IsInPreview = true
-                NSI:ToggleMoveFrames(true)
+                for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                    NSI:ToggleMoveFrames(NSI[v], true)
+                end
                 NSI:UpdateExistingFrames()
                 NSI.AllGlows = NSI.AllGlows or {}
                 NSI:StoreFrames()
