@@ -149,21 +149,21 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     local parent = self.ReminderText or {}
     for i=1, #parent do
         local F = parent[i]
-        if F then
+        if F and F:IsShown() then
             local s = NSRT.ReminderSettings.TextSettings
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
-            F:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + offset)      
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
     end
+    self:ArrangeStates("Texts")
+    self:MoveFrameSettings(self.TextMover, NSRT.ReminderSettings.TextSettings, true) 
     parent = self.ReminderIcon or {}
     for i=1, #parent do
         local F = parent[i]
-        if F then
+        if F and F:IsShown() then
             local s = NSRT.ReminderSettings.IconSettings
             F:SetSize(s.Width, s.Height)
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
             F.Icon:SetAllPoints(F)
             F.Border:SetAllPoints(F)
             F.Text:SetPoint("LEFT", F, "RIGHT", s.xTextOffset, s.yTextOffset)
@@ -172,10 +172,12 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
     end
+    self:ArrangeStates("Icons")
+    self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings) 
     parent = self.UnitIcon or {}
     for i=1, #parent do
         local F = parent[i]
-        if F then
+        if F and F:IsShown() then
             local s = NSRT.ReminderSettings.UnitIconSettings
             F:SetSize(s.Width, s.Height) -- not setting points in this one because this is repeated every time the frame is shown as it needs a new frame to anchor to anyway
         end
@@ -183,13 +185,12 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     parent = self.ReminderBar or {}
     for i=1, #parent do
         local F = parent[i]
-        if F then
+        if F and F:IsShown() then
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(s.colors))
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
             F.Border:SetAllPoints(F)
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
@@ -199,6 +200,8 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
     end
+    self:ArrangeStates("Bars")
+    self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings) 
 end
 
 function NSI:ArrangeStates(Type)
@@ -272,9 +275,9 @@ function NSI:CreateText(info)
             self.ReminderText[i] = CreateFrame("Frame", nil, UIParent)
             self.ReminderText[i]:SetSize(1, 1)
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
-            self.ReminderText[i]:SetPoint("LEFT", UIParent, "CENTER", s.xOffset, s.yOffset + offset)      
+            self.ReminderText[i]:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)      
             self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderText[i].Text:SetPoint("LEFT", self.ReminderText[i], "CENTER", 0, 0)
+            self.ReminderText[i].Text:SetPoint("LEFT", self.ReminderText[i], "LEFT", 0, 0)
             self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderText[i].Text:SetShadowOffset(0, 0)
@@ -735,6 +738,94 @@ function NSI:StoreFrames(init)
         if F then
             self.RaidFrames[unit] = F
         end
+    end
+end
+
+function NSI:ToggleMoveFrames(Show)
+    if Show then
+        if not self.IconMover then
+            local s = NSRT.ReminderSettings.IconSettings
+            self.IconMover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self:MoveFrameInit(self.IconMover, "IconSettings")
+            self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
+        else
+            self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
+        end
+        if not self.BarMover then
+            local s = NSRT.ReminderSettings.BarSettings
+            self.BarMover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self:MoveFrameInit(self.BarMover, "BarSettings")
+            self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
+        else
+            self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
+        end
+        if not self.TextMover then
+            local s = NSRT.ReminderSettings.TextSettings
+            self.TextMover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self.TextMover.Text = self.TextMover:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.TextMover.Text:SetPoint("LEFT", self.TextMover, "LEFT", 0, 0)
+            self.TextMover.Text:SetTextColor(1, 1, 1, 0)
+            self:MoveFrameInit(self.TextMover, "TextSettings", true)   
+            self:MoveFrameSettings(self.TextMover, s, true)   
+        else
+            local s = NSRT.ReminderSettings.TextSettings 
+            self.TextMover.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")      
+            self:MoveFrameSettings(self.TextMover, s, true)
+        end
+
+        self.IconMover:Show()
+        self.BarMover:Show()
+        self.TextMover:Show()
+    else
+        self.IconMover:Hide()
+        self.BarMover:Hide()
+        self.TextMover:Hide()
+    end
+end        
+
+
+
+function NSI:MoveFrameSettings(F, s, text)    
+    if text then        
+        F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+        F.Text:SetText("Personals - (10)")
+        s.Width, s.Height = F.Text:GetStringWidth(), F.Text:GetStringHeight()   
+    end
+    F:SetSize(s.Width, s.Height)
+    F:ClearAllPoints()
+    F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset)
+    F.Border:ClearAllPoints()
+    F.Border:SetAllPoints(F)
+end
+
+function NSI:MoveFrameInit(F, s, text)
+    if F then                
+        F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate") 
+        F.Border:SetAllPoints(F)
+        F.Border:SetBackdrop({
+                edgeFile = "Interface\\Buttons\\WHITE8x8",
+                edgeSize = 2
+            })
+        F.Border:SetBackdropBorderColor(1, 1, 1, 1)  
+        F:SetMovable(true)
+        F:SetFrameStrata("DIALOG")
+        F:EnableMouse(true)
+        F:RegisterForDrag("LeftButton")
+        F:SetClampedToScreen(true)
+        F:SetScript("OnDragStart", function(self)
+            self:StartMoving()
+        end)
+        F:SetScript("OnDragStop", function(Frame)
+            Frame:StopMovingOrSizing()       
+            local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
+            xOffset = Round(xOffset)
+            yOffset = Round(yOffset)
+            NSRT.ReminderSettings[s].xOffset = xOffset     
+            NSRT.ReminderSettings[s].yOffset = yOffset  
+            NSRT.ReminderSettings[s].Anchor = Anchor    
+            NSRT.ReminderSettings[s].relativeTo = relativeTo    
+            self:UpdateExistingFrames() 
+        end)
     end
 end
 
