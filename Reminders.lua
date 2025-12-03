@@ -225,7 +225,18 @@ function NSI:ArrangeStates(Type)
         local diff = Type == "Texts" and s.FontSize or s.Height
         local offset = s.GrowDirection == "Up" and (i-1) * diff or -(i-1) * diff
         v.Frame:ClearAllPoints()
-        v.Frame:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)
+        if Type == "Texts" then
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUITextMover", "BOTTOMLEFT", 0, 0 + offset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUITextMover", "TOPRIGHT", 0, 0 + offset)
+        elseif Type == "Icons" then
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIIconMover", "BOTTOMLEFT", 0, 0 + offset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIIconMover", "TOPRIGHT", 0, 0 + offset)
+        elseif Type == "Bars" then
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
+        else
+            print("RELOE PLS FIX (Reminder anchoring issue @ NSI:ArrangeStates)")
+        end
     end
 end
 
@@ -272,10 +283,11 @@ function NSI:CreateText(info)
             return self.ReminderText[i] 
         end
         if not self.ReminderText[i] then      
-            self.ReminderText[i] = CreateFrame("Frame", nil, UIParent)
+            self.ReminderText[i] = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
             self.ReminderText[i]:SetSize(1, 1)
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
-            self.ReminderText[i]:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset + offset)      
+            self.ReminderText[i]:SetPoint("BOTTOMLEFT", "NSUITextMover", "BOTTOMLEFT", 0, 0 + offset)
+            self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUITextMover", "TOPRIGHT", 0, 0 + offset)
             self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             self.ReminderText[i].Text:SetPoint("LEFT", self.ReminderText[i], "LEFT", 0, 0)
             self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
@@ -298,10 +310,10 @@ function NSI:CreateIcon(info)
             return self.ReminderIcon[i] 
         end
         if not self.ReminderIcon[i] then
-            self.ReminderIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.ReminderIcon[i]:SetSize(s.Width, s.Height)
+            self.ReminderIcon[i] = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            self.ReminderIcon[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + offset)
+            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIIconMover", "BOTTOMLEFT", 0, 0 + offset)
+            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIIconMover", "TOPRIGHT", 0, 0 + offset)
             self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
             self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
             self.ReminderIcon[i].Border = CreateFrame("Frame", nil, self.ReminderIcon[i], "BackdropTemplate")
@@ -382,17 +394,17 @@ function NSI:CreateBar(info)
             return self.ReminderBar[i] 
         end
         if not self.ReminderBar[i] then            
-            self.ReminderBar[i] = CreateFrame("StatusBar", nil, UIParent, "BackdropTemplate")
+            self.ReminderBar[i] = CreateFrame("StatusBar", 'NSUIReminderBar' .. i, UIParent, "BackdropTemplate")
             self.ReminderBar[i]:SetBackdrop({ 
             bgFile = "Interface\\Buttons\\WHITE8x8", 
             tileSize = 0,
-            }) 
-            self.ReminderBar[i]:SetSize(s.Width, s.Height)
+            })
             self.ReminderBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             self.ReminderBar[i]:SetStatusBarColor(unpack(s.colors))
             self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.5)
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            self.ReminderBar[i]:SetPoint("CENTER", UIParent, "CENTER", s.xOffset, s.yOffset + offset)
+            self.ReminderBar[i]:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
+            self.ReminderBar[i]:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
             self.ReminderBar[i].Border = CreateFrame("Frame", nil, self.ReminderBar[i], "BackdropTemplate")
             self.ReminderBar[i].Border:SetAllPoints(self.ReminderBar[i])
             self.ReminderBar[i].Border:SetBackdrop({
@@ -745,7 +757,7 @@ function NSI:ToggleMoveFrames(Show)
     if Show then
         if not self.IconMover then
             local s = NSRT.ReminderSettings.IconSettings
-            self.IconMover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self.IconMover = CreateFrame("Frame", 'NSUIIconMover', UIParent, "BackdropTemplate")
             self:MoveFrameInit(self.IconMover, "IconSettings")
             self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
         else
@@ -753,7 +765,7 @@ function NSI:ToggleMoveFrames(Show)
         end
         if not self.BarMover then
             local s = NSRT.ReminderSettings.BarSettings
-            self.BarMover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            self.BarMover = CreateFrame("Frame", 'NSUIReminderBarMover', UIParent, "BackdropTemplate")
             self:MoveFrameInit(self.BarMover, "BarSettings")
             self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings)
         else
@@ -761,8 +773,8 @@ function NSI:ToggleMoveFrames(Show)
         end
         if not self.TextMover then
             local s = NSRT.ReminderSettings.TextSettings
-            self.TextMover = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.TextMover.Text = self.TextMover:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            self.TextMover = CreateFrame("Frame", 'NSUITextMover', UIParent, "BackdropTemplate")
+            self.TextMover.Text = self.TextMover:CreateFontString('TextMoverText', "OVERLAY", "GameFontNormal")
             self.TextMover.Text:SetPoint("LEFT", self.TextMover, "LEFT", 0, 0)
             self.TextMover.Text:SetTextColor(1, 1, 1, 0)
             self:MoveFrameInit(self.TextMover, "TextSettings", true)   
