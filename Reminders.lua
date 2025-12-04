@@ -568,6 +568,8 @@ function NSI:StartReminders(phase)
 end
 
 function NSI:HideAllReminders()
+    self.PlayedSound = {}
+    self.StartedCountdown = {}
     if self.ReminderTimer then
         for i, v in ipairs(self.ReminderTimer) do
             v:Cancel()
