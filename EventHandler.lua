@@ -207,13 +207,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        if self:IsMidnight() then             
+        if self:IsMidnight() then    
             if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
                 self:ProcessReminder()
             end
             self.TestingReminder = false
             self.EncounterID = ...
-            if NSRT.Settings["Debug"] and self.EncounterID == 1024 then self.EncounterID = 3306 end -- change encounterid for debugging
+            if NSRT.Settings["Debug"] and (self.EncounterID == 1024 or self.EncounterID == 3463) then self.EncounterID = 3306 end -- change encounterid for debugging
             self.Phase = 1
             self.PhaseSwapTime = GetTime()
             self.ReminderText = self.ReminderText or {}
@@ -286,7 +286,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
             self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
-                self.Assignments = NSRT.AssignmentSettings
+            self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
         if self:Restricted() then return end
