@@ -18,6 +18,8 @@ if NSI:IsMidnight() then
     f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
     f:RegisterEvent("MINIMAP_PING")
     f:RegisterEvent("START_PLAYER_COUNTDOWN")
+    f:RegisterEvent("ENCOUNTER_WARNING")
+    f:RegisterEvent("RAID_BOSS_WHISPER")
 end
 
 f:SetScript("OnEvent", function(self, e, ...)
@@ -39,6 +41,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
             self.Reminder = ""
             self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+            NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
@@ -93,7 +96,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["MRTNoteComparison"] = NSRT.Settings["MRTNoteComparison"] or false
             if NSRT.Settings["TTS"] == nil then NSRT.Settings["TTS"] = true end
             NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
-            NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 2
+            NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 1
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
             NSRT.Settings["AutoUpdateWA"] = NSRT.Settings["AutoUpdateWA"] or false
             NSRT.Settings["AutoUpdateRaidWA"] = NSRT.Settings["AutoUpdateRaidWA"] or false
@@ -212,8 +215,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:ProcessReminder()
             end
             self.TestingReminder = false
+            self.IsInPreview = false
+            for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                self:ToggleMoveFrames(self[v], false)
+            end
             self.EncounterID = ...
-            if NSRT.Settings["Debug"] and (self.EncounterID == 1024 or self.EncounterID == 3463) then self.EncounterID = 3306 end -- change encounterid for debugging
             self.Phase = 1
             self.PhaseSwapTime = GetTime()
             self.ReminderText = self.ReminderText or {}
@@ -226,7 +232,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.StartedCountdown = {}
             self.Timelines = {}
             self.TimeLinesDebug = {}
-            self:AddAssignments(self.EncounterID)
+            self.AddAssignments[self.EncounterID](self)
+            self.EncounterAlertStart[self.EncounterID](self)
             self:StartReminders(self.Phase)
             return 
         end
@@ -247,7 +254,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.MacroPresses = {}
         self.Externals:Init()
     elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
-        local _, encounterName = ...
+        local encID, encounterName = ...
         if self:IsMidnight() then
             if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
                 DevTool:AddData(self.TimeLinesDebug)
@@ -255,11 +262,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
             end
             NSI:HideAllReminders()
+            self.EncounterID = nil
             self.TestingReminder = false
             self.Timelines = {}
             self.ReminderTimer = {}
             self.AllGlows = {}          
             self.ProcessedReminder = nil
+            self.EncounterAlertStop[encID](self)
         end
         C_Timer.After(1, function()
             if self:Restricted() then return end
@@ -453,7 +462,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
-        if self:Restricted() or NSRT.Settings["Debug"] then self:DetectPhaseChange(e) end
+        if self:Restricted() or NSRT.Settings["Debug"] then self.DetectPhaseChange[self.EncounterID](self, e) end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
@@ -525,5 +534,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
             table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(now-time)})
         end 
+    elseif e == "ENCOUNTER_WARNING" and wowevent then
+        local info = ...
+        self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info)
+    elseif e == "RAID_BOSS_WHISPER" and wowevent then
+        local text, name, dur = ...
+        if not self:DifficultyCheck(14) then return end
+        self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur)
     end
 end
