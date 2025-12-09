@@ -16,7 +16,8 @@ local TABS_LIST = {
     { name = "WeakAuras", text = "WeakAuras" },
     { name = "SetupManager", text = "Setup Manager"},
     { name = "Reminders", text = "Reminders"},
-    { name = "Assignments", text = "Assignments"}
+    { name = "Assignments", text = "Assignments"},
+    { name = "EncounterAlerts", text = "Encounter Alerts"}
 }
 local authorsString = "By Reloe & Rav"
 
@@ -859,9 +860,9 @@ local function BuildRemindersEditUI()
     Active_Text:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 50)
     Active_Text:SetWidth(380)
     if NSRT.ActiveReminder and NSRT.ActiveReminder ~= "" then
-        Active_Text.text = "Active Reminder: " .. NSRT.ActiveReminder
+        Active_Text.text = "Active Reminder: |cFFFFFFFF" .. NSRT.ActiveReminder
     else
-        Active_Text.text = "Active Reminder: None"
+        Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
     end
 
     -- Import Button
@@ -876,7 +877,7 @@ local function BuildRemindersEditUI()
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
-        Active_Text.text = "Active Reminder: None"
+        Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 120, 24, "Clear Reminder"
     )
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
@@ -921,7 +922,7 @@ local function BuildRemindersEditUI()
             if oldname == newname then return end
             NSRT.Reminders[newname] = NSRT.Reminders[oldname]
             if NSRT.ActiveReminder == oldname then
-                Active_Text.text = "Active Reminder: " .. newname
+                Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActiveReminder = newname
             end
             NSRT.Reminders[oldname] = nil
@@ -932,7 +933,7 @@ local function BuildRemindersEditUI()
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
             if NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
-                Active_Text.text = "Active Reminder: None"
+                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
             end
             NSI:RemoveReminder(line.name)
             self:SetData(NSI:GetAllReminderNames())
@@ -951,7 +952,7 @@ local function BuildRemindersEditUI()
             local name = line.nameTextEntry:GetText()
             if name ~= "" then
                 NSI:SetReminder(name)
-                Active_Text.text = "Active Reminder: " .. name
+                Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
             end
         end, 40, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -1283,6 +1284,7 @@ function NSUI:Init()
     local setupmanager_tab = tabContainer:GetTabFrameByName("SetupManager")
     local reminder_tab = tabContainer:GetTabFrameByName("Reminders")
     local assignments_tab = tabContainer:GetTabFrameByName("Assignments")
+    local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
@@ -3129,6 +3131,7 @@ Press 'Enter' to hear the TTS]],
                 NSI:DisplayReminder(info2)
                 local info3 = {
                     text = "Give Ironbark", 
+                    IconOverwrite = true,
                     spellID = 102342,
                     phase = 1, 
                     id = 3, 
@@ -3141,6 +3144,7 @@ Press 'Enter' to hear the TTS]],
                 NSI:DisplayReminder(info3)
                 local info4 = {
                     text = "Use Fort Brew", 
+                    IconOverwrite = true,
                     spellID = 115203,
                     phase = 1, 
                     id = 4, 
@@ -3150,6 +3154,31 @@ Press 'Enter' to hear the TTS]],
                     dur = NSRT.ReminderSettings.SpellDuration,
                 }
                 NSI:DisplayReminder(info4)
+                local info5 = {
+                    text = "Breath", 
+                    BarOverwrite = true,
+                    spellID = 1256855,
+                    phase = 1, 
+                    id = 5, 
+                    TTS = false,
+                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer, 
+                    countdown = false,
+                    dur = NSRT.ReminderSettings.SpellDuration,
+                    glowunit = {"player"},
+                }
+                NSI:DisplayReminder(info5)
+                local info6 = {
+                    text = "Dodge", 
+                    BarOverwrite = true,
+                    spellID = 193171,
+                    phase = 1, 
+                    id = 6, 
+                    TTS = false,
+                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer, 
+                    countdown = false,
+                    dur = NSRT.ReminderSettings.SpellDuration,
+                }
+                NSI:DisplayReminder(info6)
             end,
             nocombat = true,
             spacement = true
@@ -3224,8 +3253,117 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true,
         },
+    }
 
-
+    local encounteralerts_options1_table = {        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Imperator Averzian",
+            desc = "Enables Alerts for Imperator Averzian.",
+            get = function() return NSRT.EncounterAlerts[3176] and NSRT.EncounterAlerts[3176].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3176] = NSRT.EncounterAlerts[3176] or {}
+                NSRT.EncounterAlerts[3176].enabled = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Vorasius",
+            desc = "Enables Alerts for Vorasius.",
+            get = function() return NSRT.EncounterAlerts[3177] and NSRT.EncounterAlerts[3177].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3177] = NSRT.EncounterAlerts[3177] or {}
+                NSRT.EncounterAlerts[3177].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Fallen King Salhadaar",
+            desc = "Enables Alerts for Fallen King Salhadaar.",
+            get = function() return NSRT.EncounterAlerts[3179] and NSRT.EncounterAlerts[3179].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3179] = NSRT.EncounterAlerts[3179] or {}
+                NSRT.EncounterAlerts[3179].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Vaelgor & Ezzorak",
+            desc = "Enables Alerts for Vaelgor & Ezzorak.",
+            get = function() return NSRT.EncounterAlerts[3178] and NSRT.EncounterAlerts[3178].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3178] = NSRT.EncounterAlerts[3178] or {}
+                NSRT.EncounterAlerts[3178].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Lightblinded Vanguard",
+            desc = "Enables Alerts for Lightblinded Vanguard.",
+            get = function() return NSRT.EncounterAlerts[3180] and NSRT.EncounterAlerts[3180].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3180] = NSRT.EncounterAlerts[3180] or {}
+                NSRT.EncounterAlerts[3180].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Crown of the Cosmos",
+            desc = "Enables Alerts for Crown of the Cosmos.",
+            get = function() return NSRT.EncounterAlerts[3181] and NSRT.EncounterAlerts[3181].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3181] = NSRT.EncounterAlerts[3181] or {}
+                NSRT.EncounterAlerts[3181].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Chimaerus",
+            desc = "Enables Alerts for Chimaerus.",
+            get = function() return NSRT.EncounterAlerts[3306] and NSRT.EncounterAlerts[3306].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3306] = NSRT.EncounterAlerts[3306] or {}
+                NSRT.EncounterAlerts[3306].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Beloren",
+            desc = "Enables Alerts for Beloren.",
+            get = function() return NSRT.EncounterAlerts[3182] and NSRT.EncounterAlerts[3182].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3182] = NSRT.EncounterAlerts[3182] or {}
+                NSRT.EncounterAlerts[3182].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Midnight Falls",
+            desc = "Enables Alerts for Midnight Falls.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].enabled = value
+            end,
+            nocombat = true,
+        }
     }
 
 
@@ -3251,6 +3389,9 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(assignments_tab, assignments_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         assignments_callback)
+    DF:BuildMenu(encounteralerts_tab, encounteralerts_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        encounteralerts_callback)
 
     -- Add SUF Setup guide tooltip button thingy
 
