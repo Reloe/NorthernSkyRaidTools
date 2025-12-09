@@ -23,78 +23,95 @@ local symbols = {
     skull = 8,
 }
 
-function NSI:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID, TTSTimer)
+function NSI:AddToReminder(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
-    self.ProcessedReminder[encID] = self.ProcessedReminder[encID] or {}
-    spellID = spellID and tonumber(spellID)
+    self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
+    info.spellID = info.spellID and tonumber(info.spellID)
     -- convert to booleans
-    if TTS == "true" then TTS = true end
-    if TTS == "false" then TTS = false end
+    if info.TTS == "true" then info.TTS = true end
+    if info.TTS == "false" then info.TTS = false end
     -- default to user settings if not overwritten by the reminders
-    if TTS == nil then 
-        if spellID then
-            TTS = NSRT.ReminderSettings.SpellTTS
+    if info.TTS == nil then 
+        if info.spellID then
+            info.TTS = NSRT.ReminderSettings.SpellTTS
         else
-            TTS = NSRT.ReminderSettings.TextTTS
+            info.TTS = NSRT.ReminderSettings.TextTTS
         end
     end            
-    if dur == nil then 
-        if spellID then
-             dur = NSRT.ReminderSettings.SpellDuration 
+    if info.dur == nil then 
+        if info.spellID then
+             info.dur = NSRT.ReminderSettings.SpellDuration 
         else
-            dur = NSRT.ReminderSettings.TextDuration 
+            info.dur = NSRT.ReminderSettings.TextDuration 
         end
     end
-    if countdown == nil then
-        if spellID then
-            countdown = NSRT.ReminderSettings.SpellCountdown
+    if info.countdown == nil then
+        if info.spellID then
+            info.countdown = NSRT.ReminderSettings.SpellCountdown
         else
-            countdown = NSRT.ReminderSettings.TextCountdown
+            info.countdown = NSRT.ReminderSettings.TextCountdown
         end
-        if countdown == 0 then countdown = false end
+        if info.countdown == 0 then info.countdown = false end
     end
-    if TTSTimer == nil then
-        if spellID then
-            TTSTimer = NSRT.ReminderSettings.SpellTTSTimer
+    if info.TTSTimer == nil then
+        if info.spellID then
+            info.TTSTimer = NSRT.ReminderSettings.SpellTTSTimer
         else
-            TTSTimer = NSRT.ReminderSettings.TextTTSTimer
+            info.TTSTimer = NSRT.ReminderSettings.TextTTSTimer
         end
     end
-    phase = phase and tonumber(phase)
-    if not phase then phase = 1 end
-    local rawtext = text
-    if text then 
-        text = text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
+    info.phase = info.phase and tonumber(info.phase)
+    if not info.phase then info.phase = 1 end
+    local rawtext = info.text
+    if info.text then 
+        info.text = info.text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
             local id = symbols[name]
             if id then
                 return "{rt" .. id .. "}"
             end
         end)
-        text = text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
+        info.text = info.text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
     end         
-    if NSRT.ReminderSettings.SpellName and spellID then -- display spellname if text is empty, also make TTS that spellname
-        local spell = C_Spell.GetSpellInfo(spellID) 
-        if spell and not text then 
-            text = spell.name or ""
-            TTS = TTS and type(TTS) ~= "string" and spell.name
+    if NSRT.ReminderSettings.SpellName and info.spellID then -- display spellname if text is empty, also make TTS that spellname
+        local spell = C_Spell.GetSpellInfo(info.spellID) 
+        if spell and not info.text then 
+            info.text = spell.name or ""
+            info.TTS = info.TTS and type(info.TTS) ~= "string" and spell.name
         end 
     end
-    if TTS and text and type(TTS) == "boolean" then
-        TTS = rawtext
+    if info.TTS and info.text and type(info.TTS) == "boolean" then
+        info.TTS = rawtext
     end
-    if TTS and type(TTS) ~= "string" and spellID then -- TTS is enabled but it's still empty, which means text was empty so we should play the spellname TTS instead
-        local spell = C_Spell.GetSpellInfo(spellID)
-        TTS = spell and spell.name
+    if info.TTS and type(info.TTS) ~= "string" and info.spellID then -- TTS is enabled but it's still empty, which means text was empty so we should play the spellname TTS instead
+        local spell = C_Spell.GetSpellInfo(info.spellID)
+        info.TTS = spell and spell.name
     end
-    if glowunit then
+    if info.glowunit then
         local glowtable = {}
         for name in glowunit:gmatch("(%w+)") do
             table.insert(glowtable, name)
         end
-        glowunit = glowtable
+        info.glowunit = glowtable
     end
-    self.ProcessedReminder[encID][phase] = self.ProcessedReminder[encID][phase] or {}    
-    table.insert(self.ProcessedReminder[encID][phase], {TTSTimer = TTSTimer, rawtext = rawtext, phase = phase, id = #self.ProcessedReminder[encID][phase]+1, countdown = countdown and tonumber(countdown), glowunit = glowunit, sound = sound, time = tonumber(time), text = text, TTS = TTS, spellID = spellID and tonumber(spellID), dur = dur or 8})      
+    self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}    
+    table.insert(self.ProcessedReminder[info.encID][info.phase], 
+    {
+        notsticky = info.notsticky,
+        BarOverwrite = info.BarOverwrite or info.Type == "Bar", 
+        IconOverwrite = info.IconOverwrite or info.Type == "Icon", 
+        TTSTimer = info.TTSTimer, 
+        rawtext = info.rawtext, 
+        phase = info.phase, 
+        id = #self.ProcessedReminder[info.encID][info.phase]+1, 
+        countdown = info.countdown and tonumber(info.countdown), 
+        glowunit = info.glowunit, 
+        sound = info.sound, 
+        time = tonumber(info.time), 
+        text = info.text, 
+        TTS = info.TTS, 
+        spellID = info.spellID and tonumber(info.spellID), 
+        dur = info.dur or 8
+    })      
 end
 
 function NSI:ProcessReminder()
@@ -138,7 +155,7 @@ function NSI:ProcessReminder()
                     local dur = line:match("dur:(%d+)")
                     local sound = line:match("sound:([^;]+)")
                     local glowunit = line:match("glowunit:([^;]+)")
-                    self:AddToReminder(text, phase, countdown, glowunit, sound, time, spellID, dur, TTS, encID)
+                    self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, encID = encID, Type = nil, notsticky = false})
                 end
             end
         end
@@ -189,7 +206,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            F:SetStatusBarColor(unpack(s.colors))
+            F:SetStatusBarColor(unpack(F.info.colors or s.colors))
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
             F.Border:SetAllPoints(F)
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
@@ -267,7 +284,7 @@ function NSI:SetProperties(F, info, skipsound, s)
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
         local unit, _, spellID = ...
-        if (NSI:IsMidnight() and not issecretvalue(spellID)) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
+        if (NSI:IsMidnight() and (not issecretvalue(spellID)) and (not issecretvalue(info.spellID))) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
             self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             self:Hide()
         end
@@ -359,6 +376,7 @@ function NSI:CreateUnitFrameIcon(info, name)
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, #self.UnitIcon+1 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then 
+            self.UnitIcon[i]:ClearAllPoints()
             self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
             self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i] 
@@ -399,8 +417,8 @@ function NSI:CreateBar(info)
             tileSize = 0,
             })
             self.ReminderBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            self.ReminderBar[i]:SetStatusBarColor(unpack(s.colors))
-            self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.5)
+            self.ReminderBar[i]:SetStatusBarColor(unpack(info.colors or s.colors))
+            self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.8)
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
             self.ReminderBar[i]:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
             self.ReminderBar[i]:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
@@ -438,7 +456,7 @@ function NSI:DisplayReminder(info)
     info.dur = dur
     info.expires = now + dur
     local rem = info.dur - (now - info.startTime)
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((not info.spellID) and rem <= 0) then
+    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
         return
     end
     local remString
@@ -456,7 +474,7 @@ function NSI:DisplayReminder(info)
     local text = info.text ~= "" and info.text or ""
     local F    
     if info.spellID then -- display icon if we have a spellID    
-        if NSRT.ReminderSettings.Bars then
+        if (NSRT.ReminderSettings.Bars or info.BarOverwrite) and not info.IconOverwrite then
             F = self:CreateBar(info)
             F:SetMinMaxValues(0, info.dur)
             F:SetValue(0)
@@ -500,7 +518,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         NSAPI:TTSCountdown(info.countdown)
         self.StartedCountdown["ph"..info.phase.."id"..info.id] = true
     end
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or (not info.spellID and rem <= 0) then
+    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         F:Hide()
         return
@@ -531,7 +549,10 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     end    
 end
 
-function NSI:PlayReminderSound(info)
+function NSI:PlayReminderSound(info, default)
+    if default then -- so I can use this function outside of reminders basically
+        info = {sound = default, TTS = default, rawtext = default}
+    end
     local sound = info.sound and self.LSM:Fetch("sound", info.sound)
     if sound and sound ~= 1 then
         PlaySoundFile(sound, "Master")
@@ -551,11 +572,11 @@ end
 function NSI:StartReminders(phase)
     self:HideAllReminders()
     self.AllGlows = {}
-    self.ReminderTimer = {}
-    local encID = self.EncounterID
-    if not self.ProcessedReminder[encID] then return end
-    if not self.ProcessedReminder[encID][phase] then return end
-    for i, v in ipairs(self.ProcessedReminder[encID][phase]) do
+    self.ReminderTimer = {}    
+    if not self.EncounterID then return end
+    if not self.ProcessedReminder[self.EncounterID] then return end
+    if not self.ProcessedReminder[self.EncounterID][phase] then return end
+    for i, v in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
         local time = math.max(v.time-v.dur, 0)
         self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
             if self:Restricted() or self.TestingReminder then 
@@ -670,40 +691,6 @@ function NSI:ImportReminder(name, values, activate)
         self:SetReminder(name)
     end
     -- NSI:UpdateReminderList()
-end
-
-NSI.EncounterDetections = {
-   [3182] = {0, 3, 3, 3, 3, 3, 3, 3}, -- starting new phase when at least 3 timers get removed which should only happen at the end of p1
-}
-
-
-function NSI:DetectPhaseChange(e)
-    local now = GetTime()
-    if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] and self.Phase then
-        self.TimeLinesDebug = self.TimeLinesDebug or {}
-        self.TimeLinesDebug.EncounterID= self.TimeLinesDebug.EncounterID or self.EncounterID
-        self.TimeLinesDebug[self.Phase] = self.TimeLinesDebug[self.Phase] or {}
-        self.TimeLinesDebug[self.Phase][e] = self.TimeLinesDebug[self.Phase][e] or {}
-        table.insert(self.TimeLinesDebug[self.Phase][e], now)
-    end
-    if e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and self.EncounterID == 3182 then return end -- starting new phase only on timer being removed for this boss
-    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and self.EncounterDetections[self.EncounterID] and self.EncounterDetections[self.EncounterID][self.Phase+1]
-    if needed then
-        table.insert(self.Timelines, now+1)
-        local count = 0
-        for i, v in ipairs(self.Timelines) do
-            if v > now then
-                count = count+1
-                if count > needed then
-                    self.Phase = self.Phase+1
-                    self:StartReminders(self.Phase)
-                    self.Timelines = {}
-                    self.PhaseSwapTime = now
-                    break
-                end
-            end           
-        end
-    end
 end
 
 function NSI:GlowFrame(unit, id)
@@ -909,3 +896,23 @@ ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:t
 
 /run NSAPI:DebugReminder(3306, true, false)
 ]]
+
+function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
+    local info = 
+    {
+        dur = dur,
+        spellID = spellID,
+        encID = encID,
+        TTSTimer = 60, -- tts on show
+        text = text, 
+        TTS = text, 
+        notsticky = true, 
+        phase = phase or self.Phase,
+        id = 0, 
+        startTime = GetTime(),
+    }
+    if Type == "Bar" then info.BarOverwrite = true
+    elseif Type == "Icon" then info.IconOverwrite = true
+    end
+    return info
+end
