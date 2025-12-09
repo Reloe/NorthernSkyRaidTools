@@ -1,0 +1,119 @@
+local _, NSI = ... -- Internal namespace
+
+local encID = 3180
+
+NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
+    if not NSRT.EncounterAlerts[encID] then
+        NSRT.EncounterAlerts[encID] = {enabled = false}
+    end
+    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+        -- Shield Break
+        local Soak = self:CreateDefaultAlert("Break Shield", "Icon", 1248674, 8, 1, encID)
+        for _, time in ipairs({20.9, 78.1, 168.2, 220.5, 282.8}) do
+            Soak.time = time
+            self:AddToReminder(Soak)
+        end
+        -- Aura of Peace
+        local Peace = self:CreateDefaultAlert("Peace Aura", nil, nil, 10, 1, encID)
+        Peace.TTS, Peace.countdown = false, 5        
+        for _, time in ipairs({137.4, 313.3}) do
+            Peace.time = time
+            self:AddToReminder(Peace)
+        end
+    end
+end
+
+NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENCOUNTER_WARNING
+    if NSRT.EncounterAlerts[encID].enabled then        
+        local severity, dur = info.severity, info.duration
+        if severity == 0 then
+        elseif severity == 1 then    
+        elseif severity == 2 then
+        end
+    end
+end
+
+NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
+    if NSRT.EncounterAlerts[encID].enabled then
+
+    end
+end
+
+NSI.AddAssignment[encID] = function(self) -- on ENCOUNTER_START
+    if not (self.Assignments and self.Assignments[encID]) then return end
+    if not self:DifficultyCheck(16) then return end
+    local subgroup = self:GetSubGroup("player")
+    local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
+    -- Execution Sentence. Need to fix timers for Mythic. Consider different alert for a 5th healer, like "check missing color"
+        local group = {}
+        local healer = {}
+        for unit in self:IterateGroupMembers() do
+            local specID = NSAPI:GetSpecs(unit) or 0
+            local prio = self.spectable[specID]
+            local G = self.GUIDS[unit]
+            if UnitGroupRolesAssigned(unit) == "HEALER" then
+                table.insert(healer, {unit = unit, prio = prio, GUID = G})
+            else
+                table.insert(group, {unit = unit, prio = prio, GUID = G})
+            end
+        end
+        self:SortTable(group)
+        self:SortTable(healer)
+        local mygroup
+        local IsHealer = UnitGroupRolesAssigned("player") == "HEALER"
+        if IsHealer then
+            for i, v in ipairs(healer) do
+                if UnitIsUnit("player", v.unit) then
+                    mygroup = i
+                    mygroup = math.min(4, mygroup) -- if there are more than 4 healers, put any extra healer in the 4th group                    
+                end
+            end
+        else
+            for i, v in ipairs(group) do
+                if UnitIsUnit("player", v.unit) then
+                    mygroup = math.ceil(i/4)
+                    mygroup = math.min(4, mygroup) -- if there are less than 4healers dps would overflow so put any extra in 4th
+                    break
+                end
+            end
+        end
+        if not mygroup then return end
+        local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or ""
+        local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
+        local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
+        Alert.time, Alert.TTS, Alert.TTSTimer, Alert.text = 96.1, TTS, 10, text
+        self:AddToReminder(Alert)
+        Alert.time = 271.2
+        self:AddToReminder(Alert)
+        Alert.time = 446.3
+        self:AddToReminder(Alert)
+end
+
+local phasedetections = {0, 0, 0, 0, 0, 0, 0}
+
+NSI.DetectPhaseChange[encID] = function(self, e) -- on ENCOUNTER_TIMELINE_EVENT_ADDED/REMOVED
+    local now = GetTime()
+    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
+    if needed and needed > 0 then
+        table.insert(self.Timelines, now+0.2)
+        local count = 0
+        for i, v in ipairs(self.Timelines) do
+            if v > now then
+                count = count+1
+                if count >= needed then
+                    self.Phase = self.Phase+1                  
+                    self:StartReminders(self.Phase)
+                    self.Timelines = {}
+                    self.PhaseSwapTime = now
+                    break
+                end
+            end           
+        end
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
+    if NSRT.EncounterAlerts[encID].enabled then
+        
+    end
+end

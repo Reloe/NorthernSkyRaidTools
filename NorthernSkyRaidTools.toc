@@ -28,7 +28,18 @@ CooldownCheck.lua
 WeakAuras/Imports.lua
 WeakAuras/Links.lua
 ReadyCheck.lua
-Assignments.lua
+
+# Encounter Alerts
+EncounterAlerts/MidnightS1/ImperatorAverzian.lua
+EncounterAlerts/MidnightS1/Vorasius.lua
+EncounterAlerts/MidnightS1/FallenKingSalhadaar.lua
+EncounterAlerts/MidnightS1/VaelgorEzzorak.lua
+EncounterAlerts/MidnightS1/LightblindedVanguard.lua
+EncounterAlerts/MidnightS1/CrownOfThecosmos.lua
+EncounterAlerts/MidnightS1/Chimaerus.lua
+EncounterAlerts/MidnightS1/Beloren.lua
+EncounterAlerts/MidnightS1/MidnightFalls.lua
+EncounterAlerts/MidnightS1/MotherlodeDebug.lua
 
 # UI
 NSUI.lua

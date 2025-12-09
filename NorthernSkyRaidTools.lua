@@ -41,3 +41,11 @@ function NSI:InitLDB()
         self.databroker = databroker
     end
 end
+
+
+NSI.EncounterAlertStart = {}
+NSI.EncounterAlertStop = {}
+NSI.ShowWarningAlert = {}
+NSI.ShowBossWhisperAlert = {}
+NSI.AddAssignment = {}
+NSI.DetectPhaseChange = {}
