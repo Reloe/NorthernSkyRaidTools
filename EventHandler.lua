@@ -442,6 +442,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.specs[unit] = tonumber(spec)
         self.HasNSRT = self.HasNSRT or {}
         self.HasNSRT[unit] = true
+        if G ~= "" then
+            self.GUIDS = self.GUIDS or {}
+            self.GUIDS[unit] = G
+        end
     elseif e == "NSAPI_SPEC" and not self:IsMidnight() then -- pre midnight
         local unit, spec = ...
         self.specs = self.specs or {}
@@ -450,10 +454,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.specs[unit] = tonumber(spec)
         NSAPI.HasNSRT = NSAPI.HasNSRT or {}
         NSAPI.HasNSRT[unit] = true
-    elseif e == "NSAPI_SPEC_REQUEST" then
+        if G ~= "" then
+            self.GUIDS = self.GUIDS or {}
+            self.GUIDS[unit] = G
+        end
+    elseif e == "NSAPI_SPEC_REQUEST" or e == "NSI_SPEC_REQUEST" then
         if self:Restricted() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
-        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)            
+        if self:IsMidnight() then
+            NSI:Broadcast("NSI_SPEC", "RAID", specid)            
+        else
+            NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)  
+        end          
     elseif e == "CHALLENGE_MODE_START" and wowevent then
         if self:IsMidnight() then return end
         self.Externals:Init(true)

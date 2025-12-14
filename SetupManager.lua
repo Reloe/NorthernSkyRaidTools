@@ -403,7 +403,11 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             self.specs = {}
-            self:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
+            if self:IsMidnight() then
+                NSI:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
+            else
+                NSAPI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
+            end
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)

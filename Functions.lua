@@ -26,7 +26,7 @@ function NSI:IsMidnight()
 end
 
 function NSI:Restricted()
-    return (self:IsMidnight() and C_InstanceEncounter.IsEncounterInProgress()) or (WeakAuras and WeakAuras.CurrentEncounter) or NSRT.Settings["Debug"]
+    return (self:IsMidnight() and C_InstanceEncounter.IsEncounterInProgress()) or (WeakAuras and WeakAuras.CurrentEncounter)
 end
 
 function NSI:Print(...)

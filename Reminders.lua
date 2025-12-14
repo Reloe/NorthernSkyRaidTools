@@ -585,7 +585,7 @@ function NSI:StartReminders(phase)
     for i, v in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
         local time = math.max(v.time-v.dur, 0)
         self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-            if self:Restricted() or self.TestingReminder then 
+            if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
                 self:DisplayReminder(v) 
             else
                 self:HideAllReminders()
