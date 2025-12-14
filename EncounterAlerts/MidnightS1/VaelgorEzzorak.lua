@@ -1,16 +1,16 @@
 local _, NSI = ... -- Internal namespace
 
 local encID = 3178
-
+-- /run NSAPI:DebugEncounter(3178)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Soak = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
+        local Alert = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
         for _, time in ipairs({17.3, 51.3, 86.3, 174.3, 220.2}) do
-            Soak.time = time
-            self:AddToReminder(Soak)
+            Alert.time = time
+            self:AddToReminder(Alert)
         end
     end
 end
@@ -31,7 +31,7 @@ NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name,
     end
 end
 
-NSI.AddAssignment[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     if not self:DifficultyCheck(16) then return end
     local subgroup = self:GetSubGroup("player")

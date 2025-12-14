@@ -110,7 +110,8 @@ function NSI:AddToReminder(info)
         text = info.text, 
         TTS = info.TTS, 
         spellID = info.spellID and tonumber(info.spellID), 
-        dur = info.dur or 8
+        dur = info.dur or 8,
+        skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
     })      
 end
 
@@ -272,11 +273,16 @@ function NSI:SetProperties(F, info, skipsound, s)
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     F.Icon:SetTexture(icon)
     if F.Swipe then 
-        F.Swipe:SetCooldown(GetTime(), info.dur) 
-        if NSRT.ReminderSettings.HideTimerText then 
-            F.TimerText:Hide() 
+        if info.skipdur then
+            F.Swipe:SetCooldown(0, 0) 
+            F.TimerText:Hide()
         else
-            F.TimerText:SetTextColor(1, 1, 0, 1)
+            F.Swipe:SetCooldown(GetTime(), info.dur) 
+            if NSRT.ReminderSettings.HideTimerText then 
+                F.TimerText:Hide() 
+            else
+                F.TimerText:SetTextColor(1, 1, 0, 1)
+            end
         end
     elseif F.TimerText then
         F.TimerText:SetTextColor(1, 1, 1, 1)
@@ -875,6 +881,13 @@ function NSAPI:DebugReminder(EncounterID, startnow, nextphase)
                 NSAPI:DebugNextPhase(10)
             end)
         end
+    end
+end
+
+function NSAPI:DebugEncounter(EncounterID)
+    if NSRT.Settings["Debug"] then
+        NSI.ProcessedReminder = {}
+        NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
     end
 end
 

@@ -26,7 +26,7 @@ function NSI:IsMidnight()
 end
 
 function NSI:Restricted()
-    return (self:IsMidnight() and GetRestrictedActionStatus(0)) or (WeakAuras and WeakAuras.CurrentEncounter)
+    return (self:IsMidnight() and C_InstanceEncounter.IsEncounterInProgress()) or (WeakAuras and WeakAuras.CurrentEncounter) or NSRT.Settings["Debug"]
 end
 
 function NSI:Print(...)
@@ -253,7 +253,8 @@ end
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
-        local handle = select(2, PlaySoundFile(path..sound..".ogg", "Master"))  
+        local secret = NSI:IsMidnight() and issecretvalue(sound)
+        local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))          
         if handle then
             PlaySoundFile(path..sound..".ogg", "Master")
         else
@@ -283,10 +284,7 @@ end
 function NSAPI:PrivateAura()
     local now = GetTime()
     if (not NSAPI.LastPAMacro) or NSAPI.LastPAMacro < now-4 then -- putting this into global NSAPI namespace to allow auras to reset it if ever required
-        if NSI:IsMidnight() then
-            Minimap:PingLocation()
-            NSAPI.LastPAMacro = now
-        else
+        if not NSI:IsMidnight() then
             NSAPI.LastPAMacro = now
             WeakAuras.ScanEvents("NS_PA_MACRO", true) -- this is for backwards compatibility
             NSI:Broadcast("NS_PAMACRO", "RAID", "nilcheck") -- this will be used going forward, slightly different wording to prevent issues with old auras

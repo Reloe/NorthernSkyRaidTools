@@ -1,24 +1,23 @@
 local _, NSI = ... -- Internal namespace
 
 local encID = 3180
-
+-- /run NSAPI:DebugEncounter(3180)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         -- Shield Break
-        local Soak = self:CreateDefaultAlert("Break Shield", "Icon", 1248674, 8, 1, encID)
+        local Alert = self:CreateDefaultAlert("Break Shield", "Icon", 1248674, 8, 1, encID)
         for _, time in ipairs({20.9, 78.1, 168.2, 220.5, 282.8}) do
-            Soak.time = time
-            self:AddToReminder(Soak)
+            Alert.time = time
+            self:AddToReminder(Alert)
         end
         -- Aura of Peace
-        local Peace = self:CreateDefaultAlert("Peace Aura", nil, nil, 10, 1, encID)
-        Peace.TTS, Peace.countdown = false, 5        
+        Alert.text, Alert.TTS, Alert.countdown, Alert.Type, Alert.dur = "Peace Aura", false, 5, nil, 10
         for _, time in ipairs({137.4, 313.3}) do
-            Peace.time = time
-            self:AddToReminder(Peace)
+            Alert.time = time
+            self:AddToReminder(Alert)
         end
     end
 end
@@ -39,7 +38,7 @@ NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name,
     end
 end
 
-NSI.AddAssignment[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     if not self:DifficultyCheck(16) then return end
     local subgroup = self:GetSubGroup("player")

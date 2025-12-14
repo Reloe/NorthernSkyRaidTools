@@ -1,7 +1,7 @@
 local _, NSI = ... -- Internal namespace
 
 local encID = 3182
-
+-- /run NSAPI:DebugEncounter(3182)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
@@ -31,7 +31,7 @@ NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name,
     end
 end
 
-NSI.AddAssignment[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     if not self:DifficultyCheck(16) then return end
     local subgroup = self:GetSubGroup("player")

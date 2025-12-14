@@ -462,7 +462,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
-        if self:Restricted() or NSRT.Settings["Debug"] then self.DetectPhaseChange[self.EncounterID](self, e) end
+        if self:Restricted() then self.DetectPhaseChange[self.EncounterID](self, e) end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
@@ -516,7 +516,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local _, unit, spellID = ...
         local hyperlink = C_Spell.GetSpellLink(spellID)
         WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    elseif (e == "NS_PAMACRO" and internal and not self:IsMidnight()) or (self:IsMidnight() and e == "MINIMAP_PING") then
+    elseif (e == "NS_PAMACRO" and internal and not self:IsMidnight()) then
         local unitID = ...        
         if unitID and UnitExists(unitID) then
             local i = UnitInRaid(unitID)
@@ -528,7 +528,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.LastPress[UnitName(unitID)] = now
             -- do assignement stuff
             if not NSRT.Settings["DebugLogs"] then return end        
-            print(unitID, "pressed their Macro")    
             local time = self.Externals and self.Externals.pull or now
             self.MacroPresses = self.MacroPresses or {}
             self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}

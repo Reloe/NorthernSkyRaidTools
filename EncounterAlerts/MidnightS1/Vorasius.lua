@@ -1,17 +1,30 @@
 local _, NSI = ... -- Internal namespace
 
 local encID = 3177
-
+-- /run NSAPI:DebugEncounter(3177)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        --[[
-        local Soak = self:CreateDefaultAlert("Soak", "Bar", 1241291, 8, 1, encID)
-        Soak.time = 10
-        self:AddToReminder(Soak)
-        ]]
+        
+        local Alert = self:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID)
+        for i, v in ipairs({12.1, 132.8, 253.2}) do -- Primordial Roar
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text, Alert.TTS = "Breath", "Breath"
+        for i, v in ipairs({102.2, 222.9}) do -- Void Breath
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text, Alert.TTS = "Dodge", "Dodge"
+        for i, v in ipairs({75, 85, 200, 210}) do -- Dodge during adds
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
     end
 end
 
@@ -21,9 +34,6 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
         if severity == 0 then
         elseif severity == 1 then    
         elseif severity == 2 then
-            local Alert = self:CreateDefaultAlert("Breath", "Bar", info.tooltipSpellID, 6)
-            Alert.colors = {0.6, 0.25, 1, 1}
-            self:DisplayReminder(Alert)
         end
     end
 end
@@ -31,11 +41,12 @@ end
 NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
     if NSRT.EncounterAlerts[encID].enabled then        
         local Fixate = self:CreateDefaultAlert("Fixate", "Icon", 210099, 10)
+        Fixate.skipdur = true
         self:DisplayReminder(Fixate)
     end
 end
 
-NSI.AddAssignment[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     if not self:DifficultyCheck(16) then return end
     local subgroup = self:GetSubGroup("player")
