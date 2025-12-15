@@ -102,6 +102,7 @@ function NSI:AddToReminder(info)
         TTSTimer = info.TTSTimer, 
         rawtext = info.rawtext, 
         phase = info.phase, 
+        colors = info.colors,
         id = #self.ProcessedReminder[info.encID][info.phase]+1, 
         countdown = info.countdown and tonumber(info.countdown), 
         glowunit = info.glowunit, 
@@ -269,7 +270,10 @@ function NSI:SetProperties(F, info, skipsound, s)
         NSI:ArrangeStates(F.Type)
     end)    
     F.info = info
-    if not info.spellID then return end
+    if not info.spellID then 
+        F.Text:SetTextColor(unpack(info.colors or s.colors))
+        return 
+    end
     local icon = C_Spell.GetSpellInfo(info.spellID).iconID    
     F.Icon:SetTexture(icon)
     if F.Swipe then 
@@ -315,7 +319,7 @@ function NSI:CreateText(info)
             self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderText[i].Text:SetShadowOffset(0, 0)
-            self.ReminderText[i].Text:SetTextColor(1, 1, 1, 1)
+            self.ReminderText[i].Text:SetTextColor(unpack(info.colors or s.colors))
             self:SetProperties(self.ReminderText[i], info, false, s)
             return self.ReminderText[i]
         end

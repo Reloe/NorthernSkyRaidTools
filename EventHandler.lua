@@ -65,8 +65,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.BarSettings = {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", Width = 240, Height = 30, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = 400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 22}
             end
             if (not NSRT.ReminderSettings.TextSettings) or (not NSRT.ReminderSettings.TextSettings.GrowDirection) then
-                NSRT.ReminderSettings.TextSettings =  {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
+                NSRT.ReminderSettings.TextSettings =  {colors = {1, 1, 1, 1}, GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
             end
+            if not NSRT.ReminderSettings.TextSettings.colors then NSRT.ReminderSettings.TextSettings.colors = {1, 1, 1, 1} end
             if (not NSRT.ReminderSettings.UnitIconSettings) or (not NSRT.ReminderSettings.UnitIconSettings.Position) then
                 NSRT.ReminderSettings.UnitIconSettings = {Position = "CENTER", xOffset = 0, yOffset = 0, Width = 25, Height = 25}
             end

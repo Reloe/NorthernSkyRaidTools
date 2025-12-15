@@ -2911,6 +2911,21 @@ Press 'Enter' to hear the TTS]],
             max = 200,
             nocombat = true,
         },
+        
+        {
+            type = "color",
+            name = "Text-Color",
+            desc = "Color of Text-Reminders",
+            get = function() return NSRT.ReminderSettings.TextSettings.colors end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.TextSettings.colors = {r, g, b, a}
+                NSI:UpdateExistingFrames()
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        },
+
         {
             type = "label",
             get = function() return "Bar Settings" end,
