@@ -8,7 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
-        for _, time in ipairs({17.3, 51.3, 86.3, 174.3, 220.2}) do
+        for _, time in ipairs(self:DifficultyCheck(16) and {17.3, 51.3, 86.3, 174.3, 220.2} or {}) do -- need to check these timings again
             Alert.time = time
             self:AddToReminder(Alert)
         end
@@ -33,7 +33,7 @@ end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end
+    if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID    
     -- Gloom Soaks. Need to rework this to assign 8 players

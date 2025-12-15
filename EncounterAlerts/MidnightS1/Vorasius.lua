@@ -8,6 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         
+        -- Boss appears to have same timers on all difficulties
         local Alert = self:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID)
         for i, v in ipairs({12.1, 132.8, 253.2}) do -- Primordial Roar
             Alert.time = v
@@ -48,7 +49,7 @@ end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end
+    if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end

@@ -33,7 +33,7 @@ end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end
+    if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
     -- Alndust Upheaval. Need to fix timings for mythic

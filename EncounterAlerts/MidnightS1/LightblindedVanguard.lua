@@ -9,13 +9,13 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         -- Shield Break
         local Alert = self:CreateDefaultAlert("Break Shield", "Icon", 1248674, 8, 1, encID)
-        for _, time in ipairs({20.9, 78.1, 168.2, 220.5, 282.8}) do
+        for _, time in ipairs(self:DifficultyCheck(16) and {20.9, 78.1, 168.2, 220.5, 282.8} or {}) do -- Need to fix these timers for both difficulties
             Alert.time = time
             self:AddToReminder(Alert)
         end
         -- Aura of Peace
         Alert.text, Alert.TTS, Alert.countdown, Alert.Type, Alert.dur = "Peace Aura", false, 5, nil, 10
-        for _, time in ipairs({137.4, 313.3}) do
+        for _, time in ipairs(self:DifficultyCheck(14) and {137.4, 313.3} or {}) do
             Alert.time = time
             self:AddToReminder(Alert)
         end
@@ -40,7 +40,7 @@ end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end
+    if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
     -- Execution Sentence. Need to fix timers for Mythic. Consider different alert for a 5th healer, like "check missing color"

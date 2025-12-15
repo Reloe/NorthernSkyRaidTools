@@ -9,23 +9,25 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
 
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
-        for i, v in ipairs({102.6, 224.6}) do -- Cosmic Unraveling
+        for i, v in ipairs(self:DifficultyCheck(14) and {102.6, 224.6} or {}) do -- Cosmic Unraveling
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
-        for i, v in ipairs({13.4, 58.6, 135.6, 180.7, 257.4}) do -- Desperate Measures
+        for i, v in ipairs(self:DifficultyCheck(14) and {13.4, 58.6, 135.6, 180.7, 257.4} or {}) do -- Desperate Measures
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS = "CC Adds", "CC Adds"
-        for i, v in ipairs({26.7, 71.8, 148.7, 193.8}) do -- Fractured Projection (CC Adds)
+        for i, v in ipairs(self:DifficultyCheck(14) and {26.7, 71.8, 148.7, 193.8} or {}) do -- Fractured Projection (CC Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
+
+        if not self:DifficultyCheck(16) then return end -- Shield Mechanic is mythic only
         self.platetexts = self.platetexts or {}
         local plateref = {}
         local function DisplayNameplateText(aura, u)
@@ -165,7 +167,7 @@ end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end
+    if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end

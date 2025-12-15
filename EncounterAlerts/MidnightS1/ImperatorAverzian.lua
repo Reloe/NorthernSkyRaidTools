@@ -9,15 +9,16 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         
         local Alert = self:CreateDefaultAlert("Soak", "Text", nil, 5.5, 1, encID) -- Group Soaks
-        for i, v in ipairs({28.5, 36.1, 100.5, 108.1, 179.6, 187.1, 251.6, 259.1}) do
+
+        for i, v in ipairs(self:DifficultyCheck(14) and {28.5, 36.1, 100.5, 108.1, 179.6, 187.1, 251.6, 259.1} or {}) do
             Alert.time = v
             self:AddToReminder(Alert)
         end
         
-        if UnitGropRolesAssigned("player") == "TANK" then return end
+        if UnitGroupRolesAssigned("player") == "TANK" then return end
         -- Soaking Circles, shouldn't be relevant for tanks
         Alert.Type, Alert.spellID, Alert.dur, Alert.text, Alert.TTS = "Bar", 1270946, 7, "Soak Circle", "Soak Circle"
-        for i, v in ipairs({65, 216}) do 
+        for i, v in ipairs(self:DifficultyCheck(14) and {65, 216} or {}) do 
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -43,7 +44,7 @@ end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end
+    if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
