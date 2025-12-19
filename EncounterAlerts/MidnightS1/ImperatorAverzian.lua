@@ -15,7 +15,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
         
-        if UnitGroupRolesAssigned("player") == "TANK" then return end
+       -- if UnitGroupRolesAssigned("player") == "TANK" then return end
         -- Soaking Circles, shouldn't be relevant for tanks
         Alert.Type, Alert.spellID, Alert.dur, Alert.text, Alert.TTS = "Bar", 1270946, 7, "Soak Circle", "Soak Circle"
         for i, v in ipairs(self:DifficultyCheck(14) and {65, 216} or {}) do 

@@ -475,7 +475,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
-        if self:Restricted() then self.DetectPhaseChange[self.EncounterID](self, e) end
+        if self:Restricted() and self.EncounterID then self.DetectPhaseChange[self.EncounterID](self, e) end
     elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
         if self:IsMidnight() then return end
         local unitID, key, num, req, range, expirationTime = ...
