@@ -10,15 +10,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         
         local Alert = self:CreateDefaultAlert("Soak", "Text", nil, 5.5, 1, encID) -- Group Soaks
 
-        for i, v in ipairs(self:DifficultyCheck(14) and {28.5, 36.1, 100.5, 108.1, 179.6, 187.1, 251.6, 259.1} or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
-        
-       -- if UnitGroupRolesAssigned("player") == "TANK" then return end
-        -- Soaking Circles, shouldn't be relevant for tanks
-        Alert.Type, Alert.spellID, Alert.dur, Alert.text, Alert.TTS = "Bar", 1270946, 7, "Soak Circle", "Soak Circle"
-        for i, v in ipairs(self:DifficultyCheck(14) and {65, 216} or {}) do 
+        for i, v in ipairs(self:DifficultyCheck(16) and {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415} or {}) do -- Mythic only for now cuz no clue about other timers
             Alert.time = v
             self:AddToReminder(Alert)
         end

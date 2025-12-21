@@ -9,19 +9,19 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
 
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
-        for i, v in ipairs(self:DifficultyCheck(14) and {102.6, 224.6} or {}) do -- Cosmic Unraveling
+        for i, v in ipairs(self:DifficultyCheck(14) and {102.636, 224.182, 345.979, 467.734} or {}) do -- Cosmic Unraveling
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
-        for i, v in ipairs(self:DifficultyCheck(14) and {13.4, 58.6, 135.6, 180.7, 257.4} or {}) do -- Desperate Measures
+        for i, v in ipairs(self:DifficultyCheck(14) and {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505} or {}) do -- Desperate Measures
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS = "CC Adds", "CC Adds"
-        for i, v in ipairs(self:DifficultyCheck(14) and {26.7, 71.8, 148.7, 193.8} or {}) do -- Fractured Projection (CC Adds)
+        for i, v in ipairs(self:DifficultyCheck(14) and {26.588, 71.957, 149.818, 195.924, 271.385, 316.505, 393.162, 439.018} or {}) do -- Fractured Projection (CC Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end

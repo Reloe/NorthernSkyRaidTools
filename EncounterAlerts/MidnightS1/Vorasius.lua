@@ -10,19 +10,19 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         
         -- Boss appears to have same timers on all difficulties
         local Alert = self:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID)
-        for i, v in ipairs({12.1, 132.8, 253.2}) do -- Primordial Roar
+        for i, v in ipairs({12.2, 133.3, 253.7}) do -- Primordial Roar
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS = "Breath", "Breath"
-        for i, v in ipairs({102.2, 222.9}) do -- Void Breath
+        for i, v in ipairs({102.3, 223.3, 343.8}) do -- Void Breath
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS = "Dodge", "Dodge"
-        for i, v in ipairs({75, 85, 200, 210}) do -- Dodge during adds
+        for i, v in ipairs({81, 91, 202, 212, 322, 332}) do -- Dodge during adds
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -41,7 +41,7 @@ end
 
 NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
     if NSRT.EncounterAlerts[encID].enabled then        
-        local Fixate = self:CreateDefaultAlert("Fixate", "Icon", 210099, 10)
+        local Fixate = self:CreateDefaultAlert("Fixate", "Icon", 210099, 15) -- Fixated by Blistercreep. Hiding has to be timed as there is no event
         Fixate.skipdur = true
         self:DisplayReminder(Fixate)
     end

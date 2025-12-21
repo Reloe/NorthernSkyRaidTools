@@ -7,16 +7,37 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+
+        local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
+        for i, v in ipairs(self:DifficultyCheck(14) and {102.6, 224.6} or {}) do -- Cosmic Unraveling
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
+        for i, v in ipairs(self:DifficultyCheck(14) and {13.4, 58.6, 135.6, 180.7, 257.4} or {}) do -- Desperate Measures
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text, Alert.TTS = "CC Adds", "CC Adds"
+        for i, v in ipairs(self:DifficultyCheck(14) and {26.7, 71.8, 148.7, 193.8} or {}) do -- Fractured Projection (CC Adds)
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+
+        if not self:DifficultyCheck(16) then return end -- Shield Mechanic is mythic only
         self.platetexts = self.platetexts or {}
         local plateref = {}
-        local function DisplayNameplateText(aura, u)
+        local function DisplayNameplateText(aura1, aura2, u)
             local plate = C_NamePlate.GetNamePlateForUnit(u)
-            if plate then
+            if plate then                
                 for i=1, #self.platetexts+1 do
                     if self.platetexts[i] and not self.platetexts[i]:IsShown() then
-                        if aura then
+                        if aura2 then
                             self.platetexts[i]:SetTextColor(1, 0, 0, 1)
-                            self.platetexts[i]:SetText(aura.applications)
+                            self.platetexts[i]:SetText(aura1.applications)
                         else
 
                             self.platetexts[i]:SetTextColor(0, 1, 0, 1)
@@ -45,9 +66,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                         self.platetexts[i].bgFrame:SetSize(25, 25)
                         self.platetexts[i].bgFrame:SetPoint("CENTER", self.platetexts[i], "CENTER", 0, 0)
                         
-                        if aura then
+                        if aura2 then
                             self.platetexts[i]:SetTextColor(1, 0, 0, 1)
-                            self.platetexts[i]:SetText(aura.applications)
+                            self.platetexts[i]:SetText(aura1.applications)
                         else
                             self.platetexts[i]:SetTextColor(0, 1, 0, 1)
                             self.platetexts[i]:SetText("CC")
@@ -103,7 +124,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                                 plateref[u] = nil
                             end
                         end
-                        DisplayNameplateText(aura2, u)
+                        DisplayNameplateText(aura1, aura2, u)
                     end
                 end
             end
