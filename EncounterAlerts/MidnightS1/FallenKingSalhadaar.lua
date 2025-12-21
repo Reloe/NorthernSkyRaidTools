@@ -111,11 +111,10 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                     if unit == u then found = true break end
                 end
                 if not found then return end -- only allow nameplate units for UNIT_AURA
-                local class = UnitClassification(u)
-                if class and class ~= "" and UnitLevel(u) ~= -1 then
+                if UnitLevel(u) ~= -1 then
                     local aura1 = C_UnitAuras.GetAuraDataByIndex(u, 1, "HELPFUL")
-                    local aura2 = C_UnitAuras.GetAuraDataByIndex(u, 2, "HELPFUL")
                     if aura1 then
+                        local aura2 = C_UnitAuras.GetAuraDataByIndex(u, 2, "HELPFUL")
                         if plateref[u] then
                             if self.platetexts[plateref[u]] then
                                 self.platetexts[plateref[u]]:Hide()
