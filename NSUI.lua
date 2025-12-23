@@ -950,7 +950,7 @@ local function BuildRemindersEditUI()
             if not oldname then return end
             local newname = self:GetText()
             if oldname == newname then return end
-            NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:" .. newname)
+            NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
             if NSRT.ActiveReminder == oldname then
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActiveReminder = newname

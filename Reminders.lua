@@ -692,7 +692,8 @@ end
 
 function NSI:ImportReminder(name, values, activate)
     if not name then name = "Default Reminder" end
-    if NSRT.Reminders[name] and not name == "Default Reminder" then -- for default reminder we just overwrite for now
+    if NSRT.Reminders[name] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
+        values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
         self:ImportReminder(name.." 2", values, activate)
         return
     end
@@ -700,7 +701,6 @@ function NSI:ImportReminder(name, values, activate)
     if activate then
         self:SetReminder(name)
     end
-    -- NSI:UpdateReminderList()
 end
 
 function NSI:GlowFrame(unit, id)
