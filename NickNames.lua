@@ -24,7 +24,7 @@ end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
     local unitname = UnitExists(str) and UnitName(str) or str
-    if NSI:IsMidnight() and issecretvalue(unitname) then return unitname end
+    if issecretvalue(unitname) then return unitname end
     -- check if setting for the requesting addon is enabled, if not return the original name.
     -- if no AddonName is given we assume it's from an old WeakAura as they never specified
     if ((not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName])) and AddonName ~= "Note" then
@@ -43,13 +43,13 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         if not realm then
             realm = GetNormalizedRealmName()
         end
-        if NSI:IsMidnight() and (issecretvalue(name) or issecretvalue(realm)) then return name end
+        if (issecretvalue(name) or issecretvalue(realm)) then return name end
         local nickname = name and realm and fullCharList[name.."-"..realm]
         if nickname and NSRT.Settings["Translit"] then
             nickname = LibTranslit:Transliterate(nickname)
         end
         if NSRT.Settings["Translit"] and not nickname then
-            name = NSI:IsMidnight() and issecretvalue(name) and name or LibTranslit:Transliterate(name)
+            name = issecretvalue(name) and name or LibTranslit:Transliterate(name)
         end
         return nickname or name
     else
@@ -124,7 +124,7 @@ function NSI:WipeNickNames()
     fullNameList = {}
     sortedCharList = {}
     CharList = {}
-    -- all addons that need a display update, which is basically all but WA
+    -- all addons that need a display update, which is basically all but
     self:UpdateNickNameDisplay(true)
 end
 
@@ -153,46 +153,8 @@ function NSI:BlizzardNickNameUpdated()
     end
 end
 
-function NSI:MRTUpdateNoteDisplay(noteFrame)
-    if 1 then return end -- disabling MRT Note nickname replacement for now as it is too laggy
-    local note = noteFrame and noteFrame.text and noteFrame.text:GetText()
-    if (not note) or (not NSRT.Settings["MRT"]) then return end
-    if self.RawNoteFrame and note == self.RawNoteFrame and self.NewNoteFrame then -- don't recalculate nicknames if the note didn't change
-        self.LastNoteUpdate = GetTime()
-        noteFrame.text:SetText(self.NewNoteFrame)
-        return
-    end
-    if self:Restricted() then return end -- don't update note during encounters as this causes lag. This means it won't be functional if people are using Timers within the note but don't really have a great workaround for that
-    self.RawNoteFrame = note
-    local namelist = {}
-    local colorlist = {}
-    for name in note:gmatch("%S+") do -- finding all strings
-        local charname = (UnitExists(name) or CharList[name] or fullNameList[name]) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT") or name -- getting color coded nickname for this character
-        if charname ~= name then
-            namelist[name] = {name = charname, color = false}
-        end
-    end                
-    for colorcode, name in note:gmatch(("|c(%x%x%x%x%x%x%x%x)(.-)|r")) do -- do the same for color coded strings again
-        local charname = (UnitExists(name) and NSAPI:Shorten(NSAPI:GetChar(name, true), false, false, "MRT")) or name -- getting color coded nickname for this character
-        if charname ~= name and not namelist[name] then
-            namelist[name] = {name = charname, color = true}
-        end
-    end
-    for notename, v in pairs(namelist) do
-        note = note:gsub("(%f[%w])"..notename.."(%f[%W])", "%1"..v.name.."%2")
-        if v.color then -- if initial name already had a colorcode, need to do different replacement
-            note = note:gsub("|c%x%x%x%x%x%x%x%x"..notename.."|r", v.name)
-        end
-    end
-    self.NewNoteFrame = note
-    noteFrame.text:SetText(note)
-end
-
-function NSI:MRTNickNameUpdated(skipcheck)
+function NSI:MRTNickNameUpdated()
     if C_AddOns.IsAddOnLoaded("MRT") then
-        if skipcheck or NSRT.Settings["MRT"] then -- on init we only do this if the player has MRT Nicknames enabled, also whenever the setting changes we skip the setting check
-            self:MRTUpdateNoteDisplay(MRTNote)
-        end
         if NSRT.Settings["MRT"] and GMRT and GMRT.F and not self.MRTNickNamesHook then        
             self.MRTNickNamesHook = true
             GMRT.F:RegisterCallback(
@@ -202,12 +164,6 @@ function NSI:MRTNickNameUpdated(skipcheck)
                         data.name = NSAPI:GetName(data.name, "MRT")
                     end
                 end
-            )
-            GMRT.F:RegisterCallback(
-                "Note_UpdateText", 
-                function(event, noteFrame)
-                    self:MRTUpdateNoteDisplay(noteFrame)
-                end    
             )
         end
     end
@@ -291,39 +247,9 @@ end
 
 -- UUFG Option Change
 function NSI:UnhaltedNickNameUpdated()
-    if UUFG then
+    if UUFG and UUFG.UpdateAllTags then
         UUFG:UpdateAllTags() 
     end    
-end
-
-function NSI:WeakAurasNickNameUpdated()
-    if NSRT.Settings["WA"] and WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
-        function WeakAuras.GetName(name)
-            return NSAPI:GetName(name, "WA")
-        end
-
-        function WeakAuras.UnitName(unit)
-            local _, realm = UnitName(unit)
-            return NSAPI:GetName(unit, "WA"), realm
-        end
-
-        function WeakAuras.GetUnitName(unit, server)
-            local name = NSAPI:GetName(unit, "WA")
-            if server then
-                local _, realm = UnitFullName(unit)
-                if not realm then
-                    realm = GetNormalizedRealmName()
-                end
-                name = name.."-"..realm
-            end
-            return name
-        end
-
-        function WeakAuras.UnitFullName(unit)
-            local name, realm = UnitFullName(unit)
-            return NSAPI:GetName(name, "WA"), realm
-        end
-    end
 end
 
 -- Global NickName Option Change
@@ -341,33 +267,6 @@ function NSI:GlobalNickNameUpdate()
                 CharList[nickname] = {}
             end
             CharList[nickname][name] = true
-        end
-        if NSRT.Settings["WA"] and WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
-            function WeakAuras.GetName(name)
-                return NSAPI:GetName(name, "WA")
-            end
-
-            function WeakAuras.UnitName(unit)
-                local _, realm = UnitName(unit)
-                return NSAPI:GetName(unit, "WA"), realm
-            end
-
-            function WeakAuras.GetUnitName(unit, server)
-                local name = NSAPI:GetName(unit, "WA")
-                if server then
-                    local _, realm = UnitFullName(unit)
-                    if not realm then
-                        realm = GetNormalizedRealmName()
-                    end
-                    name = name.."-"..realm
-                end
-                return name
-            end
-
-            function WeakAuras.UnitFullName(unit)
-                local name, realm = UnitFullName(unit)
-                return NSAPI:GetName(name, "WA"), realm
-            end
         end
     end
     
@@ -395,7 +294,6 @@ end
 
 function NSI:InitNickNames()
 
-
     for fullname, nickname in pairs(NSRT.NickNames) do
         local name, realm = strsplit("-", fullname)
         fullCharList[fullname] = nickname
@@ -410,36 +308,7 @@ function NSI:InitNickNames()
         CharList[nickname][name] = true
     end
 
-    if NSRT.Settings["GlobalNickNames"] then        
-
-        if NSRT.Settings["WA"] and WeakAuras and not C_AddOns.IsAddOnLoaded("CustomNames") then
-            function WeakAuras.GetName(name)
-                return NSAPI:GetName(name, "WA")
-            end
-
-            function WeakAuras.UnitName(unit)
-                local _, realm = UnitName(unit)
-                return NSAPI:GetName(unit, "WA"), realm
-            end
-
-            function WeakAuras.GetUnitName(unit, server)
-                local name = NSAPI:GetName(unit, "WA")
-                if server then
-                    local _, realm = UnitFullName(unit)
-                    if not realm then
-                        realm = GetNormalizedRealmName()
-                    end
-                    name = name.."-"..realm
-                end
-                return name
-            end
-
-            function WeakAuras.UnitFullName(unit)
-                local name, realm = UnitFullName(unit)
-                return NSAPI:GetName(name, "WA"), realm
-            end
-        end
-
+    if NSRT.Settings["GlobalNickNames"] then      
     	self:MRTNickNameUpdated(false)
     	self:BlizzardNickNameUpdated()
     end

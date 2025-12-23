@@ -294,7 +294,7 @@ function NSI:SetProperties(F, info, skipsound, s)
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
         local unit, _, spellID = ...
-        if (NSI:IsMidnight() and (not issecretvalue(spellID)) and (not issecretvalue(info.spellID))) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
+        if (not issecretvalue(spellID)) and (not issecretvalue(info.spellID)) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
             self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
             self:Hide()
         end

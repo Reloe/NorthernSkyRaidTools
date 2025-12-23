@@ -17,16 +17,12 @@ NorthernSkyRaidTools.lua
 Functions.lua
 Reminders.lua
 Media.lua
-AuraResize.lua
 Comms.lua
 NickNames.lua
 EventHandler.lua
-Externals.lua
 VersionCheck.lua
 SetupManager.lua
 CooldownCheck.lua
-WeakAuras/Imports.lua
-WeakAuras/Links.lua
 ReadyCheck.lua
 
 # Encounter Alerts

@@ -8,7 +8,9 @@ local allowedcomms = {
 }
 
 local del = ":"
-function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everything in the addon uses the internal NSI function instead.
+-- disabling this for now as weakauras is gone but maybe in the future I need it again
+--[[
+function NSAPI:Broadcast(event, channel, ...)
     local message = event
     local argTable = {...}
     local target = ""
@@ -41,6 +43,7 @@ function NSAPI:Broadcast(event, channel, ...) -- only used for weakauras, everyt
         AceComm:SendCommMessage("NSWA_MSG", message, channel)
     end
 end
+]]
 
 function NSI:Broadcast(event, channel, ...) -- using internal broadcast function for anything inside the addon to prevent users to send stuff they shouldn't be sending
     local message = event
@@ -135,6 +138,3 @@ AceComm:RegisterComm("NSWA_MSG", function(_, text, chan, sender) ReceiveComm(tex
 AceComm:RegisterComm("NSWA_MSG2", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, false) end)
 AceComm:RegisterComm("NSI_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false, true) end)
 AceComm:RegisterComm("NSI_WHISPER", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, true) end)
-
-
--- NSAPI:Broadcast("NS_EVENTNAME", channel, targetunitID if whisper, arg1, arg2, arg3)

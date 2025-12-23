@@ -2,7 +2,6 @@ local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
-local WA = _G["WeakAuras"]
 
 local window_width = 900
 local window_height = 550
@@ -11,9 +10,7 @@ local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expresswa
 local TABS_LIST = {
     { name = "General",   text = "General" },
     { name = "Nicknames", text = "Nicknames" },
-    { name = "Externals", text = "Externals" },
     { name = "Versions",  text = "Versions" },
-    { name = "WeakAuras", text = "WeakAuras" },
     { name = "SetupManager", text = "Setup Manager"},
     { name = "Reminders", text = "Reminders"},
     { name = "Assignments", text = "Assignments"},
@@ -42,76 +39,8 @@ NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 NSUI.OptionsChanged = {
     ["general"] = {},
     ["nicknames"] = {},
-    ["externals"] = {},
     ["versions"] = {},
 }
-
--- need to run this code on settings change
-local function PASelfPingChanged()
-    if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
-    local macrocount = 0
-    local pafound = false
-    for i = 1, 120 do
-        local macroname = C_Macro.GetMacroName(i)
-        if not macroname then break end
-        macrocount = i
-        if macroname == "NS PA Macro" then
-            pafound = true
-            local macrotext = "/run NSAPI:PrivateAura();"
-            if NSRT.Settings["PASelfPing"] then
-                 macrotext = macrotext.."\n/ping [@player] Warning;"
-             end
-            if NSRT.Settings["PAExtraAction"] then
-                macrotext = macrotext.."\n/click ExtraActionButton1"
-            end            
-            if NSRT.Settings["LIQUID_MACRO"] then
-                macrotext = macrotext.."\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)"
-            end
-             EditMacro(i, "NS PA Macro", 132288, macrotext, false)
-            return
-        end
-    end
-    if macrocount >= 120 then
-        print("You reached the global Macro cap so the Private Aura Macro could not be created")
-    elseif not pafound then
-        macrocount = macrocount+1
-        local macrotext = "/run NSAPI:PrivateAura();"
-        if NSRT.Settings["PASelfPing"] then
-             macrotext = macrotext.."\n/ping [@player] Warning;"
-         end
-        if NSRT.Settings["PAExtraAction"] then
-            macrotext = macrotext.."\n/click ExtraActionButton1"
-        end
-        CreateMacro("NS PA Macro", 132288, macrotext, false)
-    end
-end
-
--- need to run this code on settings change
-local function ExternalSelfPingChanged()
-    if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
-    local macrocount = 0
-    local extfound = false
-    for i = 1, 120 do
-        local macroname = C_Macro.GetMacroName(i)
-        if not macroname then break end
-        macrocount = i
-        if macroname == "NS Ext Macro" then
-            extfound = true
-            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or
-                "/run NSAPI:ExternalRequest();"
-            EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
-            extfound = true
-            return
-        end
-    end
-    if macrocount >= 120 then 
-        print("You reached the global Macro cap so the External Macro could not be created")
-    elseif not extfound then
-        macrocount = macrocount+1
-        local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
-        CreateMacro("NS Ext Macro", 135966, macrotext, false)
-    end
-end
 
 -- suf setup guide popup
 local function BuildSUFSetupGuidePopup()
@@ -142,8 +71,8 @@ end]]
 end
 
 -- version check ui
-local component_type = "WA"
-local checkable_components = { "WA", "Addon", "Note", "Reminder"}
+local component_type = "Addon"
+local checkable_components = {"Addon", "Note", "Reminder"}
 local function build_checkable_components_options()
     local t = {}
     for i = 1, #checkable_components do
@@ -182,19 +111,16 @@ local function BuildVersionCheckUI(parent)
     component_type_dropdown:SetTemplate(options_dropdown_template)
     component_type_dropdown:SetPoint("LEFT", component_type_label, "RIGHT", 5, 0)
 
-    local component_name_label = DF:CreateLabel(parent, "WeakAura/Addon Name", 9.5, "white")
+    local component_name_label = DF:CreateLabel(parent, "Addon Name", 9.5, "white")
     component_name_label:SetPoint("LEFT", component_type_dropdown, "RIGHT", 10, 0)
 
     local component_name_entry = DF:CreateTextEntry(parent, function(_, _, value) component_name = value end, 250, 18)
     component_name_entry:SetTemplate(options_button_template)
     component_name_entry:SetPoint("LEFT", component_name_label, "RIGHT", 5, 0)
     component_name_entry:SetHook("OnEditFocusGained", function(self)
-        component_name_entry.WAAutoCompleteList = NSRT.NSUI.AutoComplete["WA"] or {}
         component_name_entry.AddonAutoCompleteList = NSRT.NSUI.AutoComplete["Addon"] or {}
         local component_type = component_type_dropdown:GetValue()
-        if component_type == "WA" then
-            component_name_entry:SetAsAutoComplete("WAAutoCompleteList", _, true)
-        elseif component_type == "Addon" then
+        if component_type == "Addon" then
             component_name_entry:SetAsAutoComplete("AddonAutoCompleteList", _, true)
         end
     end)
@@ -268,18 +194,7 @@ local function BuildVersionCheckUI(parent)
                     local now = GetTime()
                     if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.duplicate) and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end                    
                     NSI.VersionCheckData.lastclick[name] = now
-                    if NSI.VersionCheckData.type == "WA" then
-                        local url = NSI.VersionCheckData.url ~= "" and NSI.VersionCheckData.url or NSI.VersionCheckData.name
-                        if thisData.version == "WA Missing" then message = "Please install the WeakAura: "..url
-                        elseif thisData.version ~= NSI.VersionCheckData.version then message = "Please update your WeakAura: "..url end
-                        if thisData.duplicate then
-                            if message == "" then 
-                                message = "Please delete the duplicate WeakAura of: '"..NSI.VersionCheckData.name.."'"
-                            else 
-                                message = message.." Please also delete the duplicate WeakAura"
-                            end
-                        end                        
-                    elseif NSI.VersionCheckData.type == "Addon" then
+                    if NSI.VersionCheckData.type == "Addon" then
                         if thisData.version == "Addon not enabled" then message = "Please enable the Addon: '"..NSI.VersionCheckData.name.."'"
                         elseif thisData.version == "Addon Missing" then message = "Please install the Addon: '"..NSI.VersionCheckData.name.."'"
                         else message = "Please update the Addon: '"..NSI.VersionCheckData.name.."'" end
@@ -346,7 +261,7 @@ local function BuildVersionCheckUI(parent)
     -- sample data for testing
     local sample_data = {
         { name = "Player1",  version = "1.0.0",         duplicate = false },
-        { name = "Player2",  version = "WA Missing",    duplicate = false },
+        { name = "Player2",  version = "1.0.5",         duplicate = false },
         { name = "Player3",  version = "1.0.1",         duplicate = true },
         { name = "Player4",  version = "0.9.9",         duplicate = false },
         { name = "Player5",  version = "1.0.0",         duplicate = false },
@@ -358,7 +273,7 @@ local function BuildVersionCheckUI(parent)
         { name = "Player11", version = "1.0.0",         duplicate = false },
         { name = "Player12", version = "0.9.9",         duplicate = true },
         { name = "Player13", version = "1.0.0",         duplicate = false },
-        { name = "Player14", version = "WA Missing",    duplicate = false },
+        { name = "Player14", version = "Note Missing",  duplicate = false },
         { name = "Player15", version = "1.0.0",         duplicate = false },
         { name = "Player16", version = "0.9.7",         duplicate = false },
         { name = "Player17", version = "1.0.0",         duplicate = true },
@@ -381,7 +296,7 @@ local function BuildVersionCheckUI(parent)
     local addData = function(self, data, url)
         local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
         if self.name_map[data.name] then
-            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.duplicate) and (not data.ignoreCheck) then
+            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.duplicate) and (not data.ignoreCheck) then
                 table.remove(currentData, self.name_map[data.name])
                 for k, v in pairs(self.name_map) do
                     if v > self.name_map[data.name] then
@@ -432,7 +347,6 @@ local function BuildVersionCheckUI(parent)
     local preset_label = DF:CreateLabel(parent, "Preset:", 9.5, "white")
 
     local sample_presets = {
-        { "WA: Northern Sky Liberation of Undermine", { "WA", "Northern Sky Liberation of Undermine" } },
         { "Addon: Plater",                            { "Addon", "Plater" } }
     }
 
@@ -1302,10 +1216,8 @@ function NSUI:Init()
 
     local general_tab = tabContainer:GetTabFrameByName("General")
     local nicknames_tab = tabContainer:GetTabFrameByName("Nicknames")
-    local externals_tab = tabContainer:GetTabFrameByName("Externals")
     local cooldowns_tab = tabContainer:GetTabFrameByName("Cooldowns")
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
-    local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
     local setupmanager_tab = tabContainer:GetTabFrameByName("SetupManager")
     local reminder_tab = tabContainer:GetTabFrameByName("Reminders")
     local assignments_tab = tabContainer:GetTabFrameByName("Assignments")
@@ -1320,197 +1232,11 @@ function NSUI:Init()
     generic_display.text:SetPoint("CENTER", generic_display, "CENTER", 0, 0)
     generic_display:Hide()
     NSUI.generic_display = generic_display
-    -- externals anchor frame
-    local externals_anchor_panel_options = {
-        NoCloseButton = true,
-        NoTitleBar = true,
-        DontRightClickClose = true
-    }
-    local externals_anchor = CreateFrame("Frame", "ExternalsAnchor", UIParent, "BackdropTemplate")
-    NSUI.externals_anchor = externals_anchor
-    externals_anchor:SetClampedToScreen(true)
-    externals_anchor:SetMovable(true)
-    externals_anchor:SetBackdrop({
-        bgFile = "interface/editmode/editmodeuihighlightbackground",
-        edgeFile = "interface/buttons/white8x8",
-        edgeSize = 2,
-        tile = true,
-        tileSize = 16,
-        insets = {
-            left = 0,
-            right = 0,
-            top = 0,
-            bottom = 0
-        }
-    })
-    externals_anchor:SetBackdropBorderColor(1, 0, 0, 1)
-    NSUI:LoadExternalsAnchorPosition()
-
-    local externals_anchor_text = externals_anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    externals_anchor_text:SetPoint("CENTER", externals_anchor, "CENTER", 0, 0)
-    externals_anchor_text:SetText("NS_EXT")
-    externals_anchor.text = externals_anchor_text
-
-    externals_anchor:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" then
-            self:StartMoving()
-        elseif button == "RightButton" then
-            NSUI:ResetExternalsAnchorPosition()
-        end
-    end)
-    externals_anchor:SetScript("OnMouseUp", function(self)
-        self:StopMovingOrSizing()
-        NSUI:SaveExternalsAnchorPosition()
-    end)
-    externals_anchor:Hide()
-
-    local external_frame = CreateFrame("Frame", "ExternalsFrame", UIParent)
-    external_frame:SetPoint("BOTTOMLEFT", NSUI.externals_anchor, "BOTTOMLEFT", 0, 0)
-    external_frame:SetPoint("TOPRIGHT", NSUI.externals_anchor, "TOPRIGHT", 0, 0)
-    local external_frame_text = external_frame:CreateFontString(nil, "OVERLAY")
-    external_frame_text:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 20, "OUTLINE")
-    external_frame_text:SetTextColor(1, 1, 1, 1)
-    external_frame_text:SetPoint("CENTER", external_frame, "TOP", 0, 10)
-    external_frame_text:SetText("NS_EXT")
-    external_frame.text = external_frame_text
-    local external_frame_texture = external_frame:CreateTexture("ExternalsFrameTexture", "OVERLAY")
-    external_frame_texture:SetPoint("TOPLEFT", external_frame, "TOPLEFT", 0, 0)
-    external_frame_texture:SetPoint("BOTTOMRIGHT", external_frame, "BOTTOMRIGHT", 0, 0)
-    external_frame_texture:SetColorTexture(1, 0, 1, 0.5)
-    external_frame.texture = external_frame_texture
-    external_frame:Hide()
-    NSUI.external_frame = external_frame
 
     -- dummy default variables until cvars are implemented
     local enableSUFNicknames = false
     -- TTS voice preview
-    local tts_text_preview = ""
-
-    -- keybinding logic
-    local function getMacroKeybind(macroName)
-        local binding = GetBindingKey(macroName)
-        if binding then
-            return binding
-        else
-            return "Unbound"
-        end
-    end
-
-    local function bindKeybind(keyCombo, macroName)
-        keyCombo = keyCombo:gsub("LeftButton", "BUTTON1")
-            :gsub("RightButton", "BUTTON2")
-            :gsub("MiddleButton", "BUTTON3")
-            :gsub("Button4", "BUTTON4")
-            :gsub("Button5", "BUTTON5")
-
-        local existingBinding = GetBindingAction(keyCombo)
-        if existingBinding and existingBinding ~= macroName and existingBinding ~= "" then
-            SetBinding(keyCombo, nil)
-            print("|cFF00FFFFNSRT:|r Overriding existing binding for " .. existingBinding .. " to " .. macroName)
-        end
-
-        local existingKeybind = GetBindingKey(macroName)
-        if existingKeybind and existingKeybind ~= keyCombo then
-            SetBinding(existingKeybind, nil)
-        end
-
-        local ok = SetBinding(keyCombo, macroName)
-        if ok then
-            SaveBindings(GetCurrentBindingSet())
-            return true
-        else
-            return false
-        end
-    end
-
-    local listening = false
-
-    local function GetModifiedKeyString(key)
-        local modifier = ""
-        if IsControlKeyDown() then modifier = modifier .. "CTRL-" end
-        if IsShiftKeyDown() then modifier = modifier .. "SHIFT-" end
-        if IsAltKeyDown() then modifier = modifier .. "ALT-" end
-
-        return modifier .. key
-    end
-
-    local clearKeybinding = function(self, _, macroName)
-        SetBinding(GetBindingKey(macroName), nil)
-        SaveBindings(GetCurrentBindingSet())
-        self:SetText("Unbound")
-        print("|cFF00FFFFNSRT:|r Keybinding cleared for " .. macroName)
-    end
-
-    local registerKeybinding = function(self, macroName, keybindName)
-        if not listening then
-            listening = true
-        else
-            return
-        end
-
-        local displayName = (macroName == "MACRO NS Ext Macro" and "External Macro") or (macroName == "MACRO NS PA Macro" and "Private Aura Macro") or (macroName == "MACRO NS Innervate" and "Innervate Macro") or "Macro"
-        local keybindingFrame = DF:CreateSimplePanel(NSUI, 300, 75, "Keybinding: " .. displayName, "KeybindingFrame", {
-            DontRightClickClose = true
-        })
-        keybindingFrame:SetPoint("CENTER", NSUI, "CENTER", 0, 0)
-        keybindingFrame:SetFrameStrata("DIALOG")
-        local keybindingFrame_text = keybindingFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        keybindingFrame_text:SetPoint("CENTER", keybindingFrame, "CENTER", 0, 0)
-        keybindingFrame_text:SetText([[Press a key or click here
-    (with optional modifiers) to bind the]].."\n"..displayName)
-
-
-        local function OnKeyDown(self, key)
-            if listening then
-                if key == "ESCAPE" then
-                    listening = false
-                    self:SetScript("OnKeyDown", nil)
-                    self:SetPropagateKeyboardInput(false)
-                    self:Hide()
-                    NSUI:Show()
-                    return
-                end
-
-                key = key:gsub("^LCTRL$", "CTRL")
-                    :gsub("^RCTRL$", "CTRL")
-                    :gsub("^LSHIFT$", "SHIFT")
-                    :gsub("^RSHIFT$", "SHIFT")
-                    :gsub("^LALT$", "ALT")
-                    :gsub("^RALT$", "ALT")
-
-                if key == "CTRL" or key == "SHIFT" or key == "ALT" then
-                    return nil -- Don't register this as a full keybind yet
-                end
-                local keyCombo = GetModifiedKeyString(key)
-                if keyCombo == "LeftButton" or keyCombo == "RightButton" then
-                    return nil -- dont register pure mouse buttons as keybinds, only with modifier
-                end
-
-                -- Bind keybind
-                bindKeybind(keyCombo, macroName)
-
-                listening = false
-                self:SetScript("OnKeyDown", nil)
-                self:SetPropagateKeyboardInput(false)
-                self:Hide()
-                NSUI:Show()
-
-                if general_tab:GetWidgetById(macroName) ~= nil then
-                    general_tab:GetWidgetById(macroName):SetText(keyCombo)
-                elseif externals_tab:GetWidgetById(macroName) ~= nil then
-                    externals_tab:GetWidgetById(macroName):SetText(keyCombo)
-                end
-            end
-        end
-
-        keybindingFrame:SetScript("OnKeyDown", OnKeyDown)
-        keybindingFrame:SetScript("OnMouseDown", OnKeyDown)
-        keybindingFrame:SetScript("OnHide", function()
-            listening = false
-        end)
-    end
-    -- end of keybinding logic
-
+    local tts_text_preview = "" 
     -- nickname logic
     local nickname_share_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_share_options = function()
@@ -1570,23 +1296,6 @@ function NSUI:Init()
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.Settings["NickNamesSyncSend"] = value
-                end
-
-            })
-        end
-        return t
-    end
-
-    
-    local weakauras_importaccept_options = {"Guild only", "Anyone", "None"}    
-    local build_weakauras_importaccept_options = function()
-        local t = {}
-        for i = 1, #weakauras_importaccept_options do
-            tinsert(t, {
-                label = weakauras_importaccept_options[i],
-                value = i,
-                onclick = function(_, _, value)
-                    NSRT.Settings["WeakAurasImportAccept"] = value
                 end
 
             })
@@ -1669,182 +1378,8 @@ function NSUI:Init()
     end
     -- end of nickname logic
 
-    -- WeakAuras imports
-    local function ImportWeakAura(name)
-        if WA and WA.Import then
-            WA.Import(NSI:GetWeakAura(name))
-        else
-            print("Error:WeakAuras not found")
-        end
-    end
-
-    local function SendWeakAuras()
-        local popup = DF:CreateSimplePanel(NSUI, 300, 150, "Send WeakAura", "NSUISendWeakAurasPopup", {
-            DontRightClickClose = true
-        })
-        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        popup:SetFrameLevel(100)
-
-        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "SendWATextEdit", true, false, true)
-        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
-        DF:ApplyStandardBackdrop(popup.test_string_text_box)
-        DF:ReskinSlider(popup.test_string_text_box.scroll)
-        popup.test_string_text_box:SetFocus()
-
-        popup.import_confirm_button = DF:CreateButton(popup, function()
-            local import_string = popup.test_string_text_box:GetText()
-            NSI:SendWAString(import_string)
-            popup.test_string_text_box:SetText("")
-            popup:Hide()
-        end, 280, 20, "Send")
-        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
-        popup.import_confirm_button:SetTemplate(options_button_template)
-
-        return popup
-    end
-
-    -- WeakAuras whitelist popup
-    local function WhitelistPopup()
-        local parent = NSUI
-        local whitelisted_wa_edit_frame = DF:CreateSimplePanel(parent, 400, window_height / 2,
-            "WeakAuras Update Whitelist",
-            "WhitelistWAEditFrame", {
-                DontRightClickClose = true,
-                NoScripts = true
-            })
-        whitelisted_wa_edit_frame:ClearAllPoints()
-        whitelisted_wa_edit_frame:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 2)
-        whitelisted_wa_edit_frame:Hide()
-
-
-        local function PrepareData()
-            local data = {}
-            for _, v in pairs(NSRT.Settings['UpdateWhitelist']) do
-                tinsert(data, { url = v.url, name = v.name })
-            end
-            return data
-        end
-
-        local function MasterRefresh(self)
-            local data = PrepareData()
-            self:SetData(data)
-            self:Refresh()
-        end
-
-        local function refresh(self, data, offset, totalLines)
-            for i = 1, totalLines do
-                local index = i + offset
-                local whitelistData = data[index]
-                if whitelistData then
-                    local line = self:GetLine(i)
-
-                    line.name = whitelistData.name
-                    line.url = whitelistData.url
-
-                    line.nameText:SetText(line.name)
-                    line.urlTextEntry:SetText(line.url)
-                end
-            end
-        end
-
-        local function createLineFunc(self, index)
-            local parent = self
-            local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
-            line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
-            line:SetSize(self:GetWidth() - 2, self.LineHeight)
-            DF:ApplyStandardBackdrop(line)
-
-            -- Name text
-            line.nameText = DF:CreateLabel(line, "", 9.5, "white")
-            line.nameText:SetWidth(120)
-            line.nameText:SetTemplate(options_text_template)
-            line.nameText:SetPoint("LEFT", line, "LEFT", 5, 0)
-
-            line.urlTextEntry = DF:CreateTextEntry(line, function() end, 200, 20)
-            line.urlTextEntry:SetAutoSelectTextOnFocus(true)
-            line.urlTextEntry:SetTemplate(options_dropdown_template)
-            line.urlTextEntry:SetPoint("LEFT", line.nameText, "RIGHT", 5, 0)
-
-            -- Delete button
-            line.deleteButton = DF:CreateButton(line, function()
-                NSI:RemoveWhitelistURL(line.url, line.name)
-                self:MasterRefresh()
-            end, 12, 12)
-            line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-            line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-            line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-
-            line.deleteButton:GetNormalTexture():SetDesaturated(true)
-            line.deleteButton:GetHighlightTexture():SetDesaturated(true)
-            line.deleteButton:GetPushedTexture():SetDesaturated(true)
-            line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
-
-            return line
-        end
-
-        local presetScrollLines = 9
-        local whitelisted_wa_edit_scrollbox = DF:CreateScrollBox(whitelisted_wa_edit_frame,
-            "$parentWhitelistedWAEditScrollBox", refresh, {}, 360,
-            window_height / 2 - 75, presetScrollLines, 20, createLineFunc)
-        whitelisted_wa_edit_scrollbox:SetPoint("TOPLEFT", whitelisted_wa_edit_frame, "TOPLEFT", 10, -30)
-        -- version_presets_edit_scrollbox:SetPoint("BOTTOMRIGHT", version_presets_edit_frame, "BOTTOMRIGHT", -25, 30)
-        whitelisted_wa_edit_scrollbox.MasterRefresh = MasterRefresh
-        DF:ReskinSlider(whitelisted_wa_edit_scrollbox)
-
-        for i = 1, presetScrollLines do
-            whitelisted_wa_edit_scrollbox:CreateLine(createLineFunc)
-        end
-
-        whitelisted_wa_edit_scrollbox:SetScript("OnShow", function(self)
-            self:MasterRefresh()
-        end)
-
-        -- Add new preset
-        local new_name_label = DF:CreateLabel(whitelisted_wa_edit_frame, "Name:", 11)
-        new_name_label:SetWidth(35)
-        new_name_label:SetPoint("TOPLEFT", whitelisted_wa_edit_scrollbox, "BOTTOMLEFT", 0, -20)
-
-        local new_name_entry = DF:CreateTextEntry(whitelisted_wa_edit_frame, function() end, 100, 20)
-        new_name_entry:SetPoint("LEFT", new_name_label, "RIGHT", 5, 0)
-        new_name_entry:SetTemplate(options_dropdown_template)
-
-        local new_url_label = DF:CreateLabel(whitelisted_wa_edit_frame, "URL:", 11)
-        new_url_label:SetWidth(30)
-        new_url_label:SetPoint("LEFT", new_name_entry, "RIGHT", 10, 0)
-
-        local new_url_entry = DF:CreateTextEntry(whitelisted_wa_edit_frame, function() end, 120, 20)
-        new_url_entry:SetPoint("LEFT", new_url_label, "RIGHT", 5, 0)
-        new_url_entry:SetTemplate(options_dropdown_template)
-
-        local add_button = DF:CreateButton(whitelisted_wa_edit_frame, function()
-            local name = new_name_entry:GetText()
-            local url = new_url_entry:GetText()
-            NSI:AddWhitelistURL(url, name)
-            whitelisted_wa_edit_scrollbox:MasterRefresh()
-            new_name_entry:SetText("")
-            new_url_entry:SetText("")
-        end, 60, 20, "New")
-        add_button:SetPoint("BOTTOMRIGHT", whitelisted_wa_edit_frame, "BOTTOMRIGHT", -10, 10)
-        add_button:SetTemplate(options_button_template)
-
-        return whitelisted_wa_edit_frame
-    end
-    NSUI.whitelisted_wa_edit_frame = WhitelistPopup()
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
-
-        if NSUI.OptionsChanged.general["PA_MACRO"] then
-            PASelfPingChanged()
-        end        
-        if NSUI.OptionsChanged.general["DEBUGLOGS"] then
-            if NSRT.Settings["DebugLogs"] then -- Add this data if enables this after a wipe as the data exists anyway
-                NSI:Print("Macro Data", NSI.MacroPresses)
-                NSI:Print("Assigned Externals", NSI.AssignedExternals)
-                NSI.AssignedExternals = {}
-                NSI.MacroPresses = {}
-            end
-        end
         wipe(NSUI.OptionsChanged["general"])
     end
     local nicknames_callback = function()
@@ -1885,27 +1420,11 @@ function NSUI:Init()
             NSI:MRTNickNameUpdated(true)
         end
 
-        if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
-            NSI:WeakAurasNickNameUpdated()
-        end
-
         wipe(NSUI.OptionsChanged["nicknames"])
-    end
-
-    local externals_callback = function()
-        if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
-            ExternalSelfPingChanged()
-        end
-
-        wipe(NSUI.OptionsChanged["externals"])
-    end
+    end    
 
     local versions_callback = function()
         wipe(NSUI.OptionsChanged["versions"])
-    end
-
-    local weakauras_callback = function()
-        wipe(NSUI.OptionsChanged["WeakAuras"])
     end
 
     -- options
@@ -1928,7 +1447,7 @@ function NSUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Enable Debug Logging",
-            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool. This might Error if you do not have the DevTool Addon installed.\nIf enabled after a wipe, it will still add External and Macro data to DevTool",
+            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool. This might Error if you do not have the DevTool Addon installed.",
             get = function() return NSRT.Settings["DebugLogs"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["DEBUGLOGS"] = true
@@ -2015,65 +1534,6 @@ Press 'Enter' to hear the TTS]],
         {
             type = "breakline"
         },   
-        {
-            type = "label",
-            get = function() return "Private Aura Macro" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable @player Ping",
-            desc = "Enable a @player ping when the private aura macro is used.",
-            get = function() return NSRT.Settings["PASelfPing"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.Settings["PASelfPing"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Combine Extra Action Button",
-            desc = "Combine the extra action button with the private aura macro.",
-            get = function() return NSRT.Settings["PAExtraAction"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.Settings["PAExtraAction"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Add Liquid Private Aura Macro",
-            desc = "Add Scan Event for Liquid Private Aura Macro",
-            get = function() return NSRT.Settings["LIQUID_MACRO"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.Settings["LIQUID_MACRO"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "label",
-            get = function() return "Private Aura Keybind:" end,
-        },
-        {
-            type = "button",
-            name = getMacroKeybind("MACRO NS PA Macro"),
-            desc = "Set the keybind for the private aura macro",
-            param1 = "MACRO NS PA Macro",
-            param2 = "Private Aura Keybind", -- whatever reloe names the keybind to be in Bindings.xml
-            func = function(self, _, param1, param2)
-                registerKeybinding(self, param1, param2)
-            end,
-            id = "MACRO NS PA Macro",
-        },   
-        {
-            type = "breakline"
-        },
         {
             type = "label",
             get = function() return "Cooldowns Options" end,
@@ -2286,18 +1746,6 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.Settings["WA"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] = true
-                NSRT.Settings["WA"] = value
-            end,
-            name = "Enable WeakAuras Nicknames",
-            desc = "Enable Nicknames to be used with WeakAuras. This only works if name formatting is used in Display or for any assignment aura.",
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
             get = function() return NSRT.Settings["MRT"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] = true
@@ -2345,266 +1793,7 @@ Press 'Enter' to hear the TTS]],
         }
     }
 
-    local externals_options1_table = {
-        { type = "label", get = function() return "Externals Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable @player Ping",
-            desc = "Enable a @player ping when the external macro is used.",
-            get = function() return NSRT.Settings["ExternalSelfPing"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] = true
-                NSRT.Settings["ExternalSelfPing"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "label",
-            get = function() return "External Macro Keybind:" end,
-        },
-        {
-            type = "button",
-            name = getMacroKeybind("MACRO NS Ext Macro"),
-            desc = "Set the keybind for the external macro",
-            param1 = "MACRO NS Ext Macro",
-            param2 = "External Macro Keybind",
-            func = function(self, _, param1, param2) -- this only ever registers leftclick need to manually set right click
-                registerKeybinding(self, param1, param2)
-            end,
-            id = "MACRO NS Ext Macro",
-        },
-        
-        
-        {
-            type = "blank",
-        },
-
-        {
-        type = "label",
-        get = function() return "Innervate Request Keybind:" end,
-        },
-        
-        {
-            type = "button",
-            name = getMacroKeybind("MACRO NS Innervate"),
-            desc = "Set the keybind for the Innervate Request macro",
-            param1 = "MACRO NS Innervate",
-            param2 = "Innervate Request Macro Keybind",
-            func = function(self, _, param1, param2) -- this only ever registers leftclick need to manually set right click
-                registerKeybinding(self, param1, param2)
-            end,
-            id = "MACRO NS Innervate",
-        },
-
-        {
-            type = "breakline"
-        },
-        {
-            type = "button",
-            name = "Test External",
-            desc = "Simulate recieving an external.",
-            func = function(self)
-                NSI:DisplayExternal(237554, GetUnitName("player"))
-            end,
-            nocombat = true
-        },
-        {
-            type = "blank",
-        },
-        {
-            type = "button",
-            name = "Toggle External Anchor",
-            desc = "Toggle the external anchor frame.",
-            func = function(self)
-                if NSUI.externals_anchor:IsShown() then
-                    NSUI.externals_anchor:Hide()
-                else
-                    NSUI.externals_anchor:Show()
-                end
-            end,
-            nocombat = true
-        },
-    }
-    local weakaura_options1_table = {
-        
-        {
-            type = "label",
-            get = function() return "Permanent Auras" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "button",
-            name = "Anchor Auras 1440p",
-            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras, scaled for a 1440p Monitor",
-            func = function(self)
-                ImportWeakAura("anchor_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "button",
-            name = "Anchor Auras 1080p",
-            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras, scaled for a 1080p Monitor",
-            func = function(self)
-                ImportWeakAura("anchor_weakaura_1080")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "button",
-            name = "External Alert",
-            desc = "Import WeakAura External Alert required for the external macro.",
-            func = function(self)
-                ImportWeakAura("external_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-
-        {
-            type = "button",
-            name = "Interrupt WA",
-            desc = "Import Interrupt Anchor WeakAura",
-            func = function(self)
-                ImportWeakAura("interrupt_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "breakline"
-        },
-
-        {
-            type = "label",
-            get = function() return "Raid Auras" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "button",
-            name = "Manaforge Raid WA",
-            desc = "Import Manaforge Omega WeakAuras",            
-            func = function(self)
-                ImportWeakAura("raid_weakaura_manaforge")
-            end,
-            nocombat = true,
-            spacement = true,
-        },
-        
-        
-        {
-            type = "button",
-            name = "Liberation Raid WA",
-            desc = "Import Liberation of Undermine Raid WeakAuras",
-            func = function(self)
-                ImportWeakAura("raid_weakaura_undermine")
-            end,
-            nocombat = true,
-            spacement = true,
-        },
-        {
-            type = "label",
-            get = function() return "Other Misc Auras" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "button",
-            name = "Manaforge Pace WA",
-            desc = "Import Manaforge Omega Pace WA",            
-            func = function(self)
-                ImportWeakAura("pace_weakaura_manaforge")
-            end,
-            nocombat = true,
-            spacement = true,
-        },
-
-        {
-            type = "breakline"
-        },
-
-        {
-            type = "label",
-            get = function() return "WeakAura Updates" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Auto Update WL WA",
-            desc = "Automatically update whitelisted WeakAuras. (Requires WeakAuras Companion Desktop Application)",
-            get = function() return NSRT.Settings["AutoUpdateWA"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["AutoUpdateWA"] = value
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Auto Update Raid WA",
-            desc = "Automatically updates or imports the current season's raid Northern Sky WeakAuras.",
-            get = function() return NSRT.Settings["AutoUpdateRaidWA"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["AutoUpdateRaidWA"] = value
-            end,
-        },
-
-        {
-            type = "blank",
-        },
-
-        {
-            type = "button",
-            name = "Whitelist WeakAuras",
-            desc = "Whitelist WeakAura URLs for auto updating.",
-            func = function(self)
-                if not NSUI.whitelisted_wa_edit_frame:IsShown() then
-                    NSUI.whitelisted_wa_edit_frame:Show()
-                else
-                    NSUI.whitelisted_wa_edit_frame:Hide()
-                end
-            end,
-            spacement = true
-        },
-
-        {
-            type = "breakline"
-        },
-        {
-            type = "label",
-            get = function() return "WeakAuras Sharing" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "button",
-            name = "Send WeakAura to Raid",
-            desc = "Send an individual WeakAura string to the raid.",
-            func = function(self)
-                SendWeakAuras()
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "select",
-            get = function() return NSRT.Settings["WeakAurasImportAccept"] end,
-            values = function() return build_weakauras_importaccept_options() end,
-            name = "Import Accept",
-            desc = "Choose who you are accepting WeakAuras imports to come from. Note that even if guild is selected here this still only works when in the same raid as them",
-            nocombat = true
-        },
-    }
+    
     local setupmanager_options1_table = {
         
         {
@@ -3241,6 +2430,12 @@ Press 'Enter' to hear the TTS]],
     local assignments_options1_table = {        
         {
             type = "label",
+            get = function() return "The Settings of the Raidleader will overwrite your own Settings so you don't have to worry about these." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "label",
             get = function() return "Vaelgor & Ezzorak" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
@@ -3414,12 +2609,6 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nicknames_callback)
-    DF:BuildMenu(externals_tab, externals_options1_table, 10, -100, window_height - 10, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        externals_callback)
-    DF:BuildMenu(weakaura_tab, weakaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        weakaura_callback)
     DF:BuildMenu(setupmanager_tab, setupmanager_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         setupmanager_callback)
@@ -3447,21 +2636,7 @@ Press 'Enter' to hear the TTS]],
         end
     end, 20, 20, "")
     suf_help_button:SetIcon(help_i_texture)
-    suf_help_button:SetPoint("LEFT", SUF_Toggle.hasLabel, "RIGHT", 0, 0)
-
-    -- Set right click functions for clearing keybinding on keybind buttons
-    local PAMacroButton = general_tab:GetWidgetById("MACRO NS PA Macro")
-    local ExternalMacroButton = externals_tab:GetWidgetById("MACRO NS Ext Macro")
-    local InnervateMacroButton = externals_tab:GetWidgetById("MACRO NS Innervate")
-    if PAMacroButton then
-        PAMacroButton:SetClickFunction(clearKeybinding, PAMacroButton.param1, PAMacroButton.param2, "RightButton")
-    end
-    if ExternalMacroButton then
-        ExternalMacroButton:SetClickFunction(clearKeybinding, ExternalMacroButton.param1, ExternalMacroButton.param2, "RightButton")
-    end
-    if InnervateMacroButton then
-        InnervateMacroButton:SetClickFunction(clearKeybinding, InnervateMacroButton.param1, InnervateMacroButton.param2, "RightButton")
-    end
+    suf_help_button:SetPoint("LEFT", SUF_Toggle.hasLabel, "RIGHT", 0, 0)   
 
     -- Build version check UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
@@ -3476,64 +2651,6 @@ Press 'Enter' to hear the TTS]],
     NSUI.StatusBar.authorName:SetText(statusBarText)
 end
 
-function NSI:DisplayExternal(spellId, unit)
-    local text = ""
-    if spellId == "NoInnervate" then        
-        local spellIcon = C_Spell.GetSpellInfo(29166).iconID
-        NSUI.external_frame.texture:SetTexture(spellIcon)
-        text = "|cffff0000NO INNERVATE|r"
-    elseif spellId then
-        local spellIcon = C_Spell.GetSpellInfo(spellId).iconID
-        NSUI.external_frame.texture:SetTexture(spellIcon)
-        local giver = NSAPI:Shorten(unit, 8)
-        text = "From: " .. giver
-    else
-        NSUI.external_frame.texture:SetTexture(237555)
-        text = "|cffff0000NO EXTERNAL|r"
-    end
-
-    NSUI.external_frame.text:SetText(text)
-    NSUI.external_frame:Show()
-
-    C_Timer.After(4, function()
-        NSUI.external_frame:Hide()
-    end)
-end
-
-function NSUI:LoadExternalsAnchorPosition()
-    NSRT.NSUI.externals_anchor.settings = NSRT.NSUI.externals_anchor.settings or {
-        anchorPoint = {
-            "CENTER", "UIParent", "CENTER", 0, 150
-        },
-        width = 70,
-        height = 70
-    }
-    if not NSRT.NSUI.externals_anchor.settings.anchorPoint or not NSRT.NSUI.externals_anchor.settings.width or not NSRT.NSUI.externals_anchor.settings.height then
-        NSI:Print("No externals anchor settings found.... THIS SHOULD NOT HAPPEN")
-        return
-    end
-    NSUI.externals_anchor:SetPoint(unpack(NSRT.NSUI.externals_anchor.settings.anchorPoint))
-    NSUI.externals_anchor:SetSize(NSRT.NSUI.externals_anchor.settings.width, NSRT.NSUI.externals_anchor.settings.height)
-end
-
-function NSUI:SaveExternalsAnchorPosition()
-    local anchorPoint = { NSUI.externals_anchor:GetPoint() }
-    anchorPoint[2] = "UIParent"
-
-    local width, height = NSUI.externals_anchor:GetSize()
-    NSRT.NSUI.externals_anchor.settings = {
-        anchorPoint = anchorPoint,
-        width = width,
-        height = height
-    }
-end
-
-function NSUI:ResetExternalsAnchorPosition()
-    NSUI.externals_anchor:ClearAllPoints()
-    NSUI.externals_anchor:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-    NSUI.externals_anchor:SetSize(70, 70)
-    NSRT.NSUI.externals_anchor.settings.anchorPoint = { "CENTER", UIParent, "CENTER", 0, 150 }
-end
 function NSUI:ToggleOptions()
     if NSUI:IsShown() then
         NSUI:Hide()
@@ -3568,33 +2685,7 @@ function NSI:NickNamesSyncPopup(unit, nicknametable)
     return popup
 end
 
-function NSI:WAImportPopup(unit, str) 
-    local popup = DF:CreateSimplePanel(UIParent, 300, 120, "WA Import", "WAImportPopup", {
-        DontRightClickClose = true
-    })
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-
-    local label = DF:CreateLabel(popup, NSAPI:Shorten(unit) .. " is attempting to send you a WeakAura.", 11)
-
-    label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-    label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
-    label:SetJustifyH("CENTER")
-
-    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, "Cancel")
-    cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
-    cancel_button:SetTemplate(options_button_template)
-
-    local accept_button = DF:CreateButton(popup, function() 
-        WA.Import(str)
-        popup:Hide() 
-    end, 130, 20, "Accept")
-    accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
-    accept_button:SetTemplate(options_button_template)
-
-    return popup
-end
-
-function NSAPI:DisplayText(text, duration)
+function NSI:DisplayText(text, duration)
     if NSUI and NSUI.generic_display then
         NSUI.generic_display.text:SetText(text)
         NSUI.generic_display:Show()

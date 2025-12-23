@@ -17,16 +17,8 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
-function NSAPI:Version() -- function for version check WA
-    return 18
-end
-
-function NSI:IsMidnight()
-  return select(4, GetBuildInfo()) >= 120000
-end
-
 function NSI:Restricted()
-    return (self:IsMidnight() and C_InstanceEncounter.IsEncounterInProgress()) or (WeakAuras and WeakAuras.CurrentEncounter)
+    return C_InstanceEncounter.IsEncounterInProgress()
 end
 
 function NSI:Print(...)
@@ -59,7 +51,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     local classFile = unit and select(2, UnitClass(unit))
     if specicon then
         local specid = 0
-        if unit then specid = NSAPI:GetSpecs(unit) or 0 end
+        if unit then specid = NSI:GetSpecs(unit) or 0 end
         local icon = select(4, GetSpecializationInfoByID(specid))
         if icon then 
             specicon = "\124T"..icon..":12:12:0:0:64:64:4:60:4:60\124t"
@@ -100,7 +92,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     end
 end
 
-function NSAPI:GetSpecs(unit)
+function NSI:GetSpecs(unit)
     if unit then
         return NSI.specs[unit] or false -- return false if no information available for that unit so it goes to the next fallback
     else
@@ -109,120 +101,14 @@ function NSAPI:GetSpecs(unit)
 end
 
 
-function NSAPI:GetNote(disablecheck, rawonly) -- Get rid of extra spaces and color coding. Also converts nicknames
+function NSI:GetNote() -- simply for note comparison now
     if not C_AddOns.IsAddOnLoaded("MRT") then
         return "empty"
     end
     if not VMRT.Note.Text1 then
         return "empty"
     end
-    local persnote = _G.VMRT.Note.SelfText or ""
-    persnote =  strtrim(persnote)
-    NSI.persnotedisable = false
-    if persnote and persnote ~= "" then
-        for line in persnote:gmatch('[^\r\n]+') do
-            line = strtrim(line)
-            if line == "nsdisable" then
-                NSI.persnotedisable = true
-                NSAPI.disable = true
-                if disablecheck then return "" end
-                break
-            end
-        end
-    end
-    local note = _G.VMRT.Note.Text1 or ""
-    if rawonly then return note end
-    local now = GetTime()
-    if (not NSI.RawNote) or NSI.RawNote ~= note or NSAPI.disable or ((not NSI.LastNote) or now > NSI.LastNote+2) then
-        NSI.LastNote = now
-        NSAPI.UseLiquid = false
-        NSI.notedisable = false
-        local newnote = ""
-        local list = false
-        note = strtrim(note)
-        note = note:gsub("||r", "") -- clean colorcode
-        note = note:gsub("||c%x%x%x%x%x%x%x%x", "") -- clean colorcode        
-        for line in note:gmatch('[^\r\n]+') do
-            line = strtrim(line)
-            if strlower(line) == "nsuseliquid" then
-                NSAPI.UseLiquid = true
-            elseif strlower(line) == "nsdisable" then -- global disable all NS Assign Auras for everyone in the raid
-                NSAPI.disable = true
-                NSI.notedisable = true
-                if disablecheck then return "" end -- end early if we found the only thing we care about would like to just return "" in all cases here but then interrupt aura stops working with nsdisable.      
-            --check for start/end of the name list
-            elseif string.match(line, "ns.*start") or strlower(line) == "intstart" then -- match any string that starts with "ns" and ends with "start" as well as the interrupt WA
-                list = true
-            elseif string.match(line, "ns.*end") or strlower(line) == "intend" then
-                list = false
-                newnote = newnote..line.."\n"
-            end
-            if list then
-                newnote = newnote..line.."\n"
-            end
-        end
-        if disablecheck then return "" end -- if all we care about is checking if assignments are disabled then just return an empty string early.
-        note = newnote
-        local namelist = {}
-        local groupsdone = {}
-        for group in note:gmatch("[gG]roup(%d+)") do
-            local num = tonumber(group)
-            local names = ""
-            if num and num >=1 and num <= 8 and not groupsdone[num] then
-                groupsdone[num] = true
-                for i=1, 40 do
-                    local name, _, subgroup = GetRaidRosterInfo(i)
-                    if name and subgroup == num then
-                        if names == "" then
-                            names = name
-                        else
-                            names = names.." "..name
-                        end
-                    end
-                end
-            end
-            if names ~= "" then
-                note = note:gsub("[gG]roup"..group, names)
-            end
-        end
-        for name in note:gmatch("%S+") do -- finding all strings
-            local charname = (UnitIsVisible(name) and name) or NSAPI:GetChar(name, true, "Note")
-            if name ~= charname and UnitExists(charname) and not namelist[name] then
-                namelist[name] = charname
-            end
-        end
-        for nickname, charname in pairs(namelist) do
-            note = note:gsub("(%f[%w])"..nickname.."(%f[%W])", "%1"..charname.."%2")
-        end        
-        NSI.Note = note
-    end    
-    NSI.RawNote = _G.VMRT.Note.Text1 or ""
-    NSAPI.disable = NSI.notedisable or NSI.persnotedisable
-    NSI.Note = NSI.Note or ""
-    return NSI.Note
-end
-
-function NSAPI:UnitAura(unit, spell) -- simplify aura checking for myself
-    if unit and UnitExists(unit) and spell then
-        if type(spell) == "string" or not C_UnitAuras.GetUnitAuraBySpellID then
-            local spelltable = C_Spell.GetSpellInfo(spell)
-            return spelltable and C_UnitAuras.GetAuraDataBySpellName(unit, spelltable.name)
-        elseif type(spell) == "number" then 
-            return C_UnitAuras.GetUnitAuraBySpellID(unit, spell)
-        else
-            return false
-        end
-    end
-end
-
-function NSAPI:TTSCountdown(num)
-    for i= num, 1, -1 do
-        if i == num then 
-            NSAPI:TTS(i)
-        else
-            C_Timer.After(num-i, function() NSAPI:TTS(i) end)
-        end
-    end
+    return _G.VMRT.Note.Text1 or ""
 end
 
 function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
@@ -230,15 +116,8 @@ function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Her
     return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or NSRT.Settings["Debug"]
 end
 
--- this one is public as I want to use it in WeakAuras as well
-function NSAPI:DeathCheck(unit)
-    if unit and UnitExists(unit) then
-        return (UnitIsDead(unit) and not UnitIsFeignDeath(unit)) or NSAPI:UnitAura(unit, 27827)
-    end
-end
-
 -- technically don't need this to be public but it's good for backwards compatibility for a while
-function NSAPI:GetHash(text)
+function NSI:GetHash(text)
     local counter = 1
     local len = string.len(text)
     for i = 1, len, 3 do
@@ -250,52 +129,36 @@ function NSAPI:GetHash(text)
     return math.fmod(counter, 4294967291) -- 2^32 - 5: Prime (and different from the prime in the loop)
 end
 
+-- keeping these two in global as I might want to use them elsewhere still
+function NSAPI:TTSCountdown(num)
+    for i= num, 1, -1 do
+        if i == num then 
+            NSAPI:TTS(i)
+        else
+            C_Timer.After(num-i, function() NSAPI:TTS(i) end)
+        end
+    end
+end
+
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
-        local secret = NSI:IsMidnight() and issecretvalue(sound)
+        local secret = issecretvalue(sound)
         local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))          
         if handle then
             PlaySoundFile(path..sound..".ogg", "Master")
         else
             sound = tostring(sound)
             local num = voice or NSRT.Settings["TTSVoice"]
-            if NSI:IsMidnight() then
-                C_VoiceChat.SpeakText(
-                    num,
-                    sound,
-                    C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-                    NSRT.Settings["TTSVolume"],
-                    overlap
-                )
-            else
-                C_VoiceChat.SpeakText(
-                    num,
-                    sound,
-                    Enum.VoiceTtsDestination.LocalPlayback,
-                    C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-                    NSRT.Settings["TTSVolume"]
-                )
-            end
+            C_VoiceChat.SpeakText(
+                num,
+                sound,
+                C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
+                NSRT.Settings["TTSVolume"],
+                overlap
+            )
         end
     end    
-end
-
-function NSAPI:PrivateAura()
-    local now = GetTime()
-    if (not NSAPI.LastPAMacro) or NSAPI.LastPAMacro < now-4 then -- putting this into global NSAPI namespace to allow auras to reset it if ever required
-        if not NSI:IsMidnight() then
-            NSAPI.LastPAMacro = now
-            WeakAuras.ScanEvents("NS_PA_MACRO", true) -- this is for backwards compatibility
-            NSI:Broadcast("NS_PAMACRO", "RAID", "nilcheck") -- this will be used going forward, slightly different wording to prevent issues with old auras
-        end
-    end
-end
-
-function NSI:SendWAString(str)
-    if str and str ~= "" and type(str) == "string" then
-        self:Broadcast("NSI_WA_SYNC", "RAID", str)
-    end
 end
 
 function NSI:GetSubGroup(unit)
@@ -313,128 +176,6 @@ function NSI:SpecToName(specid)
     if not specName then return "" end
     local color = GetClassColorObj(classFile)
     return "\124T" .. icon .. ":10:10:0:0:64:64:4:60:4:60\124t" .. " " .. color:WrapTextInColorCode(specName)
-end
-
-local function ON_WA_UPDATE()
-    table.remove(NSI.importtable, 1)
-    if #NSI.importtable > 0 then
-        WeakAuras.Import(NSI.importtable[1], nil, ON_WA_UPDATE)
-    end
-end
-function NSAPI:GUIDInfo(unit)
-    if UnitExists(unit) then
-        local G = UnitGUID(unit)
-        local unitType, _, _, _, _, npcID, spawnUID = strsplit("-", G)
-        if unitType == "Creature" or unitType == "Vehicle" then
-            local spawnEpoch = GetServerTime() - (GetServerTime() % 2^23)
-            local spawnEpochOffset = bit.band(tonumber(string.sub(spawnUID, 5), 16), 0x7fffff)
-            local spawnIndex = bit.rshift(bit.band(tonumber(string.sub(spawnUID, 1, 5), 16), 0xffff8), 3)
-
-            return npcID, spawnIndex
-        end
-    end
-end
-
-function NSI:AutoImport()
-    self.importtable = {}
-    self.imports = {}
-    if not WeakAuras then return end
-    if NSRT.Settings["AutoUpdateRaidWA"] then        
-        if WeakAurasCompanionData then
-            local WeakAurasData = {
-                slugs = {
-                    ["NSManaforge"] = {
-                        name = self.RaidWAData.name,
-                        author = "Reloe",
-                        wagoVersion = tostring(self.RaidWAData.version),
-                        wagoSemver = self.RaidWAData.wagoVersion,
-                        source = "Northern Sky Raid Tools",
-                        versionNote = self.RaidWAData.versionNote,
-                        logo = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\NSLogo.blp",
-                        refreshLogo = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\NSLogo.blp",
-                        encoded = self.RaidWAData.string
-                    }
-                }
-            }
-            WeakAuras.AddCompanionData(WeakAurasData)
-        end
-        local waData = WeakAuras.GetData(self.RaidWAData.name)
-        local version = waData and waData.url and waData.url:match("%d+$") or 0
-        version = version and tonumber(version) or 0
-        if (self.RaidWAData.version > version or not version) and self.RaidWAData.string then
-            table.insert(self.importtable, self.RaidWAData.string)
-        end
-    end
-    if NSRT.Settings["AutoUpdateWA"] then
-        local WAdata = WeakAurasCompanionData and WeakAurasCompanionData.WeakAuras and WeakAurasCompanionData.WeakAuras.slugs
-        local WagoData = WagoAppCompanionData 
-        if WAdata then
-            for k, v in pairs(WAdata) do
-                if NSRT.Settings["UpdateWhitelist"][k] then
-                    local url = ""
-                    for a, b in pairs(WeakAurasSaved.displays) do
-                        if b.url then
-                            if (b.url:match("^%w+$") or b.url:match("wago%.io/([%w_]+)")) == k then 
-                                url = b.url
-                                break
-                            end
-                        end
-                    end
-                    local version = url and url ~= "" and url:match("%d+$") or 0
-                    version = version and tonumber(version) or 0
-                    if version ~= 0 and tonumber(v.wagoVersion) > version and not self.imports[url] then
-                        self.imports[url] = true
-                        table.insert(self.importtable, v.encoded)
-                    end
-                end
-            end
-        end
-        
-        if wagoData then
-            for k, v in pairs(WagoAppCompanionData["ids"]) do
-                if NSRT.Settings["UpdateWhitelist"][v] or NSRT.Settings["Debug"] then
-                    local data = WagoAppCompanionData["slugs"][v]
-                    if data and data.wagoVersion then
-                        local url = ""
-                        for a, b in pairs(WeakAurasSaved.displays) do
-                            if b.wagoID == k then
-                                url = b.url
-                                break
-                            end
-                        end
-                        local version = url and url ~= "" and url:match("%d+$") or 0
-                        version = version and tonumber(version) or 0
-                        if version ~= 0 and tonumber(data.wagoVersion) > version and not self.imports[url] then
-                            self.imports[url] = true
-                            table.insert(self.importtable, WagoAppCompanionData["slugs"][v].encoded)
-                        end
-                    end
-                end
-            end
-        end
-    end
-    if #self.importtable > 0 then
-        WeakAuras.Import(self.importtable[1], nil, ON_WA_UPDATE)
-    end
-end
-
-
-function NSI:AddWhitelistURL(url, name)
-    local id = url:match("^%w+$") or url:match("wago%.io/([%w_]+)")
-    if id and url and name then NSRT.Settings["UpdateWhitelist"][id] = {name = name, url = url} end
-end
-
-
-function NSI:RemoveWhitelistURL(url, name)
-    local id = ""
-    if url:match("^%w+$") then
-        id = url
-    else
-        id = url:match("wago%.io/([%w_]+)")
-    end
-    if NSRT.Settings["UpdateWhitelist"][id] then
-        NSRT.Settings["UpdateWhitelist"][id] = nil
-    end
 end
 
 function NSI:Utf8Sub(str, startChar, endChar)

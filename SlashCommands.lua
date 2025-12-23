@@ -16,7 +16,7 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "sync" then
         NSI:NickNamesSyncPopup(GetUnitName("player"), "yayayaya")
     elseif msg == "display" then
-        NSAPI:DisplayText("Display text", 8)
+        NSI:DisplayText("Display text", 8)
     elseif msg == "debug" then
         if NSRT.Settings["Debug"] then
             NSRT.Settings["Debug"] = false

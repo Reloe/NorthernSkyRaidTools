@@ -118,7 +118,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         local subgroup = select(3, GetRaidRosterInfo(i))
         local unit = "raid"..i
         if not UnitExists(unit) then break end
-        local specid = NSAPI:GetSpecs(unit) or 0
+        local specid = NSI:GetSpecs(unit) or 0
         local class = select(3, UnitClass(unit))
         local role = UnitGroupRolesAssigned(unit)
         if subgroup <= lastgroup then
@@ -403,11 +403,7 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             self.specs = {}
-            if self:IsMidnight() then
-                NSI:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
-            else
-                NSAPI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
-            end
+            NSI:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
