@@ -903,6 +903,36 @@ local function BuildRemindersEditUI()
     TestButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
     TestButton:SetTemplate(options_button_template)
 
+    local function DeleteBossReminder(self, line)
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Reminder Deletion", "NSRTDeleteReminderPopup")
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local text = DF:CreateLabel(popup,
+            "Are you sure you want to delete this reminder?", 12, "orange")
+        text:SetPoint("TOP", popup, "TOP", 0, -30)
+        text:SetJustifyH("CENTER")
+
+        local confirmButton = DF:CreateButton(popup, function()
+            if NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
+                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+            end
+            NSI:RemoveReminder(line.name)
+            self:SetData(NSI:GetAllReminderNames())
+            self:MasterRefresh()
+            popup:Hide()
+        end, 100, 30, "Confirm")
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+
+        local cancelButton = DF:CreateButton(popup, function()
+            popup:Hide()
+        end, 100, 30, "Cancel")
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        popup:Show()
+    end
+
     local function createLineFunc(self, index)
         local parent = self
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
@@ -920,7 +950,7 @@ local function BuildRemindersEditUI()
             if not oldname then return end
             local newname = self:GetText()
             if oldname == newname then return end
-            NSRT.Reminders[newname] = NSRT.Reminders[oldname]
+            NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:" .. newname)
             if NSRT.ActiveReminder == oldname then
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActiveReminder = newname
@@ -932,12 +962,7 @@ local function BuildRemindersEditUI()
         
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
-            if NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
-                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
-            end
-            NSI:RemoveReminder(line.name)
-            self:SetData(NSI:GetAllReminderNames())
-            self:MasterRefresh()
+            DeleteBossReminder(self, line)
         end, 12, 12)
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
