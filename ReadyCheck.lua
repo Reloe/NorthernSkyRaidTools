@@ -149,13 +149,13 @@ function NSI:GearCheck()
     if NSRT.ReadyCheckSettings.GatewayControlCheck and not self:GatewayControlCheck() then
         table.insert(missing, "Missing |cFF00FF00Gateway Control Shard|r")
     end
-    if not self.MainstatGem then
+    if NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
         table.insert(missing, "Missing |cFF00FF00Mainstat Gem|r")
     end
-    if repair then
+    if NSRT.ReadyCheckSettings.RepairCheck and repair then
         table.insert(missing, "Item needs |cFF00FF00Repair|r")
     end
-    if crafted < 2 then
+    if NSRT.ReadyCheckSettings.CraftedCheck and crafted < 2 then
         table.insert(missing, "Missing |cFF00FF00Embellishment|r")
     end
     local text = ""
