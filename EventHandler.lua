@@ -37,7 +37,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
-            NSRT.ReminderSettings.MRTNote = NSRT.ReminderSettings.MRTNote or false -- enable for MRT note
             NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
             NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
             if NSRT.ReminderSettings.SpellTTS == nil then NSRT.ReminderSettings.SpellTTS = true end
@@ -92,7 +91,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
             NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
             NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
-            NSRT.Settings["RebuffCheck"] = NSRT.Settings["RebuffCheck"] or false
+            NSRT.ReadyCheckSettings = NSRT.ReadyCheckSettings or {}
+            NSRT.ReadyCheckSettings.MissingItemCheck = NSRT.ReadyCheckSettings.MissingItemCheck or false
+            NSRT.ReadyCheckSettings.EnchantCheck = NSRT.ReadyCheckSettings.EnchantCheck or false
+            NSRT.ReadyCheckSettings.GemCheck = NSRT.ReadyCheckSettings.GemCheck or false
+            NSRT.ReadyCheckSettings.ItemLevelCheck = NSRT.ReadyCheckSettings.ItemLevelCheck or false
+            NSRT.ReadyCheckSettings.CraftedCheck = NSRT.ReadyCheckSettings.CraftedCheck or false
+            NSRT.ReadyCheckSettings.RepairCheck = NSRT.ReadyCheckSettings.RepairCheck or false
+            NSRT.ReadyCheckSettings.RebuffCheck = NSRT.ReadyCheckSettings.RebuffCheck or false
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
@@ -124,6 +130,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end        
         
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+        NSUI.generic_display:Hide()
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -182,25 +189,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and wowevent then
         if self:Restricted() then return end
-        self.LastBroadcast = GetTime()
-        if self:DifficultyCheck(14) then -- only care about note comparison in normal, heroic&mythic raid
-            local note = self:GetNote()
-            if note ~= "empty" then
-                local hashed = self:GetHash(note) or ""     
-                self:Broadcast("MRT_NOTE", "RAID", hashed)   
-            end
+        self.LastBroadcast = GetTime()        
+        if UnitIsGroupLeader("player") then
+            -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
+            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
+            self.Assignments = NSRT.AssignmentSettings
         end
-        if self:DifficultyCheck(14) then
-            if UnitIsGroupLeader("player") then
-                self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
-                self.Assignments = NSRT.AssignmentSettings
+            if self:DifficultyCheck(14) then
+                self:StoreFrames(true)
+                C_Timer.After(1, function()
+                    self:EventHandler("NSI_READY_CHECK", false, true)
+                end)     
             end
-            self.Difference = {}
-            self:StoreFrames(true)
-            C_Timer.After(1, function()
-                self:EventHandler("NS_COMPARE_REMINDER", false, true)
-            end)
-        end
         if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
             self:CheckCooldowns()
         end
@@ -218,12 +218,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
-        C_Timer.After(1, function()
-            self:EventHandler("NSI_READY_CHECK", false, true)
-        end)        
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, remindertable, assigntable = ...
-        if UnitIsGroupLeader(unit) then
+        if UnitIsGroupLeader(unit) and self:DifficultyCheck(14) then
             if NSRT.ReminderSettings.enabled then
                 self.Reminder = remindertable
                 self:ProcessReminder()
@@ -232,22 +229,27 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_READY_CHECK" and internal then
         if self:Restricted() then return end
-        if NSRT.Settings["RebuffCheck"] then
-            self:BuffCheck()
+        local text = ""
+        if NSRT.ReadyCheckSettings.RebuffCheck then
+            local buff = self:BuffCheck()
+            if buff and buff ~= "" then text = buff end
         end        
+        if UnitLevel("player") >= 90 then
+            local Gear = self:GearCheck()
+            if Gear and Gear ~= "" then
+                if text == "" then
+                    text = Gear
+                else
+                    text = text.."\n"..Gear
+                end
+            end
+        end
+        if text ~= "" then
+            self:DisplayText(text)
+        end
     elseif e == "GROUP_FORMED" and wowevent then 
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
-
-    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and internal then
-        if self:Restricted() then return end
-        local _, hashed = ...     
-        if hashed ~= "" then
-            local note = C_AddOns.IsAddOnLoaded("MRT") and self:GetHash(self:GetNote()) or ""    
-            if note ~= "" and note ~= hashed then
-                self:DisplayText("MRT Note Mismatch detected", 5)
-            end
-        end
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
         local unit, ver, ignoreCheck = ...        

@@ -14,7 +14,8 @@ local TABS_LIST = {
     { name = "SetupManager", text = "Setup Manager"},
     { name = "Reminders", text = "Reminders"},
     { name = "Assignments", text = "Assignments"},
-    { name = "EncounterAlerts", text = "Encounter Alerts"}
+    { name = "EncounterAlerts", text = "Encounter Alerts"},
+    { name = "ReadyCheck", text = "Ready Check"},
 }
 local authorsString = "By Reloe & Rav"
 
@@ -1202,14 +1203,16 @@ function NSUI:Init()
     local reminder_tab = tabContainer:GetTabFrameByName("Reminders")
     local assignments_tab = tabContainer:GetTabFrameByName("Assignments")
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
+    local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
-    generic_display:SetPoint("CENTER", UIParent, "CENTER", 0, 350)
+    generic_display:SetPoint("CENTER", UIParent, "CENTER", -200, 400)
     generic_display:SetSize(300, 100)
     generic_display.text = generic_display:CreateFontString(nil, "OVERLAY")
     generic_display.text:SetFont(expressway, 20, "OUTLINE")
-    generic_display.text:SetPoint("CENTER", generic_display, "CENTER", 0, 0)
+    generic_display.text:SetPoint("TOPLEFT", generic_display, "TOPLEFT", 0, 0)
+    generic_display.text:SetJustifyH("LEFT")
     generic_display:Hide()
     NSUI.generic_display = generic_display
 
@@ -1732,7 +1735,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["MRT"] = value
             end,
             name = "Enable MRT Nicknames",
-            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display. Nicknames in Assignments will still work with this disabled as long as you have the character data.",
+            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display.",
             nocombat = true
         },
         {
@@ -2409,8 +2412,19 @@ Press 'Enter' to hear the TTS]],
     }
     local assignments_options1_table = {        
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Assignment on Pull",
+            desc = "Shows your Assignment on Pull",
+            get = function() return NSRT.AssignmentSettings.OnPull end,
+            set = function(self, fixedparam, value)
+                NSRT.AssignmentSettings.OnPull = value
+            end,
+            nocombat = true,
+        },
+        {
             type = "label",
-            get = function() return "The Settings of the Raidleader will overwrite your own Settings so you don't have to worry about these." end,
+            get = function() return "For the following Boxes only the Settings of the Raidleader matter." end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
@@ -2581,6 +2595,99 @@ Press 'Enter' to hear the TTS]],
         }
     }
 
+    local readycheck_options1_table = {        
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Missing Item Check",
+            desc = "Checks if any slots are empty during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.MissingItemCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.MissingItemCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Item Level Check",
+            desc = "Checks if you have any slot equipped below the minimum item level during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.ItemLevelCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.ItemLevelCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Embellishment Check",
+            desc = "Checks if you have 2 Embellishments equipped during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.CraftedCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.CraftedCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enchant Check",
+            desc = "Checks if you have all slots enchanted during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.EnchantCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.EnchantCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Gem Check",
+            desc = "Checks if you have all slots gemmed during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.GemCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.GemCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Repair Check",
+            desc = "Checks if any piece needs repair during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.RepairCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.RepairCheck = value
+            end,
+            nocombat = true,
+        },         
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Gateway Control Shard Check",
+            desc = "Checks if you have a Gateway Control Shard during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.GatewayControlShardCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.GatewayControlShardCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Rebuff Check",
+            desc = "Checks if you any relevant class needs your buff during ready checks",
+            get = function() return NSRT.ReadyCheckSettings.RebuffCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.RebuffCheck = value
+            end,
+            nocombat = true,
+        }, 
+
+    }
+
 
     -- Build options menu for each tab
     DF:BuildMenu(general_tab, general_options1_table, 10, -100, window_height - 10, false, options_text_template,
@@ -2601,6 +2708,10 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(encounteralerts_tab, encounteralerts_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         encounteralerts_callback)
+    DF:BuildMenu(readycheck_tab, readycheck_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        readycheck_callback)
+
 
     -- Add SUF Setup guide tooltip button thingy
 
@@ -2666,10 +2777,11 @@ function NSI:NickNamesSyncPopup(unit, nicknametable)
 end
 
 function NSI:DisplayText(text, duration)
+    if self:Restricted() then return end
     if NSUI and NSUI.generic_display then
         NSUI.generic_display.text:SetText(text)
         NSUI.generic_display:Show()
-        C_Timer.After(duration or 4, function() NSUI.generic_display:Hide() end)
+        C_Timer.After(duration or 10, function() NSUI.generic_display:Hide() end)
     end
 end
 
