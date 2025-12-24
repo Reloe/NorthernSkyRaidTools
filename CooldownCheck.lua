@@ -9,6 +9,7 @@ NSI.SPECIALIZATION_MAP = {
     -- Demon Hunter
     HAVOC = 577,
     VENGEANCE = 581,
+    DEVOURER = 1480,
 
     -- Druid
     BALANCE = 102,
@@ -69,7 +70,7 @@ NSI.SPECIALIZATION_MAP = {
 
 NSI.CLASS_SPECIALIZATION_MAP = {
     ["Death Knight"] = { 250, 251, 252 },
-    ["Demon Hunter"] = { 577, 581 },
+    ["Demon Hunter"] = { 577, 581, 1480},
     ["Druid"] = { 102, 103, 104, 105 },
     ["Evoker"] = { 1467, 1468, 1473 },
     ["Hunter"] = { 253, 254, 255 },
