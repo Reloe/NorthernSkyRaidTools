@@ -99,7 +99,7 @@ local function BuildVersionCheckUI(parent)
     hide_version_response_button:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
     hide_version_response_button:SetAsCheckBox()
     hide_version_response_button:SetTooltip(
-        "Hides Version Check Responses of Users that are on the correct version and do not have any duplicates")
+        "Hides Version Check Responses of Users that are on the correct version")
     local hide_version_response_label = DF:CreateLabel(parent, "Hide Version Check Responses", 10, "white", "", nil,
         "VersionCheckResponseLabel", "overlay")
     hide_version_response_label:SetTemplate(options_text_template)
@@ -143,28 +143,23 @@ local function BuildVersionCheckUI(parent)
     local version_number_header = DF:CreateLabel(parent, "Version Number", 11)
     version_number_header:SetPoint("LEFT", character_name_header, "RIGHT", 120, 0)
 
-    local duplicate_header = DF:CreateLabel(parent, "Duplicate", 11)
-    duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
-
     local ignore_header = DF:CreateLabel(parent, "Ignore Check", 11)
-    ignore_header:SetPoint("LEFT", duplicate_header, "RIGHT", 50, 0)
+    ignore_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
-            local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0, duplicate = true}}
+            local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0}}
             if thisData then
                 local line = self:GetLine(i)
 
                 local name = thisData.name
                 local version = thisData.version
-                local duplicate = thisData.duplicate
                 local ignore = thisData.ignoreCheck
                 local nickname = NSAPI:Shorten(name)
 
                 line.name:SetText(nickname)
                 line.version:SetText(version)
-                line.duplicates:SetText(duplicate and "Yes" or "No")
                 line.ignorelist:SetText(ignore and "Yes" or "No")
 
                 -- version number color                
@@ -176,13 +171,6 @@ local function BuildVersionCheckUI(parent)
                     line.version:SetTextColor(1, 0, 0, 1)
                 end
 
-                -- duplicates color
-                if duplicate then
-                    line.duplicates:SetTextColor(1, 0, 0, 1)
-                else
-                    line.duplicates:SetTextColor(0, 1, 0, 1)
-                end
-
                 if ignore then
                     line.ignorelist:SetTextColor(1, 0, 0, 1)
                 else
@@ -192,7 +180,7 @@ local function BuildVersionCheckUI(parent)
                 line:SetScript("OnClick", function(self)
                     local message = ""
                     local now = GetTime()
-                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.duplicate) and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end                    
+                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end                    
                     NSI.VersionCheckData.lastclick[name] = now
                     if NSI.VersionCheckData.type == "Addon" then
                         if thisData.version == "Addon not enabled" then message = "Please enable the Addon: '"..NSI.VersionCheckData.name.."'"
@@ -238,20 +226,12 @@ local function BuildVersionCheckUI(parent)
         version:SetFont(expressway, 12, "OUTLINE")
         version:SetPoint("LEFT", name, "RIGHT", 115, 0)
         line.version = version
-
-        local duplicates = line:CreateFontString(nil, "OVERLAY")
-        duplicates:SetWidth(100)
-        duplicates:SetJustifyH("LEFT")
-        duplicates:SetFont(expressway, 12, "OUTLINE")
-        duplicates:SetPoint("LEFT", version, "RIGHT", 45, 0)
-        line.duplicates = duplicates
-
         
         local ignorelist = line:CreateFontString(nil, "OVERLAY")
         ignorelist:SetWidth(100)
         ignorelist:SetJustifyH("LEFT")
         ignorelist:SetFont(expressway, 12, "OUTLINE")
-        ignorelist:SetPoint("LEFT", duplicates, "RIGHT", 5, 0)
+        ignorelist:SetPoint("LEFT", version, "RIGHT", 50, 0)
         line.ignorelist = ignorelist
 
         return line
@@ -260,26 +240,26 @@ local function BuildVersionCheckUI(parent)
     local scrollLines = 19
     -- sample data for testing
     local sample_data = {
-        { name = "Player1",  version = "1.0.0",         duplicate = false },
-        { name = "Player2",  version = "1.0.5",         duplicate = false },
-        { name = "Player3",  version = "1.0.1",         duplicate = true },
-        { name = "Player4",  version = "0.9.9",         duplicate = false },
-        { name = "Player5",  version = "1.0.0",         duplicate = false },
-        { name = "Player6",  version = "Addon Missing", duplicate = false },
-        { name = "Player7",  version = "1.0.0",         duplicate = true },
-        { name = "Player8",  version = "0.9.8",         duplicate = false },
-        { name = "Player9",  version = "1.0.0",         duplicate = false },
-        { name = "Player10", version = "Note Missing",  duplicate = false },
-        { name = "Player11", version = "1.0.0",         duplicate = false },
-        { name = "Player12", version = "0.9.9",         duplicate = true },
-        { name = "Player13", version = "1.0.0",         duplicate = false },
-        { name = "Player14", version = "Note Missing",  duplicate = false },
-        { name = "Player15", version = "1.0.0",         duplicate = false },
-        { name = "Player16", version = "0.9.7",         duplicate = false },
-        { name = "Player17", version = "1.0.0",         duplicate = true },
-        { name = "Player18", version = "Addon Missing", duplicate = false },
-        { name = "Player19", version = "1.0.0",         duplicate = false },
-        { name = "Player20", version = "0.9.9",         duplicate = false }
+        { name = "Player1",  version = "1.0.0" },
+        { name = "Player2",  version = "1.0.5" },
+        { name = "Player3",  version = "1.0.1" },
+        { name = "Player4",  version = "0.9.9" },
+        { name = "Player5",  version = "1.0.0" },
+        { name = "Player6",  version = "Addon Missing" },
+        { name = "Player7",  version = "1.0.0" },
+        { name = "Player8",  version = "0.9.8" },
+        { name = "Player9",  version = "1.0.0" },
+        { name = "Player10", version = "Note Missing" },
+        { name = "Player11", version = "1.0.0" },
+        { name = "Player12", version = "0.9.9" },
+        { name = "Player13", version = "1.0.0" },
+        { name = "Player14", version = "Note Missing" },
+        { name = "Player15", version = "1.0.0" },
+        { name = "Player16", version = "0.9.7" },
+        { name = "Player17", version = "1.0.0" },
+        { name = "Player18", version = "Addon Missing" },
+        { name = "Player19", version = "1.0.0" },
+        { name = "Player20", version = "0.9.9" }
     }
     local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {},
         window_width - 40,
@@ -294,9 +274,9 @@ local function BuildVersionCheckUI(parent)
 
     version_check_scrollbox.name_map = {}
     local addData = function(self, data, url)
-        local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
+        local currentData = self:GetData() -- currentData = {{name, version}...}
         if self.name_map[data.name] then
-            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.duplicate) and (not data.ignoreCheck) then
+            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.ignoreCheck) then
                 table.remove(currentData, self.name_map[data.name])
                 for k, v in pairs(self.name_map) do
                     if v > self.name_map[data.name] then

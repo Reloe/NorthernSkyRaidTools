@@ -250,15 +250,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
-        local unit, ver, duplicate, ignoreCheck = ...        
-        self:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate, ignoreCheck = ignoreCheck})
+        local unit, ver, ignoreCheck = ...        
+        self:VersionResponse({name = UnitName(unit), version = ver, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and internal then
         if self:Restricted() then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) then
-            local u, ver, duplicate, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
-            self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate, ignoreCheck)
+            local u, ver, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
+            self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, ignoreCheck)
         end
     elseif e == "NSI_NICKNAMES_COMMS" and internal then
         if self:Restricted() then return end
