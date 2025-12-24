@@ -36,16 +36,22 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID    
-    -- Gloom Soaks. Need to rework this to assign 8 players
-    local Soak = self:CreateDefaultAlert(subgroup == 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", nil, nil, 10, 1, encID)
-    Alert.time, Alert.text, Alert.TTSTimer = 54.4, subgroup == 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", 4
+    -- Assigning Group 1&2 on first soak, Group 3&4 on second soak
+    local Soak = self:CreateDefaultAlert(subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", nil, nil, 10, 1, encID)
+    Alert.time, Alert.text, Alert.TTSTimer = 54.4, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", 4
     self:AddToReminder(Alert)
-    Alert.time, Alert.text = 156.1, subgroup == 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+    Alert.time, Alert.text = 156.1, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
-    Alert.time, Alert.text = 201.2, subgroup == 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+    Alert.time, Alert.text = 201.2, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
-    Alert.time, Alert.text = 246.1, subgroup == 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+    Alert.time, Alert.text = 246.1, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
+
+    
+    if NSRT.AssignmentSettings.OnPull then
+        local group = subgroup <= 2 and "First" or "Second"
+        self:DisplayText("You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00"..group.."|r Group", 5)
+    end
 end
 
 local phasedetections = {0, 0, 0, 0, 0, 0, 0}

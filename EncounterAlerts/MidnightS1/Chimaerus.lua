@@ -49,6 +49,11 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     self:AddToReminder(Alert)
     Alert.time, Alert.text = 350, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
+
+    if NSRT.AssignmentSettings.OnPull then
+        local group = subgroup <= 2 and "First" or "Second"
+        self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+    end
 end
 
 local phasedetections = {0, 0, 0, 0, 0, 0, 0}
