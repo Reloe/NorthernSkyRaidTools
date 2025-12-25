@@ -1183,7 +1183,6 @@ function NSUI:Init()
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
     NSUI:SetScale(NSRT.NSUI.scale)
-    NSI:FlexToggleMenu() -- Init Flex Raid Toggle Button
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
         width = window_width,
@@ -2737,6 +2736,31 @@ Press 'Enter' to hear the TTS]],
 
     }
 
+    local RaidBuffMenu = 
+    {
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Flex Raid",
+            desc = "Check raid buffs up to Group 6 instead of only Group 4.",
+            get = function() return NSRT.Settings.FlexRaid end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.FlexRaid = value
+                NSI:UpdateRaidBuffFrame()
+            end,
+        },
+        {
+            type = "button",
+            name = "Disable this Feature",
+            desc = "Disable the Missing Raid Buffs Feature. You can re-enable it in the Setup Manager Settings.",
+            func = function(self)
+                NSRT.Settings.MissingRaidBuffs = false
+                NSI:UpdateRaidBuffFrame()
+            end,
+        }
+    }
+    
+
 
     -- Build options menu for each tab
     DF:BuildMenu(general_tab, general_options1_table, 10, -100, window_height - 10, false, options_text_template,
@@ -2760,6 +2784,12 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(readycheck_tab, readycheck_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         readycheck_callback)
+
+    DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        nil)
+    NSI.RaidBuffCheck:SetMovable(false)
+    NSI.RaidBuffCheck:EnableMouse(false)
 
 
     -- Add SUF Setup guide tooltip button thingy

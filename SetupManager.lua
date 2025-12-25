@@ -412,3 +412,92 @@ function NSI:SplitGroupInit(Flex, default, odds)
         end
     end
 end
+
+local DF = _G["DetailsFramework"]
+NSI.RaidBuffCheck = DF:CreateSimplePanel(UIParent, 300, 300, "[NSRT] Missing Raid Buffs",
+        "NSIRaidBuffFrame", {
+        })
+NSI.RaidBuffCheck:Hide()
+local MissingBuffLabel = DF:CreateLabel(NSI.RaidBuffCheck, "", 14)
+MissingBuffLabel:SetPoint("TOPLEFT", NSI.RaidBuffCheck, "TOPLEFT", 2, -60)
+
+
+local className = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER"}
+local MissingTexts = {"Battle Shout", "Devotion Aura", "Hunter's Mark", "Rogue Poison", "Stamina", "Grip/AS Slow", "Skyfury", "Intellect", "Warlock", "Phys Debuff", "Mark of the Wild", "Magic Debuff", "Evoker"}
+function NSI:UpdateRaidBuffFrame()
+    if not NSRT.Settings.MissingRaidBuffs or not UnitInRaid("player") or not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings.Debug) then
+        NSI.RaidBuffCheck:Hide()
+        return
+    end
+    local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
+    if PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == nil then -- first time opening PVE frame, tab info is not yet available
+        C_Timer.After(0.1, function() NSI:UpdateRaidBuffFrame() end)
+        return
+    end
+    local LFGFrame = PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == 1
+    local parent = (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
+    if parent then   
+        NSI.RaidBuffCheck:ClearAllPoints()
+        NSI.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)        
+        NSI.RaidBuffCheck:SetHeight(parent:GetHeight()*parent:GetScale()-4)
+        NSI.RaidBuffCheck:Show()
+        local count = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        -- Automatically detect difficulty if player is zoned in a Raid, otherwise use the setting
+        local maxgroup = NSRT.Settings.FlexRaid and 6 or 4
+        for unit in self:IterateGroupMembers() do
+            local group = self:GetSubGroup(unit)
+            if group <= maxgroup then
+                local class = select(3, UnitClass(unit))
+                count[class] = count[class] + 1
+            end
+        end
+        local text = ""
+        local resscount = 0
+        local lustcount = 0
+        for i=1, #count do
+            if i == 2 or i == 6 or i == 9 or i == 11 then
+                resscount = resscount + count[i]
+            end
+            if i == 3 or i == 7 or i == 8 or i == 13 then
+                lustcount = lustcount + count[i]
+            end
+            if count[i] == 0 then
+                text = text..GetClassColorObj(className[i]):WrapTextInColorCode("Missing "..MissingTexts[i].."\n")
+            end
+        end
+        if resscount > 0 then            
+            text = text.."Available Resses: "..resscount.."\n"
+        else
+            text = text.."|cFFFF0000No Resses Available\n|r"
+        end
+        if lustcount > 0 then
+            text = text.."Available Lusts: "..lustcount.."\n"
+        else
+            text = text.."|cFFFF0000No Lusts Available\n|r"
+        end
+        if count[13] > 0 then
+            text = text..GetClassColorObj(className[13]):WrapTextInColorCode("Time Spirals: "..count[13].."\n")
+        end
+        if count[9] > 0 then
+            text = text..GetClassColorObj(className[9]):WrapTextInColorCode("Gateways: "..count[9].."\n")
+        end
+        if count[4] > 0 then
+            text = text..GetClassColorObj(className[4]):WrapTextInColorCode("Rogue Poisons: "..count[4].."\n")
+        end
+        MissingBuffLabel:SetText(text)
+    else
+        NSI.RaidBuffCheck:Hide()
+    end
+end
+
+FriendsFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
