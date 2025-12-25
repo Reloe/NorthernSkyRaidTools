@@ -7,7 +7,7 @@ local buffs = {
     [8] = 1459, -- Intellect
     [9] = 20707, -- Soulstone
     [11] = 1126, -- Mark of the Wild
-   -- [13] = 0, -- Evoker Buff. need some other solution for this because it has 13 different spellid's
+    [13] = {381741, 381757, 381756, 381732, 381752, 381748, 381750, 381749, 381746, 381751, 381753, 381754, 381758}, -- Evoker Buff, every class has a different buffid for some annoying reason.
 }
 
 local buffrequired = {
@@ -50,7 +50,15 @@ function NSI:BuffCheck()
         for unit in self:IterateGroupMembers() do
             local specID = self.specs and self.specs[unit] or select(3, UnitClass(unit)) -- if specdata exists we use that, otherwise class which means maybe some useless buffs are being done.
             if specID and (class == 5 or class == 13 or class == 11 or class == 7 or tContains(buffrequired[class], specID)) then
-                local buffed = self:UnitAura(unit, spellID)
+                local buffed
+                if type(spellID) == "table" then -- for Evoker Buff
+                    for i=1, #spellID do
+                        buffed = self:UnitAura(unit, spellID[i])
+                        if buffed then break end
+                    end
+                else
+                    buffed = self:UnitAura(unit, spellID)
+                end
                 if buffed then
                     local source = buffed.sourceUnit
                     if (not (UnitExists(source)) and (UnitIsVisible(source))) and not (UnitIsUnit("player", source)) then

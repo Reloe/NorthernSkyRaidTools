@@ -2656,11 +2656,11 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Rebuff Check",
+            name = "Raid-Buff Check",
             desc = "Checks if any relevant class needs your buff",
-            get = function() return NSRT.ReadyCheckSettings.RebuffCheck end,
+            get = function() return NSRT.ReadyCheckSettings.RaidBuffCheck end,
             set = function(self, fixedparam, value)
-                NSRT.ReadyCheckSettings.RebuffCheck = value
+                NSRT.ReadyCheckSettings.RaidBuffCheck = value
             end,
             nocombat = true,
         }, 
