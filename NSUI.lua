@@ -1183,7 +1183,7 @@ function NSUI:Init()
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
     NSUI:SetScale(NSRT.NSUI.scale)
-
+    NSI:FlexToggleMenu() -- Init Flex Raid Toggle Button
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
         width = window_width,
@@ -1514,61 +1514,6 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["TTS"] = value
             end,
         },        
-        {
-            type = "breakline"
-        },   
-        {
-            type = "label",
-            get = function() return "Cooldowns Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Cooldown Checking",
-            desc = "Enable cooldown checking for your cooldowns on ready check. This is only active in Heroic and Mythic Raids.",
-            get = function() return NSRT.Settings["CheckCooldowns"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["CHECK_COOLDOWNS"] = true
-                NSRT.Settings["CheckCooldowns"] = value
-            end,
-            nocombat = true
-        },
-        {
-            type = "range",
-            name = "Pull Timer",
-            desc = "Pull timer used for cooldown checking.",
-            get = function() return NSRT.Settings["CooldownThreshold"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["CooldownThreshold"] = value
-            end,
-            min = 10,
-            max = 60,
-            step = 1,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Unready on Cooldown",
-            desc = "Automatically unready if a tracked spell is on cooldown.",
-            get = function() return NSRT.Settings["UnreadyOnCooldown"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["UNREADY_ON_COOLDOWN"] = true
-                NSRT.Settings["UnreadyOnCooldown"] = value
-            end,
-            nocombat = true
-        },
-        {
-            type = "button",
-            name = "Edit Cooldowns",
-            desc = "Edit the cooldowns checked on the ready check.",
-            func = function(self)
-                if not NSUI.cooldowns_frame:IsShown() then
-                    NSUI.cooldowns_frame:Show()
-                end
-            end,
-            nocombat = true
-        }
     }
 
     local nicknames_options1_table = {
@@ -1800,6 +1745,23 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Missing Raidbuffs in Raid-Tab",
+            desc = "Show a list of missing raidbuffs in your comp in the raid tab. In there you can swap between Mythic and Flex, which will then only consider players up to group 4/6 respectively.",
+            get = function() return NSRT.Settings.MissingRaidBuffs end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.MissingRaidBuffs = value
+                NSI:UpdateRaidBuffFrame()
+            end,
+            nocombat = true,
+        }, 
     }
 
     local reminder_options1_table = {
@@ -2598,10 +2560,16 @@ Press 'Enter' to hear the TTS]],
     local readycheck_options1_table = {        
         
         {
+            type = "label",
+            get = function() return "Gear/Misc Checks" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
             type = "toggle",
             boxfirst = true,
             name = "Missing Item Check",
-            desc = "Checks if any slots are empty during ready checks",
+            desc = "Checks if any slots are empty",
             get = function() return NSRT.ReadyCheckSettings.MissingItemCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.MissingItemCheck = value
@@ -2612,7 +2580,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Item Level Check",
-            desc = "Checks if you have any slot equipped below the minimum item level during ready checks",
+            desc = "Checks if you have any slot equipped below the minimum item level",
             get = function() return NSRT.ReadyCheckSettings.ItemLevelCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.ItemLevelCheck = value
@@ -2623,7 +2591,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Embellishment Check",
-            desc = "Checks if you have 2 Embellishments equipped during ready checks",
+            desc = "Checks if you have 2 Embellishments equipped",
             get = function() return NSRT.ReadyCheckSettings.CraftedCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.CraftedCheck = value
@@ -2634,7 +2602,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Enchant Check",
-            desc = "Checks if you have all slots enchanted during ready checks",
+            desc = "Checks if you have all slots enchanted",
             get = function() return NSRT.ReadyCheckSettings.EnchantCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.EnchantCheck = value
@@ -2645,7 +2613,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Gem Check",
-            desc = "Checks if you have all slots gemmed during ready checks",
+            desc = "Checks if you have all slots gemmed",
             get = function() return NSRT.ReadyCheckSettings.GemCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.GemCheck = value
@@ -2656,7 +2624,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Repair Check",
-            desc = "Checks if any piece needs repair during ready checks",
+            desc = "Checks if any piece needs repair",
             get = function() return NSRT.ReadyCheckSettings.RepairCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.RepairCheck = value
@@ -2667,24 +2635,105 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Gateway Control Shard Check",
-            desc = "Checks if you have a Gateway Control Shard during ready checks",
+            desc = "Checks if you have a Gateway Control Shard",
             get = function() return NSRT.ReadyCheckSettings.GatewayControlShardCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.GatewayControlShardCheck = value
             end,
             nocombat = true,
         }, 
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "label",
+            get = function() return "Buff Checks" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
         {
             type = "toggle",
             boxfirst = true,
             name = "Rebuff Check",
-            desc = "Checks if you any relevant class needs your buff during ready checks",
+            desc = "Checks if any relevant class needs your buff",
             get = function() return NSRT.ReadyCheckSettings.RebuffCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.RebuffCheck = value
             end,
             nocombat = true,
         }, 
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Healer Soulstone Check",
+            desc = "Checks for Warlocks whether they have soulstoned a healer and it has at least 5m duration left.",
+            get = function() return NSRT.ReadyCheckSettings.SoulstoneCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.SoulstoneCheck = value
+            end,
+            nocombat = true,
+        }, 
+
+        
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "label",
+            get = function() return "Cooldowns Options" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Cooldown Checking",
+            desc = "Enable cooldown checking for your cooldowns on ready check. This is only active in Heroic and Mythic Raids.",
+            get = function() return NSRT.Settings["CheckCooldowns"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["CHECK_COOLDOWNS"] = true
+                NSRT.Settings["CheckCooldowns"] = value
+            end,
+            nocombat = true
+        },
+        {
+            type = "range",
+            name = "Pull Timer",
+            desc = "Pull timer used for cooldown checking.",
+            get = function() return NSRT.Settings["CooldownThreshold"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["CooldownThreshold"] = value
+            end,
+            min = 10,
+            max = 60,
+            step = 1,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Unready on Cooldown",
+            desc = "Automatically unready if a tracked spell is on cooldown.",
+            get = function() return NSRT.Settings["UnreadyOnCooldown"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["UNREADY_ON_COOLDOWN"] = true
+                NSRT.Settings["UnreadyOnCooldown"] = value
+            end,
+            nocombat = true
+        },
+        {
+            type = "button",
+            name = "Edit Cooldowns",
+            desc = "Edit the cooldowns checked on the ready check.",
+            func = function(self)
+                if not NSUI.cooldowns_frame:IsShown() then
+                    NSUI.cooldowns_frame:Show()
+                end
+            end,
+            nocombat = true
+        }
 
     }
 

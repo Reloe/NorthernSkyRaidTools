@@ -91,14 +91,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
             NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
             NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
-            NSRT.ReadyCheckSettings = NSRT.ReadyCheckSettings or {}
-            NSRT.ReadyCheckSettings.MissingItemCheck = NSRT.ReadyCheckSettings.MissingItemCheck or false
-            NSRT.ReadyCheckSettings.EnchantCheck = NSRT.ReadyCheckSettings.EnchantCheck or false
-            NSRT.ReadyCheckSettings.GemCheck = NSRT.ReadyCheckSettings.GemCheck or false
-            NSRT.ReadyCheckSettings.ItemLevelCheck = NSRT.ReadyCheckSettings.ItemLevelCheck or false
-            NSRT.ReadyCheckSettings.CraftedCheck = NSRT.ReadyCheckSettings.CraftedCheck or false
-            NSRT.ReadyCheckSettings.RepairCheck = NSRT.ReadyCheckSettings.RepairCheck or false
-            NSRT.ReadyCheckSettings.RebuffCheck = NSRT.ReadyCheckSettings.RebuffCheck or false
+            NSRT.Settings.MissingRaidBuffs = NSRT.Settings.MissingRaidBuffs or true
+            if not NSRT.ReadyCheckSettings then
+                NSRT.ReadyCheckSettings = {MissingItemCheck = false, EnchantCheck = false, GemCheck = false, ItemLevelCheck = false, CraftedCheck = false, RepairCheck = false, RebuffCheck = false, SoulstoneCheck = false}
+            end
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
@@ -233,7 +229,17 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.ReadyCheckSettings.RebuffCheck then
             local buff = self:BuffCheck()
             if buff and buff ~= "" then text = buff end
-        end        
+        end     
+        if NSRT.ReadyCheckSettings.SoulstoneCheck then
+            local Soulstone = self:SoulstoneCheck()
+            if Soulstone and Soulstone ~= "" then
+                if text == "" then
+                    text = Soulstone
+                else
+                    text = text.."\n"..Soulstone
+                end
+            end
+        end   
         if UnitLevel("player") >= 90 then
             local Gear = self:GearCheck()
             if Gear and Gear ~= "" then
@@ -323,7 +329,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)      
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
-        if self:Restricted() or not self:DifficultyCheck(14) then return end
+        if self:Restricted() then return end
+        self:UpdateRaidBuffFrame()
+        if not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end -- only care about timelines in raid

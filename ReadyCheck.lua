@@ -5,6 +5,7 @@ local buffs = {
     [5] = 21562, -- Stamina
     [7] = 462854, -- Skyfury
     [8] = 1459, -- Intellect
+    [9] = 20707, -- Soulstone
     [11] = 1126, -- Mark of the Wild
    -- [13] = 0, -- Evoker Buff. need some other solution for this because it has 13 different spellid's
 }
@@ -14,11 +15,37 @@ local buffrequired = {
     [8] = {2, 5, 7, 8, 9, 10, 11, 12, 13, 1480, 102, 105, 1467, 1468, 1473, 62, 63, 64, 270, 65, 256, 257, 258, 262, 264, 265, 266, 267}, -- Intellect
 }
 
+function NSI:SoulstoneCheck()
+    if self:Restricted() then return end
+    local class = select(3, UnitClass("player"))
+    if not class == 9 then return end
+    local buffed = false
+    local refresh = false
+    for unit in self:IterateGroupMembers() do
+        if UnitGroupRolesAssigned(unit) == "HEALER" and UnitIsVisible(unit) then
+            local aura = self:UnitAura(unit, buffs[class])
+            if aura then
+                local source = aura.sourceUnit
+                if UnitExists(source) and UnitIsUnit("player", source) then
+                    local expires = aura.expirationTime
+                    if expires - GetTime() > 300 then
+                        buffed = true
+                        return false
+                    else
+                        refresh = true
+                    end
+                end
+            end
+        end
+    end
+    NSAPI:TTS("Soulstone")
+    return refresh and "Refresh Soulstone" or "|cFFFF0000Soulstone Missing|r"
+end
 
 function NSI:BuffCheck()
     if self:Restricted() then return end
     local class = select(3, UnitClass("player"))
-    local spellID = buffs[class]
+    local spellID = buffs[class]    
     if spellID then
         for unit in self:IterateGroupMembers() do
             local specID = self.specs and self.specs[unit] or select(3, UnitClass(unit)) -- if specdata exists we use that, otherwise class which means maybe some useless buffs are being done.
