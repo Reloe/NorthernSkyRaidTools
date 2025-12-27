@@ -475,14 +475,14 @@ function NSI:UpdateRaidBuffFrame()
         else
             text = text.."|cFFFF0000No Lusts Available\n|r"
         end
+        if count[4] == 1 then
+            text = text..GetClassColorObj(className[4]):WrapTextInColorCode("Only 1 Rogue Poison\n")
+        end
         if count[13] > 0 then
             text = text..GetClassColorObj(className[13]):WrapTextInColorCode("Time Spirals: "..count[13].."\n")
         end
         if count[9] > 0 then
             text = text..GetClassColorObj(className[9]):WrapTextInColorCode("Gateways: "..count[9].."\n")
-        end
-        if count[4] > 0 then
-            text = text..GetClassColorObj(className[4]):WrapTextInColorCode("Rogue Poisons: "..count[4].."\n")
         end
         MissingBuffLabel:SetText(text)
     else
