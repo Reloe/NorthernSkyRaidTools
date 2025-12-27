@@ -1,5 +1,7 @@
 local _, NSI = ... -- Internal namespace
 
+local minlvl = 200
+
 local buffs = {
     [1] = 6673, -- Battle Shout
     [5] = 21562, -- Stamina
@@ -18,7 +20,7 @@ local buffrequired = {
 function NSI:SoulstoneCheck()
     if self:Restricted() then return end
     local class = select(3, UnitClass("player"))
-    if not class == 9 then return end
+    if class ~= 9 then return end
     local buffed = false
     local refresh = false
     for unit in self:IterateGroupMembers() do
@@ -97,8 +99,6 @@ local SlotName = {
     "Main Hand", -- 16
     "Off Hand"   -- 17
 }
-
-local minlvl = 200
 
 function NSI:GemCheck(slot, itemString)    
     local gemsMissing = 0
@@ -181,13 +181,14 @@ function NSI:GearCheck()
         end
     end
     -- Gateway Control Shard
-    if NSRT.ReadyCheckSettings.GatewayControlCheck and not self:GatewayControlCheck() then
-        table.insert(missing, "Missing |cFF00FF00Gateway Control Shard|r")
+    if NSRT.ReadyCheckSettings.GatewayShardCheck then
+        local Gateway = self:GatewayControlCheck()
+        if Gateway then table.insert(missing, Gateway) end
     end
     if NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
         table.insert(missing, "Missing |cFF00FF00Mainstat Gem|r")
     end
-    if NSRT.ReadyCheckSettings.RepairCheck and repair then
+    if repair then
         table.insert(missing, "Item needs |cFF00FF00Repair|r")
     end
     if NSRT.ReadyCheckSettings.CraftedCheck and crafted < 2 then
@@ -204,8 +205,37 @@ function NSI:GatewayControlCheck()
     for bagID = 0, NUM_BAG_SLOTS do
         for invID = 1, C_Container.GetContainerNumSlots(bagID) do
             local itemID = C_Container.GetContainerItemID(bagID, invID)
-            if itemID and itemID == 188152 then return true end
+            if itemID and itemID == 188152 then 
+                local bound = false
+                local onbar = false
+                for Slot = 1, 120 do
+                    local actionType, ID = GetActionInfo(Slot)
+                    if actionType == "item" and ID == itemID then
+                        onbar = true
+                        bound = self:CheckGateWayKeybind(Slot)
+                        if bound then break end
+                    end
+                end
+                if bound then
+                    return false
+                elseif onbar then
+                    return "|cFF00FF00Gateway Control Shard|r Not Bound"
+                else
+                    return "|cFF00FF00Gateway Control Shard|r Not on Actionbar"
+                end
+            end
         end
     end
-    return false
+    return "|cFF00FF00Gateway Control Shard|r Missing"
+end
+
+function NSI:CheckGateWayKeybind(Slot)    
+    if Slot <= 12 then -- First bar has different name
+        return GetBindingKey("ACTIONBUTTON"..Slot)
+    else
+        -- Define correct slot on bar
+        local bar = math.ceil((Slot) / 12)
+        local mod = Slot % 12 == 0 and 12 or Slot % 12
+        return GetBindingKey("MULTIACTIONBAR"..bar.."BUTTON"..mod)
+    end
 end

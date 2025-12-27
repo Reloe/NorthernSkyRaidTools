@@ -2634,10 +2634,10 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Gateway Control Shard Check",
-            desc = "Checks if you have a Gateway Control Shard",
-            get = function() return NSRT.ReadyCheckSettings.GatewayControlShardCheck end,
+            desc = "Checks if you have a Gateway Control Shard and whether or not it is located on your actionbars",
+            get = function() return NSRT.ReadyCheckSettings.GatewayShardCheck end,
             set = function(self, fixedparam, value)
-                NSRT.ReadyCheckSettings.GatewayControlShardCheck = value
+                NSRT.ReadyCheckSettings.GatewayShardCheck = value
             end,
             nocombat = true,
         }, 
