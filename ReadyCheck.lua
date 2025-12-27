@@ -205,12 +205,12 @@ function NSI:GatewayControlCheck()
     for bagID = 0, NUM_BAG_SLOTS do
         for invID = 1, C_Container.GetContainerNumSlots(bagID) do
             local itemID = C_Container.GetContainerItemID(bagID, invID)
-            if itemID and itemID == 188152 then 
+            if itemID and itemID == 188152 then -- Gateway Shard found
                 local bound = false
                 local onbar = false
                 for Slot = 1, 120 do
                     local actionType, ID = GetActionInfo(Slot)
-                    if actionType == "item" and ID == itemID then
+                    if actionType == "item" and ID == itemID then -- found on actionbar
                         onbar = true
                         bound = self:CheckGateWayKeybind(Slot)
                         if bound then break end
