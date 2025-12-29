@@ -1438,28 +1438,6 @@ function NSUI:Init()
         },
 
         {
-            type = "blank",
-        },
-
-        {
-            type = "label",
-            get = function() return "MRT Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable MRT Note Comparison",
-            desc = "Enables MRT note comparison on ready check.",
-            get = function() return NSRT.Settings["MRTNoteComparison"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] = true
-                NSRT.Settings["MRTNoteComparison"] = value
-            end,
-            nocombat = true
-        },  
-
-        {
             type = "breakline"
         },   
         { type = "label", get = function() return "TTS Options" end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
