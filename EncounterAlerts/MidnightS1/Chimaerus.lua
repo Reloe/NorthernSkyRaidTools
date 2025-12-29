@@ -56,7 +56,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-local phasedetections = {0, 0, 0, 0, 0, 0, 0}
+local phasedetections = {5, 5, 5, 5, 5, 5, 5} -- transition adds 4 timers and regular phase adds 7 timers. We don't care about transition as the time difference happens before regular phase.
 
 NSI.DetectPhaseChange[encID] = function(self, e) -- on ENCOUNTER_TIMELINE_EVENT_ADDED/REMOVED
     local now = GetTime()
