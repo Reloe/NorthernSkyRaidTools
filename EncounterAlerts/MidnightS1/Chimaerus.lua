@@ -43,12 +43,14 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     self:AddToReminder(Alert)
     Alert.time, Alert.text = 130, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
+    Alert.phase = 2
     Alert.time, Alert.text = 237.8, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
     Alert.time, Alert.text = 290.5, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
     Alert.time, Alert.text = 350, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
+    Alert.phase = 3
 
     if NSRT.AssignmentSettings.OnPull then
         local group = subgroup <= 2 and "First" or "Second"
