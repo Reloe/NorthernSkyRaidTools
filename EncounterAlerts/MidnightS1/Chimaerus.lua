@@ -61,6 +61,7 @@ end
 local phasedetections = {5, 5, 5, 5, 5, 5, 5} -- transition adds 4 timers and regular phase adds 7 timers. We don't care about transition as the time difference happens before regular phase.
 
 NSI.DetectPhaseChange[encID] = function(self, e) -- on ENCOUNTER_TIMELINE_EVENT_ADDED/REMOVED
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then return end -- starting new phase only on timer being added for this boss
     local now = GetTime()
     local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
     if needed and needed > 0 then
