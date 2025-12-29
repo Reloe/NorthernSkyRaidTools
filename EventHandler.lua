@@ -146,22 +146,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.AllGlows = self.AllGlows or {}
         self.PlayedSound = {}
         self.StartedCountdown = {}
-        self.Timelines = {}
-        self.TimeLinesDebug = {}
         self.AddAssignments[self.EncounterID](self)
         self.EncounterAlertStart[self.EncounterID](self)
         self:StartReminders(self.Phase)
     elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
         local encID, encounterName = ...
-        if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
-            DevTool:AddData(self.TimeLinesDebug)
-            NSRT.TimeLinesDebug = NSRT.TimeLinesDebug or {}
-            table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
-        end
         self:HideAllReminders()
         self.EncounterID = nil
         self.TestingReminder = false
-        self.Timelines = {}
         self.ReminderTimer = {}
         self.AllGlows = {}          
         self.ProcessedReminder = nil
@@ -335,7 +327,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
-        if self:Restricted() and self.EncounterID then self.DetectPhaseChange[self.EncounterID](self, e) end
+        local info = ...
+        if self:Restricted() and self.EncounterID then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_WARNING" and wowevent then
         local info = ...
         self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info)

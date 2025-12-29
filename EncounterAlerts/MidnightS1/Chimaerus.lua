@@ -58,26 +58,18 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-local phasedetections = {5, 5, 5, 5, 5, 5, 5} -- transition adds 4 timers and regular phase adds 7 timers. We don't care about transition as the time difference happens before regular phase.
+local detectedDurations = {120.9} -- Devour
 
-NSI.DetectPhaseChange[encID] = function(self, e) -- on ENCOUNTER_TIMELINE_EVENT_ADDED/REMOVED
-    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then return end -- starting new phase only on timer being added for this boss
+NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
-    if needed and needed > 0 then
-        table.insert(self.Timelines, now+0.2)
-        local count = 0
-        for i, v in ipairs(self.Timelines) do
-            if v > now then
-                count = count+1
-                if count >= needed then
-                    self.Phase = self.Phase+1                  
-                    self:StartReminders(self.Phase)
-                    self.Timelines = {}
-                    self.PhaseSwapTime = now
-                    break
-                end
-            end           
+    -- not checking REMOVED event by default but may be needed for some encounters
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
+    for k, v in ipairs(detectedDurations) do
+        if info.duration == v then            
+            self.Phase = self.Phase+1                  
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = now
+            break
         end
     end
 end
