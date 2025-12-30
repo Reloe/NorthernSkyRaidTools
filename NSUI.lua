@@ -2423,7 +2423,12 @@ Press 'Enter' to hear the TTS]],
         },
     }
 
-    local encounteralerts_options1_table = {        
+    local encounteralerts_options1_table = {     
+        {
+            type = "label",
+            get = function() return "Midnight S1" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },   
         {
             type = "toggle",
             boxfirst = true,
@@ -2531,7 +2536,39 @@ Press 'Enter' to hear the TTS]],
                 NSRT.EncounterAlerts[3183].enabled = value
             end,
             nocombat = true,
-        }
+        },
+        {
+            type = "breakline",
+        },
+        {
+            type = "label",
+            get = function() return "Manaforge Omega" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Nexus King",
+            desc = "Enables Alerts for Nexus King.",
+            get = function() return NSRT.EncounterAlerts[3134] and NSRT.EncounterAlerts[3134].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3134] = NSRT.EncounterAlerts[3134] or {}
+                NSRT.EncounterAlerts[3134].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Dimensius",
+            desc = "Enables Alerts for Dimensius.",
+            get = function() return NSRT.EncounterAlerts[3135] and NSRT.EncounterAlerts[3135].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3135] = NSRT.EncounterAlerts[3135] or {}
+                NSRT.EncounterAlerts[3135].enabled = value
+            end,
+            nocombat = true,
+        },
     }
 
     local readycheck_options1_table = {        
