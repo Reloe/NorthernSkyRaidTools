@@ -37,6 +37,9 @@ EncounterAlerts/MidnightS1/Beloren.lua
 EncounterAlerts/MidnightS1/MidnightFalls.lua
 EncounterAlerts/MidnightS1/MotherlodeDebug.lua
 
+EncounterAlerts/ManaforgeOmega/NexusKing.lua
+EncounterAlerts/ManaforgeOmega/Dimensius.lua
+
 # UI
 NSUI.lua
 SlashCommands.lua

@@ -146,8 +146,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.AllGlows = self.AllGlows or {}
         self.PlayedSound = {}
         self.StartedCountdown = {}
-        self.AddAssignments[self.EncounterID](self)
-        self.EncounterAlertStart[self.EncounterID](self)
+        if self.AddAssignments[self.EncounterID] then
+            self.AddAssignments[self.EncounterID](self)
+            self.EncounterAlertStart[self.EncounterID](self)
+        end
         self:StartReminders(self.Phase)
     elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
         local encID, encounterName = ...
@@ -157,7 +159,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.ReminderTimer = {}
         self.AllGlows = {}          
         self.ProcessedReminder = nil
-        self.EncounterAlertStop[encID](self)
+        if self.EncounterAlertStop[encID] then
+            self.EncounterAlertStop[encID](self)
+        end
         C_Timer.After(1, function()
             if self:Restricted() then return end
             if self.SyncNickNamesStore then
@@ -326,15 +330,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
-        if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
+        if not self:DifficultyCheck(14) then return end
         local info = ...
-        if self:Restricted() and self.EncounterID then self.DetectPhaseChange[self.EncounterID](self, e, info) end
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_WARNING" and wowevent then
         local info = ...
-        self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info)
+        if not self:DifficultyCheck(14) then return end
+        if self.ShowWarningAlert[self.EncounterID] then self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info) end
     elseif e == "RAID_BOSS_WHISPER" and wowevent then
         local text, name, dur = ...
         if not self:DifficultyCheck(14) then return end
-        self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur)
+        if self.ShowBossWhisperAlert[self.EncounterID] then self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur) end
     end
 end
