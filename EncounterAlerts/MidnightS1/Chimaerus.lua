@@ -22,6 +22,14 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
         elseif severity == 1 then    
         elseif severity == 2 then
         end
+        local DebuffTimes = {30, 84.6} -- time at which the debuffs happen so we automatically ignore all other alerts
+        for i, time in ipairs(DebuffTimes) do
+            if self.PhaseSwapTime < time+3 and self.PhaseSwapTime > time-3 then                
+                local Debuff = self:CreateDefaultAlert("Debuff", "Icon", 1264756, 5) -- Rift Madness Debuff
+                Debuff.TTS = "Targeted"
+                self:DisplayReminder(Debuff)
+            end
+        end
     end
 end
 
