@@ -146,6 +146,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.AllGlows = self.AllGlows or {}
         self.PlayedSound = {}
         self.StartedCountdown = {}
+        self.DefaultAlertID = 10000
         if self.AddAssignments[self.EncounterID] then
             self.AddAssignments[self.EncounterID](self)
             self.EncounterAlertStart[self.EncounterID](self)

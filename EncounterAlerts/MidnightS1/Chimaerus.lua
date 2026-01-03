@@ -30,6 +30,7 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
                 local Debuff = self:CreateDefaultAlert("Debuff", "Icon", 1264756, 5) -- Rift Madness Debuff
                 Debuff.TTS = "Targeted"
                 self:DisplayReminder(Debuff)
+                break
             end
         end
     end

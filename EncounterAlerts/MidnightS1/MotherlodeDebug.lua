@@ -155,6 +155,17 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
         elseif severity == 1 then    
         elseif severity == 2 then
         end
+        local DebuffTimes = {100} -- time at which void/light dives can happen. 
+        local now = GetTime()
+        for i, time in ipairs(DebuffTimes) do
+            if self.PhaseSwapTime< time+now+400 and self.PhaseSwapTime > time+now-400 then          
+                local Debuff = self:CreateDefaultAlert("Targeted", "Icon", info.tooltipSpellID, 8) -- Light/Void Dive
+                local spell = C_Spell.GetSpellInfo(info.tooltipSpellID)
+                Debuff.TTS = spell.name -- this will create a secret value for TTS of the spellname
+                self:DisplayReminder(Debuff)
+                break
+            end
+        end
     end
 end
 
@@ -171,15 +182,14 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
-local detectedDurations = {33}
+local detectedDurations = {}
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     for k, v in ipairs(detectedDurations) do
-        if info.duration == v then            
-            print("new phase found")
+        if info.duration == v then          
             self.Phase = self.Phase+1                  
             self:StartReminders(self.Phase)
             self.PhaseSwapTime = now

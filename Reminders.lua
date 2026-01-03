@@ -560,6 +560,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
 end
 
 function NSI:PlayReminderSound(info, default)
+    if info.TTS and issecretvalue(info.TTS) then NSAPI:TTS(info.TTS) return end
     if default then -- so I can use this function outside of reminders basically
         info = {sound = default, TTS = default, rawtext = default}
     end
@@ -915,6 +916,8 @@ ph:1;time:25;tag:everyone;text:Lust on Reloe;glowunit:Reloe;spellid:116841;TTS:t
 ]]
 
 function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
+    local id = self.DefaultAlertID
+    self.DefaultAlertID = self.DefaultAlertID + 1
     local info = 
     {
         dur = dur,
@@ -925,7 +928,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         TTS = text, 
         notsticky = true, 
         phase = phase or self.Phase,
-        id = 0, 
+        id = id,
         startTime = GetTime(),
     }
     if Type == "Bar" then info.BarOverwrite = true

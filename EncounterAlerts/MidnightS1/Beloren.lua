@@ -23,12 +23,14 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
         elseif severity == 2 then
         end        
         local DebuffTimes = {12, 53, 57, 98} -- time at which void/light dives can happen. 
+        local now = GetTime()
         for i, time in ipairs(DebuffTimes) do
-            if self.PhaseSwapTime < time+4 and self.PhaseSwapTime > time-4 then                
-                local Debuff = self:CreateDefaultAlert("Targeted", "Icon", info.spellID, 8) -- Light/Void Dive
-                local spell = C_Spell.GetSpellInfo(info.spellID)
-                Debuff.TTS = spell.name
+            if self.PhaseSwapTime < time+now+4 and self.PhaseSwapTime > time+now-4 then                
+                local Debuff = self:CreateDefaultAlert("Targeted", "Icon", info.tooltipSpellID, 8) -- Light/Void Dive
+                local spell = C_Spell.GetSpellInfo(info.tooltipSpellID)
+                Debuff.TTS = spell.name -- this will create a secret value for TTS of the spellname
                 self:DisplayReminder(Debuff)
+                break
             end
         end
     end
