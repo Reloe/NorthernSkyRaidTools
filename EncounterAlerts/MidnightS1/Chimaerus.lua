@@ -22,9 +22,11 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
         elseif severity == 1 then    
         elseif severity == 2 then
         end
+        if not self:DifficultyCheck(16) then return end -- Mythic only
         local DebuffTimes = {30, 84.6} -- time at which the debuffs happen so we automatically ignore all other alerts
+        local now = GetTime()
         for i, time in ipairs(DebuffTimes) do
-            if self.PhaseSwapTime < time+3 and self.PhaseSwapTime > time-3 then                
+            if self.PhaseSwapTime < time+now+3 and self.PhaseSwapTime > time+now-3 then                
                 local Debuff = self:CreateDefaultAlert("Debuff", "Icon", 1264756, 5) -- Rift Madness Debuff
                 Debuff.TTS = "Targeted"
                 self:DisplayReminder(Debuff)
@@ -44,21 +46,16 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
-    -- Alndust Upheaval. Need to fix timings for mythic
-    Alert.time, Alert.text, Alert.dur, Alert.TTSTimer = 19.4, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", 10, 5
-    self:AddToReminder(Alert)
-    Alert.time, Alert.text = 72.1, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-    self:AddToReminder(Alert)
-    Alert.time, Alert.text = 130, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-    self:AddToReminder(Alert)
-    Alert.phase = 2
-    Alert.time, Alert.text = 237.8, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-    self:AddToReminder(Alert)
-    Alert.time, Alert.text = 290.5, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-    self:AddToReminder(Alert)
-    Alert.time, Alert.text = 350, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-    self:AddToReminder(Alert)
-    Alert.phase = 3
+    Alert.dur, Alert.TTSTimer = 10, 5
+    for phase = 1, 3 do
+        Alert.Phase = phase
+        Alert.time, Alert.text  = 18.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        self:AddToReminder(Alert)
+        Alert.time, Alert.text = 71.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        self:AddToReminder(Alert)
+        Alert.time, Alert.text = 138.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        self:AddToReminder(Alert)
+    end
 
     if NSRT.AssignmentSettings.OnPull then
         local group = subgroup <= 2 and "First" or "Second"

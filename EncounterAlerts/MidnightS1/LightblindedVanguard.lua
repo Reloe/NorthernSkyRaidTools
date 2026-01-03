@@ -7,12 +7,6 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        -- Shield Break
-        local Alert = self:CreateDefaultAlert("Break Shield", "Icon", 1248674, 8, 1, encID)
-        for _, time in ipairs(self:DifficultyCheck(16) and {20.9, 78.1, 168.2, 220.5, 282.8} or {}) do -- Need to fix these timers for both difficulties
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
         -- Aura of Peace
         Alert.text, Alert.TTS, Alert.countdown, Alert.Type, Alert.dur = "Peace Aura", false, 5, nil, 10
         for _, time in ipairs(self:DifficultyCheck(14) and {137.4, 313.3} or {}) do
@@ -43,7 +37,6 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
-    -- Execution Sentence. Need to fix timers for Mythic. Consider different alert for a 5th healer, like "check missing color"
     local group = {}
     local healer = {}
     for unit in self:IterateGroupMembers() do
@@ -63,8 +56,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if IsHealer then
         for i, v in ipairs(healer) do
             if UnitIsUnit("player", v.unit) then
-                mygroup = i
-                mygroup = math.min(4, mygroup) -- if there are more than 4 healers, put any extra healer in the 4th group                    
+                mygroup = i                  
             end
         end
     else
@@ -77,15 +69,20 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
         end
     end
     if not mygroup then return end
-    local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or ""
+    local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or "Flex Spot"
     local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
     local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
-    Alert.time, Alert.TTS, Alert.TTSTimer, Alert.text = 96.1, TTS, 10, text
-    self:AddToReminder(Alert)
-    Alert.time = 271.2
-    self:AddToReminder(Alert)
-    Alert.time = 446.3
-    self:AddToReminder(Alert)
+    Alert.TTS, Alert.TTSTimer, Alert.text = 92, TTS, 10, text
+    local phaselength = 162.7 -- guess based on Zealous Spirit in logs
+
+    for phase = 0, 2 do        
+        Alert.time = 92 + (phase * phaselength)
+        self:AddToReminder(Alert)
+        if self:DifficultyCheck(16) then -- second cast is mythic only in case I want to support Heroic as well
+            Alert.time = 149.2 + (phase * phaselength)
+            self:AddToReminder(Alert)
+        end
+    end
 
     if NSRT.AssignmentSettings.OnPull then
         local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""
