@@ -2626,6 +2626,17 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
+            name = "4pc Check",
+            desc = "Checks if you have 4pc of the current raid-tier equipped.",
+            get = function() return NSRT.ReadyCheckSettings.TierCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.TierCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Enchant Check",
             desc = "Checks if you have all slots enchanted",
             get = function() return NSRT.ReadyCheckSettings.EnchantCheck end,
@@ -2886,7 +2897,11 @@ function NSI:DisplayText(text, duration)
     if NSUI and NSUI.generic_display then
         NSUI.generic_display.text:SetText(text)
         NSUI.generic_display:Show()
-        C_Timer.After(duration or 10, function() NSUI.generic_display:Hide() end)
+        if self.TextHideTimer then
+            self.TextHideTimer:Cancel()
+            self.TextHideTimer = nil
+        end
+        self.TextHideTimer = C_Timer.NewTimer(duration or 10, function() NSUI.generic_display:Hide() end)
     end
 end
 

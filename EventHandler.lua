@@ -92,9 +92,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
             NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
             NSRT.Settings.MissingRaidBuffs = NSRT.Settings.MissingRaidBuffs or true
-            if not NSRT.ReadyCheckSettings then
-                NSRT.ReadyCheckSettings = {MissingItemCheck = false, EnchantCheck = false, GemCheck = false, ItemLevelCheck = false, CraftedCheck = false, RepairCheck = false, RaidBuffCheck = false, SoulstoneCheck = false, GatewayShardCheck = false}
-            end
+            if not NSRT.ReadyCheckSettings then NSRT.ReadyCheckSettings = {} end
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}

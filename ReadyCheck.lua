@@ -143,6 +143,7 @@ end
 function NSI:GearCheck()          
     local missing = {}
     local crafted = 0
+    local tier = 0
     local repair = false
     local spec = GetSpecializationInfo(GetSpecialization())
     self.MainstatGem = false
@@ -167,6 +168,11 @@ function NSI:GearCheck()
                     repair = true
                 end
             end   
+            if NSRT.ReadyCheckSettings.TierCheck then
+                if self:TierCheck(slot) then
+                    tier = tier+1
+                end
+            end
         elseif NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 then  
             if slot == 17 then
                 itemString = GetInventoryItemLink("player", 16)
@@ -193,6 +199,13 @@ function NSI:GearCheck()
     end
     if NSRT.ReadyCheckSettings.CraftedCheck and crafted < 2 then
         table.insert(missing, "Missing |cFF00FF00Embellishment|r")
+    end
+    if NSRT.ReadyCheckSettings.TierCheck and tier < 4 then
+        if tier < 2 then
+            table.insert(missing, "|cFFFF0000No Set Bonus equipped|r")
+        else
+            table.insert(missing, "|cFFFF0000Only 2pc equipped|r")
+        end
     end
     local text = ""
     for i=1, #missing do
@@ -237,5 +250,48 @@ function NSI:CheckGateWayKeybind(Slot)
         local bar = math.ceil((Slot) / 12)
         local mod = Slot % 12 == 0 and 12 or Slot % 12
         return GetBindingKey("MULTIACTIONBAR"..bar.."BUTTON"..mod)
+    end
+end
+
+local validsets = { 
+    -- Manaforge Sets
+    [1921] = true, -- Druid
+    [1923] = true, -- Hunter
+    [1924] = true, -- Mage
+    [1926] = true, -- Paladin
+    [1927] = true, -- Priest
+    [1928] = true, -- Rogue
+    [1929] = true, -- Shaman
+    [1930] = true, -- Warlock
+    [1931] = true, -- Warrior
+    [1919] = true, -- Death Knight
+    [1920] = true, -- Demon Hunter
+    [1925] = true, -- Monk
+    [1922] = true, -- Evoker
+    
+    -- Midnight S1
+    [1980] = true, -- Druid
+    [1982] = true, -- Hunter
+    [1983] = true, -- Mage
+    [1985] = true, -- Paladin
+    [1986] = true, -- Priest
+    [1987] = true, -- Rogue
+    [1988] = true, -- Shaman
+    [1989] = true, -- Warlock
+    [1990] = true, -- Warrior
+    [1978] = true, -- Death Knight
+    [1979] = true, -- Demon Hunter
+    [1984] = true, -- Monk
+    [1981] = true, -- Evoker
+}
+
+function NSI:TierCheck(Slot)
+    local tier = 0
+    local itemLink = GetInventoryItemLink("player", Slot)
+    if itemLink then
+        local setID = select(16, C_Item.GetItemInfo(itemLink))
+        if setID and validsets[setID] then
+            return true
+        end
     end
 end
