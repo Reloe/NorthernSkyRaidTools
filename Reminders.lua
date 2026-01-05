@@ -124,6 +124,10 @@ function NSI:ProcessReminder()
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
         str = note and str ~= "" and str.."\n"..note or note or str
     end
+    if NSRT.ReminderSettings.PersNote then
+        local note = _G.VMRT and _G.VMRT.Note and _G.VMRT.Note.SelfText or ""
+        str = note and str ~= "" and str.."\n"..note or note or str
+    end
     if str ~= "" then
         local subgroup = self:GetSubGroup("player")        
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
@@ -150,7 +154,7 @@ function NSI:ProcessReminder()
                 tag:match(strlower(select(2, UnitClass("player")))) or
                 tag:match("group"..subgroup) or 
                 (pos and tag:match(pos))
-                then                         
+                then                     
                     local phase = line:match("ph:(%d+)")
                     local TTS = line:match("TTS:([^;]+)")
                     local countdown = line:match("countdown:(%d+)")
@@ -891,7 +895,7 @@ end
 
 function NSAPI:DebugEncounter(EncounterID)
     if NSRT.Settings["Debug"] then
-        NSI.ProcessedReminder = {}
+        NSI.ProcessedReminder = nil
         NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
     end
 end

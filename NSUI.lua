@@ -4,7 +4,7 @@ local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 local window_width = 900
-local window_height = 550
+local window_height = 570
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local TABS_LIST = {
@@ -1783,6 +1783,17 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.ReminderSettings.MRTNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.MRTNote = value
+            end,
+            nocombat = true,
+        },        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Personal Note Reminder",
+            desc = "Enables reminders entered into MRT-Personal note",
+            get = function() return NSRT.ReminderSettings.PersNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersNote = value
             end,
             nocombat = true,
         },
