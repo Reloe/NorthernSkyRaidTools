@@ -2572,7 +2572,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Dimensius",
-            desc = "This doesn't currently have anything. Might add some things to test during Pre-Patch,
+            desc = "This doesn't currently have anything. Might add some things to test during Pre-Patch",
             get = function() return NSRT.EncounterAlerts[3135] and NSRT.EncounterAlerts[3135].enabled end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3135] = NSRT.EncounterAlerts[3135] or {}
