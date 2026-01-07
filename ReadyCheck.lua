@@ -146,6 +146,7 @@ function NSI:GearCheck()
     local tier = 0
     local repair = false
     local spec = GetSpecializationInfo(GetSpecialization())
+    local ilvl = UnitLevel("player") >= 90 and minlvl or 100
     self.MainstatGem = false
     for slot = 1, #SlotName do
         local itemString = GetInventoryItemLink("player", slot)            
@@ -153,13 +154,13 @@ function NSI:GearCheck()
             if NSRT.ReadyCheckSettings.CraftedCheck and string.find(itemString, "8960") then
                 crafted = crafted+1
             end
-            if NSRT.ReadyCheckSettings.EnchantCheck and self:EnchantCheck(slot,itemString) then
+            if UnitLevel("player") >= 90 and NSRT.ReadyCheckSettings.EnchantCheck and self:EnchantCheck(slot,itemString) then
                 table.insert(missing, "Missing Enchant on: |cFF00FF00"..SlotName[slot].."|r")        
             end                
-            if NSRT.ReadyCheckSettings.GemCheck and self:GemCheck(slot, itemString) then
+            if UnitLevel("player") >= 90 and NSRT.ReadyCheckSettings.GemCheck and self:GemCheck(slot, itemString) then
                 table.insert(missing, "Missing Gem in: |cFF00FF00"..SlotName[slot].."|r")
             end                
-            if NSRT.ReadyCheckSettings.ItemLevelCheck and slot ~= 4 and select(4, C_Item.GetItemInfo(itemString)) < minlvl then
+            if NSRT.ReadyCheckSettings.ItemLevelCheck and slot ~= 4 and select(4, C_Item.GetItemInfo(itemString)) < ilvl then
                 table.insert(missing, "Low Itemlvl equipped on: |cFF00FF00"..SlotName[slot].."|r")
             end
             if NSRT.ReadyCheckSettings.RepairCheck and not repair then
@@ -191,7 +192,7 @@ function NSI:GearCheck()
         local Gateway = self:GatewayControlCheck()
         if Gateway then table.insert(missing, Gateway) end
     end
-    if NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
+    if UnitLevel("player") >= 90 and NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
         table.insert(missing, "Missing |cFF00FF00Mainstat Gem|r")
     end
     if repair then
