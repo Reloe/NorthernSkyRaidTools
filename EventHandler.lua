@@ -327,12 +327,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         self:UpdateRaidBuffFrame()
         if self.InviteInProgress then
-            C_PartyInfo.ConvertToRaid()
             if not UnitInRaid("player") then
+                C_PartyInfo.ConvertToRaid()
                 C_Timer.After(1, function() -- send invites again if player is now in a raid
                     if UnitInRaid("player") then
                         self:InviteList(self.CurrentInviteList)
-                        self.InviteInProgress = false
+                        self.InviteInProgress = nil
                     end
                 end)
             end
