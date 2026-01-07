@@ -176,7 +176,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
-            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
+            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
@@ -184,15 +184,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.LastBroadcast = GetTime()        
         if UnitIsGroupLeader("player") then
             -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
-            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
+            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
-            if self:DifficultyCheck(14) then
-                self:StoreFrames(true)
-                C_Timer.After(1, function()
-                    self:EventHandler("NSI_READY_CHECK", false, true)
-                end)     
-            end
+        if self:DifficultyCheck(14) then
+            self:StoreFrames(true)
+            C_Timer.After(1, function()
+                self:EventHandler("NSI_READY_CHECK", false, true)
+            end)     
+        end
         if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
             self:CheckCooldowns()
         end
@@ -211,9 +211,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "NSI_REM_SHARE"  and internal then
-        local unit, remindertable, assigntable = ...
-        if UnitIsGroupLeader(unit) and self:DifficultyCheck(14) then
+        local unit, remindertable, assigntable, skipcheck = ...
+        if UnitIsGroupLeader(unit) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if NSRT.ReminderSettings.enabled then
+                print("received reminder")
                 self.Reminder = remindertable
                 self:ProcessReminder()
             end

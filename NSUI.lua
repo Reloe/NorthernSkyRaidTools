@@ -764,7 +764,7 @@ local function BuildRemindersEditUI()
     -- Import Button
     local ImportButton = DF:CreateButton(reminders_edit_frame, function()
         ImportReminderString()
-        end, 120, 24, "Import Reminder"
+        end, 100, 24, "Import Reminder"
     )
     ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
     ImportButton:SetTemplate(options_button_template)
@@ -774,7 +774,7 @@ local function BuildRemindersEditUI()
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
-        end, 120, 24, "Clear Reminder"
+        end, 100, 24, "Clear Reminder"
     )
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
@@ -794,10 +794,19 @@ local function BuildRemindersEditUI()
             NSI:ProcessReminder()
             NSI:StartReminders(1)
         end
-    end, 120, 24, "Test Reminder"
+    end, 100, 24, "Test Reminder"
     )
     TestButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
     TestButton:SetTemplate(options_button_template)
+
+    -- Share Button
+    local ShareButton = DF:CreateButton(reminders_edit_frame, function()
+        NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, NSRT.AssignmentSettings, true)
+        NSI.LastBroadcast = GetTime()
+    end, 100, 24, "Share Reminder"
+    )
+    ShareButton:SetPoint("LEFT", TestButton, "RIGHT", 5, 0)
+    ShareButton:SetTemplate(options_button_template)
 
     local function DeleteBossReminder(self, line)
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Reminder Deletion", "NSRTDeleteReminderPopup")
@@ -838,7 +847,7 @@ local function BuildRemindersEditUI()
 
         
 
-        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-206, line:GetHeight())
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-210, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
         line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
         line.nameTextEntry:SetScript("OnEnterPressed", function(self)
