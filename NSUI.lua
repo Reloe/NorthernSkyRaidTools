@@ -714,7 +714,7 @@ local function ImportReminderString(name)
     DF:ReskinSlider(popup.test_string_text_box.scroll)
     popup.test_string_text_box:SetFocus()
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
-    popup.test_string_text_box:SetTextSize(13)
+    --popup.test_string_text_box:SetTextSize(13)
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
