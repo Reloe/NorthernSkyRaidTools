@@ -773,6 +773,9 @@ local function BuildRemindersEditUI()
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
+        if NSRT.ReminderSettings.ShowReminderFrame then
+            NSI:UpdateReminderFrame()
+        end
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -2397,6 +2400,111 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+        {
+            type = "label",
+            get = function() return "Reminder Frame Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Reminder Frame",
+            desc = "Whether you want to show the Reminder on screen permanently",
+            get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowReminderFrame = value
+                NSI:UpdateReminderFrame()
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font-Size of the Reminder Frame",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ReminderFrame.FontSize = value
+                NSI:UpdateReminderFrame()
+            end,
+            min = 2,
+            max = 40,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
+            values = function() 
+                NSI:UpdateReminderFrame() 
+                return build_media_options("ReminderFrame", "Font") 
+            end, 
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Reminder Frame",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ReminderFrame.Width = value
+                NSI:UpdateReminderFrame()
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Reminder Frame",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ReminderFrame.Height = value
+                NSI:UpdateReminderFrame()
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Unlock Reminder Frame",
+            desc = "Locks/Unlocks the Reminder Frame to be moved around",
+            func = function(self)
+                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
+                    NSI:UpdateReminderFrame()
+                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, false)
+                    NSI.ReminderFrameMover.Resizer:Hide()
+                    NSI.ReminderFrameMover:SetResizable(false)
+                    NSRT.ReminderSettings.ReminderFrameMoveable = false
+                else
+                    NSI:UpdateReminderFrame()
+                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, true)
+                    NSI.ReminderFrameMover.Resizer:Show()
+                    NSI.ReminderFrameMover:SetResizable(true)
+                    NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+                    NSRT.ReminderSettings.ReminderFrameMoveable = true
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
+        {
+            type = "color",
+            name = "Background-Color",
+            desc = "Color of the Background of the Reminder Frame when unlocked",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
+                NSI:UpdateReminderFrame()
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        },
+
     }
     local assignments_options1_table = {        
         {

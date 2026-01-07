@@ -662,6 +662,9 @@ end
 function NSI:SetReminder(name)
     if name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
+        if NSRT.ReminderSettings.ShowReminderFrame then
+            self:UpdateReminderFrame()
+        end
         NSRT.ActiveReminder = name
         self:ProcessReminder()
     end
@@ -673,6 +676,9 @@ function NSI:RemoveReminder(name)
         NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
             self.Reminder = ""
+            if NSRT.ReminderSettings.ShowReminderFrame then
+                self:UpdateReminderFrame()
+            end
             NSRT.ActiveReminder = ""
         end
     end
@@ -801,13 +807,25 @@ function NSI:CreateMoveFrames(Show)
         self.TextMover.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")      
         self:MoveFrameSettings(self.TextMover, s, true)
     end
+    if not self.ReminderFrameMover then
+        self.ReminderFrameMover = CreateFrame("Frame", 'NSUIReminderFrameMover', UIParent, "BackdropTemplate")
+        self:MoveFrameInit(self.ReminderFrameMover, "ReminderFrame", false, true)
+        self:MoveFrameSettings(self.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame)
+        if NSRT.ReminderSettings.ShowReminderFrame and NSRT.ReminderSettings.ReminderFrameMoveable then
+            self:UpdateReminderFrame()
+            self:ToggleMoveFrames(self.ReminderFrameMover, true)
+            self.ReminderFrameMover.Resizer:Show()
+            self.ReminderFrameMover:SetResizable(true)
+            self.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+        end
+    else
+        self:MoveFrameSettings(self.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame)
+    end  
 
     self.IconMover:Show()
     self.BarMover:Show()
     self.TextMover:Show()
-    self.IconMover.Border:Hide()
-    self.BarMover.Border:Hide()
-    self.TextMover.Border:Hide()
+    self.ReminderFrameMover:Show()
 end        
 
 
@@ -825,17 +843,21 @@ function NSI:MoveFrameSettings(F, s, text)
     F.Border:SetAllPoints(F)
 end
 
-function NSI:MoveFrameInit(F, s, text)
+function NSI:MoveFrameInit(F, s, text, Reminder)
     if F then             
         F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate") 
         F.Border:SetAllPoints(F)
         F.Border:SetBackdrop({
+                bgFile = "Interface\\Buttons\\WHITE8x8",
+                tileSize = 0,
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 2
+                edgeSize = 1,
             })
-        F.Border:SetBackdropBorderColor(1, 1, 1, 1)  
+        if Reminder then F.Border:SetBackdropBorderColor(1, 1, 1, 0) else F.Border:SetBackdropBorderColor(1, 1, 1, 1) end
+        if Reminder then F.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.ReminderFrame.BGcolor)) else F.Border:SetBackdropColor(0, 0, 0, 0) end
         F.Border:Hide()
         F:SetFrameStrata("DIALOG")
+        F.Border:SetFrameStrata("BACKGROUND")
         F:SetScript("OnDragStart", function(self)
             self:StartMoving()
         end)
@@ -957,4 +979,46 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
     elseif Type == "Icon" then info.IconOverwrite = true
     end
     return info
+end
+
+function NSI:UpdateReminderFrame()
+    self:MoveFrameSettings(self.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame) 
+    if not self.ReminderFrame then
+        self.ReminderFrame = CreateFrame("Frame", 'NSUIReminderFrame', self.ReminderFrameMover, "BackdropTemplate")    
+        self.ReminderFrame:SetClipsChildren(true)         
+        self.ReminderFrame.Text = self.ReminderFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        self.ReminderFrame.Text:SetPoint("TOPLEFT", self.ReminderFrame, "TOPLEFT", 0, 0)       
+        self.ReminderFrame.Text:SetTextColor(1, 1, 1, 1)        
+        self.ReminderFrame.Text:SetJustifyH("LEFT")  
+        self.ReminderFrame.Text:SetJustifyV("TOP")
+        self.ReminderFrame.Text:SetWordWrap(true)
+        self.ReminderFrame.Text:SetNonSpaceWrap(true)
+        self.ReminderFrame.Text:SetDrawLayer("OVERLAY", 7)
+
+        self.ReminderFrameMover.Resizer = CreateFrame("Button", nil, self.ReminderFrameMover)
+        self.ReminderFrameMover.Resizer:SetSize(20, 20)
+        self.ReminderFrameMover.Resizer:SetPoint("BOTTOMRIGHT", self.ReminderFrameMover, "BOTTOMRIGHT", -2, 2)            
+        self.ReminderFrameMover.Resizer:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+        self.ReminderFrameMover.Resizer:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+        self.ReminderFrameMover.Resizer:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+        self.ReminderFrameMover.Resizer:EnableMouse(true)
+        self.ReminderFrameMover.Resizer:RegisterForDrag("LeftButton")
+        self.ReminderFrameMover.Resizer:SetScript("OnMouseDown", function()
+            self.ReminderFrameMover:StartSizing("BOTTOMRIGHT")
+        end)
+        self.ReminderFrameMover.Resizer:SetScript("OnMouseUp", function()
+            self.ReminderFrameMover:StopMovingOrSizing()
+            NSRT.ReminderSettings.ReminderFrame.Width = self.ReminderFrameMover:GetWidth()
+            NSRT.ReminderSettings.ReminderFrame.Height = self.ReminderFrameMover:GetHeight()
+        end)
+    end
+    if NSRT.ReminderSettings.ShowReminderFrame then        
+        self.ReminderFrame:SetAllPoints(self.ReminderFrameMover)
+        self.ReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ReminderFrame.Font), NSRT.ReminderSettings.ReminderFrame.FontSize, "OUTLINE")   
+        self.ReminderFrame.Text:SetText(self.Reminder)
+        self.ReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.ReminderFrame.BGcolor))
+        self.ReminderFrame:Show()
+    elseif self.ReminderFrame then
+        self.ReminderFrame:Hide()
+    end
 end
