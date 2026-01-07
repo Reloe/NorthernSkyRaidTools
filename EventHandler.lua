@@ -32,8 +32,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Reminders = NSRT.Reminders or {}
             NSRT.InviteList = NSRT.InviteList or {}
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
-            self.Reminder = ""
-            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+            self.Reminder = ""   
             NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
@@ -51,6 +50,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
             if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
+            NSRT.ReminderSettings.ShowReminderFrame = NSRT.ReminderSettings.ShowReminderFrame or false
+            if not NSRT.ReminderSettings.ReminderFrame then
+                NSRT.ReminderSettings.ReminderFrame = {Width = 700, Height = 800, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 12, BGcolor = {0, 0, 0, 0.3},}
+            end
             if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
                 NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80}
             end
@@ -104,8 +107,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.PlayedSound = {}
             self.StartedCountdown = {}
-            self:InitNickNames()            
             self:CreateMoveFrames()
+            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+            self:InitNickNames()         
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
@@ -242,6 +246,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if UnitIsGroupLeader(unit) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if NSRT.ReminderSettings.enabled and reminderstring ~= "" then
                 self.Reminder = reminderstring
+                if NSRT.ReminderSettings.ShowReminderFrame then
+                    self:UpdateReminderFrame()
+                end
                 self:ProcessReminder()
             end
             self.Assignments = assigntable
