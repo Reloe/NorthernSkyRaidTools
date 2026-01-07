@@ -50,6 +50,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
+            if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
             if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
                 NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80}
             end
@@ -176,7 +177,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
-            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings, false)
+            local tosend = ""
+            if NSRT.ReminderSettings.AutoShare then
+                tosend = self.Reminder
+            end
+            self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
@@ -184,7 +189,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.LastBroadcast = GetTime()        
         if UnitIsGroupLeader("player") then
             -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
-            self:Broadcast("NSI_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings, false)
+            local tosend = ""
+            if NSRT.ReminderSettings.AutoShare then
+                tosend = self.Reminder
+            end
+            self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
         if self:DifficultyCheck(14) then
@@ -211,11 +220,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "NSI_REM_SHARE"  and internal then
-        local unit, remindertable, assigntable, skipcheck = ...
+        local unit, reminderstring, assigntable, skipcheck = ...
         if UnitIsGroupLeader(unit) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
-            if NSRT.ReminderSettings.enabled then
-                print("received reminder")
-                self.Reminder = remindertable
+            if NSRT.ReminderSettings.enabled and reminderstring ~= "" then
+                self.Reminder = reminderstring
                 self:ProcessReminder()
             end
             self.Assignments = assigntable

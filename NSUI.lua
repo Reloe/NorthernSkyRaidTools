@@ -4,7 +4,7 @@ local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 local window_width = 900
-local window_height = 570
+local window_height = 600
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local TABS_LIST = {
@@ -1799,6 +1799,17 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.ReminderSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Share on Ready Check",
+            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
+            get = function() return NSRT.ReminderSettings.AutoShare end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.AutoShare = value
             end,
             nocombat = true,
         },
