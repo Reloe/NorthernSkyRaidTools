@@ -118,7 +118,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         local subgroup = select(3, GetRaidRosterInfo(i))
         local unit = "raid"..i
         if not UnitExists(unit) then break end
-        local specid = NSI:GetSpecs(unit) or 0
+        local specid = self:GetSpecs(unit) or 0
         local class = select(3, UnitClass(unit))
         local role = UnitGroupRolesAssigned(unit)
         if subgroup <= lastgroup then
@@ -426,7 +426,7 @@ local className = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIG
 local MissingTexts = {"Battle Shout", "Devotion Aura", "Hunter's Mark", "Rogue Poison", "Stamina", "Grip/AS Slow", "Skyfury", "Intellect", "Warlock", "Phys Debuff", "Mark of the Wild", "Magic Debuff", "Evoker"}
 function NSI:UpdateRaidBuffFrame()
     if not NSRT.Settings.MissingRaidBuffs or not UnitInRaid("player") or not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings.Debug) then
-        NSI.RaidBuffCheck:Hide()
+        self.RaidBuffCheck:Hide()
         return
     end
     local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
@@ -437,10 +437,10 @@ function NSI:UpdateRaidBuffFrame()
     local LFGFrame = PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == 1
     local parent = (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
     if parent then   
-        NSI.RaidBuffCheck:ClearAllPoints()
-        NSI.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)        
-        NSI.RaidBuffCheck:SetHeight(parent:GetHeight()*parent:GetScale()-4)
-        NSI.RaidBuffCheck:Show()
+        self.RaidBuffCheck:ClearAllPoints()
+        self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)        
+        self.RaidBuffCheck:SetHeight(parent:GetHeight()*parent:GetScale()-4)
+        self.RaidBuffCheck:Show()
         local count = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         -- Automatically detect difficulty if player is zoned in a Raid, otherwise use the setting
         local maxgroup = NSRT.Settings.FlexRaid and 6 or 4
@@ -486,7 +486,7 @@ function NSI:UpdateRaidBuffFrame()
         end
         MissingBuffLabel:SetText(text)
     else
-        NSI.RaidBuffCheck:Hide()
+        self.RaidBuffCheck:Hide()
     end
 end
 
@@ -501,3 +501,52 @@ FriendsFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+
+function NSI:InviteFromReminder(str, init)
+    local list = NSRT.InviteList[str]
+    if list and not self:Restricted() then
+        self.CurrentInviteList = list
+        self.InviteInProgress = true
+        self:InviteList(list)
+        C_Timer.After(5, function() self.InviteInProgress = nil end)
+    end
+end
+
+function NSI:InviteList(list)
+    if not list then return end
+    local myrealm = GetRealmName()
+    for _, name in ipairs(list) do
+        local fullname = ""
+        local name, realm = strsplit("-", name)
+        if realm == nil or realm == "" or realm == myrealm then
+            fullname = name
+        else
+            fullname = name.."-"..realm
+        end
+        if (not UnitIsUnit("player", fullname)) and (not UnitInRaid(fullname)) then
+            C_PartyInfo.InviteUnit(fullname)
+        end
+    end
+end
+
+function NSI:ArrangeFromReminder(str)
+    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
+    local now = GetTime()
+    if self.LastGroupSort and self.LastGroupSort > now - 5 then
+        print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
+        return 
+    end
+    self.LastGroupSort = now
+    local list = NSRT.InviteList[str]
+    self.Groups = {}
+    self.Groups.Processing = false
+    self.Groups.units = {}
+    self.Groups.total = 0
+    if list and not self:Restricted() then
+        for i, name in ipairs(list) do
+            self.Groups.units[i] = {name = name}
+            self.Groups.total = self.Groups.total + 1
+        end
+        self:ArrangeGroups(true)
+    end
+end

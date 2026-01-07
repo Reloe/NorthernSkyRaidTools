@@ -89,7 +89,9 @@ function NSI:AddToReminder(info)
     if info.glowunit then
         local glowtable = {}
         for name in glowunit:gmatch("(%w+)") do
-            table.insert(glowtable, name)
+            if name ~= "glowunit" then
+                table.insert(glowtable, name)
+            end
         end
         info.glowunit = glowtable
     end
@@ -668,6 +670,7 @@ end
 function NSI:RemoveReminder(name)
     if name and NSRT.Reminders[name] then
         NSRT.Reminders[name] = nil
+        NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
             self.Reminder = ""
             NSRT.ActiveReminder = ""
@@ -703,9 +706,24 @@ function NSI:ImportReminder(name, values, activate)
         return
     end
     NSRT.Reminders[name] = values
+    NSRT.InviteList[name] = self:InviteListFromReminder(values)
     if activate then
         self:SetReminder(name)
     end
+end
+
+function NSI:InviteListFromReminder(str)
+    local list = {}
+    for line in str:gmatch('[^\r\n]+') do
+        if line:find("invitelist:") then            
+            for name in line:gmatch("(%w+)") do
+                if name ~= "invitelist" then
+                    table.insert(list, name)
+                end
+            end
+        end
+    end
+    return list
 end
 
 function NSI:GlowFrame(unit, id)

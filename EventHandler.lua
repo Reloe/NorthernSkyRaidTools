@@ -30,6 +30,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.NickNames then NSRT.NickNames = {} end
             if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Reminders = NSRT.Reminders or {}
+            NSRT.InviteList = NSRT.InviteList or {}
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
             self.Reminder = ""
             self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
@@ -326,6 +327,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         if self:Restricted() then return end
         self:UpdateRaidBuffFrame()
+        if self.InviteInProgress then
+            C_PartyInfo.ConvertToRaid()
+            self:InviteList(self.CurrentInviteList)
+        end
         if not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  

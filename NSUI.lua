@@ -701,7 +701,7 @@ local function build_spec_options()
 end
 
 local function ImportReminderString(name)
-    local popup = DF:CreateSimplePanel(NSUI, 800, 500, "Import Reminder String", "NSUIReminderImport", {
+    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -714,6 +714,7 @@ local function ImportReminderString(name)
     DF:ReskinSlider(popup.test_string_text_box.scroll)
     popup.test_string_text_box:SetFocus()
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
+    popup.test_string_text_box:SetTextSize(13)
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
@@ -722,7 +723,7 @@ local function ImportReminderString(name)
         NSUI.reminders_frame:Hide()
         NSUI.reminders_frame:Show()
         popup:Hide()
-    end, 280, 20, "Import")
+    end, 280, 20, "Import/Update")
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.import_confirm_button:SetTemplate(options_button_template)
 
@@ -730,7 +731,7 @@ local function ImportReminderString(name)
 end
 
 local function BuildRemindersEditUI()
-    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 380, 410, "Reminders Management", "RemindersEditFrame", {
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Reminders Management", "RemindersEditFrame", {
         DontRightClickClose = true
     })
     reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -837,7 +838,7 @@ local function BuildRemindersEditUI()
 
         
 
-        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-106, line:GetHeight())
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-206, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
         line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
         line.nameTextEntry:SetScript("OnEnterPressed", function(self)
@@ -846,11 +847,13 @@ local function BuildRemindersEditUI()
             local newname = self:GetText()
             if oldname == newname then return end
             NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             if NSRT.ActiveReminder == oldname then
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActiveReminder = newname
             end
             NSRT.Reminders[oldname] = nil
+            NSRT.InviteList[oldname] = nil
             line.name = newname
             parent:MasterRefresh()
         end)
@@ -886,13 +889,28 @@ local function BuildRemindersEditUI()
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)
 
+        -- Invite Button
+        line.InviteButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            NSI:InviteFromReminder(name, true)
+        end, 40, 20, "Invite")
+        line.InviteButton:SetPoint("RIGHT", line.ShowButton, "LEFT", 0, 0)
+        line.InviteButton:SetTemplate(options_button_template)
+
+        -- Group Arrange Button
+        line.ArrangeButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            NSI:ArrangeFromReminder(name)
+        end, 40, 20, "Arrange")
+        line.ArrangeButton:SetPoint("RIGHT", line.InviteButton, "LEFT", 0, 0)
+        line.ArrangeButton:SetTemplate(options_button_template)
         return line
     end
 
     local scrollLines = 15
     local reminders_edit_scrollbox = DF:CreateScrollBox(reminders_edit_frame, "$parentRemindersEditScrollBox", refresh,
         {},
-        340, 300, scrollLines, 20, createLineFunc)
+        420, 300, scrollLines, 20, createLineFunc)
     reminders_edit_frame.scrollbox = reminders_edit_scrollbox
     reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -40)
     reminders_edit_scrollbox.MasterRefresh = MasterRefresh
