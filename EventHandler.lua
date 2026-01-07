@@ -220,13 +220,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Assignments = assigntable
         end
     elseif e == "NSI_READY_CHECK" and internal then
-        if self:Restricted() then return end
         local text = ""
-        if NSRT.ReadyCheckSettings.RaidBuffCheck then
+        if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
             local buff = self:BuffCheck()
             if buff and buff ~= "" then text = buff end
         end     
-        if NSRT.ReadyCheckSettings.SoulstoneCheck then
+        if NSRT.ReadyCheckSettings.SoulstoneCheck and not self:Restricted() then
             local Soulstone = self:SoulstoneCheck()
             if Soulstone and Soulstone ~= "" then
                 if text == "" then
@@ -236,7 +235,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end   
-        if UnitLevel("player") >= 90 then
+        if UnitLevel("player") >= 80 then
             local Gear = self:GearCheck()
             if Gear and Gear ~= "" then
                 if text == "" then
@@ -329,7 +328,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:UpdateRaidBuffFrame()
         if self.InviteInProgress then
             C_PartyInfo.ConvertToRaid()
-            self:InviteList(self.CurrentInviteList)
+            if not UnitInRaid("player") then
+                C_Timer.After(1, function() -- send invites again if player is now in a raid
+                    if UnitInRaid("player") then
+                        self:InviteList(self.CurrentInviteList)
+                        self.InviteInProgress = false
+                    end
+                end)
+            end
         end
         if not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)

@@ -508,7 +508,13 @@ function NSI:InviteFromReminder(str, init)
         self.CurrentInviteList = list
         self.InviteInProgress = true
         self:InviteList(list)
-        C_Timer.After(5, function() self.InviteInProgress = nil end)
+        if self.InviteTimer then 
+            self.InviteTimer:Cancel() 
+            self.InviteTimer = nil
+        end
+        self.InviteTimer = C_Timer.NewTimer(10, function()
+            self.InviteInProgress = nil
+        end)
     end
 end
 
