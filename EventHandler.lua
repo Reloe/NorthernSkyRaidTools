@@ -112,6 +112,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitLDB()
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
+        end        
+        if NSRT.HasLoggedIntoMidnight == nil then -- delete old macros on first login after update
+            NSRT.HasLoggedIntoMidnight = true 
+            local todelete = {}
+            for i=1, 120 do
+                local macroname = C_Macro.GetMacroName(i)
+                if not macroname then break end
+                if macroname == "NS PA Macro" or macroname == "NS Ext Macro" or macroname == "NS Innervate" then
+                    table.insert(todelete, i)
+                end
+            end
+            if #todelete > 0 then
+                for i=#todelete, 1, -1 do
+                    DeleteMacro(todelete[i])
+                end
+            end
         end
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
