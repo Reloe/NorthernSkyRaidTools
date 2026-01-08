@@ -131,11 +131,18 @@ function NSI:ProcessReminder()
         str = note and str ~= "" and str.."\n"..note or note or str
     end    
     if str ~= "" then
-        local subgroup = self:GetSubGroup("player")        
+        local subgroup = self:GetSubGroup("player")    
+        if self.TestingReminder and not subgroup then subgroup = 1 end
+        if not subgroup then return end    
+        subgroup = "group"..subgroup
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         local pos = self.spectable[specid]
         local encID = 0
-        pos = ((pos <= 19 or pos == 34 or pos == 35) and "melee") or (((pos <= 33 and pos >= 20) or pos >= 36) and "ranged")
+        local mynickname = strlower(NSAPI:GetName("player", "GlobalNickNames"))
+        local myname = strlower(UnitName("player"))
+        local myrole = strlower(UnitGroupRolesAssigned("player"))
+        local myclass = strlower(select(2, UnitClass("player")))
+        pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
         for line in str:gmatch('[^\r\n]+') do
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
@@ -145,16 +152,15 @@ function NSI:ProcessReminder()
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
-            if self.TestingReminder and not subgroup then subgroup = 1 end
-            if time and tag and subgroup and (text or spellID) and encID and encID ~= 0 then
+            if time and tag and (text or spellID) and encID and encID ~= 0 then
                 tag = strlower(tag)
                 if tag == "everyone" or 
-                tag:match(strlower(UnitName("player"))) or 
-                tag:match(strlower(NSAPI:GetName("player", "GlobalNickNames"))) or 
-                tag:match(strlower(UnitGroupRolesAssigned("player"))) or 
+                tag:match(myname) or 
+                tag:match(mynickname) or 
+                tag:match(myrole) or 
                 tag:match(specid) or
-                tag:match(strlower(select(2, UnitClass("player")))) or
-                tag:match("group"..subgroup) or 
+                tag:match(myclass) or
+                tag:match(subgroup) or 
                 (pos and tag:match(pos))
                 then                     
                     local phase = line:match("ph:(%d+)")
