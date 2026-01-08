@@ -3,7 +3,7 @@ local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
-local window_width = 900
+local window_width = 1050
 local window_height = 600
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
@@ -730,6 +730,36 @@ local function ImportReminderString(name)
     return popup
 end
 
+local function ImportPersonalReminderString(name)
+    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
+        DontRightClickClose = true
+    })
+    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    popup:SetFrameLevel(100)
+
+    popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "PersonalReminderTextEdit", true, false, true)
+    popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+    popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+    DF:ApplyStandardBackdrop(popup.test_string_text_box)
+    DF:ReskinSlider(popup.test_string_text_box.scroll)
+    popup.test_string_text_box:SetFocus()
+    popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
+    --popup.test_string_text_box:SetTextSize(13)
+
+    popup.import_confirm_button = DF:CreateButton(popup, function()
+        local import_string = popup.test_string_text_box:GetText()
+        NSI:ImportFullReminderString(import_string, true)
+        popup.test_string_text_box:SetText("")
+        NSUI.personal_reminders_frame:Hide()
+        NSUI.personal_reminders_frame:Show()
+        popup:Hide()
+    end, 280, 20, "Import/Update")
+    popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+    popup.import_confirm_button:SetTemplate(options_button_template)
+
+    return popup
+end
+
 local function BuildRemindersEditUI()
     local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Reminders Management", "RemindersEditFrame", {
         DontRightClickClose = true
@@ -782,33 +812,13 @@ local function BuildRemindersEditUI()
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
 
-    -- Test Button
-    local TestButton = DF:CreateButton(reminders_edit_frame, function()
-        if NSI.TestingReminder then
-            NSI.TestingReminder = false
-            NSI:HideAllReminders()
-        else
-            local str = NSRT.Reminders[NSRT.ActiveReminder]
-            if not str then return end
-            local encID = str:match("EncounterID:(%d+)")
-            if not encID then return end
-            NSI.EncounterID = tonumber(encID)
-            NSI.TestingReminder = true
-            NSI:ProcessReminder()
-            NSI:StartReminders(1)
-        end
-    end, 100, 24, "Test Reminder"
-    )
-    TestButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
-    TestButton:SetTemplate(options_button_template)
-
     -- Share Button
     local ShareButton = DF:CreateButton(reminders_edit_frame, function()
         NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, NSRT.AssignmentSettings, true)
         NSI.LastBroadcast = GetTime()
     end, 100, 24, "Share Reminder"
     )
-    ShareButton:SetPoint("LEFT", TestButton, "RIGHT", 5, 0)
+    ShareButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
     ShareButton:SetTemplate(options_button_template)
 
     local function DeleteBossReminder(self, line)
@@ -916,6 +926,166 @@ local function BuildRemindersEditUI()
         end, 40, 20, "Arrange")
         line.ArrangeButton:SetPoint("RIGHT", line.InviteButton, "LEFT", 0, 0)
         line.ArrangeButton:SetTemplate(options_button_template)
+        return line
+    end
+
+    local scrollLines = 15
+    local reminders_edit_scrollbox = DF:CreateScrollBox(reminders_edit_frame, "$parentRemindersEditScrollBox", refresh,
+        {},
+        420, 300, scrollLines, 20, createLineFunc)
+    reminders_edit_frame.scrollbox = reminders_edit_scrollbox
+    reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -40)
+    reminders_edit_scrollbox.MasterRefresh = MasterRefresh
+    DF:ReskinSlider(reminders_edit_scrollbox)
+    reminders_edit_scrollbox:SetScript("OnShow", function(self)
+        self:MasterRefresh()
+    end)
+
+    for i = 1, scrollLines do
+        reminders_edit_scrollbox:CreateLine(createLineFunc)
+    end
+
+    reminders_edit_frame:Hide()
+    return reminders_edit_frame
+end
+
+local function BuildPersonalRemindersEditUI()
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Personal Reminders Management", "RemindersEditFrame", {
+        DontRightClickClose = true
+    })
+    reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    local function MasterRefresh(self)
+        local data = NSI:GetAllReminderNames(true)
+        self:SetData(data)
+        self:Refresh()
+    end
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local reminderData = data[index]
+            if reminderData then
+                local line = self:GetLine(i)
+                line.name = reminderData.name
+                line.nameTextEntry.text = reminderData.name
+            end
+        end
+    end
+    
+    local Active_Text = DF:CreateLabel(reminders_edit_frame, "Active Personal Reminder", 11)
+    Active_Text:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 50)
+    Active_Text:SetWidth(380)
+    if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder ~= "" then
+        Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. NSRT.ActivePersonalReminder
+    else
+        Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+    end
+
+    -- Import Button
+    local ImportButton = DF:CreateButton(reminders_edit_frame, function()
+        ImportPersonalReminderString()
+        end, 100, 24, "Import Personal Reminder"
+    )
+    ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
+    ImportButton:SetTemplate(options_button_template)
+
+    -- Clear Button
+    local ClearButton = DF:CreateButton(reminders_edit_frame, function()
+        NSRT.ActivePersonalReminder = nil
+        NSI.PersonalReminder = ""
+        if NSRT.ReminderSettings.ShowPersonalReminderFrame then
+            NSI:UpdateReminderFrame(true)
+        end
+        Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+        end, 100, 24, "Clear Reminder"
+    )
+    ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
+    ClearButton:SetTemplate(options_button_template)
+
+    local function DeleteBossReminder(self, line)
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Personal Reminder Deletion", "NSRTDeletePersonalReminderPopup")
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local text = DF:CreateLabel(popup,
+            "Are you sure you want to delete this Personal Reminder?", 12, "orange")
+        text:SetPoint("TOP", popup, "TOP", 0, -30)
+        text:SetJustifyH("CENTER")
+
+        local confirmButton = DF:CreateButton(popup, function()
+            if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder == line.name then
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+            end
+            NSI:RemoveReminder(line.name, true)
+            self:SetData(NSI:GetAllReminderNames(true))
+            self:MasterRefresh()
+            popup:Hide()
+        end, 100, 30, "Confirm")
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+
+        local cancelButton = DF:CreateButton(popup, function()
+            popup:Hide()
+        end, 100, 30, "Cancel")
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        popup:Show()
+    end
+
+    local function createLineFunc(self, index)
+        local parent = self
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-129, line:GetHeight())
+        line.nameTextEntry:SetTemplate(options_dropdown_template)
+        line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
+        line.nameTextEntry:SetScript("OnEnterPressed", function(self)
+            local oldname = line.name
+            if not oldname then return end
+            local newname = self:GetText()
+            if oldname == newname then return end
+            NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            if NSRT.ActivePersonalReminder == oldname then
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. newname
+                NSRT.ActivePersonalReminder = newname
+            end
+            NSRT.PersonalReminders[oldname] = nil
+            line.name = newname
+            parent:MasterRefresh()
+        end)
+        
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function()
+            DeleteBossReminder(self, line, true)
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+        -- Load Button
+        line.LoadButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            if name ~= "" then
+                NSI:SetReminder(name, true)
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
+            end
+        end, 55, 20, "Load")
+        line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
+        line.LoadButton:SetTemplate(options_button_template)
+
+        -- Show Button
+        line.ShowButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            ImportPersonalReminderString(name)
+        end, 55, 20, "Show")
+        line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
+        line.ShowButton:SetTemplate(options_button_template)
         return line
     end
 
@@ -1315,7 +1485,7 @@ function NSUI:Init()
         return t
     end
 
-    local build_media_options = function(typename, settingname, isTexture)
+    local build_media_options = function(typename, settingname, isTexture, isReminder, Personal)
         local list = NSI.LSM:List(isTexture and "statusbar" or "font")
         local t = {}
         for i, font in ipairs(list) do
@@ -1324,7 +1494,15 @@ function NSUI:Init()
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.ReminderSettings[typename][settingname] = list[value]
-                    NSI:UpdateExistingFrames()
+                    if isReminder then
+                        if Personal then
+                            NSI:UpdateReminderFrame(true)
+                        else
+                            NSI:UpdateReminderFrame(false)
+                        end
+                    else
+                        NSI:UpdateExistingFrames()
+                    end
                 end
             })
         end
@@ -1794,50 +1972,7 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },]]
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Raidleader Reminder",
-            desc = "Enables reminders set by the raidleader",
-            get = function() return NSRT.ReminderSettings.enabled end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.enabled = value
-            end,
-            nocombat = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Share on Ready Check",
-            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
-            get = function() return NSRT.ReminderSettings.AutoShare end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.AutoShare = value
-            end,
-            nocombat = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "MRT Note Reminder",
-            desc = "Enables reminders entered into MRT note",
-            get = function() return NSRT.ReminderSettings.MRTNote end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.MRTNote = value
-            end,
-            nocombat = true,
-        },        
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Personal Note Reminder",
-            desc = "Enables reminders entered into MRT-Personal note",
-            get = function() return NSRT.ReminderSettings.PersNote end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.PersNote = value
-            end,
-            nocombat = true,
-        },
+        
         {
             type = "label",
             get = function() return "Spell Settings" end,
@@ -2289,12 +2424,21 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
 
         },
-
+                 
+        {
+            type = "label",
+            get = function() return "Manage Reminders" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),            
+        },
         {
             type = "button",
-            name = "Preview",
+            name = "Preview Alerts",
             desc = "Preview Reminders and unlock their anchors to move them around",
             func = function(self)
+                if NSI.PreviewTimer then
+                    NSI.PreviewTimer:Cancel()
+                    NSI.PreviewTimer = nil
+                end
                 if NSI.IsInPreview then
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
@@ -2303,6 +2447,15 @@ Press 'Enter' to hear the TTS]],
                     end
                     return
                 end
+                NSI.PreviewTimer = C_Timer.NewTimer(12, function()
+                    if NSI.IsInPreview then
+                        NSI.IsInPreview = false
+                        NSI:HideAllReminders()
+                        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                            NSI:ToggleMoveFrames(NSI[v], false)
+                        end
+                    end
+                end)
                 NSI.IsInPreview = true
                 for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
                     NSI:ToggleMoveFrames(NSI[v], true)
@@ -2387,6 +2540,53 @@ Press 'Enter' to hear the TTS]],
             spacement = true
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Raidleader Reminder",
+            desc = "Enables reminders set by the raidleader",
+            get = function() return NSRT.ReminderSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.enabled = value
+            end,
+            nocombat = true,
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Personal Note Reminder",
+            desc = "Enables reminders set into your personal reminder",
+            get = function() return NSRT.ReminderSettings.PersNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersNote = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "MRT Note Reminder",
+            desc = "Enables reminders entered into MRT note",
+            get = function() return NSRT.ReminderSettings.MRTNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.MRTNote = value
+            end,
+            nocombat = true,
+        },               
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Share on Ready Check",
+            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
+            get = function() return NSRT.ReminderSettings.AutoShare end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.AutoShare = value
+            end,
+            nocombat = true,
+        },
+
+        {
             type = "button",
             name = "Reminders Overview",
             desc = "Shows a list of all Reminders",
@@ -2401,14 +2601,55 @@ Press 'Enter' to hear the TTS]],
             spacement = true
         },
         {
+            type = "button",
+            name = "Personal Reminders",
+            desc = "Shows a list of all Personal Reminders",
+            func = function(self)
+                if not NSUI.personal_reminders_frame:IsShown() then
+                    NSUI.personal_reminders_frame:Show()
+                else
+                    NSUI.personal_reminders_frame:Hide()
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "breakline"
+        },
+        {
             type = "label",
             get = function() return "Reminder Frame Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
+        
+        {
+            type = "button",
+            name = "Unlock Reminder Frame",
+            desc = "Locks/Unlocks the Reminder Frame to be moved around",
+            func = function(self)
+                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
+                    NSI:UpdateReminderFrame()
+                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, false)
+                    NSI.ReminderFrameMover.Resizer:Hide()
+                    NSI.ReminderFrameMover:SetResizable(false)
+                    NSRT.ReminderSettings.ReminderFrameMoveable = false
+                else
+                    NSI:UpdateReminderFrame()
+                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, true)
+                    NSI.ReminderFrameMover.Resizer:Show()
+                    NSI.ReminderFrameMover:SetResizable(true)
+                    NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+                    NSRT.ReminderSettings.ReminderFrameMoveable = true
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },   
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Reminder Frame",
+            name = "Show Reminder Text",
             desc = "Whether you want to show the Reminder on screen permanently",
             get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
             set = function(self, fixedparam, value)
@@ -2416,7 +2657,7 @@ Press 'Enter' to hear the TTS]],
                 NSI:UpdateReminderFrame()
             end,
             nocombat = true,
-        },
+        },        
         {
             type = "range",
             name = "Font-Size",
@@ -2436,8 +2677,7 @@ Press 'Enter' to hear the TTS]],
             desc = "Font",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
             values = function() 
-                NSI:UpdateReminderFrame() 
-                return build_media_options("ReminderFrame", "Font") 
+                return build_media_options("ReminderFrame", "Font", false, true, false) 
             end, 
             nocombat = true,
         },
@@ -2466,30 +2706,7 @@ Press 'Enter' to hear the TTS]],
             min = 100,
             max = 2000,
             nocombat = true,
-        },
-        {
-            type = "button",
-            name = "Unlock Reminder Frame",
-            desc = "Locks/Unlocks the Reminder Frame to be moved around",
-            func = function(self)
-                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame()
-                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, false)
-                    NSI.ReminderFrameMover.Resizer:Hide()
-                    NSI.ReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.ReminderFrameMoveable = false
-                else
-                    NSI:UpdateReminderFrame()
-                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, true)
-                    NSI.ReminderFrameMover.Resizer:Show()
-                    NSI.ReminderFrameMover:SetResizable(true)
-                    NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.ReminderFrameMoveable = true
-                end
-            end,
-            nocombat = true,
-            spacement = true
-        },
+        },  
 
         {
             type = "color",
@@ -2499,6 +2716,111 @@ Press 'Enter' to hear the TTS]],
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
                 NSI:UpdateReminderFrame()
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        },
+
+        {
+            type = "label",
+            get = function() return "Personal Reminder Frame Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        
+        {
+            type = "button",
+            name = "Unlock Pers Reminder",
+            desc = "Locks/Unlocks the Reminder Frame to be moved around",
+            func = function(self)
+                if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
+                    NSI:UpdateReminderFrame(true)
+                    NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, false)
+                    NSI.PersonalReminderFrameMover.Resizer:Hide()
+                    NSI.PersonalReminderFrameMover:SetResizable(false)
+                    NSRT.ReminderSettings.PersonalReminderFrameMoveable = false
+                else
+                    NSI:UpdateReminderFrame(true)
+                    NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, true)
+                    NSI.PersonalReminderFrameMover.Resizer:Show()
+                    NSI.PersonalReminderFrameMover:SetResizable(true)
+                    NSI.PersonalReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+                    NSRT.ReminderSettings.PersonalReminderFrameMoveable = true
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },  
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Personal Reminder Text",
+            desc = "Whether you want to show the Reminder on screen permanently",
+            get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowPersonalReminderFrame = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font-Size of the Personal Reminder Frame",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersonalReminderFrame.FontSize = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            min = 2,
+            max = 40,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Font end,
+            values = function() 
+                return build_media_options("PersonalReminderFrame", "Font", false, true, true) 
+            end, 
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Personal Reminder Frame",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersonalReminderFrame.Width = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Personal Reminder Frame",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersonalReminderFrame.Height = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+
+        {
+            type = "color",
+            name = "Background-Color",
+            desc = "Color of the Background of the Personal Reminder Frame when unlocked",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.BGcolor end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
+                NSI:UpdateReminderFrame(true)
             end,
             hasAlpha = true,
             nocombat = true
@@ -2996,6 +3318,7 @@ Press 'Enter' to hear the TTS]],
     NSUI.nickname_frame = BuildNicknameEditUI()
     NSUI.cooldowns_frame = BuildCooldownsEditUI()
     NSUI.reminders_frame = BuildRemindersEditUI()
+    NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
 
     -- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
