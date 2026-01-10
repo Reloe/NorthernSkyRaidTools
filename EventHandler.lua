@@ -83,7 +83,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
-            NSRT.Settings["MRT"] = NSRT.Settings["MRT"] or false
             NSRT.Settings["Cell"] = NSRT.Settings["Cell"] or false
             NSRT.Settings["Grid2"] = NSRT.Settings["Grid2"] or false
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false

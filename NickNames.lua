@@ -153,22 +153,6 @@ function NSI:BlizzardNickNameUpdated()
     end
 end
 
-function NSI:MRTNickNameUpdated()
-    if C_AddOns.IsAddOnLoaded("MRT") then
-        if NSRT.Settings["MRT"] and GMRT and GMRT.F and not self.MRTNickNamesHook then        
-            self.MRTNickNamesHook = true
-            GMRT.F:RegisterCallback(
-                "RaidCooldowns_Bar_TextName",
-                function(event, bar, data)
-                    if data and data.name then
-                        data.name = NSAPI:GetName(data.name, "MRT")
-                    end
-                end
-            )
-        end
-    end
-end
-
 -- Cell Option Change
 function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
     if CellDB then
@@ -289,7 +273,6 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:ElvUINickNameUpdated()
     self:UnhaltedNickNameUpdated()
     self:BlizzardNickNameUpdated()
-    self:MRTNickNameUpdated(true)
 end
 
 function NSI:InitNickNames()
@@ -309,7 +292,6 @@ function NSI:InitNickNames()
     end
 
     if NSRT.Settings["GlobalNickNames"] then      
-    	self:MRTNickNameUpdated(false)
     	self:BlizzardNickNameUpdated()
     end
 
