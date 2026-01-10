@@ -36,6 +36,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ActivePersonalReminder = NSRT.ActivePersonalReminder or nil
             self.Reminder = ""   
             self.PersonalReminder = ""
+            self.DisplayedReminder = ""
+            self.DisplayedPersonalReminder = ""
             NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
@@ -55,6 +57,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
             NSRT.ReminderSettings.ShowReminderFrame = NSRT.ReminderSettings.ShowReminderFrame or false
             NSRT.ReminderSettings.ShowPersonalReminderFrame = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
+            if NSRT.ReminderSettings.OnlySpellReminders == nil then NSRT.ReminderSettings.OnlySpellReminders = true end
             if not NSRT.ReminderSettings.PersonalReminderFrame then
                 NSRT.ReminderSettings.PersonalReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 12, BGcolor = {0, 0, 0, 0.3},}
             end
@@ -115,9 +118,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.PlayedSound = {}
             self.StartedCountdown = {}
             self:CreateMoveFrames()
+            self:InitNickNames()         
             self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
             self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
-            self:InitNickNames()         
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
@@ -254,10 +257,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit)) and skipcheck) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if NSRT.ReminderSettings.enabled and reminderstring ~= "" then
                 self.Reminder = reminderstring
+                self:ProcessReminder()
                 if NSRT.ReminderSettings.ShowReminderFrame then
                     self:UpdateReminderFrame()
                 end
-                self:ProcessReminder()
             end
             self.Assignments = assigntable
         end

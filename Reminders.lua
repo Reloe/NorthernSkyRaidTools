@@ -121,6 +121,10 @@ end
 function NSI:ProcessReminder()
     local str = ""
     self.ProcessedReminder = {}
+    local remindertable = {}
+    local personalremindertable = {}
+    self.DisplayedReminder = ""
+    self.DisplayedPersonalReminder = ""
     if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
     if NSRT.ReminderSettings.MRTNote then 
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
@@ -132,8 +136,7 @@ function NSI:ProcessReminder()
     end    
     if str ~= "" then
         local subgroup = self:GetSubGroup("player")    
-        if self.TestingReminder and not subgroup then subgroup = 1 end
-        if not subgroup then return end    
+        if not subgroup then subgroup = 1 end
         subgroup = "group"..subgroup
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         local pos = self.spectable[specid]
@@ -144,15 +147,78 @@ function NSI:ProcessReminder()
         local myclass = strlower(select(2, UnitClass("player")))
         pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
         for line in str:gmatch('[^\r\n]+') do
+            local firstline = false
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
-                if encID then encID = tonumber(encID) end
+                if encID then 
+                    encID = tonumber(encID)
+                    firstline = true
+                end
             end
             local tag = line:match("tag:([^;]+)")
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
-            local spellID = line:match("spellid:(%d+)")
-            if time and tag and (text or spellID) and encID and encID ~= 0 then
+            local spellID = line:match("spellid:(%d+)")   
+            local phase = line:match("ph:(%d+)")
+            local dur = line:match("dur:(%d+)")
+            local TTS = line:match("TTS:([^;]+)")
+            local countdown = line:match("countdown:(%d+)")
+            local sound = line:match("sound:([^;]+)")
+            local glowunit = line:match("glowunit:([^;]+)")
+            if time and tag and (text or spellID) and encID and encID ~= 0 and not firstline then
+                local displayLine = line
+                if spellID or not NSRT.ReminderSettings.OnlySpellReminders then -- only insert this if it's a spell or user wants to see text-reminders as well
+                    -- display phase more readable
+                    if phase then
+                        local displayedPhase = phase and tonumber(phase)
+                        displayLine = displayLine:gsub("ph:"..phase, "P"..displayedPhase)
+                    else
+                        displayLine = "Phase: 1 "..displayLine
+                    end
+                    -- convert to MM:SS format
+                    local timeNum = tonumber(time)
+                    if timeNum then
+                        local minutes = math.floor(timeNum / 60)
+                        local seconds = math.floor(timeNum % 60)
+                        local timeFormatted = string.format("%d:%02d", minutes, seconds)
+                        displayLine = displayLine:gsub("time:"..time, timeFormatted)
+                    end
+                
+                    -- convert to icon
+                    if spellID then
+                        local iconID = C_Spell.GetSpellTexture(tonumber(spellID))
+                        if iconID then
+                            local iconString = "\124T"..iconID..":12:12:0:0:64:64:4:60:4:60\124t"
+                            displayLine = displayLine:gsub("spellid:%d+", iconString)
+                        end
+                    end
+                    -- cleanup stuff we don't want to have displayed
+                    if glowunit then
+                        displayLine = displayLine:gsub("glowunit:"..glowunit, "")
+                    end
+                    if countdown then
+                        displayLine = displayLine:gsub("countdown:"..countdown, "")
+                    end
+                    if TTS then
+                        displayLine = displayLine:gsub("TTS:"..TTS, "")
+                    end
+                    if sound then
+                        displayLine = displayLine:gsub("sound:"..sound, "")
+                    end
+                    if dur then
+                        displayLine = displayLine:gsub("dur:"..dur, "")
+                    end
+                    -- convert names to nicknames and color code them
+                    local tagNames = ""
+                    for name in tag:gmatch("(%w+)") do
+                        tagNames = tagNames..NSAPI:Shorten(strtrim(name), 12, false, "GlobalNickNames").." "
+                    end
+                    tagNames = strtrim(tagNames)
+                    displayLine = displayLine:gsub("tag:([^;]+)", tagNames)
+                    -- remove remaining semicolons
+                    displayLine = displayLine:gsub(";", " ")
+                    table.insert(remindertable, {str = displayLine, time = tonumber(time)})
+                end
                 tag = strlower(tag)
                 if tag == "everyone" or 
                 tag:match(myname) or 
@@ -162,16 +228,21 @@ function NSI:ProcessReminder()
                 tag:match(myclass) or
                 tag:match(subgroup) or 
                 (pos and tag:match(pos))
-                then                     
-                    local phase = line:match("ph:(%d+)")
-                    local TTS = line:match("TTS:([^;]+)")
-                    local countdown = line:match("countdown:(%d+)")
-                    local dur = line:match("dur:(%d+)")
-                    local sound = line:match("sound:([^;]+)")
-                    local glowunit = line:match("glowunit:([^;]+)")
+                then          
+                    if spellID or not NSRT.ReminderSettings.OnlySpellReminders then -- only insert this if it's a spell or user wants to see text-reminders as well
+                        table.insert(personalremindertable, {str = displayLine, time = tonumber(time)})
+                    end
                     self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, encID = encID, Type = nil, notsticky = false})
                 end
             end
+        end
+        table.sort(remindertable, function(a, b) return a.time < b.time end)
+        for _, data in ipairs(remindertable) do
+            self.DisplayedReminder = self.DisplayedReminder..data.str.."\n"
+        end
+        table.sort(personalremindertable, function(a, b) return a.time < b.time end)
+        for _, data in ipairs(personalremindertable) do
+            self.DisplayedPersonalReminder = self.DisplayedPersonalReminder..data.str.."\n"
         end
     end
 end
@@ -673,19 +744,19 @@ function NSI:SetReminder(name, personal)
     if personal then
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
+            NSRT.ActivePersonalReminder = name
+            self:ProcessReminder()
             if NSRT.ReminderSettings.ShowPersonalReminderFrame then
                 self:UpdateReminderFrame(true)
             end
-            NSRT.ActivePersonalReminder = name
-            self:ProcessReminder()
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
+        NSRT.ActiveReminder = name
+        self:ProcessReminder()
         if NSRT.ReminderSettings.ShowReminderFrame then
             self:UpdateReminderFrame()
         end
-        NSRT.ActiveReminder = name
-        self:ProcessReminder()
     end
 end
 
@@ -695,6 +766,7 @@ function NSI:RemoveReminder(name, personal)
             NSRT.PersonalReminders[name] = nil
             if NSRT.ActivePersonalReminder == name then
                 self.PersonalReminder = ""
+                self:ProcessReminder()
                 if NSRT.ReminderSettings.ShowPersonalReminderFrame then
                     self:UpdateReminderFrame(true)
                 end
@@ -706,6 +778,7 @@ function NSI:RemoveReminder(name, personal)
         NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
             self.Reminder = ""
+            self:ProcessReminder()
             if NSRT.ReminderSettings.ShowReminderFrame then
                 self:UpdateReminderFrame()
             end
@@ -913,8 +986,8 @@ function NSI:MoveFrameInit(F, s, text, ReminderColor)
         if ReminderColor then F.Border:SetBackdropBorderColor(1, 1, 1, 0) else F.Border:SetBackdropBorderColor(1, 1, 1, 1) end
         if ReminderColor then F.Border:SetBackdropColor(unpack(ReminderColor)) else F.Border:SetBackdropColor(0, 0, 0, 0) end
         F.Border:Hide()
-        F:SetFrameStrata("LOW")
-        F.Border:SetFrameStrata(ReminderColor and "BACKGROUND" or "HIGH")
+        F:SetFrameStrata(ReminderColor and "BACKGROUND" or "DIALOG")
+        F.Border:SetFrameStrata(ReminderColor and "BACKGROUND" or "DIALOG")
         F:SetScript("OnDragStart", function(self)
             self:StartMoving()
         end)
@@ -981,13 +1054,14 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
     return info
 end
 
-function NSI:UpdateReminderFrame(personal)
-    if personal then
+function NSI:UpdateReminderFrame(personal, all)
+    if personal or all then
         self:MoveFrameSettings(self.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
-    else
+    end
+    if all or not personal then
         self:MoveFrameSettings(self.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame) 
     end
-    if personal and not self.PersonalReminderFrame then
+    if (personal or all) and not self.PersonalReminderFrame then
         self.PersonalReminderFrame = CreateFrame("Frame", 'NSUIPersonalReminderFrame', self.PersonalReminderFrameMover, "BackdropTemplate")    
         self.PersonalReminderFrame:SetClipsChildren(true)         
         self.PersonalReminderFrame:SetFrameStrata("MEDIUM")
@@ -1020,7 +1094,7 @@ function NSI:UpdateReminderFrame(personal)
             self.PersonalReminderFrameMover.Resizer:Hide()
         end
     end
-    if (not personal) and (not self.ReminderFrame) then
+    if (all or not personal) and (not self.ReminderFrame) then
         self.ReminderFrame = CreateFrame("Frame", 'NSUIReminderFrame', self.ReminderFrameMover, "BackdropTemplate")    
         self.ReminderFrame:SetClipsChildren(true)       
         self.ReminderFrame:SetFrameStrata("MEDIUM")  
@@ -1053,25 +1127,26 @@ function NSI:UpdateReminderFrame(personal)
             self.ReminderFrameMover.Resizer:Hide()
         end
     end
-    if personal then 
+    if personal or all then 
         self.PersonalReminderFrame:SetAllPoints(self.PersonalReminderFrameMover)
         self.PersonalReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.PersonalReminderFrame.Font), NSRT.ReminderSettings.PersonalReminderFrame.FontSize, "OUTLINE")   
-        self.PersonalReminderFrame.Text:SetText(self.PersonalReminder)
+        self.PersonalReminderFrame.Text:SetText(self.DisplayedPersonalReminder)
         self.PersonalReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.PersonalReminderFrame.BGcolor))
         if NSRT.ReminderSettings.ShowPersonalReminderFrame then       
             self.PersonalReminderFrame:Show()
         elseif self.PersonalReminderFrame then
             self.PersonalReminderFrame:Hide()
         end
-        return
-    end      
-    self.ReminderFrame:SetAllPoints(self.ReminderFrameMover)
-    self.ReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ReminderFrame.Font), NSRT.ReminderSettings.ReminderFrame.FontSize, "OUTLINE")   
-    self.ReminderFrame.Text:SetText(self.Reminder)
-    self.ReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.ReminderFrame.BGcolor))
-    if NSRT.ReminderSettings.ShowReminderFrame then  
-        self.ReminderFrame:Show()
-    elseif self.ReminderFrame then
-        self.ReminderFrame:Hide()
+    end  
+    if all or not personal then    
+        self.ReminderFrame:SetAllPoints(self.ReminderFrameMover)
+        self.ReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ReminderFrame.Font), NSRT.ReminderSettings.ReminderFrame.FontSize, "OUTLINE")   
+        self.ReminderFrame.Text:SetText(self.DisplayedReminder)
+        self.ReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.ReminderFrame.BGcolor))
+        if NSRT.ReminderSettings.ShowReminderFrame then  
+            self.ReminderFrame:Show()
+        elseif self.ReminderFrame then
+            self.ReminderFrame:Hide()
+        end
     end
 end
