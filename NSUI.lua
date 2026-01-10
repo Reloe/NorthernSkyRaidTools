@@ -1894,18 +1894,6 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.Settings["MRT"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] = true
-                NSRT.Settings["MRT"] = value
-            end,
-            name = "Enable MRT Nicknames",
-            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display.",
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
             get = function() return NSRT.Settings["Unhalted"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] = true
