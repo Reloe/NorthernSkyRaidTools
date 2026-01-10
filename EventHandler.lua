@@ -119,12 +119,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.StartedCountdown = {}
             self:CreateMoveFrames()
             self:InitNickNames()         
-            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
-            self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
         self:InitLDB()
+            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+            self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end        
