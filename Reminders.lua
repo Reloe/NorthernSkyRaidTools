@@ -122,7 +122,9 @@ function NSI:ProcessReminder()
     local str = ""
     self.ProcessedReminder = {}
     local remindertable = {}
+    local addedreminders = {}
     local personalremindertable = {}
+    local addedpersonalreminders = {}
     self.DisplayedReminder = ""
     self.DisplayedPersonalReminder = ""
     if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
@@ -167,14 +169,11 @@ function NSI:ProcessReminder()
             local glowunit = line:match("glowunit:([^;]+)")
             if time and tag and (text or spellID) and encID and encID ~= 0 and not firstline then
                 local displayLine = line
-                if spellID or not NSRT.ReminderSettings.OnlySpellReminders then -- only insert this if it's a spell or user wants to see text-reminders as well
+                phase = phase and tonumber(phase) or 1 
+                local key = encID..phase..time..tag..(text or spellID)
+                if (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                     -- display phase more readable
-                    if phase then
-                        local displayedPhase = phase and tonumber(phase)
-                        displayLine = displayLine:gsub("ph:"..phase, "P"..displayedPhase)
-                    else
-                        displayLine = "Phase: 1 "..displayLine
-                    end
+                    displayLine = displayLine:gsub("ph:"..phase, "P"..phase)
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
@@ -217,7 +216,10 @@ function NSI:ProcessReminder()
                     displayLine = displayLine:gsub("tag:([^;]+)", tagNames)
                     -- remove remaining semicolons
                     displayLine = displayLine:gsub(";", " ")
-                    table.insert(remindertable, {str = displayLine, time = tonumber(time)})
+                    if not addedreminders[key] then       
+                        table.insert(remindertable, {str = displayLine, time = tonumber(time), phase = phase})  
+                        addedreminders[key] = true  
+                    end
                 end
                 tag = strlower(tag)
                 if tag == "everyone" or 
@@ -228,19 +230,34 @@ function NSI:ProcessReminder()
                 tag:match(myclass) or
                 tag:match(subgroup) or 
                 (pos and tag:match(pos))
-                then          
-                    if spellID or not NSRT.ReminderSettings.OnlySpellReminders then -- only insert this if it's a spell or user wants to see text-reminders as well
-                        table.insert(personalremindertable, {str = displayLine, time = tonumber(time)})
+                then       
+                    if not addedpersonalreminders[key] then 
+                        addedpersonalreminders[key] = true
+                        if (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
+                            table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})   
+                        end
+                        self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, encID = encID, Type = nil, notsticky = false})
                     end
-                    self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, encID = encID, Type = nil, notsticky = false})
                 end
             end
         end
-        table.sort(remindertable, function(a, b) return a.time < b.time end)
+        table.sort(remindertable, function(a, b) 
+            if a.phase == b.phase then
+                return a.time < b.time
+            else
+                return a.phase < b.phase 
+            end
+        end)
         for _, data in ipairs(remindertable) do
             self.DisplayedReminder = self.DisplayedReminder..data.str.."\n"
         end
-        table.sort(personalremindertable, function(a, b) return a.time < b.time end)
+        table.sort(personalremindertable, function(a, b) 
+            if a.phase == b.phase then
+                return a.time < b.time
+            else
+                return a.phase < b.phase 
+            end
+        end)
         for _, data in ipairs(personalremindertable) do
             self.DisplayedPersonalReminder = self.DisplayedPersonalReminder..data.str.."\n"
         end
