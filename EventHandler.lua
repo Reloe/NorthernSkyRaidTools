@@ -59,10 +59,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.ShowPersonalReminderFrame = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
             if NSRT.ReminderSettings.OnlySpellReminders == nil then NSRT.ReminderSettings.OnlySpellReminders = true end
             if not NSRT.ReminderSettings.PersonalReminderFrame then
-                NSRT.ReminderSettings.PersonalReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 12, BGcolor = {0, 0, 0, 0.3},}
+                NSRT.ReminderSettings.PersonalReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end
             if not NSRT.ReminderSettings.ReminderFrame then
-                NSRT.ReminderSettings.ReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 12, BGcolor = {0, 0, 0, 0.3},}
+                NSRT.ReminderSettings.ReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end
             if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
                 NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80}

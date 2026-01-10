@@ -167,13 +167,18 @@ function NSI:ProcessReminder()
             local countdown = line:match("countdown:(%d+)")
             local sound = line:match("sound:([^;]+)")
             local glowunit = line:match("glowunit:([^;]+)")
+            local bossSpellID = line:match("bossSpell:(%d+)")
             if time and tag and (text or spellID) and encID and encID ~= 0 and not firstline then
                 local displayLine = line
                 phase = phase and tonumber(phase) or 1 
                 local key = encID..phase..time..tag..(text or spellID)
                 if (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                     -- display phase more readable
-                    displayLine = displayLine:gsub("ph:"..phase, "P"..phase)
+                    if phase > 1 then
+                        displayLine = displayLine:gsub("ph:"..phase, "P"..phase)
+                    else
+                        displayLine = displayLine:gsub("ph:"..phase, "")
+                    end
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
@@ -182,13 +187,20 @@ function NSI:ProcessReminder()
                         local timeFormatted = string.format("%d:%02d", minutes, seconds)
                         displayLine = displayLine:gsub("time:"..time, timeFormatted)
                     end
-                
+                    
                     -- convert to icon
                     if spellID then
                         local iconID = C_Spell.GetSpellTexture(tonumber(spellID))
                         if iconID then
                             local iconString = "\124T"..iconID..":12:12:0:0:64:64:4:60:4:60\124t"
                             displayLine = displayLine:gsub("spellid:%d+", iconString)
+                        end
+                    end
+                    if bossSpellID then
+                        local iconID = C_Spell.GetSpellTexture(tonumber(bossSpellID))
+                        if iconID then
+                            local iconString = "\124T"..iconID..":12:12:0:0:64:64:4:60:4:60\124t"
+                            displayLine = displayLine:gsub("bossSpell:%d+", iconString)
                         end
                     end
                     -- cleanup stuff we don't want to have displayed
