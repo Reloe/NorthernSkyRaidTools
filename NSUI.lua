@@ -2604,7 +2604,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Use MRT Note Reminder",
+            name = "Use MRT Note Reminders",
             desc = "Enables reminders entered into MRT note",
             get = function() return NSRT.ReminderSettings.MRTNote end,
             set = function(self, fixedparam, value)
@@ -2809,7 +2809,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Show Personal Reminder",
-            desc = "Whether you want to show the Reminder on screen permanently",
+            desc = "Whether you want to display Reminders only relevant to you on screen permanently",
             get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowPersonalReminderFrame = value
