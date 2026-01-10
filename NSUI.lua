@@ -714,6 +714,9 @@ local function ImportReminderString(name)
     DF:ReskinSlider(popup.test_string_text_box.scroll)
     popup.test_string_text_box:SetFocus()
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
+    popup.test_string_text_box:SetScript("OnMouseDown", function(self)
+        self:SetFocus()
+    end)
     --popup.test_string_text_box:SetTextSize(13)
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
@@ -744,6 +747,9 @@ local function ImportPersonalReminderString(name)
     DF:ReskinSlider(popup.test_string_text_box.scroll)
     popup.test_string_text_box:SetFocus()
     popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
+    popup.test_string_text_box:SetScript("OnMouseDown", function(self)
+        self:SetFocus()
+    end)
     --popup.test_string_text_box:SetTextSize(13)
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
@@ -800,10 +806,11 @@ local function BuildRemindersEditUI()
     ImportButton:SetTemplate(options_button_template)
 
     -- Clear Button
-    local ClearButton = DF:CreateButton(reminders_edit_frame, function()
+    local ClearButton = DF:CreateButton(reminders_edit_frame, function()        
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
-        if NSRT.ReminderSettings.ShowReminderFrame then
+        NSI:ProcessReminder()
+        if NSRT.ReminderSettings.ShowReminderFrame then            
             NSI:UpdateReminderFrame()
         end
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
@@ -819,9 +826,9 @@ local function BuildRemindersEditUI()
     end, 100, 24, "Share Reminder"
     )
     ShareButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
-    ShareButton:SetTemplate(options_button_template)
+    ShareButton:SetTemplate(options_button_template)    
 
-    local function DeleteBossReminder(self, line)
+    local function DeleteBossReminder(self, line, all)
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Reminder Deletion", "NSRTDeleteReminderPopup")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
@@ -832,10 +839,16 @@ local function BuildRemindersEditUI()
         text:SetJustifyH("CENTER")
 
         local confirmButton = DF:CreateButton(popup, function()
-            if NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
+            if line and NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
                 Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
             end
-            NSI:RemoveReminder(line.name)
+            if all then
+                for _, reminder in ipairs(NSI:GetAllReminderNames()) do
+                    NSI:RemoveReminder(reminder.name)
+                end
+            else
+                NSI:RemoveReminder(line.name)
+            end
             self:SetData(NSI:GetAllReminderNames())
             self:MasterRefresh()
             popup:Hide()
@@ -850,15 +863,25 @@ local function BuildRemindersEditUI()
         cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         popup:Show()
     end
-
+    
+    local alldeletecreated = false
     local function createLineFunc(self, index)
         local parent = self
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
-
         
+        if not alldeletecreated then
+            alldeletecreated = true
+            -- Delete All Button
+            local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
+                DeleteBossReminder(self, line, true)
+                end, 100, 24, "Delete ALL Reminders"
+            )
+            DeleteAllButton:SetPoint("LEFT", ShareButton, "RIGHT", 5, 0)
+            DeleteAllButton:SetTemplate(options_button_template)
+        end       
 
         line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-210, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
@@ -992,6 +1015,7 @@ local function BuildPersonalRemindersEditUI()
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
         NSRT.ActivePersonalReminder = nil
         NSI.PersonalReminder = ""
+        NSI:ProcessReminder()
         if NSRT.ReminderSettings.ShowPersonalReminderFrame then
             NSI:UpdateReminderFrame(true)
         end
@@ -1030,7 +1054,7 @@ local function BuildPersonalRemindersEditUI()
         cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         popup:Show()
     end
-
+    local alldeletecreated
     local function createLineFunc(self, index)
         local parent = self
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
@@ -1055,6 +1079,17 @@ local function BuildPersonalRemindersEditUI()
             line.name = newname
             parent:MasterRefresh()
         end)
+
+        if not alldeletecreated then
+            alldeletecreated = true
+            -- Delete All Button
+            local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
+                DeleteBossReminder(self, line, true)
+                end, 100, 24, "Delete ALL Reminders"
+            )
+            DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
+            DeleteAllButton:SetTemplate(options_button_template)
+        end
         
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
@@ -2542,11 +2577,13 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Raidleader Reminder",
-            desc = "Enables reminders set by the raidleader",
+            name = "Use Shared Reminders",
+            desc = "Enables reminders set by the raidleader or shared by an assist",
             get = function() return NSRT.ReminderSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.enabled = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
             end,
             nocombat = true,
         },
@@ -2554,18 +2591,20 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Personal Note Reminder",
+            name = "Use Personal Reminders",
             desc = "Enables reminders set into your personal reminder",
             get = function() return NSRT.ReminderSettings.PersNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersNote = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
             end,
             nocombat = true,
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "MRT Note Reminder",
+            name = "Use MRT Note Reminder",
             desc = "Enables reminders entered into MRT note",
             get = function() return NSRT.ReminderSettings.MRTNote end,
             set = function(self, fixedparam, value)
@@ -2574,21 +2613,10 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
         },               
         
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Share on Ready Check",
-            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
-            get = function() return NSRT.ReminderSettings.AutoShare end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.AutoShare = value
-            end,
-            nocombat = true,
-        },
 
         {
             type = "button",
-            name = "Reminders Overview",
+            name = "Shared Reminders",
             desc = "Shows a list of all Reminders",
             func = function(self)
                 if not NSUI.reminders_frame:IsShown() then
@@ -2614,18 +2642,44 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Share on Ready Check",
+            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
+            get = function() return NSRT.ReminderSettings.AutoShare end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.AutoShare = value
+            end,
+            nocombat = true,
+        },
+        
         {
             type = "breakline"
         },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Only Spell-Reminders",
+            desc = "By default only Spell-Reminders will be shown in the on-screen display. Disabling this will also show you Text-Reminders",
+            get = function() return NSRT.ReminderSettings.OnlySpellReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OnlySpellReminders = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
+            end,
+        },
         {
             type = "label",
-            get = function() return "Reminder Frame Settings" end,
+            get = function() return "Shared Reminder Frame Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         
         {
             type = "button",
-            name = "Unlock Reminder Frame",
+            name = "Unlock Shared Reminder",
             desc = "Locks/Unlocks the Reminder Frame to be moved around",
             func = function(self)
                 if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
@@ -2649,8 +2703,8 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Reminder Text",
-            desc = "Whether you want to show the Reminder on screen permanently",
+            name = "Show Shared Reminder",
+            desc = "Whether you want to show the Shared Reminder on screen permanently",
             get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowReminderFrame = value
@@ -2661,7 +2715,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Font-Size",
-            desc = "Font-Size of the Reminder Frame",
+            desc = "Font-Size of the Shared Reminder Frame",
             get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.FontSize = value
@@ -2674,7 +2728,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "select",
             name = "Font",
-            desc = "Font",
+            desc = "Font of the Shared Reminder Frame",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
             values = function() 
                 return build_media_options("ReminderFrame", "Font", false, true, false) 
@@ -2684,7 +2738,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Width",
-            desc = "Width of the Reminder Frame",
+            desc = "Width of the Shared Reminder Frame",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Width = value
@@ -2697,7 +2751,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Height",
-            desc = "Height of the Reminder Frame",
+            desc = "Height of the Shared Reminder Frame",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Height = value
@@ -2711,7 +2765,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "color",
             name = "Background-Color",
-            desc = "Color of the Background of the Reminder Frame when unlocked",
+            desc = "Color of the Background of the Shared Reminder Frame when unlocked",
             get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
@@ -2754,7 +2808,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Personal Reminder Text",
+            name = "Show Personal Reminder",
             desc = "Whether you want to show the Reminder on screen permanently",
             get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
             set = function(self, fixedparam, value)
