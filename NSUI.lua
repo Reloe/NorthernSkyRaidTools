@@ -12,10 +12,11 @@ local TABS_LIST = {
     { name = "Nicknames", text = "Nicknames" },
     { name = "Versions",  text = "Versions" },
     { name = "SetupManager", text = "Setup Manager"},
+    { name = "ReadyCheck", text = "Ready Check"},
     { name = "Reminders", text = "Reminders"},
+    { name = "Reminders-Note", text = "Reminders-Note"},
     { name = "Assignments", text = "Assignments"},
     { name = "EncounterAlerts", text = "Encounter Alerts"},
-    { name = "ReadyCheck", text = "Ready Check"},
 }
 local authorsString = "By Reloe & Rav"
 
@@ -1233,7 +1234,6 @@ local function BuildCooldownsEditUI()
         line.typeDropdown:SetPoint("LEFT", line.specText, "RIGHT", 5, 0)
         line.typeDropdown:SetHook("OnOptionSelected", function(self, _, value)
             local newType = value
-            NSI:Print("new value selected: " .. newType)
             local oldType = line.type
             if oldType == newType then return end
 
@@ -1435,6 +1435,7 @@ function NSUI:Init()
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
     local setupmanager_tab = tabContainer:GetTabFrameByName("SetupManager")
     local reminder_tab = tabContainer:GetTabFrameByName("Reminders")
+    local reminder_note_tab = tabContainer:GetTabFrameByName("Reminders-Note")
     local assignments_tab = tabContainer:GetTabFrameByName("Assignments")
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
     local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
@@ -1973,28 +1974,6 @@ Press 'Enter' to hear the TTS]],
     }
 
     local reminder_options1_table = {
-        --[[
-        {
-            type = "button",
-            name = "Text Settings",
-            desc = "Open the Settings for Text-Reminders",
-            func = function(self)
-                
-            end,
-            nocombat = true,
-            spacement = true
-        },]]
-        --[[
-        {
-            type = "button",
-            name = "Icon/Bar Settings",
-            desc = "Open the Settings for Icon/Bar-Reminders",
-            func = function(self)
-                
-            end,
-            nocombat = true,
-            spacement = true
-        },]]
         
         {
             type = "label",
@@ -2098,85 +2077,6 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "label",
-            get = function() return "Icon Settings" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "select",
-            name = "Grow Direction",
-            desc = "Grow Direction",
-            get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
-            values = function() return build_growdirection_options("IconSettings") end,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Icon-Width",
-            desc = "Width of the Icon",
-            get = function() return NSRT.ReminderSettings.IconSettings.Width end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.Width = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Icon-Height",
-            desc = "Height of the Icon",
-            get = function() return NSRT.ReminderSettings.IconSettings.Height end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.Height = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-
-        {
-            type = "select",
-            name = "Font",
-            desc = "Font",
-            get = function() return NSRT.ReminderSettings.IconSettings.Font end,
-            values = function() return build_media_options("IconSettings", "Font") end,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Font-Size",
-            desc = "Font Size",
-            get = function() return NSRT.ReminderSettings.IconSettings.FontSize end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.FontSize = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Timer-Text Font-Size",
-            desc = "Font Size of the Timer-Text",
-            get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.TimerFontSize = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-
-        {
-            type = "breakline"
-        },
-        {
-            type = "label",
             get = function() return "Text Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
@@ -2271,6 +2171,83 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
 
         },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Icon Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
+            values = function() return build_growdirection_options("IconSettings") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Width",
+            desc = "Width of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Width = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Height",
+            desc = "Height of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Height = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.IconSettings.Font end,
+            values = function() return build_media_options("IconSettings", "Font") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font Size",
+            get = function() return NSRT.ReminderSettings.IconSettings.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.FontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Timer-Text Font-Size",
+            desc = "Font Size of the Timer-Text",
+            get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.TimerFontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },       
 
         {
             type = "label",
@@ -2448,6 +2425,9 @@ Press 'Enter' to hear the TTS]],
 
         },
                  
+        {
+            type = "breakline"
+        },
         {
             type = "label",
             get = function() return "Manage Reminders" end,
@@ -2642,33 +2622,25 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true,
         },
-        
+    }
+    
+    local reminder_note_options1_table = {
         {
-            type = "breakline"
-        },
-        
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Only Spell-Reminders",
-            desc = "By default only Spell-Reminders will be shown in the on-screen display. Disabling this will also show you Text-Reminders",
-            get = function() return NSRT.ReminderSettings.OnlySpellReminders end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.OnlySpellReminders = value
-                NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, true)
-            end,
+            type = "label",
+            get = function() return "This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 2 types of displays. The first one shows all reminders, the second one shows only those that will activate for you." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
         },
         {
             type = "label",
-            get = function() return "Shared Reminder Frame Settings" end,
+            get = function() return "Shared Reminder-Note" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         
         {
             type = "button",
             name = "Unlock Shared Reminder",
-            desc = "Locks/Unlocks the Reminder Frame to be moved around",
+            desc = "Locks/Unlocks the Reminder-Note to be moved around",
             func = function(self)
                 if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame()
@@ -2691,8 +2663,8 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Shared Reminder",
-            desc = "Whether you want to show the Shared Reminder on screen permanently",
+            name = "Show All Reminders-Note",
+            desc = "Whether you want to show the Shared Reminder-Note on screen permanently",
             get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowReminderFrame = value
@@ -2703,7 +2675,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Font-Size",
-            desc = "Font-Size of the Shared Reminder Frame",
+            desc = "Font-Size of the Shared Reminder-Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.FontSize = value
@@ -2716,7 +2688,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "select",
             name = "Font",
-            desc = "Font of the Shared Reminder Frame",
+            desc = "Font of the Shared Reminder-Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
             values = function() 
                 return build_media_options("ReminderFrame", "Font", false, true, false) 
@@ -2726,7 +2698,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Width",
-            desc = "Width of the Shared Reminder Frame",
+            desc = "Width of the Shared Reminder-Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Width = value
@@ -2739,7 +2711,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Height",
-            desc = "Height of the Shared Reminder Frame",
+            desc = "Height of the Shared Reminder-Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Height = value
@@ -2753,27 +2725,49 @@ Press 'Enter' to hear the TTS]],
         {
             type = "color",
             name = "Background-Color",
-            desc = "Color of the Background of the Shared Reminder Frame when unlocked",
+            desc = "Color of the Background of the Shared Reminder-Note when unlocked",
             get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
                 NSI:UpdateReminderFrame()
             end,
             hasAlpha = true,
-            nocombat = true
+            nocombat = true,
+            spacement = true,
 
+        },        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Only Spell-Reminders",
+            desc = "By default only Spell-Reminders will be shown. Disabling this will also show you Text-Reminders",
+            get = function() return NSRT.ReminderSettings.OnlySpellReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OnlySpellReminders = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
+            end,
         },
-
+        {
+            type = "breakline",
+            spacement = true,
+        },
         {
             type = "label",
-            get = function() return "Personal Reminder Frame Settings" end,
+            get = function() return "" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "Personal Reminder-Note" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),         
         },
         
         {
             type = "button",
             name = "Unlock Pers Reminder",
-            desc = "Locks/Unlocks the Reminder Frame to be moved around",
+            desc = "Locks/Unlocks the Personal Reminder-Note to be moved around",
             func = function(self)
                 if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(true)
@@ -2796,8 +2790,8 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Personal Reminder",
-            desc = "Whether you want to display Reminders only relevant to you on screen permanently",
+            name = "Show Personal Reminders-Note",
+            desc = "Whether you want to display the Note for Reminders only relevant to you",
             get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowPersonalReminderFrame = value
@@ -2808,7 +2802,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Font-Size",
-            desc = "Font-Size of the Personal Reminder Frame",
+            desc = "Font-Size of the Personal Reminder-Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.FontSize = value
@@ -2821,7 +2815,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "select",
             name = "Font",
-            desc = "Font",
+            desc = "Font of the Personal Reminder-Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Font end,
             values = function() 
                 return build_media_options("PersonalReminderFrame", "Font", false, true, true) 
@@ -2831,7 +2825,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Width",
-            desc = "Width of the Personal Reminder Frame",
+            desc = "Width of the Personal Reminder-Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Width = value
@@ -2844,7 +2838,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "range",
             name = "Height",
-            desc = "Height of the Personal Reminder Frame",
+            desc = "Height of the Personal Reminder-Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Height = value
@@ -2858,7 +2852,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "color",
             name = "Background-Color",
-            desc = "Color of the Background of the Personal Reminder Frame when unlocked",
+            desc = "Color of the Background of the Personal Reminder-Note when unlocked",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
@@ -2867,7 +2861,7 @@ Press 'Enter' to hear the TTS]],
             hasAlpha = true,
             nocombat = true
 
-        },
+        }, 
 
     }
     local assignments_options1_table = {        
@@ -3280,7 +3274,6 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true
         }
-
     }
 
     local RaidBuffMenu = 
@@ -3322,6 +3315,9 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         reminder_callback)
+    DF:BuildMenu(reminder_note_tab, reminder_note_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        reminder_note_callback)
     DF:BuildMenu(assignments_tab, assignments_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         assignments_callback)
@@ -3331,7 +3327,6 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(readycheck_tab, readycheck_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         readycheck_callback)
-
     DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nil)
@@ -3355,7 +3350,7 @@ Press 'Enter' to hear the TTS]],
     suf_help_button:SetIcon(help_i_texture)
     suf_help_button:SetPoint("LEFT", SUF_Toggle.hasLabel, "RIGHT", 0, 0)   
 
-    -- Build version check UI
+    -- Build UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame = BuildNicknameEditUI()
     NSUI.cooldowns_frame = BuildCooldownsEditUI()
