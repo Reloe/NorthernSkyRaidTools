@@ -3064,7 +3064,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Nexus King",
-            desc = "This doesn't currently have anything. Might add some things to test during Pre-Patch",
+            desc = "Probably a bit rough in 1st week of pre-patch, use at own risk.",
             get = function() return NSRT.EncounterAlerts[3134] and NSRT.EncounterAlerts[3134].enabled end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3134] = NSRT.EncounterAlerts[3134] or {}
@@ -3076,7 +3076,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Dimensius",
-            desc = "This doesn't currently have anything. Might add some things to test during Pre-Patch",
+            desc = "Probably a bit rough in 1st week of pre-patch, use at own risk.",
             get = function() return NSRT.EncounterAlerts[3135] and NSRT.EncounterAlerts[3135].enabled end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3135] = NSRT.EncounterAlerts[3135] or {}
