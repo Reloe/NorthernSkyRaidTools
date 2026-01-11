@@ -838,27 +838,29 @@ end
 
 function NSI:ImportReminder(name, values, activate, personal)
     if not name then name = "Default Reminder" end
+    local diff = values:match("Difficulty:([^;]+)")
+    local newname = diff and name.." - "..diff or name
     if personal then
-        if NSRT.PersonalReminders[name] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
+        if NSRT.PersonalReminders[newname] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
             values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
             self:ImportReminder(name.." 2", values, activate, personal)
             return
         end
-        NSRT.PersonalReminders[name] = values
+        NSRT.PersonalReminders[newname] = values
         if activate then
-            self:SetReminder(name, true)
+            self:SetReminder(newname, true)
         end
         return
     end
-    if NSRT.Reminders[name] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
+    if NSRT.Reminders[newname] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
         values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
         self:ImportReminder(name.." 2", values, activate, personal)
         return
     end
-    NSRT.Reminders[name] = values
-    NSRT.InviteList[name] = self:InviteListFromReminder(values)
+    NSRT.Reminders[newname] = values
+    NSRT.InviteList[newname] = self:InviteListFromReminder(values)
     if activate then
-        self:SetReminder(name)
+        self:SetReminder(newname)
     end
 end
 
