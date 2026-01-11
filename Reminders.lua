@@ -127,7 +127,7 @@ function NSI:ProcessReminder()
     local addedpersonalreminders = {}
     self.DisplayedReminder = ""
     self.DisplayedPersonalReminder = ""
-    local pers = NSRT.RemidnerSettings.ShowPersonalReminderFrame
+    local pers = NSRT.ReminderSettings.ShowPersonalReminderFrame
     local shared = NSRT.ReminderSettings.ShowReminderFrame
     if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
     if NSRT.ReminderSettings.MRTNote then 
