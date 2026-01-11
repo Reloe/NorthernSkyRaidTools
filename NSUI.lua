@@ -2668,6 +2668,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowReminderFrame = value
+                NSI:ProcessReminder()
                 NSI:UpdateReminderFrame()
             end,
             nocombat = true,
@@ -2795,6 +2796,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowPersonalReminderFrame = value
+                NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(true)
             end,
             nocombat = true,
