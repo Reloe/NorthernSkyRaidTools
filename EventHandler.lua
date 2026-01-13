@@ -122,8 +122,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
         self:InitLDB()
-            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
-            self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
+        self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+        self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
+        if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
+            self.Reminder = NSRT.StoredSharedReminder or ""
+        end
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end        
@@ -138,6 +141,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
             if #todelete > 0 then
+                print("deleting", #todelete, "old NSRT macros as they are no longer beinng used.")
                 for i=#todelete, 1, -1 do
                     DeleteMacro(todelete[i])
                 end
@@ -255,6 +259,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, reminderstring, assigntable, skipcheck = ...
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit)) and skipcheck) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if NSRT.ReminderSettings.enabled and reminderstring ~= "" then
+                NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
                 self:ProcessReminder()
                 if NSRT.ReminderSettings.ShowReminderFrame then
