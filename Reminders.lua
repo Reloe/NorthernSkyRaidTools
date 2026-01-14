@@ -763,8 +763,8 @@ function NSI:GetAllReminderNames(personal)
     for k, v in pairs(tocheck) do
         local encID = v:match("EncounterID:(%d+)")
         if encID then
-            encID = self.EncounterOrder[tonumber(encID)]
-            table.insert(list, {name = k, order = encID})
+            local order = self.EncounterOrder[tonumber(encID)] or 1000
+            table.insert(list, {name = k, order = order})
         end
     end
     table.sort(list, function(a, b) 
