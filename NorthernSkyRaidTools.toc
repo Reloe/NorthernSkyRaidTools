@@ -16,6 +16,7 @@ Libs\libs.xml
 NorthernSkyRaidTools.lua
 Functions.lua
 Reminders.lua
+Timeline.lua
 Media.lua
 Comms.lua
 NickNames.lua
