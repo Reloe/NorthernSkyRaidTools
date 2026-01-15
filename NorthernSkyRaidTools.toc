@@ -26,6 +26,7 @@ CooldownCheck.lua
 ReadyCheck.lua
 
 # Encounter Alerts
+EncounterAlerts/PrivateAura.lua
 EncounterAlerts/MidnightS1/ImperatorAverzian.lua
 EncounterAlerts/MidnightS1/Vorasius.lua
 EncounterAlerts/MidnightS1/FallenKingSalhadaar.lua
