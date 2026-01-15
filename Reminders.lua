@@ -932,6 +932,7 @@ function NSI:StoreFrames(init)
             self.RaidFrames[unit] = F
         end
     end
+    self:InitRaidPA()
 end
 
 function NSI:CreateMoveFrames(Show)

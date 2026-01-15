@@ -83,6 +83,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.PASettings then
                 NSRT.PASettings = {enabled = true, Width = 130, Height = 130, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 300}
             end
+            if not NSRT.PARaidSettings then
+                NSRT.PARaidSettings = {Grow = "UP", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
+            end
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
