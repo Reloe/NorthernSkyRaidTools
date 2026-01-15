@@ -88,7 +88,7 @@ function NSI:AddToReminder(info)
     end
     if info.glowunit then
         local glowtable = {}
-        for name in glowunit:gmatch("(%w+)") do
+        for name in glowunit:gmatch("([^%s:]+)") do
             if name ~= "glowunit" then
                 table.insert(glowtable, name)
             end
