@@ -7,21 +7,42 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
-        for i, v in ipairs(self:DifficultyCheck(14) and {102.636, 224.182, 345.979, 467.734} or {}) do -- Cosmic Unraveling
+
+
+        -- using same timers for all difficulties atm
+        local id = self:DifficultyCheck(14) or 0        
+        local timers = {
+            [0] = {},
+            [14] = {102.6, 224.2, 346, 467.7},
+            [15] = {102.6, 224.2, 346, 467.7},
+            [16] = {102.6, 224.2, 346, 467.7},
+        }
+        for i, v in ipairs(timers[id]) do -- Cosmic Unraveling
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
-        for i, v in ipairs(self:DifficultyCheck(14) and {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505} or {}) do -- Desperate Measures
+        timers = {
+            [0] = {},
+            [14] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+            [15] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+            [16] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+        }
+        for i, v in ipairs(timers[id]) do -- Desperate Measures
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS = "CC Adds", "CC Adds"
-        for i, v in ipairs(self:DifficultyCheck(14) and {26.588, 71.957, 149.818, 195.924, 271.385, 316.505, 393.162, 439.018} or {}) do -- Fractured Projection (CC Adds)
+        timers = {
+            [0] = {},
+            [14] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+            [15] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+            [16] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+        }
+        for i, v in ipairs(timers[id]) do -- Fractured Projection (CC Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end

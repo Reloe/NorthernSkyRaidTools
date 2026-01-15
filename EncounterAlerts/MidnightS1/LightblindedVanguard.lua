@@ -7,9 +7,19 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        -- Aura of Peace
-        Alert.text, Alert.TTS, Alert.countdown, Alert.Type, Alert.dur = "Peace Aura", false, 5, nil, 10
-        for _, time in ipairs(self:DifficultyCheck(14) and {137.4, 313.3} or {}) do
+        local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Peace Aura
+
+        -- same timer on all difficulties for now
+        Alert.TTS = false
+        local id = self:DifficultyCheck(14) or 0
+        local timers = {
+            [0] = {},
+            [14] = {137.4, 313.3},
+            [15] = {137.4, 313.3},
+            [16] = {137.4, 313.3},
+        }
+        local timers = self:DifficultyCheck(14) and {137.4, 313.3} or {}
+        for _, time in ipairs(timers[id]) do
             Alert.time = time
             self:AddToReminder(Alert)
         end
