@@ -667,7 +667,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     else
         remString = tostring(math.ceil(rem))
     end
-    local text = info.text and info.text ~= "" and info.text.." - ("..remString..")" or remString
+    local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
