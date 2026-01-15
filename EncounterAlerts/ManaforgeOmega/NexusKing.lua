@@ -7,6 +7,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+        if not self:DifficultyCheck(16) then return end -- Mythic only
         local function DisplayLine()
             if not self.LineTexture then
                 self.LineTexture = self.LineFrame:CreateTexture(nil, "BACKGROUND")
