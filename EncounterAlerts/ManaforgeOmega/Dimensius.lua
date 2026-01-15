@@ -7,6 +7,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+        if not self:DifficultyCheck(16) then return end -- Mythic only
         local Knock = self:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID) -- Phase 1 Knocks
         for _, time in ipairs({25, 67.1, 109.2, 151.3}) do
             Knock.time = time
