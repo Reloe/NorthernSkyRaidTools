@@ -876,7 +876,7 @@ function NSI:InviteListFromReminder(str)
     local list = {}
     for line in str:gmatch('[^\r\n]+') do
         if line:find("invitelist:") then            
-            for name in line:gmatch("(%w+)") do
+            for name in line:gmatch("([^%s,;:]+)") do
                 if name ~= "invitelist" then
                     table.insert(list, name)
                 end
