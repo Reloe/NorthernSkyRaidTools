@@ -7,10 +7,14 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        
         local Alert = self:CreateDefaultAlert("Soak", "Text", nil, 5.5, 1, encID) -- Group Soaks
-
-        for i, v in ipairs(self:DifficultyCheck(16) and {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415} or {}) do -- Mythic only for now cuz no clue about other timers
+        
+        local id = self:DifficultyCheck(14) or 0 
+        local timers = {
+            [0] = {},
+            [16] = {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415}, -- Mythic only for now
+        }
+        for i, v in ipairs(timers[id]) do
             Alert.time = v
             self:AddToReminder(Alert)
         end
