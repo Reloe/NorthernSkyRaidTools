@@ -10,7 +10,7 @@ function NSI:GetBossAbilityLines(encounterID, filterImportantOnly)
         return {}, 0
     end
 
-    local abilities, duration, phases = self:GetBossTimelineAbilities(encounterID)
+    local abilities, duration, phases, difficulty = self:GetBossTimelineAbilities(encounterID)
     if not abilities then return {}, 0 end
 
     local lines = {}
@@ -19,25 +19,22 @@ function NSI:GetBossAbilityLines(encounterID, filterImportantOnly)
     -- Group abilities by name (since same ability can appear in multiple phases)
     local abilityGroups = {}
     for _, ability in ipairs(abilities) do
-        -- Skip non-important abilities if filtering
-        if not filterImportantOnly or ability.important then
-            local key = ability.name
-            if not abilityGroups[key] then
-                abilityGroups[key] = {
-                    name = ability.name,
-                    spellID = ability.spellID,
-                    category = ability.category,
-                    color = ability.color,
-                    important = ability.important,
-                    times = {},
-                    durations = {},
-                }
-            end
-            -- Add all times from this ability
-            for i, time in ipairs(ability.times) do
-                table.insert(abilityGroups[key].times, time)
-                table.insert(abilityGroups[key].durations, ability.duration)
-            end
+        local key = ability.name
+        if not abilityGroups[key] then
+            abilityGroups[key] = {
+                name = ability.name,
+                spellID = ability.spellID,
+                category = ability.category,
+                color = ability.color,
+                sortOrder = ability.sortOrder,
+                times = {},
+                durations = {},
+            }
+        end
+        -- Add all times from this ability
+        for i, time in ipairs(ability.times) do
+            table.insert(abilityGroups[key].times, time)
+            table.insert(abilityGroups[key].durations, ability.duration)
         end
     end
 
@@ -47,10 +44,9 @@ function NSI:GetBossAbilityLines(encounterID, filterImportantOnly)
         table.insert(sortedAbilities, data)
     end
     table.sort(sortedAbilities, function(a, b)
-        -- Sort by category priority: damage > soak > tank > movement > intermission
-        local categoryOrder = {damage = 1, soak = 2, tank = 3, movement = 4, intermission = 5}
-        local aOrder = categoryOrder[a.category] or 99
-        local bOrder = categoryOrder[b.category] or 99
+        -- Sort by pre-computed sort order from ParseCategoryForDisplay
+        local aOrder = a.sortOrder or 99
+        local bOrder = b.sortOrder or 99
         if aOrder ~= bOrder then
             return aOrder < bOrder
         end
@@ -110,7 +106,7 @@ function NSI:GetBossAbilityLines(encounterID, filterImportantOnly)
         })
     end
 
-    return lines, maxTime, phases
+    return lines, maxTime, phases, difficulty
 end
 
 -- Get timeline data from ProcessedReminder (player's own filtered reminders)
@@ -243,10 +239,12 @@ function NSI:GetMyTimelineData(includeBossAbilities)
 
     -- Add boss abilities if requested (at the top)
     local phases = nil
+    local difficulty = nil
     local finalLines = {}
     if includeBossAbilities and encID then
-        local bossLines, bossMaxTime, bossPhases = self:GetBossAbilityLines(encID, false)
+        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false)
         phases = bossPhases
+        difficulty = bossDifficulty
 
         -- Add boss ability lines first
         for _, line in ipairs(bossLines) do
@@ -282,7 +280,7 @@ function NSI:GetMyTimelineData(includeBossAbilities)
         defaultColor = {1, 1, 1, 1},
         useIconOnBlocks = true,
         lines = finalLines,
-    }, encID, phases
+    }, encID, phases, difficulty
 end
 
 -- Get timeline data from a reminder set (ALL reminders, for raid leaders)
@@ -453,10 +451,12 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
 
     -- Add boss abilities if requested (at the top)
     local phases = nil
+    local difficulty = nil
     local finalLines = {}
     if includeBossAbilities and encID then
-        local bossLines, bossMaxTime, bossPhases = self:GetBossAbilityLines(encID, false)
+        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false)
         phases = bossPhases
+        difficulty = bossDifficulty
 
         -- Add boss ability lines first
         for _, line in ipairs(bossLines) do
@@ -493,7 +493,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
         defaultColor = {1, 1, 1, 1},
         useIconOnBlocks = true,
         lines = finalLines,
-    }, encID, phases
+    }, encID, phases, difficulty
 end
 
 -- Create the timeline window
@@ -817,7 +817,7 @@ function NSI:RefreshMyRemindersTimeline()
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
 
     local includeBossAbilities = self.TimelineWindow.showBossAbilities
-    local data, encID, phases = self:GetMyTimelineData(includeBossAbilities)
+    local data, encID, phases, difficulty = self:GetMyTimelineData(includeBossAbilities)
 
     if data and data.lines and #data.lines > 0 then
         self.TimelineWindow.noDataLabel:Hide()
@@ -825,13 +825,15 @@ function NSI:RefreshMyRemindersTimeline()
         self.TimelineWindow.timeline:SetData(data)
         self.TimelineWindow.currentEncounterID = encID
         self.TimelineWindow.currentPhases = phases
+        self.TimelineWindow.currentDifficulty = difficulty
         self:UpdatePhaseMarkers()
+        self:UpdateTimelineTitle()
     else
         -- If no player reminders but boss abilities enabled, show just boss abilities
         if includeBossAbilities then
             local bossEncID = self.EncounterID
             if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                local bossLines, bossMaxTime, bossPhases = self:GetBossAbilityLines(bossEncID, false)
+                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false)
                 if #bossLines > 0 then
                     local bossData = {
                         length = math.max(60, math.ceil(bossMaxTime / 30) * 30),
@@ -844,7 +846,9 @@ function NSI:RefreshMyRemindersTimeline()
                     self.TimelineWindow.timeline:SetData(bossData)
                     self.TimelineWindow.currentEncounterID = bossEncID
                     self.TimelineWindow.currentPhases = bossPhases
+                    self.TimelineWindow.currentDifficulty = bossDifficulty
                     self:UpdatePhaseMarkers()
+                    self:UpdateTimelineTitle()
                     return
                 end
             end
@@ -860,7 +864,9 @@ function NSI:RefreshMyRemindersTimeline()
         })
         self.TimelineWindow.currentEncounterID = nil
         self.TimelineWindow.currentPhases = nil
+        self.TimelineWindow.currentDifficulty = nil
         self:UpdatePhaseMarkers()
+        self:UpdateTimelineTitle()
     end
 end
 
@@ -869,7 +875,7 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
 
     local includeBossAbilities = self.TimelineWindow.showBossAbilities
-    local data, encID, phases = self:GetAllTimelineData(reminderName, personal, includeBossAbilities)
+    local data, encID, phases, difficulty = self:GetAllTimelineData(reminderName, personal, includeBossAbilities)
 
     if data and data.lines and #data.lines > 0 then
         self.TimelineWindow.noDataLabel:Hide()
@@ -877,7 +883,9 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
         self.TimelineWindow.timeline:SetData(data)
         self.TimelineWindow.currentEncounterID = encID
         self.TimelineWindow.currentPhases = phases
+        self.TimelineWindow.currentDifficulty = difficulty
         self:UpdatePhaseMarkers()
+        self:UpdateTimelineTitle()
     else
         self.TimelineWindow.noDataLabel:SetText("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)")
         self.TimelineWindow.noDataLabel:Show()
@@ -889,7 +897,36 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
         })
         self.TimelineWindow.currentEncounterID = nil
         self.TimelineWindow.currentPhases = nil
+        self.TimelineWindow.currentDifficulty = nil
         self:UpdatePhaseMarkers()
+        self:UpdateTimelineTitle()
+    end
+end
+
+-- Update timeline window title with boss name and difficulty
+function NSI:UpdateTimelineTitle()
+    local window = self.TimelineWindow
+    if not window then return end
+
+    local title = "|cFF00FFFFNorthern Sky|r Timeline"
+
+    local encID = window.currentEncounterID
+    if encID then
+        local bossName = self:GetEncounterName(encID)
+        local difficulty = window.currentDifficulty
+
+        if difficulty then
+            title = string.format("|cFF00FFFFNorthern Sky|r Timeline - %s (%s)", bossName, difficulty)
+        else
+            title = string.format("|cFF00FFFFNorthern Sky|r Timeline - %s", bossName)
+        end
+    end
+
+    -- Update the title text
+    if window.TitleBar and window.TitleBar.Text then
+        window.TitleBar.Text:SetText(title)
+    elseif window.Title then
+        window.Title:SetText(title)
     end
 end
 
