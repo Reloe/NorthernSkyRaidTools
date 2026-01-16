@@ -18,7 +18,7 @@ function NSI:IterateGroupMembers(reversed, forceParty)
 end
 
 function NSI:Restricted()
-    return C_InstanceEncounter.IsEncounterInProgress()
+    return C_Secrets.ShouldAurasBeSecret()
 end
 
 function NSI:Print(...)
@@ -113,7 +113,7 @@ end
 
 function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0    
-    return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or NSRT.Settings["Debug"]
+    return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or (NSRT.Settings["Debug"] and 16)
 end
 
 -- technically don't need this to be public but it's good for backwards compatibility for a while

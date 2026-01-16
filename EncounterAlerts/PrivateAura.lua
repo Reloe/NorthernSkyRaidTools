@@ -8,9 +8,8 @@ function NSI:AddPASound(spellID, sound)
         C_UnitAuras.AddPrivateAuraAppliedSound({
             unitToken = "player",
             spellID = spellID,
-            soundFileName = 8959,
-        --    soundFileName = soundPath,
-            outputChannel = "Master",
+            soundFileName = soundPath,
+            outputChannel = "master",
         })
     end
 end
@@ -26,16 +25,18 @@ function NSI:InitPA()
     self.PAFrame:SetPoint(NSRT.PASettings.Anchor, UIParent, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
     
     if not self.AddedPA then self.AddedPA = {} end    
+    local xDirection = (NSRT.PASettings.Grow == "RIGHT" and 1) or (NSRT.PASettings.Grow == "LEFT" and -1) or 0
+    local yDirection = (NSRT.PASettings.Grow == "DOWN" and -1) or (NSRT.PASettings.Grow == "UP" and 1) or 0
 
-    for i=1, 4 do
-        local anchorID = "NSRT_PA"..i
+    for auraIndex=1, 4 do
+        local anchorID = "NSRT_PA"..auraIndex
         if self.AddedPA[anchorID] then
             C_UnitAuras.RemovePrivateAuraAnchor(anchorID)
         end    
         if NSRT.PASettings.enabled then
             local privateAnchorArgs = {
                 unitToken = "player",
-                auraIndex = i,
+                auraIndex = auraIndex,
                 parent = self.PAFrame,
                 showCountdownFrame = true,
                 showCountdownNumbers = true,
@@ -44,9 +45,8 @@ function NSI:InitPA()
                         point = "CENTER",
                         relativeTo = self.PAFrame,
                         relativePoint = "CENTER",
-                        -- "Grid Formation like it was in Raid-Pack previously"
-                        offsetX = (i == 1 or i == 3) and 0 or NSRT.PASettings.Width+1,
-                        offsetY = (i == 1 or i == 2) and 0 or -(NSRT.PASettings.Height+1),
+                        offsetX = 0 + (auraIndex-1) * (NSRT.PASettings.Width+1) * xDirection,
+                        offsetY = 0 + (auraIndex-1) * (NSRT.PASettings.Height+1) * yDirection,
                     },
                 iconWidth = NSRT.PASettings.Width,
                 iconHeight = NSRT.PASettings.Height,
@@ -57,25 +57,27 @@ function NSI:InitPA()
     end
 end
 
-function NSI:InitRaidPA() -- still run this function if disabled to clean up old anchors
+function NSI:InitRaidPA(party) -- still run this function if disabled to clean up old anchors
     if not self.PARaidFrames then self.PARaidFrames = {} end
     if not self.AddedPARaid then self.AddedPARaid = {} end
-    for i=1, 40 do       
-        local anchorID = "NSRT_PARaid"..i
+    for i=1, party and 5 or 40 do       
+        local anchorID = party and "NSRT_PAParty"..i or "NSRT_PARaid"..i
         if self.AddedPARaid and self.AddedPARaid[anchorID] then
-            for _, id in pairs(self.AddedPARaid[anchorID]) do
-                C_UnitAuras.RemovePrivateAuraAnchor(anchorID..id)
+            for anchor, auraIndex in ipairs(self.AddedPARaid[anchorID]) do
+                C_UnitAuras.RemovePrivateAuraAnchor(anchor[auraIndex])
+                self.AddedPARaid[anchorID][auraIndex] = nil
             end
         end
-        local u = "raid"..i
-        if NSRT.PARaidSettings.enabled and UnitExists(u) and self.RaidFrames["raid"..i] then 
+        local u = party and "party"..i or "raid"..i
+        if party and i == 5 then u = "player" end
+        if NSRT.PARaidSettings.enabled and UnitExists(u) and self.RaidFrames[u] then 
             if not self.PARaidFrames[i] then
                 self.PARaidFrames[i] = CreateFrame("Frame", nil, UIParent)
                 self.PARaidFrames[i]:EnableMouse(false)
                 self.PARaidFrames[i]:SetMouseClickEnabled(false)
             end
             self.PARaidFrames[i]:SetSize(1, 1)
-            self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, self.RaidFrames["raid"..i], NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
+            self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, self.RaidFrames[u], NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
             local xDirection = (NSRT.PARaidSettings.Grow == "RIGHT" and 1) or (NSRT.PARaidSettings.Grow == "LEFT" and -1) or 0
             local yDirection = (NSRT.PARaidSettings.Grow == "DOWN" and -1) or (NSRT.PARaidSettings.Grow == "UP" and 1) or 0
             self.AddedPARaid[anchorID] = {}
