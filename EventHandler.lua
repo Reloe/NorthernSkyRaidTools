@@ -82,11 +82,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.GlowSettings = {colors = {0, 1, 0, 1}, Lines = 10, Frequency = 0.2, Length = 10, Thickness = 4, xOffset = 0, yOffset = 0} 
             end
             if not NSRT.PASettings then
-                NSRT.PASettings = {Grow = "RIGHT", enabled = true, Width = 130, Height = 130, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
+                NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 130, Height = 130, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
             end
             if not NSRT.PARaidSettings then
-                NSRT.PARaidSettings = {Grow = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
+                NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
             end
+            if not NSRT.PASounds then NSRT.PASounds = {} end
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -132,6 +133,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
         if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true) end)
         elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true, true) end) end
+        for i, v in ipairs(NSRT.PASounds) do
+            self:AddPASound(i, v)
+        end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
