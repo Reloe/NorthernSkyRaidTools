@@ -323,8 +323,9 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
             -- For text-only: use "text" so all text reminders for a player are on one lane
             local abilityKey = spellID and tostring(spellID) or "text"
 
-            -- Parse player names from tag
-            for player in tag:gmatch("([%w%-]+)") do
+            -- Parse player names from tag (use [^,]+ to support UTF-8/accented characters)
+            for player in tag:gmatch("([^,]+)") do
+                player = strtrim(player)
                 local lowerPlayer = strlower(player)
 
                 -- Convert "everyone" and "all" to a unified "Everyone" lane
