@@ -17,6 +17,7 @@ local TABS_LIST = {
     { name = "Reminders-Note", text = "Reminders-Note"},
     { name = "Assignments", text = "Assignments"},
     { name = "EncounterAlerts", text = "Encounter Alerts"},
+    { name = "PrivateAura", text = "Private Auras"},
 }
 local authorsString = "By Reloe & Rav"
 
@@ -1439,6 +1440,7 @@ function NSUI:Init()
     local assignments_tab = tabContainer:GetTabFrameByName("Assignments")
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
     local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
+    local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
@@ -1571,6 +1573,23 @@ function NSUI:Init()
                 onclick = function(_, _, value)
                     NSRT.ReminderSettings[SettingName]["GrowDirection"] = list[value]
                     NSI:UpdateExistingFrames()
+                end
+            })
+        end
+        return t
+    end
+
+    local build_PAgrowdirection_options = function(Personal)
+        local list = {"LEFT", "RIGHT", "UP", "DOWN"}
+        local SettingName = Personal and "PASettings" or "PARaidSettings"
+        local t = {}
+        for i, v in ipairs(list) do
+            tinsert(t, {
+                label = v,
+                value = i,
+                onclick = function(_, _, value)
+                    NSRT[SettingName]["GrowDirection"] = list[value]
+                    NSI:UpdatePADisplay(Personal)
                 end
             })
         end
@@ -1734,7 +1753,7 @@ Press 'Enter' to hear the TTS]],
                 NSUI.OptionsChanged.general["TTS_ENABLED"] = true
                 NSRT.Settings["TTS"] = value
             end,
-        },        
+        },    
     }
 
     local nicknames_options1_table = {
@@ -3302,6 +3321,262 @@ Press 'Enter' to hear the TTS]],
         }
     }
     
+    local privateaura_options1_table = {    
+        {
+            type = "label",
+            get = function() return "Personal Private Aura Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Aura Display is enabled",
+            get = function() return NSRT.PASettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.enabled = value
+                NSI:InitPA()
+            end,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview/Unlock",
+            desc = "Preview Private Auras to move them around.",
+            func = function(self)
+                NSI.IsPAPreview = not NSI.IsPAPreview
+                NSI:UpdatePADisplay(true)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.PASettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options(true) end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
+            get = function() return NSRT.PASettings.Spacing end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Spacing = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = -5,
+            max = 20,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Private Aura Display",
+            get = function() return NSRT.PASettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Width = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 10,
+            max = 500,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Private Aura Display",
+            get = function() return NSRT.PASettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Height = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 10,
+            max = 500,
+        },
+
+        {
+            type = "range",
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
+            get = function() return NSRT.PASettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.xOffset = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = -3000,
+            max = 3000,
+        },
+        {
+            type = "range",
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
+            get = function() return NSRT.PASettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.yOffset = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = -3000,
+            max = 3000,
+        },
+        {
+            type = "range",
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
+            get = function() return NSRT.PASettings.Limit end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Limit = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 1,
+            max = 10,
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "RaidFrame Private Aura Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Aura on Raidframes are enabled",
+            get = function() return NSRT.PARaidSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.enabled = value
+                NSI:InitRaidPA(false)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview",
+            desc = "Preview Private Auras on your own Raidframe. This only works if you actually have a frame for yourself and you can't drag this one around, use the x/y offset instead.",
+            func = function(self)
+                NSI.IsRaidPAPreview = not NSI.IsRaidPAPreview
+                NSI:UpdatePADisplay(false)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.PARaidSettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options(false) end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.Spacing end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Spacing = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = -5,
+            max = 10,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Width = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 4,
+            max = 50,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Height = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 4,
+            max = 50,
+        },
+
+        {
+            type = "range",
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.xOffset = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = -200,
+            max = 200,
+        },
+        {
+            type = "range",
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.yOffset = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = -200,
+            max = 200,
+        },
+        {
+            type = "range",
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
+            get = function() return NSRT.PARaidSettings.Limit end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Limit = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 1,
+            max = 10,
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Private Aura Sounds" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "button",
+            name = "Edit Sounds",
+            desc = "Open the Private Aura Sounds Editor",
+            func = function()
+                NSI:OpenPASoundEditor()
+            end,
+            nocombat = true,
+            spacement = true,
+        },
+        {
+            type = "button",
+            name = "Apply Default Sounds",
+            desc = "This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later.",
+            func = function()
+                NSI:ApplyDefaultPASounds()
+                -- update Sound editor display if open
+            end,
+            nocombat = true,
+            spacement = true,
+        },
+    }
+
+    
 
 
     -- Build options menu for each tab
@@ -3332,9 +3607,11 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nil)
+    DF:BuildMenu(privateaura_tab, privateaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        privateaura_callback)
     NSI.RaidBuffCheck:SetMovable(false)
     NSI.RaidBuffCheck:EnableMouse(false)
-
 
     -- Add SUF Setup guide tooltip button thingy
 
