@@ -915,14 +915,14 @@ function NSI:HideGlows(units, id)
     end
 end
 
-function NSI:StoreFrames(init)
+function NSI:StoreFrames(init, party)
     if self:Restricted() then return end
     self.RaidFrames = {}
     if init then
         local MyFrame = self.LGF.GetUnitFrame("player")
         if self.FrameStoreTimer then self.FrameStoreTimer:Cancel() end
         self.FrameStoreTimer = C_Timer.NewTimer(1, function()
-            NSI:StoreFrames(false)
+            NSI:StoreFrames(false, party)
         end)
         return
     end
@@ -932,7 +932,11 @@ function NSI:StoreFrames(init)
             self.RaidFrames[unit] = F
         end
     end
-    self:InitRaidPA()
+    self:InitRaidPA(party)
+end
+
+function NSAPI:FrameDebug()
+    NSI:StoreFrames(true, true)
 end
 
 function NSI:CreateMoveFrames(Show)

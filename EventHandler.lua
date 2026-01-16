@@ -14,6 +14,7 @@ f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("ENCOUNTER_WARNING")
 f:RegisterEvent("RAID_BOSS_WHISPER")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -81,10 +82,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.GlowSettings = {colors = {0, 1, 0, 1}, Lines = 10, Frequency = 0.2, Length = 10, Thickness = 4, xOffset = 0, yOffset = 0} 
             end
             if not NSRT.PASettings then
-                NSRT.PASettings = {enabled = true, Width = 130, Height = 130, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 300}
+                NSRT.PASettings = {Grow = "RIGHT", enabled = true, Width = 130, Height = 130, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
             end
             if not NSRT.PARaidSettings then
-                NSRT.PARaidSettings = {Grow = "UP", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
+                NSRT.PARaidSettings = {Grow = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
             end
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
@@ -128,7 +129,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
         self:InitLDB()
-        if NSRT.PASettings.enabled then self:InitPA() end
+        if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
+        if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true) end)
+        elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true, true) end) end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
@@ -165,7 +168,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end        
-        
+    elseif e == "PLAYER_ENTERING_WORLD" then
+        if self:Restricted() then return end
+        if NSRT.PARaidSettings.enabled then
+            local diff = select(3, GetInstanceInfo())
+            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then
+                local isparty = not UnitInRaid("player")
+                C_Timer.After(0.01, function() self:StoreFrames(true, isparty) end)
+            end
+        end        
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSUI.generic_display:Hide()
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
@@ -381,6 +392,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)      
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         if self:Restricted() then return end
+
+        if NSRT.PARaidSettings.enabled then
+            local diff = select(3, GetInstanceInfo())
+            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then
+                local isparty = not UnitInRaid("player")
+                self:StoreFrames(true, isparty)
+            end
+        end       
+
         self:UpdateRaidBuffFrame()
         if self.InviteInProgress then
             if not UnitInRaid("player") then
