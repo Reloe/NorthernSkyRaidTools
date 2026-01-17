@@ -88,7 +88,7 @@ function NSI:AddToReminder(info)
     end
     if info.glowunit then
         local glowtable = {}
-        for name in glowunit:gmatch("([^%s:]+)") do
+        for name in info.glowunit:gmatch("([^%s:]+)") do
             if name ~= "glowunit" then
                 table.insert(glowtable, name)
             end
@@ -176,11 +176,7 @@ function NSI:ProcessReminder()
                 local key = encID..phase..time..tag..(text or spellID)
                 if (pers or shared) and (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                     -- display phase more readable
-                    if phase > 1 then
-                        displayLine = displayLine:gsub("ph:"..phase, "P"..phase)
-                    else
-                        displayLine = displayLine:gsub("ph:"..phase, "")
-                    end
+                    displayLine = displayLine:gsub("ph:"..phase, "P"..phase)
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
