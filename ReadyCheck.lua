@@ -23,7 +23,7 @@ function NSI:SoulstoneCheck()
     if class ~= 9 then return end
     local cooldown = C_Spell.GetSpellCooldown(20707)
     local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - GetTime()
-    if (not timeRemaining) or timeRemaining > 30 then return false end -- only check if soulstone is ready or about to be ready
+    if timeRemaining and timeRemaining > 30 then return false end -- only check if soulstone is ready or about to be ready
     local buffed = false
     local refresh = false
     for unit in self:IterateGroupMembers() do
