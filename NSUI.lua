@@ -3478,7 +3478,7 @@ Press 'Enter' to hear the TTS]],
             type = "toggle",
             boxfirst = true,
             name = "Healer Soulstone Check",
-            desc = "Checks for Warlocks whether they have soulstoned a healer and it has at least 5m duration left.",
+            desc = "Checks for Warlocks whether they have soulstoned a healer and it has at least 5m duration left. It will only check this if Soulstone is ready or has less than 30s CD left.",
             get = function() return NSRT.ReadyCheckSettings.SoulstoneCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.SoulstoneCheck = value
