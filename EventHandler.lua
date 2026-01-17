@@ -82,12 +82,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.GlowSettings = {colors = {0, 1, 0, 1}, Lines = 10, Frequency = 0.2, Length = 10, Thickness = 4, xOffset = 0, yOffset = 0} 
             end
             if not NSRT.PASettings then
-                NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 130, Height = 130, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
+                NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
+            end
+            if not NSRT.PATankSettings then
+                NSRT.PATankSettings = {Spacing = -1, Limit = 5, MultiTankGrowDirection = "UP", GrowDirection = "LEFT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -549, yOffset = -199}
             end
             if not NSRT.PARaidSettings then
                 NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
             end
             if not NSRT.PASounds then NSRT.PASounds = {} end
+            NSRT.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
@@ -136,6 +140,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         for spellID, info in pairs(NSRT.PASounds) do
             self:AddPASound(spellID, info.sound)
         end
+        if NSRT.UseDefaultPASounds then
+            self:ApplyDefaultPASounds()
+        end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
@@ -183,6 +190,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end        
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         NSUI.generic_display:Hide()
+        if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
+            self:InitTankPA()
+        end
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -211,6 +221,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:StartReminders(self.Phase)
     elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
         local encID, encounterName = ...
+        if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
+            self:RemoveTankPA()
+        end
         self:HideAllReminders()
         self.EncounterID = nil
         self.TestingReminder = false
