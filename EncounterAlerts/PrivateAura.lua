@@ -1,7 +1,10 @@
 local _, NSI = ... -- Internal namespace
 
+-- figure out how to clean up Savedvariables for users on new expansions, probably just a one time cleanup
 local SoundList = {
--- [spellID] = "SoundName",
+    -- [spellID] = "SoundName", use false to remove a sound
+
+    -- Midnight S1
     [1284527] = "Targeted", -- Galvanize
     [1283236] = "Targeted", --Void Expulsion
     [1283069] = "Fixate", -- Weakened
@@ -19,8 +22,8 @@ local SoundList = {
     [1249265] = "Soak", -- Umbral Collapse (one of them is 2nd cast I think?)
     [1259861] = "Targeted", -- Ranger Captain's Mark
     [1237623] = "Targeted", -- Ranger Captain's Mark(idk which one is correct)
- --   [1262983] = "Light", -- Twilight Seal (Light) - maybe adding this later
- --   [1262972] = "Void", -- Twilight Seal (Void) - maybe adding this later
+ --   [1262983] = "Light", -- Twilight Seal (Light) - maybe adding this later, not sure if this is used at all
+ --   [1262972] = "Void", -- Twilight Seal (Void) - maybe adding this later, not sure if this is used at all
     [1257087] = "Debuff", -- Consuming Miasma
     [1255612] = "Targeted", -- Dread Breath
     [1248697] = "Debuff", -- Despotic Command
@@ -34,12 +37,8 @@ local SoundList = {
     [1239111] = "Break", -- Aspect of the End
     [1233887] = "Debuff", -- Null Corona
     [1254113] = "Fixate", -- Vorasius Fixate
-}
--- ADD DEBUFF AND DARK RUNE AND VOID AND LIGHT
-local TankDebuffs = {
 
-
-
+    -- Manaforge
 }
 
 function NSI:AddPASound(spellID, sound)
@@ -61,9 +60,14 @@ function NSI:ApplyDefaultPASounds()
     for spellID, sound in pairs(SoundList) do
         local curSound = NSRT.PASounds[spellID]
         if (not curSound) or (not curSound.edited) then -- only add default sound if user hasn't edited it prior
-            sound = "|cFF4BAAC8"..sound.."|r"
-            NSRT.PASounds[spellID] = {sound = sound, edited = false}
-            self:AddPASound(spellID, sound)
+            if not sound then -- if sound is false in the table I have marked it to be removed to clean up the table from old content
+                NSRT.PASounds[spellID] = nil
+                self:AddPASound(spellID, nil)
+            else
+                sound = "|cFF4BAAC8"..sound.."|r"
+                NSRT.PASounds[spellID] = {sound = sound, edited = false}
+                self:AddPASound(spellID, sound)
+            end
         end
     end
 end
