@@ -37,8 +37,6 @@ local SoundList = {
     [1239111] = "Break", -- Aspect of the End
     [1233887] = "Debuff", -- Null Corona
     [1254113] = "Fixate", -- Vorasius Fixate
-
-    -- Manaforge
 }
 
 function NSI:AddPASound(spellID, sound)
