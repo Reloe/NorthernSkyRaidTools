@@ -60,9 +60,6 @@ end
 
 NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
     if NSRT.EncounterAlerts[encID].enabled then        
-        local Fixate = self:CreateDefaultAlert("Fixate", "Icon", 210099, 15) -- Fixated by Blistercreep. Hiding has to be timed as there is no event
-        Fixate.skipdur = true
-        self:DisplayReminder(Fixate)
     end
 end
 
