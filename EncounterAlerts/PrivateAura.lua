@@ -5,9 +5,10 @@ local SoundList = {
 }
 
 function NSI:AddPASound(spellID, sound)
-    if not C_UnitAuras.AuraIsPrivate(spellID) then return end
-    local soundPath = NSI.LSM:Fetch("sound", sound)
+    if (not spellID) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then return end
     C_UnitAuras.RemovePrivateAuraAppliedSound(spellID)
+    if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
+    local soundPath = NSI.LSM:Fetch("sound", sound)
     if soundPath and soundPath ~= 1 then
         C_UnitAuras.AddPrivateAuraAppliedSound({
             unitToken = "player",
@@ -20,9 +21,18 @@ end
 
 function NSI:ApplyDefaultPASounds()
     for spellID, sound in pairs(SoundList) do
-        NSRT.PASounds[spellID] = sound
-        self:AddPASound(spellID, sound)
+        local curSound = NSRT.PASounds[spellID]
+        if (not curSound) or (not curSound.edited) then -- only add default sound if user hasn't edited it prior
+            NSRT.PASounds[spellID] = {sound = sound, edited = false}
+            self:AddPASound(spellID, sound)
+        end
     end
+end
+
+function NSI:SavePASound(spellID, sound)
+    if (not spellID) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then return end
+    NSRT.PASounds[spellID] = {sound = sound, edited = true}
+    self:AddPASound(spellID, sound)
 end
 
 function NSI:InitPA()

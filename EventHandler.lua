@@ -133,8 +133,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
         if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true) end)
         elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true, true) end) end
-        for i, v in ipairs(NSRT.PASounds) do
-            self:AddPASound(i, v)
+        for spellID, info in pairs(NSRT.PASounds) do
+            self:AddPASound(spellID, info.sound)
         end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
