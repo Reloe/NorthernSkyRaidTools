@@ -185,7 +185,9 @@ function NSI:ProcessReminder()
                         local timeFormatted = string.format("%d:%02d", minutes, seconds)
                         displayLine = displayLine:gsub("time:"..time, timeFormatted)
                     end
-                    
+                    if text then
+                        displayLine = displayLine:gsub("text:"..text, text)
+                    end
                     -- convert to icon
                     if spellID then
                         local iconID = C_Spell.GetSpellTexture(tonumber(spellID))
