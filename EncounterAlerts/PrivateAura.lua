@@ -124,9 +124,11 @@ function NSI:InitRaidPA(party) -- still run this function if disabled to clean u
     for i=1, party and 5 or 40 do       
         local anchorID = party and "NSRT_PAParty"..i or "NSRT_PARaid"..i
         if self.AddedPARaid and self.AddedPARaid[anchorID] then
-            for anchor, auraIndex in ipairs(self.AddedPARaid[anchorID]) do
-                C_UnitAuras.RemovePrivateAuraAnchor(anchor[auraIndex])
-                self.AddedPARaid[anchorID][auraIndex] = nil
+            for auraIndex = 1, 10 do
+                if self.AddedPARaid[anchorID][auraIndex] then
+                    C_UnitAuras.RemovePrivateAuraAnchor(self.AddedPARaid[anchorID][auraIndex])
+                    self.AddedPARaid[anchorID][auraIndex] = nil
+                end
             end
         end
         local u = party and "party"..i or "raid"..i
