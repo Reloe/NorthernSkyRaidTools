@@ -21,6 +21,9 @@ function NSI:SoulstoneCheck()
     if self:Restricted() then return end
     local class = select(3, UnitClass("player"))
     if class ~= 9 then return end
+    local cooldown = C_Spell.GetSpellCooldown(20707)
+    local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - GetTime()
+    if (not timeRemaining) or timeRemaining > 30 then return false end -- only check if soulstone is ready or about to be ready
     local buffed = false
     local refresh = false
     for unit in self:IterateGroupMembers() do
@@ -154,10 +157,10 @@ function NSI:GearCheck()
             if NSRT.ReadyCheckSettings.CraftedCheck and string.find(itemString, "8960") then
                 crafted = crafted+1
             end
-            if UnitLevel("player") >= 90 and NSRT.ReadyCheckSettings.EnchantCheck and self:EnchantCheck(slot,itemString) then
+            if NSRT.ReadyCheckSettings.EnchantCheck and UnitLevel("player") >= 90 and self:EnchantCheck(slot,itemString) then
                 table.insert(missing, "Missing Enchant on: |cFF00FF00"..SlotName[slot].."|r")        
             end                
-            if UnitLevel("player") >= 90 and NSRT.ReadyCheckSettings.GemCheck and self:GemCheck(slot, itemString) then
+            if NSRT.ReadyCheckSettings.GemCheck and UnitLevel("player") >= 90 and self:GemCheck(slot, itemString) then
                 table.insert(missing, "Missing Gem in: |cFF00FF00"..SlotName[slot].."|r")
             end                
             if NSRT.ReadyCheckSettings.ItemLevelCheck and slot ~= 4 and select(4, C_Item.GetItemInfo(itemString)) < ilvl then

@@ -305,6 +305,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_READY_CHECK" and internal then
         local text = ""
+        if UnitLevel("player") < 80 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
             local buff = self:BuffCheck()
             if buff and buff ~= "" then text = buff end
