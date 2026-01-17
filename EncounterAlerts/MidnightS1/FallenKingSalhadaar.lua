@@ -48,7 +48,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         end
 
 
-        if not self:DifficultyCheck(16) then return end -- Shield Mechanic is mythic only
+        if id ~= 16 then return end -- Shield Mechanic is mythic only
         self.platetexts = self.platetexts or {}
         local plateref = {}
         local function DisplayNameplateText(aura1, aura2, u)

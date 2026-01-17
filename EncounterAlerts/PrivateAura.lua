@@ -33,6 +33,7 @@ local SoundList = {
     [1241292] = "Light", -- Light Dive
     [1239111] = "Break", -- Aspect of the End
     [1233887] = "Debuff", -- Null Corona
+    [1254113] = "Fixate", -- Vorasius Fixate
 }
 -- ADD DEBUFF AND DARK RUNE AND VOID AND LIGHT
 local TankDebuffs = {
