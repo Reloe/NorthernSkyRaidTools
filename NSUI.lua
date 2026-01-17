@@ -1519,6 +1519,7 @@ local function BuildPASoundEditUI()
         -- Sound Dropdown
         line.sounddropdown = DF:CreateDropDown(line, function() return build_sound_dropdown() end,
             nil, 170)
+        --line.sounddropdown:Select(line.sound)
         line.sounddropdown:SetTemplate(options_dropdown_template)
         line.sounddropdown:SetPoint("LEFT", line.spellIDText, "RIGHT", 5, 0)
         line.sounddropdown:SetHook("OnOptionSelected", function(self, _, value)
@@ -1821,17 +1822,16 @@ function NSUI:Init()
         return t
     end
 
-    local build_PAgrowdirection_options = function(Personal)
+    local build_PAgrowdirection_options = function(SettingName, SecondaryName)
         local list = {"LEFT", "RIGHT", "UP", "DOWN"}
-        local SettingName = Personal and "PASettings" or "PARaidSettings"
         local t = {}
         for i, v in ipairs(list) do
             tinsert(t, {
                 label = v,
                 value = i,
                 onclick = function(_, _, value)
-                    NSRT[SettingName]["GrowDirection"] = list[value]
-                    NSI:UpdatePADisplay(Personal)
+                    NSRT[SettingName][SecondaryName] = list[value]
+                    NSI:UpdatePADisplay(SettingName == "PASettings", SettingName == "PATankSettings")
                 end
             })
         end
@@ -3597,7 +3597,7 @@ Press 'Enter' to hear the TTS]],
             name = "Grow Direction",
             desc = "Grow Direction",
             get = function() return NSRT.PASettings.GrowDirection end,
-            values = function() return build_PAgrowdirection_options(true) end,
+            values = function() return build_PAgrowdirection_options("PASettings", "GrowDirection") end,
             nocombat = true,
         },
         {
@@ -3710,7 +3710,7 @@ Press 'Enter' to hear the TTS]],
             name = "Grow Direction",
             desc = "Grow Direction",
             get = function() return NSRT.PARaidSettings.GrowDirection end,
-            values = function() return build_PAgrowdirection_options(false) end,
+            values = function() return build_PAgrowdirection_options("PARaidSettings", "GrowDirection") end,
             nocombat = true,
         },
         {
@@ -3808,15 +3808,140 @@ Press 'Enter' to hear the TTS]],
             spacement = true,
         },
         {
-            type = "button",
-            name = "Apply Default Sounds",
+            type = "toggle",
+            boxfirst = true,
+            name = "Use Default Private Aura Sounds",
             desc = "This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spellid's yourself previously this button will NOT overwrite that.",
-            func = function()
-                NSI:ApplyDefaultPASounds()
-                NSI:RefreshPASoundEditUI()
+            get = function() return NSRT.UseDefaultPASounds end,
+            set = function(self, fixedparam, value)
+                NSRT.UseDefaultPASounds = value
+                if NSRT.UseDefaultPASounds then
+                    NSI:ApplyDefaultPASounds()
+                    NSI:RefreshPASoundEditUI()
+                end
             end,
             nocombat = true,
-            spacement = true,
+        },
+        {
+            type = "breakline",
+        },
+        
+        {
+            type = "label",
+            get = function() return "Co-Tank Private Auras" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Auras for Co-Tanks are enabled",
+            get = function() return NSRT.PATankSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview/Unlock",
+            desc = "Preview Co-Tank Private Auras.",
+            func = function(self)
+                NSI.IsTankPAPreview = not NSI.IsTankPAPreview
+                NSI:UpdatePADisplay(false, true)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.PATankSettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options("PATankSettings", "GrowDirection") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.Spacing end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Spacing = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = -5,
+            max = 10,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Width = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 4,
+            max = 50,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Height = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 4,
+            max = 50,
+        },
+
+        {
+            type = "range",
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.xOffset = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = -200,
+            max = 200,
+        },
+        {
+            type = "range",
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.yOffset = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = -200,
+            max = 200,
+        },
+        {
+            type = "range",
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
+            get = function() return NSRT.PATankSettings.Limit end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Limit = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 1,
+            max = 10,
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included.",
+            get = function() return NSRT.PATankSettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options("PATankSettings", "MultiTankGrowDirection") end,
+            nocombat = true,
         },
     }
 
