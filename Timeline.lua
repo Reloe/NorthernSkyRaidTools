@@ -1040,8 +1040,8 @@ function NSI:UpdatePhaseMarkers()
             local phaseStart = self:GetPhaseStart(encID, phaseNum)
             local xPos = phaseStart * pixelsPerSecond
 
-            -- Set color from phase data
-            local color = phaseData.color or {0.5, 0.5, 0.5}
+            -- Set color from phase data (default to red for visibility)
+            local color = phaseData.color or {0.8, 0.2, 0.2}
             marker:SetBackdropColor(color[1], color[2], color[3], 0.8)
 
             marker:ClearAllPoints()
