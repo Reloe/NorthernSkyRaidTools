@@ -18,7 +18,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {102.6, 224.2, 346, 467.7},
             [16] = {102.6, 224.2, 346, 467.7},
         }
-        for i, v in ipairs(timers[id]) do -- Cosmic Unraveling
+        for i, v in ipairs(timers[id]) do -- Entropic Unraveling
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -30,7 +30,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
             [16] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
         }
-        for i, v in ipairs(timers[id]) do -- Desperate Measures
+        for i, v in ipairs(timers[id]) do -- Void Convergence (Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end
