@@ -3883,8 +3883,8 @@ Press 'Enter' to hear the TTS]],
                 NSRT.PATankSettings.Width = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            min = 4,
-            max = 50,
+            min = 10,
+            max = 500,
         },
         {
             type = "range",
@@ -3895,8 +3895,8 @@ Press 'Enter' to hear the TTS]],
                 NSRT.PATankSettings.Height = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            min = 4,
-            max = 50,
+            min = 10,
+            max = 500,
         },
 
         {
@@ -3908,8 +3908,8 @@ Press 'Enter' to hear the TTS]],
                 NSRT.PATankSettings.xOffset = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            min = -200,
-            max = 200,
+            min = -3000,
+            max = 3000,
         },
         {
             type = "range",
@@ -3920,8 +3920,8 @@ Press 'Enter' to hear the TTS]],
                 NSRT.PATankSettings.yOffset = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            min = -200,
-            max = 200,
+            min = -3000,
+            max = 3000,
         },
         {
             type = "range",
