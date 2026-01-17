@@ -2707,6 +2707,9 @@ Press 'Enter' to hear the TTS]],
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
                     for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                        if NSI[v] then
+                            NSI[v]:StopMovingOrSizing()
+                        end
                         NSI:ToggleMoveFrames(NSI[v], false)
                     end
                     return
@@ -2716,6 +2719,9 @@ Press 'Enter' to hear the TTS]],
                         NSI.IsInPreview = false
                         NSI:HideAllReminders()
                         for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                            if NSI[v] then
+                                NSI[v]:StopMovingOrSizing()
+                            end
                             NSI:ToggleMoveFrames(NSI[v], false)
                         end
                     end
