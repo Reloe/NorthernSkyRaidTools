@@ -188,30 +188,54 @@ function NSI:GetBossTimelineAbilities(encounterID)
     local timeline = self.BossTimelines[encounterID]
     if not timeline then return nil end
 
+    -- Pre-calculate all phase start times for filtering
+    local phaseStarts = {}
+    local maxPhase = 0
+    for phaseNum, _ in pairs(timeline.phases) do
+        phaseStarts[phaseNum] = self:GetPhaseStart(encounterID, phaseNum)
+        if phaseNum > maxPhase then
+            maxPhase = phaseNum
+        end
+    end
+
     local result = {}
 
     for i, ability in ipairs(timeline.abilities) do
         local phaseStart = self:GetPhaseStart(encounterID, ability.phase)
         local absoluteTimes = {}
 
-        for _, time in ipairs(ability.times) do
-            table.insert(absoluteTimes, phaseStart + time)
+        -- Get the start time of the next phase (if it exists)
+        -- Abilities from this phase should not extend past the next phase start
+        local nextPhaseStart = nil
+        if ability.phase < maxPhase then
+            nextPhaseStart = phaseStarts[ability.phase + 1]
         end
 
-        -- Parse compound category for color and sort order
-        local color, sortOrder, primaryCategory = self:ParseCategoryForDisplay(ability.category)
+        for _, time in ipairs(ability.times) do
+            local absoluteTime = phaseStart + time
+            -- Filter out abilities that occur after the next phase has started
+            if not nextPhaseStart or absoluteTime < nextPhaseStart then
+                table.insert(absoluteTimes, absoluteTime)
+            end
+        end
 
-        table.insert(result, {
-            name = ability.name,
-            spellID = ability.spellID,
-            category = ability.category,           -- Keep original for tooltip display
-            primaryCategory = primaryCategory,     -- Parsed primary category
-            sortOrder = sortOrder,                 -- For sorting in timeline
-            phase = ability.phase,
-            times = absoluteTimes,
-            duration = ability.duration,
-            color = color,
-        })
+        -- Only add ability if it has any visible times
+        if #absoluteTimes > 0 then
+            -- Parse compound category for color and sort order
+            local color, sortOrder, primaryCategory = self:ParseCategoryForDisplay(ability.category)
+
+            table.insert(result, {
+                name = ability.name,
+                spellID = ability.spellID,
+                category = ability.category,           -- Keep original for tooltip display
+                primaryCategory = primaryCategory,     -- Parsed primary category
+                sortOrder = sortOrder,                 -- For sorting in timeline
+                phase = ability.phase,
+                times = absoluteTimes,
+                duration = ability.duration,
+                color = color,
+            })
+        end
     end
 
     -- Build phases with adjusted times
