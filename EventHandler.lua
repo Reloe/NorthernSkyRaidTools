@@ -86,12 +86,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.PASettings then
                 NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
             end
+            NSRT.PASettings.Spacing = NSRT.PASettings.Spacing or -1
+            NSRT.PASettings.Limit = NSRT.PASettings.Limit or 5
             if not NSRT.PATankSettings then
                 NSRT.PATankSettings = {Spacing = -1, Limit = 5, MultiTankGrowDirection = "UP", GrowDirection = "LEFT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -549, yOffset = -199}
             end
+            NSRT.PATankSettings.Spacing = NSRT.PATankSettings.Spacing or -1
+            NSRT.PATankSettings.Limit = NSRT.PATankSettings.Limit or 5
             if not NSRT.PARaidSettings then
                 NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
             end
+            NSRT.PARaidSettings.Spacing = NSRT.PARaidSettings.Spacing or -1
+            NSRT.PARaidSettings.Limit = NSRT.PARaidSettings.Limit or 5
             if not NSRT.PASounds then NSRT.PASounds = {} end
             NSRT.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
