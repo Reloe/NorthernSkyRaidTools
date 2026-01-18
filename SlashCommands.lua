@@ -31,6 +31,8 @@ SlashCmdList["NSUI"] = function(msg)
         else
             NSI.NSUI.cooldowns_frame:Show()
         end
+    elseif msg == "timeline" then
+        NSI:ToggleTimelineWindow()
     else
         NSI.NSUI:ToggleOptions()
     end
