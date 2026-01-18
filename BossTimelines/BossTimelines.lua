@@ -3,9 +3,15 @@ local _, NSI = ... -- Internal namespace
 --[[
     Boss Timeline Data
 
-    Structure:
+    Structure (nested by difficulty):
     NSI.BossTimelines[encounterID] = {
-        difficulty = string,        -- (optional) "Mythic", "Heroic", "Normal", "LFR"
+        Mythic = { ... },   -- Mythic difficulty timeline
+        Heroic = { ... },   -- Heroic difficulty timeline
+        Normal = { ... },   -- Normal difficulty timeline
+    }
+
+    Each difficulty contains:
+    {
         duration = number,          -- Total fight duration in seconds
         phases = {
             [phaseNum] = {
@@ -145,13 +151,52 @@ NSI.BossTimelineNames = {
 -- HELPER FUNCTIONS
 --------------------------------------------------------------------------------
 
+-- Difficulty ID to name mapping
+NSI.DifficultyNames = {
+    [14] = "Normal",
+    [15] = "Heroic",
+    [16] = "Mythic",
+    [17] = "LFR",
+}
+
+-- Get current difficulty name, defaults to "Mythic" if unknown
+function NSI:GetCurrentDifficultyName()
+    local _, _, difficultyID = GetInstanceInfo()
+    return self.DifficultyNames[difficultyID] or "Mythic"
+end
+
+-- Get the timeline data for a specific encounter and difficulty
+-- Falls back to Mythic > Heroic > Normal if requested difficulty not available
+function NSI:GetBossTimeline(encounterID, difficulty)
+    local bossData = self.BossTimelines[encounterID]
+    if not bossData then return nil end
+
+    -- If difficulty specified, try that first
+    if difficulty and bossData[difficulty] then
+        return bossData[difficulty], difficulty
+    end
+
+    -- Auto-detect current difficulty
+    local currentDiff = self:GetCurrentDifficultyName()
+    if bossData[currentDiff] then
+        return bossData[currentDiff], currentDiff
+    end
+
+    -- Fallback chain: Mythic > Heroic > Normal
+    if bossData.Mythic then return bossData.Mythic, "Mythic" end
+    if bossData.Heroic then return bossData.Heroic, "Heroic" end
+    if bossData.Normal then return bossData.Normal, "Normal" end
+
+    return nil
+end
+
 -- Get user-adjusted phase start time, or default if not set
-function NSI:GetPhaseStart(encounterID, phaseNum)
+function NSI:GetPhaseStart(encounterID, phaseNum, difficulty)
     -- Phase 1 always starts at 0
     if phaseNum == 1 then return 0 end
 
-    local timeline = self.BossTimelines[encounterID]
-    if not timeline or not timeline.phases[phaseNum] then return 0 end
+    local timeline = self:GetBossTimeline(encounterID, difficulty)
+    if not timeline or not timeline.phases or not timeline.phases[phaseNum] then return 0 end
 
     -- Check for user adjustment
     if NSRT.PhaseTimings and NSRT.PhaseTimings[encounterID] and NSRT.PhaseTimings[encounterID][phaseNum] then
@@ -184,15 +229,15 @@ function NSI:ResetPhaseStart(encounterID, phaseNum)
 end
 
 -- Get all abilities for an encounter with absolute times
-function NSI:GetBossTimelineAbilities(encounterID)
-    local timeline = self.BossTimelines[encounterID]
+function NSI:GetBossTimelineAbilities(encounterID, difficulty)
+    local timeline, actualDifficulty = self:GetBossTimeline(encounterID, difficulty)
     if not timeline then return nil end
 
     -- Pre-calculate all phase start times for filtering
     local phaseStarts = {}
     local maxPhase = 0
     for phaseNum, _ in pairs(timeline.phases) do
-        phaseStarts[phaseNum] = self:GetPhaseStart(encounterID, phaseNum)
+        phaseStarts[phaseNum] = self:GetPhaseStart(encounterID, phaseNum, actualDifficulty)
         if phaseNum > maxPhase then
             maxPhase = phaseNum
         end
@@ -201,7 +246,7 @@ function NSI:GetBossTimelineAbilities(encounterID)
     local result = {}
 
     for i, ability in ipairs(timeline.abilities) do
-        local phaseStart = self:GetPhaseStart(encounterID, ability.phase)
+        local phaseStart = self:GetPhaseStart(encounterID, ability.phase, actualDifficulty)
         local absoluteTimes = {}
 
         -- Get the start time of the next phase (if it exists)
@@ -243,12 +288,12 @@ function NSI:GetBossTimelineAbilities(encounterID)
     for phaseNum, phaseData in pairs(timeline.phases) do
         phases[phaseNum] = {
             name = phaseData.name,                                  -- May be nil
-            start = self:GetPhaseStart(encounterID, phaseNum),
+            start = self:GetPhaseStart(encounterID, phaseNum, actualDifficulty),
             color = phaseData.color,                                -- May be nil
         }
     end
 
-    return result, timeline.duration, phases, timeline.difficulty
+    return result, timeline.duration, phases, actualDifficulty
 end
 
 -- Get encounter name from ID

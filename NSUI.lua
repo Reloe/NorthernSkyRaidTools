@@ -18,6 +18,7 @@ local TABS_LIST = {
     { name = "Assignments", text = "Assignments"},
     { name = "EncounterAlerts", text = "Encounter Alerts"},
     { name = "PrivateAura", text = "Private Auras"},
+    { name = "Timeline", text = "Timeline"},
 }
 local authorsString = "By Reloe & Rav"
 
@@ -1647,6 +1648,255 @@ local function BuildPASoundEditUI()
     PASound_edit_frame:Hide()
     return PASound_edit_frame
 end
+
+-- Build embedded timeline UI for the Timeline tab
+local function BuildTimelineTabUI(parent)
+    local header_width = 180
+    local timeline_width = window_width - 40 - header_width
+    local timeline_height = window_height - 250  -- Account for tab bar, controls, title, zoom slider, and status bar
+    local top_offset = -100  -- Standard offset for tab content (below tab buttons)
+
+    -- Mode: "my" = My Reminders, "all" = All Reminders
+    parent.timelineMode = "my"
+    parent.showBossAbilities = true
+
+    -- Mode dropdown
+    local function BuildModeDropdownOptions()
+        return {
+            {
+                label = "My Reminders",
+                value = "my",
+                onclick = function(_, _, value)
+                    parent.timelineMode = value
+                    parent.reminderLabel:Hide()
+                    parent.reminderDropdown:Hide()
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
+            {
+                label = "All Reminders (Raid Leader)",
+                value = "all",
+                onclick = function(_, _, value)
+                    parent.timelineMode = value
+                    parent.reminderLabel:Show()
+                    parent.reminderDropdown:Show()
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
+        }
+    end
+
+    local modeLabel = DF:CreateLabel(parent, "View:", 11, "white")
+    modeLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, top_offset)
+
+    local modeDropdown = DF:CreateDropDown(parent, BuildModeDropdownOptions, "my", 200)
+    modeDropdown:SetTemplate(options_dropdown_template)
+    modeDropdown:SetPoint("LEFT", modeLabel, "RIGHT", 10, 0)
+    parent.modeDropdown = modeDropdown
+
+    -- Reminder selection dropdown (for All mode)
+    local function BuildReminderDropdownOptions()
+        local options = {}
+        local sharedList = NSI:GetAllReminderNames(false)
+        for _, data in ipairs(sharedList) do
+            table.insert(options, {
+                label = data.name,
+                value = {name = data.name, personal = false},
+                onclick = function(_, _, value)
+                    parent.currentReminder = value
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            })
+        end
+        local personalList = NSI:GetAllReminderNames(true)
+        if #personalList > 0 then
+            table.insert(options, { label = "--- Personal ---", value = nil })
+            for _, data in ipairs(personalList) do
+                table.insert(options, {
+                    label = data.name .. " (Personal)",
+                    value = {name = data.name, personal = true},
+                    onclick = function(_, _, value)
+                        parent.currentReminder = value
+                        NSI:RefreshEmbeddedTimeline(parent)
+                    end
+                })
+            end
+        end
+        return options
+    end
+
+    local reminderLabel = DF:CreateLabel(parent, "Reminder Set:", 11, "white")
+    reminderLabel:SetPoint("LEFT", modeDropdown, "RIGHT", 20, 0)
+    parent.reminderLabel = reminderLabel
+    reminderLabel:Hide()
+
+    local reminderDropdown = DF:CreateDropDown(parent, BuildReminderDropdownOptions, nil, 300)
+    reminderDropdown:SetTemplate(options_dropdown_template)
+    reminderDropdown:SetPoint("LEFT", reminderLabel, "RIGHT", 10, 0)
+    parent.reminderDropdown = reminderDropdown
+    reminderDropdown:Hide()
+
+    -- Boss abilities toggle
+    local bossAbilitiesToggle = DF:CreateSwitch(parent,
+        function(self, _, value)
+            parent.showBossAbilities = value
+            NSI:RefreshEmbeddedTimeline(parent)
+        end,
+        true, 20, 20, nil, nil, nil, "TimelineBossAbilitiesToggle", nil, nil, nil, nil, options_switch_template)
+    bossAbilitiesToggle:SetAsCheckBox()
+    bossAbilitiesToggle:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -15, top_offset + 2)
+    parent.bossAbilitiesToggle = bossAbilitiesToggle
+
+    local bossAbilitiesLabel = DF:CreateLabel(parent, "Show Boss Abilities", 11, "white")
+    bossAbilitiesLabel:SetPoint("RIGHT", bossAbilitiesToggle, "LEFT", -5, 0)
+
+    -- No data label
+    local noDataLabel = DF:CreateLabel(parent, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
+    noDataLabel:SetPoint("CENTER", parent, "CENTER", 0, 0)
+    parent.noDataLabel = noDataLabel
+    noDataLabel:Hide()
+
+    -- Title label (shows boss name and difficulty) - positioned on second row
+    local titleLabel = DF:CreateLabel(parent, "", 12, "white")
+    titleLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, top_offset - 25)
+    parent.titleLabel = titleLabel
+
+    -- Timeline component
+    local timelineOptions = {
+        width = timeline_width,
+        height = timeline_height,
+        header_width = header_width,
+        header_detached = true,
+        line_height = 22,
+        line_padding = 1,
+        pixels_per_second = 15,
+        scale_min = 0.1,
+        scale_max = 2.0,
+        show_elapsed_timeline = true,
+        elapsed_timeline_height = 20,
+        can_resize = false,
+        use_perpixel_buttons = false,
+        backdrop = {edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1, bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tileSize = 64, tile = true},
+        backdrop_color = {0.1, 0.1, 0.1, 0.8},
+        backdrop_color_highlight = {0.2, 0.2, 0.3, 0.9},
+        backdrop_border_color = {0.1, 0.1, 0.1, 0.3},
+
+        on_enter = function(line)
+            line:SetBackdropColor(unpack(line.backdrop_color_highlight))
+        end,
+        on_leave = function(line)
+            line:SetBackdropColor(unpack(line.backdrop_color))
+        end,
+
+        on_create_line = function(line)
+            if line.lineHeader then
+                line.lineHeader:EnableMouse(true)
+                line.lineHeader:SetScript("OnEnter", function(self)
+                    line:SetBackdropColor(unpack(line.backdrop_color_highlight))
+                    if line.lineData and line.lineData.spellId then
+                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                        GameTooltip:SetSpellByID(line.lineData.spellId)
+                        GameTooltip:Show()
+                    end
+                end)
+                line.lineHeader:SetScript("OnLeave", function(self)
+                    line:SetBackdropColor(unpack(line.backdrop_color))
+                    GameTooltip:Hide()
+                end)
+            end
+            if line.text then
+                line.text:SetWordWrap(false)
+                line.text:SetWidth(150)
+            end
+        end,
+
+        block_on_enter = function(block)
+            if block.info and block.info.time then
+                GameTooltip:SetOwner(block, "ANCHOR_RIGHT")
+                local minutes = math.floor(block.info.time / 60)
+                local seconds = math.floor(block.info.time % 60)
+                local timeStr = string.format("%d:%02d", minutes, seconds)
+
+                local spellName = ""
+                if block.info.spellId then
+                    local spellInfo = C_Spell.GetSpellInfo(block.info.spellId)
+                    if spellInfo then
+                        spellName = spellInfo.name or ""
+                    end
+                end
+
+                GameTooltip:AddLine(spellName ~= "" and spellName or "Reminder", 1, 1, 1)
+                GameTooltip:AddLine("Time: " .. timeStr, 0.7, 0.7, 0.7)
+                local duration = tonumber(block.info.duration) or 0
+                if duration > 0 then
+                    GameTooltip:AddLine("Duration: " .. duration .. "s", 0.7, 0.7, 0.7)
+                end
+
+                if block.blockData and block.blockData.payload then
+                    local payload = block.blockData.payload
+                    if payload.isBossAbility and payload.category then
+                        local categoryColors = {
+                            damage = "|cffe64c4c",
+                            tank = "|cff4c80e6",
+                            movement = "|cffe6b333",
+                            soak = "|cff80e680",
+                            intermission = "|cffb366e6",
+                        }
+                        local colorCode = categoryColors[payload.category] or "|cffb3b3b3"
+                        GameTooltip:AddLine("Category: " .. colorCode .. payload.category .. "|r", 0.7, 0.7, 0.7)
+                        if payload.important then
+                            GameTooltip:AddLine("|cffff9900Use Healing CDs!|r", 1, 0.6, 0)
+                        end
+                    elseif payload.phase then
+                        GameTooltip:AddLine("Phase: " .. payload.phase, 0.7, 0.7, 0.7)
+                    end
+                    if payload.text then
+                        GameTooltip:AddLine("Text: " .. payload.text, 0.5, 0.8, 0.5)
+                    end
+                end
+                GameTooltip:Show()
+            end
+        end,
+        block_on_leave = function(block)
+            GameTooltip:Hide()
+        end,
+    }
+
+    local timelineFrame = DF:CreateTimeLineFrame(parent, "$parentTimeLine", timelineOptions)
+    parent.timeline = timelineFrame
+
+    -- Position the timeline (below the title row)
+    local timeline_top = top_offset - 45
+    if timelineFrame.headerFrame then
+        timelineFrame.headerFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, timeline_top)
+        timelineFrame.headerFrame:SetHeight(timeline_height)
+        timelineFrame:SetPoint("TOPLEFT", timelineFrame.headerFrame, "TOPRIGHT", 0, 0)
+    else
+        timelineFrame:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, timeline_top)
+    end
+
+    -- Hook scale slider to update phase markers
+    if timelineFrame.scaleSlider then
+        timelineFrame.scaleSlider:HookScript("OnValueChanged", function()
+            NSI:UpdateEmbeddedPhaseMarkers(parent)
+        end)
+
+        -- Help text positioned below the zoom slider
+        local helpLabel = DF:CreateLabel(parent, "Scroll: Navigate | Ctrl+Scroll: Zoom | Shift+Scroll: Vertical", 10, "gray")
+        helpLabel:SetPoint("TOPLEFT", timelineFrame.scaleSlider, "BOTTOMLEFT", 0, -5)
+    end
+
+    -- Phase markers container
+    parent.phaseMarkers = {}
+
+    -- Refresh timeline when tab becomes visible
+    parent:SetScript("OnShow", function(self)
+        NSI:RefreshEmbeddedTimeline(self)
+    end)
+
+    return parent
+end
+
 function NSUI:Init()
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
@@ -1673,6 +1923,7 @@ function NSUI:Init()
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
     local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
+    local timeline_tab = tabContainer:GetTabFrameByName("Timeline")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
@@ -4159,6 +4410,7 @@ Press 'Enter' to hear the TTS]],
     NSUI.reminders_frame = BuildRemindersEditUI()
     NSUI.pasound_frame = BuildPASoundEditUI()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
+    NSUI.timeline_tab = BuildTimelineTabUI(timeline_tab)
 
     -- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")

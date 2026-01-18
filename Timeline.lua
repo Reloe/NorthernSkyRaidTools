@@ -1055,3 +1055,258 @@ function NSI:UpdatePhaseMarkers()
         end
     end
 end
+
+--------------------------------------------------------------------------------
+-- EMBEDDED TIMELINE FUNCTIONS (for NSUI tab)
+--------------------------------------------------------------------------------
+
+-- Refresh the embedded timeline based on current mode
+function NSI:RefreshEmbeddedTimeline(tab)
+    if not tab or not tab.timeline then return end
+
+    if tab.timelineMode == "my" then
+        self:RefreshEmbeddedMyReminders(tab)
+    else
+        local currentReminder = tab.currentReminder
+        if currentReminder then
+            self:RefreshEmbeddedAllReminders(tab, currentReminder.name, currentReminder.personal)
+        else
+            -- Try to select active reminder
+            local activeReminder = NSRT.ActiveReminder
+            local isPersonal = false
+            if not activeReminder or activeReminder == "" then
+                activeReminder = NSRT.ActivePersonalReminder
+                isPersonal = true
+            end
+            if activeReminder and activeReminder ~= "" then
+                self:RefreshEmbeddedAllReminders(tab, activeReminder, isPersonal)
+                tab.currentReminder = {name = activeReminder, personal = isPersonal}
+                tab.reminderDropdown:Select({name = activeReminder, personal = isPersonal})
+            else
+                tab.noDataLabel:SetText("Select a reminder set from the dropdown.")
+                tab.noDataLabel:Show()
+                tab.timeline:Hide()
+            end
+        end
+    end
+end
+
+-- Refresh embedded timeline with player's own processed reminders
+function NSI:RefreshEmbeddedMyReminders(tab)
+    if not tab or not tab.timeline then return end
+
+    local includeBossAbilities = tab.showBossAbilities
+    local data, encID, phases, difficulty = self:GetMyTimelineData(includeBossAbilities)
+
+    if data and data.lines and #data.lines > 0 then
+        tab.noDataLabel:Hide()
+        tab.timeline:Show()
+        tab.timeline:SetData(data)
+        tab.currentEncounterID = encID
+        tab.currentPhases = phases
+        tab.currentDifficulty = difficulty
+        self:UpdateEmbeddedPhaseMarkers(tab)
+        self:UpdateEmbeddedTimelineTitle(tab)
+    else
+        -- If no player reminders but boss abilities enabled, show just boss abilities
+        if includeBossAbilities then
+            local bossEncID = self.EncounterID
+            if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
+                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false)
+                if #bossLines > 0 then
+                    local bossData = {
+                        length = math.max(60, math.ceil(bossMaxTime / 30) * 30),
+                        defaultColor = {1, 1, 1, 1},
+                        useIconOnBlocks = true,
+                        lines = bossLines,
+                    }
+                    tab.noDataLabel:Hide()
+                    tab.timeline:Show()
+                    tab.timeline:SetData(bossData)
+                    tab.currentEncounterID = bossEncID
+                    tab.currentPhases = bossPhases
+                    tab.currentDifficulty = bossDifficulty
+                    self:UpdateEmbeddedPhaseMarkers(tab)
+                    self:UpdateEmbeddedTimelineTitle(tab)
+                    return
+                end
+            end
+        end
+
+        tab.noDataLabel:SetText("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you.")
+        tab.noDataLabel:Show()
+        tab.timeline:SetData({
+            length = 300,
+            defaultColor = {1, 1, 1, 1},
+            useIconOnBlocks = true,
+            lines = {},
+        })
+        tab.currentEncounterID = nil
+        tab.currentPhases = nil
+        tab.currentDifficulty = nil
+        self:UpdateEmbeddedPhaseMarkers(tab)
+        self:UpdateEmbeddedTimelineTitle(tab)
+    end
+end
+
+-- Refresh embedded timeline with all reminders from a reminder set
+function NSI:RefreshEmbeddedAllReminders(tab, reminderName, personal)
+    if not tab or not tab.timeline then return end
+
+    local includeBossAbilities = tab.showBossAbilities
+    local data, encID, phases, difficulty = self:GetAllTimelineData(reminderName, personal, includeBossAbilities)
+
+    if data and data.lines and #data.lines > 0 then
+        tab.noDataLabel:Hide()
+        tab.timeline:Show()
+        tab.timeline:SetData(data)
+        tab.currentEncounterID = encID
+        tab.currentPhases = phases
+        tab.currentDifficulty = difficulty
+        self:UpdateEmbeddedPhaseMarkers(tab)
+        self:UpdateEmbeddedTimelineTitle(tab)
+    else
+        tab.noDataLabel:SetText("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)")
+        tab.noDataLabel:Show()
+        tab.timeline:SetData({
+            length = 300,
+            defaultColor = {1, 1, 1, 1},
+            useIconOnBlocks = true,
+            lines = {},
+        })
+        tab.currentEncounterID = nil
+        tab.currentPhases = nil
+        tab.currentDifficulty = nil
+        self:UpdateEmbeddedPhaseMarkers(tab)
+        self:UpdateEmbeddedTimelineTitle(tab)
+    end
+end
+
+-- Update embedded timeline title with boss name and difficulty
+function NSI:UpdateEmbeddedTimelineTitle(tab)
+    if not tab or not tab.titleLabel then return end
+
+    local title = ""
+    local encID = tab.currentEncounterID
+    if encID then
+        local bossName = self:GetEncounterName(encID)
+        local difficulty = tab.currentDifficulty
+        if difficulty then
+            title = string.format("%s (%s)", bossName, difficulty)
+        else
+            title = bossName
+        end
+    end
+
+    tab.titleLabel:SetText(title)
+end
+
+-- Update phase markers on the embedded timeline
+function NSI:UpdateEmbeddedPhaseMarkers(tab)
+    if not tab then return end
+
+    -- Create phase markers container if needed
+    if not tab.phaseMarkers then
+        tab.phaseMarkers = {}
+    end
+
+    -- Hide all existing markers
+    for _, marker in pairs(tab.phaseMarkers) do
+        marker:Hide()
+    end
+
+    local phases = tab.currentPhases
+    local encID = tab.currentEncounterID
+    if not phases or not encID then return end
+
+    local timeline = tab.timeline
+    if not timeline then return end
+
+    local body = timeline.body
+    if not body then return end
+
+    local basePixelsPerSecond = timeline.options.pixels_per_second or 15
+    local currentScale = timeline.currentScale or 1
+    local pixelsPerSecond = basePixelsPerSecond * currentScale
+    local elapsedHeight = timeline.options.elapsed_timeline_height or 20
+
+    for phaseNum, phaseData in pairs(phases) do
+        if phaseNum > 1 then
+            local marker = tab.phaseMarkers[phaseNum]
+            if not marker then
+                marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
+                marker:SetSize(4, body:GetHeight() - elapsedHeight)
+                marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+
+                marker:EnableMouse(true)
+                marker:SetMovable(true)
+                marker:RegisterForDrag("LeftButton")
+
+                marker.phaseNum = phaseNum
+                marker.encID = encID
+                marker.parentTab = tab
+
+                marker:SetScript("OnDragStart", function(self)
+                    self.isDragging = true
+                    self:StartMoving()
+                end)
+
+                marker:SetScript("OnDragStop", function(self)
+                    self:StopMovingOrSizing()
+                    self.isDragging = false
+
+                    local currentPPS = (timeline.options.pixels_per_second or 15) * (timeline.currentScale or 1)
+                    local bodyLeft = body:GetLeft() or 0
+                    local markerLeft = self:GetLeft() or 0
+                    local xOffset = markerLeft - bodyLeft
+
+                    local newTime = math.max(0, xOffset / currentPPS)
+                    newTime = math.floor(newTime)
+
+                    NSI:SetPhaseStart(self.encID, self.phaseNum, newTime)
+                    NSI:RefreshEmbeddedTimeline(self.parentTab)
+                end)
+
+                marker:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or ("Phase " .. self.phaseNum)
+                    local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
+                    local minutes = math.floor(time / 60)
+                    local seconds = math.floor(time % 60)
+                    GameTooltip:AddLine(phaseName, 1, 1, 1)
+                    GameTooltip:AddLine(string.format("Start: %d:%02d", minutes, seconds), 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine("|cff00ff00Drag to adjust timing|r", 0, 1, 0)
+                    GameTooltip:AddLine("|cffff9900Right-click to reset|r", 1, 0.6, 0)
+                    GameTooltip:Show()
+                end)
+
+                marker:SetScript("OnLeave", function(self)
+                    GameTooltip:Hide()
+                end)
+
+                marker:SetScript("OnMouseDown", function(self, button)
+                    if button == "RightButton" then
+                        NSI:ResetPhaseStart(self.encID, self.phaseNum)
+                        NSI:RefreshEmbeddedTimeline(self.parentTab)
+                    end
+                end)
+
+                tab.phaseMarkers[phaseNum] = marker
+            end
+
+            local phaseStart = self:GetPhaseStart(encID, phaseNum)
+            local xPos = phaseStart * pixelsPerSecond
+
+            local color = phaseData.color or {0.8, 0.2, 0.2}
+            marker:SetBackdropColor(color[1], color[2], color[3], 0.8)
+
+            marker:ClearAllPoints()
+            marker:SetPoint("TOPLEFT", body, "TOPLEFT", xPos, -elapsedHeight)
+            marker:SetHeight(body:GetHeight() - elapsedHeight)
+            marker:SetFrameLevel(body:GetFrameLevel() + 10)
+            marker:Show()
+
+            marker.encID = encID
+        end
+    end
+end
