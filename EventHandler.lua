@@ -98,7 +98,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["Cell"] = NSRT.Settings["Cell"] or false
             NSRT.Settings["Grid2"] = NSRT.Settings["Grid2"] or false
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
-            NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
             NSRT.Settings["Translit"] = NSRT.Settings["Translit"] or false
             NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
             NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
