@@ -156,6 +156,31 @@ function NSI:WipeCellDB()
     end
 end
 
+function NSI:VuhDoNickNameUpdated()
+    if C_AddOns.IsAddOnLoaded("VuhDo") and NSRT.Settings["VuhDo"] and not self.VuhDoNickNamesHook then
+        self.VuhDoNickNamesHook = true
+        local hookedFrames = {}
+        hooksecurefunc('VUHDO_getBarText', function(aBar)
+            local bar = aBar:GetName() .. 'TxPnlUnN'
+            if bar then
+                if not hookedFrames[bar] then
+                    hookedFrames[bar] = true
+                    hooksecurefunc(_G[bar], 'SetText', function(self,txt)
+                        if txt then
+                            local name = txt:match('%w+$')
+                            if name then
+                                local preStr = txt:gsub(name, '')
+                                self:SetFormattedText('%s%s',preStr,NSAPI:GetName(name, "VuhDo") or "")
+                            end
+                        end
+                    end)
+                end
+            end
+        end)
+    end
+
+end
+
 function NSI:BlizzardNickNameUpdated()
     C_Timer.After(0.1, function() -- delay everything to always do it after other reskin addons
         if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not self.BlizzardNickNamesHook then
@@ -309,6 +334,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:UnhaltedNickNameUpdated()
     self:BlizzardNickNameUpdated()
     self:DandersFramesNickNameUpdated(all, unit)
+    self:VuhDoNickNameUpdated()
 end
 
 function NSI:InitNickNames()
@@ -402,6 +428,8 @@ function NSI:InitNickNames()
         end, "Name", "[NSRT] NickName")
     end
 
+    C_AddOns.LoadAddOn("VuhDo")
+    self:VuhDoNickNameUpdated()
 end
 
 function NSI:SendNickName(channel, requestback)
