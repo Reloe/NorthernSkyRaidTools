@@ -1869,6 +1869,10 @@ function NSUI:Init()
             NSI:Grid2NickNameUpdated()
         end
 
+        if NSUI.OptionsChanged.nicknames["DANDERS_FRAMES_NICKNAMES"] then
+            NSI:DandersFramesNickNameUpdated(true)
+        end
+
         if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
             NSI:UnhaltedNickNameUpdated()
         end
@@ -2096,6 +2100,18 @@ Press 'Enter' to hear the TTS]],
             end,
             name = "Enable Grid2 Nicknames",
             desc = "Enable Nicknames to be used with Grid2 unit frames. This requires selecting the 'NSNickName' indicator within Grid2.",
+            nocombat = true
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return NSRT.Settings["DandersFrames"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["DANDERS_FRAMES_NICKNAMES"] = true
+                NSRT.Settings["DandersFrames"] = value
+            end,
+            name = "Enable DandersFrames Nicknames",
+            desc = "Enable Nicknames to be used with DandersFrames unit frames.",
             nocombat = true
         },
         {
