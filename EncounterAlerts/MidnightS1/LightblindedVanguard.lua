@@ -26,22 +26,6 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENCOUNTER_WARNING
-    if NSRT.EncounterAlerts[encID].enabled then        
-        local severity, dur = info.severity, info.duration
-        if severity == 0 then
-        elseif severity == 1 then    
-        elseif severity == 2 then
-        end
-    end
-end
-
-NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
-    if NSRT.EncounterAlerts[encID].enabled then
-
-    end
-end
-
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     if not self:DifficultyCheck(16) then return end -- Mythic only
@@ -97,27 +81,5 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if NSRT.AssignmentSettings.OnPull then
         local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""
         self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the "..text.." Group", 5)
-    end
-end
-
-local detectedDurations = {}
-
-NSI.DetectPhaseChange[encID] = function(self, e, info)
-    local now = GetTime()
-    -- not checking REMOVED event by default but may be needed for some encounters
-    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
-    for k, v in ipairs(detectedDurations) do
-        if info.duration == v then            
-            self.Phase = self.Phase+1                  
-            self:StartReminders(self.Phase)
-            self.PhaseSwapTime = now
-            break
-        end
-    end
-end
-
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
-    if NSRT.EncounterAlerts[encID].enabled then
-        
     end
 end

@@ -214,10 +214,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.StartedCountdown = {}   
         self.Timelines = {}
         self.DefaultAlertID = 10000
-        if self.AddAssignments[self.EncounterID] then
-            self.AddAssignments[self.EncounterID](self)
-            self.EncounterAlertStart[self.EncounterID](self)
-        end
+        if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
+        if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:StartReminders(self.Phase)
     elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
         local encID, encounterName = ...
@@ -231,9 +229,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.AllGlows = {}          
         self.Timelines = {}
         self.ProcessedReminder = nil
-        if self.EncounterAlertStop[encID] then
-            self.EncounterAlertStop[encID](self)
-        end
+        if self.EncounterAlertStop[encID] then self.EncounterAlertStop[encID](self) end
         C_Timer.After(1, function()
             if self:Restricted() then return end
             if self.SyncNickNamesStore then

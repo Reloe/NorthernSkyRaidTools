@@ -6,7 +6,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
-    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+    if NSRT.EncounterAlerts[encID].enabled or encID == 3463 then -- text, Type, spellID, dur, phase, encID
         --[[
         local Soak = self:CreateDefaultAlert("Soak", "Bar", 1241291, 8, 1, encID)
         Soak.time = 10
@@ -22,6 +22,11 @@ NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENC
         elseif severity == 1 then    
         elseif severity == 2 then
         end
+        --[[ Example
+        local Fixate = self:CreateDefaultAlert("Fixate", "Icon", 210099, 15) -- text, type, spellID; dur
+        Fixate.skipdur = true
+        self:DisplayReminder(Fixate)
+        ]]
     end
 end
 
