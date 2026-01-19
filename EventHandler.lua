@@ -404,15 +404,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)      
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
-        if self:Restricted() then return end
-
-        if NSRT.PARaidSettings.enabled then
-            local diff = select(3, GetInstanceInfo())
-            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then
-                local isparty = not UnitInRaid("player")
-                self:StoreFrames(true, isparty)
-            end
-        end       
+        if self:Restricted() then return end 
 
         self:UpdateRaidBuffFrame()
         if self.InviteInProgress then
@@ -426,6 +418,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
+        
+        if NSRT.PARaidSettings.enabled then
+            local diff = select(3, GetInstanceInfo())
+            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing
+                local isparty = not UnitInRaid("player")
+                self:StoreFrames(true, isparty)
+                return
+            end
+        end      
+
         if not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  

@@ -2135,7 +2135,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["Unhalted"] = value
             end,
             name = "Enable Unhalted UF Nicknames",
-            desc = "Enable Nicknames to be used with Unhalted Unit Frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
+            desc = "Enable Nicknames to be used with Unhalted Unit Frames. You can choose 'NSNickName' as a tag within UUF.",
             nocombat = true
         },
 
