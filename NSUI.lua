@@ -1865,6 +1865,10 @@ function NSUI:Init()
             NSI:ElvUINickNameUpdated()
         end
 
+        if NSUI.OptionsChanged.nicknames["VUHDO_NICKNAMES"] then
+            NSI:VuhDoNickNameUpdated()
+        end
+
         if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
             NSI:Grid2NickNameUpdated()
         end
@@ -2129,13 +2133,13 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.Settings["Vuhdo"] end,
+            get = function() return NSRT.Settings["VuhDo"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["VUHDO_NICKNAMES"] = true
-                NSRT.Settings["Vuhdo"] = value
+                NSRT.Settings["VuhDo"] = value
             end,
-            name = "Enable Vuhdo Nicknames",
-            desc = "Enable Nicknames to be used with Vuhdo unit frames.",
+            name = "Enable VuhDo Nicknames",
+            desc = "Enable Nicknames to be used with VuhDo unit frames.",
             nocombat = true
         },
         {
