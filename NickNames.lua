@@ -330,7 +330,7 @@ function NSI:InitNickNames()
 
         function Grid2Status:GetText(unit)
             local name = UnitName(unit)
-            return name and NSAPI and NSAPI:GetName(name, "Grid2") or name
+            return name and NSAPI:GetName(name, "Grid2") or name
         end
 
         local function Create(baseKey, dbx)
@@ -347,13 +347,13 @@ function NSI:InitNickNames()
         ElvUF.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
         ElvUF.Tags.Methods['NSNickName'] = function(unit)
             local name = UnitName(unit)
-            return name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
+            return name and NSAPI:GetName(name, "ElvUI") or name
         end
         for i=1, 12 do
             ElvUF.Tags.Events['NSNickName:'..i] = 'UNIT_NAME_UPDATE'
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
                 local name = UnitName(unit)
-                name = name and NSAPI and NSAPI:GetName(name, "ElvUI") or name
+                name = name and NSAPI:GetName(name, "ElvUI") or name
                 return NSI:Utf8Sub(name, 1, i)
             end
         end
@@ -370,9 +370,18 @@ function NSI:InitNickNames()
     if DandersFrames then
         function DandersFrames:GetUnitName(unit)
             local name = UnitName(unit)
-            return name and NSAPI and NSAPI:GetName(name, "DandersFrames") or name
+            return name and NSAPI:GetName(name, "DandersFrames") or name
         end
     end
+    C_AddOns.LoadAddOn("UnhaltedUnitFrames")
+    if UUFG then
+        UUFG:AddTag("NSNickName", "UNIT_NAME_UPDATE", function(unit)
+            local name = UnitName(unit)
+            return name and NSAPI:GetName(name, "Unhalted") or name
+        end, "Name", "[NSRT] NickName")
+
+    end
+
 end
 
 function NSI:SendNickName(channel, requestback)
