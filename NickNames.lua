@@ -157,15 +157,35 @@ function NSI:WipeCellDB()
 end
 
 function NSI:BlizzardNickNameUpdated()
-    if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not self.BlizzardNickNamesHook then
-        self.BlizzardNickNamesHook = true
-        hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
-            if frame:IsForbidden() or not frame.unit then
-                return
+    C_Timer.After(0.1, function() -- delay everything to always do it after other reskin addons
+        if C_AddOns.IsAddOnLoaded("Blizzard_CompactRaidFrames") and NSRT.Settings["Blizzard"] and not self.BlizzardNickNamesHook then
+            self.BlizzardNickNamesHook = true
+            hooksecurefunc("CompactUnitFrame_UpdateName", function(frame)
+                if frame:IsForbidden() or not frame.unit then
+                    return
+                end
+                frame.name:SetText(NSAPI:GetName(frame.unit, "Blizzard"))
+            end)            
+        end
+        local inRaid = UnitInRaid("player")
+        if inRaid then
+            for group = 1, 8 do
+                for member = 1, 5 do
+                    local frame = _G["CompactRaidGroup"..group.."Member"..member]
+                    if frame and not frame:IsForbidden() and frame.unit then
+                        frame.name:SetText(NSAPI:GetName(frame.unit, "Blizzard"))
+                    end
+                end
             end
-            frame.name:SetText(NSAPI:GetName(frame.unit, "Blizzard"))
-        end)
-    end
+        else
+            for member = 1, 5 do
+                local frame = _G["CompactPartyFrameMember"..member]
+                if frame and not frame:IsForbidden() and frame.unit then
+                    frame.name:SetText(NSAPI:GetName(frame.unit, "Blizzard"))
+                end
+            end
+        end
+    end)
 end
 
 -- Cell Option Change
@@ -307,7 +327,7 @@ function NSI:InitNickNames()
         CharList[nickname][name] = true
     end
 
-    if NSRT.Settings["GlobalNickNames"] then      
+    if NSRT.Settings["GlobalNickNames"] and NSRT.Settings["Blizzard"] then      
     	self:BlizzardNickNameUpdated()
     end
 
@@ -373,13 +393,13 @@ function NSI:InitNickNames()
             return name and NSAPI:GetName(name, "DandersFrames") or name
         end
     end
+
     C_AddOns.LoadAddOn("UnhaltedUnitFrames")
     if UUFG then
         UUFG:AddTag("NSNickName", "UNIT_NAME_UPDATE", function(unit)
             local name = UnitName(unit)
             return name and NSAPI:GetName(name, "Unhalted") or name
         end, "Name", "[NSRT] NickName")
-
     end
 
 end
