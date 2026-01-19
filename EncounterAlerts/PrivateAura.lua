@@ -279,7 +279,8 @@ function NSI:PreviewPA(Show)
     self.PAFrame:SetPoint(NSRT.PASettings.Anchor, UIParent, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
     if not self.PAFrame.Border then
         self.PAFrame.Border = CreateFrame("Frame", nil, self.PAFrame, "BackdropTemplate") 
-        self.PAFrame.Border:SetAllPoints(self.PAFrame)
+        self.PAFrame.Border:SetPoint("TOPLEFT", self.PAFrame, "TOPLEFT", -6, 6)
+        self.PAFrame.Border:SetPoint("BOTTOMRIGHT", self.PAFrame, "BOTTOMRIGHT", 6, -6)
         self.PAFrame.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 2,
@@ -346,7 +347,8 @@ function NSI:PreviewTankPA(Show)
     self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, UIParent, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
     if not self.PATankFrame.Border then
         self.PATankFrame.Border = CreateFrame("Frame", nil, self.PATankFrame, "BackdropTemplate") 
-        self.PATankFrame.Border:SetAllPoints(self.PATankFrame)
+        self.PATankFrame.Border:SetPoint("TOPLEFT", self.PATankFrame, "TOPLEFT", -6, 6)
+        self.PATankFrame.Border:SetPoint("BOTTOMRIGHT", self.PATankFrame, "BOTTOMRIGHT", 6, -6)
         self.PATankFrame.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 2,

@@ -328,7 +328,6 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(F.info.colors or s.colors))
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            F.Border:SetAllPoints(F)
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
@@ -360,7 +359,8 @@ function NSI:ArrangeStates(Type)
     end)
     for i, v in ipairs(pos) do
         local diff = Type == "Texts" and s.FontSize or s.Height
-        local offset = s.GrowDirection == "Up" and (i-1) * diff or -(i-1) * diff
+        local Spacing = s.Spacing or 0
+        local offset = s.GrowDirection == "Up" and (i-1) * diff + (i-1) * Spacing or -(i-1) * diff - (i-1) * Spacing
         v.Frame:ClearAllPoints()
         if Type == "Texts" then
             v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
@@ -1011,14 +1011,14 @@ function NSI:MoveFrameSettings(F, s, text)
     F:SetSize(s.Width, s.Height)
     F:ClearAllPoints()
     F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset)
-    F.Border:ClearAllPoints()
-    F.Border:SetAllPoints(F)
 end
 
 function NSI:MoveFrameInit(F, s, text, ReminderColor)
     if F then             
         F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate") 
-        F.Border:SetAllPoints(F)
+        local x = s == "BarSettings" and -6-NSRT.ReminderSettings[s].Height or -6 -- extra offset for bars to account for the icon
+        F.Border:SetPoint("TOPLEFT", F, "TOPLEFT", x, 6)
+        F.Border:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 6, -6)
         F.Border:SetBackdrop({
                 bgFile = "Interface\\Buttons\\WHITE8x8",
                 tileSize = 0,

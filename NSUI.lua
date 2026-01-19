@@ -2390,6 +2390,19 @@ Press 'Enter' to hear the TTS]],
 
         },
         {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing between Text reminders",
+            get = function() return NSRT.ReminderSettings.TextSettings["Spacing"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TextSettings["Spacing"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -5,
+            max = 20,
+            nocombat = true,
+        },
+        {
             type = "breakline"
         },
         {
@@ -2465,7 +2478,20 @@ Press 'Enter' to hear the TTS]],
             min = 20,
             max = 200,
             nocombat = true,
-        },       
+        },     
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing between Icon reminders",
+            get = function() return NSRT.ReminderSettings.IconSettings["Spacing"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings["Spacing"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -5,
+            max = 20,
+            nocombat = true,
+        },  
 
         {
             type = "label",
@@ -2560,6 +2586,19 @@ Press 'Enter' to hear the TTS]],
             hasAlpha = true,
             nocombat = true
 
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing between Bar reminders",
+            get = function() return NSRT.ReminderSettings.BarSettings["Spacing"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.BarSettings["Spacing"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -5,
+            max = 20,
+            nocombat = true,
         },
         {
             type = "breakline"
