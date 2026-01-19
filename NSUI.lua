@@ -2074,8 +2074,8 @@ Press 'Enter' to hear the TTS]],
                 NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] = true
                 NSRT.Settings["Blizzard"] = value
             end,
-            name = "Enable Blizzard Nicknames",
-            desc = "Enable Nicknames to be used with Blizzard unit frames.",
+            name = "Enable Blizzard/Reskin Addons Nicknames",
+            desc = "Enable Nicknames to be used with Blizzard unit frames. This should automatically work for any Addon that reskins Blizzard Frames instead of creating their own frames. This for example includes RaidFrameSettings.",
             nocombat = true
         },
         {
@@ -2124,6 +2124,18 @@ Press 'Enter' to hear the TTS]],
             end,
             name = "Enable ElvUI Nicknames",
             desc = "Enable Nicknames to be used with ElvUI unit frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
+            nocombat = true
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return NSRT.Settings["Vuhdo"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["VUHDO_NICKNAMES"] = true
+                NSRT.Settings["Vuhdo"] = value
+            end,
+            name = "Enable Vuhdo Nicknames",
+            desc = "Enable Nicknames to be used with Vuhdo unit frames.",
             nocombat = true
         },
         {
