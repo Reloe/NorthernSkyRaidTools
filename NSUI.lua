@@ -45,34 +45,6 @@ NSUI.OptionsChanged = {
     ["versions"] = {},
 }
 
--- suf setup guide popup
-local function BuildSUFSetupGuidePopup()
-    local popup = DF:CreateSimplePanel(UIParent, 300, 130, "SUF Setup Guide", "SUFSetupGuidePopup")
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    popup:SetFrameLevel(100)
-
-    popup.text_entry_label = DF:CreateLabel(popup, "Copy this code and create a new SUF tag with it:", 9.5, "white")
-    popup.text_entry_label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-    
-    popup.text_entry = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "$parentTextEntry", true, true, false)
-    popup.text_entry:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -45)
-    popup.text_entry:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 10)
-    DF:ApplyStandardBackdrop(popup.text_entry)
-    DF:ReskinSlider(popup.text_entry.scroll)
-    
-    local tag_code = [[function(unit)
-    local name = UnitName(unit)
-    return name and NSAPI and NSAPI:GetName(name, "SuF") or name
-end]]
-    popup:SetScript("OnShow", function(self)
-        popup.text_entry:SetText(tag_code)
-        popup.text_entry.editbox:HighlightText()
-        popup.text_entry:SetFocus()
-    end)
-
-    return popup
-end
-
 -- version check ui
 local component_type = "Addon"
 local checkable_components = {"Addon", "Note", "Reminder"}
@@ -1696,8 +1668,6 @@ function NSUI:Init()
     generic_display:Hide()
     NSUI.generic_display = generic_display
 
-    -- dummy default variables until cvars are implemented
-    local enableSUFNicknames = false
     -- TTS voice preview
     local tts_text_preview = "" 
     -- nickname logic
@@ -2139,19 +2109,6 @@ Press 'Enter' to hear the TTS]],
             name = "Enable ElvUI Nicknames",
             desc = "Enable Nicknames to be used with ElvUI unit frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
             nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            get = function() return NSRT.Settings["SuF"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] = true
-                NSRT.Settings["SuF"] = value
-            end,
-            name = "Enable SUF Nicknames",
-            desc = "Enable Nicknames to be used with SUF unit frames. This requires adding your own Tag to the addon. You can copy the required code by clicking on the small 'i'",
-            nocombat = true,
-            id = "SUF-Toggle"
         },
         {
             type = "toggle",
@@ -3987,22 +3944,6 @@ Press 'Enter' to hear the TTS]],
         privateaura_callback)
     NSI.RaidBuffCheck:SetMovable(false)
     NSI.RaidBuffCheck:EnableMouse(false)
-
-    -- Add SUF Setup guide tooltip button thingy
-
-    NSUI.suf_setup_guide_popup = BuildSUFSetupGuidePopup()
-
-    local help_i_texture = [[Interface\common\help-i]]
-    local SUF_Toggle = nicknames_tab:GetWidgetById("SUF-Toggle")
-    local suf_help_button = DF:CreateButton(nicknames_tab, function()
-        if NSUI.suf_setup_guide_popup and not NSUI.suf_setup_guide_popup:IsShown() then
-            NSUI.suf_setup_guide_popup:Show()
-        else
-            NSUI.suf_setup_guide_popup:Hide()
-        end
-    end, 20, 20, "")
-    suf_help_button:SetIcon(help_i_texture)
-    suf_help_button:SetPoint("LEFT", SUF_Toggle.hasLabel, "RIGHT", 0, 0)   
 
     -- Build UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
