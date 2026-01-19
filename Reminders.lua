@@ -872,8 +872,10 @@ end
 
 function NSI:InviteListFromReminder(str)
     local list = {}
+    local found = false
     for line in str:gmatch('[^\r\n]+') do
-        if line:find("invitelist:") then            
+        if line:find("invitelist:") then        
+            found = true    
             for name in line:gmatch("([^%s,;:]+)") do
                 if name ~= "invitelist" then
                     table.insert(list, name)
@@ -881,7 +883,7 @@ function NSI:InviteListFromReminder(str)
             end
         end
     end
-    return list
+    return found and list or false
 end
 
 function NSI:GlowFrame(unit, id)

@@ -758,6 +758,10 @@ local function BuildRemindersEditUI()
                 local line = self:GetLine(i)
                 line.name = reminderData.name
                 line.nameTextEntry.text = reminderData.name
+                if not NSRT.InviteList[line.name] then
+                    line.InviteButton:Hide()
+                    line.ArrangeButton:Hide()
+                end
             end
         end
     end
@@ -865,6 +869,7 @@ local function BuildRemindersEditUI()
             if not oldname then return end
             local newname = self:GetText()
             if oldname == newname then return end
+            if NSRT.Reminders[newname] then return end -- if name already exists, do nothing
             NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             if NSRT.ActiveReminder == oldname then
@@ -907,19 +912,16 @@ local function BuildRemindersEditUI()
         end, 40, 20, "Show")
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)
-
         -- Invite Button
-        line.InviteButton = DF:CreateButton(line, function()
-            local name = line.nameTextEntry:GetText()
-            NSI:InviteFromReminder(name, true)
+        line.InviteButton = DF:CreateButton(line, function(self)
+            NSI:InviteFromReminder(line.name, true)
         end, 40, 20, "Invite")
         line.InviteButton:SetPoint("RIGHT", line.ShowButton, "LEFT", 0, 0)
         line.InviteButton:SetTemplate(options_button_template)
 
         -- Group Arrange Button
-        line.ArrangeButton = DF:CreateButton(line, function()
-            local name = line.nameTextEntry:GetText()
-            NSI:ArrangeFromReminder(name)
+        line.ArrangeButton = DF:CreateButton(line, function(self)
+            NSI:ArrangeFromReminder(line.name)     
         end, 40, 20, "Arrange")
         line.ArrangeButton:SetPoint("RIGHT", line.InviteButton, "LEFT", 0, 0)
         line.ArrangeButton:SetTemplate(options_button_template)
@@ -1044,6 +1046,7 @@ local function BuildPersonalRemindersEditUI()
             if not oldname then return end
             local newname = self:GetText()
             if oldname == newname then return end
+            if NSRT.PersonalReminders[newname] then return end -- if name already exists, do nothing
             NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
             if NSRT.ActivePersonalReminder == oldname then
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. newname
