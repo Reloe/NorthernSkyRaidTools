@@ -116,6 +116,21 @@ function NSI:Grid2NickNameUpdated(all, unit)
      end
 end
 
+function NSI:DandersFramesNickNameUpdated(all, unit)
+    if DandersFrames then
+        if all then
+            DandersFrames:IterateCompactFrames(function(frame) 
+                DandersFrames:UpdateNameText(frame)
+            end)
+        elseif unit then
+            local frame = DandersFrames:GetFrameForUnit(unit)
+            if frame then
+                DandersFrames:UpdateNameText(frame)
+            end
+        end
+    end
+end
+
 -- Wipe NickName Database
 function NSI:WipeNickNames()
     self:WipeCellDB()
@@ -273,6 +288,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:ElvUINickNameUpdated()
     self:UnhaltedNickNameUpdated()
     self:BlizzardNickNameUpdated()
+    self:DandersFramesNickNameUpdated(all, unit)
 end
 
 function NSI:InitNickNames()
@@ -348,6 +364,13 @@ function NSI:InitNickNames()
             if tInsertUnique(CellDB.nicknames.list, name..":"..nickname) then
                 Cell.Fire("UpdateNicknames", "list-update", name, nickname)
             end
+        end
+    end
+
+    if DandersFrames then
+        function DandersFrames:GetUnitName(unit)
+            local name = UnitName(unit)
+            return name and NSAPI and NSAPI:GetName(name, "DandersFrames") or name
         end
     end
 end
