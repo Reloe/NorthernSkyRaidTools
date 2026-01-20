@@ -65,25 +65,37 @@ function NSI:SetupTimelineHooks(timeline)
     end
 
     -- Sticky ruler - keep elapsedTimeFrame fixed at top when scrolling vertically
-    -- Note: vertical lines are hidden because they can't easily be repositioned
-    if elapsedTimeFrame and timeline.verticalSlider then
+    -- but scroll horizontally with content
+    if elapsedTimeFrame and timeline.verticalSlider and horizontalSlider then
         local headerWidth = timeline.options.header_width or 0
         if timeline.options.header_detached then
             headerWidth = 0
         end
 
-        elapsedTimeFrame:SetFrameLevel(timeline.body:GetFrameLevel() + 10)
+        -- Create a clipping container for the ruler
+        local rulerContainer = CreateFrame("Frame", nil, timeline)
+        rulerContainer:SetPoint("TOPLEFT", timeline, "TOPLEFT", 0, 0)
+        rulerContainer:SetPoint("TOPRIGHT", timeline, "TOPRIGHT", 0, 0)
+        rulerContainer:SetHeight(timeline.options.elapsed_timeline_height or 20)
+        rulerContainer:SetClipsChildren(true)
+        rulerContainer:SetFrameLevel(timeline.body:GetFrameLevel() + 10)
+
+        -- Reparent elapsedTimeFrame to the clipping container
+        elapsedTimeFrame:SetParent(rulerContainer)
+        elapsedTimeFrame:SetFrameLevel(rulerContainer:GetFrameLevel() + 1)
         elapsedTimeFrame:EnableMouse(false)
 
         local function updateRulerPosition()
-            local scrollY = timeline.verticalSlider:GetValue() or 0
+            local scrollX = horizontalSlider:GetValue() or 0
+            local bodyWidth = timeline.body:GetWidth() or timeline:GetWidth()
             elapsedTimeFrame:ClearAllPoints()
-            elapsedTimeFrame:SetPoint("TOPLEFT", timeline.body, "TOPLEFT", headerWidth, scrollY)
-            elapsedTimeFrame:SetPoint("TOPRIGHT", timeline.body, "TOPRIGHT", 0, scrollY)
+            elapsedTimeFrame:SetPoint("TOPLEFT", rulerContainer, "TOPLEFT", -scrollX, 0)
+            elapsedTimeFrame:SetWidth(bodyWidth)
+            elapsedTimeFrame:SetHeight(timeline.options.elapsed_timeline_height or 20)
         end
 
-        -- Reposition lines to be anchored to body instead of ruler labels
-        -- so they stay in place while ruler moves
+        -- Reposition vertical time lines to be anchored to body
+        -- so they scroll with content while ruler stays fixed
         local function repositionLines()
             if elapsedTimeFrame.labels then
                 local bodyHeight = timeline.body:GetHeight() or 400
@@ -109,7 +121,8 @@ function NSI:SetupTimelineHooks(timeline)
 
         updateRulerPosition()
 
-        timeline.verticalSlider:HookScript("OnValueChanged", function()
+        -- Update ruler position when scrolling horizontally
+        horizontalSlider:HookScript("OnValueChanged", function()
             updateRulerPosition()
         end)
 
@@ -122,7 +135,10 @@ function NSI:SetupTimelineHooks(timeline)
 
         if scaleSlider then
             scaleSlider:HookScript("OnValueChanged", function()
-                C_Timer.After(0.01, repositionLines)
+                C_Timer.After(0.01, function()
+                    updateRulerPosition()
+                    repositionLines()
+                end)
             end)
         end
     end
@@ -800,7 +816,13 @@ function NSI:CreateTimelineWindow()
             line:SetBackdropColor(unpack(line.backdrop_color_highlight))
         end,
         on_leave = function(line)
-            line:SetBackdropColor(unpack(line.backdrop_color))
+            -- Restore alternating row color based on index
+            local idx = line.dataIndex or 0
+            if idx % 2 == 1 then
+                line:SetBackdropColor(0, 0, 0, 0)
+            else
+                line:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+            end
         end,
 
         -- Called when a line is created - add tooltip to the header
@@ -818,7 +840,13 @@ function NSI:CreateTimelineWindow()
                     end
                 end)
                 line.lineHeader:SetScript("OnLeave", function(self)
-                    line:SetBackdropColor(unpack(line.backdrop_color))
+                    -- Restore alternating row color based on index
+                    local idx = line.dataIndex or 0
+                    if idx % 2 == 1 then
+                        line:SetBackdropColor(0, 0, 0, 0)
+                    else
+                        line:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+                    end
                     GameTooltip:Hide()
                 end)
             end
