@@ -3,13 +3,14 @@ local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
--- Setup timeline hooks for zoom-to-cursor
+-- Setup timeline hooks for zoom-to-cursor and sticky ruler
 -- Call this after creating a timeline with DF:CreateTimeLineFrame
 function NSI:SetupTimelineHooks(timeline)
     if not timeline then return end
 
     local horizontalSlider = timeline.horizontalSlider
     local scaleSlider = timeline.scaleSlider
+    local elapsedTimeFrame = timeline.elapsedTimeFrame
 
     -- Hook mousewheel for zoom-to-cursor behavior
     -- We need to capture state BEFORE the zoom, then adjust AFTER
@@ -61,6 +62,69 @@ function NSI:SetupTimelineHooks(timeline)
                 timeline.preZoomState = {}
             end
         end)
+    end
+
+    -- Sticky ruler - keep elapsedTimeFrame fixed at top when scrolling vertically
+    -- Note: vertical lines are hidden because they can't easily be repositioned
+    if elapsedTimeFrame and timeline.verticalSlider then
+        local headerWidth = timeline.options.header_width or 0
+        if timeline.options.header_detached then
+            headerWidth = 0
+        end
+
+        elapsedTimeFrame:SetFrameLevel(timeline.body:GetFrameLevel() + 10)
+        elapsedTimeFrame:EnableMouse(false)
+
+        local function updateRulerPosition()
+            local scrollY = timeline.verticalSlider:GetValue() or 0
+            elapsedTimeFrame:ClearAllPoints()
+            elapsedTimeFrame:SetPoint("TOPLEFT", timeline.body, "TOPLEFT", headerWidth, scrollY)
+            elapsedTimeFrame:SetPoint("TOPRIGHT", timeline.body, "TOPRIGHT", 0, scrollY)
+        end
+
+        -- Reposition lines to be anchored to body instead of ruler labels
+        -- so they stay in place while ruler moves
+        local function repositionLines()
+            if elapsedTimeFrame.labels then
+                local bodyHeight = timeline.body:GetHeight() or 400
+                local rulerHeight = elapsedTimeFrame:GetHeight() or 20
+
+                for i, label in pairs(elapsedTimeFrame.labels) do
+                    if label.line and label:IsShown() then
+                        -- Get the label's X position relative to elapsedTimeFrame
+                        local labelX = label:GetLeft() - elapsedTimeFrame:GetLeft()
+
+                        -- Re-parent line to body and anchor it there
+                        label.line:SetParent(timeline.body)
+                        label.line:ClearAllPoints()
+                        -- Position at top of body content area (below ruler height)
+                        label.line:SetPoint("TOPLEFT", timeline.body, "TOPLEFT", headerWidth + labelX, -rulerHeight)
+                        label.line:SetHeight(bodyHeight - rulerHeight)
+                        label.line:SetDrawLayer("BACKGROUND", -8)
+                        label.line:Show()
+                    end
+                end
+            end
+        end
+
+        updateRulerPosition()
+
+        timeline.verticalSlider:HookScript("OnValueChanged", function()
+            updateRulerPosition()
+        end)
+
+        hooksecurefunc(timeline, "SetData", function()
+            C_Timer.After(0.01, function()
+                updateRulerPosition()
+                repositionLines()
+            end)
+        end)
+
+        if scaleSlider then
+            scaleSlider:HookScript("OnValueChanged", function()
+                C_Timer.After(0.01, repositionLines)
+            end)
+        end
     end
 end
 
