@@ -862,8 +862,23 @@ end
 
 function NSI:ImportReminder(name, values, activate, personal, IsUpdate)
     if not name then name = "Default Reminder" end
-    local diff = values:match("Difficulty:([^;]+)")
-    local newname = diff and name.." - "..diff or name
+    local diff = values:match("Difficulty:([^;\n]+)")
+    -- Normalize difficulty: capitalize first letter, default to Mythic
+    if diff then
+        diff = strtrim(diff)
+        diff = diff:sub(1,1):upper() .. diff:sub(2):lower()
+        -- Ensure it's a valid difficulty
+        if diff ~= "Mythic" and diff ~= "Heroic" then
+            diff = "Mythic"
+        end
+        -- Update the values string with normalized difficulty
+        values = values:gsub("Difficulty:[^;\n]+", "Difficulty:" .. diff)
+    else
+        diff = "Mythic"
+        -- Add difficulty to the first line if not present
+        values = values:gsub("(EncounterID:%d+)", "%1;Difficulty:" .. diff)
+    end
+    local newname = name .. " - " .. diff
     if personal then
         if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
             values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")

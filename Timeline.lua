@@ -5,12 +5,12 @@ local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expresswa
 
 -- Get boss ability lines for the timeline
 -- Returns array of timeline lines and max time
-function NSI:GetBossAbilityLines(encounterID, filterImportantOnly)
+function NSI:GetBossAbilityLines(encounterID, filterImportantOnly, requestedDifficulty)
     if not encounterID or not self.BossTimelines or not self.BossTimelines[encounterID] then
         return {}, 0
     end
 
-    local abilities, duration, phases, difficulty = self:GetBossTimelineAbilities(encounterID)
+    local abilities, duration, phases, difficulty = self:GetBossTimelineAbilities(encounterID, requestedDifficulty)
     if not abilities then return {}, 0 end
 
     local lines = {}
@@ -125,6 +125,21 @@ function NSI:GetMyTimelineData(includeBossAbilities)
     end
 
     if not encID or not self.ProcessedReminder[encID] then return nil end
+
+    -- Get difficulty from active reminder (default to Mythic)
+    local reminderDifficulty = "Mythic"
+    local activeReminder = NSRT.ActiveReminder
+    local reminderSource = NSRT.Reminders
+    if not activeReminder or activeReminder == "" then
+        activeReminder = NSRT.ActivePersonalReminder
+        reminderSource = NSRT.PersonalReminders
+    end
+    if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
+        local diff = reminderSource[activeReminder]:match("Difficulty:([^;\n]+)")
+        if diff then
+            reminderDifficulty = strtrim(diff)
+        end
+    end
 
     -- Data structure: playerReminders[playerName][spellKey] = {entries}
     local playerReminders = {}
@@ -242,7 +257,7 @@ function NSI:GetMyTimelineData(includeBossAbilities)
     local difficulty = nil
     local finalLines = {}
     if includeBossAbilities and encID then
-        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false)
+        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false, reminderDifficulty)
         phases = bossPhases
         difficulty = bossDifficulty
 
@@ -293,6 +308,10 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
     -- Extract encounter ID from the reminder string
     local encID = reminderStr:match("EncounterID:(%d+)")
     encID = encID and tonumber(encID)
+
+    -- Extract difficulty from the reminder string (default to Mythic)
+    local reminderDifficulty = reminderStr:match("Difficulty:([^;\n]+)")
+    reminderDifficulty = reminderDifficulty and strtrim(reminderDifficulty) or "Mythic"
 
     -- Data structure: playerReminders[playerName][spellKey] = {entries}
     -- where spellKey is spellID or text (if no spellID)
@@ -455,7 +474,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
     local difficulty = nil
     local finalLines = {}
     if includeBossAbilities and encID then
-        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false)
+        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false, reminderDifficulty)
         phases = bossPhases
         difficulty = bossDifficulty
 
@@ -834,7 +853,22 @@ function NSI:RefreshMyRemindersTimeline()
         if includeBossAbilities then
             local bossEncID = self.EncounterID
             if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false)
+                -- Get difficulty from active reminder (default to Mythic)
+                local fallbackDifficulty = "Mythic"
+                local activeReminder = NSRT.ActiveReminder
+                local reminderSource = NSRT.Reminders
+                if not activeReminder or activeReminder == "" then
+                    activeReminder = NSRT.ActivePersonalReminder
+                    reminderSource = NSRT.PersonalReminders
+                end
+                if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
+                    local diff = reminderSource[activeReminder]:match("Difficulty:([^;\n]+)")
+                    if diff then
+                        fallbackDifficulty = strtrim(diff)
+                    end
+                end
+
+                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false, fallbackDifficulty)
                 if #bossLines > 0 then
                     local bossData = {
                         length = math.max(60, math.ceil(bossMaxTime / 30) * 30),
@@ -1112,7 +1146,22 @@ function NSI:RefreshEmbeddedMyReminders(tab)
         if includeBossAbilities then
             local bossEncID = self.EncounterID
             if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false)
+                -- Get difficulty from active reminder (default to Mythic)
+                local fallbackDifficulty = "Mythic"
+                local activeReminder = NSRT.ActiveReminder
+                local reminderSource = NSRT.Reminders
+                if not activeReminder or activeReminder == "" then
+                    activeReminder = NSRT.ActivePersonalReminder
+                    reminderSource = NSRT.PersonalReminders
+                end
+                if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
+                    local diff = reminderSource[activeReminder]:match("Difficulty:([^;\n]+)")
+                    if diff then
+                        fallbackDifficulty = strtrim(diff)
+                    end
+                end
+
+                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false, fallbackDifficulty)
                 if #bossLines > 0 then
                     local bossData = {
                         length = math.max(60, math.ceil(bossMaxTime / 30) * 30),
