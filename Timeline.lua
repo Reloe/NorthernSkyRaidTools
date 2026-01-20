@@ -3,6 +3,67 @@ local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
+-- Setup timeline hooks for zoom-to-cursor
+-- Call this after creating a timeline with DF:CreateTimeLineFrame
+function NSI:SetupTimelineHooks(timeline)
+    if not timeline then return end
+
+    local horizontalSlider = timeline.horizontalSlider
+    local scaleSlider = timeline.scaleSlider
+
+    -- Hook mousewheel for zoom-to-cursor behavior
+    -- We need to capture state BEFORE the zoom, then adjust AFTER
+    if scaleSlider and horizontalSlider then
+        -- Storage for pre-zoom state
+        timeline.preZoomState = {}
+
+        timeline:HookScript("OnMouseWheel", function(self, delta)
+            if IsControlKeyDown() then
+                -- Capture state before zoom
+                local pixelPerSecond = timeline.options.pixels_per_second or 15
+                local currentScale = timeline.currentScale or 1
+
+                -- Get mouse X position relative to the visible timeline frame
+                local cursorX = GetCursorPosition()
+                local uiScale = 1 / UIParent:GetEffectiveScale()
+                cursorX = cursorX * uiScale
+                local frameLeft = timeline:GetLeft() or 0
+                local mouseXInFrame = cursorX - frameLeft
+
+                -- Get current scroll position
+                local scrollPosition = horizontalSlider:GetValue()
+
+                -- Calculate time under mouse
+                local timeUnderMouse = (scrollPosition + mouseXInFrame) / (pixelPerSecond * currentScale)
+
+                -- Store for post-zoom adjustment
+                timeline.preZoomState.timeUnderMouse = timeUnderMouse
+                timeline.preZoomState.mouseXInFrame = mouseXInFrame
+                timeline.preZoomState.pixelPerSecond = pixelPerSecond
+            end
+        end)
+
+        -- Hook scale slider to adjust scroll after zoom
+        scaleSlider:HookScript("OnValueChanged", function(self)
+            local state = timeline.preZoomState
+            if state and state.timeUnderMouse then
+                local newScale = timeline.currentScale or 1
+
+                -- Calculate where the time under mouse is now
+                local timeInNewScale = state.timeUnderMouse * state.pixelPerSecond * newScale
+
+                -- Set scroll so the time stays under the mouse
+                local newScrollValue = max(0, timeInNewScale - state.mouseXInFrame)
+                local _, maxScroll = horizontalSlider:GetMinMaxValues()
+                horizontalSlider:SetValue(min(newScrollValue, maxScroll))
+
+                -- Clear state
+                timeline.preZoomState = {}
+            end
+        end)
+    end
+end
+
 -- Get boss ability lines for the timeline
 -- Returns array of timeline lines and max time
 function NSI:GetBossAbilityLines(encounterID, filterImportantOnly, requestedDifficulty)
@@ -760,6 +821,9 @@ function NSI:CreateTimelineWindow()
 
     local timelineFrame = DF:CreateTimeLineFrame(timelineWindow, "$parentTimeLine", timelineOptions)
     timelineWindow.timeline = timelineFrame
+
+    -- Setup zoom-to-cursor and sticky ruler hooks
+    self:SetupTimelineHooks(timelineFrame)
 
     -- Position the detached header (sticky first column) and timeline
     if timelineFrame.headerFrame then
