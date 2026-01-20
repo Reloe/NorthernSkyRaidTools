@@ -7,34 +7,22 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        -- Shield Break
-        local Alert = self:CreateDefaultAlert("Break Shield", "Icon", 1248674, 8, 1, encID)
-        for _, time in ipairs(self:DifficultyCheck(16) and {20.9, 78.1, 168.2, 220.5, 282.8} or {}) do -- Need to fix these timers for both difficulties
+        local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Peace Aura
+
+        -- same timer on all difficulties for now
+        Alert.TTS = false
+        local id = self:DifficultyCheck(14) or 0
+        local timers = {
+            [0] = {},
+            [14] = {137.4, 313.3},
+            [15] = {137.4, 313.3},
+            [16] = {137.4, 313.3},
+        }
+        local timers = self:DifficultyCheck(14) and {137.4, 313.3} or {}
+        for _, time in ipairs(timers[id]) do
             Alert.time = time
             self:AddToReminder(Alert)
         end
-        -- Aura of Peace
-        Alert.text, Alert.TTS, Alert.countdown, Alert.Type, Alert.dur = "Peace Aura", false, 5, nil, 10
-        for _, time in ipairs(self:DifficultyCheck(14) and {137.4, 313.3} or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
-    end
-end
-
-NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENCOUNTER_WARNING
-    if NSRT.EncounterAlerts[encID].enabled then        
-        local severity, dur = info.severity, info.duration
-        if severity == 0 then
-        elseif severity == 1 then    
-        elseif severity == 2 then
-        end
-    end
-end
-
-NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
-    if NSRT.EncounterAlerts[encID].enabled then
-
     end
 end
 
@@ -43,76 +31,55 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
-    -- Execution Sentence. Need to fix timers for Mythic. Consider different alert for a 5th healer, like "check missing color"
-        local group = {}
-        local healer = {}
-        for unit in self:IterateGroupMembers() do
-            local specID = NSAPI:GetSpecs(unit) or 0
-            local prio = self.spectable[specID]
-            local G = self.GUIDS[unit]
-            if UnitGroupRolesAssigned(unit) == "HEALER" then
-                table.insert(healer, {unit = unit, prio = prio, GUID = G})
-            else
-                table.insert(group, {unit = unit, prio = prio, GUID = G})
-            end
-        end
-        self:SortTable(group)
-        self:SortTable(healer)
-        local mygroup
-        local IsHealer = UnitGroupRolesAssigned("player") == "HEALER"
-        if IsHealer then
-            for i, v in ipairs(healer) do
-                if UnitIsUnit("player", v.unit) then
-                    mygroup = i
-                    mygroup = math.min(4, mygroup) -- if there are more than 4 healers, put any extra healer in the 4th group                    
-                end
-            end
+    local group = {}
+    local healer = {}
+    for unit in self:IterateGroupMembers() do
+        local specID = NSAPI:GetSpecs(unit) or 0
+        local prio = self.spectable[specID]
+        local G = self.GUIDS[unit]
+        if UnitGroupRolesAssigned(unit) == "HEALER" then
+            table.insert(healer, {unit = unit, prio = prio, GUID = G})
         else
-            for i, v in ipairs(group) do
-                if UnitIsUnit("player", v.unit) then
-                    mygroup = math.ceil(i/4)
-                    mygroup = math.min(4, mygroup) -- if there are less than 4healers dps would overflow so put any extra in 4th
-                    break
-                end
-            end
-        end
-        if not mygroup then return end
-        local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or ""
-        local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
-        local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
-        Alert.time, Alert.TTS, Alert.TTSTimer, Alert.text = 96.1, TTS, 10, text
-        self:AddToReminder(Alert)
-        Alert.time = 271.2
-        self:AddToReminder(Alert)
-        Alert.time = 446.3
-        self:AddToReminder(Alert)
-end
-
-local phasedetections = {0, 0, 0, 0, 0, 0, 0}
-
-NSI.DetectPhaseChange[encID] = function(self, e) -- on ENCOUNTER_TIMELINE_EVENT_ADDED/REMOVED
-    local now = GetTime()
-    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
-    if needed and needed > 0 then
-        table.insert(self.Timelines, now+0.2)
-        local count = 0
-        for i, v in ipairs(self.Timelines) do
-            if v > now then
-                count = count+1
-                if count >= needed then
-                    self.Phase = self.Phase+1                  
-                    self:StartReminders(self.Phase)
-                    self.Timelines = {}
-                    self.PhaseSwapTime = now
-                    break
-                end
-            end           
+            table.insert(group, {unit = unit, prio = prio, GUID = G})
         end
     end
-end
+    self:SortTable(group)
+    self:SortTable(healer)
+    local mygroup
+    local IsHealer = UnitGroupRolesAssigned("player") == "HEALER"
+    if IsHealer then
+        for i, v in ipairs(healer) do
+            if UnitIsUnit("player", v.unit) then
+                mygroup = i                  
+            end
+        end
+    else
+        for i, v in ipairs(group) do
+            if UnitIsUnit("player", v.unit) then
+                mygroup = math.ceil(i/4)
+                mygroup = math.min(4, mygroup) -- if there are less than 4healers dps would overflow so put any extra in 4th
+                break
+            end
+        end
+    end
+    if not mygroup then return end
+    local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or "Flex Spot"
+    local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
+    local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
+    Alert.TTS, Alert.TTSTimer, Alert.text = 92, TTS, 10, text
+    local phaselength = 162.7 -- guess based on Zealous Spirit in logs
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
-    if NSRT.EncounterAlerts[encID].enabled then
-        
+    for phase = 0, 2 do        
+        Alert.time = 92 + (phase * phaselength)
+        self:AddToReminder(Alert)
+        if self:DifficultyCheck(16) then -- second cast is mythic only in case I want to support Heroic as well
+            Alert.time = 149.2 + (phase * phaselength)
+            self:AddToReminder(Alert)
+        end
+    end
+
+    if NSRT.AssignmentSettings.OnPull then
+        local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""
+        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the "..text.." Group", 5)
     end
 end

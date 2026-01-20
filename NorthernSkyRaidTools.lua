@@ -3,18 +3,10 @@ _G["NSAPI"] = {}
 NSI.specs = {}
 NSI.LCG = LibStub("LibCustomGlow-1.0")
 NSI.LGF = LibStub("LibGetFrame-1.0")
-local NSAPI2 = NSAPI
 
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
--- storing NSAPI in NSAPI2 so I can overwrite it again if user still has the old database WA installed
--- this is needed because the database WA will overwrite the global NSAPI which would cause newer functions to be nil
-hooksecurefunc("setglobal", function(name, _)
-    if name == "NSAPI" then
-        print("Please uninstall the |cFF00FFFFNorthern Sky Functions & Database Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon. Reload UI afterwards.")
-        NSAPI = NSAPI2
-    end
-end)
+
 function NSI:InitLDB()
     if LDB then
         local databroker = LDB:NewDataObject("NSRT", {

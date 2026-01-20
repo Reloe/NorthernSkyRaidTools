@@ -7,20 +7,14 @@ f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
+f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
+f:RegisterEvent("MINIMAP_PING")
+f:RegisterEvent("START_PLAYER_COUNTDOWN")
+f:RegisterEvent("ENCOUNTER_WARNING")
+f:RegisterEvent("RAID_BOSS_WHISPER")
+f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
-if not NSI:IsMidnight() then
-    f:RegisterEvent("UNIT_AURA")
-    f:RegisterEvent("CHALLENGE_MODE_START")
-    f:RegisterEvent("GROUP_ROSTER_UPDATE")
-end
-if NSI:IsMidnight() then
-    f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
-    f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
-    f:RegisterEvent("MINIMAP_PING")
-    f:RegisterEvent("START_PLAYER_COUNTDOWN")
-    f:RegisterEvent("ENCOUNTER_WARNING")
-    f:RegisterEvent("RAID_BOSS_WHISPER")
-end
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -32,20 +26,23 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
             if not NSRT.NSUI then NSRT.NSUI = {scale = 1} end
-            if not NSRT.NSUI.externals_anchor then NSRT.NSUI.externals_anchor = {} end
             -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
             if not NSRT.Settings then NSRT.Settings = {} end
             NSRT.Reminders = NSRT.Reminders or {}
+            NSRT.PersonalReminders = NSRT.PersonalReminders or {}
+            NSRT.InviteList = NSRT.InviteList or {}
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
-            self.Reminder = ""
-            self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+            NSRT.ActivePersonalReminder = NSRT.ActivePersonalReminder or nil
+            self.Reminder = ""   
+            self.PersonalReminder = ""
+            self.DisplayedReminder = ""
+            self.DisplayedPersonalReminder = ""
             NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
-            NSRT.ReminderSettings.MRTNote = NSRT.ReminderSettings.MRTNote or false -- enable for MRT note
             NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
             NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
             if NSRT.ReminderSettings.SpellTTS == nil then NSRT.ReminderSettings.SpellTTS = true end
@@ -58,14 +55,24 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
+            if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
+            NSRT.ReminderSettings.ShowReminderFrame = NSRT.ReminderSettings.ShowReminderFrame or false
+            NSRT.ReminderSettings.ShowPersonalReminderFrame = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
+            if NSRT.ReminderSettings.OnlySpellReminders == nil then NSRT.ReminderSettings.OnlySpellReminders = true end
+            if not NSRT.ReminderSettings.PersonalReminderFrame then
+                NSRT.ReminderSettings.PersonalReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
+            end
+            if not NSRT.ReminderSettings.ReminderFrame then
+                NSRT.ReminderSettings.ReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
+            end
             if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
-                NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -400, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80}
+                NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80, Spacing = -1}
             end
             if (not NSRT.ReminderSettings.BarSettings) or (not NSRT.ReminderSettings.BarSettings.GrowDirection) then
-                NSRT.ReminderSettings.BarSettings = {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", Width = 240, Height = 30, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = 400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "PT Sans Narrow Bold", FontSize = 22, TimerFontSize = 22}
+                NSRT.ReminderSettings.BarSettings = {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", Width = 300, Height = 40, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = -400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "Expressway", FontSize = 22, TimerFontSize = 22, Spacing = -1}
             end
             if (not NSRT.ReminderSettings.TextSettings) or (not NSRT.ReminderSettings.TextSettings.GrowDirection) then
-                NSRT.ReminderSettings.TextSettings =  {colors = {1, 1, 1, 1}, GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 200, Font = "PT Sans Narrow Bold", FontSize = 50}
+                NSRT.ReminderSettings.TextSettings =  {colors = {1, 1, 1, 1}, GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 200, Font = "Expressway", FontSize = 50, Spacing = 1}
             end
             if not NSRT.ReminderSettings.TextSettings.colors then NSRT.ReminderSettings.TextSettings.colors = {1, 1, 1, 1} end
             if (not NSRT.ReminderSettings.UnitIconSettings) or (not NSRT.ReminderSettings.UnitIconSettings.Position) then
@@ -74,34 +81,34 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.ReminderSettings.GlowSettings then 
                 NSRT.ReminderSettings.GlowSettings = {colors = {0, 1, 0, 1}, Lines = 10, Frequency = 0.2, Length = 10, Thickness = 4, xOffset = 0, yOffset = 0} 
             end
+            if not NSRT.PASettings then
+                NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
+            end
+            if not NSRT.PATankSettings then
+                NSRT.PATankSettings = {Spacing = -1, Limit = 5, MultiTankGrowDirection = "UP", GrowDirection = "LEFT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -549, yOffset = -199}
+            end
+            if not NSRT.PARaidSettings then
+                NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
+            end
+            if not NSRT.PASounds then NSRT.PASounds = {} end
+            NSRT.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
             NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
             NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
-            NSRT.Settings["WA"] = NSRT.Settings["WA"] or false
-            NSRT.Settings["MRT"] = NSRT.Settings["MRT"] or false
             NSRT.Settings["Cell"] = NSRT.Settings["Cell"] or false
             NSRT.Settings["Grid2"] = NSRT.Settings["Grid2"] or false
             NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
-            NSRT.Settings["SuF"] = NSRT.Settings["SuF"] or false
             NSRT.Settings["Translit"] = NSRT.Settings["Translit"] or false
             NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
             NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
             NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default
             NSRT.Settings["NickNamesSyncAccept"] = NSRT.Settings["NickNamesSyncAccept"] or 2 -- guild default
             NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 3 -- guild default
-            NSRT.Settings["WeakAurasImportAccept"] = NSRT.Settings["WeakAurasImportAccept"] or 1 -- guild default
-            NSRT.Settings["PAExtraAction"] = NSRT.Settings["PAExtraAction"] or false
-            NSRT.Settings["LIQUID_MACRO"] = NSRT.Settings["LIQUID_MACRO"] or false
-            NSRT.Settings["PASelfPing"] = NSRT.Settings["PASelfPing"] or false
-            NSRT.Settings["ExternalSelfPing"] = NSRT.Settings["ExternalSelfPing"] or false
             NSRT.Settings["MRTNoteComparison"] = NSRT.Settings["MRTNoteComparison"] or false
             if NSRT.Settings["TTS"] == nil then NSRT.Settings["TTS"] = true end
             NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
             NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 1
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
-            NSRT.Settings["AutoUpdateWA"] = NSRT.Settings["AutoUpdateWA"] or false
-            NSRT.Settings["AutoUpdateRaidWA"] = NSRT.Settings["AutoUpdateRaidWA"] or false
-            NSRT.Settings["UpdateWhitelist"] = NSRT.Settings["UpdateWhitelist"] or {}
             NSRT.Settings["VersionCheckRemoveResponse"] = NSRT.Settings["VersionCheckRemoveResponse"] or false
             NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
             NSRT.Settings["DebugLogs"] = NSRT.Settings["DebugLogs"] or false
@@ -109,10 +116,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
             NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
             NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
-            NSRT.Settings["RebuffCheck"] = NSRT.Settings["RebuffCheck"] or false
+            NSRT.Settings.MissingRaidBuffs = NSRT.Settings.MissingRaidBuffs or true
+            if not NSRT.ReadyCheckSettings then NSRT.ReadyCheckSettings = {} end
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
-            NSRT.NSUI.AutoComplete["WA"] = NSRT.NSUI.AutoComplete["WA"] or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
 
             self.BlizzardNickNamesHook = false
@@ -120,29 +127,45 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.PlayedSound = {}
             self.StartedCountdown = {}
-            self:InitNickNames()            
             self:CreateMoveFrames()
+            self:InitNickNames()         
         end
-    elseif e == "PLAYER_ENTERING_WORLD" and wowevent then
-        C_AddOns.LoadAddOn("WeakAuras")
-        if self:IsMidnight() or not WeakAuras then return end
-        self:AutoImport()
-        self.Externals:Init(C_ChallengeMode.IsChallengeModeActive())
     elseif e == "PLAYER_LOGIN" and wowevent then
-        local pafound = false
-        local extfound = false
-        local innervatefound = false
-        local macrocount = 0    
         self.NSUI:Init()
         self:InitLDB()
+        if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
+        if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true) end)
+        elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true, true) end) end
+        for spellID, info in pairs(NSRT.PASounds) do
+            self:AddPASound(spellID, info.sound)
+        end
+        if NSRT.UseDefaultPASounds then
+            self:ApplyDefaultPASounds()
+        end
+        self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
+        self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
+        if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
+            self.Reminder = NSRT.StoredSharedReminder or ""
+        end
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
-        end
-        if WeakAuras and WeakAuras.GetData("Northern Sky Externals") then
-            print("Please uninstall the |cFF00FFFFNorthern Sky Externals Weakaura|r to prevent conflicts with the Northern Sky Raid Tools Addon.")
-        end
-        if C_AddOns.IsAddOnLoaded("NorthernSkyMedia") then
-            print("Please uninstall the |cFF00FFFFNorthern Sky Media Addon|r as this new Addon takes over all its functionality")
+        end        
+        if NSRT.HasLoggedIntoMidnight == nil then -- delete old macros on first login after update
+            NSRT.HasLoggedIntoMidnight = true 
+            local todelete = {}
+            for i=1, 120 do
+                local macroname = C_Macro.GetMacroName(i)
+                if not macroname then break end
+                if macroname == "NS PA Macro" or macroname == "NS Ext Macro" or macroname == "NS Innervate" then
+                    table.insert(todelete, i)
+                end
+            end
+            if #todelete > 0 then
+                print("deleting", #todelete, "old NSRT macros as they are no longer beinng used.")
+                for i=#todelete, 1, -1 do
+                    DeleteMacro(todelete[i])
+                end
+            end
         end
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
@@ -154,140 +177,65 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
-        end
-        if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
-        for i=1, 120 do
-            local macroname = C_Macro.GetMacroName(i)
-            if not macroname then break end
-            macrocount = i
-            if macroname == "NS PA Macro" then
-                local macrotext = "/run NSAPI:PrivateAura();"
-                if NSRT.Settings["PASelfPing"] then
-                    macrotext = macrotext.."\n/ping [@player] Warning;"
-                end
-                if NSRT.Settings["PAExtraAction"] then
-                    macrotext = macrotext.."\n/click ExtraActionButton1"
-                end
-                EditMacro(i, "NS PA Macro", 132288, macrotext, false)
-                pafound = true
-            elseif macroname == "NS Ext Macro" then
-                local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
-                EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
-                extfound = true
-            elseif macroname == "NS Innervate" then
-                EditMacro(i, "NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
-                innervatefound = true
+        end        
+    elseif e == "PLAYER_ENTERING_WORLD" then
+        if self:Restricted() then return end
+        if NSRT.PARaidSettings.enabled then
+            local diff = select(3, GetInstanceInfo())
+            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then
+                local isparty = not UnitInRaid("player")
+                C_Timer.After(0.01, function() self:StoreFrames(true, isparty) end)
             end
-            if pafound and extfound and innervatefound then break end
-        end
-        if macrocount >= 120 and not pafound then
-            print("You reached the global Macro cap so the Private Aura Macro could not be created")
-        elseif not pafound then
-            macrocount = macrocount+1            
-            local macrotext = "/run NSAPI:PrivateAura();"
-            if NSRT.Settings["PASelfPing"] then
-                macrotext = macrotext.."\n/ping [@player] Warning;"
-            end
-            if NSRT.Settings["PAExtraAction"] then
-                macrotext = macrotext.."\n/click ExtraActionButton1"
-            end
-            if NSRT.Settings["LIQUID_MACRO"] then
-                macrotext = macrotext.."\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)"
-            end
-            CreateMacro("NS PA Macro", 132288, macrotext, false)
-        end
-        if macrocount >= 120 and not extfound then 
-            print("You reached the global Macro cap so the External Macro could not be created")
-        elseif not extfound then
-            macrocount = macrocount+1
-            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
-            CreateMacro("NS Ext Macro", 135966, macrotext, false)
-        end
-        if macrocount >= 120 and not inenrvatefound then
-            print("You reached the global Macro cap so the Innervate Macro could not be created")
-        elseif not innervatefound then
-            macrocount = macrocount+1
-            CreateMacro("NS Innervate", 136048, "/run NSAPI:InnervateRequest();", false)
-        end
-        
+        end        
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        if self:IsMidnight() then    
-            if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
-                self:ProcessReminder()
-            end
-            self.TestingReminder = false
-            self.IsInPreview = false
-            for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
-                self:ToggleMoveFrames(self[v], false)
-            end
-            self.EncounterID = ...
-            self.Phase = 1
-            self.PhaseSwapTime = GetTime()
-            self.ReminderText = self.ReminderText or {}
-            self.ReminderIcon = self.ReminderIcon or {}
-            self.ReminderBar = self.ReminderBar or {}
-            self.ReminderTimer = self.ReminderTimer or {}
-            self.RaidFrames = self.RaidFrames or {}
-            self.AllGlows = self.AllGlows or {}
-            self.PlayedSound = {}
-            self.StartedCountdown = {}
-            self.Timelines = {}
-            self.TimeLinesDebug = {}
-            self.AddAssignments[self.EncounterID](self)
-            self.EncounterAlertStart[self.EncounterID](self)
-            self:StartReminders(self.Phase)
-            return 
+        NSUI.generic_display:Hide()
+        if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
+            self:InitTankPA()
         end
-        self.specs = {}
-        NSAPI.HasNSRT = {}
-        for u in self:IterateGroupMembers() do
-            if UnitIsVisible(u) then
-                NSAPI.HasNSRT[u] = false
-                self.specs[u] = WeakAuras and WeakAuras.SpecForUnit(u) or 0
-            end
+        if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
+            self:ProcessReminder()
         end
-        -- broadcast spec info
-        local specid = GetSpecializationInfo(GetSpecialization())
-        NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)
-        C_Timer.After(1, function()
-            WeakAuras.ScanEvents("NSAPI_ENCOUNTER_START", true)
-        end)
-        self.MacroPresses = {}
-        self.Externals:Init()
+        self.TestingReminder = false
+        self.IsInPreview = false
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+            self:ToggleMoveFrames(self[v], false)
+        end
+        self.EncounterID = ...
+        self.Phase = 1
+        self.PhaseSwapTime = GetTime()
+        self.ReminderText = self.ReminderText or {}
+        self.ReminderIcon = self.ReminderIcon or {}
+        self.ReminderBar = self.ReminderBar or {}
+        self.ReminderTimer = self.ReminderTimer or {}
+        self.RaidFrames = self.RaidFrames or {}
+        self.AllGlows = self.AllGlows or {}
+        self.PlayedSound = {}
+        self.StartedCountdown = {}   
+        self.Timelines = {}
+        self.DefaultAlertID = 10000
+        if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
+        if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
+        self:StartReminders(self.Phase)
     elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
         local encID, encounterName = ...
-        if self:IsMidnight() then
-            if NSRT.Settings["Debug"] and NSRT.Settings["DebugLogs"] then
-                DevTool:AddData(self.TimeLinesDebug)
-                NSRT.TimeLinesDebug = NSRT.TimeLinesDebug or {}
-                table.insert(NSRT.TimeLinesDebug, self.TimeLinesDebug)
-            end
-            NSI:HideAllReminders()
-            self.EncounterID = nil
-            self.TestingReminder = false
-            self.Timelines = {}
-            self.ReminderTimer = {}
-            self.AllGlows = {}          
-            self.ProcessedReminder = nil
-            self.EncounterAlertStop[encID](self)
+        if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
+            self:RemoveTankPA()
         end
+        self:HideAllReminders()
+        self.EncounterID = nil
+        self.TestingReminder = false
+        self.ReminderTimer = {}
+        self.AllGlows = {}          
+        self.Timelines = {}
+        self.ProcessedReminder = nil
+        if self.EncounterAlertStop[encID] then self.EncounterAlertStop[encID](self) end
         C_Timer.After(1, function()
             if self:Restricted() then return end
             if self.SyncNickNamesStore then
                 self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
                 self.SyncNickNamesStore = nil
             end
-            if self.WAString and self.WAString.unit and self.WAString.string then
-                self:EventHandler("NSI_WA_SYNC", false, true, self.WAString.unit, self.WAString.string)
-            end
-        end)
-        if self:IsMidnight() then return end
-        if NSRT.Settings["DebugLogs"] then
-            if self.MacroPresses and next(self.MacroPresses) then self:Print("Macro Data for Encounter: "..encounterName, self.MacroPresses) end
-            if self.AssignedExternals and next(self.AssignedExternals) then self:Print("Assigned Externals for Encounter: "..encounterName, self.AssignedExternals) end
-            self.AssignedExternals = {}
-            self.MacroPresses = {}
-        end      
+        end) 
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self:Restricted() or not self:DifficultyCheck(14) then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
@@ -295,101 +243,105 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
-            self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
+            local tosend = ""
+            if NSRT.ReminderSettings.AutoShare then
+                tosend = self.Reminder
+            end
+            self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
         if self:Restricted() then return end
-        self.LastBroadcast = GetTime()
-        if self:DifficultyCheck(14) then -- only care about note comparison in normal, heroic&mythic raid
-            local note = NSAPI:GetNote()
-            if note ~= "empty" then
-                local hashed = NSAPI:GetHash(note) or ""     
-                self:Broadcast("MRT_NOTE", "RAID", hashed)   
+        self.LastBroadcast = GetTime()        
+        if UnitIsGroupLeader("player") then
+            -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
+            local tosend = ""
+            if NSRT.ReminderSettings.AutoShare then
+                tosend = self.Reminder
             end
+            self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
+            self.Assignments = NSRT.AssignmentSettings
         end
-        if self:IsMidnight() and self:DifficultyCheck(14) then
-            if UnitIsGroupLeader("player") then
-                self:Broadcast("NS_REM_SHARE", "RAID", self.Reminder, NSRT.AssignmentSettings)
-                self.Assignments = NSRT.AssignmentSettings
-            end
-            self.Difference = {}
+        if self:DifficultyCheck(14) then
             self:StoreFrames(true)
             C_Timer.After(1, function()
-                self:EventHandler("NS_COMPARE_REMINDER", false, true)
-            end)
+                self:EventHandler("NSI_READY_CHECK", false, true)
+            end)     
         end
         if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
             self:CheckCooldowns()
         end
         self.specs = {}
         self.GUIDS = {}
-        NSAPI.HasNSRT = {}
+        self.HasNSRT = {}
         for u in self:IterateGroupMembers() do
             if UnitIsVisible(u) then
-                NSAPI.HasNSRT[u] = false
+                self.HasNSRT[u] = false
                 self.specs[u] = false
                 local G = UnitGUID(u)
-                self.GUIDS[u] = self:IsMidnight() and issecretvalue(G) and "" or G
+                self.GUIDS[u] = issecretvalue(G) and "" or G
             end
         end
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
-        C_Timer.After(1, function()
-            self:EventHandler("NSAPI_READY_CHECK", false, true)
-        end)        
-    elseif e == "NS_REM_SHARE"  and internal then
-        local unit, remindertable, assigntable = ...
-        if UnitIsGroupLeader(unit) then
-            if NSRT.ReminderSettings.enabled then
-                self.Reminder = remindertable
+    elseif e == "NSI_REM_SHARE"  and internal then
+        local unit, reminderstring, assigntable, skipcheck = ...
+        if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit)) and skipcheck) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
+            if NSRT.ReminderSettings.enabled and reminderstring ~= "" then
+                NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
+                self.Reminder = reminderstring
                 self:ProcessReminder()
+                if NSRT.ReminderSettings.ShowReminderFrame then
+                    self:UpdateReminderFrame()
+                end
             end
             self.Assignments = assigntable
         end
-    elseif e == "NSAPI_READY_CHECK" and internal then
-        if self:Restricted() then return end
-        if NSRT.Settings["RebuffCheck"] then
-            self:BuffCheck()
-        end        
-    elseif e == "GROUP_FORMED" and wowevent then 
-        if self:Restricted() then return end
-        if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
-
-    elseif e == "MRT_NOTE" and NSRT.Settings["MRTNoteComparison"] and internal then
-        if self:Restricted() then return end
-        local _, hashed = ...     
-        if hashed ~= "" then
-            local note = C_AddOns.IsAddOnLoaded("MRT") and NSAPI:GetHash(NSAPI:GetNote()) or ""    
-            if note ~= "" and note ~= hashed then
-                NSAPI:DisplayText("MRT Note Mismatch detected", 5)
+    elseif e == "NSI_READY_CHECK" and internal then
+        local text = ""
+        if UnitLevel("player") < 80 then return end
+        if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
+            local buff = self:BuffCheck()
+            if buff and buff ~= "" then text = buff end
+        end     
+        if NSRT.ReadyCheckSettings.SoulstoneCheck and not self:Restricted() then
+            local Soulstone = self:SoulstoneCheck()
+            if Soulstone and Soulstone ~= "" then
+                if text == "" then
+                    text = Soulstone
+                else
+                    text = text.."\n"..Soulstone
+                end
             end
-        end
-    elseif e == "UNIT_AURA" and (self.Externals and self.Externals.target) and (UnitIsUnit(self.Externals.target, "player") and wowevent) then
-        if self:IsMidnight() then return end
-        local unit, info = ...
-        if not self.Externals.AllowedUnits[unit] then return end
-        if info and info.addedAuras then
-            for _, v in ipairs(info.addedAuras) do
-                if self.Externals.Automated[v.spellId] then
-                    local key = self.Externals.Automated[v.spellId]
-                    local num = (key and self.Externals.Amount[key..v.spellId])
-                    self:EventHandler("NS_EXTERNAL_REQ", false, true, unit, key, num, false, "skip", v.expirationTime)
+        end   
+        if UnitLevel("player") >= 80 then
+            local Gear = self:GearCheck()
+            if Gear and Gear ~= "" then
+                if text == "" then
+                    text = Gear
+                else
+                    text = text.."\n"..Gear
                 end
             end
         end
+        if text ~= "" then
+            self:DisplayText(text)
+        end
+    elseif e == "GROUP_FORMED" and wowevent then 
+        if self:Restricted() then return end
+        if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
-        local unit, ver, duplicate, ignoreCheck = ...        
-        self:VersionResponse({name = UnitName(unit), version = ver, duplicate = duplicate, ignoreCheck = ignoreCheck})
+        local unit, ver, ignoreCheck = ...        
+        self:VersionResponse({name = UnitName(unit), version = ver, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and internal then
         if self:Restricted() then return end
         local unit, type, name = ...        
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) then
-            local u, ver, duplicate, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
-            self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, duplicate, ignoreCheck)
+            local u, ver, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
+            self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, ignoreCheck)
         end
     elseif e == "NSI_NICKNAMES_COMMS" and internal then
         if self:Restricted() then return end
@@ -435,7 +387,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
         
-    elseif e == "NSI_SPEC" and internal and self:IsMidnight() then -- renamed for Midnight
+    elseif e == "NSI_SPEC" and internal then -- renamed for Midnight
         local unit, spec = ...
         self.specs = self.specs or {}
         local G = UnitGUID(unit)
@@ -447,111 +399,48 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.GUIDS = self.GUIDS or {}
             self.GUIDS[unit] = G
         end
-    elseif e == "NSAPI_SPEC" and not self:IsMidnight() then -- pre midnight
-        local unit, spec = ...
-        self.specs = self.specs or {}
-        local G = UnitGUID(unit)
-        G = self:IsMidnight() and issecretvalue(G) and "" or G
-        self.specs[unit] = tonumber(spec)
-        NSAPI.HasNSRT = NSAPI.HasNSRT or {}
-        NSAPI.HasNSRT[unit] = true
-        if G ~= "" then
-            self.GUIDS = self.GUIDS or {}
-            self.GUIDS[unit] = G
-        end
-    elseif e == "NSAPI_SPEC_REQUEST" or e == "NSI_SPEC_REQUEST" then
+    elseif e == "NSI_SPEC_REQUEST" then
         if self:Restricted() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
-        if self:IsMidnight() then
-            NSI:Broadcast("NSI_SPEC", "RAID", specid)            
-        else
-            NSAPI:Broadcast("NSAPI_SPEC", "RAID", specid)  
-        end          
-    elseif e == "CHALLENGE_MODE_START" and wowevent then
-        if self:IsMidnight() then return end
-        self.Externals:Init(true)
+        self:Broadcast("NSI_SPEC", "RAID", specid)      
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
-        if self:Restricted() or not self:DifficultyCheck(14) then return end
+        if self:Restricted() then return end 
+
+        self:UpdateRaidBuffFrame()
+        if self.InviteInProgress then
+            if not UnitInRaid("player") then
+                C_PartyInfo.ConvertToRaid()
+                C_Timer.After(1, function() -- send invites again if player is now in a raid
+                    if UnitInRaid("player") then
+                        self:InviteList(self.CurrentInviteList)
+                        self.InviteInProgress = nil
+                    end
+                end)
+            end
+        end
+        
+        if NSRT.PARaidSettings.enabled then
+            local diff = select(3, GetInstanceInfo())
+            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing
+                local isparty = not UnitInRaid("player")
+                self:StoreFrames(true, isparty)
+                return
+            end
+        end      
+
+        if not self:DifficultyCheck(14) then return end
         self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
-        if not self:DifficultyCheck(14) then return end -- only care about timelines in raid
-        if self:Restricted() and self.EncounterID then self.DetectPhaseChange[self.EncounterID](self, e) end
-    elseif e == "NS_EXTERNAL_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        if self:IsMidnight() then return end
-        local unitID, key, num, req, range, expirationTime = ...
-        local dead = NSAPI:DeathCheck(unitID)        
-        self.MacroPresses = self.MacroPresses or {}
-        self.MacroPresses["Externals"] = self.MacroPresses["Externals"] or {}
-        local formattedrange = {}
-        if type(range) == "table" then
-            for k, v in pairs(range) do
-                formattedrange[v.name] = v.range 
-            end
-        else
-            formattedrange = range
-        end
-        table.insert(self.MacroPresses["Externals"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull), dead = dead, key = key, num = num, automated = not req, rangetable = formattedrange})
-        if (C_ChallengeMode.IsChallengeModeActive() or (self:DifficultyCheck(14) and not self:Restricted())) and not dead then -- block incoming requests from dead people
-            self.Externals:Request(unitID, key, num, req, range, false, expirationTime)
-        end
-    elseif e == "NS_INNERVATE_REQ" and ... and UnitIsUnit(self.Externals.target, "player") then -- only accept scanevent if you are the "server"
-        if self:IsMidnight() then return end
-        local unitID, key, num, req, range, expirationTime = ...
-        local dead = NSAPI:DeathCheck(unitID)      
-        self.MacroPresses = self.MacroPresses or {}
-        self.MacroPresses["Innervate"] = self.MacroPresses["Innervate"] or {}
-        local formattedrange = {}
-        if type(range) == "table" then
-            for k, v in pairs(range) do
-                formattedrange[v.name] = v.range 
-            end
-        else
-            formattedrange = range
-        end
-        table.insert(self.MacroPresses["Innervate"], {unit = NSAPI:Shorten(unitID, 8), time = Round(GetTime()-self.Externals.pull), dead = dead, key = key, num = num, rangetable = formattedrange})
-        if (C_ChallengeMode.IsChallengeModeActive() or (self:DifficultyCheck(14) and not self:Restricted())) and not dead then -- block incoming requests from dead people
-            self.Externals:Request(unitID, "", 1, true, range, true, expirationTime)
-        end
-    elseif e == "NS_EXTERNAL_YES" and ... then
-        if self:IsMidnight() then return end
-        local _, unit, spellID = ...
-        self:DisplayExternal(spellID, unit)
-    elseif e == "NS_EXTERNAL_NO" then   
-        if self:IsMidnight() then return end     
-        local unit, innervate = ...      
-        if innervate == "Innervate" then
-            self:DisplayExternal("NoInnervate")
-        else
-            self:DisplayExternal()
-        end
-    elseif e == "NS_EXTERNAL_GIVE" and ... then
-        if self:IsMidnight() then return end
-        local _, unit, spellID = ...
-        local hyperlink = C_Spell.GetSpellLink(spellID)
-        WeakAuras.ScanEvents("CHAT_MSG_WHISPER", hyperlink, unit)
-    elseif (e == "NS_PAMACRO" and internal and not self:IsMidnight()) then
-        local unitID = ...        
-        if unitID and UnitExists(unitID) then
-            local i = UnitInRaid(unitID)
-            unitID = i and "raid"..i
-            if not unitID then return end
-            self.LastPress = self.LastPress or {}
-            local now = GetTime()
-            if self.LastPress[UnitName(unitID)] and self.LastPress[UnitName(unitID)] > now-5 then return end
-            self.LastPress[UnitName(unitID)] = now
-            -- do assignement stuff
-            if not NSRT.Settings["DebugLogs"] then return end        
-            local time = self.Externals and self.Externals.pull or now
-            self.MacroPresses = self.MacroPresses or {}
-            self.MacroPresses["Private Aura"] = self.MacroPresses["Private Aura"] or {}
-            table.insert(self.MacroPresses["Private Aura"], {name = NSAPI:Shorten(unitID, 8), time = Round(now-time)})
-        end 
+        if not self:DifficultyCheck(14) then return end
+        local info = ...
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_WARNING" and wowevent then
         local info = ...
-        self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info)
+        if not self:DifficultyCheck(14) then return end
+        if self.ShowWarningAlert[self.EncounterID] then self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info) end
     elseif e == "RAID_BOSS_WHISPER" and wowevent then
         local text, name, dur = ...
         if not self:DifficultyCheck(14) then return end
-        self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur)
+        if self.ShowBossWhisperAlert[self.EncounterID] then self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur) end
     end
 end

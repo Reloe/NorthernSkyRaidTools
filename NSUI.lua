@@ -2,22 +2,22 @@ local _, NSI = ... -- Internal namespace
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
-local WA = _G["WeakAuras"]
 
-local window_width = 900
-local window_height = 550
+local window_width = 1050
+local window_height = 600
 local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local TABS_LIST = {
     { name = "General",   text = "General" },
     { name = "Nicknames", text = "Nicknames" },
-    { name = "Externals", text = "Externals" },
     { name = "Versions",  text = "Versions" },
-    { name = "WeakAuras", text = "WeakAuras" },
     { name = "SetupManager", text = "Setup Manager"},
+    { name = "ReadyCheck", text = "Ready Check"},
     { name = "Reminders", text = "Reminders"},
+    { name = "Reminders-Note", text = "Reminders-Note"},
     { name = "Assignments", text = "Assignments"},
-    { name = "EncounterAlerts", text = "Encounter Alerts"}
+    { name = "EncounterAlerts", text = "Encounter Alerts"},
+    { name = "PrivateAura", text = "Private Auras"},
 }
 local authorsString = "By Reloe & Rav"
 
@@ -42,108 +42,12 @@ NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 NSUI.OptionsChanged = {
     ["general"] = {},
     ["nicknames"] = {},
-    ["externals"] = {},
     ["versions"] = {},
 }
 
--- need to run this code on settings change
-local function PASelfPingChanged()
-    if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
-    local macrocount = 0
-    local pafound = false
-    for i = 1, 120 do
-        local macroname = C_Macro.GetMacroName(i)
-        if not macroname then break end
-        macrocount = i
-        if macroname == "NS PA Macro" then
-            pafound = true
-            local macrotext = "/run NSAPI:PrivateAura();"
-            if NSRT.Settings["PASelfPing"] then
-                 macrotext = macrotext.."\n/ping [@player] Warning;"
-             end
-            if NSRT.Settings["PAExtraAction"] then
-                macrotext = macrotext.."\n/click ExtraActionButton1"
-            end            
-            if NSRT.Settings["LIQUID_MACRO"] then
-                macrotext = macrotext.."\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)"
-            end
-             EditMacro(i, "NS PA Macro", 132288, macrotext, false)
-            return
-        end
-    end
-    if macrocount >= 120 then
-        print("You reached the global Macro cap so the Private Aura Macro could not be created")
-    elseif not pafound then
-        macrocount = macrocount+1
-        local macrotext = "/run NSAPI:PrivateAura();"
-        if NSRT.Settings["PASelfPing"] then
-             macrotext = macrotext.."\n/ping [@player] Warning;"
-         end
-        if NSRT.Settings["PAExtraAction"] then
-            macrotext = macrotext.."\n/click ExtraActionButton1"
-        end
-        CreateMacro("NS PA Macro", 132288, macrotext, false)
-    end
-end
-
--- need to run this code on settings change
-local function ExternalSelfPingChanged()
-    if C_AddOns.IsAddOnLoaded("MegaMacro") then return end -- don't mess with macros if user has MegaMacro as it will spam create macros
-    local macrocount = 0
-    local extfound = false
-    for i = 1, 120 do
-        local macroname = C_Macro.GetMacroName(i)
-        if not macroname then break end
-        macrocount = i
-        if macroname == "NS Ext Macro" then
-            extfound = true
-            local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or
-                "/run NSAPI:ExternalRequest();"
-            EditMacro(i, "NS Ext Macro", 135966, macrotext, false)
-            extfound = true
-            return
-        end
-    end
-    if macrocount >= 120 then 
-        print("You reached the global Macro cap so the External Macro could not be created")
-    elseif not extfound then
-        macrocount = macrocount+1
-        local macrotext = NSRT.Settings["ExternalSelfPing"] and "/run NSAPI:ExternalRequest();\n/ping [@player] Assist;" or "/run NSAPI:ExternalRequest();"
-        CreateMacro("NS Ext Macro", 135966, macrotext, false)
-    end
-end
-
--- suf setup guide popup
-local function BuildSUFSetupGuidePopup()
-    local popup = DF:CreateSimplePanel(UIParent, 300, 130, "SUF Setup Guide", "SUFSetupGuidePopup")
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    popup:SetFrameLevel(100)
-
-    popup.text_entry_label = DF:CreateLabel(popup, "Copy this code and create a new SUF tag with it:", 9.5, "white")
-    popup.text_entry_label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-    
-    popup.text_entry = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "$parentTextEntry", true, true, false)
-    popup.text_entry:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -45)
-    popup.text_entry:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 10)
-    DF:ApplyStandardBackdrop(popup.text_entry)
-    DF:ReskinSlider(popup.text_entry.scroll)
-    
-    local tag_code = [[function(unit)
-    local name = UnitName(unit)
-    return name and NSAPI and NSAPI:GetName(name, "SuF") or name
-end]]
-    popup:SetScript("OnShow", function(self)
-        popup.text_entry:SetText(tag_code)
-        popup.text_entry.editbox:HighlightText()
-        popup.text_entry:SetFocus()
-    end)
-
-    return popup
-end
-
 -- version check ui
-local component_type = "WA"
-local checkable_components = { "WA", "Addon", "Note", "Reminder"}
+local component_type = "Addon"
+local checkable_components = {"Addon", "Note", "Reminder"}
 local function build_checkable_components_options()
     local t = {}
     for i = 1, #checkable_components do
@@ -170,7 +74,7 @@ local function BuildVersionCheckUI(parent)
     hide_version_response_button:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
     hide_version_response_button:SetAsCheckBox()
     hide_version_response_button:SetTooltip(
-        "Hides Version Check Responses of Users that are on the correct version and do not have any duplicates")
+        "Hides Version Check Responses of Users that are on the correct version")
     local hide_version_response_label = DF:CreateLabel(parent, "Hide Version Check Responses", 10, "white", "", nil,
         "VersionCheckResponseLabel", "overlay")
     hide_version_response_label:SetTemplate(options_text_template)
@@ -182,19 +86,16 @@ local function BuildVersionCheckUI(parent)
     component_type_dropdown:SetTemplate(options_dropdown_template)
     component_type_dropdown:SetPoint("LEFT", component_type_label, "RIGHT", 5, 0)
 
-    local component_name_label = DF:CreateLabel(parent, "WeakAura/Addon Name", 9.5, "white")
+    local component_name_label = DF:CreateLabel(parent, "Addon Name", 9.5, "white")
     component_name_label:SetPoint("LEFT", component_type_dropdown, "RIGHT", 10, 0)
 
     local component_name_entry = DF:CreateTextEntry(parent, function(_, _, value) component_name = value end, 250, 18)
     component_name_entry:SetTemplate(options_button_template)
     component_name_entry:SetPoint("LEFT", component_name_label, "RIGHT", 5, 0)
     component_name_entry:SetHook("OnEditFocusGained", function(self)
-        component_name_entry.WAAutoCompleteList = NSRT.NSUI.AutoComplete["WA"] or {}
         component_name_entry.AddonAutoCompleteList = NSRT.NSUI.AutoComplete["Addon"] or {}
         local component_type = component_type_dropdown:GetValue()
-        if component_type == "WA" then
-            component_name_entry:SetAsAutoComplete("WAAutoCompleteList", _, true)
-        elseif component_type == "Addon" then
+        if component_type == "Addon" then
             component_name_entry:SetAsAutoComplete("AddonAutoCompleteList", _, true)
         end
     end)
@@ -217,28 +118,23 @@ local function BuildVersionCheckUI(parent)
     local version_number_header = DF:CreateLabel(parent, "Version Number", 11)
     version_number_header:SetPoint("LEFT", character_name_header, "RIGHT", 120, 0)
 
-    local duplicate_header = DF:CreateLabel(parent, "Duplicate", 11)
-    duplicate_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
-
     local ignore_header = DF:CreateLabel(parent, "Ignore Check", 11)
-    ignore_header:SetPoint("LEFT", duplicate_header, "RIGHT", 50, 0)
+    ignore_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
-            local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0, duplicate = true}}
+            local thisData = data[index] -- thisData = {{name = "Ravxd", version = 1.0}}
             if thisData then
                 local line = self:GetLine(i)
 
                 local name = thisData.name
                 local version = thisData.version
-                local duplicate = thisData.duplicate
                 local ignore = thisData.ignoreCheck
                 local nickname = NSAPI:Shorten(name)
 
                 line.name:SetText(nickname)
                 line.version:SetText(version)
-                line.duplicates:SetText(duplicate and "Yes" or "No")
                 line.ignorelist:SetText(ignore and "Yes" or "No")
 
                 -- version number color                
@@ -250,13 +146,6 @@ local function BuildVersionCheckUI(parent)
                     line.version:SetTextColor(1, 0, 0, 1)
                 end
 
-                -- duplicates color
-                if duplicate then
-                    line.duplicates:SetTextColor(1, 0, 0, 1)
-                else
-                    line.duplicates:SetTextColor(0, 1, 0, 1)
-                end
-
                 if ignore then
                     line.ignorelist:SetTextColor(1, 0, 0, 1)
                 else
@@ -266,20 +155,9 @@ local function BuildVersionCheckUI(parent)
                 line:SetScript("OnClick", function(self)
                     local message = ""
                     local now = GetTime()
-                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.duplicate) and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end                    
+                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end                    
                     NSI.VersionCheckData.lastclick[name] = now
-                    if NSI.VersionCheckData.type == "WA" then
-                        local url = NSI.VersionCheckData.url ~= "" and NSI.VersionCheckData.url or NSI.VersionCheckData.name
-                        if thisData.version == "WA Missing" then message = "Please install the WeakAura: "..url
-                        elseif thisData.version ~= NSI.VersionCheckData.version then message = "Please update your WeakAura: "..url end
-                        if thisData.duplicate then
-                            if message == "" then 
-                                message = "Please delete the duplicate WeakAura of: '"..NSI.VersionCheckData.name.."'"
-                            else 
-                                message = message.." Please also delete the duplicate WeakAura"
-                            end
-                        end                        
-                    elseif NSI.VersionCheckData.type == "Addon" then
+                    if NSI.VersionCheckData.type == "Addon" then
                         if thisData.version == "Addon not enabled" then message = "Please enable the Addon: '"..NSI.VersionCheckData.name.."'"
                         elseif thisData.version == "Addon Missing" then message = "Please install the Addon: '"..NSI.VersionCheckData.name.."'"
                         else message = "Please update the Addon: '"..NSI.VersionCheckData.name.."'" end
@@ -323,20 +201,12 @@ local function BuildVersionCheckUI(parent)
         version:SetFont(expressway, 12, "OUTLINE")
         version:SetPoint("LEFT", name, "RIGHT", 115, 0)
         line.version = version
-
-        local duplicates = line:CreateFontString(nil, "OVERLAY")
-        duplicates:SetWidth(100)
-        duplicates:SetJustifyH("LEFT")
-        duplicates:SetFont(expressway, 12, "OUTLINE")
-        duplicates:SetPoint("LEFT", version, "RIGHT", 45, 0)
-        line.duplicates = duplicates
-
         
         local ignorelist = line:CreateFontString(nil, "OVERLAY")
         ignorelist:SetWidth(100)
         ignorelist:SetJustifyH("LEFT")
         ignorelist:SetFont(expressway, 12, "OUTLINE")
-        ignorelist:SetPoint("LEFT", duplicates, "RIGHT", 5, 0)
+        ignorelist:SetPoint("LEFT", version, "RIGHT", 50, 0)
         line.ignorelist = ignorelist
 
         return line
@@ -345,26 +215,26 @@ local function BuildVersionCheckUI(parent)
     local scrollLines = 19
     -- sample data for testing
     local sample_data = {
-        { name = "Player1",  version = "1.0.0",         duplicate = false },
-        { name = "Player2",  version = "WA Missing",    duplicate = false },
-        { name = "Player3",  version = "1.0.1",         duplicate = true },
-        { name = "Player4",  version = "0.9.9",         duplicate = false },
-        { name = "Player5",  version = "1.0.0",         duplicate = false },
-        { name = "Player6",  version = "Addon Missing", duplicate = false },
-        { name = "Player7",  version = "1.0.0",         duplicate = true },
-        { name = "Player8",  version = "0.9.8",         duplicate = false },
-        { name = "Player9",  version = "1.0.0",         duplicate = false },
-        { name = "Player10", version = "Note Missing",  duplicate = false },
-        { name = "Player11", version = "1.0.0",         duplicate = false },
-        { name = "Player12", version = "0.9.9",         duplicate = true },
-        { name = "Player13", version = "1.0.0",         duplicate = false },
-        { name = "Player14", version = "WA Missing",    duplicate = false },
-        { name = "Player15", version = "1.0.0",         duplicate = false },
-        { name = "Player16", version = "0.9.7",         duplicate = false },
-        { name = "Player17", version = "1.0.0",         duplicate = true },
-        { name = "Player18", version = "Addon Missing", duplicate = false },
-        { name = "Player19", version = "1.0.0",         duplicate = false },
-        { name = "Player20", version = "0.9.9",         duplicate = false }
+        { name = "Player1",  version = "1.0.0" },
+        { name = "Player2",  version = "1.0.5" },
+        { name = "Player3",  version = "1.0.1" },
+        { name = "Player4",  version = "0.9.9" },
+        { name = "Player5",  version = "1.0.0" },
+        { name = "Player6",  version = "Addon Missing" },
+        { name = "Player7",  version = "1.0.0" },
+        { name = "Player8",  version = "0.9.8" },
+        { name = "Player9",  version = "1.0.0" },
+        { name = "Player10", version = "Note Missing" },
+        { name = "Player11", version = "1.0.0" },
+        { name = "Player12", version = "0.9.9" },
+        { name = "Player13", version = "1.0.0" },
+        { name = "Player14", version = "Note Missing" },
+        { name = "Player15", version = "1.0.0" },
+        { name = "Player16", version = "0.9.7" },
+        { name = "Player17", version = "1.0.0" },
+        { name = "Player18", version = "Addon Missing" },
+        { name = "Player19", version = "1.0.0" },
+        { name = "Player20", version = "0.9.9" }
     }
     local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {},
         window_width - 40,
@@ -379,9 +249,9 @@ local function BuildVersionCheckUI(parent)
 
     version_check_scrollbox.name_map = {}
     local addData = function(self, data, url)
-        local currentData = self:GetData() -- currentData = {{name, version, duplicate}...}
+        local currentData = self:GetData() -- currentData = {{name, version}...}
         if self.name_map[data.name] then
-            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "WA Missing" and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.duplicate) and (not data.ignoreCheck) then
+            if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.ignoreCheck) then
                 table.remove(currentData, self.name_map[data.name])
                 for k, v in pairs(self.name_map) do
                     if v > self.name_map[data.name] then
@@ -432,7 +302,6 @@ local function BuildVersionCheckUI(parent)
     local preset_label = DF:CreateLabel(parent, "Preset:", 9.5, "white")
 
     local sample_presets = {
-        { "WA: Northern Sky Liberation of Undermine", { "WA", "Northern Sky Liberation of Undermine" } },
         { "Addon: Plater",                            { "Addon", "Plater" } }
     }
 
@@ -806,7 +675,7 @@ local function build_spec_options()
 end
 
 local function ImportReminderString(name)
-    local popup = DF:CreateSimplePanel(NSUI, 800, 500, "Import Reminder String", "NSUIReminderImport", {
+    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -819,6 +688,10 @@ local function ImportReminderString(name)
     DF:ReskinSlider(popup.test_string_text_box.scroll)
     popup.test_string_text_box:SetFocus()
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
+    popup.test_string_text_box:SetScript("OnMouseDown", function(self)
+        self:SetFocus()
+    end)
+    --popup.test_string_text_box:SetTextSize(13)
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
@@ -827,7 +700,40 @@ local function ImportReminderString(name)
         NSUI.reminders_frame:Hide()
         NSUI.reminders_frame:Show()
         popup:Hide()
-    end, 280, 20, "Import")
+    end, 280, 20, "Import/Update")
+    popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+    popup.import_confirm_button:SetTemplate(options_button_template)
+
+    return popup
+end
+
+local function ImportPersonalReminderString(name)
+    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
+        DontRightClickClose = true
+    })
+    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    popup:SetFrameLevel(100)
+
+    popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "PersonalReminderTextEdit", true, false, true)
+    popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+    popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+    DF:ApplyStandardBackdrop(popup.test_string_text_box)
+    DF:ReskinSlider(popup.test_string_text_box.scroll)
+    popup.test_string_text_box:SetFocus()
+    popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
+    popup.test_string_text_box:SetScript("OnMouseDown", function(self)
+        self:SetFocus()
+    end)
+    --popup.test_string_text_box:SetTextSize(13)
+
+    popup.import_confirm_button = DF:CreateButton(popup, function()
+        local import_string = popup.test_string_text_box:GetText()
+        NSI:ImportFullReminderString(import_string, true)
+        popup.test_string_text_box:SetText("")
+        NSUI.personal_reminders_frame:Hide()
+        NSUI.personal_reminders_frame:Show()
+        popup:Hide()
+    end, 280, 20, "Import/Update")
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.import_confirm_button:SetTemplate(options_button_template)
 
@@ -835,7 +741,7 @@ local function ImportReminderString(name)
 end
 
 local function BuildRemindersEditUI()
-    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 380, 410, "Reminders Management", "RemindersEditFrame", {
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Reminders Management", "RemindersEditFrame", {
         DontRightClickClose = true
     })
     reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -852,6 +758,10 @@ local function BuildRemindersEditUI()
                 local line = self:GetLine(i)
                 line.name = reminderData.name
                 line.nameTextEntry.text = reminderData.name
+                if not NSRT.InviteList[line.name] then
+                    line.InviteButton:Hide()
+                    line.ArrangeButton:Hide()
+                end
             end
         end
     end
@@ -868,51 +778,90 @@ local function BuildRemindersEditUI()
     -- Import Button
     local ImportButton = DF:CreateButton(reminders_edit_frame, function()
         ImportReminderString()
-        end, 120, 24, "Import Reminder"
+        end, 100, 24, "Import Reminder"
     )
     ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
     ImportButton:SetTemplate(options_button_template)
 
     -- Clear Button
-    local ClearButton = DF:CreateButton(reminders_edit_frame, function()
+    local ClearButton = DF:CreateButton(reminders_edit_frame, function()        
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
+        NSI:ProcessReminder()
+        if NSRT.ReminderSettings.ShowReminderFrame then            
+            NSI:UpdateReminderFrame()
+        end
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
-        end, 120, 24, "Clear Reminder"
+        end, 100, 24, "Clear Reminder"
     )
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
 
-    -- Test Button
-    local TestButton = DF:CreateButton(reminders_edit_frame, function()
-        if NSI.TestingReminder then
-            NSI.TestingReminder = false
-            NSI:HideAllReminders()
-        else
-            local str = NSRT.Reminders[NSRT.ActiveReminder]
-            if not str then return end
-            local encID = str:match("EncounterID:(%d+)")
-            if not encID then return end
-            NSI.EncounterID = tonumber(encID)
-            NSI.TestingReminder = true
-            NSI:ProcessReminder()
-            NSI:StartReminders(1)
-        end
-    end, 120, 24, "Test Reminder"
+    -- Share Button
+    local ShareButton = DF:CreateButton(reminders_edit_frame, function()
+        NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, NSRT.AssignmentSettings, true)
+        NSI.LastBroadcast = GetTime()
+    end, 100, 24, "Share Reminder"
     )
-    TestButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
-    TestButton:SetTemplate(options_button_template)
+    ShareButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
+    ShareButton:SetTemplate(options_button_template)    
 
+    local function DeleteBossReminder(self, line, all)
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Reminder Deletion", "NSRTDeleteReminderPopup")
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local text = DF:CreateLabel(popup,
+            "Are you sure you want to delete this reminder?", 12, "orange")
+        text:SetPoint("TOP", popup, "TOP", 0, -30)
+        text:SetJustifyH("CENTER")
+
+        local confirmButton = DF:CreateButton(popup, function()
+            if line and NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
+                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+            end
+            if all then
+                for _, reminder in ipairs(NSI:GetAllReminderNames()) do
+                    NSI:RemoveReminder(reminder.name)
+                end
+            else
+                NSI:RemoveReminder(line.name)
+            end
+            self:SetData(NSI:GetAllReminderNames())
+            self:MasterRefresh()
+            popup:Hide()
+        end, 100, 30, "Confirm")
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+
+        local cancelButton = DF:CreateButton(popup, function()
+            popup:Hide()
+        end, 100, 30, "Cancel")
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        popup:Show()
+    end
+    
+    local alldeletecreated = false
     local function createLineFunc(self, index)
         local parent = self
         local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
-
         
+        if not alldeletecreated then
+            alldeletecreated = true
+            -- Delete All Button
+            local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
+                DeleteBossReminder(self, line, true)
+                end, 100, 24, "Delete ALL Reminders"
+            )
+            DeleteAllButton:SetPoint("LEFT", ShareButton, "RIGHT", 5, 0)
+            DeleteAllButton:SetTemplate(options_button_template)
+        end       
 
-        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-106, line:GetHeight())
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-210, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
         line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
         line.nameTextEntry:SetScript("OnEnterPressed", function(self)
@@ -920,24 +869,22 @@ local function BuildRemindersEditUI()
             if not oldname then return end
             local newname = self:GetText()
             if oldname == newname then return end
-            NSRT.Reminders[newname] = NSRT.Reminders[oldname]
+            if NSRT.Reminders[newname] then return end -- if name already exists, do nothing
+            NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             if NSRT.ActiveReminder == oldname then
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActiveReminder = newname
             end
             NSRT.Reminders[oldname] = nil
+            NSRT.InviteList[oldname] = nil
             line.name = newname
             parent:MasterRefresh()
         end)
         
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
-            if NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
-                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
-            end
-            NSI:RemoveReminder(line.name)
-            self:SetData(NSI:GetAllReminderNames())
-            self:MasterRefresh()
+            DeleteBossReminder(self, line)
         end, 12, 12)
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
@@ -965,14 +912,199 @@ local function BuildRemindersEditUI()
         end, 40, 20, "Show")
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)
+        -- Invite Button
+        line.InviteButton = DF:CreateButton(line, function(self)
+            NSI:InviteFromReminder(line.name, true)
+        end, 40, 20, "Invite")
+        line.InviteButton:SetPoint("RIGHT", line.ShowButton, "LEFT", 0, 0)
+        line.InviteButton:SetTemplate(options_button_template)
 
+        -- Group Arrange Button
+        line.ArrangeButton = DF:CreateButton(line, function(self)
+            NSI:ArrangeFromReminder(line.name)     
+        end, 40, 20, "Arrange")
+        line.ArrangeButton:SetPoint("RIGHT", line.InviteButton, "LEFT", 0, 0)
+        line.ArrangeButton:SetTemplate(options_button_template)
         return line
     end
 
     local scrollLines = 15
     local reminders_edit_scrollbox = DF:CreateScrollBox(reminders_edit_frame, "$parentRemindersEditScrollBox", refresh,
         {},
-        340, 300, scrollLines, 20, createLineFunc)
+        420, 300, scrollLines, 20, createLineFunc)
+    reminders_edit_frame.scrollbox = reminders_edit_scrollbox
+    reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -40)
+    reminders_edit_scrollbox.MasterRefresh = MasterRefresh
+    DF:ReskinSlider(reminders_edit_scrollbox)
+    reminders_edit_scrollbox:SetScript("OnShow", function(self)
+        self:MasterRefresh()
+    end)
+
+    for i = 1, scrollLines do
+        reminders_edit_scrollbox:CreateLine(createLineFunc)
+    end
+
+    reminders_edit_frame:Hide()
+    return reminders_edit_frame
+end
+
+local function BuildPersonalRemindersEditUI()
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Personal Reminders Management", "RemindersEditFrame", {
+        DontRightClickClose = true
+    })
+    reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    local function MasterRefresh(self)
+        local data = NSI:GetAllReminderNames(true)
+        self:SetData(data)
+        self:Refresh()
+    end
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local reminderData = data[index]
+            if reminderData then
+                local line = self:GetLine(i)
+                line.name = reminderData.name
+                line.nameTextEntry.text = reminderData.name
+            end
+        end
+    end
+    
+    local Active_Text = DF:CreateLabel(reminders_edit_frame, "Active Personal Reminder", 11)
+    Active_Text:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 50)
+    Active_Text:SetWidth(380)
+    if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder ~= "" then
+        Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. NSRT.ActivePersonalReminder
+    else
+        Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+    end
+
+    -- Import Button
+    local ImportButton = DF:CreateButton(reminders_edit_frame, function()
+        ImportPersonalReminderString()
+        end, 100, 24, "Import Personal Reminder"
+    )
+    ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
+    ImportButton:SetTemplate(options_button_template)
+
+    -- Clear Button
+    local ClearButton = DF:CreateButton(reminders_edit_frame, function()
+        NSRT.ActivePersonalReminder = nil
+        NSI.PersonalReminder = ""
+        NSI:ProcessReminder()
+        if NSRT.ReminderSettings.ShowPersonalReminderFrame then
+            NSI:UpdateReminderFrame(true)
+        end
+        Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+        end, 100, 24, "Clear Reminder"
+    )
+    ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
+    ClearButton:SetTemplate(options_button_template)
+
+    local function DeleteBossReminder(self, line)
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Personal Reminder Deletion", "NSRTDeletePersonalReminderPopup")
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local text = DF:CreateLabel(popup,
+            "Are you sure you want to delete this Personal Reminder?", 12, "orange")
+        text:SetPoint("TOP", popup, "TOP", 0, -30)
+        text:SetJustifyH("CENTER")
+
+        local confirmButton = DF:CreateButton(popup, function()
+            if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder == line.name then
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+            end
+            NSI:RemoveReminder(line.name, true)
+            self:SetData(NSI:GetAllReminderNames(true))
+            self:MasterRefresh()
+            popup:Hide()
+        end, 100, 30, "Confirm")
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+
+        local cancelButton = DF:CreateButton(popup, function()
+            popup:Hide()
+        end, 100, 30, "Cancel")
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        popup:Show()
+    end
+    local alldeletecreated
+    local function createLineFunc(self, index)
+        local parent = self
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-129, line:GetHeight())
+        line.nameTextEntry:SetTemplate(options_dropdown_template)
+        line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
+        line.nameTextEntry:SetScript("OnEnterPressed", function(self)
+            local oldname = line.name
+            if not oldname then return end
+            local newname = self:GetText()
+            if oldname == newname then return end
+            if NSRT.PersonalReminders[newname] then return end -- if name already exists, do nothing
+            NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            if NSRT.ActivePersonalReminder == oldname then
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. newname
+                NSRT.ActivePersonalReminder = newname
+            end
+            NSRT.PersonalReminders[oldname] = nil
+            line.name = newname
+            parent:MasterRefresh()
+        end)
+
+        if not alldeletecreated then
+            alldeletecreated = true
+            -- Delete All Button
+            local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
+                DeleteBossReminder(self, line, true)
+                end, 100, 24, "Delete ALL Reminders"
+            )
+            DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
+            DeleteAllButton:SetTemplate(options_button_template)
+        end
+        
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function()
+            DeleteBossReminder(self, line, true)
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+        -- Load Button
+        line.LoadButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            if name ~= "" then
+                NSI:SetReminder(name, true)
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
+            end
+        end, 55, 20, "Load")
+        line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
+        line.LoadButton:SetTemplate(options_button_template)
+
+        -- Show Button
+        line.ShowButton = DF:CreateButton(line, function()
+            local name = line.nameTextEntry:GetText()
+            ImportPersonalReminderString(name)
+        end, 55, 20, "Show")
+        line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
+        line.ShowButton:SetTemplate(options_button_template)
+        return line
+    end
+
+    local scrollLines = 15
+    local reminders_edit_scrollbox = DF:CreateScrollBox(reminders_edit_frame, "$parentRemindersEditScrollBox", refresh,
+        {},
+        420, 300, scrollLines, 20, createLineFunc)
     reminders_edit_frame.scrollbox = reminders_edit_scrollbox
     reminders_edit_scrollbox:SetPoint("TOPLEFT", reminders_edit_frame, "TOPLEFT", 10, -40)
     reminders_edit_scrollbox.MasterRefresh = MasterRefresh
@@ -1078,7 +1210,6 @@ local function BuildCooldownsEditUI()
         line.typeDropdown:SetPoint("LEFT", line.specText, "RIGHT", 5, 0)
         line.typeDropdown:SetHook("OnOptionSelected", function(self, _, value)
             local newType = value
-            NSI:Print("new value selected: " .. newType)
             local oldType = line.type
             if oldType == newType then return end
 
@@ -1259,11 +1390,253 @@ local function BuildCooldownsEditUI()
     cooldowns_edit_frame:Hide()
     return cooldowns_edit_frame
 end
+
+local soundlist = NSI.LSM:List("sound")
+local build_sound_dropdown = function()
+    local t = {}
+    for i, sound in ipairs(soundlist) do
+        tinsert(t, {
+            label = sound,
+            value = i,
+            onclick = function(_, _, value)                
+                local toplay = NSI.LSM:Fetch("sound", sound)
+                PlaySoundFile(toplay, "Master")
+                return value
+            end
+        })
+    end
+    return t
+end
+
+local function BuildPASoundEditUI()
+    local PASound_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Private Aura Sounds", "PASoundEditFrame", {
+        DontRightClickClose = true
+    })
+    PASound_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+
+    local function PrepareData(data)
+        local data = {}
+        for spellID, info in pairs(NSRT.PASounds) do
+            if spellID and info.sound then
+                local spell = C_Spell.GetSpellInfo(spellID)
+                if spell then              
+                    tinsert(data, {sound = info.sound, spellID = spellID, name = spell.name})
+                end
+            end
+        end
+        table.sort(data, function(a, b)
+            return a.name < b.name
+        end)
+        return data
+    end
+
+    local function MasterRefresh(self)
+        local data = PrepareData()
+        self:SetData(data)
+        self:Refresh()
+    end
+
+    function NSI:RefreshPASoundEditUI()
+        PASound_edit_frame.scrollbox:MasterRefresh()
+    end
+
+    local function refresh(self, data, offset, totalLines)
+        for i = 1, totalLines do
+            local index = i + offset
+            local Data = data[index]
+            if Data then
+                local line = self:GetLine(i)
+
+                line.name.text = Data.name
+                line.spellID = Data.spellID
+                line.spellIDText.text = Data.spellID
+                line.sound = Data.sound
+                line.texture = C_Spell.GetSpellTexture(line.spellID)
+                line.sounddropdown:Select(line.sound)
+                line.spellIcon:SetTexture(line.texture)
+                -- line:Show()
+            end
+        end
+    end
+
+    local function createLineFunc(self, index)
+        local parent = self
+        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
+        line:SetSize(self:GetWidth() - 2, self.LineHeight)
+        DF:ApplyStandardBackdrop(line)
+
+        -- SpellIcon
+        line.spellIcon = DF:CreateTexture(line, 134400, 18, 18)
+        line.spellIcon:SetPoint("LEFT", line, "LEFT", 5, 0)
+        line.spellIcon:SetScript("OnEnter", function(self)
+            local parent = self:GetParent()
+            if parent.spellID then
+                GameTooltip:SetOwner(self, "ANCHOR_CURSOR_RIGHT")
+                GameTooltip:SetSpellByID(parent.spellID)
+                GameTooltip:Show()
+            end
+        end)
+        line.spellIcon:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
+        -- SpellName
+        line.name = DF:CreateLabel(line, "")
+        line.name:SetPoint("LEFT", line.spellIcon, "RIGHT", 5, 0)
+        line.name:SetWidth(150)
+
+        -- SpellID
+        line.spellIDText = DF:CreateLabel(line, "")
+        line.spellIDText:SetPoint("LEFT", line.name, "RIGHT", 5, 0)
+        line.spellIDText:SetWidth(60)
+
+        -- Sound Dropdown
+        line.sounddropdown = DF:CreateDropDown(line, function() return build_sound_dropdown() end,
+            nil, 170)
+        --line.sounddropdown:Select(line.sound)
+        line.sounddropdown:SetTemplate(options_dropdown_template)
+        line.sounddropdown:SetPoint("LEFT", line.spellIDText, "RIGHT", 5, 0)
+        line.sounddropdown:SetHook("OnOptionSelected", function(self, _, value)
+            local newValue = soundlist[value]
+            local oldValue = line.sound
+
+            if oldValue == newValue or not (C_UnitAuras.AuraIsPrivate(line.spellID)) then return end
+            NSI:SavePASound(tonumber(line.spellID), newValue)
+
+            line.sound = newValue
+            parent:MasterRefresh()
+        end)
+
+        -- Delete button
+        line.deleteButton = DF:CreateButton(line, function()
+            NSI:SavePASound(tonumber(line.spellID), nil)
+            self:SetData(NSRT.PASounds)
+            self:MasterRefresh()
+        end, 12, 12)
+        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+
+        line.deleteButton:GetNormalTexture():SetDesaturated(true)
+        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
+        line.deleteButton:GetPushedTexture():SetDesaturated(true)
+        -- line.deleteButton:SetFontFace(expressway)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+
+        return line
+    end
+
+    local scrollLines = 15
+    local PASound_edit_scrollbox = DF:CreateScrollBox(PASound_edit_frame, "$parentPASoundsEditScrollBox", refresh,
+        {},
+        445, 300, scrollLines, 20, createLineFunc)
+    PASound_edit_frame.scrollbox = PASound_edit_scrollbox
+    PASound_edit_scrollbox:SetPoint("TOPLEFT", PASound_edit_frame, "TOPLEFT", 10, -50)
+    PASound_edit_scrollbox.MasterRefresh = MasterRefresh
+    DF:ReskinSlider(PASound_edit_scrollbox)
+
+    for i = 1, scrollLines do
+        PASound_edit_scrollbox:CreateLine(createLineFunc)
+    end
+
+    local SpellName = DF:CreateLabel(PASound_edit_frame, "Spell Name", 11)
+    SpellName:SetPoint("TOPLEFT", PASound_edit_frame, "TOPLEFT", 40, -30)
+    SpellName:SetWidth(100)
+
+    local SpellID = DF:CreateLabel(PASound_edit_frame, "Spell-ID", 11)
+    SpellID:SetPoint("LEFT", SpellName, "RIGHT", 55, 0)
+    SpellID:SetWidth(70)
+
+    local Sound = DF:CreateLabel(PASound_edit_frame, "Sound", 11)
+    Sound:SetWidth(120)
+    Sound:SetPoint("LEFT", SpellID, "RIGHT", 0, 0)
+
+
+    PASound_edit_scrollbox:SetScript("OnShow", function(self)
+        self:MasterRefresh()
+    end)
+
+    local label_width = 80
+    local NewSpellID = DF:CreateLabel(PASound_edit_frame, "SpellID:", 11)
+    NewSpellID:SetPoint("BOTTOMLEFT", PASound_edit_frame, "BOTTOMLEFT", 10, 50)
+    NewSpellID:SetWidth(label_width)
+    
+    local NewSpellIDTextEntry = DF:CreateTextEntry(PASound_edit_frame, function() end, 120, 20)
+    NewSpellIDTextEntry:SetPoint("LEFT", NewSpellID, "RIGHT", -10, 0)
+    NewSpellIDTextEntry:SetTemplate(options_dropdown_template)
+
+
+    local NewSound = DF:CreateLabel(PASound_edit_frame, "Sound:", 11)
+    NewSound:SetPoint("LEFT", NewSpellIDTextEntry, "RIGHT", 10, 0)
+    NewSound:SetWidth(label_width)
+
+    local NewSoundDropdown = DF:CreateDropDown(PASound_edit_frame, function() return build_sound_dropdown() end,
+        nil, 120)
+    NewSoundDropdown:SetPoint("LEFT", NewSound, "RIGHT", -10, 0)
+    NewSoundDropdown:SetTemplate(options_dropdown_template)
+
+    local add_button = DF:CreateButton(PASound_edit_frame, function()
+        local spellID = NewSpellIDTextEntry:GetText()
+        local sound = soundlist[NewSoundDropdown:GetValue()]
+        if spellID and sound ~= "" then
+            NewSpellIDTextEntry:SetText("")
+            NewSoundDropdown:SetValue(nil)
+            spellID = tonumber(spellID)
+            if C_UnitAuras.AuraIsPrivate(spellID) then
+                NSI:SavePASound(spellID, sound)
+            else
+                print("Your entered spellID does not appear to be a Private Aura.")
+            end
+            PASound_edit_scrollbox:MasterRefresh()
+
+        end
+    end, 60, 20, "Add")
+    add_button:SetPoint("LEFT", NewSoundDropdown, "RIGHT", 10, 0)
+    add_button:SetTemplate(options_button_template)
+
+    local function DeleteAllPASounds(self)
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Deleting ALL Private Aura Sounds", "NSRTDeleteALLPASoundsPopup")
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local text = DF:CreateLabel(popup,
+            "Are you sure you want to delete all \nPrivate Aura Sounds?", 12, "orange")
+        text:SetPoint("TOP", popup, "TOP", 0, -30)
+        text:SetJustifyH("CENTER")
+
+        local confirmButton = DF:CreateButton(popup, function()
+            for spellID, info in pairs(NSRT.PASounds) do
+                NSI:AddPASound(spellID, nil)
+            end
+            NSRT.PASounds = {}
+            PASound_edit_scrollbox:MasterRefresh()
+            popup:Hide()
+        end, 100, 30, "Confirm")
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        local cancelButton = DF:CreateButton(popup, function()
+            popup:Hide()
+        end, 100, 30, "Cancel")
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
+        popup:Show()
+    end
+
+    local delete_all_button = DF:CreateButton(PASound_edit_frame, function()
+        DeleteAllPASounds(self)
+        PASound_edit_scrollbox:MasterRefresh()
+    end, 60, 20, "Delete ALL")
+    delete_all_button:SetPoint("BOTTOMRIGHT", PASound_edit_frame, "BOTTOMRIGHT", -10, 10)
+    delete_all_button:SetTemplate(options_button_template)
+
+    PASound_edit_frame:Hide()
+    return PASound_edit_frame
+end
 function NSUI:Init()
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
     NSUI:SetScale(NSRT.NSUI.scale)
-
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
         width = window_width,
@@ -1277,215 +1650,29 @@ function NSUI:Init()
 
     local general_tab = tabContainer:GetTabFrameByName("General")
     local nicknames_tab = tabContainer:GetTabFrameByName("Nicknames")
-    local externals_tab = tabContainer:GetTabFrameByName("Externals")
     local cooldowns_tab = tabContainer:GetTabFrameByName("Cooldowns")
     local versions_tab = tabContainer:GetTabFrameByName("Versions")
-    local weakaura_tab = tabContainer:GetTabFrameByName("WeakAuras")
     local setupmanager_tab = tabContainer:GetTabFrameByName("SetupManager")
     local reminder_tab = tabContainer:GetTabFrameByName("Reminders")
+    local reminder_note_tab = tabContainer:GetTabFrameByName("Reminders-Note")
     local assignments_tab = tabContainer:GetTabFrameByName("Assignments")
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
+    local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
+    local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
 
     -- generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
-    generic_display:SetPoint("CENTER", UIParent, "CENTER", 0, 350)
+    generic_display:SetPoint("CENTER", UIParent, "CENTER", -200, 400)
     generic_display:SetSize(300, 100)
     generic_display.text = generic_display:CreateFontString(nil, "OVERLAY")
     generic_display.text:SetFont(expressway, 20, "OUTLINE")
-    generic_display.text:SetPoint("CENTER", generic_display, "CENTER", 0, 0)
+    generic_display.text:SetPoint("TOPLEFT", generic_display, "TOPLEFT", 0, 0)
+    generic_display.text:SetJustifyH("LEFT")
     generic_display:Hide()
     NSUI.generic_display = generic_display
-    -- externals anchor frame
-    local externals_anchor_panel_options = {
-        NoCloseButton = true,
-        NoTitleBar = true,
-        DontRightClickClose = true
-    }
-    local externals_anchor = CreateFrame("Frame", "ExternalsAnchor", UIParent, "BackdropTemplate")
-    NSUI.externals_anchor = externals_anchor
-    externals_anchor:SetClampedToScreen(true)
-    externals_anchor:SetMovable(true)
-    externals_anchor:SetBackdrop({
-        bgFile = "interface/editmode/editmodeuihighlightbackground",
-        edgeFile = "interface/buttons/white8x8",
-        edgeSize = 2,
-        tile = true,
-        tileSize = 16,
-        insets = {
-            left = 0,
-            right = 0,
-            top = 0,
-            bottom = 0
-        }
-    })
-    externals_anchor:SetBackdropBorderColor(1, 0, 0, 1)
-    NSUI:LoadExternalsAnchorPosition()
 
-    local externals_anchor_text = externals_anchor:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    externals_anchor_text:SetPoint("CENTER", externals_anchor, "CENTER", 0, 0)
-    externals_anchor_text:SetText("NS_EXT")
-    externals_anchor.text = externals_anchor_text
-
-    externals_anchor:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" then
-            self:StartMoving()
-        elseif button == "RightButton" then
-            NSUI:ResetExternalsAnchorPosition()
-        end
-    end)
-    externals_anchor:SetScript("OnMouseUp", function(self)
-        self:StopMovingOrSizing()
-        NSUI:SaveExternalsAnchorPosition()
-    end)
-    externals_anchor:Hide()
-
-    local external_frame = CreateFrame("Frame", "ExternalsFrame", UIParent)
-    external_frame:SetPoint("BOTTOMLEFT", NSUI.externals_anchor, "BOTTOMLEFT", 0, 0)
-    external_frame:SetPoint("TOPRIGHT", NSUI.externals_anchor, "TOPRIGHT", 0, 0)
-    local external_frame_text = external_frame:CreateFontString(nil, "OVERLAY")
-    external_frame_text:SetFont([[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]], 20, "OUTLINE")
-    external_frame_text:SetTextColor(1, 1, 1, 1)
-    external_frame_text:SetPoint("CENTER", external_frame, "TOP", 0, 10)
-    external_frame_text:SetText("NS_EXT")
-    external_frame.text = external_frame_text
-    local external_frame_texture = external_frame:CreateTexture("ExternalsFrameTexture", "OVERLAY")
-    external_frame_texture:SetPoint("TOPLEFT", external_frame, "TOPLEFT", 0, 0)
-    external_frame_texture:SetPoint("BOTTOMRIGHT", external_frame, "BOTTOMRIGHT", 0, 0)
-    external_frame_texture:SetColorTexture(1, 0, 1, 0.5)
-    external_frame.texture = external_frame_texture
-    external_frame:Hide()
-    NSUI.external_frame = external_frame
-
-    -- dummy default variables until cvars are implemented
-    local enableSUFNicknames = false
     -- TTS voice preview
-    local tts_text_preview = ""
-
-    -- keybinding logic
-    local function getMacroKeybind(macroName)
-        local binding = GetBindingKey(macroName)
-        if binding then
-            return binding
-        else
-            return "Unbound"
-        end
-    end
-
-    local function bindKeybind(keyCombo, macroName)
-        keyCombo = keyCombo:gsub("LeftButton", "BUTTON1")
-            :gsub("RightButton", "BUTTON2")
-            :gsub("MiddleButton", "BUTTON3")
-            :gsub("Button4", "BUTTON4")
-            :gsub("Button5", "BUTTON5")
-
-        local existingBinding = GetBindingAction(keyCombo)
-        if existingBinding and existingBinding ~= macroName and existingBinding ~= "" then
-            SetBinding(keyCombo, nil)
-            print("|cFF00FFFFNSRT:|r Overriding existing binding for " .. existingBinding .. " to " .. macroName)
-        end
-
-        local existingKeybind = GetBindingKey(macroName)
-        if existingKeybind and existingKeybind ~= keyCombo then
-            SetBinding(existingKeybind, nil)
-        end
-
-        local ok = SetBinding(keyCombo, macroName)
-        if ok then
-            SaveBindings(GetCurrentBindingSet())
-            return true
-        else
-            return false
-        end
-    end
-
-    local listening = false
-
-    local function GetModifiedKeyString(key)
-        local modifier = ""
-        if IsControlKeyDown() then modifier = modifier .. "CTRL-" end
-        if IsShiftKeyDown() then modifier = modifier .. "SHIFT-" end
-        if IsAltKeyDown() then modifier = modifier .. "ALT-" end
-
-        return modifier .. key
-    end
-
-    local clearKeybinding = function(self, _, macroName)
-        SetBinding(GetBindingKey(macroName), nil)
-        SaveBindings(GetCurrentBindingSet())
-        self:SetText("Unbound")
-        print("|cFF00FFFFNSRT:|r Keybinding cleared for " .. macroName)
-    end
-
-    local registerKeybinding = function(self, macroName, keybindName)
-        if not listening then
-            listening = true
-        else
-            return
-        end
-
-        local displayName = (macroName == "MACRO NS Ext Macro" and "External Macro") or (macroName == "MACRO NS PA Macro" and "Private Aura Macro") or (macroName == "MACRO NS Innervate" and "Innervate Macro") or "Macro"
-        local keybindingFrame = DF:CreateSimplePanel(NSUI, 300, 75, "Keybinding: " .. displayName, "KeybindingFrame", {
-            DontRightClickClose = true
-        })
-        keybindingFrame:SetPoint("CENTER", NSUI, "CENTER", 0, 0)
-        keybindingFrame:SetFrameStrata("DIALOG")
-        local keybindingFrame_text = keybindingFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        keybindingFrame_text:SetPoint("CENTER", keybindingFrame, "CENTER", 0, 0)
-        keybindingFrame_text:SetText([[Press a key or click here
-    (with optional modifiers) to bind the]].."\n"..displayName)
-
-
-        local function OnKeyDown(self, key)
-            if listening then
-                if key == "ESCAPE" then
-                    listening = false
-                    self:SetScript("OnKeyDown", nil)
-                    self:SetPropagateKeyboardInput(false)
-                    self:Hide()
-                    NSUI:Show()
-                    return
-                end
-
-                key = key:gsub("^LCTRL$", "CTRL")
-                    :gsub("^RCTRL$", "CTRL")
-                    :gsub("^LSHIFT$", "SHIFT")
-                    :gsub("^RSHIFT$", "SHIFT")
-                    :gsub("^LALT$", "ALT")
-                    :gsub("^RALT$", "ALT")
-
-                if key == "CTRL" or key == "SHIFT" or key == "ALT" then
-                    return nil -- Don't register this as a full keybind yet
-                end
-                local keyCombo = GetModifiedKeyString(key)
-                if keyCombo == "LeftButton" or keyCombo == "RightButton" then
-                    return nil -- dont register pure mouse buttons as keybinds, only with modifier
-                end
-
-                -- Bind keybind
-                bindKeybind(keyCombo, macroName)
-
-                listening = false
-                self:SetScript("OnKeyDown", nil)
-                self:SetPropagateKeyboardInput(false)
-                self:Hide()
-                NSUI:Show()
-
-                if general_tab:GetWidgetById(macroName) ~= nil then
-                    general_tab:GetWidgetById(macroName):SetText(keyCombo)
-                elseif externals_tab:GetWidgetById(macroName) ~= nil then
-                    externals_tab:GetWidgetById(macroName):SetText(keyCombo)
-                end
-            end
-        end
-
-        keybindingFrame:SetScript("OnKeyDown", OnKeyDown)
-        keybindingFrame:SetScript("OnMouseDown", OnKeyDown)
-        keybindingFrame:SetScript("OnHide", function()
-            listening = false
-        end)
-    end
-    -- end of keybinding logic
-
+    local tts_text_preview = "" 
     -- nickname logic
     local nickname_share_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_share_options = function()
@@ -1552,24 +1739,7 @@ function NSUI:Init()
         return t
     end
 
-    
-    local weakauras_importaccept_options = {"Guild only", "Anyone", "None"}    
-    local build_weakauras_importaccept_options = function()
-        local t = {}
-        for i = 1, #weakauras_importaccept_options do
-            tinsert(t, {
-                label = weakauras_importaccept_options[i],
-                value = i,
-                onclick = function(_, _, value)
-                    NSRT.Settings["WeakAurasImportAccept"] = value
-                end
-
-            })
-        end
-        return t
-    end
-
-    local build_media_options = function(typename, settingname, isTexture)
+    local build_media_options = function(typename, settingname, isTexture, isReminder, Personal)
         local list = NSI.LSM:List(isTexture and "statusbar" or "font")
         local t = {}
         for i, font in ipairs(list) do
@@ -1578,7 +1748,15 @@ function NSUI:Init()
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.ReminderSettings[typename][settingname] = list[value]
-                    NSI:UpdateExistingFrames()
+                    if isReminder then
+                        if Personal then
+                            NSI:UpdateReminderFrame(true)
+                        else
+                            NSI:UpdateReminderFrame(false)
+                        end
+                    else
+                        NSI:UpdateExistingFrames()
+                    end
                 end
             })
         end
@@ -1617,6 +1795,22 @@ function NSUI:Init()
         return t
     end
 
+    local build_PAgrowdirection_options = function(SettingName, SecondaryName)
+        local list = {"LEFT", "RIGHT", "UP", "DOWN"}
+        local t = {}
+        for i, v in ipairs(list) do
+            tinsert(t, {
+                label = v,
+                value = i,
+                onclick = function(_, _, value)
+                    NSRT[SettingName][SecondaryName] = list[value]
+                    NSI:UpdatePADisplay(SettingName == "PASettings", SettingName == "PATankSettings")
+                end
+            })
+        end
+        return t
+    end
+
     local function WipeNickNames()
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Wipe Nicknames", "NSRTWipeNicknamesPopup")
         popup:SetFrameStrata("DIALOG")
@@ -1644,182 +1838,8 @@ function NSUI:Init()
     end
     -- end of nickname logic
 
-    -- WeakAuras imports
-    local function ImportWeakAura(name)
-        if WA and WA.Import then
-            WA.Import(NSI:GetWeakAura(name))
-        else
-            print("Error:WeakAuras not found")
-        end
-    end
-
-    local function SendWeakAuras()
-        local popup = DF:CreateSimplePanel(NSUI, 300, 150, "Send WeakAura", "NSUISendWeakAurasPopup", {
-            DontRightClickClose = true
-        })
-        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        popup:SetFrameLevel(100)
-
-        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "SendWATextEdit", true, false, true)
-        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
-        DF:ApplyStandardBackdrop(popup.test_string_text_box)
-        DF:ReskinSlider(popup.test_string_text_box.scroll)
-        popup.test_string_text_box:SetFocus()
-
-        popup.import_confirm_button = DF:CreateButton(popup, function()
-            local import_string = popup.test_string_text_box:GetText()
-            NSI:SendWAString(import_string)
-            popup.test_string_text_box:SetText("")
-            popup:Hide()
-        end, 280, 20, "Send")
-        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
-        popup.import_confirm_button:SetTemplate(options_button_template)
-
-        return popup
-    end
-
-    -- WeakAuras whitelist popup
-    local function WhitelistPopup()
-        local parent = NSUI
-        local whitelisted_wa_edit_frame = DF:CreateSimplePanel(parent, 400, window_height / 2,
-            "WeakAuras Update Whitelist",
-            "WhitelistWAEditFrame", {
-                DontRightClickClose = true,
-                NoScripts = true
-            })
-        whitelisted_wa_edit_frame:ClearAllPoints()
-        whitelisted_wa_edit_frame:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 2)
-        whitelisted_wa_edit_frame:Hide()
-
-
-        local function PrepareData()
-            local data = {}
-            for _, v in pairs(NSRT.Settings['UpdateWhitelist']) do
-                tinsert(data, { url = v.url, name = v.name })
-            end
-            return data
-        end
-
-        local function MasterRefresh(self)
-            local data = PrepareData()
-            self:SetData(data)
-            self:Refresh()
-        end
-
-        local function refresh(self, data, offset, totalLines)
-            for i = 1, totalLines do
-                local index = i + offset
-                local whitelistData = data[index]
-                if whitelistData then
-                    local line = self:GetLine(i)
-
-                    line.name = whitelistData.name
-                    line.url = whitelistData.url
-
-                    line.nameText:SetText(line.name)
-                    line.urlTextEntry:SetText(line.url)
-                end
-            end
-        end
-
-        local function createLineFunc(self, index)
-            local parent = self
-            local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
-            line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
-            line:SetSize(self:GetWidth() - 2, self.LineHeight)
-            DF:ApplyStandardBackdrop(line)
-
-            -- Name text
-            line.nameText = DF:CreateLabel(line, "", 9.5, "white")
-            line.nameText:SetWidth(120)
-            line.nameText:SetTemplate(options_text_template)
-            line.nameText:SetPoint("LEFT", line, "LEFT", 5, 0)
-
-            line.urlTextEntry = DF:CreateTextEntry(line, function() end, 200, 20)
-            line.urlTextEntry:SetAutoSelectTextOnFocus(true)
-            line.urlTextEntry:SetTemplate(options_dropdown_template)
-            line.urlTextEntry:SetPoint("LEFT", line.nameText, "RIGHT", 5, 0)
-
-            -- Delete button
-            line.deleteButton = DF:CreateButton(line, function()
-                NSI:RemoveWhitelistURL(line.url, line.name)
-                self:MasterRefresh()
-            end, 12, 12)
-            line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-            line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-            line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-
-            line.deleteButton:GetNormalTexture():SetDesaturated(true)
-            line.deleteButton:GetHighlightTexture():SetDesaturated(true)
-            line.deleteButton:GetPushedTexture():SetDesaturated(true)
-            line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
-
-            return line
-        end
-
-        local presetScrollLines = 9
-        local whitelisted_wa_edit_scrollbox = DF:CreateScrollBox(whitelisted_wa_edit_frame,
-            "$parentWhitelistedWAEditScrollBox", refresh, {}, 360,
-            window_height / 2 - 75, presetScrollLines, 20, createLineFunc)
-        whitelisted_wa_edit_scrollbox:SetPoint("TOPLEFT", whitelisted_wa_edit_frame, "TOPLEFT", 10, -30)
-        -- version_presets_edit_scrollbox:SetPoint("BOTTOMRIGHT", version_presets_edit_frame, "BOTTOMRIGHT", -25, 30)
-        whitelisted_wa_edit_scrollbox.MasterRefresh = MasterRefresh
-        DF:ReskinSlider(whitelisted_wa_edit_scrollbox)
-
-        for i = 1, presetScrollLines do
-            whitelisted_wa_edit_scrollbox:CreateLine(createLineFunc)
-        end
-
-        whitelisted_wa_edit_scrollbox:SetScript("OnShow", function(self)
-            self:MasterRefresh()
-        end)
-
-        -- Add new preset
-        local new_name_label = DF:CreateLabel(whitelisted_wa_edit_frame, "Name:", 11)
-        new_name_label:SetWidth(35)
-        new_name_label:SetPoint("TOPLEFT", whitelisted_wa_edit_scrollbox, "BOTTOMLEFT", 0, -20)
-
-        local new_name_entry = DF:CreateTextEntry(whitelisted_wa_edit_frame, function() end, 100, 20)
-        new_name_entry:SetPoint("LEFT", new_name_label, "RIGHT", 5, 0)
-        new_name_entry:SetTemplate(options_dropdown_template)
-
-        local new_url_label = DF:CreateLabel(whitelisted_wa_edit_frame, "URL:", 11)
-        new_url_label:SetWidth(30)
-        new_url_label:SetPoint("LEFT", new_name_entry, "RIGHT", 10, 0)
-
-        local new_url_entry = DF:CreateTextEntry(whitelisted_wa_edit_frame, function() end, 120, 20)
-        new_url_entry:SetPoint("LEFT", new_url_label, "RIGHT", 5, 0)
-        new_url_entry:SetTemplate(options_dropdown_template)
-
-        local add_button = DF:CreateButton(whitelisted_wa_edit_frame, function()
-            local name = new_name_entry:GetText()
-            local url = new_url_entry:GetText()
-            NSI:AddWhitelistURL(url, name)
-            whitelisted_wa_edit_scrollbox:MasterRefresh()
-            new_name_entry:SetText("")
-            new_url_entry:SetText("")
-        end, 60, 20, "New")
-        add_button:SetPoint("BOTTOMRIGHT", whitelisted_wa_edit_frame, "BOTTOMRIGHT", -10, 10)
-        add_button:SetTemplate(options_button_template)
-
-        return whitelisted_wa_edit_frame
-    end
-    NSUI.whitelisted_wa_edit_frame = WhitelistPopup()
     -- when any setting is changed, call these respective callback function
     local general_callback = function()
-
-        if NSUI.OptionsChanged.general["PA_MACRO"] then
-            PASelfPingChanged()
-        end        
-        if NSUI.OptionsChanged.general["DEBUGLOGS"] then
-            if NSRT.Settings["DebugLogs"] then -- Add this data if enables this after a wipe as the data exists anyway
-                NSI:Print("Macro Data", NSI.MacroPresses)
-                NSI:Print("Assigned Externals", NSI.AssignedExternals)
-                NSI.AssignedExternals = {}
-                NSI.MacroPresses = {}
-            end
-        end
         wipe(NSUI.OptionsChanged["general"])
     end
     local nicknames_callback = function()
@@ -1848,8 +1868,16 @@ function NSUI:Init()
             NSI:ElvUINickNameUpdated()
         end
 
+        if NSUI.OptionsChanged.nicknames["VUHDO_NICKNAMES"] then
+            NSI:VuhDoNickNameUpdated()
+        end
+
         if NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] then
             NSI:Grid2NickNameUpdated()
+        end
+
+        if NSUI.OptionsChanged.nicknames["DANDERS_FRAMES_NICKNAMES"] then
+            NSI:DandersFramesNickNameUpdated(true)
         end
 
         if NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] then
@@ -1860,27 +1888,11 @@ function NSUI:Init()
             NSI:MRTNickNameUpdated(true)
         end
 
-        if NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] then
-            NSI:WeakAurasNickNameUpdated()
-        end
-
         wipe(NSUI.OptionsChanged["nicknames"])
-    end
-
-    local externals_callback = function()
-        if NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] then
-            ExternalSelfPingChanged()
-        end
-
-        wipe(NSUI.OptionsChanged["externals"])
-    end
+    end    
 
     local versions_callback = function()
         wipe(NSUI.OptionsChanged["versions"])
-    end
-
-    local weakauras_callback = function()
-        wipe(NSUI.OptionsChanged["WeakAuras"])
     end
 
     -- options
@@ -1903,35 +1915,13 @@ function NSUI:Init()
             type = "toggle",
             boxfirst = true,
             name = "Enable Debug Logging",
-            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool. This might Error if you do not have the DevTool Addon installed.\nIf enabled after a wipe, it will still add External and Macro data to DevTool",
+            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool. This might Error if you do not have the DevTool Addon installed.",
             get = function() return NSRT.Settings["DebugLogs"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["DEBUGLOGS"] = true
                 NSRT.Settings["DebugLogs"] = value
             end,
         },
-
-        {
-            type = "blank",
-        },
-
-        {
-            type = "label",
-            get = function() return "MRT Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable MRT Note Comparison",
-            desc = "Enables MRT note comparison on ready check.",
-            get = function() return NSRT.Settings["MRTNoteComparison"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["MRT_NOTE_COMPARISON"] = true
-                NSRT.Settings["MRTNoteComparison"] = value
-            end,
-            nocombat = true
-        },  
 
         {
             type = "breakline"
@@ -1986,121 +1976,7 @@ Press 'Enter' to hear the TTS]],
                 NSUI.OptionsChanged.general["TTS_ENABLED"] = true
                 NSRT.Settings["TTS"] = value
             end,
-        },        
-        {
-            type = "breakline"
-        },   
-        {
-            type = "label",
-            get = function() return "Private Aura Macro" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable @player Ping",
-            desc = "Enable a @player ping when the private aura macro is used.",
-            get = function() return NSRT.Settings["PASelfPing"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.Settings["PASelfPing"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Combine Extra Action Button",
-            desc = "Combine the extra action button with the private aura macro.",
-            get = function() return NSRT.Settings["PAExtraAction"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.Settings["PAExtraAction"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Add Liquid Private Aura Macro",
-            desc = "Add Scan Event for Liquid Private Aura Macro",
-            get = function() return NSRT.Settings["LIQUID_MACRO"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.general["PA_MACRO"] = true
-                NSRT.Settings["LIQUID_MACRO"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "label",
-            get = function() return "Private Aura Keybind:" end,
-        },
-        {
-            type = "button",
-            name = getMacroKeybind("MACRO NS PA Macro"),
-            desc = "Set the keybind for the private aura macro",
-            param1 = "MACRO NS PA Macro",
-            param2 = "Private Aura Keybind", -- whatever reloe names the keybind to be in Bindings.xml
-            func = function(self, _, param1, param2)
-                registerKeybinding(self, param1, param2)
-            end,
-            id = "MACRO NS PA Macro",
-        },   
-        {
-            type = "breakline"
-        },
-        {
-            type = "label",
-            get = function() return "Cooldowns Options" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable Cooldown Checking",
-            desc = "Enable cooldown checking for your cooldowns on ready check. This is only active in Heroic and Mythic Raids.",
-            get = function() return NSRT.Settings["CheckCooldowns"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["CHECK_COOLDOWNS"] = true
-                NSRT.Settings["CheckCooldowns"] = value
-            end,
-            nocombat = true
-        },
-        {
-            type = "range",
-            name = "Pull Timer",
-            desc = "Pull timer used for cooldown checking.",
-            get = function() return NSRT.Settings["CooldownThreshold"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["CooldownThreshold"] = value
-            end,
-            min = 10,
-            max = 60,
-            step = 1,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Unready on Cooldown",
-            desc = "Automatically unready if a tracked spell is on cooldown.",
-            get = function() return NSRT.Settings["UnreadyOnCooldown"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["UNREADY_ON_COOLDOWN"] = true
-                NSRT.Settings["UnreadyOnCooldown"] = value
-            end,
-            nocombat = true
-        },
-        {
-            type = "button",
-            name = "Edit Cooldowns",
-            desc = "Edit the cooldowns checked on the ready check.",
-            func = function(self)
-                if not NSUI.cooldowns_frame:IsShown() then
-                    NSUI.cooldowns_frame:Show()
-                end
-            end,
-            nocombat = true
-        }
+        },    
     }
 
     local nicknames_options1_table = {
@@ -2205,8 +2081,8 @@ Press 'Enter' to hear the TTS]],
                 NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] = true
                 NSRT.Settings["Blizzard"] = value
             end,
-            name = "Enable Blizzard Nicknames",
-            desc = "Enable Nicknames to be used with Blizzard unit frames.",
+            name = "Enable Blizzard/Reskin Addons Nicknames",
+            desc = "Enable Nicknames to be used with Blizzard unit frames. This should automatically work for any Addon that reskins Blizzard Frames instead of creating their own frames. This for example includes RaidFrameSettings.",
             nocombat = true
         },
         {
@@ -2236,6 +2112,18 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
+            get = function() return NSRT.Settings["DandersFrames"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.nicknames["DANDERS_FRAMES_NICKNAMES"] = true
+                NSRT.Settings["DandersFrames"] = value
+            end,
+            name = "Enable DandersFrames Nicknames",
+            desc = "Enable Nicknames to be used with DandersFrames unit frames.",
+            nocombat = true
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             get = function() return NSRT.Settings["ElvUI"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] = true
@@ -2248,38 +2136,13 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            get = function() return NSRT.Settings["SuF"] end,
+            get = function() return NSRT.Settings["VuhDo"] end,
             set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["SUF_NICKNAMES"] = true
-                NSRT.Settings["SuF"] = value
+                NSUI.OptionsChanged.nicknames["VUHDO_NICKNAMES"] = true
+                NSRT.Settings["VuhDo"] = value
             end,
-            name = "Enable SUF Nicknames",
-            desc = "Enable Nicknames to be used with SUF unit frames. This requires adding your own Tag to the addon. You can copy the required code by clicking on the small 'i'",
-            nocombat = true,
-            id = "SUF-Toggle"
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            get = function() return NSRT.Settings["WA"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["WA_NICKNAMES"] = true
-                NSRT.Settings["WA"] = value
-            end,
-            name = "Enable WeakAuras Nicknames",
-            desc = "Enable Nicknames to be used with WeakAuras. This only works if name formatting is used in Display or for any assignment aura.",
-            nocombat = true
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            get = function() return NSRT.Settings["MRT"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.nicknames["MRT_NICKNAMES"] = true
-                NSRT.Settings["MRT"] = value
-            end,
-            name = "Enable MRT Nicknames",
-            desc = "Enable Nicknames to be used with MRT. This affects the Cooldown Tracking and Note Display. Nicknames in Assignments will still work with this disabled as long as you have the character data.",
+            name = "Enable VuhDo Nicknames",
+            desc = "Enable Nicknames to be used with VuhDo unit frames.",
             nocombat = true
         },
         {
@@ -2291,7 +2154,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["Unhalted"] = value
             end,
             name = "Enable Unhalted UF Nicknames",
-            desc = "Enable Nicknames to be used with Unhalted Unit Frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
+            desc = "Enable Nicknames to be used with Unhalted Unit Frames. You can choose 'NSNickName' as a tag within UUF.",
             nocombat = true
         },
 
@@ -2320,266 +2183,7 @@ Press 'Enter' to hear the TTS]],
         }
     }
 
-    local externals_options1_table = {
-        { type = "label", get = function() return "Externals Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Enable @player Ping",
-            desc = "Enable a @player ping when the external macro is used.",
-            get = function() return NSRT.Settings["ExternalSelfPing"] end,
-            set = function(self, fixedparam, value) 
-                NSUI.OptionsChanged.externals["EXTERNAL_MACRO"] = true
-                NSRT.Settings["ExternalSelfPing"] = value 
-            end,
-            nocombat = true
-        },
-        {
-            type = "label",
-            get = function() return "External Macro Keybind:" end,
-        },
-        {
-            type = "button",
-            name = getMacroKeybind("MACRO NS Ext Macro"),
-            desc = "Set the keybind for the external macro",
-            param1 = "MACRO NS Ext Macro",
-            param2 = "External Macro Keybind",
-            func = function(self, _, param1, param2) -- this only ever registers leftclick need to manually set right click
-                registerKeybinding(self, param1, param2)
-            end,
-            id = "MACRO NS Ext Macro",
-        },
-        
-        
-        {
-            type = "blank",
-        },
-
-        {
-        type = "label",
-        get = function() return "Innervate Request Keybind:" end,
-        },
-        
-        {
-            type = "button",
-            name = getMacroKeybind("MACRO NS Innervate"),
-            desc = "Set the keybind for the Innervate Request macro",
-            param1 = "MACRO NS Innervate",
-            param2 = "Innervate Request Macro Keybind",
-            func = function(self, _, param1, param2) -- this only ever registers leftclick need to manually set right click
-                registerKeybinding(self, param1, param2)
-            end,
-            id = "MACRO NS Innervate",
-        },
-
-        {
-            type = "breakline"
-        },
-        {
-            type = "button",
-            name = "Test External",
-            desc = "Simulate recieving an external.",
-            func = function(self)
-                NSI:DisplayExternal(237554, GetUnitName("player"))
-            end,
-            nocombat = true
-        },
-        {
-            type = "blank",
-        },
-        {
-            type = "button",
-            name = "Toggle External Anchor",
-            desc = "Toggle the external anchor frame.",
-            func = function(self)
-                if NSUI.externals_anchor:IsShown() then
-                    NSUI.externals_anchor:Hide()
-                else
-                    NSUI.externals_anchor:Show()
-                end
-            end,
-            nocombat = true
-        },
-    }
-    local weakaura_options1_table = {
-        
-        {
-            type = "label",
-            get = function() return "Permanent Auras" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "button",
-            name = "Anchor Auras 1440p",
-            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras, scaled for a 1440p Monitor",
-            func = function(self)
-                ImportWeakAura("anchor_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "button",
-            name = "Anchor Auras 1080p",
-            desc = "Import WeakAura Anchors required for all Northern Sky WeakAuras, scaled for a 1080p Monitor",
-            func = function(self)
-                ImportWeakAura("anchor_weakaura_1080")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "button",
-            name = "External Alert",
-            desc = "Import WeakAura External Alert required for the external macro.",
-            func = function(self)
-                ImportWeakAura("external_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-
-        {
-            type = "button",
-            name = "Interrupt WA",
-            desc = "Import Interrupt Anchor WeakAura",
-            func = function(self)
-                ImportWeakAura("interrupt_weakaura")
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "breakline"
-        },
-
-        {
-            type = "label",
-            get = function() return "Raid Auras" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "button",
-            name = "Manaforge Raid WA",
-            desc = "Import Manaforge Omega WeakAuras",            
-            func = function(self)
-                ImportWeakAura("raid_weakaura_manaforge")
-            end,
-            nocombat = true,
-            spacement = true,
-        },
-        
-        
-        {
-            type = "button",
-            name = "Liberation Raid WA",
-            desc = "Import Liberation of Undermine Raid WeakAuras",
-            func = function(self)
-                ImportWeakAura("raid_weakaura_undermine")
-            end,
-            nocombat = true,
-            spacement = true,
-        },
-        {
-            type = "label",
-            get = function() return "Other Misc Auras" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "button",
-            name = "Manaforge Pace WA",
-            desc = "Import Manaforge Omega Pace WA",            
-            func = function(self)
-                ImportWeakAura("pace_weakaura_manaforge")
-            end,
-            nocombat = true,
-            spacement = true,
-        },
-
-        {
-            type = "breakline"
-        },
-
-        {
-            type = "label",
-            get = function() return "WeakAura Updates" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Auto Update WL WA",
-            desc = "Automatically update whitelisted WeakAuras. (Requires WeakAuras Companion Desktop Application)",
-            get = function() return NSRT.Settings["AutoUpdateWA"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["AutoUpdateWA"] = value
-            end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Auto Update Raid WA",
-            desc = "Automatically updates or imports the current season's raid Northern Sky WeakAuras.",
-            get = function() return NSRT.Settings["AutoUpdateRaidWA"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["AutoUpdateRaidWA"] = value
-            end,
-        },
-
-        {
-            type = "blank",
-        },
-
-        {
-            type = "button",
-            name = "Whitelist WeakAuras",
-            desc = "Whitelist WeakAura URLs for auto updating.",
-            func = function(self)
-                if not NSUI.whitelisted_wa_edit_frame:IsShown() then
-                    NSUI.whitelisted_wa_edit_frame:Show()
-                else
-                    NSUI.whitelisted_wa_edit_frame:Hide()
-                end
-            end,
-            spacement = true
-        },
-
-        {
-            type = "breakline"
-        },
-        {
-            type = "label",
-            get = function() return "WeakAuras Sharing" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "button",
-            name = "Send WeakAura to Raid",
-            desc = "Send an individual WeakAura string to the raid.",
-            func = function(self)
-                SendWeakAuras()
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
-            type = "select",
-            get = function() return NSRT.Settings["WeakAurasImportAccept"] end,
-            values = function() return build_weakauras_importaccept_options() end,
-            name = "Import Accept",
-            desc = "Choose who you are accepting WeakAuras imports to come from. Note that even if guild is selected here this still only works when in the same raid as them",
-            nocombat = true
-        },
-    }
+    
     local setupmanager_options1_table = {
         
         {
@@ -2603,53 +2207,27 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Missing Raidbuffs in Raid-Tab",
+            desc = "Show a list of missing raidbuffs in your comp in the raid tab. In there you can swap between Mythic and Flex, which will then only consider players up to group 4/6 respectively.",
+            get = function() return NSRT.Settings.MissingRaidBuffs end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.MissingRaidBuffs = value
+                NSI:UpdateRaidBuffFrame()
+            end,
+            nocombat = true,
+        }, 
     }
 
     local reminder_options1_table = {
-        --[[
-        {
-            type = "button",
-            name = "Text Settings",
-            desc = "Open the Settings for Text-Reminders",
-            func = function(self)
-                
-            end,
-            nocombat = true,
-            spacement = true
-        },]]
-        --[[
-        {
-            type = "button",
-            name = "Icon/Bar Settings",
-            desc = "Open the Settings for Icon/Bar-Reminders",
-            func = function(self)
-                
-            end,
-            nocombat = true,
-            spacement = true
-        },]]
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Raidleader Reminder",
-            desc = "Enables reminders set by the raidleader",
-            get = function() return NSRT.ReminderSettings.enabled end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.enabled = value
-            end,
-            nocombat = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "MRT Note Reminder",
-            desc = "Enables reminders entered into MRT note",
-            get = function() return NSRT.ReminderSettings.MRTNote end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.MRTNote = value
-            end,
-            nocombat = true,
-        },
+        
         {
             type = "label",
             get = function() return "Spell Settings" end,
@@ -2752,85 +2330,6 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "label",
-            get = function() return "Icon Settings" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
-            type = "select",
-            name = "Grow Direction",
-            desc = "Grow Direction",
-            get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
-            values = function() return build_growdirection_options("IconSettings") end,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Icon-Width",
-            desc = "Width of the Icon",
-            get = function() return NSRT.ReminderSettings.IconSettings.Width end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.Width = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Icon-Height",
-            desc = "Height of the Icon",
-            get = function() return NSRT.ReminderSettings.IconSettings.Height end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.Height = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-
-        {
-            type = "select",
-            name = "Font",
-            desc = "Font",
-            get = function() return NSRT.ReminderSettings.IconSettings.Font end,
-            values = function() return build_media_options("IconSettings", "Font") end,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Font-Size",
-            desc = "Font Size",
-            get = function() return NSRT.ReminderSettings.IconSettings.FontSize end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.FontSize = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Timer-Text Font-Size",
-            desc = "Font Size of the Timer-Text",
-            get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.IconSettings.TimerFontSize = value
-                NSI:UpdateExistingFrames()
-            end,
-            min = 20,
-            max = 200,
-            nocombat = true,
-        },
-
-        {
-            type = "breakline"
-        },
-        {
-            type = "label",
             get = function() return "Text Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
@@ -2925,6 +2424,109 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
 
         },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing between Text reminders",
+            get = function() return NSRT.ReminderSettings.TextSettings["Spacing"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TextSettings["Spacing"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -5,
+            max = 20,
+            nocombat = true,
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Icon Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
+            values = function() return build_growdirection_options("IconSettings") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Width",
+            desc = "Width of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Width = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Icon-Height",
+            desc = "Height of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Height = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font",
+            get = function() return NSRT.ReminderSettings.IconSettings.Font end,
+            values = function() return build_media_options("IconSettings", "Font") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font Size",
+            get = function() return NSRT.ReminderSettings.IconSettings.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.FontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Timer-Text Font-Size",
+            desc = "Font Size of the Timer-Text",
+            get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.TimerFontSize = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 20,
+            max = 200,
+            nocombat = true,
+        },     
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing between Icon reminders",
+            get = function() return NSRT.ReminderSettings.IconSettings["Spacing"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings["Spacing"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -5,
+            max = 20,
+            nocombat = true,
+        },  
 
         {
             type = "label",
@@ -3021,6 +2623,19 @@ Press 'Enter' to hear the TTS]],
 
         },
         {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing between Bar reminders",
+            get = function() return NSRT.ReminderSettings.BarSettings["Spacing"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.BarSettings["Spacing"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -5,
+            max = 20,
+            nocombat = true,
+        },
+        {
             type = "breakline"
         },
         {
@@ -3101,20 +2716,47 @@ Press 'Enter' to hear the TTS]],
             nocombat = true
 
         },
-
+                 
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Manage Reminders" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),            
+        },
         {
             type = "button",
-            name = "Preview",
+            name = "Preview Alerts",
             desc = "Preview Reminders and unlock their anchors to move them around",
             func = function(self)
+                if NSI.PreviewTimer then
+                    NSI.PreviewTimer:Cancel()
+                    NSI.PreviewTimer = nil
+                end
                 if NSI.IsInPreview then
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
                     for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                        if NSI[v] then
+                            NSI[v]:StopMovingOrSizing()
+                        end
                         NSI:ToggleMoveFrames(NSI[v], false)
                     end
                     return
                 end
+                NSI.PreviewTimer = C_Timer.NewTimer(12, function()
+                    if NSI.IsInPreview then
+                        NSI.IsInPreview = false
+                        NSI:HideAllReminders()
+                        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                            if NSI[v] then
+                                NSI[v]:StopMovingOrSizing()
+                            end
+                            NSI:ToggleMoveFrames(NSI[v], false)
+                        end
+                    end
+                end)
                 NSI.IsInPreview = true
                 for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
                     NSI:ToggleMoveFrames(NSI[v], true)
@@ -3199,8 +2841,48 @@ Press 'Enter' to hear the TTS]],
             spacement = true
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Use Shared Reminders",
+            desc = "Enables reminders set by the raidleader or shared by an assist",
+            get = function() return NSRT.ReminderSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.enabled = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
+            end,
+            nocombat = true,
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Use Personal Reminders",
+            desc = "Enables reminders set into your personal reminder",
+            get = function() return NSRT.ReminderSettings.PersNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersNote = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Use MRT Note Reminders",
+            desc = "Enables reminders entered into MRT note",
+            get = function() return NSRT.ReminderSettings.MRTNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.MRTNote = value
+            end,
+            nocombat = true,
+        },               
+        
+
+        {
             type = "button",
-            name = "Reminders Overview",
+            name = "Shared Reminders",
             desc = "Shows a list of all Reminders",
             func = function(self)
                 if not NSUI.reminders_frame:IsShown() then
@@ -3212,8 +2894,294 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
+        {
+            type = "button",
+            name = "Personal Reminders",
+            desc = "Shows a list of all Personal Reminders",
+            func = function(self)
+                if not NSUI.personal_reminders_frame:IsShown() then
+                    NSUI.personal_reminders_frame:Show()
+                else
+                    NSUI.personal_reminders_frame:Hide()
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Share on Ready Check",
+            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
+            get = function() return NSRT.ReminderSettings.AutoShare end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.AutoShare = value
+            end,
+            nocombat = true,
+        },
+    }
+    
+    local reminder_note_options1_table = {
+        {
+            type = "label",
+            get = function() return "This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 2 types of displays. The first one shows all reminders, the second one shows only those that will activate for you." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "Shared Reminder-Note" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        
+        {
+            type = "button",
+            name = "Unlock Shared Reminder",
+            desc = "Locks/Unlocks the Reminder-Note to be moved around",
+            func = function(self)
+                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
+                    NSI:UpdateReminderFrame()
+                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, false)
+                    NSI.ReminderFrameMover.Resizer:Hide()
+                    NSI.ReminderFrameMover:SetResizable(false)
+                    NSRT.ReminderSettings.ReminderFrameMoveable = false
+                else
+                    NSI:UpdateReminderFrame()
+                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, true)
+                    NSI.ReminderFrameMover.Resizer:Show()
+                    NSI.ReminderFrameMover:SetResizable(true)
+                    NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+                    NSRT.ReminderSettings.ReminderFrameMoveable = true
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },   
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show All Reminders-Note",
+            desc = "Whether you want to show the Shared Reminder-Note on screen permanently",
+            get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowReminderFrame = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame()
+            end,
+            nocombat = true,
+        },        
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font-Size of the Shared Reminder-Note",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ReminderFrame.FontSize = value
+                NSI:UpdateReminderFrame()
+            end,
+            min = 2,
+            max = 40,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font of the Shared Reminder-Note",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
+            values = function() 
+                return build_media_options("ReminderFrame", "Font", false, true, false) 
+            end, 
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Shared Reminder-Note",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ReminderFrame.Width = value
+                NSI:UpdateReminderFrame()
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Shared Reminder-Note",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ReminderFrame.Height = value
+                NSI:UpdateReminderFrame()
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },  
+
+        {
+            type = "color",
+            name = "Background-Color",
+            desc = "Color of the Background of the Shared Reminder-Note when unlocked",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
+                NSI:UpdateReminderFrame()
+            end,
+            hasAlpha = true,
+            nocombat = true,
+            spacement = true,
+
+        },        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Only Spell-Reminders",
+            desc = "By default only Spell-Reminders will be shown. Disabling this will also show you Text-Reminders",
+            get = function() return NSRT.ReminderSettings.OnlySpellReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OnlySpellReminders = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
+            end,
+        },
+        {
+            type = "breakline",
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "Personal Reminder-Note" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),         
+        },
+        
+        {
+            type = "button",
+            name = "Unlock Pers Reminder",
+            desc = "Locks/Unlocks the Personal Reminder-Note to be moved around",
+            func = function(self)
+                if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
+                    NSI:UpdateReminderFrame(true)
+                    NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, false)
+                    NSI.PersonalReminderFrameMover.Resizer:Hide()
+                    NSI.PersonalReminderFrameMover:SetResizable(false)
+                    NSRT.ReminderSettings.PersonalReminderFrameMoveable = false
+                else
+                    NSI:UpdateReminderFrame(true)
+                    NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, true)
+                    NSI.PersonalReminderFrameMover.Resizer:Show()
+                    NSI.PersonalReminderFrameMover:SetResizable(true)
+                    NSI.PersonalReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+                    NSRT.ReminderSettings.PersonalReminderFrameMoveable = true
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },  
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Personal Reminders-Note",
+            desc = "Whether you want to display the Note for Reminders only relevant to you",
+            get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowPersonalReminderFrame = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font-Size of the Personal Reminder-Note",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersonalReminderFrame.FontSize = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            min = 2,
+            max = 40,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font of the Personal Reminder-Note",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Font end,
+            values = function() 
+                return build_media_options("PersonalReminderFrame", "Font", false, true, true) 
+            end, 
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Personal Reminder-Note",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersonalReminderFrame.Width = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Personal Reminder-Note",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.PersonalReminderFrame.Height = value
+                NSI:UpdateReminderFrame(true)
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+
+        {
+            type = "color",
+            name = "Background-Color",
+            desc = "Color of the Background of the Personal Reminder-Note when unlocked",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.BGcolor end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
+                NSI:UpdateReminderFrame(true)
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        }, 
+
     }
     local assignments_options1_table = {        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Assignment on Pull",
+            desc = "Shows your Assignment on Pull",
+            get = function() return NSRT.AssignmentSettings.OnPull end,
+            set = function(self, fixedparam, value)
+                NSRT.AssignmentSettings.OnPull = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "label",
+            get = function() return "For the following Boxes only the Settings of the Raidleader matter." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
         {
             type = "label",
             get = function() return "Vaelgor & Ezzorak" end,
@@ -3270,7 +3238,12 @@ Press 'Enter' to hear the TTS]],
         },
     }
 
-    local encounteralerts_options1_table = {        
+    local encounteralerts_options1_table = {     
+        {
+            type = "label",
+            get = function() return "Midnight S1" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },   
         {
             type = "toggle",
             boxfirst = true,
@@ -3378,8 +3351,638 @@ Press 'Enter' to hear the TTS]],
                 NSRT.EncounterAlerts[3183].enabled = value
             end,
             nocombat = true,
+        },
+        {
+            type = "breakline",
+        },
+        {
+            type = "label",
+            get = function() return "Manaforge Omega" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Nexus King",
+            desc = "Probably a bit rough in 1st week of pre-patch, use at own risk.",
+            get = function() return NSRT.EncounterAlerts[3134] and NSRT.EncounterAlerts[3134].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3134] = NSRT.EncounterAlerts[3134] or {}
+                NSRT.EncounterAlerts[3134].enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Dimensius",
+            desc = "Probably a bit rough in 1st week of pre-patch, use at own risk.",
+            get = function() return NSRT.EncounterAlerts[3135] and NSRT.EncounterAlerts[3135].enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3135] = NSRT.EncounterAlerts[3135] or {}
+                NSRT.EncounterAlerts[3135].enabled = value
+            end,
+            nocombat = true,
+        },
+    }
+
+    local readycheck_options1_table = {        
+        
+        {
+            type = "label",
+            get = function() return "Gear/Misc Checks" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Missing Item Check",
+            desc = "Checks if any slots are empty",
+            get = function() return NSRT.ReadyCheckSettings.MissingItemCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.MissingItemCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Item Level Check",
+            desc = "Checks if you have any slot equipped below the minimum item level",
+            get = function() return NSRT.ReadyCheckSettings.ItemLevelCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.ItemLevelCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Embellishment Check",
+            desc = "Checks if you have 2 Embellishments equipped",
+            get = function() return NSRT.ReadyCheckSettings.CraftedCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.CraftedCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "4pc Check",
+            desc = "Checks if you have 4pc of the current raid-tier equipped.",
+            get = function() return NSRT.ReadyCheckSettings.TierCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.TierCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enchant Check",
+            desc = "Checks if you have all slots enchanted",
+            get = function() return NSRT.ReadyCheckSettings.EnchantCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.EnchantCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Gem Check",
+            desc = "Checks if you have all slots gemmed",
+            get = function() return NSRT.ReadyCheckSettings.GemCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.GemCheck = value
+            end,
+            nocombat = true,
+        }, 
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Repair Check",
+            desc = "Checks if any piece needs repair",
+            get = function() return NSRT.ReadyCheckSettings.RepairCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.RepairCheck = value
+            end,
+            nocombat = true,
+        },         
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Gateway Control Shard Check",
+            desc = "Checks if you have a Gateway Control Shard and whether or not it is located on your actionbars",
+            get = function() return NSRT.ReadyCheckSettings.GatewayShardCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.GatewayShardCheck = value
+            end,
+            nocombat = true,
+        }, 
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "label",
+            get = function() return "Buff Checks" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Raid-Buff Check",
+            desc = "Checks if any relevant class needs your buff",
+            get = function() return NSRT.ReadyCheckSettings.RaidBuffCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.RaidBuffCheck = value
+            end,
+            nocombat = true,
+        }, 
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Healer Soulstone Check",
+            desc = "Checks for Warlocks whether they have soulstoned a healer and it has at least 5m duration left. It will only check this if Soulstone is ready or has less than 30s CD left.",
+            get = function() return NSRT.ReadyCheckSettings.SoulstoneCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.SoulstoneCheck = value
+            end,
+            nocombat = true,
+        }, 
+
+        
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "label",
+            get = function() return "Cooldowns Options" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enable Cooldown Checking",
+            desc = "Enable cooldown checking for your cooldowns on ready check. This is only active in Heroic and Mythic Raids.",
+            get = function() return NSRT.Settings["CheckCooldowns"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["CHECK_COOLDOWNS"] = true
+                NSRT.Settings["CheckCooldowns"] = value
+            end,
+            nocombat = true
+        },
+        {
+            type = "range",
+            name = "Pull Timer",
+            desc = "Pull timer used for cooldown checking.",
+            get = function() return NSRT.Settings["CooldownThreshold"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["CooldownThreshold"] = value
+            end,
+            min = 10,
+            max = 60,
+            step = 1,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Unready on Cooldown",
+            desc = "Automatically unready if a tracked spell is on cooldown.",
+            get = function() return NSRT.Settings["UnreadyOnCooldown"] end,
+            set = function(self, fixedparam, value)
+                NSUI.OptionsChanged.general["UNREADY_ON_COOLDOWN"] = true
+                NSRT.Settings["UnreadyOnCooldown"] = value
+            end,
+            nocombat = true
+        },
+        {
+            type = "button",
+            name = "Edit Cooldowns",
+            desc = "Edit the cooldowns checked on the ready check.",
+            func = function(self)
+                if not NSUI.cooldowns_frame:IsShown() then
+                    NSUI.cooldowns_frame:Show()
+                end
+            end,
+            nocombat = true
         }
     }
+
+    local RaidBuffMenu = 
+    {
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Flex Raid",
+            desc = "Check raid buffs up to Group 6 instead of only Group 4.",
+            get = function() return NSRT.Settings.FlexRaid end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.FlexRaid = value
+                NSI:UpdateRaidBuffFrame()
+            end,
+        },
+        {
+            type = "button",
+            name = "Disable this Feature",
+            desc = "Disable the Missing Raid Buffs Feature. You can re-enable it in the Setup Manager Settings.",
+            func = function(self)
+                NSRT.Settings.MissingRaidBuffs = false
+                NSI:UpdateRaidBuffFrame()
+            end,
+        }
+    }
+    
+    local privateaura_options1_table = {    
+        {
+            type = "label",
+            get = function() return "Personal Private Aura Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Aura Display is enabled",
+            get = function() return NSRT.PASettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.enabled = value
+                NSI:InitPA()
+            end,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview/Unlock",
+            desc = "Preview Private Auras to move them around.",
+            func = function(self)
+                NSI.IsPAPreview = not NSI.IsPAPreview
+                NSI:UpdatePADisplay(true)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.PASettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options("PASettings", "GrowDirection") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
+            get = function() return NSRT.PASettings.Spacing end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Spacing = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = -5,
+            max = 20,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Private Aura Display",
+            get = function() return NSRT.PASettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Width = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 10,
+            max = 500,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Private Aura Display",
+            get = function() return NSRT.PASettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Height = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 10,
+            max = 500,
+        },
+
+        {
+            type = "range",
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
+            get = function() return NSRT.PASettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.xOffset = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = -3000,
+            max = 3000,
+        },
+        {
+            type = "range",
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
+            get = function() return NSRT.PASettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.yOffset = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = -3000,
+            max = 3000,
+        },
+        {
+            type = "range",
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
+            get = function() return NSRT.PASettings.Limit end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.Limit = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 1,
+            max = 10,
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "RaidFrame Private Aura Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Aura on Raidframes are enabled",
+            get = function() return NSRT.PARaidSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.enabled = value
+                NSI:InitRaidPA(false)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview",
+            desc = "Preview Private Auras on your own Raidframe. This only works if you actually have a frame for yourself and you can't drag this one around, use the x/y offset instead.",
+            func = function(self)
+                NSI.IsRaidPAPreview = not NSI.IsRaidPAPreview
+                NSI:UpdatePADisplay(false)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.PARaidSettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options("PARaidSettings", "GrowDirection") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.Spacing end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Spacing = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = -5,
+            max = 10,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Width = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 4,
+            max = 50,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Height = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 4,
+            max = 50,
+        },
+
+        {
+            type = "range",
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.xOffset = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = -200,
+            max = 200,
+        },
+        {
+            type = "range",
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
+            get = function() return NSRT.PARaidSettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.yOffset = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = -200,
+            max = 200,
+        },
+        {
+            type = "range",
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
+            get = function() return NSRT.PARaidSettings.Limit end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.Limit = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 1,
+            max = 10,
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "Private Aura Sounds" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "button",
+            name = "Edit Sounds",
+            desc = "Open the Private Aura Sounds Editor",
+            func = function()
+                if not NSUI.pasound_frame:IsShown() then
+                    NSUI.pasound_frame:Show()
+                end
+            end,
+            nocombat = true,
+            spacement = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Use Default Private Aura Sounds",
+            desc = "This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spellid's yourself previously this button will NOT overwrite that.",
+            get = function() return NSRT.UseDefaultPASounds end,
+            set = function(self, fixedparam, value)
+                NSRT.UseDefaultPASounds = value
+                if NSRT.UseDefaultPASounds then
+                    NSI:ApplyDefaultPASounds()
+                    NSI:RefreshPASoundEditUI()
+                end
+            end,
+            nocombat = true,
+        },
+        {
+            type = "breakline",
+        },
+        
+        {
+            type = "label",
+            get = function() return "Co-Tank Private Auras" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Auras for Co-Tanks are enabled",
+            get = function() return NSRT.PATankSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.enabled = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview/Unlock",
+            desc = "Preview Co-Tank Private Auras.",
+            func = function(self)
+                NSI.IsTankPAPreview = not NSI.IsTankPAPreview
+                NSI:UpdatePADisplay(false, true)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "Grow Direction",
+            get = function() return NSRT.PATankSettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options("PATankSettings", "GrowDirection") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.Spacing end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Spacing = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = -5,
+            max = 10,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Width = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 10,
+            max = 500,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Height = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 10,
+            max = 500,
+        },
+
+        {
+            type = "range",
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.xOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.xOffset = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = -3000,
+            max = 3000,
+        },
+        {
+            type = "range",
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
+            get = function() return NSRT.PATankSettings.yOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.yOffset = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = -3000,
+            max = 3000,
+        },
+        {
+            type = "range",
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
+            get = function() return NSRT.PATankSettings.Limit end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.Limit = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 1,
+            max = 10,
+        },
+        {
+            type = "select",
+            name = "Grow Direction",
+            desc = "This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included.",
+            get = function() return NSRT.PATankSettings.GrowDirection end,
+            values = function() return build_PAgrowdirection_options("PATankSettings", "MultiTankGrowDirection") end,
+            nocombat = true,
+        },
+    }
+
+    
 
 
     -- Build options menu for each tab
@@ -3389,60 +3992,40 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nicknames_callback)
-    DF:BuildMenu(externals_tab, externals_options1_table, 10, -100, window_height - 10, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        externals_callback)
-    DF:BuildMenu(weakaura_tab, weakaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        weakaura_callback)
     DF:BuildMenu(setupmanager_tab, setupmanager_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         setupmanager_callback)
     DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         reminder_callback)
+    DF:BuildMenu(reminder_note_tab, reminder_note_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        reminder_note_callback)
     DF:BuildMenu(assignments_tab, assignments_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         assignments_callback)
     DF:BuildMenu(encounteralerts_tab, encounteralerts_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         encounteralerts_callback)
+    DF:BuildMenu(readycheck_tab, readycheck_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        readycheck_callback)
+    DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        nil)
+    DF:BuildMenu(privateaura_tab, privateaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        privateaura_callback)
+    NSI.RaidBuffCheck:SetMovable(false)
+    NSI.RaidBuffCheck:EnableMouse(false)
 
-    -- Add SUF Setup guide tooltip button thingy
-
-    NSUI.suf_setup_guide_popup = BuildSUFSetupGuidePopup()
-
-    local help_i_texture = [[Interface\common\help-i]]
-    local SUF_Toggle = nicknames_tab:GetWidgetById("SUF-Toggle")
-    local suf_help_button = DF:CreateButton(nicknames_tab, function()
-        if NSUI.suf_setup_guide_popup and not NSUI.suf_setup_guide_popup:IsShown() then
-            NSUI.suf_setup_guide_popup:Show()
-        else
-            NSUI.suf_setup_guide_popup:Hide()
-        end
-    end, 20, 20, "")
-    suf_help_button:SetIcon(help_i_texture)
-    suf_help_button:SetPoint("LEFT", SUF_Toggle.hasLabel, "RIGHT", 0, 0)
-
-    -- Set right click functions for clearing keybinding on keybind buttons
-    local PAMacroButton = general_tab:GetWidgetById("MACRO NS PA Macro")
-    local ExternalMacroButton = externals_tab:GetWidgetById("MACRO NS Ext Macro")
-    local InnervateMacroButton = externals_tab:GetWidgetById("MACRO NS Innervate")
-    if PAMacroButton then
-        PAMacroButton:SetClickFunction(clearKeybinding, PAMacroButton.param1, PAMacroButton.param2, "RightButton")
-    end
-    if ExternalMacroButton then
-        ExternalMacroButton:SetClickFunction(clearKeybinding, ExternalMacroButton.param1, ExternalMacroButton.param2, "RightButton")
-    end
-    if InnervateMacroButton then
-        InnervateMacroButton:SetClickFunction(clearKeybinding, InnervateMacroButton.param1, InnervateMacroButton.param2, "RightButton")
-    end
-
-    -- Build version check UI
+    -- Build UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame = BuildNicknameEditUI()
     NSUI.cooldowns_frame = BuildCooldownsEditUI()
     NSUI.reminders_frame = BuildRemindersEditUI()
+    NSUI.pasound_frame = BuildPASoundEditUI()
+    NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
 
     -- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
@@ -3451,64 +4034,6 @@ Press 'Enter' to hear the TTS]],
     NSUI.StatusBar.authorName:SetText(statusBarText)
 end
 
-function NSI:DisplayExternal(spellId, unit)
-    local text = ""
-    if spellId == "NoInnervate" then        
-        local spellIcon = C_Spell.GetSpellInfo(29166).iconID
-        NSUI.external_frame.texture:SetTexture(spellIcon)
-        text = "|cffff0000NO INNERVATE|r"
-    elseif spellId then
-        local spellIcon = C_Spell.GetSpellInfo(spellId).iconID
-        NSUI.external_frame.texture:SetTexture(spellIcon)
-        local giver = NSAPI:Shorten(unit, 8)
-        text = "From: " .. giver
-    else
-        NSUI.external_frame.texture:SetTexture(237555)
-        text = "|cffff0000NO EXTERNAL|r"
-    end
-
-    NSUI.external_frame.text:SetText(text)
-    NSUI.external_frame:Show()
-
-    C_Timer.After(4, function()
-        NSUI.external_frame:Hide()
-    end)
-end
-
-function NSUI:LoadExternalsAnchorPosition()
-    NSRT.NSUI.externals_anchor.settings = NSRT.NSUI.externals_anchor.settings or {
-        anchorPoint = {
-            "CENTER", "UIParent", "CENTER", 0, 150
-        },
-        width = 70,
-        height = 70
-    }
-    if not NSRT.NSUI.externals_anchor.settings.anchorPoint or not NSRT.NSUI.externals_anchor.settings.width or not NSRT.NSUI.externals_anchor.settings.height then
-        NSI:Print("No externals anchor settings found.... THIS SHOULD NOT HAPPEN")
-        return
-    end
-    NSUI.externals_anchor:SetPoint(unpack(NSRT.NSUI.externals_anchor.settings.anchorPoint))
-    NSUI.externals_anchor:SetSize(NSRT.NSUI.externals_anchor.settings.width, NSRT.NSUI.externals_anchor.settings.height)
-end
-
-function NSUI:SaveExternalsAnchorPosition()
-    local anchorPoint = { NSUI.externals_anchor:GetPoint() }
-    anchorPoint[2] = "UIParent"
-
-    local width, height = NSUI.externals_anchor:GetSize()
-    NSRT.NSUI.externals_anchor.settings = {
-        anchorPoint = anchorPoint,
-        width = width,
-        height = height
-    }
-end
-
-function NSUI:ResetExternalsAnchorPosition()
-    NSUI.externals_anchor:ClearAllPoints()
-    NSUI.externals_anchor:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-    NSUI.externals_anchor:SetSize(70, 70)
-    NSRT.NSUI.externals_anchor.settings.anchorPoint = { "CENTER", UIParent, "CENTER", 0, 150 }
-end
 function NSUI:ToggleOptions()
     if NSUI:IsShown() then
         NSUI:Hide()
@@ -3543,37 +4068,16 @@ function NSI:NickNamesSyncPopup(unit, nicknametable)
     return popup
 end
 
-function NSI:WAImportPopup(unit, str) 
-    local popup = DF:CreateSimplePanel(UIParent, 300, 120, "WA Import", "WAImportPopup", {
-        DontRightClickClose = true
-    })
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-
-    local label = DF:CreateLabel(popup, NSAPI:Shorten(unit) .. " is attempting to send you a WeakAura.", 11)
-
-    label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-    label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
-    label:SetJustifyH("CENTER")
-
-    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, "Cancel")
-    cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
-    cancel_button:SetTemplate(options_button_template)
-
-    local accept_button = DF:CreateButton(popup, function() 
-        WA.Import(str)
-        popup:Hide() 
-    end, 130, 20, "Accept")
-    accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
-    accept_button:SetTemplate(options_button_template)
-
-    return popup
-end
-
-function NSAPI:DisplayText(text, duration)
+function NSI:DisplayText(text, duration)
+    if self:Restricted() then return end
     if NSUI and NSUI.generic_display then
         NSUI.generic_display.text:SetText(text)
         NSUI.generic_display:Show()
-        C_Timer.After(duration or 4, function() NSUI.generic_display:Hide() end)
+        if self.TextHideTimer then
+            self.TextHideTimer:Cancel()
+            self.TextHideTimer = nil
+        end
+        self.TextHideTimer = C_Timer.NewTimer(duration or 10, function() NSUI.generic_display:Hide() end)
     end
 end
 

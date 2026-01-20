@@ -118,7 +118,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         local subgroup = select(3, GetRaidRosterInfo(i))
         local unit = "raid"..i
         if not UnitExists(unit) then break end
-        local specid = NSAPI:GetSpecs(unit) or 0
+        local specid = self:GetSpecs(unit) or 0
         local class = select(3, UnitClass(unit))
         local role = UnitGroupRolesAssigned(unit)
         if subgroup <= lastgroup then
@@ -403,16 +403,156 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             self.specs = {}
-            if self:IsMidnight() then
-                NSI:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
-            else
-                NSAPI:Broadcast("NSAPI_SPEC_REQUEST", "RAID", "nilcheck")
-            end
+            NSI:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
         else
             print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
         end
+    end
+end
+
+local DF = _G["DetailsFramework"]
+NSI.RaidBuffCheck = DF:CreateSimplePanel(UIParent, 300, 300, "[NSRT] Missing Raid Buffs",
+        "NSIRaidBuffFrame", {
+        })
+NSI.RaidBuffCheck:Hide()
+local MissingBuffLabel = DF:CreateLabel(NSI.RaidBuffCheck, "", 14)
+MissingBuffLabel:SetPoint("TOPLEFT", NSI.RaidBuffCheck, "TOPLEFT", 2, -60)
+
+
+local className = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER"}
+local MissingTexts = {"Battle Shout", "Devotion Aura", "Hunter's Mark", "Rogue Poison", "Stamina", "Grip/AS Slow", "Skyfury", "Intellect", "Warlock", "Phys Debuff", "Mark of the Wild", "Magic Debuff", "Evoker"}
+function NSI:UpdateRaidBuffFrame()
+    if not NSRT.Settings.MissingRaidBuffs or not UnitInRaid("player") or not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings.Debug) then
+        self.RaidBuffCheck:Hide()
+        return
+    end
+    local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
+    if PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == nil then -- first time opening PVE frame, tab info is not yet available
+        C_Timer.After(0.1, function() NSI:UpdateRaidBuffFrame() end)
+        return
+    end
+    local LFGFrame = PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == 1
+    local parent = (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
+    if parent then   
+        self.RaidBuffCheck:ClearAllPoints()
+        self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)        
+        self.RaidBuffCheck:SetHeight(parent:GetHeight()*parent:GetScale()-4)
+        self.RaidBuffCheck:Show()
+        local count = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+        -- Automatically detect difficulty if player is zoned in a Raid, otherwise use the setting
+        local maxgroup = NSRT.Settings.FlexRaid and 6 or 4
+        for unit in self:IterateGroupMembers() do
+            local group = self:GetSubGroup(unit)
+            if group <= maxgroup then
+                local class = select(3, UnitClass(unit))
+                count[class] = count[class] + 1
+            end
+        end
+        local text = ""
+        local resscount = 0
+        local lustcount = 0
+        for i=1, #count do
+            if i == 2 or i == 6 or i == 9 or i == 11 then
+                resscount = resscount + count[i]
+            end
+            if i == 3 or i == 7 or i == 8 or i == 13 then
+                lustcount = lustcount + count[i]
+            end
+            if count[i] == 0 then
+                text = text..GetClassColorObj(className[i]):WrapTextInColorCode("Missing "..MissingTexts[i].."\n")
+            end
+        end
+        if resscount > 0 then            
+            text = text.."Available Resses: "..resscount.."\n"
+        else
+            text = text.."|cFFFF0000No Resses Available\n|r"
+        end
+        if lustcount > 0 then
+            text = text.."Available Lusts: "..lustcount.."\n"
+        else
+            text = text.."|cFFFF0000No Lusts Available\n|r"
+        end
+        if count[4] == 1 then
+            text = text..GetClassColorObj(className[4]):WrapTextInColorCode("Only 1 Rogue Poison\n")
+        end
+        if count[13] > 0 then
+            text = text..GetClassColorObj(className[13]):WrapTextInColorCode("Time Spirals: "..count[13].."\n")
+        end
+        if count[9] > 0 then
+            text = text..GetClassColorObj(className[9]):WrapTextInColorCode("Gateways: "..count[9].."\n")
+        end
+        MissingBuffLabel:SetText(text)
+    else
+        self.RaidBuffCheck:Hide()
+    end
+end
+
+FriendsFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+PVEFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+
+function NSI:InviteFromReminder(str, init)
+    local list = NSRT.InviteList[str]
+    if list and not self:Restricted() then
+        self.CurrentInviteList = list
+        self.InviteInProgress = true
+        self:InviteList(list)
+        if self.InviteTimer then 
+            self.InviteTimer:Cancel() 
+            self.InviteTimer = nil
+        end
+        self.InviteTimer = C_Timer.NewTimer(10, function()
+            self.InviteInProgress = nil
+        end)
+    end
+end
+
+function NSI:InviteList(list)
+    if not list then return end
+    local myrealm = GetRealmName()
+    for _, name in ipairs(list) do
+        local fullname = ""
+        local name, realm = strsplit("-", name)
+        if realm == nil or realm == "" or realm == myrealm then
+            fullname = name
+        else
+            fullname = name.."-"..realm
+        end
+        if (not UnitIsUnit("player", fullname)) and (not UnitInRaid(fullname)) then
+            C_PartyInfo.InviteUnit(fullname)
+        end
+    end
+end
+
+function NSI:ArrangeFromReminder(str)
+    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
+    local now = GetTime()
+    if self.LastGroupSort and self.LastGroupSort > now - 5 then
+        print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
+        return 
+    end
+    self.LastGroupSort = now
+    local list = NSRT.InviteList[str]
+    self.Groups = {}
+    self.Groups.Processing = false
+    self.Groups.units = {}
+    self.Groups.total = 0
+    if list and not self:Restricted() then
+        for i, name in ipairs(list) do
+            self.Groups.units[i] = {name = name}
+            self.Groups.total = self.Groups.total + 1
+        end
+        self:ArrangeGroups(true)
     end
 end

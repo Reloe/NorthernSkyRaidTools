@@ -1,36 +1,214 @@
-tag 7023f03d87c4ec2c0d4cb7b6539c0d5a4bfb21a0 v11.2.626
+tag e14db4b2607640b92576f8c3d73f9b1469b90244 v11.2.7.655
 Author:	Tercio Jose <terciob19@hotmail.com>
-Date:	Tue Oct 21 13:50:33 2025 -0300
+Date:	Sun Jan 18 17:36:50 2026 -0300
 
-commit 87e21257d2b2c4f4081aaa9c3928ed2647099a30
+commit 44169ee857473d3928d29c9a865c28d5fcb2b9a7
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Oct 21 13:49:51 2025 -0300
+Date:   Sun Jan 18 16:01:10 2026 -0300
 
-    Midnight Support
+    Just documentation 2
 
-commit f316af04ec6283090c81f861bd4b80942c9d9c6c
+commit bcab40f749c9fd11f3fc24e91f20f5166ab32f64
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun Jan 18 16:00:53 2026 -0300
+
+    Just documentation
+
+commit 2e891b1f854a41e5c75d7b7c9f8cc128e7d766f1
 Author: cont1nuity <continuity@gmx.net>
-Date:   Wed Oct 1 15:26:08 2025 +0200
+Date:   Sun Jan 18 01:06:29 2026 +0100
 
-    - fix the at least mop check
+    - fix lingering interrupted and shield icon
 
-commit f6a43f2a816b108d10c4c5251b0e84096589d71e
+commit e72f0efa4695acd6d49201de7b026a5b130bc621
 Author: cont1nuity <continuity@gmx.net>
-Date:   Tue Sep 30 21:10:38 2025 +0200
+Date:   Fri Jan 16 14:40:34 2026 +0100
 
-    - don't check api but game version
-    
-    Cell_Unitframes adds this global API... Shame on them!
+    - correct order
 
-commit 5c5d5b4b3559a8fa5c452c13775e177f5a881dde
+commit 535dfafb398a353c2bee5e54f85ea939999f6005
+Author: cont1nuity <continuity@gmx.net>
+Date:   Fri Jan 16 08:54:35 2026 +0100
+
+    - requires compatibility for prepatch
+
+commit da0fbfbe3b1cdc1b3f835613259cd421db570ac4
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Jan 15 21:25:23 2026 +0100
+
+    - midnight cast and health/absorb updates
+
+commit 9a2ff491157840956a5699ad04140c25ceea9b24
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Jan 14 21:54:08 2026 +0100
+
+    - fixing this api for TBC... (not usable)
+
+commit 8d7a6a3e5e45341bae53a89360500fa0da794108
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Tue Sep 30 15:45:07 2025 -0300
+Date:   Wed Jan 14 13:03:01 2026 -0300
 
-    Header Updates
+    Editor improvements, Propagate click security, build menu fix templates
 
-commit 51e2f9f31e53e89c336c972b2e3e1e4f3878e61a
+commit a778774ed09b845754588faedc2684bfb2b51d03
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Jan 14 16:44:43 2026 +0100
+
+    - absorbs (draft till release) and cast colors
+
+commit c90cb7574190310837a11587ba6b49882152cabb
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Sep 24 19:54:03 2025 -0300
+Date:   Sat Jan 3 19:21:21 2026 -0300
 
-    Header implementations.
+    fix
+
+commit 5eec2d2ca7cb94d9afc178c7553bfc11d4c7ac65
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat Jan 3 18:03:10 2026 -0300
+
+    Cooltip and secrets
+
+commit 0913ebc87bc74d591654f6743715579ffc97649d
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Dec 24 13:23:16 2025 -0300
+
+    TBC fixes
+
+commit 7b4697a54efc29d351244bb16571ee3072f207a8
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Dec 24 13:05:31 2025 -0300
+
+    TBC Classic now uses modern api
+
+commit bc3f6026a7f73401d9d4ab1d1ee0a6b8712c1206
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Dec 23 15:31:44 2025 -0300
+
+    Add: Math.PositiveNonZero(value) return a number always bigger than zero.
+
+commit 643202e942d61a0d8c6097992ef343b9025eb679
+Author: cont1nuity <continuity@gmx.net>
+Date:   Fri Dec 12 15:51:23 2025 +0100
+
+    - midnight updates
+
+commit 8f466e46eeada0937dd6bca193211d43e439d64d
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Dec 10 10:03:44 2025 -0300
+
+    update
+
+commit 3c41bacd7a3afeb18fdd51c876e278b1a243185a
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun Dec 7 19:40:20 2025 -0300
+
+    Add framework:SetTexture() deals with masks, tables, strings and numbers. Add selection textures to editor.
+
+commit 9f0d1757b491c670948986c3830d4242e05ad560
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun Dec 7 18:11:53 2025 -0300
+
+    Fix table.setfrompath setting indexed values are strings.
+
+commit 52b966dc9450d951b7a029f69106b17627bdf869
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat Dec 6 23:42:31 2025 -0300
+
+    Add editor help functions to abstract some calls
+
+commit 77ec74b3c9c6f35aa85596c88c4af6d738b9ee00
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat Dec 6 21:08:12 2025 -0300
+
+    BuildMenu now supports widget type "selectstatusbartexture" and "selectframestrata"
+
+commit 650401e796d2fb4018d750db513fb87802c34010
+Author: cont1nuity <continuity@gmx.net>
+Date:   Sun Dec 7 00:37:27 2025 +0100
+
+    - cast update fixes
+
+commit f645b4ca499351b209410dbe165c63216ce4d0f8
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Dec 5 18:29:51 2025 -0300
+
+    Avoid secret value error when editor movement
+
+commit e3e6705bdb2a05bfd84e3772daa2b0b68445a2b2
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Dec 3 00:54:24 2025 +0100
+
+    - better midnight check
+
+commit b6110a02418c12374af55ca5641e1cbcaee10e0f
+Author: cont1nuity <continuity@gmx.net>
+Date:   Sat Nov 29 20:12:03 2025 +0100
+
+    - midnigt adjustments
+
+commit e017b3026f4cf25202e069314c6368417a1b3967
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Nov 24 21:57:23 2025 -0300
+
+    Fix bug introduced while fixing ensuring profileKey existance.
+
+commit 0531b27c157cdd0fe8fd017baeeab87ecb619dd7
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Nov 24 20:47:47 2025 -0300
+
+    Add option to disable anchor point in the editor
+
+commit 0976e45cafb480ede48edbe5904df23ea24a18dd
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat Nov 22 15:50:50 2025 -0300
+
+    Ensure profileKey exists before adding the option.
+
+commit 3e0926249e0cf03039178eac4fc2321e22bf7660
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Nov 20 16:18:14 2025 +0100
+
+    - midnight adjustments
+
+commit 0dd220f9e635d19800db48aa3e40c9782f1ecab9
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Nov 19 14:23:44 2025 -0300
+
+    Fixes
+
+commit 2bc42a0bb67cac546e30f749593674eec8dcc5b9
+Author: cont1nuity <continuity@gmx.net>
+Date:   Sun Nov 16 21:28:18 2025 +0100
+
+    - few more adjustments for midnight
+
+commit eed5e5ec79734cf29885996c248ab5e7be6713e2
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Nov 12 11:20:59 2025 -0300
+
+    Fix to return boss spell data
+
+commit 19f14abde09e8c77f035bbd07d1462c0bfe69c56
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Nov 5 10:02:11 2025 -0300
+
+    Fix SetTemplate mixing backdrop on textures.
+
+commit f06defbe6f0eae488fcfb6a88440309ebbe080c8
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Thu Oct 23 20:04:43 2025 -0300
+
+    Add scroll bar examples file
+
+commit 19fdee88c7534b8e98586c16933a547e49cf1bbc
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Oct 22 16:24:29 2025 +0200
+
+    - fix classic...
+
+commit b71815a5d87a6e4b4763a243918893ec1f91e46c
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Oct 21 21:10:58 2025 +0200
+
+    - unitframe midnigt
 

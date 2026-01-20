@@ -7,27 +7,48 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
-        for i, v in ipairs(self:DifficultyCheck(14) and {102.6, 224.6} or {}) do -- Cosmic Unraveling
+
+
+        -- using same timers for all difficulties atm
+        local id = self:DifficultyCheck(14) or 0        
+        local timers = {
+            [0] = {},
+            [14] = {102.6, 224.2, 346, 467.7},
+            [15] = {102.6, 224.2, 346, 467.7},
+            [16] = {102.6, 224.2, 346, 467.7},
+        }
+        for i, v in ipairs(timers[id]) do -- Entropic Unraveling
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
-        for i, v in ipairs(self:DifficultyCheck(14) and {13.4, 58.6, 135.6, 180.7, 257.4} or {}) do -- Desperate Measures
+        timers = {
+            [0] = {},
+            [14] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+            [15] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+            [16] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+        }
+        for i, v in ipairs(timers[id]) do -- Void Convergence (Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
         Alert.text, Alert.TTS = "CC Adds", "CC Adds"
-        for i, v in ipairs(self:DifficultyCheck(14) and {26.7, 71.8, 148.7, 193.8} or {}) do -- Fractured Projection (CC Adds)
+        timers = {
+            [0] = {},
+            [14] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+            [15] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+            [16] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+        }
+        for i, v in ipairs(timers[id]) do -- Fractured Projection (CC Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end
 
 
-        if not self:DifficultyCheck(16) then return end -- Shield Mechanic is mythic only
+        if id ~= 16 then return end -- Shield Mechanic is mythic only
         self.platetexts = self.platetexts or {}
         local plateref = {}
         local function DisplayNameplateText(aura1, aura2, u)
@@ -111,11 +132,10 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                     if unit == u then found = true break end
                 end
                 if not found then return end -- only allow nameplate units for UNIT_AURA
-                local class = UnitClassification(u)
-                if class and class ~= "" and UnitLevel(u) ~= -1 then
+                if UnitLevel(u) ~= -1 then
                     local aura1 = C_UnitAuras.GetAuraDataByIndex(u, 1, "HELPFUL")
-                    local aura2 = C_UnitAuras.GetAuraDataByIndex(u, 2, "HELPFUL")
                     if aura1 then
+                        local aura2 = C_UnitAuras.GetAuraDataByIndex(u, 2, "HELPFUL")
                         if plateref[u] then
                             if self.platetexts[plateref[u]] then
                                 self.platetexts[plateref[u]]:Hide()
@@ -146,52 +166,6 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         self.plateframe:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
         self.plateframe:RegisterEvent("UNIT_AURA")
         self.plateframe:Show()
-    end
-end
-
-NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENCOUNTER_WARNING
-    if NSRT.EncounterAlerts[encID].enabled then        
-        local severity, dur = info.severity, info.duration
-        if severity == 0 then
-        elseif severity == 1 then    
-        elseif severity == 2 then
-        end
-    end
-end
-
-NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
-    if NSRT.EncounterAlerts[encID].enabled then
-
-    end
-end
-
-NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
-    if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end -- Mythic only
-    local subgroup = self:GetSubGroup("player")
-    local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
-end
-
-local phasedetections = {0, 0, 0, 0, 0, 0, 0}
-
-NSI.DetectPhaseChange[encID] = function(self, e) -- on ENCOUNTER_TIMELINE_EVENT_ADDED/REMOVED
-    local now = GetTime()
-    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
-    if needed and needed > 0 then
-        table.insert(self.Timelines, now+0.2)
-        local count = 0
-        for i, v in ipairs(self.Timelines) do
-            if v > now then
-                count = count+1
-                if count >= needed then
-                    self.Phase = self.Phase+1                  
-                    self:StartReminders(self.Phase)
-                    self.Timelines = {}
-                    self.PhaseSwapTime = now
-                    break
-                end
-            end           
-        end
     end
 end
 
