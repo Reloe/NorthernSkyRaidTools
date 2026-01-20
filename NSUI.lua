@@ -1865,6 +1865,9 @@ local function BuildTimelineTabUI(parent)
     local timelineFrame = DF:CreateTimeLineFrame(parent, "$parentTimeLine", timelineOptions)
     parent.timeline = timelineFrame
 
+    -- Setup zoom-to-cursor and sticky ruler hooks
+    NSI:SetupTimelineHooks(timelineFrame)
+
     -- Position the timeline (below the title row)
     local timeline_top = top_offset - 45
     if timelineFrame.headerFrame then
