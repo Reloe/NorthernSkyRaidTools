@@ -1035,6 +1035,11 @@ detailsFramework.TimeLineMixin = {
 
 		--calculate the width that the body width should be
 		local bodyWidth = totalLength * pixelPerSecond * currentScale
+		--cap body width to prevent backdrop texture coordinate overflow
+		local maxBodyWidth = 8000
+		if bodyWidth > maxBodyWidth then
+			bodyWidth = maxBodyWidth
+		end
 		self.body:SetWidth(bodyWidth + effectiveHeaderWidth)
 
 		--reduce the default timeline size from the body width and don't allow the max value be negative
@@ -1053,9 +1058,27 @@ detailsFramework.TimeLineMixin = {
 		local oldMin, oldMax = self.horizontalSlider:GetMinMaxValues()
 		local newHorizontalSliderValue = self.horizontalSlider:GetValue()
 		if (bFromScale) then
-			local timeUnderMouse = self:GetTimeUnderMouse()
-			local timeUnderMouseInPixels = (timeUnderMouse * pixelPerSecond * self.currentScale)
-			newHorizontalSliderValue = timeUnderMouseInPixels
+			-- Zoom to cursor: keep the time under the mouse at the same screen position
+			-- Get mouse X position relative to the visible timeline frame
+			local cursorX = GetCursorPosition()
+			local uiScale = 1 / UIParent:GetEffectiveScale()
+			cursorX = cursorX * uiScale
+			local frameLeft = self:GetLeft() or 0
+			local mouseXInFrame = cursorX - frameLeft
+
+			-- Get old scroll position (still has the value from before this refresh)
+			local oldScrollPosition = self.horizontalSlider:GetValue()
+
+			-- Calculate time under mouse using OLD scale (currentScale was already updated)
+			-- Time = (scrollPosition + mouseOffset) / (pixelsPerSecond * oldScale)
+			local oldScale = self.oldScale or self.currentScale
+			local timeUnderMouse = (oldScrollPosition + mouseXInFrame) / (pixelPerSecond * oldScale)
+
+			-- Calculate where that time will be in the new scale
+			local timeInNewScale = timeUnderMouse * pixelPerSecond * self.currentScale
+
+			-- Set scroll so the time stays under the mouse
+			newHorizontalSliderValue = max(0, timeInNewScale - mouseXInFrame)
 		end
 
 		if (newMaxValue == 0) then

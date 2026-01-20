@@ -851,23 +851,30 @@ function NSI:RefreshMyRemindersTimeline()
     else
         -- If no player reminders but boss abilities enabled, show just boss abilities
         if includeBossAbilities then
+            -- Get encounter ID and difficulty from active reminder
             local bossEncID = self.EncounterID
-            if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                -- Get difficulty from active reminder (default to Mythic)
-                local fallbackDifficulty = "Mythic"
-                local activeReminder = NSRT.ActiveReminder
-                local reminderSource = NSRT.Reminders
-                if not activeReminder or activeReminder == "" then
-                    activeReminder = NSRT.ActivePersonalReminder
-                    reminderSource = NSRT.PersonalReminders
+            local fallbackDifficulty = "Mythic"
+            local activeReminder = NSRT.ActiveReminder
+            local reminderSource = NSRT.Reminders
+            if not activeReminder or activeReminder == "" then
+                activeReminder = NSRT.ActivePersonalReminder
+                reminderSource = NSRT.PersonalReminders
+            end
+            if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
+                local reminderStr = reminderSource[activeReminder]
+                -- Get encounter ID from reminder if not in encounter
+                if not bossEncID then
+                    local encIDStr = reminderStr:match("EncounterID:(%d+)")
+                    bossEncID = encIDStr and tonumber(encIDStr)
                 end
-                if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
-                    local diff = reminderSource[activeReminder]:match("Difficulty:([^;\n]+)")
-                    if diff then
-                        fallbackDifficulty = strtrim(diff)
-                    end
+                -- Get difficulty
+                local diff = reminderStr:match("Difficulty:([^;\n]+)")
+                if diff then
+                    fallbackDifficulty = strtrim(diff)
                 end
+            end
 
+            if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
                 local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false, fallbackDifficulty)
                 if #bossLines > 0 then
                     local bossData = {
@@ -1144,23 +1151,30 @@ function NSI:RefreshEmbeddedMyReminders(tab)
     else
         -- If no player reminders but boss abilities enabled, show just boss abilities
         if includeBossAbilities then
+            -- Get encounter ID and difficulty from active reminder
             local bossEncID = self.EncounterID
-            if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                -- Get difficulty from active reminder (default to Mythic)
-                local fallbackDifficulty = "Mythic"
-                local activeReminder = NSRT.ActiveReminder
-                local reminderSource = NSRT.Reminders
-                if not activeReminder or activeReminder == "" then
-                    activeReminder = NSRT.ActivePersonalReminder
-                    reminderSource = NSRT.PersonalReminders
+            local fallbackDifficulty = "Mythic"
+            local activeReminder = NSRT.ActiveReminder
+            local reminderSource = NSRT.Reminders
+            if not activeReminder or activeReminder == "" then
+                activeReminder = NSRT.ActivePersonalReminder
+                reminderSource = NSRT.PersonalReminders
+            end
+            if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
+                local reminderStr = reminderSource[activeReminder]
+                -- Get encounter ID from reminder if not in encounter
+                if not bossEncID then
+                    local encIDStr = reminderStr:match("EncounterID:(%d+)")
+                    bossEncID = encIDStr and tonumber(encIDStr)
                 end
-                if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
-                    local diff = reminderSource[activeReminder]:match("Difficulty:([^;\n]+)")
-                    if diff then
-                        fallbackDifficulty = strtrim(diff)
-                    end
+                -- Get difficulty
+                local diff = reminderStr:match("Difficulty:([^;\n]+)")
+                if diff then
+                    fallbackDifficulty = strtrim(diff)
                 end
+            end
 
+            if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
                 local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false, fallbackDifficulty)
                 if #bossLines > 0 then
                     local bossData = {
