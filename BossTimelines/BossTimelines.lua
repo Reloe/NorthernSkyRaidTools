@@ -7,7 +7,6 @@ local _, NSI = ... -- Internal namespace
     NSI.BossTimelines[encounterID] = {
         Mythic = { ... },   -- Mythic difficulty timeline
         Heroic = { ... },   -- Heroic difficulty timeline
-        Normal = { ... },   -- Normal difficulty timeline
     }
 
     Each difficulty contains:
@@ -153,10 +152,8 @@ NSI.BossTimelineNames = {
 
 -- Difficulty ID to name mapping
 NSI.DifficultyNames = {
-    [14] = "Normal",
     [15] = "Heroic",
     [16] = "Mythic",
-    [17] = "LFR",
 }
 
 -- Get current difficulty name, defaults to "Mythic" if unknown
@@ -182,10 +179,9 @@ function NSI:GetBossTimeline(encounterID, difficulty)
         return bossData[currentDiff], currentDiff
     end
 
-    -- Fallback chain: Mythic > Heroic > Normal
+    -- Fallback chain: Mythic > Heroic
     if bossData.Mythic then return bossData.Mythic, "Mythic" end
     if bossData.Heroic then return bossData.Heroic, "Heroic" end
-    if bossData.Normal then return bossData.Normal, "Normal" end
 
     return nil
 end
