@@ -286,8 +286,15 @@ function NSI:GetMyTimelineData(includeBossAbilities)
     local playerReminders = {}
     local maxTime = 0
 
+    -- Pre-calculate all phase start times for converting phase-relative times to absolute times
+    local phaseStarts = {}
+    for phase, _ in pairs(self.ProcessedReminder[encID]) do
+        phaseStarts[phase] = self:GetPhaseStart(encID, phase, reminderDifficulty) or 0
+    end
+
     -- Iterate through all phases
     for phase, reminders in pairs(self.ProcessedReminder[encID]) do
+        local phaseStart = phaseStarts[phase] or 0
         for _, reminder in ipairs(reminders) do
             local time = reminder.time
             local dur = reminder.dur or 8
@@ -295,9 +302,12 @@ function NSI:GetMyTimelineData(includeBossAbilities)
             local text = reminder.text or reminder.rawtext
 
             if time then
+                -- Convert phase-relative time to absolute time
+                local absoluteTime = phaseStart + time
+
                 -- Track max time for timeline length
-                if time + dur > maxTime then
-                    maxTime = time + dur
+                if absoluteTime + dur > maxTime then
+                    maxTime = absoluteTime + dur
                 end
 
                 -- For processed reminders, we don't have tag info
@@ -315,7 +325,7 @@ function NSI:GetMyTimelineData(includeBossAbilities)
                 }
 
                 table.insert(playerReminders[player][abilityKey].entries, {
-                    time = time,
+                    time = absoluteTime,
                     dur = dur,
                     phase = phase,
                     text = text,
@@ -458,6 +468,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
     -- where spellKey is spellID or text (if no spellID)
     local playerReminders = {}
     local maxTime = 0
+    local discoveredPhases = {}
 
     for line in reminderStr:gmatch('[^\r\n]+') do
         local tag = line:match("tag:([^;]+)")
@@ -473,10 +484,8 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
             phase = tonumber(phase)
             spellID = spellID and tonumber(spellID)
 
-            -- Track max time for timeline length
-            if time + dur > maxTime then
-                maxTime = time + dur
-            end
+            -- Track discovered phases for later phase start calculation
+            discoveredPhases[phase] = true
 
             -- Determine the key for this ability
             -- For spells: use spellID so each spell gets its own lane
@@ -519,6 +528,12 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
                 end
             end
         end
+    end
+
+    -- Pre-calculate phase start times for converting phase-relative times to absolute times
+    local phaseStarts = {}
+    for phase, _ in pairs(discoveredPhases) do
+        phaseStarts[phase] = encID and self:GetPhaseStart(encID, phase, reminderDifficulty) or 0
     end
 
     -- Convert to timeline format
@@ -565,14 +580,26 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
             local spellID = abilityData.spellID
             local timeline = {}
 
-            -- Sort entries by time
-            table.sort(abilityData.entries, function(a, b) return a.time < b.time end)
+            -- Sort entries by phase-relative time for consistent ordering
+            table.sort(abilityData.entries, function(a, b)
+                if a.phase ~= b.phase then return a.phase < b.phase end
+                return a.time < b.time
+            end)
 
-            -- Create timeline blocks
+            -- Create timeline blocks with absolute times
             for _, entry in ipairs(abilityData.entries) do
+                -- Convert phase-relative time to absolute time
+                local phaseStart = phaseStarts[entry.phase] or 0
+                local absoluteTime = phaseStart + entry.time
+
+                -- Track max time for timeline length
+                if absoluteTime + entry.dur > maxTime then
+                    maxTime = absoluteTime + entry.dur
+                end
+
                 -- Format: {time, length, isAura, auraDuration, blockSpellId}
                 table.insert(timeline, {
-                    entry.time,     -- [1] time in seconds
+                    absoluteTime,   -- [1] time in seconds (absolute)
                     0,              -- [2] length (0 for icon-based display)
                     true,           -- [3] isAura (shows duration bar)
                     entry.dur,      -- [4] auraDuration
