@@ -56,9 +56,4 @@ NSI.BossTimelines[3176] = {
         phases = phases,
         abilities = abilities,
     },
-    Normal = {
-        duration = 650,
-        phases = phases,
-        abilities = abilities,
-    },
 }
