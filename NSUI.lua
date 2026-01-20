@@ -1789,7 +1789,13 @@ local function BuildTimelineTabUI(parent)
             line:SetBackdropColor(unpack(line.backdrop_color_highlight))
         end,
         on_leave = function(line)
-            line:SetBackdropColor(unpack(line.backdrop_color))
+            -- Restore alternating row color based on index
+            local idx = line.dataIndex or 0
+            if idx % 2 == 1 then
+                line:SetBackdropColor(0, 0, 0, 0)
+            else
+                line:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+            end
         end,
 
         on_create_line = function(line)
@@ -1804,7 +1810,13 @@ local function BuildTimelineTabUI(parent)
                     end
                 end)
                 line.lineHeader:SetScript("OnLeave", function(self)
-                    line:SetBackdropColor(unpack(line.backdrop_color))
+                    -- Restore alternating row color based on index
+                    local idx = line.dataIndex or 0
+                    if idx % 2 == 1 then
+                        line:SetBackdropColor(0, 0, 0, 0)
+                    else
+                        line:SetBackdropColor(0.1, 0.1, 0.1, 0.8)
+                    end
                     GameTooltip:Hide()
                 end)
             end
