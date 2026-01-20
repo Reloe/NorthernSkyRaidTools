@@ -23,6 +23,7 @@ function NSAPI:GetAllCharacters()
 end
 
 function NSAPI:GetName(str, AddonName) -- Returns Nickname
+    if (not str) or issecretvalue(str) then return str end
     local unitname = UnitExists(str) and UnitName(str) or str
     if issecretvalue(unitname) then return unitname end
     -- check if setting for the requesting addon is enabled, if not return the original name.

@@ -1,6 +1,5 @@
 local _, NSI = ... -- Internal namespace
 
--- figure out how to clean up Savedvariables for users on new expansions, probably just a one time cleanup
 local SoundList = {
     -- [spellID] = "SoundName", use false to remove a sound
 
@@ -17,7 +16,7 @@ local SoundList = {
     [1270497] = "Spread", -- Shadowmark
     [1264756] = "Targeted", -- Rift Madness
     [1260027] = "Targeted", -- Grasp of Emptiness
-    [1232470] = "Targeted", -- Gras of Emptiness (idk which one is correct)
+    [1232470] = "Targeted", -- Grasp of Emptiness (idk which one is correct)
     [1260203] = "Soak", -- Umbral Collapse
     [1249265] = "Soak", -- Umbral Collapse (one of them is 2nd cast I think?)
     [1259861] = "Targeted", -- Ranger Captain's Mark
