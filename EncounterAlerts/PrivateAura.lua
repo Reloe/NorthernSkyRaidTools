@@ -255,7 +255,7 @@ function NSI:UpdatePADisplay(Personal, Tank)
             self:PreviewRaidPA(true, true)
         else
             self:PreviewRaidPA(false)
-            self:InitRaidPA(false)
+            self:InitRaidPA(UnitInRaid("player"))
         end
     end
 end
