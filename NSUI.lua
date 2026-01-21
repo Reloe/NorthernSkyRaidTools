@@ -3727,7 +3727,7 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.PARaidSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.enabled = value
-                NSI:InitRaidPA(false)
+                NSI:InitRaidPA(UnitInRaid("player"))
             end,
             nocombat = true,
         },
