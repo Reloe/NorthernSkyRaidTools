@@ -39,6 +39,7 @@ local SoundList = {
 }
 
 function NSI:AddPASound(spellID, sound)
+    if not NSRT.Settings["Debug"] then return end -- disable for now as blizzard has not fixed this yet.
     if (not spellID) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then return end
     C_UnitAuras.RemovePrivateAuraAppliedSound(spellID)
     if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
