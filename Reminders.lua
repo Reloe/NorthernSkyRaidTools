@@ -45,6 +45,9 @@ function NSI:AddToReminder(info)
             info.dur = NSRT.ReminderSettings.TextDuration 
         end
     end
+    info.dur = tonumber(info.dur)
+    info.time = tonumber(info.time)
+    if info.dur > info.time then info.dur = info.time end -- force duration to be equal to time if an alert is set very early into the phase
     if info.countdown == nil then
         if info.spellID then
             info.countdown = NSRT.ReminderSettings.SpellCountdown
@@ -109,7 +112,7 @@ function NSI:AddToReminder(info)
         countdown = info.countdown and tonumber(info.countdown), 
         glowunit = info.glowunit, 
         sound = info.sound, 
-        time = tonumber(info.time), 
+        time = info.time, 
         text = info.text, 
         TTS = info.TTS, 
         spellID = info.spellID and tonumber(info.spellID), 
