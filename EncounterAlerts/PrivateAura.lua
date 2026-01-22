@@ -399,10 +399,6 @@ function NSI:PreviewTankPA(Show)
 end
 
 function NSI:PreviewRaidPA(Show, Init)
-    if self:Restricted() then 
-        print("Secret value system is currently active so this feature is disabled.")
-        return
-    end
     if not Show then
         if self.PARaidPreviewFrame then self.PARaidPreviewFrame:Hide() end
         return
