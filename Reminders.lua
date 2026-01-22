@@ -221,7 +221,7 @@ function NSI:ProcessReminder()
                     end
                     -- convert names to nicknames and color code them
                     local tagNames = ""
-                    for name in tag:gmatch("(%w+)") do
+                    for name in tag:gmatch("(%S+)") do
                         tagNames = tagNames..NSAPI:Shorten(strtrim(name), 12, false, "GlobalNickNames").." "
                     end
                     tagNames = strtrim(tagNames)
