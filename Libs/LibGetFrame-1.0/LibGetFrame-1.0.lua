@@ -483,6 +483,9 @@ local function isFrameFiltered(name, ignoredFrames)
 end
 
 local function GetUnitFrames(target, ignoredFrames)
+  if issecretvalue(target) then
+    return
+  end
   if not UnitExists(target) then
     if type(target) ~= "string" then
       return
@@ -500,7 +503,7 @@ local function GetUnitFrames(target, ignoredFrames)
   local frames
   for frame, frameName in pairs(FrameToFrameName.data) do
     local unit = SecureButton_GetUnit(frame)
-    if unit and UnitIsUnit(unit, target) and not isFrameFiltered(frameName, ignoredFrames) then
+    if (not issecretvalue(unit)) and unit and (not issecretvalue(UnitIsUnit(unit, target))) and UnitIsUnit(unit, target) and not isFrameFiltered(frameName, ignoredFrames) then
       frames = frames or {}
       frames[frame] = frameName
     end

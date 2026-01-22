@@ -132,36 +132,39 @@ function NSI:InitRaidPA(party) -- still run this function if disabled to clean u
         end
         local u = party and "party"..i or "raid"..i
         if party and i == 5 then u = "player" end
-        if NSRT.PARaidSettings.enabled and UnitExists(u) and self.RaidFrames[u] then 
-            if not self.PARaidFrames[i] then
-                self.PARaidFrames[i] = CreateFrame("Frame", nil, UIParent)
-            end
-            self.PARaidFrames[i]:SetSize(1, 1)
-            self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, self.RaidFrames[u], NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
-            local xDirection = (NSRT.PARaidSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.GrowDirection == "LEFT" and -1) or 0
-            local yDirection = (NSRT.PARaidSettings.GrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.GrowDirection == "UP" and 1) or 0
-            self.AddedPARaid[anchorID] = {}
-            for auraIndex = 1, 10 do
-                if auraIndex > NSRT.PARaidSettings.Limit then break end
-                local privateAnchorArgs = {
-                    unitToken = u,
-                    auraIndex = auraIndex,
-                    parent = self.PARaidFrames[i],
-                    showCountdownFrame = true,
-                    showCountdownNumbers = true,
-                    iconInfo = {
-                        iconAnchor = {
-                            point = NSRT.PARaidSettings.Anchor,
-                            relativeTo = self.PARaidFrames[i],
-                            relativePoint = NSRT.PARaidSettings.relativeTo,
-                            offsetX = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection,
-                            offsetY = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection,
-                        },
-                        iconWidth = NSRT.PARaidSettings.Width,
-                        iconHeight = NSRT.PARaidSettings.Height,
-                    }
-                }    
-                self.AddedPARaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
+        if NSRT.PARaidSettings.enabled and UnitExists(u) then 
+            local F = self.LGF.GetUnitFrame(u)
+            if F then
+                if not self.PARaidFrames[i] then
+                    self.PARaidFrames[i] = CreateFrame("Frame", nil, UIParent)
+                end
+                self.PARaidFrames[i]:SetSize(1, 1)
+                self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, F, NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
+                local xDirection = (NSRT.PARaidSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.GrowDirection == "LEFT" and -1) or 0
+                local yDirection = (NSRT.PARaidSettings.GrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.GrowDirection == "UP" and 1) or 0
+                self.AddedPARaid[anchorID] = {}
+                for auraIndex = 1, 10 do
+                    if auraIndex > NSRT.PARaidSettings.Limit then break end
+                    local privateAnchorArgs = {
+                        unitToken = u,
+                        auraIndex = auraIndex,
+                        parent = self.PARaidFrames[i],
+                        showCountdownFrame = true,
+                        showCountdownNumbers = true,
+                        iconInfo = {
+                            iconAnchor = {
+                                point = NSRT.PARaidSettings.Anchor,
+                                relativeTo = self.PARaidFrames[i],
+                                relativePoint = NSRT.PARaidSettings.relativeTo,
+                                offsetX = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection,
+                                offsetY = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection,
+                            },
+                            iconWidth = NSRT.PARaidSettings.Width,
+                            iconHeight = NSRT.PARaidSettings.Height,
+                        }
+                    }    
+                    self.AddedPARaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
+                end
             end
         end
     end

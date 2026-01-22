@@ -501,7 +501,7 @@ function NSI:CreateUnitFrameIcon(info, name)
     local unit = NSAPI:GetChar(name, true)
     local i = UnitInRaid(unit)
     if (not UnitExists(unit)) or (not i) then return end
-    local F = self.RaidFrames["raid"..i]
+    local F = self.LGF.GetUnitFrame("raid"..i)
     if not F then return end
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, #self.UnitIcon+1 do
@@ -893,7 +893,7 @@ function NSI:GlowFrame(unit, id)
     local i = UnitInRaid(unit)
     if (not UnitExists(unit)) or (not i) then return end
     id = unit..id
-    local F = self.RaidFrames["raid"..i]
+    local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows[F] = id
@@ -908,35 +908,11 @@ function NSI:HideGlows(units, id)
         local i = UnitInRaid(unit)
         if (not UnitExists(unit)) or (not i) then return end
         local newid = unit..id
-        local F = self.RaidFrames["raid"..i]
+        local F = self.LGF.GetUnitFrame(unit)
         if not F then return end
         self.AllGlows[F] = nil
         self.LCG.PixelGlow_Stop(F, newid) 
     end
-end
-
-function NSI:StoreFrames(init, party)
-    if self:Restricted() then return end
-    self.RaidFrames = {}
-    if init then
-        local MyFrame = self.LGF.GetUnitFrame("player")
-        if self.FrameStoreTimer then self.FrameStoreTimer:Cancel() end
-        self.FrameStoreTimer = C_Timer.NewTimer(1, function()
-            NSI:StoreFrames(false, party)
-        end)
-        return
-    end
-    for unit in self:IterateGroupMembers() do
-        local F = self.LGF.GetUnitFrame(unit)
-        if F then
-            self.RaidFrames[unit] = F
-        end
-    end
-    self:InitRaidPA(party)
-end
-
-function NSAPI:FrameDebug()
-    NSI:StoreFrames(true, true)
 end
 
 function NSI:CreateMoveFrames(Show)

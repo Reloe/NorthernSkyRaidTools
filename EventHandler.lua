@@ -132,9 +132,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
         self:InitLDB()
+        local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
-        if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true) end)
-        elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:StoreFrames(true, true) end) end
+        if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:InitRaidPA(false) end)
+        elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:InitRaidPA(true) end) end
         for spellID, info in pairs(NSRT.PASounds) do
             self:AddPASound(spellID, info.sound)
         end
@@ -183,7 +184,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local diff = select(3, GetInstanceInfo())
             if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then
                 local isparty = not UnitInRaid("player")
-                C_Timer.After(0.01, function() self:StoreFrames(true, isparty) end)
+                C_Timer.After(0.01, function() self:InitRaidPA(isparty) end)
             end
         end        
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
@@ -191,6 +192,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
             self:InitTankPA()
         end
+        self:InitRaidPA(false)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -206,7 +208,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.ReminderIcon = self.ReminderIcon or {}
         self.ReminderBar = self.ReminderBar or {}
         self.ReminderTimer = self.ReminderTimer or {}
-        self.RaidFrames = self.RaidFrames or {}
         self.AllGlows = self.AllGlows or {}
         self.PlayedSound = {}
         self.StartedCountdown = {}   
@@ -238,7 +239,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self:Restricted() or not self:DifficultyCheck(14) then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
-        self:StoreFrames(true)
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
@@ -262,7 +262,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Assignments = NSRT.AssignmentSettings
         end
         if self:DifficultyCheck(14) then
-            self:StoreFrames(true)
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
             end)     
@@ -403,6 +402,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)      
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
+        if self:DifficultyCheck(14) then
+            self:InitRaidPA(false)
+        end
         if self:Restricted() then return end 
 
         self:UpdateRaidBuffFrame()
@@ -422,13 +424,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local diff = select(3, GetInstanceInfo())
             if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing
                 local isparty = not UnitInRaid("player")
-                self:StoreFrames(true, isparty)
+                self:InitRaidPA(isparty)
                 return
             end
         end      
 
         if not self:DifficultyCheck(14) then return end
-        self:StoreFrames(false)
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
         if not self:DifficultyCheck(14) then return end
         local info = ...
