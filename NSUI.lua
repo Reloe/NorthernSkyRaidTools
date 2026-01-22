@@ -788,7 +788,10 @@ local function BuildRemindersEditUI()
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
         NSI:ProcessReminder()
-        if NSRT.ReminderSettings.ShowReminderFrame then            
+        if NSRT.ReminderSettings.ShowPersonalReminderFrame then
+            NSI:UpdateReminderFrame(true)
+        end
+        if NSRT.ReminderSettings.ShowReminderFrame then
             NSI:UpdateReminderFrame()
         end
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
@@ -900,6 +903,12 @@ local function BuildRemindersEditUI()
             if name ~= "" then
                 NSI:SetReminder(name)
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
+                if NSRT.ReminderSettings.ShowPersonalReminderFrame then
+                    NSI:UpdateReminderFrame(true)
+                end
+                if NSRT.ReminderSettings.ShowReminderFrame then
+                    NSI:UpdateReminderFrame()
+                end
             end
         end, 40, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -995,6 +1004,9 @@ local function BuildPersonalRemindersEditUI()
         if NSRT.ReminderSettings.ShowPersonalReminderFrame then
             NSI:UpdateReminderFrame(true)
         end
+        if NSRT.ReminderSettings.ShowReminderFrame then
+            NSI:UpdateReminderFrame()
+        end
         Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -1086,6 +1098,12 @@ local function BuildPersonalRemindersEditUI()
             if name ~= "" then
                 NSI:SetReminder(name, true)
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
+                if NSRT.ReminderSettings.ShowPersonalReminderFrame then
+                    NSI:UpdateReminderFrame(true)
+                end
+                if NSRT.ReminderSettings.ShowReminderFrame then
+                    NSI:UpdateReminderFrame()
+                end
             end
         end, 55, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -2763,7 +2781,7 @@ Press 'Enter' to hear the TTS]],
                 end
                 NSI:UpdateExistingFrames()
                 NSI.AllGlows = NSI.AllGlows or {}
-                NSI:StoreFrames()
+                local MyFrame = NSI.LGF.GetUnitFrame("player")
                 NSI.PlayedSound = {}
                 NSI.StartedCountdown = {}
                 local info1 = {
