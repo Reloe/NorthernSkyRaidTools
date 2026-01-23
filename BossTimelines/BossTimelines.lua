@@ -203,6 +203,7 @@ function NSI:GetPhaseStart(encounterID, phaseNum, difficulty)
 end
 
 -- Set user-adjusted phase start time
+-- Also shifts all subsequent phases by the same delta
 function NSI:SetPhaseStart(encounterID, phaseNum, time)
     -- Cannot adjust phase 1
     if phaseNum == 1 then return end
@@ -214,7 +215,26 @@ function NSI:SetPhaseStart(encounterID, phaseNum, time)
         NSRT.PhaseTimings[encounterID] = {}
     end
 
+    -- Get the old time to calculate delta
+    local oldTime = self:GetPhaseStart(encounterID, phaseNum)
+    local delta = time - oldTime
+
+    -- Set the moved phase's new time
     NSRT.PhaseTimings[encounterID][phaseNum] = time
+
+    -- Shift all subsequent phases by the same delta
+    if delta ~= 0 then
+        local timeline = self:GetBossTimeline(encounterID)
+        if timeline and timeline.phases then
+            for otherPhaseNum, _ in pairs(timeline.phases) do
+                if otherPhaseNum > phaseNum then
+                    local otherOldTime = self:GetPhaseStart(encounterID, otherPhaseNum)
+                    local newOtherTime = math.max(0, otherOldTime + delta)
+                    NSRT.PhaseTimings[encounterID][otherPhaseNum] = newOtherTime
+                end
+            end
+        end
+    end
 end
 
 -- Reset phase timing to default
