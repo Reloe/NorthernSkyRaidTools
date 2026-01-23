@@ -297,8 +297,9 @@ function NSI:GetMyTimelineData(includeBossAbilities)
         local phaseStart = phaseStarts[phase] or 0
         for _, reminder in ipairs(reminders) do
             local time = reminder.time
-            local dur = reminder.dur or 8
             local spellID = reminder.spellID
+            -- Use settings default if dur not set in reminder
+            local dur = reminder.dur or (spellID and NSRT.ReminderSettings.SpellDuration or NSRT.ReminderSettings.TextDuration)
             local text = reminder.text or reminder.rawtext
 
             if time then
@@ -474,15 +475,20 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
         local tag = line:match("tag:([^;]+)")
         local time = line:match("time:(%d*%.?%d+)")
         local spellID = line:match("spellid:(%d+)")
-        local dur = line:match("dur:(%d+)") or "8"
+        local dur = line:match("dur:(%d+)")
         local text = line:match("text:([^;]+)")
         local phase = line:match("ph:(%d+)") or "1"
 
         if tag and time then
             time = tonumber(time)
-            dur = tonumber(dur)
             phase = tonumber(phase)
             spellID = spellID and tonumber(spellID)
+            -- Use settings default if dur not specified in reminder string
+            if dur then
+                dur = tonumber(dur)
+            else
+                dur = spellID and NSRT.ReminderSettings.SpellDuration or NSRT.ReminderSettings.TextDuration
+            end
 
             -- Track discovered phases for later phase start calculation
             discoveredPhases[phase] = true
@@ -902,7 +908,8 @@ function NSI:CreateTimelineWindow()
 
                 GameTooltip:AddLine(spellName ~= "" and spellName or "Reminder", 1, 1, 1)
                 GameTooltip:AddLine("Time: " .. timeStr, 0.7, 0.7, 0.7)
-                local duration = tonumber(block.info.duration) or 0
+                -- Duration is stored at position [4] in the block data (auraDuration)
+                local duration = block.blockData and tonumber(block.blockData[4]) or 0
                 if duration > 0 then
                     GameTooltip:AddLine("Duration: " .. duration .. "s", 0.7, 0.7, 0.7)
                 end
