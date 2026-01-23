@@ -263,7 +263,16 @@ function NSI:ProcessReminder()
                 end
             else
                 if (not firstline) and (not line:find("invitelist:")) then
-                    extranote = extranote..line.."\n"
+                    if NSRT.Settings["GlobalNickNames"] then
+                        local words = {}
+                        for word in line:gmatch("[^%s]+") do
+                            local shortened = NSAPI:Shorten(NSAPI:GetChar(word), 12, false, "GlobalNickNames")
+                            table.insert(words, shortened)
+                        end
+                        extranote = extranote..table.concat(words, " ").."\n"
+                    else
+                        extranote = extranote..line.."\n"
+                    end
                 end
             end
         end
@@ -303,7 +312,6 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         local F = parent[i]
         if F and F:IsShown() then
             local s = NSRT.ReminderSettings.TextSettings
-            local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
     end
@@ -315,7 +323,6 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         if F and F:IsShown() then
             local s = NSRT.ReminderSettings.IconSettings
             F:SetSize(s.Width, s.Height)
-            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
             F.Icon:SetAllPoints(F)
             F.Border:SetAllPoints(F)
             F.Text:SetPoint("LEFT", F, "RIGHT", s.xTextOffset, s.yTextOffset)
@@ -342,7 +349,6 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(F.info.colors or s.colors))
-            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
@@ -375,17 +381,18 @@ function NSI:ArrangeStates(Type)
     for i, v in ipairs(pos) do
         local diff = Type == "Texts" and s.FontSize or s.Height
         local Spacing = s.Spacing or 0
-        local offset = s.GrowDirection == "Up" and (i-1) * diff + (i-1) * Spacing or -(i-1) * diff - (i-1) * Spacing
+        local yoffset = (s.GrowDirection == "Up" and (i-1) * s.Height) or (s.GrowDirection == "Down" and -(i-1) * s.Height) or 0
+        local xoffset = Type == "Icons" and ((s.GrowDirection == "Right" and (i-1) * s.Width) or (s.GrowDirection == "Left" and -(i-1) * s.Width)) or 0
         v.Frame:ClearAllPoints()
         if Type == "Texts" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + yoffset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + yoffset)
         elseif Type == "Icons" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0, 0 + offset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0, 0 + offset)
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
         elseif Type == "Bars" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
+            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + yoffset)
+            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + yoffset)
         else
             print("RELOE PLS FIX (Reminder anchoring issue @ NSI:ArrangeStates)")
         end
@@ -471,9 +478,10 @@ function NSI:CreateIcon(info)
         end
         if not self.ReminderIcon[i] then
             self.ReminderIcon[i] = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
-            local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0, 0 + offset)
+            local yoffset = (s.GrowDirection == "Up" and (i-1) * s.Height) or (s.GrowDirection == "Down" and -(i-1) * s.Height) or 0
+            local xoffset = (s.GrowDirection == "Right" and (i-1) * s.Width) or (s.GrowDirection == "Left" and -(i-1) * s.Width) or 0
+            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
+            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
             self.ReminderIcon[i]:SetFrameStrata("HIGH")
             self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
             self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
