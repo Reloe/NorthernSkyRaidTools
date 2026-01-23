@@ -696,6 +696,9 @@ local function ImportReminderString(name, IsUpdate)
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
         NSI:ImportFullReminderString(import_string, false, IsUpdate)
+        if IsUpdate and NSRT.ActiveReminder then
+            NSI:SetReminder(NSRT.ActiveReminder) -- refresh active reminder
+        end
         popup.test_string_text_box:SetText("")
         NSUI.reminders_frame:Hide()
         NSUI.reminders_frame:Show()
@@ -729,6 +732,9 @@ local function ImportPersonalReminderString(name, IsUpdate)
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
         NSI:ImportFullReminderString(import_string, true, IsUpdate)
+        if IsUpdate and NSRT.ActivePersonalReminder then
+            NSI:SetReminder(NSRT.ActivePersonalReminder, true) -- refresh active personal reminder
+        end
         popup.test_string_text_box:SetText("")
         NSUI.personal_reminders_frame:Hide()
         NSUI.personal_reminders_frame:Show()
@@ -1783,8 +1789,8 @@ function NSUI:Init()
         return t
     end
 
-    local build_growdirection_options = function(SettingName)
-        local list = {"Up", "Down"}
+    local build_growdirection_options = function(SettingName, Icons)
+        local list = Icons and {"Up", "Down", "Left", "Right"} or {"Up", "Down"}
         local t = {}
         for i, v in ipairs(list) do
             tinsert(t, {
@@ -2454,7 +2460,7 @@ Press 'Enter' to hear the TTS]],
             name = "Grow Direction",
             desc = "Grow Direction",
             get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
-            values = function() return build_growdirection_options("IconSettings") end,
+            values = function() return build_growdirection_options("IconSettings", true) end,
             nocombat = true,
         },
         {
@@ -2804,7 +2810,7 @@ Press 'Enter' to hear the TTS]],
                 }
                 NSI:DisplayReminder(info3)
                 local info4 = {
-                    text = "Use Fort Brew", 
+                    text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
                     IconOverwrite = true,
                     spellID = 115203,
                     phase = 1, 
