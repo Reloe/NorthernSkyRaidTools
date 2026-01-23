@@ -29,11 +29,12 @@ NSI.LSM:Register("sound","|cFF4BAAC8Next|r", [[Interface\Addons\NorthernSkyRaidT
 NSI.LSM:Register("sound","|cFF4BAAC8Interrupt|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Interrupt.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Spread|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Spread.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Break|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Break.ogg]])
-NSI.LSM:Register("sound","|cFF4BAAC8Targeted|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Break.ogg]])
+NSI.LSM:Register("sound","|cFF4BAAC8Targeted|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Targeted.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Rune|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Rune.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Light|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Light.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Void|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Void.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Debuff|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Debuff.ogg]])
+NSI.LSM:Register("sound","|cFF4BAAC8Clear|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Clear.ogg]])
 --Fonts
 NSI.LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars
