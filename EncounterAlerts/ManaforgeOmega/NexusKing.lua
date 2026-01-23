@@ -102,6 +102,7 @@ end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
     if NSRT.EncounterAlerts[encID].enabled then
+        if not self:DifficultyCheck(16) then return end -- Mythic only
         for i, v in ipairs(self.SpiritTimers) do
             v:Cancel()
         end
