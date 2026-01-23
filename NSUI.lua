@@ -674,7 +674,7 @@ local function build_spec_options()
     return t
 end
 
-local function ImportReminderString(name)
+local function ImportReminderString(name, IsUpdate)
     local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
         DontRightClickClose = true
     })
@@ -692,22 +692,22 @@ local function ImportReminderString(name)
         self:SetFocus()
     end)
     --popup.test_string_text_box:SetTextSize(13)
-
+    local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
-        NSI:ImportFullReminderString(import_string)
+        NSI:ImportFullReminderString(import_string, false, IsUpdate)
         popup.test_string_text_box:SetText("")
         NSUI.reminders_frame:Hide()
         NSUI.reminders_frame:Show()
         popup:Hide()
-    end, 280, 20, "Import/Update")
+    end, 280, 20, importtext)
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.import_confirm_button:SetTemplate(options_button_template)
 
     return popup
 end
 
-local function ImportPersonalReminderString(name)
+local function ImportPersonalReminderString(name, IsUpdate)
     local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
         DontRightClickClose = true
     })
@@ -725,15 +725,15 @@ local function ImportPersonalReminderString(name)
         self:SetFocus()
     end)
     --popup.test_string_text_box:SetTextSize(13)
-
+    local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
-        NSI:ImportFullReminderString(import_string, true)
+        NSI:ImportFullReminderString(import_string, true, IsUpdate)
         popup.test_string_text_box:SetText("")
         NSUI.personal_reminders_frame:Hide()
         NSUI.personal_reminders_frame:Show()
         popup:Hide()
-    end, 280, 20, "Import/Update")
+    end, 280, 20, importtext)
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.import_confirm_button:SetTemplate(options_button_template)
 
@@ -780,7 +780,7 @@ local function BuildRemindersEditUI()
 
     -- Import Button
     local ImportButton = DF:CreateButton(reminders_edit_frame, function()
-        ImportReminderString()
+        ImportReminderString(nil, false)
         end, 100, 24, "Import Reminder"
     )
     ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
@@ -812,8 +812,8 @@ local function BuildRemindersEditUI()
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
-        local text = DF:CreateLabel(popup,
-            "Are you sure you want to delete this reminder?", 12, "orange")
+        local text = all and DF:CreateLabel(popup, "Are you sure you want to \ndelete ALL reminders?", 12, "orange") or DF:CreateLabel(popup,
+            "Are you sure you want to \ndelete this reminder?", 12, "orange")
         text:SetPoint("TOP", popup, "TOP", 0, -30)
         text:SetJustifyH("CENTER")
 
@@ -885,7 +885,7 @@ local function BuildRemindersEditUI()
         
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
-            DeleteBossReminder(self, line)
+            DeleteBossReminder(self, line, false)
         end, 12, 12)
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
@@ -910,7 +910,7 @@ local function BuildRemindersEditUI()
         -- Show Button
         line.ShowButton = DF:CreateButton(line, function()
             local name = line.nameTextEntry:GetText()
-            ImportReminderString(name)
+            ImportReminderString(name, true)
         end, 40, 20, "Show")
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)
@@ -983,7 +983,7 @@ local function BuildPersonalRemindersEditUI()
 
     -- Import Button
     local ImportButton = DF:CreateButton(reminders_edit_frame, function()
-        ImportPersonalReminderString()
+        ImportPersonalReminderString(nil, false)
         end, 100, 24, "Import Personal Reminder"
     )
     ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
@@ -1001,13 +1001,14 @@ local function BuildPersonalRemindersEditUI()
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
 
-    local function DeleteBossReminder(self, line)
+    local function DeleteBossReminder(self, line, all)
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Personal Reminder Deletion", "NSRTDeletePersonalReminderPopup")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
-        local text = DF:CreateLabel(popup,
-            "Are you sure you want to delete this Personal Reminder?", 12, "orange")
+        local text = all and DF:CreateLabel(popup,
+            "Are you sure you want to \ndelete ALL reminders?", 12, "orange") or DF:CreateLabel(popup,
+            "Are you sure you want to \ndelete this Personal Reminder?", 12, "orange")
         text:SetPoint("TOP", popup, "TOP", 0, -30)
         text:SetJustifyH("CENTER")
 
@@ -1015,7 +1016,13 @@ local function BuildPersonalRemindersEditUI()
             if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder == line.name then
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
             end
-            NSI:RemoveReminder(line.name, true)
+            if all then
+                for _, reminder in ipairs(NSI:GetAllReminderNames(true)) do
+                    NSI:RemoveReminder(reminder.name, true)
+                end
+            else
+                NSI:RemoveReminder(line.name, true)
+            end
             self:SetData(NSI:GetAllReminderNames(true))
             self:MasterRefresh()
             popup:Hide()
@@ -1070,7 +1077,7 @@ local function BuildPersonalRemindersEditUI()
         
         -- Delete button
         line.deleteButton = DF:CreateButton(line, function()
-            DeleteBossReminder(self, line, true)
+            DeleteBossReminder(self, line, false)
         end, 12, 12)
         line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
         line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
@@ -1095,7 +1102,7 @@ local function BuildPersonalRemindersEditUI()
         -- Show Button
         line.ShowButton = DF:CreateButton(line, function()
             local name = line.nameTextEntry:GetText()
-            ImportPersonalReminderString(name)
+            ImportPersonalReminderString(name, true)
         end, 55, 20, "Show")
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)

@@ -829,7 +829,7 @@ function NSI:RemoveReminder(name, personal)
     end
 end
 
-function NSI:ImportFullReminderString(str, personal)
+function NSI:ImportFullReminderString(str, personal, IsUpdate)
     local name = ""
     local values = ""
     if not str:match('\n$') then
@@ -838,7 +838,7 @@ function NSI:ImportFullReminderString(str, personal)
     for line in str:gmatch('([^\n]*)\n') do
         if line:find("EncounterID:") and line:find("Name:") then
             if values ~= "" then -- meaning we reached a new boss line as the previous one has values already
-                self:ImportReminder(name, values, false, personal)
+                self:ImportReminder(name, values, false, personal, IsUpdate)
                 values = ""
             end
             name = line:match("Name:([^;]+)")
@@ -848,18 +848,18 @@ function NSI:ImportFullReminderString(str, personal)
         end
     end
     if values ~= "" and name ~= "" then -- importing the last boss
-        self:ImportReminder(name, values, false, personal)
+        self:ImportReminder(name, values, false, personal, IsUpdate)
     end
 end
 
-function NSI:ImportReminder(name, values, activate, personal)
+function NSI:ImportReminder(name, values, activate, personal, IsUpdate)
     if not name then name = "Default Reminder" end
     local diff = values:match("Difficulty:([^;]+)")
     local newname = diff and name.." - "..diff or name
     if personal then
-        if NSRT.PersonalReminders[newname] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
+        if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
             values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
-            self:ImportReminder(name.." 2", values, activate, personal)
+            self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
             return
         end
         NSRT.PersonalReminders[newname] = values
@@ -868,9 +868,9 @@ function NSI:ImportReminder(name, values, activate, personal)
         end
         return
     end
-    if NSRT.Reminders[newname] then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
+    if NSRT.Reminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
         values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
-        self:ImportReminder(name.." 2", values, activate, personal)
+        self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
         return
     end
     NSRT.Reminders[newname] = values
