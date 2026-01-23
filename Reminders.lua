@@ -784,17 +784,13 @@ function NSI:SetReminder(name, personal)
             self.PersonalReminder = NSRT.PersonalReminders[name]
             NSRT.ActivePersonalReminder = name
             self:ProcessReminder()
-            if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-                self:UpdateReminderFrame(true)
-            end
+            self:UpdateReminderFrame(false, true)
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
         self:ProcessReminder()
-        if NSRT.ReminderSettings.ShowReminderFrame then
-            self:UpdateReminderFrame()
-        end
+        self:UpdateReminderFrame(false, true)
     end
 end
 
@@ -805,9 +801,7 @@ function NSI:RemoveReminder(name, personal)
             if NSRT.ActivePersonalReminder == name then
                 self.PersonalReminder = ""
                 self:ProcessReminder()
-                if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-                    self:UpdateReminderFrame(true)
-                end
+                self:UpdateReminderFrame(false, true)
                 NSRT.ActivePersonalReminder = ""
             end
         end
@@ -817,9 +811,7 @@ function NSI:RemoveReminder(name, personal)
         if NSRT.ActiveReminder == name then
             self.Reminder = ""
             self:ProcessReminder()
-            if NSRT.ReminderSettings.ShowReminderFrame then
-                self:UpdateReminderFrame()
-            end
+            self:UpdateReminderFrame(false, true)
             NSRT.ActiveReminder = ""
         end
     end

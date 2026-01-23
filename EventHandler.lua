@@ -144,12 +144,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
-        if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-            self:UpdateReminderFrame(true)
-        end
-        if NSRT.ReminderSettings.ShowReminderFrame then
-            self:UpdateReminderFrame()
-        end
+        self:UpdateReminderFrame(false, true)
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
             self.Reminder = NSRT.StoredSharedReminder or ""
         end
@@ -296,9 +291,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
                 self:ProcessReminder()
-                if NSRT.ReminderSettings.ShowReminderFrame then
-                    self:UpdateReminderFrame()
-                end
+                self:UpdateReminderFrame(false, true)
             end
             self.Assignments = assigntable
         end

@@ -46,19 +46,17 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "note" or msg == "n" then
         NSRT.ReminderSettings.ShowReminderFrame = not NSRT.ReminderSettings.ShowReminderFrame
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame()
+        NSI:UpdateReminderFrame(false)
     elseif msg == "pnote" or msg == "pn" then
         NSRT.ReminderSettings.ShowPersonalReminderFrame = not NSRT.ReminderSettings.ShowPersonalReminderFrame
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame()
+        NSI:UpdateReminderFrame(true)
     elseif msg == "clear" or msg == "c" then
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
         NSI:ProcessReminder()
 
-        if NSRT.ReminderSettings.ShowReminderFrame then
-            NSI:UpdateReminderFrame()
-        end
+        NSI:UpdateReminderFrame(false, true)
     else
         NSI.NSUI:ToggleOptions()
     end

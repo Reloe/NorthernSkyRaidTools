@@ -788,12 +788,7 @@ local function BuildRemindersEditUI()
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
         NSI:ProcessReminder()
-        if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-            NSI:UpdateReminderFrame(true)
-        end
-        if NSRT.ReminderSettings.ShowReminderFrame then
-            NSI:UpdateReminderFrame()
-        end
+        NSI:UpdateReminderFrame(false, true)
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -903,12 +898,7 @@ local function BuildRemindersEditUI()
             if name ~= "" then
                 NSI:SetReminder(name)
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
-                if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-                    NSI:UpdateReminderFrame(true)
-                end
-                if NSRT.ReminderSettings.ShowReminderFrame then
-                    NSI:UpdateReminderFrame()
-                end
+                NSI:UpdateReminderFrame(false, true)
             end
         end, 40, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -1001,12 +991,7 @@ local function BuildPersonalRemindersEditUI()
         NSRT.ActivePersonalReminder = nil
         NSI.PersonalReminder = ""
         NSI:ProcessReminder()
-        if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-            NSI:UpdateReminderFrame(true)
-        end
-        if NSRT.ReminderSettings.ShowReminderFrame then
-            NSI:UpdateReminderFrame()
-        end
+        NSI:UpdateReminderFrame(false, true)
         Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -1098,12 +1083,7 @@ local function BuildPersonalRemindersEditUI()
             if name ~= "" then
                 NSI:SetReminder(name, true)
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
-                if NSRT.ReminderSettings.ShowPersonalReminderFrame then
-                    NSI:UpdateReminderFrame(true)
-                end
-                if NSRT.ReminderSettings.ShowReminderFrame then
-                    NSI:UpdateReminderFrame()
-                end
+                NSI:UpdateReminderFrame(false, true)
             end
         end, 55, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -1767,11 +1747,7 @@ function NSUI:Init()
                 onclick = function(_, _, value)
                     NSRT.ReminderSettings[typename][settingname] = list[value]
                     if isReminder then
-                        if Personal then
-                            NSI:UpdateReminderFrame(true)
-                        else
-                            NSI:UpdateReminderFrame(false)
-                        end
+                        NSI:UpdateReminderFrame(false, true)
                     else
                         NSI:UpdateExistingFrames()
                     end
@@ -2893,6 +2869,8 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.ReminderSettings.MRTNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.MRTNote = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
             end,
             nocombat = true,
         },               
