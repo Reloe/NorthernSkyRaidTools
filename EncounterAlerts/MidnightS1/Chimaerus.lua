@@ -10,7 +10,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
     Alert.dur, Alert.TTSTimer = 10, 5
     for phase = 1, 3 do
-        Alert.Phase = phase
+        Alert.phase = phase
         Alert.time, Alert.text  = 18.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         self:AddToReminder(Alert)
         Alert.time, Alert.text = 71.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
