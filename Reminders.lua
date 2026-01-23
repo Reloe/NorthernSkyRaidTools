@@ -130,6 +130,7 @@ function NSI:ProcessReminder()
     local addedpersonalreminders = {}
     self.DisplayedReminder = ""
     self.DisplayedPersonalReminder = ""
+    self.DisplayedExtraReminder = ""
     local pers = NSRT.ReminderSettings.ShowPersonalReminderFrame
     local shared = NSRT.ReminderSettings.ShowReminderFrame
     if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
@@ -153,7 +154,11 @@ function NSI:ProcessReminder()
         local myrole = strlower(UnitGroupRolesAssigned("player"))
         local myclass = strlower(select(2, UnitClass("player")))
         pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
-        for line in str:gmatch('[^\r\n]+') do
+        local extranote = ""
+        if not str:match('\n$') then
+            str = str..'\n'
+        end
+        for line in str:gmatch('([^\n]*)\n') do
             local firstline = false
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
@@ -256,8 +261,13 @@ function NSI:ProcessReminder()
                         self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, encID = encID, Type = nil, notsticky = false})
                     end
                 end
+            else
+                if (not firstline) and (not line:find("invitelist:")) then
+                    extranote = extranote..line.."\n"
+                end
             end
         end
+
         if shared then
             table.sort(remindertable, function(a, b) 
                 if a.phase == b.phase then
@@ -282,6 +292,8 @@ function NSI:ProcessReminder()
                 self.DisplayedPersonalReminder = self.DisplayedPersonalReminder..data.str.."\n"
             end
         end
+        extranote = extranote:gsub("^%s*\n+", "")
+        self.DisplayedExtraReminder = extranote
     end
 end
 
@@ -820,7 +832,10 @@ end
 function NSI:ImportFullReminderString(str, personal)
     local name = ""
     local values = ""
-    for line in str:gmatch('[^\r\n]+') do
+    if not str:match('\n$') then
+        str = str..'\n'
+    end
+    for line in str:gmatch('([^\n]*)\n') do
         if line:find("EncounterID:") and line:find("Name:") then
             if values ~= "" then -- meaning we reached a new boss line as the previous one has values already
                 self:ImportReminder(name, values, false, personal)
@@ -869,7 +884,7 @@ function NSI:InviteListFromReminder(str)
     local list = {}
     local found = false
     for line in str:gmatch('[^\r\n]+') do
-        if line:find("invitelist:") then        
+        if line:find("invitelist:") then    
             found = true    
             for name in line:gmatch("([^%s,;:]+)") do
                 if name ~= "invitelist" then
@@ -964,6 +979,20 @@ function NSI:CreateMoveFrames(Show)
         end
     else
         self:MoveFrameSettings(self.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
+    end
+    if not self.ExtraReminderFrameMover then
+        self.ExtraReminderFrameMover = CreateFrame("Frame", 'NSUIExtraReminderFrameMover', UIParent, "BackdropTemplate")
+        self:MoveFrameInit(self.ExtraReminderFrameMover, "ExtraReminderFrame", false, NSRT.ReminderSettings.ExtraReminderFrame.BGcolor)
+        self:MoveFrameSettings(self.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame)
+        if NSRT.ReminderSettings.ShowExtraReminderFrame and NSRT.ReminderSettings.ExtraReminderFrameMoveable then
+            self:UpdateReminderFrame(false, false, true)
+            self:ToggleMoveFrames(self.ExtraReminderFrameMover, true)
+            self.ExtraReminderFrameMover.Resizer:Show()
+            self.ExtraReminderFrameMover:SetResizable(true)
+            self.ExtraReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+        end
+    else
+        self:MoveFrameSettings(self.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame)
     end
 
     self.IconMover:Show()
@@ -1069,13 +1098,17 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
     return info
 end
 
-function NSI:UpdateReminderFrame(personal, all)
+function NSI:UpdateReminderFrame(personal, all, extra)
     if personal or all then
         self:MoveFrameSettings(self.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
     end
-    if all or not personal then
+    if all or ((not personal) and not extra) then
         self:MoveFrameSettings(self.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame) 
     end
+    if all or extra then
+        self:MoveFrameSettings(self.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame) 
+    end
+
     if (personal or all) and not self.PersonalReminderFrame then
         self.PersonalReminderFrame = CreateFrame("Frame", 'NSUIPersonalReminderFrame', self.PersonalReminderFrameMover, "BackdropTemplate")    
         self.PersonalReminderFrame:SetClipsChildren(true)         
@@ -1109,7 +1142,7 @@ function NSI:UpdateReminderFrame(personal, all)
             self.PersonalReminderFrameMover.Resizer:Hide()
         end
     end
-    if (all or not personal) and (not self.ReminderFrame) then
+    if (all or ((not personal) and not extra)) and (not self.ReminderFrame) then
         self.ReminderFrame = CreateFrame("Frame", 'NSUIReminderFrame', self.ReminderFrameMover, "BackdropTemplate")    
         self.ReminderFrame:SetClipsChildren(true)       
         self.ReminderFrame:SetFrameStrata("MEDIUM")  
@@ -1142,6 +1175,39 @@ function NSI:UpdateReminderFrame(personal, all)
             self.ReminderFrameMover.Resizer:Hide()
         end
     end
+    if (extra or all) and (not self.ExtraReminderFrame) then
+        self.ExtraReminderFrame = CreateFrame("Frame", 'NSUIExtraReminderFrame', self.ExtraReminderFrameMover, "BackdropTemplate")    
+        self.ExtraReminderFrame:SetClipsChildren(true)         
+        self.ExtraReminderFrame:SetFrameStrata("MEDIUM")
+        self.ExtraReminderFrame.Text = self.ExtraReminderFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        self.ExtraReminderFrame.Text:SetPoint("TOPLEFT", self.ExtraReminderFrame, "TOPLEFT", 0, 0)       
+        self.ExtraReminderFrame.Text:SetTextColor(1, 1, 1, 1)        
+        self.ExtraReminderFrame.Text:SetJustifyH("LEFT")  
+        self.ExtraReminderFrame.Text:SetJustifyV("TOP")
+        self.ExtraReminderFrame.Text:SetWordWrap(true)
+        self.ExtraReminderFrame.Text:SetNonSpaceWrap(true)
+        self.ExtraReminderFrame.Text:SetDrawLayer("OVERLAY", 7)
+
+        self.ExtraReminderFrameMover.Resizer = CreateFrame("Button", nil, self.ExtraReminderFrameMover)
+        self.ExtraReminderFrameMover.Resizer:SetSize(20, 20)
+        self.ExtraReminderFrameMover.Resizer:SetPoint("BOTTOMRIGHT", self.ExtraReminderFrameMover, "BOTTOMRIGHT", -2, 2)            
+        self.ExtraReminderFrameMover.Resizer:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+        self.ExtraReminderFrameMover.Resizer:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+        self.ExtraReminderFrameMover.Resizer:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+        self.ExtraReminderFrameMover.Resizer:EnableMouse(true)
+        self.ExtraReminderFrameMover.Resizer:RegisterForDrag("LeftButton")
+        self.ExtraReminderFrameMover.Resizer:SetScript("OnMouseDown", function()
+            self.ExtraReminderFrameMover:StartSizing("BOTTOMRIGHT")
+        end)
+        self.ExtraReminderFrameMover.Resizer:SetScript("OnMouseUp", function()            
+            self.ExtraReminderFrameMover:StopMovingOrSizing()
+            NSRT.ReminderSettings.ExtraReminderFrame.Width = self.ExtraReminderFrameMover:GetWidth()
+            NSRT.ReminderSettings.ExtraReminderFrame.Height = self.ExtraReminderFrameMover:GetHeight()
+        end)
+        if not NSRT.ReminderSettings.ExtraReminderFrameMoveable then
+            self.ExtraReminderFrameMover.Resizer:Hide()
+        end
+    end
     if personal or all then 
         self.PersonalReminderFrame:SetAllPoints(self.PersonalReminderFrameMover)
         self.PersonalReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.PersonalReminderFrame.Font), NSRT.ReminderSettings.PersonalReminderFrame.FontSize, "OUTLINE")   
@@ -1153,7 +1219,7 @@ function NSI:UpdateReminderFrame(personal, all)
             self.PersonalReminderFrame:Hide()
         end
     end  
-    if all or not personal then    
+    if all or ((not personal) and not extra) then    
         self.ReminderFrame:SetAllPoints(self.ReminderFrameMover)
         self.ReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ReminderFrame.Font), NSRT.ReminderSettings.ReminderFrame.FontSize, "OUTLINE")   
         self.ReminderFrame.Text:SetText(self.DisplayedReminder)
@@ -1162,6 +1228,16 @@ function NSI:UpdateReminderFrame(personal, all)
             self.ReminderFrame:Show()
         elseif self.ReminderFrame then
             self.ReminderFrame:Hide()
+        end
+    end
+    if all or extra then
+        self.ExtraReminderFrame:SetAllPoints(self.ExtraReminderFrameMover)
+        self.ExtraReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ExtraReminderFrame.Font), NSRT.ReminderSettings.ExtraReminderFrame.FontSize, "OUTLINE")   
+        self.ExtraReminderFrame.Text:SetText(self.DisplayedExtraReminder)
+        if NSRT.ReminderSettings.ShowExtraReminderFrame then  
+            self.ExtraReminderFrame:Show()
+        elseif self.ExtraReminderFrame then
+            self.ExtraReminderFrame:Hide()
         end
     end
 end

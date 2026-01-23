@@ -758,7 +758,10 @@ local function BuildRemindersEditUI()
                 local line = self:GetLine(i)
                 line.name = reminderData.name
                 line.nameTextEntry.text = reminderData.name
-                if not NSRT.InviteList[line.name] then
+                if NSRT.InviteList[reminderData.name] then
+                    line.InviteButton:Show()
+                    line.ArrangeButton:Show()
+                else
                     line.InviteButton:Hide()
                     line.ArrangeButton:Hide()
                 end
@@ -2921,7 +2924,7 @@ Press 'Enter' to hear the TTS]],
     local reminder_note_options1_table = {
         {
             type = "label",
-            get = function() return "This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 2 types of displays. The first one shows all reminders, the second one shows only those that will activate for you." end,
+            get = function() return "This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 3 types of displays. The first one shows all reminders, the second one shows only those that will activate for you. And the third shows all text that is not a reminder." end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             spacement = true,
         },
@@ -3153,6 +3156,122 @@ Press 'Enter' to hear the TTS]],
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
                 NSI:UpdateReminderFrame(true)
+            end,
+            hasAlpha = true,
+            nocombat = true
+
+        }, 
+
+        {
+            type = "breakline",
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "Text-Note" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),         
+        },
+        
+        {
+            type = "button",
+            name = "Unlock Text Note",
+            desc = "Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed.",
+            func = function(self)
+                if NSI.ExtraReminderFrameMover and NSI.ExtraReminderFrameMover:IsMovable() then
+                    NSI:UpdateReminderFrame(false, false, true)
+                    NSI:ToggleMoveFrames(NSI.ExtraReminderFrameMover, false)
+                    NSI.ExtraReminderFrameMover.Resizer:Hide()
+                    NSI.ExtraReminderFrameMover:SetResizable(false)
+                    NSRT.ReminderSettings.ExtraReminderFrameMoveable = false
+                else
+                    NSI:UpdateReminderFrame(false, false, true)
+                    NSI:ToggleMoveFrames(NSI.ExtraReminderFrameMover, true)
+                    NSI.ExtraReminderFrameMover.Resizer:Show()
+                    NSI.ExtraReminderFrameMover:SetResizable(true)
+                    NSI.ExtraReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
+                    NSRT.ReminderSettings.ExtraReminderFrameMoveable = true
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },  
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Text Note",
+            desc = "Whether you want to display the Text-Note",
+            get = function() return NSRT.ReminderSettings.ShowExtraReminderFrame end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowExtraReminderFrame = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, false, true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Font-Size",
+            desc = "Font-Size of the Text-Note",
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ExtraReminderFrame.FontSize = value
+                NSI:UpdateReminderFrame(false, false, true)
+            end,
+            min = 2,
+            max = 40,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font",
+            desc = "Font of the Text-Note",
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Font end,
+            values = function() 
+                return build_media_options("ExtraReminderFrame", "Font", false, true, true) 
+            end, 
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the Text-Note",
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ExtraReminderFrame.Width = value
+                NSI:UpdateReminderFrame(false, false, true)
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the Text-Note",
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ExtraReminderFrame.Height = value
+                NSI:UpdateReminderFrame(false, false, true)
+            end,
+            min = 100,
+            max = 2000,
+            nocombat = true,
+        },
+
+        {
+            type = "color",
+            name = "Background-Color",
+            desc = "Color of the Background of the Text-Note when unlocked",
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.BGcolor end,
+            set = function(self, r, g, b, a)
+                NSRT.ReminderSettings.ExtraReminderFrame.BGcolor = {r, g, b, a}
+                NSI:UpdateReminderFrame(false, false, true)
             end,
             hasAlpha = true,
             nocombat = true
