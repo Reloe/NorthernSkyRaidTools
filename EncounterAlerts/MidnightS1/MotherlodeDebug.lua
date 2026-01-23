@@ -48,6 +48,7 @@ local detectedDurations = {34.5} -- Add smth here after seeing fight in pre-patc
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     -- not checking REMOVED event by default but may be needed for some encounters
+    print("added event", e, info and info.duration, self.PhaseSwapTime, now, self.EncounterID, self.Phase)
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     print(info and info.duration)
     for k, v in ipairs(detectedDurations) do
