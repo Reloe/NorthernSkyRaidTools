@@ -192,8 +192,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         NSUI.generic_display:Hide()
         if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
             self:InitTankPA()
-        end
-        self:InitRaidPA(false)
+        end        
+        if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -400,10 +400,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)      
-    elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
-        if self:DifficultyCheck(14) then
-            self:InitRaidPA(false)
-        end
+    elseif e == "GROUP_ROSTER_UPDATE" and wowevent then        
+        if NSRT.PARaidSettings.enabled then
+            local diff = select(3, GetInstanceInfo())
+            if diff == 23 or self:DifficultyCheck(14) or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing
+                local isparty = not UnitInRaid("player")
+                self:InitRaidPA(isparty)
+                return
+            end
+        end  
+
         if self:Restricted() then return end 
 
         self:UpdateRaidBuffFrame()
@@ -417,16 +423,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     end
                 end)
             end
-        end
-        
-        if NSRT.PARaidSettings.enabled then
-            local diff = select(3, GetInstanceInfo())
-            if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing
-                local isparty = not UnitInRaid("player")
-                self:InitRaidPA(isparty)
-                return
-            end
-        end      
+        end    
 
         if not self:DifficultyCheck(14) then return end
     elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then  
