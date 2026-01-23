@@ -3068,6 +3068,7 @@ Press 'Enter' to hear the TTS]],
                 NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(false, true)
             end,
+            nocombat = true,
         },
         {
             type = "breakline",
