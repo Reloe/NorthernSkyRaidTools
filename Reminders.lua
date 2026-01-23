@@ -133,12 +133,13 @@ function NSI:ProcessReminder()
     self.DisplayedExtraReminder = ""
     local pers = NSRT.ReminderSettings.ShowPersonalReminderFrame
     local shared = NSRT.ReminderSettings.ShowReminderFrame
-    if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
-    if NSRT.ReminderSettings.MRTNote then 
+    -- UseTimelineReminders makes it process the note but then stops the display at a later point. This allows still displaying the note.
+    if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and self.Reminder then str = self.Reminder end
+    if NSRT.ReminderSettings.MRTNote or NSRT.ReminderSettings.UseTimelineReminders then 
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
         str = note and str ~= "" and str.."\n"..note or note or str
     end
-    if NSRT.ReminderSettings.PersNote then
+    if NSRT.ReminderSettings.PersNote or NSRT.ReminderSettings.UseTimelineReminders then
         local note = self.PersonalReminder
         str = note and str ~= "" and str.."\n"..note or note or str
     end    
@@ -725,6 +726,7 @@ function NSI:PlayReminderSound(info, default)
 end
 
 function NSI:StartReminders(phase)
+    if NSRT.ReminderSettings.UseTimelineReminders then return end
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}    
@@ -805,13 +807,24 @@ function NSI:SetReminder(name, personal)
             NSRT.ActivePersonalReminder = name
             self:ProcessReminder()
             self:UpdateReminderFrame(false, true)
+        else
+            self.PersonalReminder = ""
+            NSRT.ActivePersonalReminder = nil
+            self:ProcessReminder()
+            self:UpdateReminderFrame(false, true)
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
         self:ProcessReminder()
         self:UpdateReminderFrame(false, true)
+    else
+        self.Reminder = ""
+        NSRT.ActiveReminder = nil
+        self:ProcessReminder()
+        self:UpdateReminderFrame(false, true)
     end
+    self:FireCallback("NSRT_REMINDER_CHANGED", self.Reminder, self.PersonalReminder)
 end
 
 function NSI:RemoveReminder(name, personal)
@@ -819,20 +832,14 @@ function NSI:RemoveReminder(name, personal)
         if name and NSRT.PersonalReminders[name] then
             NSRT.PersonalReminders[name] = nil
             if NSRT.ActivePersonalReminder == name then
-                self.PersonalReminder = ""
-                self:ProcessReminder()
-                self:UpdateReminderFrame(false, true)
-                NSRT.ActivePersonalReminder = ""
+                self:SetReminder(nil, true)
             end
         end
     elseif name and NSRT.Reminders[name] then
         NSRT.Reminders[name] = nil
         NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
-            self.Reminder = ""
-            self:ProcessReminder()
-            self:UpdateReminderFrame(false, true)
-            NSRT.ActiveReminder = ""
+            self:SetReminder(nil, false)
         end
     end
 end
@@ -1106,7 +1113,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
     return info
 end
 
-function NSI:UpdateReminderFrame(personal, all, extra)
+function NSI:UpdateReminderFrame(personal, all, extra)    
     if personal or all then
         self:MoveFrameSettings(self.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
     end
@@ -1248,4 +1255,8 @@ function NSI:UpdateReminderFrame(personal, all, extra)
             self.ExtraReminderFrame:Hide()
         end
     end
+end
+
+function NSAPI:GetReminderString()
+    return NSI.PersonalReminder, NSI.Reminder
 end

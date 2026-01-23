@@ -793,10 +793,8 @@ local function BuildRemindersEditUI()
     ImportButton:SetTemplate(options_button_template)
 
     -- Clear Button
-    local ClearButton = DF:CreateButton(reminders_edit_frame, function()        
-        NSRT.ActiveReminder = nil
-        NSI.Reminder = ""
-        NSI:ProcessReminder()
+    local ClearButton = DF:CreateButton(reminders_edit_frame, function()       
+        NSI:SetReminder(nil) 
         NSI:UpdateReminderFrame(false, true)
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
@@ -997,9 +995,7 @@ local function BuildPersonalRemindersEditUI()
 
     -- Clear Button
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
-        NSRT.ActivePersonalReminder = nil
-        NSI.PersonalReminder = ""
-        NSI:ProcessReminder()
+        NSI:SetReminder(nil, true)
         NSI:UpdateReminderFrame(false, true)
         Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
@@ -2929,6 +2925,20 @@ Press 'Enter' to hear the TTS]],
             get = function() return NSRT.ReminderSettings.AutoShare end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.AutoShare = value
+            end,
+            nocombat = true,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Use TimelineReminders",
+            desc = "Toggling this on will make NSRT not display any reminders, but still allow TimelineReminders to read any shared or personal reminder you have and also allow the Note-Display to work.",
+            get = function() return NSRT.ReminderSettings.UseTimelineReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.UseTimelineReminders = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(false, true)
             end,
             nocombat = true,
         },

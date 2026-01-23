@@ -148,10 +148,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
-        self:UpdateReminderFrame(false, true)
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
             self.Reminder = NSRT.StoredSharedReminder or ""
         end
+        self:UpdateReminderFrame(false, true)
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end        
@@ -291,11 +291,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit)) and skipcheck) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
-            if NSRT.ReminderSettings.enabled and reminderstring ~= "" then
+            if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and reminderstring ~= "" then
                 NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
                 self:ProcessReminder()
                 self:UpdateReminderFrame(false, true)
+                self:FireCallback("NSRT_REMINDER_CHANGED", self.Reminder, self.PersonalReminder)
             end
             self.Assignments = assigntable
         end
@@ -410,13 +411,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if diff == 23 or self:DifficultyCheck(14) or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing
                 local isparty = not UnitInRaid("player")
                 self:InitRaidPA(isparty)
-                return
             end
         end  
 
+        self:UpdateRaidBuffFrame()
         if self:Restricted() then return end 
 
-        self:UpdateRaidBuffFrame()
         if self.InviteInProgress then
             if not UnitInRaid("player") then
                 C_PartyInfo.ConvertToRaid()
