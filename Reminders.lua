@@ -1090,6 +1090,11 @@ function NSAPI:DebugEncounter(EncounterID)
         NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
     end
 end
+-- /run NSAPI:DebugEncounter(3306)
+-- /run NSAPI:DebugTimeline("ENCOUNTER_TIMELINE_EVENT_ADDED", 120.9)
+function NSAPI:DebugTimeline(e, dur)
+    NSI:EventHandler(e, true, true, {duration = dur})
+end
 
 function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
     local id = self.DefaultAlertID
