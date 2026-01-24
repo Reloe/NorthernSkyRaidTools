@@ -94,26 +94,12 @@ function NSI:SetupTimelineHooks(timeline)
             elapsedTimeFrame:SetHeight(timeline.options.elapsed_timeline_height or 20)
         end
 
-        -- Reposition vertical time lines to be anchored to body
-        -- so they scroll with content while ruler stays fixed
+        -- Hide original vertical time lines (we use gridOverlay instead for proper z-ordering)
         local function repositionLines()
             if elapsedTimeFrame.labels then
-                local bodyHeight = timeline.body:GetHeight() or 400
-                local rulerHeight = elapsedTimeFrame:GetHeight() or 20
-
                 for i, label in pairs(elapsedTimeFrame.labels) do
-                    if label.line and label:IsShown() then
-                        -- Get the label's X position relative to elapsedTimeFrame
-                        local labelX = label:GetLeft() - elapsedTimeFrame:GetLeft()
-
-                        -- Re-parent line to body and anchor it there
-                        label.line:SetParent(timeline.body)
-                        label.line:ClearAllPoints()
-                        -- Position at top of body content area (below ruler height)
-                        label.line:SetPoint("TOPLEFT", timeline.body, "TOPLEFT", headerWidth + labelX, -rulerHeight)
-                        label.line:SetHeight(bodyHeight - rulerHeight)
-                        label.line:SetDrawLayer("BACKGROUND", -8)
-                        label.line:Show()
+                    if label.line then
+                        label.line:Hide()
                     end
                 end
             end
