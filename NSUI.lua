@@ -1979,6 +1979,92 @@ local function BuildTimelineTabUI(parent)
         end
     end
 
+    -- Create cursor line that follows mouse and shows time
+    local cursorLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    cursorLine:SetWidth(1)
+    cursorLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 150)
+    cursorLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+    cursorLine:SetBackdropColor(1, 1, 0, 0.8)  -- Yellow cursor line
+    cursorLine:Hide()
+    timelineFrame.cursorLine = cursorLine
+
+    -- Time label for cursor
+    local cursorTimeLabel = cursorLine:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    cursorTimeLabel:SetPoint("BOTTOM", cursorLine, "TOP", 0, 2)
+    cursorTimeLabel:SetTextColor(1, 1, 0.7, 1)
+    timelineFrame.cursorTimeLabel = cursorTimeLabel
+
+    -- Background for time label for better readability
+    local cursorTimeBg = cursorLine:CreateTexture(nil, "BACKGROUND")
+    cursorTimeBg:SetColorTexture(0, 0, 0, 0.7)
+    cursorTimeBg:SetPoint("TOPLEFT", cursorTimeLabel, "TOPLEFT", -3, 2)
+    cursorTimeBg:SetPoint("BOTTOMRIGHT", cursorTimeLabel, "BOTTOMRIGHT", 3, -1)
+    timelineFrame.cursorTimeBg = cursorTimeBg
+
+    -- Update cursor position based on mouse
+    local function updateCursorLine()
+        if not timelineFrame.body:IsVisible() then
+            cursorLine:Hide()
+            return
+        end
+
+        local cursorX, cursorY = GetCursorPosition()
+        local uiScale = UIParent:GetEffectiveScale()
+        cursorX = cursorX / uiScale
+        cursorY = cursorY / uiScale
+
+        local bodyLeft = timelineFrame.body:GetLeft() or 0
+        local bodyRight = timelineFrame.body:GetRight() or 0
+        local bodyTop = timelineFrame.body:GetTop() or 0
+        local bodyBottom = timelineFrame.body:GetBottom() or 0
+
+        -- Check if cursor is within timeline body bounds
+        if cursorX >= bodyLeft and cursorX <= bodyRight and cursorY >= bodyBottom and cursorY <= bodyTop then
+            local mouseXInBody = cursorX - bodyLeft
+            local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+            local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
+            local currentScale = timelineFrame.currentScale or 1
+
+            -- Calculate time at cursor position
+            local timeAtCursor = (scrollX + mouseXInBody) / (pixelsPerSecond * currentScale)
+
+            -- Format time as M:SS
+            local minutes = math.floor(timeAtCursor / 60)
+            local seconds = math.floor(timeAtCursor % 60)
+            cursorTimeLabel:SetText(string.format("%d:%02d", minutes, seconds))
+
+            -- Position cursor line
+            local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
+            cursorLine:ClearAllPoints()
+            cursorLine:SetPoint("TOP", timelineFrame.body, "TOPLEFT", mouseXInBody, -elapsedHeight)
+            cursorLine:SetPoint("BOTTOM", timelineFrame.body, "BOTTOMLEFT", mouseXInBody, 0)
+            cursorLine:Show()
+        else
+            cursorLine:Hide()
+        end
+    end
+
+    -- Enable mouse tracking on the timeline body
+    timelineFrame.body:EnableMouse(true)
+    timelineFrame.body:SetScript("OnEnter", function()
+        cursorLine:Show()
+    end)
+    timelineFrame.body:SetScript("OnLeave", function()
+        cursorLine:Hide()
+    end)
+
+    -- Use OnUpdate for smooth cursor tracking
+    local updateThrottle = 0
+    timelineFrame.body:SetScript("OnUpdate", function(self, elapsed)
+        updateThrottle = updateThrottle + elapsed
+        if updateThrottle >= 0.016 then  -- ~60fps
+            updateThrottle = 0
+            if self:IsMouseOver() then
+                updateCursorLine()
+            end
+        end
+    end)
+
     -- Setup zoom-to-cursor and sticky ruler hooks
     NSI:SetupTimelineHooks(timelineFrame)
 
