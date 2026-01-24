@@ -99,6 +99,47 @@ NSI.BossTimelineCategoryOrder = {
     intermission = 6,
 }
 
+-- Categories considered "important" for filtering
+-- These are mechanics that typically require healing CDs or raid coordination
+NSI.BossTimelineImportantCategories = {
+    damage = true,
+    ["raid damage"] = true,
+    soak = true,
+    ["group soak"] = true,
+    intermission = true,
+}
+
+-- Boss display modes for timeline
+NSI.BossDisplayModes = {
+    SHOW_ALL = "all",           -- Show all abilities (default)
+    IMPORTANT_ONLY = "important", -- Show only important abilities
+    COMBINED = "combined",      -- Combine all into one row
+}
+
+-- Check if an ability is considered "important" based on its category
+-- Returns true if any category keyword is in the important list, or if ability has important=true
+function NSI:IsAbilityImportant(ability)
+    -- Explicit important flag takes precedence
+    if ability.important ~= nil then
+        return ability.important
+    end
+
+    -- Check category keywords
+    local categoryStr = ability.category
+    if not categoryStr or categoryStr == "" then
+        return false
+    end
+
+    for keyword in categoryStr:gmatch("([^,]+)") do
+        keyword = strtrim(keyword):lower()
+        if self.BossTimelineImportantCategories[keyword] then
+            return true
+        end
+    end
+
+    return false
+end
+
 -- Parse a compound category string and return color and sort order
 -- e.g., "raid damage, debuffs" -> color for "raid damage", order 1
 function NSI:ParseCategoryForDisplay(categoryStr)
@@ -207,6 +248,12 @@ end
 function NSI:SetPhaseStart(encounterID, phaseNum, time)
     -- Cannot adjust phase 1
     if phaseNum == 1 then return end
+
+    -- Reject move if it would go before the previous phase
+    local prevPhaseTime = self:GetPhaseStart(encounterID, phaseNum - 1)
+    if time <= prevPhaseTime then
+        return
+    end
 
     if not NSRT.PhaseTimings then
         NSRT.PhaseTimings = {}
