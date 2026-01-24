@@ -116,7 +116,6 @@ function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Her
     return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or (NSRT.Settings["Debug"] and 16)
 end
 
--- technically don't need this to be public but it's good for backwards compatibility for a while
 function NSI:GetHash(text)
     local counter = 1
     local len = string.len(text)

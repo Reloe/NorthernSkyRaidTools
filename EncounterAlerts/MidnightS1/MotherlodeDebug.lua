@@ -43,7 +43,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
-local detectedDurations = {34.5} -- Add smth here after seeing fight in pre-patch. Probably one thing for dmg amp phase and then one for last phase to account for guilds hardpushing at 10%.
+local detectedDurations = {33}
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()

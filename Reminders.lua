@@ -1091,6 +1091,7 @@ end
 function NSAPI:DebugEncounter(EncounterID)
     if NSRT.Settings["Debug"] then
         NSI.ProcessedReminder = nil
+        NSI.Assignments = NSRT.AssignmentSettings
         NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
     end
 end
