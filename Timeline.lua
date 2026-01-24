@@ -945,8 +945,62 @@ function NSI:CreateTimelineWindow()
         end,
     }
 
-    local timelineFrame = DF:CreateTimeLineFrame(timelineWindow, "$parentTimeLine", timelineOptions)
+    -- Elapsed time options for the ruler and vertical grid lines
+    local elapsedTimeOptions = {
+        draw_line_color = {0.6, 0.6, 0.6, 0.8}, -- Consistent grey lines on both light and dark backgrounds
+    }
+
+    local timelineFrame = DF:CreateTimeLineFrame(timelineWindow, "$parentTimeLine", timelineOptions, elapsedTimeOptions)
     timelineWindow.timeline = timelineFrame
+
+    -- Create an overlay frame for grid lines that draws on top of rows
+    local gridOverlay = CreateFrame("Frame", nil, timelineFrame.body)
+    gridOverlay:SetAllPoints(timelineFrame.body)
+    gridOverlay:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 100)
+    timelineFrame.gridOverlay = gridOverlay
+    timelineFrame.gridLines = {}
+
+    -- Hide the default elapsed time lines
+    if timelineFrame.elapsedTimeFrame and timelineFrame.elapsedTimeFrame.options then
+        timelineFrame.elapsedTimeFrame.options.draw_line = false
+    end
+
+    -- Hook refresh to create our own grid lines on the overlay
+    if timelineFrame.elapsedTimeFrame then
+        local originalRefresh = timelineFrame.elapsedTimeFrame.Refresh
+        timelineFrame.elapsedTimeFrame.Refresh = function(self, ...)
+            originalRefresh(self, ...)
+            -- Create grid lines on our overlay frame
+            if self.labels then
+                for i, label in ipairs(self.labels) do
+                    if label:IsShown() then
+                        local gridLine = timelineFrame.gridLines[i]
+                        if not gridLine then
+                            gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
+                            gridLine:SetColorTexture(0.5, 0.5, 0.5, 1)
+                            gridLine:SetWidth(1)
+                            timelineFrame.gridLines[i] = gridLine
+                        end
+                        -- Position the grid line to match the label
+                        gridLine:ClearAllPoints()
+                        gridLine:SetPoint("TOP", label, "BOTTOM", 0, -2)
+                        gridLine:SetPoint("BOTTOM", gridOverlay, "BOTTOM", 0, 0)
+                        gridLine:Show()
+                    else
+                        if timelineFrame.gridLines[i] then
+                            timelineFrame.gridLines[i]:Hide()
+                        end
+                    end
+                end
+                -- Hide extra lines
+                for i = #self.labels + 1, #timelineFrame.gridLines do
+                    if timelineFrame.gridLines[i] then
+                        timelineFrame.gridLines[i]:Hide()
+                    end
+                end
+            end
+        end
+    end
 
     -- Setup zoom-to-cursor and sticky ruler hooks
     self:SetupTimelineHooks(timelineFrame)
