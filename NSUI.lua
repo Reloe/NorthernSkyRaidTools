@@ -2950,6 +2950,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.ReminderSettings.UseTimelineReminders = value
                 NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(false, true)
+                NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.Reminder, NSI.PersonalReminder)
             end,
             nocombat = true,
         },
