@@ -2215,6 +2215,17 @@ Press 'Enter' to hear the TTS]],
         },
 
         {
+            type = "button",
+            name = "Split Evens/Odds",
+            desc = "Same as the button above but using groups 1/3/5 and 2/4/6.",
+            func = function(self)
+                NSI:SplitGroupInit(false, false, true)
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
+        {
             type = "breakline"
         },
 

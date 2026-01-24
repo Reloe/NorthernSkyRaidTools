@@ -209,7 +209,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         end) -- a < b low first, a > b high first
         sides["left"] = self:ShiftLeader(sides["left"])
         sides["right"] = self:ShiftLeader(sides["right"])
-        if self.Groups.Odds then
+        if odds then
             units = {}
             local count = 1
             for i, v in ipairs(sides["left"]) do
