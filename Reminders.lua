@@ -242,15 +242,19 @@ function NSI:ProcessReminder()
                         addedreminders[key] = true  
                     end
                 end
+                local tags = {}
                 tag = strlower(tag)
+                for name in tag:gmatch("(%S+)") do
+                    tags[strtrim(name)] = true
+                end
                 if tag == "everyone" or 
-                tag:match(myname) or 
-                tag:match(mynickname) or 
-                tag:match(myrole) or 
-                tag:match(specid) or
-                tag:match(myclass) or
-                tag:match(subgroup) or 
-                (pos and tag:match(pos))
+                tags[myname] or 
+                tags[mynickname] or
+                tags[myrole] or 
+                tags[specid] or
+                tags[myclass] or
+                tags[subgroup] or 
+                (pos and tags[pos])
                 then       
                     if not addedpersonalreminders[key] then 
                         addedpersonalreminders[key] = true
