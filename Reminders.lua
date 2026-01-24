@@ -828,7 +828,7 @@ function NSI:SetReminder(name, personal)
         self:ProcessReminder()
         self:UpdateReminderFrame(false, true)
     end
-    self:FireCallback("NSRT_REMINDER_CHANGED", self.Reminder, self.PersonalReminder)
+    self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
 end
 
 function NSI:RemoveReminder(name, personal)

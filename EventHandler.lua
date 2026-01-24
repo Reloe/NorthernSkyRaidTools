@@ -296,7 +296,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.Reminder = reminderstring
                 self:ProcessReminder()
                 self:UpdateReminderFrame(false, true)
-                self:FireCallback("NSRT_REMINDER_CHANGED", self.Reminder, self.PersonalReminder)
+                self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
             self.Assignments = assigntable
         end

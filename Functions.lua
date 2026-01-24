@@ -227,20 +227,20 @@ NSI.Callbacks = NSI.Callbacks or LibStub("CallbackHandler-1.0"):New(NSI)
 
 function NSI:FireCallback(event, ...)
     if NSRT.ReminderSettings.UseTimelineReminders then
-        NSI.Callbacks:Fire(event, "", "") -- send empty strings if setting is disabled
+        self.Callbacks:Fire(event, ...)
     else
-        NSI.Callbacks:Fire(event, ...)
+        self.Callbacks:Fire(event, "", "") -- send empty strings if setting is disabled
     end
 end
 
 function NSAPI:RegisterCallback(event, callback, owner)
-    return NSI.Callbacks:RegisterCallback(event, callback, owner)
+    return NSI:RegisterCallback(event, callback, owner)
 end
 
 function NSAPI:UnregisterCallback(event, callback, owner)
-    return NSI.Callbacks:UnregisterCallback(event, callback, owner)
+    return NSI:UnregisterCallback(event, callback, owner)
 end
 
 function NSAPI:UnregisterAllCallbacks(owner)
-    return NSI.Callbacks:UnregisterAllCallbacks(owner)
+    return NSI:UnregisterAllCallbacks(owner)
 end
