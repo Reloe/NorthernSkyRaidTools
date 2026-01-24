@@ -25,14 +25,14 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-local detectedDurations = {120.9} -- Devour
+local detectedDurations = {120} -- Devour
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     for k, v in ipairs(detectedDurations) do
-        if info.duration == v then            
+        if info.duration > v then -- for now this should work until I know the exact number from heroic week           
             self.Phase = self.Phase+1                  
             self:StartReminders(self.Phase)
             self.PhaseSwapTime = now
