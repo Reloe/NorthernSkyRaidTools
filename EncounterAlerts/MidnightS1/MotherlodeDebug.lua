@@ -43,7 +43,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
-local detectedDurations = {33}
+local detectedDurations = {34.5}
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
