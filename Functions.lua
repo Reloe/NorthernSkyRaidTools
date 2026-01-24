@@ -227,7 +227,11 @@ NSAPI = NSAPI or {}
 NSI.Callbacks = NSI.Callbacks or LibStub("CallbackHandler-1.0"):New(NSI)
 
 function NSI:FireCallback(event, ...)
-    NSI.Callbacks:Fire(event, ...)
+    if NSRT.ReminderSettings.UseTimelineReminders then
+        NSI.Callbacks:Fire(event, "", "") -- send empty strings if setting is disabled
+    else
+        NSI.Callbacks:Fire(event, ...)
+    end
 end
 
 function NSAPI:RegisterCallback(event, callback, owner)
