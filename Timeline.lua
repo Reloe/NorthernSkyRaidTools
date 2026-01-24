@@ -146,9 +146,18 @@ end
 
 -- Get boss ability lines for the timeline
 -- Returns array of timeline lines and max time
-function NSI:GetBossAbilityLines(encounterID, filterImportantOnly, requestedDifficulty)
+-- displayMode: "all" (default), "important" (important only), "combined" (one row)
+function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
     if not encounterID or not self.BossTimelines or not self.BossTimelines[encounterID] then
         return {}, 0
+    end
+
+    -- Default to "all" if no mode specified (backwards compatible with old boolean param)
+    if displayMode == nil or displayMode == false then
+        displayMode = self.BossDisplayModes.SHOW_ALL
+    elseif displayMode == true then
+        -- Legacy: true meant filter important only
+        displayMode = self.BossDisplayModes.IMPORTANT_ONLY
     end
 
     local abilities, duration, phases, difficulty = self:GetBossTimelineAbilities(encounterID, requestedDifficulty)
@@ -157,9 +166,70 @@ function NSI:GetBossAbilityLines(encounterID, filterImportantOnly, requestedDiff
     local lines = {}
     local maxTime = duration or 0
 
-    -- Group abilities by name (since same ability can appear in multiple phases)
-    local abilityGroups = {}
+    -- Filter abilities based on display mode
+    local filteredAbilities = {}
     for _, ability in ipairs(abilities) do
+        local include = true
+        if displayMode == self.BossDisplayModes.IMPORTANT_ONLY then
+            include = self:IsAbilityImportant(ability)
+        end
+        if include then
+            table.insert(filteredAbilities, ability)
+        end
+    end
+
+    -- Handle combined mode - put all abilities on one row
+    if displayMode == self.BossDisplayModes.COMBINED then
+        local combinedTimeline = {}
+        local allTimes = {}
+
+        for _, ability in ipairs(filteredAbilities) do
+            for i, time in ipairs(ability.times) do
+                table.insert(allTimes, {
+                    time = time,
+                    dur = ability.duration or 3,
+                    spellID = ability.spellID,
+                    name = ability.name,
+                    category = ability.category,
+                    color = ability.color,
+                })
+            end
+        end
+
+        -- Sort by time
+        table.sort(allTimes, function(a, b) return a.time < b.time end)
+
+        -- Create timeline blocks
+        for _, entry in ipairs(allTimes) do
+            table.insert(combinedTimeline, {
+                entry.time,
+                0,
+                true,
+                entry.dur,
+                entry.spellID,
+                payload = {
+                    category = entry.category,
+                    abilityName = entry.name,
+                    isBossAbility = true,
+                },
+            })
+        end
+
+        table.insert(lines, {
+            spellId = nil,
+            icon = "Interface\\ICONS\\Achievement_Boss_KilJaeden",
+            text = "|cffff8800Boss Abilities|r",
+            timeline = combinedTimeline,
+            isBossAbility = true,
+            isCombined = true,
+        })
+
+        return lines, maxTime, phases, difficulty
+    end
+
+    -- Normal mode: group abilities by name (since same ability can appear in multiple phases)
+    local abilityGroups = {}
+    for _, ability in ipairs(filteredAbilities) do
         local key = ability.name
         if not abilityGroups[key] then
             abilityGroups[key] = {
@@ -252,7 +322,8 @@ end
 
 -- Get timeline data from ProcessedReminder (player's own filtered reminders)
 -- Returns data in DetailsFramework timeline format
-function NSI:GetMyTimelineData(includeBossAbilities)
+-- bossDisplayMode: "all", "important", or "combined" (see BossDisplayModes)
+function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
     if not self.ProcessedReminder then return nil end
 
     -- Find which encounter has data
@@ -409,7 +480,7 @@ function NSI:GetMyTimelineData(includeBossAbilities)
     local difficulty = nil
     local finalLines = {}
     if includeBossAbilities and encID then
-        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false, reminderDifficulty)
+        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, bossDisplayMode, reminderDifficulty)
         phases = bossPhases
         difficulty = bossDifficulty
 
@@ -452,7 +523,8 @@ end
 
 -- Get timeline data from a reminder set (ALL reminders, for raid leaders)
 -- Returns data in DetailsFramework timeline format
-function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
+-- bossDisplayMode: "all", "important", or "combined" (see BossDisplayModes)
+function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bossDisplayMode)
     local source = personal and NSRT.PersonalReminders or NSRT.Reminders
     local reminderStr = source[reminderName]
     if not reminderStr then return nil end
@@ -648,7 +720,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities)
     local difficulty = nil
     local finalLines = {}
     if includeBossAbilities and encID then
-        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, false, reminderDifficulty)
+        local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(encID, bossDisplayMode, reminderDifficulty)
         phases = bossPhases
         difficulty = bossDifficulty
 
@@ -800,12 +872,21 @@ function NSI:CreateTimelineWindow()
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
+    timelineWindow.bossDisplayMode = NSI.BossDisplayModes.SHOW_ALL -- Default display mode
 
     local options_switch_template = DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE")
 
     local bossAbilitiesToggle = DF:CreateSwitch(timelineWindow,
         function(self, _, value)
             timelineWindow.showBossAbilities = value
+            -- Show/hide display mode dropdown based on toggle
+            if value then
+                timelineWindow.bossDisplayLabel:Show()
+                timelineWindow.bossDisplayDropdown:Show()
+            else
+                timelineWindow.bossDisplayLabel:Hide()
+                timelineWindow.bossDisplayDropdown:Hide()
+            end
             NSI:RefreshTimelineForMode()
         end,
         true, 20, 20, nil, nil, nil, "BossAbilitiesToggle", nil, nil, nil, nil, options_switch_template)
@@ -815,6 +896,45 @@ function NSI:CreateTimelineWindow()
 
     local bossAbilitiesLabel = DF:CreateLabel(timelineWindow, "Show Boss Abilities", 11, "white")
     bossAbilitiesLabel:SetPoint("RIGHT", bossAbilitiesToggle, "LEFT", -5, 0)
+
+    -- Boss display mode dropdown
+    local function BuildBossDisplayModeOptions()
+        return {
+            {
+                label = "Show All",
+                value = NSI.BossDisplayModes.SHOW_ALL,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
+            {
+                label = "Important Only",
+                value = NSI.BossDisplayModes.IMPORTANT_ONLY,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
+            {
+                label = "Combined",
+                value = NSI.BossDisplayModes.COMBINED,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
+        }
+    end
+
+    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
+    bossDisplayLabel:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
+    timelineWindow.bossDisplayLabel = bossDisplayLabel
+
+    local bossDisplayDropdown = DF:CreateDropDown(timelineWindow, BuildBossDisplayModeOptions, NSI.BossDisplayModes.SHOW_ALL, 130)
+    bossDisplayDropdown:SetTemplate(options_dropdown_template)
+    bossDisplayDropdown:SetPoint("RIGHT", bossDisplayLabel, "LEFT", -5, 0)
+    timelineWindow.bossDisplayDropdown = bossDisplayDropdown
 
     -- No data label (shown when no reminders)
     local noDataLabel = DF:CreateLabel(timelineWindow, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
@@ -904,6 +1024,11 @@ function NSI:CreateTimelineWindow()
                     if spellInfo then
                         spellName = spellInfo.name or ""
                     end
+                end
+
+                -- For combined mode, use the ability name from payload
+                if block.blockData and block.blockData.payload and block.blockData.payload.abilityName then
+                    spellName = block.blockData.payload.abilityName
                 end
 
                 GameTooltip:AddLine(spellName ~= "" and spellName or "Reminder", 1, 1, 1)
@@ -1081,7 +1206,8 @@ function NSI:RefreshMyRemindersTimeline()
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
 
     local includeBossAbilities = self.TimelineWindow.showBossAbilities
-    local data, encID, phases, difficulty = self:GetMyTimelineData(includeBossAbilities)
+    local bossDisplayMode = self.TimelineWindow.bossDisplayMode or self.BossDisplayModes.SHOW_ALL
+    local data, encID, phases, difficulty = self:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
 
     if data and data.lines and #data.lines > 0 then
         self.TimelineWindow.noDataLabel:Hide()
@@ -1119,7 +1245,7 @@ function NSI:RefreshMyRemindersTimeline()
             end
 
             if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false, fallbackDifficulty)
+                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, bossDisplayMode, fallbackDifficulty)
                 if #bossLines > 0 then
                     local bossData = {
                         length = math.max(60, math.ceil(bossMaxTime / 30) * 30),
@@ -1161,7 +1287,8 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
 
     local includeBossAbilities = self.TimelineWindow.showBossAbilities
-    local data, encID, phases, difficulty = self:GetAllTimelineData(reminderName, personal, includeBossAbilities)
+    local bossDisplayMode = self.TimelineWindow.bossDisplayMode or self.BossDisplayModes.SHOW_ALL
+    local data, encID, phases, difficulty = self:GetAllTimelineData(reminderName, personal, includeBossAbilities, bossDisplayMode)
 
     if data and data.lines and #data.lines > 0 then
         self.TimelineWindow.noDataLabel:Hide()
@@ -1381,7 +1508,8 @@ function NSI:RefreshEmbeddedMyReminders(tab)
     if not tab or not tab.timeline then return end
 
     local includeBossAbilities = tab.showBossAbilities
-    local data, encID, phases, difficulty = self:GetMyTimelineData(includeBossAbilities)
+    local bossDisplayMode = tab.bossDisplayMode or self.BossDisplayModes.SHOW_ALL
+    local data, encID, phases, difficulty = self:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
 
     if data and data.lines and #data.lines > 0 then
         tab.noDataLabel:Hide()
@@ -1419,7 +1547,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
             end
 
             if bossEncID and self.BossTimelines and self.BossTimelines[bossEncID] then
-                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, false, fallbackDifficulty)
+                local bossLines, bossMaxTime, bossPhases, bossDifficulty = self:GetBossAbilityLines(bossEncID, bossDisplayMode, fallbackDifficulty)
                 if #bossLines > 0 then
                     local bossData = {
                         length = math.max(60, math.ceil(bossMaxTime / 30) * 30),
@@ -1461,7 +1589,8 @@ function NSI:RefreshEmbeddedAllReminders(tab, reminderName, personal)
     if not tab or not tab.timeline then return end
 
     local includeBossAbilities = tab.showBossAbilities
-    local data, encID, phases, difficulty = self:GetAllTimelineData(reminderName, personal, includeBossAbilities)
+    local bossDisplayMode = tab.bossDisplayMode or self.BossDisplayModes.SHOW_ALL
+    local data, encID, phases, difficulty = self:GetAllTimelineData(reminderName, personal, includeBossAbilities, bossDisplayMode)
 
     if data and data.lines and #data.lines > 0 then
         tab.noDataLabel:Hide()

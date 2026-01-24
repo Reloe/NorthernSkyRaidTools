@@ -1659,6 +1659,7 @@ local function BuildTimelineTabUI(parent)
     -- Mode: "my" = My Reminders, "all" = All Reminders
     parent.timelineMode = "my"
     parent.showBossAbilities = true
+    parent.bossDisplayMode = NSI.BossDisplayModes.SHOW_ALL
 
     -- Mode dropdown
     local function BuildModeDropdownOptions()
@@ -1740,6 +1741,14 @@ local function BuildTimelineTabUI(parent)
     local bossAbilitiesToggle = DF:CreateSwitch(parent,
         function(self, _, value)
             parent.showBossAbilities = value
+            -- Show/hide display mode dropdown based on toggle
+            if value then
+                parent.bossDisplayLabel:Show()
+                parent.bossDisplayDropdown:Show()
+            else
+                parent.bossDisplayLabel:Hide()
+                parent.bossDisplayDropdown:Hide()
+            end
             NSI:RefreshEmbeddedTimeline(parent)
         end,
         true, 20, 20, nil, nil, nil, "TimelineBossAbilitiesToggle", nil, nil, nil, nil, options_switch_template)
@@ -1749,6 +1758,45 @@ local function BuildTimelineTabUI(parent)
 
     local bossAbilitiesLabel = DF:CreateLabel(parent, "Show Boss Abilities", 11, "white")
     bossAbilitiesLabel:SetPoint("RIGHT", bossAbilitiesToggle, "LEFT", -5, 0)
+
+    -- Boss display mode dropdown
+    local function BuildBossDisplayModeOptions()
+        return {
+            {
+                label = "Show All",
+                value = NSI.BossDisplayModes.SHOW_ALL,
+                onclick = function(_, _, value)
+                    parent.bossDisplayMode = value
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
+            {
+                label = "Important Only",
+                value = NSI.BossDisplayModes.IMPORTANT_ONLY,
+                onclick = function(_, _, value)
+                    parent.bossDisplayMode = value
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
+            {
+                label = "Combined",
+                value = NSI.BossDisplayModes.COMBINED,
+                onclick = function(_, _, value)
+                    parent.bossDisplayMode = value
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
+        }
+    end
+
+    local bossDisplayLabel = DF:CreateLabel(parent, "Boss Display:", 11, "white")
+    bossDisplayLabel:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
+    parent.bossDisplayLabel = bossDisplayLabel
+
+    local bossDisplayDropdown = DF:CreateDropDown(parent, BuildBossDisplayModeOptions, NSI.BossDisplayModes.SHOW_ALL, 130)
+    bossDisplayDropdown:SetTemplate(options_dropdown_template)
+    bossDisplayDropdown:SetPoint("RIGHT", bossDisplayLabel, "LEFT", -5, 0)
+    parent.bossDisplayDropdown = bossDisplayDropdown
 
     -- No data label
     local noDataLabel = DF:CreateLabel(parent, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
