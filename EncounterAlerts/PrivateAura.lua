@@ -117,7 +117,7 @@ function NSI:InitPA()
     end
 end
 
-function NSI:InitRaidPA(party) -- still run this function if disabled to clean up old anchors
+function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled to clean up old anchors
     if not self.PARaidFrames then self.PARaidFrames = {} end
     if not self.AddedPARaid then self.AddedPARaid = {} end
     for i=1, party and 5 or 40 do       
@@ -134,6 +134,10 @@ function NSI:InitRaidPA(party) -- still run this function if disabled to clean u
         if party and i == 5 then u = "player" end
         if NSRT.PARaidSettings.enabled and UnitExists(u) then 
             local F = self.LGF.GetUnitFrame(u)
+            if firstcall and not F then
+                C_Timer.After(5, function() self:InitRaidPA(party, false) end)
+                return
+            end
             if F then
                 if not self.PARaidFrames[i] then
                     self.PARaidFrames[i] = CreateFrame("Frame", nil, UIParent)
