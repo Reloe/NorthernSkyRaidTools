@@ -138,8 +138,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitLDB()
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
-        if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(0.01, function() self:InitRaidPA(false) end)
-        elseif NSRT.PARaidSettings.enabled and UnitInParty("player") and not self:Restricted() then C_Timer.After(0.01, function() self:InitRaidPA(true) end) end
+        if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(5, function() self:InitRaidPA(false, true) end) end
         for spellID, info in pairs(NSRT.PASounds) do
             self:AddPASound(spellID, info.sound)
         end
@@ -189,7 +188,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local diff = select(3, GetInstanceInfo())
             if diff == 23 or (diff == 205 and NSRT.Settings["Debug"]) then
                 local isparty = not UnitInRaid("player")
-                C_Timer.After(0.01, function() self:InitRaidPA(isparty) end)
+                C_Timer.After(5, function() self:InitRaidPA(isparty, true) end)
             end
         end        
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
