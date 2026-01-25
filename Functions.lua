@@ -48,6 +48,7 @@ function NSI:SortTable(t, reversed)
 end
 
 function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
+    if issecretvalue(unit) or not unit then return unit, "", "" end
     local classFile = unit and select(2, UnitClass(unit))
     if specicon then
         local specid = 0
@@ -178,7 +179,7 @@ function NSI:SpecToName(specid)
 end
 
 function NSI:Utf8Sub(str, startChar, endChar)
-    if not str then return str end
+    if issecretvalue(str) or not str then return str end
     local startIndex, endIndex = 1, #str
     local currentIndex, currentChar = 1, 0
 
