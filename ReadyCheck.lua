@@ -73,7 +73,11 @@ function NSI:BuffCheck()
                         return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
                     end
                 elseif buffed ~= "" then
-                    local name = C_Spell.GetSpellInfo(spellID).name
+                    if type(spellID) == "table" then
+                        spellID = spellID[1] -- use first entry as they all have the same name anyway
+                    end
+                    local spellInfo = C_Spell.GetSpellInfo(spellID)
+                    local name = spellInfo and spellInfo.name or ""
                     NSAPI:TTS("Rebuff "..name)
                     return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
                 end     
