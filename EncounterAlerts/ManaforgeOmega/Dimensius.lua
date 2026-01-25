@@ -116,28 +116,37 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
-local phasedetections = {3, 3, 3, 3} -- old detection method based on number of events happening
+local phasedetections = {
+    [3.157] = 2,
+    [5.263] = 3,
+}
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    self.Timelines = self.Timelines or {}
-    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
-    if needed and needed > 0 then
-        table.insert(self.Timelines, now+0.2)
+    if self.Phase == 3 and e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
+        table.insert(self.Timelines, now)
         local count = 0
-        for i, v in ipairs(self.Timelines) do
-            if v > now then
+        for k, v in ipairs(self.Timelines) do
+            if now < v+0.1 then
                 count = count+1
-                if count >= needed then
-                    self.Phase = self.Phase+1                  
+                if count >= 3 then
+                    self.Phase = 4                  
                     self:StartReminders(self.Phase)
-                    self.Timelines = {}
                     self.PhaseSwapTime = now
-                    break
+                    return
                 end
-            end 
+            end
         end
-    end 
+    end
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
+    for k, v in pairs(phasedetections) do
+        if info.duration and info.duration == k then
+            self.Phase = v                  
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = now
+            return
+        end
+    end
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   

@@ -1102,7 +1102,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         dur = dur,
         spellID = spellID,
         encID = encID,
-        TTSTimer = 60, -- tts on show
+        TTSTimer = dur, -- tts on show
         text = text, 
         TTS = text, 
         notsticky = true, 
