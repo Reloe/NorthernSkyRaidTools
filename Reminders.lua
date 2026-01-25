@@ -722,7 +722,6 @@ function NSI:PlayReminderSound(info, default)
 end
 
 function NSI:StartReminders(phase)
-    print("Starting reminders for phase "..phase)
     if NSRT.ReminderSettings.UseTimelineReminders then return end
     self:HideAllReminders()
     self.AllGlows = {}
