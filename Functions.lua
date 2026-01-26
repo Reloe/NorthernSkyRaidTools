@@ -48,6 +48,7 @@ function NSI:SortTable(t, reversed)
 end
 
 function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
+    if issecretvalue(unit) or not unit then return unit, "", "" end
     local classFile = unit and select(2, UnitClass(unit))
     if specicon then
         local specid = 0
@@ -116,7 +117,6 @@ function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Her
     return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or (NSRT.Settings["Debug"] and 16)
 end
 
--- technically don't need this to be public but it's good for backwards compatibility for a while
 function NSI:GetHash(text)
     local counter = 1
     local len = string.len(text)
@@ -179,7 +179,7 @@ function NSI:SpecToName(specid)
 end
 
 function NSI:Utf8Sub(str, startChar, endChar)
-    if not str then return str end
+    if issecretvalue(str) or not str then return str end
     local startIndex, endIndex = 1, #str
     local currentIndex, currentChar = 1, 0
 
@@ -221,4 +221,27 @@ function NSI:UnitAura(unit, spell) -- simplify aura checking for myself
             return false
         end
     end
+end
+NSI   = NSI   or {}
+NSAPI = NSAPI or {}
+NSI.Callbacks = NSI.Callbacks or LibStub("CallbackHandler-1.0"):New(NSI)
+
+function NSI:FireCallback(event, ...)
+    if NSRT.ReminderSettings.UseTimelineReminders then
+        self.Callbacks:Fire(event, ...)
+    else
+        self.Callbacks:Fire(event, "", "") -- send empty strings if setting is disabled
+    end
+end
+
+function NSAPI:RegisterCallback(event, callback, owner)
+    return NSI:RegisterCallback(event, callback, owner)
+end
+
+function NSAPI:UnregisterCallback(event, callback, owner)
+    return NSI:UnregisterCallback(event, callback, owner)
+end
+
+function NSAPI:UnregisterAllCallbacks(owner)
+    return NSI:UnregisterAllCallbacks(owner)
 end

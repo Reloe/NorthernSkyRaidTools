@@ -32,37 +32,26 @@ function NSI:AddToReminder(info)
     if info.TTS == "false" then info.TTS = false end
     -- default to user settings if not overwritten by the reminders
     if info.TTS == nil then 
-        if info.spellID then
-            info.TTS = NSRT.ReminderSettings.SpellTTS
-        else
-            info.TTS = NSRT.ReminderSettings.TextTTS
-        end
-    end            
+        info.TTS = info.spellID and NSRT.ReminderSettings.SpellTTS or NSRT.ReminderSettings.TextTTS
+    end         
+    if info.TTSTimer == nil then
+        -- set TTS timer to the specified duration or if no duration was specified, set it to the default value
+        info.TTSTimer = info.dur or ((info.spellID and NSRT.ReminderSettings.SpellTTSTimer) or NSRT.ReminderSettings.TextTTSTimer)
+    end   
     if info.dur == nil then 
-        if info.spellID then
-             info.dur = NSRT.ReminderSettings.SpellDuration 
-        else
-            info.dur = NSRT.ReminderSettings.TextDuration 
-        end
+        info.dur = info.spellID and NSRT.ReminderSettings.SpellDuration or NSRT.ReminderSettings.TextDuration
+    end
+    if info.countdown == nil then
+        info.countdown = info.spellID and NSRT.ReminderSettings.SpellCountdown or NSRT.ReminderSettings.TextCountdown
+        if info.countdown == 0 then info.countdown = false end
     end
     info.dur = tonumber(info.dur)
     info.time = tonumber(info.time)
+    info.TTSTimer = tonumber(info.TTSTimer)
+    info.countdown = tonumber(info.countdown)
     if info.dur > info.time then info.dur = info.time end -- force duration to be equal to time if an alert is set very early into the phase
-    if info.countdown == nil then
-        if info.spellID then
-            info.countdown = NSRT.ReminderSettings.SpellCountdown
-        else
-            info.countdown = NSRT.ReminderSettings.TextCountdown
-        end
-        if info.countdown == 0 then info.countdown = false end
-    end
-    if info.TTSTimer == nil then
-        if info.spellID then
-            info.TTSTimer = NSRT.ReminderSettings.SpellTTSTimer
-        else
-            info.TTSTimer = NSRT.ReminderSettings.TextTTSTimer
-        end
-    end
+    if info.TTSTimer > info.time then info.TTSTimer = info.time end -- same for TTSTimer
+    if info.countdown and info.countdown > info.time then info.countdown = info.time end -- same for countdown
     info.phase = info.phase and tonumber(info.phase)
     if not info.phase then info.phase = 1 end
     local rawtext = info.text
@@ -79,15 +68,14 @@ function NSI:AddToReminder(info)
         local spell = C_Spell.GetSpellInfo(info.spellID) 
         if spell and not info.text then 
             info.text = spell.name or ""
-            info.TTS = info.TTS and type(info.TTS) ~= "string" and spell.name
+            info.TTS = info.TTS and type(info.TTS) ~= "string" and spell.name or info.TTS
         end 
     end
-    if info.TTS and info.text and type(info.TTS) == "boolean" then
+    if info.TTS and info.text and type(info.TTS) == "boolean" then -- if tts is "true" convert it to the rawtext, which is the text before converting it to display raid-icons
         info.TTS = rawtext
     end
-    if info.TTS and type(info.TTS) ~= "string" and info.spellID then -- TTS is enabled but it's still empty, which means text was empty so we should play the spellname TTS instead
-        local spell = C_Spell.GetSpellInfo(info.spellID)
-        info.TTS = spell and spell.name
+    if info.TTS and type(info.TTS) == "string" and ((NSRT.ReminderSettings.AnnounceSpellDuration and info.spellID) or (NSRT.ReminderSettings.AnnounceTextDuration and not info.spellID)) then
+        info.TTS = info.TTS.." in "..info.TTSTimer
     end
     if info.glowunit then
         local glowtable = {}
@@ -133,12 +121,13 @@ function NSI:ProcessReminder()
     self.DisplayedExtraReminder = ""
     local pers = NSRT.ReminderSettings.ShowPersonalReminderFrame
     local shared = NSRT.ReminderSettings.ShowReminderFrame
-    if NSRT.ReminderSettings.enabled and self.Reminder then str = self.Reminder end
-    if NSRT.ReminderSettings.MRTNote then 
+    -- UseTimelineReminders makes it process the note but then stops the display at a later point. This allows still displaying the note.
+    if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and self.Reminder then str = self.Reminder end
+    if NSRT.ReminderSettings.MRTNote or NSRT.ReminderSettings.UseTimelineReminders then 
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
         str = note and str ~= "" and str.."\n"..note or note or str
     end
-    if NSRT.ReminderSettings.PersNote then
+    if NSRT.ReminderSettings.PersNote or NSRT.ReminderSettings.UseTimelineReminders then
         local note = self.PersonalReminder
         str = note and str ~= "" and str.."\n"..note or note or str
     end    
@@ -174,6 +163,7 @@ function NSI:ProcessReminder()
             local phase = line:match("ph:(%d+)")
             local dur = line:match("dur:(%d+)")
             local TTS = line:match("TTS:([^;]+)")
+            local TTSTimer = line:match("TTSTimer:(%d+)")
             local countdown = line:match("countdown:(%d+)")
             local sound = line:match("sound:([^;]+)")
             local glowunit = line:match("glowunit:([^;]+)")
@@ -184,31 +174,31 @@ function NSI:ProcessReminder()
                 local key = encID..phase..time..tag..(text or spellID)
                 if (pers or shared) and (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                     -- display phase more readable
-                    displayLine = displayLine:gsub("ph:"..phase, "P"..phase)
+                    displayLine = displayLine:gsub("ph:"..phase, "P"..phase.." ")
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
                         local minutes = math.floor(timeNum / 60)
                         local seconds = math.floor(timeNum % 60)
                         local timeFormatted = string.format("%d:%02d", minutes, seconds)
-                        displayLine = displayLine:gsub("time:"..time, timeFormatted)
+                        displayLine = displayLine:gsub("time:"..time, timeFormatted.." ")
                     end
                     if text then
-                        displayLine = displayLine:gsub("text:"..text, text)
+                        displayLine = displayLine:gsub("text:"..text, text.. " ")
                     end
                     -- convert to icon
                     if spellID then
                         local iconID = C_Spell.GetSpellTexture(tonumber(spellID))
                         if iconID then
                             local iconString = "\124T"..iconID..":12:12:0:0:64:64:4:60:4:60\124t"
-                            displayLine = displayLine:gsub("spellid:%d+", iconString)
+                            displayLine = displayLine:gsub("spellid:%d+", iconString.. " ")
                         end
                     end
                     if bossSpellID then
                         local iconID = C_Spell.GetSpellTexture(tonumber(bossSpellID))
                         if iconID then
                             local iconString = "\124T"..iconID..":12:12:0:0:64:64:4:60:4:60\124t"
-                            displayLine = displayLine:gsub("bossSpell:%d+", iconString)
+                            displayLine = displayLine:gsub("bossSpell:%d+", iconString.. " ")
                         end
                     end
                     -- cleanup stuff we don't want to have displayed
@@ -220,6 +210,9 @@ function NSI:ProcessReminder()
                     end
                     if TTS then
                         displayLine = displayLine:gsub("TTS:"..TTS, "")
+                    end
+                    if TTSTimer then
+                        displayLine = displayLine:gsub("TTSTimer:"..TTSTimer, "")
                     end
                     if sound then
                         displayLine = displayLine:gsub("sound:"..sound, "")
@@ -233,23 +226,27 @@ function NSI:ProcessReminder()
                         tagNames = tagNames..NSAPI:Shorten(strtrim(name), 12, false, "GlobalNickNames").." "
                     end
                     tagNames = strtrim(tagNames)
-                    displayLine = displayLine:gsub("tag:([^;]+)", tagNames)
+                    displayLine = displayLine:gsub("tag:([^;]+)", tagNames.." ")
                     -- remove remaining semicolons
-                    displayLine = displayLine:gsub(";", " ")
+                    displayLine = displayLine:gsub(";", "")
                     if shared and not addedreminders[key] then       
                         table.insert(remindertable, {str = displayLine, time = tonumber(time), phase = phase})  
                         addedreminders[key] = true  
                     end
                 end
+                local tags = {}
                 tag = strlower(tag)
+                for name in tag:gmatch("(%S+)") do
+                    tags[strtrim(name)] = true
+                end
                 if tag == "everyone" or 
-                tag:match(myname) or 
-                tag:match(mynickname) or 
-                tag:match(myrole) or 
-                tag:match(specid) or
-                tag:match(myclass) or
-                tag:match(subgroup) or 
-                (pos and tag:match(pos))
+                tags[myname] or 
+                tags[mynickname] or
+                tags[myrole] or 
+                tags[specid] or
+                tags[myclass] or
+                tags[subgroup] or 
+                (pos and tags[pos])
                 then       
                     if not addedpersonalreminders[key] then 
                         addedpersonalreminders[key] = true
@@ -258,7 +255,7 @@ function NSI:ProcessReminder()
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})   
                             end
                         end
-                        self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, encID = encID, Type = nil, notsticky = false})
+                        self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
                     end
                 end
             else
@@ -725,6 +722,7 @@ function NSI:PlayReminderSound(info, default)
 end
 
 function NSI:StartReminders(phase)
+    if NSRT.ReminderSettings.UseTimelineReminders then return end
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}    
@@ -805,13 +803,24 @@ function NSI:SetReminder(name, personal)
             NSRT.ActivePersonalReminder = name
             self:ProcessReminder()
             self:UpdateReminderFrame(false, true)
+        else
+            self.PersonalReminder = ""
+            NSRT.ActivePersonalReminder = nil
+            self:ProcessReminder()
+            self:UpdateReminderFrame(false, true)
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
         self:ProcessReminder()
         self:UpdateReminderFrame(false, true)
+    else
+        self.Reminder = ""
+        NSRT.ActiveReminder = nil
+        self:ProcessReminder()
+        self:UpdateReminderFrame(false, true)
     end
+    self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
 end
 
 function NSI:RemoveReminder(name, personal)
@@ -819,69 +828,50 @@ function NSI:RemoveReminder(name, personal)
         if name and NSRT.PersonalReminders[name] then
             NSRT.PersonalReminders[name] = nil
             if NSRT.ActivePersonalReminder == name then
-                self.PersonalReminder = ""
-                self:ProcessReminder()
-                self:UpdateReminderFrame(false, true)
-                NSRT.ActivePersonalReminder = ""
+                self:SetReminder(nil, true)
             end
         end
     elseif name and NSRT.Reminders[name] then
         NSRT.Reminders[name] = nil
         NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
-            self.Reminder = ""
-            self:ProcessReminder()
-            self:UpdateReminderFrame(false, true)
-            NSRT.ActiveReminder = ""
+            self:SetReminder(nil, false)
         end
     end
 end
 
-function NSI:ImportFullReminderString(str, personal, IsUpdate)
+function NSI:ImportFullReminderString(str, personal, IsUpdate, name)
     local name = ""
     local values = ""
+    local diff = ""
     if not str:match('\n$') then
         str = str..'\n'
     end
-    for line in str:gmatch('([^\n]*)\n') do
-        if line:find("EncounterID:") and line:find("Name:") then
+    for line in str:gmatch('([^\n]*)\n') do        
+        if line:find("EncounterID:") then
             if values ~= "" then -- meaning we reached a new boss line as the previous one has values already
                 self:ImportReminder(name, values, false, personal, IsUpdate)
                 values = ""
+                name = ""
+                diff = ""
             end
             name = line:match("Name:([^;]+)")
+            diff = line:match("Difficulty:([^;]+)")
             values = line.."\n"
         elseif name ~= "" then
             values = values..line.."\n"
         end
     end
     if values ~= "" and name ~= "" then -- importing the last boss
-        self:ImportReminder(name, values, false, personal, IsUpdate)
+        self:ImportReminder(name, values, false, personal, IsUpdate, diff)
     end
 end
 
-function NSI:ImportReminder(name, values, activate, personal, IsUpdate)
+function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
     if not name then name = "Default Reminder" end
-    local diff = values:match("Difficulty:([^;\n]+)")
-    -- Normalize difficulty: capitalize first letter, default to Mythic
-    if diff then
-        diff = strtrim(diff)
-        diff = diff:sub(1,1):upper() .. diff:sub(2):lower()
-        -- Ensure it's a valid difficulty
-        if diff ~= "Mythic" and diff ~= "Heroic" then
-            diff = "Mythic"
-        end
-        -- Update the values string with normalized difficulty
-        values = values:gsub("Difficulty:[^;\n]+", "Difficulty:" .. diff)
-    else
-        diff = "Mythic"
-        -- Add difficulty to the first line if not present
-        values = values:gsub("(EncounterID:%d+)", "%1;Difficulty:" .. diff)
-    end
-    local newname = name .. " - " .. diff
+    local newname = diff and name.." - "..diff or name
     if personal then
         if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
-            values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
             self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
             return
         end
@@ -892,7 +882,6 @@ function NSI:ImportReminder(name, values, activate, personal, IsUpdate)
         return
     end
     if NSRT.Reminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
-        values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
         self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
         return
     end
@@ -1095,8 +1084,14 @@ end
 function NSAPI:DebugEncounter(EncounterID)
     if NSRT.Settings["Debug"] then
         NSI.ProcessedReminder = nil
+        NSI.Assignments = NSRT.AssignmentSettings
         NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
     end
+end
+-- /run NSAPI:DebugEncounter(3306)
+-- /run NSAPI:DebugTimeline("ENCOUNTER_TIMELINE_EVENT_ADDED", 120.9)
+function NSAPI:DebugTimeline(e, dur)
+    NSI:EventHandler(e, true, true, {duration = dur})
 end
 
 function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
@@ -1107,7 +1102,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         dur = dur,
         spellID = spellID,
         encID = encID,
-        TTSTimer = 60, -- tts on show
+        TTSTimer = dur, -- tts on show
         text = text, 
         TTS = text, 
         notsticky = true, 
@@ -1121,7 +1116,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
     return info
 end
 
-function NSI:UpdateReminderFrame(personal, all, extra)
+function NSI:UpdateReminderFrame(personal, all, extra)    
     if personal or all then
         self:MoveFrameSettings(self.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
     end
@@ -1263,4 +1258,8 @@ function NSI:UpdateReminderFrame(personal, all, extra)
             self.ExtraReminderFrame:Hide()
         end
     end
+end
+
+function NSAPI:GetReminderString()
+    return NSI.PersonalReminder, NSI.Reminder
 end

@@ -1,6 +1,7 @@
 local _, NSI = ... -- Internal namespace
 
 SLASH_NSUI1 = "/ns"
+SLASH_NSUI2 = "/nsrt"
 SlashCmdList["NSUI"] = function(msg)
     if msg == "anchor" then
         if NSI.NSUI.externals_anchor:IsShown() then

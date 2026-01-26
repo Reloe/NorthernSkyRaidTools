@@ -9,6 +9,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         if not self:DifficultyCheck(16) then return end -- Mythic only
         local function DisplayLine()
+            if not C_InstanceEncounter.IsEncounterInProgress then return end -- if this somehow runs outside of the encounter return early
             if not self.LineTexture then
                 self.LineTexture = self.LineFrame:CreateTexture(nil, "BACKGROUND")
                 self.LineTexture:SetColorTexture(0, 1, 0, 1)
@@ -76,37 +77,40 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
-local phasedetections = {3, 3, 3, 3} -- old detection method based on number of events happening. Might very well fail on NK
+local phasedetections = {
+    [100] = 2,
+    [185] = 3,
+}
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    self.Timelines = self.Timelines or {}
-    local needed = self.Timelines and self.PhaseSwapTime and (now > self.PhaseSwapTime+5) and self.EncounterID and self.Phase and phasedetections[self.Phase]
-    if needed and needed > 0 then
-        table.insert(self.Timelines, now+0.2)
-        local count = 0
-        for i, v in ipairs(self.Timelines) do
-            if v > now then
-                count = count+1
-                if count >= needed then
-                    self.Phase = self.Phase+1                  
-                    self:StartReminders(self.Phase)
-                    self.Timelines = {}
-                    self.PhaseSwapTime = now
-                    break
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
+    for k, v in pairs(phasedetections) do
+        if info.duration and info.duration == k then
+            self.Phase = v                  
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = now
+            if self.SpiritTimers then
+                for k, v in pairs(self.SpiritTimers) do
+                    v:Cancel()
                 end
-            end 
+                self.SpiritTimers = {}
+            end
+            return
         end
-    end 
+    end
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
     if NSRT.EncounterAlerts[encID].enabled then
-        for i, v in ipairs(self.SpiritTimers) do
+        if (not self:DifficultyCheck(16)) or (not self.SpiritTimers) then return end -- Mythic only
+        for k, v in pairs(self.SpiritTimers) do
             v:Cancel()
         end
         self.SpiritTimers = {}
+        if not self.LineFrame then return end
         self.LineFrame:Hide()
+        if not self.LineTexture then return end
         self.LineTexture:Hide()
     end
 end

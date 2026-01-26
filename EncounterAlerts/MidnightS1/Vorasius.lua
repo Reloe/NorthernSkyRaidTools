@@ -13,9 +13,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         local id = self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
-            [14] = {12.2, 133.3, 253.7},
-            [15] = {12.2, 133.3, 253.7},
-            [16] = {12.2, 133.3, 253.7},
+            [14] = {12, 132, 252},
+            [15] = {12, 132, 252},
+            [16] = {12, 132, 252},
         }
         for i, v in ipairs(timers[id]) do -- Primordial Roar
             Alert.time = v
@@ -25,9 +25,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         Alert.text, Alert.TTS = "Breath", "Breath"
         timers = {
             [0] = {},
-            [14] = {102.3, 223.3, 343.8},
-            [15] = {102.3, 223.3, 343.8},
-            [16] = {102.3, 223.3, 343.8},
+            [14] = {102, 223, 343},
+            [15] = {102, 223, 343},
+            [16] = {102, 223, 343},
         }
         for i, v in ipairs(timers[id]) do -- Void Breath
             Alert.time = v

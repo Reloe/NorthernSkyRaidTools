@@ -73,7 +73,11 @@ function NSI:BuffCheck()
                         return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
                     end
                 elseif buffed ~= "" then
-                    local name = C_Spell.GetSpellInfo(spellID).name
+                    if type(spellID) == "table" then
+                        spellID = spellID[1] -- use first entry as they all have the same name anyway
+                    end
+                    local spellInfo = C_Spell.GetSpellInfo(spellID)
+                    local name = spellInfo and spellInfo.name or ""
                     NSAPI:TTS("Rebuff "..name)
                     return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
                 end     
@@ -222,10 +226,10 @@ function NSI:GatewayControlCheck()
     for bagID = 0, NUM_BAG_SLOTS do
         for invID = 1, C_Container.GetContainerNumSlots(bagID) do
             local itemID = C_Container.GetContainerItemID(bagID, invID)
-            if itemID and itemID == 188152 then -- Gateway Shard found
+            if itemID and itemID == 188152 then -- Gateway Shard found in Inventory
                 local bound = false
                 local onbar = false
-                for Slot = 1, 120 do
+                for Slot = 1, 180 do
                     local actionType, ID = GetActionInfo(Slot)
                     if actionType == "item" and ID == itemID then -- found on actionbar
                         onbar = true
@@ -246,14 +250,41 @@ function NSI:GatewayControlCheck()
     return "|cFF00FF00Gateway Control Shard|r Missing"
 end
 
+local keymapping = {
+    [1] = "ACTIONBUTTON",
+    [13] = "CustomName",
+    [25] = "MULTIACTIONBAR3BUTTON",
+    [37] = "MULTIACTIONBAR4BUTTON",
+    [49] = "MULTIACTIONBAR2BUTTON",
+    [61] = "MULTIACTIONBAR1BUTTON",
+    [73] = "CustomName",
+    [85] = "CustomName",
+    [97] = "CustomName",
+    [109] = "CustomName",
+    [121] = "CustomName",
+    [133] = "CustomName",
+    [145] = "MULTIACTIONBAR5BUTTON",
+    [157] = "MULTIACTIONBAR6BUTTON",
+    [169] = "MULTIACTIONBAR7BUTTON",
+}
+
 function NSI:CheckGateWayKeybind(Slot)    
-    if Slot <= 12 then -- First bar has different name
-        return GetBindingKey("ACTIONBUTTON"..Slot)
-    else
-        -- Define correct slot on bar
-        local bar = math.ceil((Slot) / 12)
-        local mod = Slot % 12 == 0 and 12 or Slot % 12
-        return GetBindingKey("MULTIACTIONBAR"..bar.."BUTTON"..mod)
+    for SlotRange, BarName in pairs(keymapping) do
+        if Slot >= SlotRange and Slot < SlotRange+12 then
+            local buttonnum = Slot % 12 == 0 and 12 or Slot % 12
+            if BarName == "CustomName" then
+                if Bartender4 then                    
+                    BarName = "CLICK BT4Button"..Slot..":Keybind"
+                elseif ElvUI then
+                    BarName = "ELVUIBAR"..math.ceil(Slot/12).."BUTTON"..buttonnum
+                elseif Dominos then
+                    BarName = "CLICK DominosActionButton"..Slot..":HOTKEY"
+                end
+            else
+                BarName = BarName..buttonnum
+            end
+            return GetBindingKey(BarName)
+        end
     end
 end
 

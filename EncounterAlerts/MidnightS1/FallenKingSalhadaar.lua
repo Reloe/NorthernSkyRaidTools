@@ -57,12 +57,11 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                 for i=1, #self.platetexts+1 do
                     if self.platetexts[i] and not self.platetexts[i]:IsShown() then
                         if aura2 then
-                            self.platetexts[i]:SetTextColor(1, 0, 0, 1)
-                            self.platetexts[i]:SetText(aura1.applications)
+                            self.platetexts[i]:SetText("WAIT")
+                            self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
                         else
-
-                            self.platetexts[i]:SetTextColor(0, 1, 0, 1)
                             self.platetexts[i]:SetText("CC")
+                            self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         end
                         self.platetexts[i]:ClearAllPoints()
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
@@ -78,6 +77,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                         self.platetexts[i]:SetFont(self.LSM:Fetch("font", "Expressway"), 18, "OUTLINE")
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
                         self.platetexts[i]:SetShadowColor(0, 0, 0, 1)
+                        self.platetexts[i]:SetTextColor(1, 1, 1, 1)
 
                         self.platetexts[i].bgFrame = CreateFrame("Frame", nil, self.plateframe)
                         self.platetexts[i].bgFrame:SetFrameStrata("BACKGROUND")
@@ -86,13 +86,13 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                         self.platetexts[i].bgTexture:SetAllPoints(self.platetexts[i].bgFrame)
                         self.platetexts[i].bgFrame:SetSize(25, 25)
                         self.platetexts[i].bgFrame:SetPoint("CENTER", self.platetexts[i], "CENTER", 0, 0)
-                        
+                                                
                         if aura2 then
-                            self.platetexts[i]:SetTextColor(1, 0, 0, 1)
-                            self.platetexts[i]:SetText(aura1.applications)
+                            self.platetexts[i]:SetText("WAIT")
+                            self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
                         else
-                            self.platetexts[i]:SetTextColor(0, 1, 0, 1)
                             self.platetexts[i]:SetText("CC")
+                            self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         end
                         
                         self.platetexts[i]:Show()
@@ -183,7 +183,3 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
         end
     end
 end
-
-
-
-
