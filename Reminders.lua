@@ -872,7 +872,6 @@ function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
     local newname = diff and name.." - "..diff or name
     if personal then
         if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
-            values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
             self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
             return
         end
@@ -883,7 +882,6 @@ function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
         return
     end
     if NSRT.Reminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
-        values = values:gsub("Name:[^\n]*", "Name:"..name.." 2")
         self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
         return
     end
