@@ -43,6 +43,27 @@ EncounterAlerts/MidnightS1/MotherlodeDebug.lua
 EncounterAlerts/ManaforgeOmega/NexusKing.lua
 EncounterAlerts/ManaforgeOmega/Dimensius.lua
 
-# UI
+# UI - Core (must load first to create NSUI panel and shared utilities)
+UI/Core.lua
+
+# UI - Components (depend on Core)
+UI/VersionCheck.lua
+UI/Nicknames.lua
+UI/Reminders.lua
+UI/Cooldowns.lua
+UI/PrivateAuras.lua
+UI/Timeline.lua
+
+# UI - Options (depend on Core)
+UI/Options/General.lua
+UI/Options/Nicknames.lua
+UI/Options/SetupManager.lua
+UI/Options/Reminders.lua
+UI/Options/Assignments.lua
+UI/Options/EncounterAlerts.lua
+UI/Options/ReadyCheck.lua
+UI/Options/PrivateAuras.lua
+
+# UI - Entry Point (loads all UI modules and initializes)
 NSUI.lua
 SlashCommands.lua
