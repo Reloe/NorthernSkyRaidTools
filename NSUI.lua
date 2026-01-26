@@ -22,7 +22,6 @@ local BuildRemindersEditUI = NSI.UI.Reminders.BuildRemindersEditUI
 local BuildPersonalRemindersEditUI = NSI.UI.Reminders.BuildPersonalRemindersEditUI
 local BuildCooldownsEditUI = NSI.UI.Cooldowns.BuildCooldownsEditUI
 local BuildPASoundEditUI = NSI.UI.PrivateAuras.BuildPASoundEditUI
-local BuildTimelineTabUI = NSI.UI.Timeline.BuildTimelineTabUI
 
 -- Get options builders from modules
 local BuildGeneralOptions = NSI.UI.Options.General.BuildOptions
@@ -71,7 +70,6 @@ function NSUI:Init()
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
     local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
-    local timeline_tab = tabContainer:GetTabFrameByName("Timeline")
 
     -- Generic text display
     local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
@@ -148,7 +146,6 @@ function NSUI:Init()
     NSUI.reminders_frame = BuildRemindersEditUI()
     NSUI.pasound_frame = BuildPASoundEditUI()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
-    NSUI.timeline_tab = BuildTimelineTabUI(timeline_tab)
 
     -- Version Number in status bar
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")

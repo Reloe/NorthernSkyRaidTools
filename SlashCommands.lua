@@ -58,7 +58,7 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:ProcessReminder()
 
         NSI:UpdateReminderFrame(false, true)
-    elseif msg == "timeline" then
+    elseif msg == "timeline" or msg == "tl"then
         NSI:ToggleTimelineWindow()
     else
         NSI.NSUI:ToggleOptions()

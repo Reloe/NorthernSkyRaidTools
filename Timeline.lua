@@ -757,7 +757,9 @@ function NSI:CreateTimelineWindow()
         "|cFF00FFFFNorthern Sky|r Timeline", "NSUITimelineWindow", {
         DontRightClickClose = true,
         UseStatusBar = false,
-    })
+            UseScaleBar = true,
+        },
+        NSRT.NSUI.timeline_window)
     timelineWindow:SetPoint("CENTER")
     timelineWindow:SetFrameStrata("HIGH")
     timelineWindow:EnableMouse(true)
@@ -766,6 +768,64 @@ function NSI:CreateTimelineWindow()
     timelineWindow:SetScript("OnDragStart", timelineWindow.StartMoving)
     timelineWindow:SetScript("OnDragStop", timelineWindow.StopMovingOrSizing)
 
+    -- Create resize grip in bottom-right corner
+    local resizeGrip = CreateFrame("Button", nil, timelineWindow)
+    resizeGrip:SetSize(16, 16)
+    resizeGrip:SetPoint("BOTTOMRIGHT", timelineWindow, "BOTTOMRIGHT", -2, 2)
+    resizeGrip:SetNormalTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up")
+    resizeGrip:SetHighlightTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight")
+    resizeGrip:SetPushedTexture("Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down")
+    resizeGrip:EnableMouse(true)
+
+    -- Custom resize logic to avoid the jump caused by StartSizing snapping to mouse position
+    resizeGrip.isResizing = false
+    resizeGrip:SetScript("OnMouseDown", function(self, button)
+        if button == "LeftButton" then
+            self.isResizing = true
+            -- Store initial state when drag starts
+            self.startWidth = timelineWindow:GetWidth()
+            self.startHeight = timelineWindow:GetHeight()
+            local scale = timelineWindow:GetEffectiveScale()
+            local cursorX, cursorY = GetCursorPosition()
+            self.startCursorX = cursorX / scale
+            self.startCursorY = cursorY / scale
+
+            -- Re-anchor to TOPLEFT so resize only affects bottom-right
+            local left = timelineWindow:GetLeft()
+            local top = timelineWindow:GetTop()
+            timelineWindow:ClearAllPoints()
+            timelineWindow:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+        end
+    end)
+
+    resizeGrip:SetScript("OnMouseUp", function(self, button)
+        self.isResizing = false
+    end)
+
+    resizeGrip:SetScript("OnUpdate", function(self)
+        if not self.isResizing then return end
+
+        local scale = timelineWindow:GetEffectiveScale()
+        local cursorX, cursorY = GetCursorPosition()
+        cursorX = cursorX / scale
+        cursorY = cursorY / scale
+
+        -- Calculate delta from start position
+        local deltaX = cursorX - self.startCursorX
+        local deltaY = cursorY - self.startCursorY
+
+        -- Calculate new size (bottom-right resize: width increases with +X, height increases with -Y)
+        local newWidth = self.startWidth + deltaX
+        local newHeight = self.startHeight - deltaY
+
+        -- Clamp to bounds
+        local minWidth, minHeight, maxWidth, maxHeight = 1100, 550, 2000, 1200
+        newWidth = math.max(minWidth, math.min(maxWidth, newWidth))
+        newHeight = math.max(minHeight, math.min(maxHeight, newHeight))
+
+        timelineWindow:SetSize(newWidth, newHeight)
+    end)
+    timelineWindow.resizeGrip = resizeGrip
     local options_dropdown_template = DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE")
 
     -- Mode: "my" = My Reminders (from ProcessedReminder), "all" = All Reminders (from raw strings)
@@ -1222,6 +1282,50 @@ function NSI:CreateTimelineWindow()
     local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Navigate | Ctrl+Scroll: Zoom | Shift+Scroll: Vertical", 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
+    -- Handle window resize to update timeline dimensions
+    local resizeTimer = nil
+    timelineWindow:SetScript("OnSizeChanged", function(self, width, height)
+        local header_width = 180
+        local newTimelineWidth = width - 40 - header_width
+        local newTimelineHeight = height - 130
+
+        -- Update timeline frame size
+        if timelineFrame then
+            timelineFrame:SetSize(newTimelineWidth, newTimelineHeight)
+            if timelineFrame.body then
+                timelineFrame.body:SetSize(newTimelineWidth, newTimelineHeight)
+            end
+
+            -- Update horizontal slider width (position slider)
+            if timelineFrame.horizontalSlider then
+                timelineFrame.horizontalSlider:SetWidth(newTimelineWidth)
+            end
+
+            -- Update scale slider width (stacked below horizontal slider)
+            if timelineFrame.scaleSlider then
+                timelineFrame.scaleSlider:SetWidth(newTimelineWidth)
+            end
+
+            -- Update vertical slider height
+            if timelineFrame.verticalSlider then
+                timelineFrame.verticalSlider:SetHeight(newTimelineHeight - 40) -- Account for elapsed time header and bottom sliders
+            end
+        end
+
+        -- Update header frame height
+        if timelineFrame.headerFrame then
+            timelineFrame.headerFrame:SetHeight(newTimelineHeight)
+        end
+
+        -- Debounce the refresh - only refresh after resizing stops
+        if resizeTimer then
+            resizeTimer:Cancel()
+        end
+        resizeTimer = C_Timer.NewTimer(0.1, function()
+            NSI:RefreshTimelineForMode()
+            resizeTimer = nil
+        end)
+    end)
     timelineWindow:Hide()
     return timelineWindow
 end

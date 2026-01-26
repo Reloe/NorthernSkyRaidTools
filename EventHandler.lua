@@ -25,6 +25,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
             if not NSRT.NSUI then NSRT.NSUI = {scale = 1} end
+            if not NSRT.NSUI.timeline_window then NSRT.NSUI.timeline_window = { scale = 1 } end
             -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
