@@ -60,6 +60,23 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:UpdateReminderFrame(false, true)
     elseif msg == "timeline" or msg == "tl"then
         NSI:ToggleTimelineWindow()
+    elseif msg == "help" then
+        print("|cFF00FFFFNSRT|r Available commands:")
+        print("  |cFFFFFF00/ns anchor|r - Toggle externals anchor visibility")
+        print("  |cFFFFFF00/ns test|r - Display external test")
+        print("  |cFFFFFF00/ns wipe|r - Wipe NSRT settings and reload UI")
+        print("  |cFFFFFF00/ns sync|r - Show nickname sync popup (test)")
+        print("  |cFFFFFF00/ns display|r - Display test text")
+        print("  |cFFFFFF00/ns debug|r - Toggle debug mode")
+        print("  |cFFFFFF00/ns cd|r - Toggle cooldowns frame")
+        print("  |cFFFFFF00/ns reminders|r or |cFFFFFF00/ns r|r - Toggle reminders frame")
+        print("  |cFFFFFF00/ns preminders|r or |cFFFFFF00/ns pr|r - Toggle personal reminders frame")
+        print("  |cFFFFFF00/ns note|r or |cFFFFFF00/ns n|r - Toggle reminder frame display")
+        print("  |cFFFFFF00/ns pnote|r or |cFFFFFF00/ns pn|r - Toggle personal reminder frame display")
+        print("  |cFFFFFF00/ns clear|r or |cFFFFFF00/ns c|r - Clear active reminder")
+        print("  |cFFFFFF00/ns timeline|r or |cFFFFFF00/ns tl|r - Toggle timeline window")
+        print("  |cFFFFFF00/ns help|r or |cFFFFFF00/ns h|r - Show this help message")
+        print("  |cFFFFFF00/ns|r (no command) - Toggle options window")
     else
         NSI.NSUI:ToggleOptions()
     end
