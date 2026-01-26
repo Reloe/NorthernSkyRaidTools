@@ -715,14 +715,14 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "label",
-            get = function() return "Shared Reminder-Note" end,
+            get = function() return "All Reminders Note" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "button",
-            name = "Unlock Shared Reminder",
-            desc = "Locks/Unlocks the Reminder-Note to be moved around",
+            name = "Unlock All Reminders Note",
+            desc = "Locks/Unlocks the All Reminders Note to be moved around",
             func = function(self)
                 if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame()
@@ -745,8 +745,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show All Reminders-Note",
-            desc = "Whether you want to show the Shared Reminder-Note on screen permanently",
+            name = "Show All Reminders Note",
+            desc = "Whether you want to show the All Reminders Note on screen permanently",
             get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowReminderFrame = value
@@ -758,7 +758,7 @@ local function BuildReminderNoteOptions()
         {
             type = "range",
             name = "Font-Size",
-            desc = "Font-Size of the Shared Reminder-Note",
+            desc = "Font-Size of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.FontSize = value
@@ -771,7 +771,7 @@ local function BuildReminderNoteOptions()
         {
             type = "select",
             name = "Font",
-            desc = "Font of the Shared Reminder-Note",
+            desc = "Font of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
             values = function()
                 return build_media_options("ReminderFrame", "Font", false, true, false)
@@ -781,7 +781,7 @@ local function BuildReminderNoteOptions()
         {
             type = "range",
             name = "Width",
-            desc = "Width of the Shared Reminder-Note",
+            desc = "Width of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Width = value
@@ -794,7 +794,7 @@ local function BuildReminderNoteOptions()
         {
             type = "range",
             name = "Height",
-            desc = "Height of the Shared Reminder-Note",
+            desc = "Height of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Height = value
@@ -808,7 +808,7 @@ local function BuildReminderNoteOptions()
         {
             type = "color",
             name = "Background-Color",
-            desc = "Color of the Background of the Shared Reminder-Note when unlocked",
+            desc = "Color of the Background of the All Reminders Note when unlocked",
             get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
@@ -816,14 +816,23 @@ local function BuildReminderNoteOptions()
             end,
             hasAlpha = true,
             nocombat = true,
-            spacement = true,
-
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Text-Note in All Reminders Note",
+            desc = "Display the Text-Note inside the All Reminders Note.",
+            get = function() return NSRT.ReminderSettings.TextInSharedNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TextInSharedNote = value
+                NSI:UpdateReminderFrame(false, true)
+            end,
         },
         {
             type = "toggle",
             boxfirst = true,
             name = "Show Only Spell-Reminders",
-            desc = "By default only Spell-Reminders will be shown. Disabling this will also show you Text-Reminders",
+            desc = "With this enabled you will only see Spell-Reminders in your notes.",
             get = function() return NSRT.ReminderSettings.OnlySpellReminders end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.OnlySpellReminders = value
@@ -850,7 +859,7 @@ local function BuildReminderNoteOptions()
         {
             type = "button",
             name = "Unlock Pers Reminder",
-            desc = "Locks/Unlocks the Personal Reminder-Note to be moved around",
+            desc = "Locks/Unlocks the Personal Reminders Note to be moved around",
             func = function(self)
                 if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(true)
@@ -873,7 +882,7 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Personal Reminders-Note",
+            name = "Show Personal Reminder Note",
             desc = "Whether you want to display the Note for Reminders only relevant to you",
             get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
             set = function(self, fixedparam, value)
@@ -886,7 +895,7 @@ local function BuildReminderNoteOptions()
         {
             type = "range",
             name = "Font-Size",
-            desc = "Font-Size of the Personal Reminder-Note",
+            desc = "Font-Size of the Personal Reminders Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.FontSize = value
@@ -899,7 +908,7 @@ local function BuildReminderNoteOptions()
         {
             type = "select",
             name = "Font",
-            desc = "Font of the Personal Reminder-Note",
+            desc = "Font of the Personal Reminders Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Font end,
             values = function()
                 return build_media_options("PersonalReminderFrame", "Font", false, true, true)
@@ -909,7 +918,7 @@ local function BuildReminderNoteOptions()
         {
             type = "range",
             name = "Width",
-            desc = "Width of the Personal Reminder-Note",
+            desc = "Width of the Personal Reminders Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Width = value
@@ -922,7 +931,7 @@ local function BuildReminderNoteOptions()
         {
             type = "range",
             name = "Height",
-            desc = "Height of the Personal Reminder-Note",
+            desc = "Height of the Personal Reminders Note",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Height = value
@@ -936,7 +945,7 @@ local function BuildReminderNoteOptions()
         {
             type = "color",
             name = "Background-Color",
-            desc = "Color of the Background of the Personal Reminder-Note when unlocked",
+            desc = "Color of the Background of the Personal Reminders Note when unlocked",
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
@@ -945,6 +954,17 @@ local function BuildReminderNoteOptions()
             hasAlpha = true,
             nocombat = true
 
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Text-Note in Personal Reminders Note",
+            desc = "Display the Text-Note inside the Personal Reminders Note.",
+            get = function() return NSRT.ReminderSettings.TextInPersonalNote end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TextInPersonalNote = value
+                NSI:UpdateReminderFrame(false, true)
+            end,
         },
 
         {
@@ -1061,10 +1081,6 @@ local function BuildReminderNoteOptions()
             hasAlpha = true,
             nocombat = true
 
-        },
-        {
-            type = "breakline",
-            spacement = true,
         },
         {
             type = "breakline",

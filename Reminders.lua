@@ -1228,8 +1228,9 @@ function NSI:UpdateReminderFrame(personal, all, extra)
     end
     if personal or all then 
         self.PersonalReminderFrame:SetAllPoints(self.PersonalReminderFrameMover)
-        self.PersonalReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.PersonalReminderFrame.Font), NSRT.ReminderSettings.PersonalReminderFrame.FontSize, "OUTLINE")   
-        self.PersonalReminderFrame.Text:SetText(self.DisplayedPersonalReminder)
+        self.PersonalReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.PersonalReminderFrame.Font), NSRT.ReminderSettings.PersonalReminderFrame.FontSize, "OUTLINE") 
+        local text = NSRT.ReminderSettings.TextInPersonalNote and self.DisplayedPersonalReminder..self.DisplayedExtraReminder or self.DisplayedPersonalReminder
+        self.PersonalReminderFrame.Text:SetText(text)
         self.PersonalReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.PersonalReminderFrame.BGcolor))
         if NSRT.ReminderSettings.ShowPersonalReminderFrame then       
             self.PersonalReminderFrame:Show()
@@ -1240,7 +1241,8 @@ function NSI:UpdateReminderFrame(personal, all, extra)
     if all or ((not personal) and not extra) then    
         self.ReminderFrame:SetAllPoints(self.ReminderFrameMover)
         self.ReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ReminderFrame.Font), NSRT.ReminderSettings.ReminderFrame.FontSize, "OUTLINE")   
-        self.ReminderFrame.Text:SetText(self.DisplayedReminder)
+        local text = NSRT.ReminderSettings.TextInSharedNote and self.DisplayedReminder..self.DisplayedExtraReminder or self.DisplayedReminder
+        self.ReminderFrame.Text:SetText(text)
         self.ReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.ReminderFrame.BGcolor))
         if NSRT.ReminderSettings.ShowReminderFrame then  
             self.ReminderFrame:Show()
