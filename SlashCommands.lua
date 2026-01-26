@@ -45,19 +45,33 @@ SlashCmdList["NSUI"] = function(msg)
             NSUI.personal_reminders_frame:Hide()
         end
     elseif msg == "note" or msg == "n" then
+        -- Toggle every note's frame
+
+        -- If they are out of sync, hide any that are visible to sync the frames first.
+        local visibility = not (NSRT.ReminderSettings.ShowReminderFrame or
+                                NSRT.ReminderSettings.ShowPersonalReminderFrame or
+                                NSRT.ReminderSettings.ShowExtraReminderFrame)
+
+        NSRT.ReminderSettings.ShowReminderFrame = visibility
+        NSRT.ReminderSettings.ShowPersonalReminderFrame = visibility
+        NSRT.ReminderSettings.ShowExtraReminderFrame = visibility
+        NSI:ProcessReminder()
+        NSI:UpdateReminderFrame(true, true, true)
+    elseif msg == "rnote" or msg == "rn" or msg == "anote" or msg == "an" then
+        -- Toggle the "Reminders Note" or "All Note"
         NSRT.ReminderSettings.ShowReminderFrame = not NSRT.ReminderSettings.ShowReminderFrame
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(false)
+        NSI:UpdateReminderFrame(false, true, false)
     elseif msg == "pnote" or msg == "pn" then
+        -- Toggle the "Personal Note"
         NSRT.ReminderSettings.ShowPersonalReminderFrame = not NSRT.ReminderSettings.ShowPersonalReminderFrame
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(true)
-    elseif msg == "clear" or msg == "c" then
-        NSRT.ActiveReminder = nil
-        NSI.Reminder = ""
+        NSI:UpdateReminderFrame(true, false, false)
+    elseif msg == "tnote" or msg == "tn" or msg == "enote" or msg == "en" then
+        -- Toggle the "Text Note" or "Extra Note"
+        NSRT.ReminderSettings.ShowExtraReminderFrame = not NSRT.ReminderSettings.ShowExtraReminderFrame
         NSI:ProcessReminder()
-
-        NSI:UpdateReminderFrame(false, true)
+        NSI:UpdateReminderFrame(false, false, true)
     else
         NSI.NSUI:ToggleOptions()
     end
