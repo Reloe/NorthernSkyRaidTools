@@ -1062,6 +1062,36 @@ local function BuildReminderNoteOptions()
             nocombat = true
 
         },
+        {
+            type = "breakline",
+            spacement = true,
+        },
+        {
+            type = "breakline",
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "Timeline" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "button",
+            name = "Open Timeline",
+            desc = "Opens the Timeline window (Also opened by the `/ns tl` or `/ns timeline` slash command)",
+            func = function(self)
+                NSI:ToggleTimelineWindow()
+            end,
+            spacement = true,
+            button_template = DF:GetTemplate("button", "details_forge_button_template"),
+
+        }
     }
 end
 
