@@ -58,7 +58,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.ShowReminderFrame = NSRT.ReminderSettings.ShowReminderFrame or false
             if NSRT.ReminderSettings.ShowPersonalReminderFrame == nil then NSRT.ReminderSettings.ShowPersonalReminderFrame = true end
             NSRT.ReminderSettings.ShowExtraReminderFrame = NSRT.ReminderSettings.ShowExtraReminderFrame or false
-            if NSRT.ReminderSettings.OnlySpellReminders == nil then NSRT.ReminderSettings.OnlySpellReminders = true end
             if not NSRT.ReminderSettings.PersonalReminderFrame then
                 NSRT.ReminderSettings.PersonalReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end

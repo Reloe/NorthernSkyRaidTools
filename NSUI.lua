@@ -4211,8 +4211,8 @@ Press 'Enter' to hear the TTS]],
     DF:BuildMenu(privateaura_tab, privateaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
-    NSI.RaidBuffCheck:SetMovable(false)
-    NSI.RaidBuffCheck:EnableMouse(false)
+    NSI.RaidBuffCheck:SetMovable(true)
+    NSI.RaidBuffCheck:EnableMouse(true)
 
     -- Build UI
     NSUI.version_scrollbox = BuildVersionCheckUI(versions_tab)
