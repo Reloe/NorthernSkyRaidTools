@@ -694,8 +694,12 @@ local function ImportReminderString(name, IsUpdate)
     popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
-        local import_string = popup.test_string_text_box:GetText()
-        NSI:ImportFullReminderString(import_string, false, IsUpdate)
+        local import_string = popup.test_string_text_box:GetText()        
+        if IsUpdate then
+            NSI:ImportReminder(name, import_string, false, false, true)
+        else
+            NSI:ImportFullReminderString(import_string, false, false, name)
+        end
         if IsUpdate and NSRT.ActiveReminder then
             NSI:SetReminder(NSRT.ActiveReminder) -- refresh active reminder
         end
@@ -731,7 +735,11 @@ local function ImportPersonalReminderString(name, IsUpdate)
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
-        NSI:ImportFullReminderString(import_string, true, IsUpdate)
+        if IsUpdate then
+            NSI:ImportReminder(name, import_string, false, true, true)
+        else
+            NSI:ImportFullReminderString(import_string, true, false, name)
+        end
         if IsUpdate and NSRT.ActivePersonalReminder then
             NSI:SetReminder(NSRT.ActivePersonalReminder, true) -- refresh active personal reminder
         end
@@ -875,7 +883,7 @@ local function BuildRemindersEditUI()
             local newname = self:GetText()
             if oldname == newname then return end
             if NSRT.Reminders[newname] then return end -- if name already exists, do nothing
-            NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            NSRT.Reminders[newname] = NSRT.Reminders[oldname]
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             if NSRT.ActiveReminder == oldname then
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
@@ -1056,7 +1064,7 @@ local function BuildPersonalRemindersEditUI()
             local newname = self:GetText()
             if oldname == newname then return end
             if NSRT.PersonalReminders[newname] then return end -- if name already exists, do nothing
-            NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]
             if NSRT.ActivePersonalReminder == oldname then
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActivePersonalReminder = newname

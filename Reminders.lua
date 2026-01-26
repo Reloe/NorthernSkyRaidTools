@@ -840,32 +840,35 @@ function NSI:RemoveReminder(name, personal)
     end
 end
 
-function NSI:ImportFullReminderString(str, personal, IsUpdate)
+function NSI:ImportFullReminderString(str, personal, IsUpdate, name)
     local name = ""
     local values = ""
+    local diff = ""
     if not str:match('\n$') then
         str = str..'\n'
     end
-    for line in str:gmatch('([^\n]*)\n') do
-        if line:find("EncounterID:") and line:find("Name:") then
+    for line in str:gmatch('([^\n]*)\n') do        
+        if line:find("EncounterID:") then
             if values ~= "" then -- meaning we reached a new boss line as the previous one has values already
                 self:ImportReminder(name, values, false, personal, IsUpdate)
                 values = ""
+                name = ""
+                diff = ""
             end
             name = line:match("Name:([^;]+)")
+            diff = line:match("Difficulty:([^;]+)")
             values = line.."\n"
         elseif name ~= "" then
             values = values..line.."\n"
         end
     end
     if values ~= "" and name ~= "" then -- importing the last boss
-        self:ImportReminder(name, values, false, personal, IsUpdate)
+        self:ImportReminder(name, values, false, personal, IsUpdate, diff)
     end
 end
 
-function NSI:ImportReminder(name, values, activate, personal, IsUpdate)
+function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
     if not name then name = "Default Reminder" end
-    local diff = values:match("Difficulty:([^;]+)")
     local newname = diff and name.." - "..diff or name
     if personal then
         if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
