@@ -208,7 +208,7 @@ local function BuildRemindersEditUI()
         line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-210, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
         line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
-        line.nameTextEntry:SetScript("OnEnterPressed", function(self)
+        local saveNewName = function(self)
             local oldname = line.name
             if not oldname then return end
             local newname = self:GetText()
@@ -224,7 +224,9 @@ local function BuildRemindersEditUI()
             NSRT.InviteList[oldname] = nil
             line.name = newname
             parent:MasterRefresh()
-        end)
+        end
+        line.nameTextEntry:SetScript("OnEnterPressed", saveNewName)
+        line.nameTextEntry:SetScript("OnEditFocusLost", saveNewName)
 
         line.deleteButton = DF:CreateButton(line, function()
             DeleteBossReminder(self, line, false)
@@ -385,7 +387,7 @@ local function BuildPersonalRemindersEditUI()
         line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth()-129, line:GetHeight())
         line.nameTextEntry:SetTemplate(options_dropdown_template)
         line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
-        line.nameTextEntry:SetScript("OnEnterPressed", function(self)
+        local saveNewName = function(self)
             local oldname = line.name
             if not oldname then return end
             local newname = self:GetText()
@@ -399,7 +401,9 @@ local function BuildPersonalRemindersEditUI()
             NSRT.PersonalReminders[oldname] = nil
             line.name = newname
             parent:MasterRefresh()
-        end)
+        end
+        line.nameTextEntry:SetScript("OnEnterPressed", saveNewName)
+        line.nameTextEntry:SetScript("OnEditFocusLost", saveNewName)
 
         if not alldeletecreated then
             alldeletecreated = true
