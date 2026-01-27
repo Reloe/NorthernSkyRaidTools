@@ -394,8 +394,8 @@ function NSI:ArrangeStates(Type)
     for i, v in ipairs(pos) do
         local diff = Type == "Texts" and s.FontSize or s.Height
         local Spacing = s.Spacing or 0
-        local yoffset = (s.GrowDirection == "Up" and (i-1) * s.Height) or (s.GrowDirection == "Down" and -(i-1) * s.Height) or 0
-        local xoffset = Type == "Icons" and ((s.GrowDirection == "Right" and (i-1) * s.Width) or (s.GrowDirection == "Left" and -(i-1) * s.Width)) or 0
+        local yoffset = (s.GrowDirection == "Up" and (i-1) * (s.Height+Spacing) or (s.GrowDirection == "Down" and -(i-1) * (s.Height+Spacing))) or 0
+        local xoffset = Type == "Icons" and ((s.GrowDirection == "Right" and (i-1) * (s.Width+Spacing)) or (s.GrowDirection == "Left" and -(i-1) * (s.Width+Spacing))) or 0
         v.Frame:ClearAllPoints()
         if Type == "Texts" then
             v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + yoffset)
