@@ -141,9 +141,9 @@ NSI.BossTimelineCategoryOrder = {
     ["intermission"] = 25,
 }
 
--- Categories considered "important" for filtering
+-- Categories considered "important" for healer filtering
 -- These are mechanics that typically require healing CDs or raid coordination
-NSI.BossTimelineImportantCategories = {
+NSI.BossTimelineImportantHealerCategories = {
     ["raid damage"] = true,
     ["raid aoe"] = true,
     ["raid soak"] = true,
@@ -153,6 +153,14 @@ NSI.BossTimelineImportantCategories = {
     ["intermission"] = true,
 }
 
+-- Categories considered "important" for tank filtering
+-- These are mechanics that typically require tank cooldowns or swaps
+NSI.BossTimelineImportantTankCategories = {
+    ["tankbuster"] = true,
+    ["tank debuff"] = true,
+    ["frontal"] = true,
+}
+
 -- Boss display modes for timeline
 NSI.BossDisplayModes = {
     ["SHOW_ALL"] = "all",           -- Show all abilities (default)
@@ -160,9 +168,9 @@ NSI.BossDisplayModes = {
     ["COMBINED"] = "combined",      -- Combine all into one row
 }
 
--- Check if an ability is considered "important" based on its category
--- Returns true if any category keyword is in the important list, or if ability has important=true
-function NSI:IsAbilityImportant(ability)
+-- Check if an ability is considered "important" for healers based on its category
+-- Returns true if any category keyword is in the healer important list, or if ability has important=true
+function NSI:IsAbilityImportantForHealer(ability)
     -- Explicit important flag takes precedence
     if ability.important ~= nil then
         return ability.important
@@ -176,12 +184,42 @@ function NSI:IsAbilityImportant(ability)
 
     for keyword in categoryStr:gmatch("([^,]+)") do
         keyword = strtrim(keyword):lower()
-        if self.BossTimelineImportantCategories[keyword] then
+        if self.BossTimelineImportantHealerCategories[keyword] then
             return true
         end
     end
 
     return false
+end
+
+-- Check if an ability is considered "important" for tanks based on its category
+-- Returns true if any category keyword is in the tank important list, or if ability has important=true
+function NSI:IsAbilityImportantForTank(ability)
+    -- Explicit important flag takes precedence
+    if ability.important ~= nil then
+        return ability.important
+    end
+
+    -- Check category keywords
+    local categoryStr = ability.category
+    if not categoryStr or categoryStr == "" then
+        return false
+    end
+
+    for keyword in categoryStr:gmatch("([^,]+)") do
+        keyword = strtrim(keyword):lower()
+        if self.BossTimelineImportantTankCategories[keyword] then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Check if an ability is considered "important" for either healers or tanks
+-- Returns true if any category keyword is in either important list, or if ability has important=true
+function NSI:IsAbilityImportant(ability)
+    return self:IsAbilityImportantForHealer(ability) or self:IsAbilityImportantForTank(ability)
 end
 
 -- Parse a compound category string and return color and sort order
