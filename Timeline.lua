@@ -299,28 +299,21 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
             math.floor(color[3] * 255),
             abilityData.name)
 
-        -- Add healer/tank role icons if ability is important for that role
-        local roleIcons = ""
+        -- Check if ability is important for healer/tank roles
         local abilityForCheck = {category = abilityData.category}
-        if self:IsAbilityImportantForHealer(abilityForCheck) then
-            -- Healer icon from LFG role texture (green cross)
-            roleIcons = roleIcons .. "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:20:20:0:0:64:64:20:39:1:20|t"
-        end
-        if self:IsAbilityImportantForTank(abilityForCheck) then
-            -- Tank icon from LFG role texture (shield)
-            roleIcons = roleIcons .. "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:20:20:0:0:64:64:0:19:22:41|t"
-        end
-        if roleIcons ~= "" then
-            coloredName = roleIcons .. " " .. coloredName
-        end
+        local isImportantHealer = self:IsAbilityImportantForHealer(abilityForCheck)
+        local isImportantTank = self:IsAbilityImportantForTank(abilityForCheck)
 
         table.insert(lines, {
             spellId = abilityData.spellID,
-            icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
+            icon = nil, -- We'll use custom icons on the right instead
             text = coloredName,
             timeline = timeline,
             isBossAbility = true,
             category = abilityData.category,
+            bossIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
+            isImportantHealer = isImportantHealer,
+            isImportantTank = isImportantTank,
         })
     end
 
@@ -1101,6 +1094,38 @@ function NSI:CreateTimelineWindow()
             if line.lineData and line.lineData.isSeparator then
                 line:SetBackdropColor(0, 0, 0, 1)
             end
+
+            -- Update custom right-side icons for boss abilities
+            if line.lineHeader then
+                local data = line.lineData
+
+                -- Boss spell icon (rightmost)
+                if line.lineHeader.bossIcon then
+                    if data and data.bossIcon then
+                        line.lineHeader.bossIcon:SetTexture(data.bossIcon)
+                        line.lineHeader.bossIcon:Show()
+                    else
+                        line.lineHeader.bossIcon:Hide()
+                    end
+                end
+
+                -- Role icons (to the left of boss icon)
+                if line.lineHeader.tankIcon then
+                    if data and data.isImportantTank then
+                        line.lineHeader.tankIcon:Show()
+                    else
+                        line.lineHeader.tankIcon:Hide()
+                    end
+                end
+
+                if line.lineHeader.healerIcon then
+                    if data and data.isImportantHealer then
+                        line.lineHeader.healerIcon:Show()
+                    else
+                        line.lineHeader.healerIcon:Hide()
+                    end
+                end
+            end
         end,
 
         -- Called when a line is created - add tooltip to the header
@@ -1137,11 +1162,36 @@ function NSI:CreateTimelineWindow()
                     end
                     GameTooltip:Hide()
                 end)
+
+                -- Create boss spell icon (rightmost, right-anchored)
+                local bossIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                bossIcon:SetSize(18, 18)
+                bossIcon:SetPoint("RIGHT", line.lineHeader, "RIGHT", -2, 0)
+                bossIcon:Hide()
+                line.lineHeader.bossIcon = bossIcon
+
+                -- Create tank role icon (to the left of boss icon)
+                local tankIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                tankIcon:SetSize(16, 16)
+                tankIcon:SetPoint("RIGHT", bossIcon, "LEFT", -2, 0)
+                tankIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES")
+                tankIcon:SetTexCoord(0/64, 19/64, 22/64, 41/64) -- Tank shield
+                tankIcon:Hide()
+                line.lineHeader.tankIcon = tankIcon
+
+                -- Create healer role icon (to the left of tank icon)
+                local healerIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                healerIcon:SetSize(16, 16)
+                healerIcon:SetPoint("RIGHT", tankIcon, "LEFT", -1, 0)
+                healerIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES")
+                healerIcon:SetTexCoord(20/64, 39/64, 1/64, 20/64) -- Healer cross
+                healerIcon:Hide()
+                line.lineHeader.healerIcon = healerIcon
             end
-            -- Constrain text width to prevent overflow
+            -- Constrain text width to prevent overflow (adjusted for right-side icons)
             if line.text then
                 line.text:SetWordWrap(false)
-                line.text:SetWidth(150) -- header_width (180) - icon (22) - padding (8)
+                line.text:SetWidth(120) -- header_width (180) - icons on right (~60)
             end
         end,
 
