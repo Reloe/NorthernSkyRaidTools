@@ -1181,6 +1181,84 @@ function NSI:CreateTimelineWindow()
         block_on_leave = function(block)
             GameTooltip:Hide()
         end,
+
+        -- Called when block data is set - add category-colored border and duration bar
+        block_on_set_data = function(block, data)
+            if not block or not data then return end
+
+            local payload = data.payload
+            if not payload or not payload.isBossAbility then return end
+
+            -- Get category color from BossTimelineColors
+            local category = payload.category
+            local color = nil
+            if category and NSI.BossTimelineColors then
+                -- Parse first category keyword
+                local firstCategory = category:match("([^,]+)")
+                if firstCategory then
+                    firstCategory = strtrim(firstCategory):lower()
+                    color = NSI.BossTimelineColors[firstCategory]
+                end
+            end
+
+            if not color then return end
+
+            -- Scale down icon and create border around it (4 edge textures)
+            if block.icon then
+                local borderSize = 1
+                local iconSize = 18  -- 20px row - 1px border top - 1px border bottom = 18px
+
+                -- Scale down the icon to make room for border
+                block.icon:SetSize(iconSize, iconSize)
+
+                if not block.categoryBorderTop then
+                    -- Top edge
+                    block.categoryBorderTop = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderTop:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderTop:SetHeight(borderSize)
+                    -- Bottom edge
+                    block.categoryBorderBottom = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderBottom:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderBottom:SetHeight(borderSize)
+                    -- Left edge
+                    block.categoryBorderLeft = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderLeft:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderLeft:SetWidth(borderSize)
+                    -- Right edge
+                    block.categoryBorderRight = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderRight:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderRight:SetWidth(borderSize)
+                end
+
+                -- Position borders around the scaled icon
+                block.categoryBorderTop:ClearAllPoints()
+                block.categoryBorderTop:SetPoint("BOTTOMLEFT", block.icon, "TOPLEFT", -borderSize, 0)
+                block.categoryBorderTop:SetPoint("BOTTOMRIGHT", block.icon, "TOPRIGHT", borderSize, 0)
+                block.categoryBorderBottom:ClearAllPoints()
+                block.categoryBorderBottom:SetPoint("TOPLEFT", block.icon, "BOTTOMLEFT", -borderSize, 0)
+                block.categoryBorderBottom:SetPoint("TOPRIGHT", block.icon, "BOTTOMRIGHT", borderSize, 0)
+                block.categoryBorderLeft:ClearAllPoints()
+                block.categoryBorderLeft:SetPoint("TOPRIGHT", block.icon, "TOPLEFT", 0, borderSize)
+                block.categoryBorderLeft:SetPoint("BOTTOMRIGHT", block.icon, "BOTTOMLEFT", 0, -borderSize)
+                block.categoryBorderRight:ClearAllPoints()
+                block.categoryBorderRight:SetPoint("TOPLEFT", block.icon, "TOPRIGHT", 0, borderSize)
+                block.categoryBorderRight:SetPoint("BOTTOMLEFT", block.icon, "BOTTOMRIGHT", 0, -borderSize)
+
+                block.categoryBorderTop:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderBottom:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderLeft:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderRight:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderTop:Show()
+                block.categoryBorderBottom:Show()
+                block.categoryBorderLeft:Show()
+                block.categoryBorderRight:Show()
+            end
+
+            -- Color the duration bar if it exists
+            if block.blockLength and block.blockLength.Texture then
+                block.blockLength.Texture:SetVertexColor(color[1], color[2], color[3], 0.7)
+            end
+        end,
     }
 
     -- Elapsed time options for the ruler and vertical grid lines
