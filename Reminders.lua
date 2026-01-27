@@ -338,7 +338,10 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F:SetSize(s.Width, s.Height)
             F.Icon:SetAllPoints(F)
             F.Border:SetAllPoints(F)
-            F.Text:SetPoint("LEFT", F, "RIGHT", s.xTextOffset, s.yTextOffset)
+            local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
+            local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
+            F.Text:ClearAllPoints()
+            F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
@@ -513,7 +516,9 @@ function NSI:CreateIcon(info)
             })
             self.ReminderIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
             self.ReminderIcon[i].Text = self.ReminderIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderIcon[i].Text:SetPoint("LEFT", self.ReminderIcon[i], "RIGHT", s.xTextOffset, s.yTextOffset)
+            local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
+            local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
+            self.ReminderIcon[i].Text:SetPoint(anchor, self.ReminderIcon[i], relativePoint, s.xTextOffset, s.yTextOffset)
             self.ReminderIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderIcon[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderIcon[i].Text:SetShadowOffset(0, 0)

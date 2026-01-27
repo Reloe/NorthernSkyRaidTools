@@ -284,6 +284,45 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
+            name = "Text-X-Offset",
+            desc = "X-Offset of the Text of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.xTextOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.xTextOffset = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -500,
+            max = 500,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Text-Y-Offset",
+            desc = "Y-Offset of the Text of the Icon",
+            get = function() return NSRT.ReminderSettings.IconSettings.yTextOffset end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.yTextOffset = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = -500,
+            max = 500,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            name = "Right-Aligned Text",
+            desc = "Change the Text to be right-aligned, you still have to fix the offset yourself.",
+            get = function() return NSRT.ReminderSettings.IconSettings.RightAlignedText end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.RightAlignedText = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 5,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "range",
             name = "Timer-Text Font-Size",
             desc = "Font Size of the Timer-Text",
             get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
@@ -320,6 +359,10 @@ local function BuildReminderOptions()
             min = 0,
             max = 30,
             nocombat = true,
+        },
+
+        {
+            type = "breakline"
         },
 
         {
@@ -511,9 +554,6 @@ local function BuildReminderOptions()
 
         },
 
-        {
-            type = "breakline"
-        },
         {
             type = "label",
             get = function() return "Manage Reminders" end,
