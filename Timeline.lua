@@ -1203,38 +1203,68 @@ function NSI:CreateTimelineWindow()
         timelineFrame.elapsedTimeFrame.options.draw_line = false
     end
 
-    -- Hook refresh to create our own grid lines on the overlay
+    -- Override refresh to show labels every 30 seconds instead of pixel-distance-based
     if timelineFrame.elapsedTimeFrame then
-        local originalRefresh = timelineFrame.elapsedTimeFrame.Refresh
-        timelineFrame.elapsedTimeFrame.Refresh = function(self, ...)
-            originalRefresh(self, ...)
-            -- Create grid lines on our overlay frame
-            if self.labels then
-                for i, label in ipairs(self.labels) do
-                    if label:IsShown() then
-                        local gridLine = timelineFrame.gridLines[i]
-                        if not gridLine then
-                            gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
-                            gridLine:SetColorTexture(0.5, 0.5, 0.5, 1)
-                            gridLine:SetWidth(1)
-                            timelineFrame.gridLines[i] = gridLine
-                        end
-                        -- Position the grid line to match the label
-                        gridLine:ClearAllPoints()
-                        gridLine:SetPoint("TOP", label, "BOTTOM", 0, -2)
-                        gridLine:SetPoint("BOTTOM", gridOverlay, "BOTTOM", 0, 0)
-                        gridLine:Show()
-                    else
-                        if timelineFrame.gridLines[i] then
-                            timelineFrame.gridLines[i]:Hide()
-                        end
-                    end
+        timelineFrame.elapsedTimeFrame.Refresh = function(self, elapsedTime, scale)
+            if not elapsedTime then return end
+
+            self:SetHeight(self.options.height)
+
+            local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
+            local currentScale = scale or 1
+            local scaledPixelsPerSecond = pixelsPerSecond * currentScale
+
+            -- Show a label every 30 seconds
+            local intervalSeconds = 30
+            local intervalPixels = intervalSeconds * scaledPixelsPerSecond
+
+            -- Calculate how many 30-second marks fit in the timeline
+            local amountSegments = math.ceil(elapsedTime / intervalSeconds) + 1
+
+            for i = 1, amountSegments do
+                local label = self:GetLabel(i)
+                local timeSeconds = (i - 1) * intervalSeconds
+                local xOffset = timeSeconds * scaledPixelsPerSecond
+
+                label:ClearAllPoints()
+                label:SetPoint("LEFT", self, "LEFT", xOffset, 0)
+
+                -- Format as M:SS
+                local minutes = math.floor(timeSeconds / 60)
+                local seconds = timeSeconds % 60
+                label:SetText(string.format("%d:%02d", minutes, seconds))
+
+                -- Hide the default line (we use gridOverlay instead)
+                if label.line then
+                    label.line:Hide()
                 end
-                -- Hide extra lines
-                for i = #self.labels + 1, #timelineFrame.gridLines do
-                    if timelineFrame.gridLines[i] then
-                        timelineFrame.gridLines[i]:Hide()
-                    end
+
+                label:Show()
+
+                -- Create/update grid line on overlay
+                local gridLine = timelineFrame.gridLines[i]
+                if not gridLine then
+                    gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
+                    gridLine:SetColorTexture(0.5, 0.5, 0.5, 1)
+                    gridLine:SetWidth(1)
+                    timelineFrame.gridLines[i] = gridLine
+                end
+                gridLine:ClearAllPoints()
+                gridLine:SetPoint("TOP", label, "BOTTOM", 0, -2)
+                gridLine:SetPoint("BOTTOM", gridOverlay, "BOTTOM", 0, 0)
+                gridLine:Show()
+            end
+
+            -- Hide extra labels and lines
+            for i = amountSegments + 1, #self.labels do
+                self.labels[i]:Hide()
+                if self.labels[i].line then
+                    self.labels[i].line:Hide()
+                end
+            end
+            for i = amountSegments + 1, #timelineFrame.gridLines do
+                if timelineFrame.gridLines[i] then
+                    timelineFrame.gridLines[i]:Hide()
                 end
             end
         end
