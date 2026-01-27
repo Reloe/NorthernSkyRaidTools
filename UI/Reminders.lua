@@ -5,6 +5,7 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local options_dropdown_template = Core.options_dropdown_template
 local options_button_template = Core.options_button_template
+local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local function ImportReminderString(name, IsUpdate)
     local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
@@ -23,12 +24,17 @@ local function ImportReminderString(name, IsUpdate)
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
+    popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
-        local import_string = popup.test_string_text_box:GetText()
-        NSI:ImportFullReminderString(import_string, false, IsUpdate)
+        local import_string = popup.test_string_text_box:GetText()        
+        if IsUpdate then
+            NSI:ImportReminder(name, import_string, false, false, true)
+        else
+            NSI:ImportFullReminderString(import_string, false, false, name)
+        end
         if IsUpdate and NSRT.ActiveReminder then
-            NSI:SetReminder(NSRT.ActiveReminder)
+            NSI:SetReminder(NSRT.ActiveReminder) -- refresh active reminder
         end
         popup.test_string_text_box:SetText("")
         NSUI.reminders_frame:Hide()
@@ -58,12 +64,17 @@ local function ImportPersonalReminderString(name, IsUpdate)
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
+    popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
-        NSI:ImportFullReminderString(import_string, true, IsUpdate)
+        if IsUpdate then
+            NSI:ImportReminder(name, import_string, false, true, true)
+        else
+            NSI:ImportFullReminderString(import_string, true, false, name)
+        end
         if IsUpdate and NSRT.ActivePersonalReminder then
-            NSI:SetReminder(NSRT.ActivePersonalReminder, true)
+            NSI:SetReminder(NSRT.ActivePersonalReminder, true) -- refresh active personal reminder
         end
         popup.test_string_text_box:SetText("")
         NSUI.personal_reminders_frame:Hide()
@@ -203,7 +214,7 @@ local function BuildRemindersEditUI()
             local newname = self:GetText()
             if oldname == newname then return end
             if NSRT.Reminders[newname] then return end
-            NSRT.Reminders[newname] = NSRT.Reminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            NSRT.Reminders[newname] = NSRT.Reminders[oldname]
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             if NSRT.ActiveReminder == oldname then
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
@@ -380,7 +391,7 @@ local function BuildPersonalRemindersEditUI()
             local newname = self:GetText()
             if oldname == newname then return end
             if NSRT.PersonalReminders[newname] then return end
-            NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]:gsub("Name:[^\n]*", "Name:"..newname)
+            NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]
             if NSRT.ActivePersonalReminder == oldname then
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. newname
                 NSRT.ActivePersonalReminder = newname
