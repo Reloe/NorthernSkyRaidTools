@@ -481,9 +481,11 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
 
         table.insert(lines, {
             spellId = lineSpellId,
-            icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
+            icon = nil, -- We'll use custom icons on the right instead
             text = lineName,
             timeline = timeline,
+            isYourReminder = true,
+            reminderSpellIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
         })
     end
 
@@ -728,14 +730,31 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                 lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
             end
 
-            -- Get shortened player name with color
+            -- Get shortened player name
             local shortPlayer = NSAPI:Shorten(player, 12, false, "GlobalNickNames") or player
+
+            -- Get class color for the player
+            local classColorHex = nil
+            local unitName = NSAPI:GetChar(player, true, "NorthernSkyRaidTools")
+            if unitName and UnitExists(unitName) then
+                local _, classFile = UnitClass(unitName)
+                if classFile then
+                    local color = GetClassColorObj(classFile)
+                    if color then
+                        classColorHex = color:GenerateHexColor()
+                    end
+                end
+            end
 
             table.insert(lines, {
                 spellId = lineSpellId,
-                icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
-                text = shortPlayer .. " - " .. lineName,
+                icon = nil, -- We'll use custom icons on the right instead
+                text = lineName, -- Spell name left-anchored
                 timeline = timeline,
+                isPlayerAssignment = true,
+                playerName = shortPlayer,
+                playerClassColor = classColorHex,
+                playerSpellIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
             })
         end
     end
@@ -759,7 +778,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
             table.insert(finalLines, {
                 spellId = nil,
                 icon = "Interface\\ICONS\\INV_Misc_Gear_01",
-                text = "|cff888888--- Player Assignments ---|r",
+                text = "|cff888888--- Player Reminders ---|r",
                 timeline = {},
                 isSeparator = true,
             })
@@ -1095,13 +1114,36 @@ function NSI:CreateTimelineWindow()
                 line:SetBackdropColor(0, 0, 0, 1)
             end
 
-            -- Update custom right-side icons for boss abilities
+            -- Update custom right-side icons
             if line.lineHeader then
                 local data = line.lineData
 
-                -- Boss spell icon (rightmost)
+                -- Check line types
+                local isPlayerAssignment = data and data.isPlayerAssignment
+                local isYourReminder = data and data.isYourReminder
+                local isBossAbility = data and data.isBossAbility
+
+                -- Update custom header text (left-anchored)
+                if line.lineHeader.headerText then
+                    if data and data.text then
+                        line.lineHeader.headerText:SetText(data.text)
+                        -- Adjust text width based on line type
+                        if isPlayerAssignment then
+                            line.lineHeader.headerText:SetWidth(90) -- Narrower for player assignments (name + icon)
+                        elseif isYourReminder then
+                            line.lineHeader.headerText:SetWidth(140) -- Wider for your reminders (just icon on right)
+                        else
+                            line.lineHeader.headerText:SetWidth(120) -- Boss abilities (icons on right)
+                        end
+                        line.lineHeader.headerText:Show()
+                    else
+                        line.lineHeader.headerText:Hide()
+                    end
+                end
+
+                -- Boss ability icons (only show for boss abilities)
                 if line.lineHeader.bossIcon then
-                    if data and data.bossIcon then
+                    if isBossAbility and data.bossIcon then
                         line.lineHeader.bossIcon:SetTexture(data.bossIcon)
                         line.lineHeader.bossIcon:Show()
                     else
@@ -1109,9 +1151,9 @@ function NSI:CreateTimelineWindow()
                     end
                 end
 
-                -- Role icons (to the left of boss icon)
+                -- Role icons (only for boss abilities)
                 if line.lineHeader.tankIcon then
-                    if data and data.isImportantTank then
+                    if isBossAbility and data.isImportantTank then
                         line.lineHeader.tankIcon:Show()
                     else
                         line.lineHeader.tankIcon:Hide()
@@ -1119,10 +1161,37 @@ function NSI:CreateTimelineWindow()
                 end
 
                 if line.lineHeader.healerIcon then
-                    if data and data.isImportantHealer then
+                    if isBossAbility and data.isImportantHealer then
                         line.lineHeader.healerIcon:Show()
                     else
                         line.lineHeader.healerIcon:Hide()
+                    end
+                end
+
+                -- Player/reminder spell icon (for player assignments and your reminders)
+                if line.lineHeader.playerSpellIcon then
+                    if isPlayerAssignment and data.playerSpellIcon then
+                        line.lineHeader.playerSpellIcon:SetTexture(data.playerSpellIcon)
+                        line.lineHeader.playerSpellIcon:Show()
+                    elseif isYourReminder and data.reminderSpellIcon then
+                        line.lineHeader.playerSpellIcon:SetTexture(data.reminderSpellIcon)
+                        line.lineHeader.playerSpellIcon:Show()
+                    else
+                        line.lineHeader.playerSpellIcon:Hide()
+                    end
+                end
+
+                -- Player name text (only for player assignments)
+                if line.lineHeader.playerNameText then
+                    if isPlayerAssignment and data.playerName then
+                        local displayName = data.playerName
+                        if data.playerClassColor then
+                            displayName = "|c" .. data.playerClassColor .. data.playerName .. "|r"
+                        end
+                        line.lineHeader.playerNameText:SetText(displayName)
+                        line.lineHeader.playerNameText:Show()
+                    else
+                        line.lineHeader.playerNameText:Hide()
                     end
                 end
             end
@@ -1170,28 +1239,50 @@ function NSI:CreateTimelineWindow()
                 bossIcon:Hide()
                 line.lineHeader.bossIcon = bossIcon
 
-                -- Create tank role icon (to the left of boss icon)
+                -- Create tank role icon (right next to boss icon)
                 local tankIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
                 tankIcon:SetSize(16, 16)
-                tankIcon:SetPoint("RIGHT", bossIcon, "LEFT", -2, 0)
+                tankIcon:SetPoint("RIGHT", bossIcon, "LEFT", 0, 0)
                 tankIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES")
                 tankIcon:SetTexCoord(0/64, 19/64, 22/64, 41/64) -- Tank shield
                 tankIcon:Hide()
                 line.lineHeader.tankIcon = tankIcon
 
-                -- Create healer role icon (to the left of tank icon)
+                -- Create healer role icon (right next to tank icon)
                 local healerIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
                 healerIcon:SetSize(16, 16)
-                healerIcon:SetPoint("RIGHT", tankIcon, "LEFT", -1, 0)
+                healerIcon:SetPoint("RIGHT", tankIcon, "LEFT", 0, 0)
                 healerIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES")
                 healerIcon:SetTexCoord(20/64, 39/64, 1/64, 20/64) -- Healer cross
                 healerIcon:Hide()
                 line.lineHeader.healerIcon = healerIcon
+
+                -- Create player assignment spell icon (rightmost, right-anchored)
+                local playerSpellIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                playerSpellIcon:SetSize(18, 18)
+                playerSpellIcon:SetPoint("RIGHT", line.lineHeader, "RIGHT", -2, 0)
+                playerSpellIcon:Hide()
+                line.lineHeader.playerSpellIcon = playerSpellIcon
+
+                -- Create player name text (to the left of player spell icon)
+                local playerNameText = line.lineHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                playerNameText:SetPoint("RIGHT", playerSpellIcon, "LEFT", -4, 0)
+                playerNameText:SetJustifyH("RIGHT")
+                playerNameText:Hide()
+                line.lineHeader.playerNameText = playerNameText
+
+                -- Create custom header text (left-anchored, like the icons)
+                -- We don't use line.text because it's parented to the timeline body, not the header
+                local headerText = line.lineHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                headerText:SetPoint("LEFT", line.lineHeader, "LEFT", 4, 0)
+                headerText:SetJustifyH("LEFT")
+                headerText:SetWordWrap(false)
+                headerText:SetWidth(120) -- Default for boss abilities
+                line.lineHeader.headerText = headerText
             end
-            -- Constrain text width to prevent overflow (adjusted for right-side icons)
+            -- Hide the default line.text since it's parented to the timeline body and scrolls incorrectly
             if line.text then
-                line.text:SetWordWrap(false)
-                line.text:SetWidth(120) -- header_width (180) - icons on right (~60)
+                line.text:Hide()
             end
         end,
 
