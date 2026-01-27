@@ -678,8 +678,8 @@ function NSI:DisplayReminder(info)
                 if UnitIcon then UnitIcon:Show() end
             end
         end
-    end
-end
+    end  
+end 
 
 function NSI:UpdateReminderDisplay(info, F, skipsound)
     local rem = info.dur - (GetTime() - info.startTime)
@@ -765,6 +765,50 @@ function NSI:StartReminders(phase)
                     self:HideAllReminders()
                 end
             end)
+        end
+    end
+end
+
+function NSI:DelayAllReminders(delay)
+    if not self.ReminderTimer then return end
+    for i, v in ipairs(self.ReminderTimer) do
+        v:Cancel()
+    end
+    if not self.EncounterID then return end
+    if not self.ProcessedReminder[self.EncounterID] then return end
+    local phase = self.Phase or 1
+    if not self.ProcessedReminder[self.EncounterID][phase] then return end
+    local timediff = GetTime() - self.PhaseSwapTime -- time since phase change
+
+    local parents = {"ReminderText", "ReminderIcon", "ReminderBar", "UnitIcon"}
+    for _, parentname in ipairs(parents) do
+        if self[parentname] then
+            for i=1, #self[parentname] do
+                local F = self[parentname][i]
+                if F and F:IsShown() then
+                    if F.info and F.info.dur then 
+                        F.info.expires = F.info.expires + delay 
+                        F.info.startTime = F.info.startTime + delay
+                        self:UpdateReminderDisplay(F.info, F)
+                    end
+                end
+            end
+        end
+    end
+
+    for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
+        if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+            if info.time-info.dur > timediff then -- if time is 0 then this reminder has already started
+                local time = math.max(info.time-info.dur-timediff+delay, 0)
+                info.time = info.time + delay
+                self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                    if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
+                        self:DisplayReminder(info) 
+                    else
+                        self:HideAllReminders()
+                    end
+                end)
+            end
         end
     end
 end
