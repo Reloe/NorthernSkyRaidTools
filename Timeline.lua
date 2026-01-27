@@ -1073,13 +1073,16 @@ function NSI:CreateTimelineWindow()
             end
         end,
 
-        -- Called when a line is created - add tooltip to the header
-        on_create_line = function(line)
-            -- Set separator rows to black background immediately
+        -- Called when a line is refreshed with new data
+        on_refresh_line = function(line)
+            -- Set separator rows to black background
             if line.lineData and line.lineData.isSeparator then
                 line:SetBackdropColor(0, 0, 0, 1)
             end
+        end,
 
+        -- Called when a line is created - add tooltip to the header
+        on_create_line = function(line)
             if line.lineHeader then
                 line.lineHeader:EnableMouse(true)
                 line.lineHeader:SetScript("OnEnter", function(self)
