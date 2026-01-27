@@ -33,10 +33,10 @@ SlashCmdList["NSUI"] = function(msg)
             NSUI.personal_reminders_frame:Hide()
         end
     elseif msg == "note" or msg == "n" then -- Toggle Showing/Hiding ALL Notes
-        local ShouldHide = NSRT.ReminderSettings.ShowReminderFrame and NSRT.ReminderSettings.ShowPersonalReminderFrame and NSRT.ReminderSettings.ShowExtraReminderFrame
-        NSRT.ReminderSettings.ShowReminderFrame = not ShouldHide
-        NSRT.ReminderSettings.ShowPersonalReminderFrame = not ShouldHide
-        NSRT.ReminderSettings.ShowExtraReminderFrame = not ShouldHide
+        local ShouldShow = not (NSRT.ReminderSettings.ShowReminderFrame or NSRT.ReminderSettings.ShowPersonalReminderFrame or NSRT.ReminderSettings.ShowExtraReminderFrame)
+        NSRT.ReminderSettings.ShowReminderFrame = ShouldShow
+        NSRT.ReminderSettings.ShowPersonalReminderFrame = ShouldShow
+        NSRT.ReminderSettings.ShowExtraReminderFrame = ShouldShow
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(false, true)
     elseif msg == "anote" or msg == "an" or msg == "snote" or msg == "sn" then -- Toggle the "All Reminders Note"
