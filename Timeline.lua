@@ -1245,7 +1245,7 @@ function NSI:CreateTimelineWindow()
                 local gridLine = timelineFrame.gridLines[i]
                 if not gridLine then
                     gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
-                    gridLine:SetColorTexture(0.5, 0.5, 0.5, 1)
+                    gridLine:SetColorTexture(0.5, 0.5, 0.5, 0.5)
                     gridLine:SetWidth(1)
                     timelineFrame.gridLines[i] = gridLine
                 end
