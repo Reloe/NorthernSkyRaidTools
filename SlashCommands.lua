@@ -75,6 +75,8 @@ SlashCmdList["NSUI"] = function(msg)
         print("  |cFF00FFFF/ns pnote|r or |cFF00FFFF/ns pn|r - Toggle Personal Reminders note")
         print("  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle Text note")
         print("  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window")
+    elseif msg == "" then
+        NSI.NSUI:ToggleOptions()
     elseif msg then
         print("|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands.")
     else
