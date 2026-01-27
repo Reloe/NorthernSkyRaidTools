@@ -163,9 +163,11 @@ NSI.BossTimelineImportantTankCategories = {
 
 -- Boss display modes for timeline
 NSI.BossDisplayModes = {
-    ["SHOW_ALL"] = "all",           -- Show all abilities (default)
-    ["IMPORTANT_ONLY"] = "important", -- Show only important abilities
-    ["COMBINED"] = "combined",      -- Combine all into one row
+    ["SHOW_ALL"] = "all",
+    ["IMPORTANT_HEALER"] = "important_healer",
+    ["IMPORTANT_TANK"] = "important_tank",
+    ["COMBINED"] = "combined",
+    ["COMBINED_IMPORTANT"] = "combined_important",
 }
 
 -- Check if an ability is considered "important" for healers based on its category

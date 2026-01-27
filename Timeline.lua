@@ -138,12 +138,12 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
         return {}, 0
     end
 
-    -- Default to "all" if no mode specified (backwards compatible with old boolean param)
+    -- Default to "important_healer" if no mode specified (backwards compatible with old boolean param)
     if displayMode == nil or displayMode == false then
-        displayMode = self.BossDisplayModes.SHOW_ALL
+        displayMode = self.BossDisplayModes.IMPORTANT_HEALER
     elseif displayMode == true then
         -- Legacy: true meant filter important only
-        displayMode = self.BossDisplayModes.IMPORTANT_ONLY
+        displayMode = self.BossDisplayModes.IMPORTANT_HEALER
     end
 
     local abilities, duration, phases, difficulty = self:GetBossTimelineAbilities(encounterID, requestedDifficulty)
@@ -156,16 +156,22 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
     local filteredAbilities = {}
     for _, ability in ipairs(abilities) do
         local include = true
-        if displayMode == self.BossDisplayModes.IMPORTANT_ONLY then
+        if displayMode == self.BossDisplayModes.IMPORTANT_HEALER then
+            include = self:IsAbilityImportantForHealer(ability)
+        elseif displayMode == self.BossDisplayModes.IMPORTANT_TANK then
+            include = self:IsAbilityImportantForTank(ability)
+        elseif displayMode == self.BossDisplayModes.COMBINED_IMPORTANT then
             include = self:IsAbilityImportant(ability)
         end
+        -- SHOW_ALL and COMBINED include all abilities
         if include then
             table.insert(filteredAbilities, ability)
         end
     end
 
-    -- Handle combined mode - put all abilities on one row
-    if displayMode == self.BossDisplayModes.COMBINED then
+    -- Handle combined modes - put all abilities on one row
+    if displayMode == self.BossDisplayModes.COMBINED or
+       displayMode == self.BossDisplayModes.COMBINED_IMPORTANT then
         local combinedTimeline = {}
         local allTimes = {}
 
@@ -958,7 +964,7 @@ function NSI:CreateTimelineWindow()
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
-    timelineWindow.bossDisplayMode = NSI.BossDisplayModes.SHOW_ALL -- Default display mode
+    timelineWindow.bossDisplayMode = NSI.BossDisplayModes.IMPORTANT_HEALER -- Default display mode
 
     local options_switch_template = DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE")
 
@@ -987,16 +993,24 @@ function NSI:CreateTimelineWindow()
     local function BuildBossDisplayModeOptions()
         return {
             {
-                label = "Show All",
-                value = NSI.BossDisplayModes.SHOW_ALL,
+                label = "Important Healer",
+                value = NSI.BossDisplayModes.IMPORTANT_HEALER,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
                     NSI:RefreshTimelineForMode()
                 end
             },
             {
-                label = "Important Only",
-                value = NSI.BossDisplayModes.IMPORTANT_ONLY,
+                label = "Important Tank",
+                value = NSI.BossDisplayModes.IMPORTANT_TANK,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
+            {
+                label = "Show All",
+                value = NSI.BossDisplayModes.SHOW_ALL,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
                     NSI:RefreshTimelineForMode()
@@ -1010,10 +1024,18 @@ function NSI:CreateTimelineWindow()
                     NSI:RefreshTimelineForMode()
                 end
             },
+            {
+                label = "Combined Important",
+                value = NSI.BossDisplayModes.COMBINED_IMPORTANT,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
         }
     end
 
-    local bossDisplayDropdown = DF:CreateDropDown(timelineWindow, BuildBossDisplayModeOptions, NSI.BossDisplayModes.SHOW_ALL, 130)
+    local bossDisplayDropdown = DF:CreateDropDown(timelineWindow, BuildBossDisplayModeOptions, NSI.BossDisplayModes.IMPORTANT_HEALER, 150)
     bossDisplayDropdown:SetTemplate(options_dropdown_template)
     bossDisplayDropdown:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     timelineWindow.bossDisplayDropdown = bossDisplayDropdown
@@ -1190,7 +1212,21 @@ function NSI:CreateTimelineWindow()
             if not block or not data then return end
 
             local payload = data.payload
-            if not payload or not payload.isBossAbility then return end
+
+            -- Hide category borders if this is not a boss ability (blocks are reused)
+            if not payload or not payload.isBossAbility then
+                if block.categoryBorderTop then
+                    block.categoryBorderTop:Hide()
+                    block.categoryBorderBottom:Hide()
+                    block.categoryBorderLeft:Hide()
+                    block.categoryBorderRight:Hide()
+                end
+                -- Reset icon size to default
+                if block.icon then
+                    block.icon:SetSize(20, 20)
+                end
+                return
+            end
 
             -- Get category color from BossTimelineColors
             local category = payload.category
@@ -1326,7 +1362,7 @@ function NSI:CreateTimelineWindow()
                 local gridLine = timelineFrame.gridLines[i]
                 if not gridLine then
                     gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
-                    gridLine:SetColorTexture(0.5, 0.5, 0.5, 0.5)
+                    gridLine:SetColorTexture(1, 1, 1, 0.3)
                     gridLine:SetWidth(1)
                     timelineFrame.gridLines[i] = gridLine
                 end
@@ -1775,7 +1811,7 @@ function NSI:UpdatePhaseMarkers()
             if not marker then
                 -- Create new marker
                 marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
-                marker:SetSize(4, body:GetHeight() - elapsedHeight)
+                marker:SetSize(2, body:GetHeight() - elapsedHeight)
                 marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
 
                 -- Make it draggable
@@ -1846,7 +1882,7 @@ function NSI:UpdatePhaseMarkers()
 
             -- Set color from phase data (default to red for visibility)
             local color = phaseData.color or {0.8, 0.2, 0.2}
-            marker:SetBackdropColor(color[1], color[2], color[3], 0.8)
+            marker:SetBackdropColor(color[1], color[2], color[3], 0.5)
 
             marker:ClearAllPoints()
             marker:SetPoint("TOPLEFT", body, "TOPLEFT", xPos, -elapsedHeight)
@@ -2066,7 +2102,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
             local marker = tab.phaseMarkers[phaseNum]
             if not marker then
                 marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
-                marker:SetSize(4, body:GetHeight() - elapsedHeight)
+                marker:SetSize(2, body:GetHeight() - elapsedHeight)
                 marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
 
                 marker:EnableMouse(true)
@@ -2129,7 +2165,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
             local xPos = phaseStart * pixelsPerSecond
 
             local color = phaseData.color or {0.8, 0.2, 0.2}
-            marker:SetBackdropColor(color[1], color[2], color[3], 0.8)
+            marker:SetBackdropColor(color[1], color[2], color[3], 0.5)
 
             marker:ClearAllPoints()
             marker:SetPoint("TOPLEFT", body, "TOPLEFT", xPos, -elapsedHeight)
