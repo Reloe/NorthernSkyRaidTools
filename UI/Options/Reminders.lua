@@ -187,7 +187,7 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.TextSettings.FontSize = value
                 NSI:UpdateExistingFrames()
             end,
-            min = 20,
+            min = 5,
             max = 200,
             nocombat = true,
         },
@@ -278,7 +278,7 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.IconSettings.FontSize = value
                 NSI:UpdateExistingFrames()
             end,
-            min = 20,
+            min = 5,
             max = 200,
             nocombat = true,
         },
@@ -291,7 +291,7 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.IconSettings.TimerFontSize = value
                 NSI:UpdateExistingFrames()
             end,
-            min = 20,
+            min = 5,
             max = 200,
             nocombat = true,
         },
@@ -318,7 +318,7 @@ local function BuildReminderOptions()
                 NSI:UpdateExistingFrames()
             end,
             min = 0,
-            max = 10,
+            max = 30,
             nocombat = true,
         },
 
@@ -386,7 +386,7 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.BarSettings.FontSize = value
                 NSI:UpdateExistingFrames()
             end,
-            min = 15,
+            min = 5,
             max = 200,
             nocombat = true,
         },
@@ -399,7 +399,7 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.BarSettings.TimerFontSize = value
                 NSI:UpdateExistingFrames()
             end,
-            min = 15,
+            min = 5,
             max = 200,
             nocombat = true,
         },
