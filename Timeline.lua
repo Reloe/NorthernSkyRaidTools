@@ -1552,6 +1552,41 @@ function NSI:RefreshTimelineForMode()
     end
 end
 
+-- Auto-fit timeline scale to show full duration (up to 600 seconds max)
+function NSI:AutoFitTimelineScale(timeline, dataLength)
+    if not timeline then return end
+
+    local maxVisibleDuration = 600  -- 10 minutes max
+    local targetDuration = math.min(dataLength or 300, maxVisibleDuration)
+
+    local visibleWidth = timeline:GetWidth() or 880
+    local pixelsPerSecond = timeline.options.pixels_per_second or 15
+    local scaleMax = timeline.options.scale_max or 2.0
+
+    -- Calculate scale needed to fit target duration in visible width
+    local requiredScale = visibleWidth / (targetDuration * pixelsPerSecond)
+
+    -- Dynamic scale_min: the scale needed to show the boss duration (or 600s max)
+    local dynamicScaleMin = requiredScale
+
+    -- Clamp to valid range
+    requiredScale = math.max(dynamicScaleMin, math.min(scaleMax, requiredScale))
+
+    -- Update the slider's min value so user can't zoom out further than needed
+    if timeline.scaleSlider then
+        timeline.scaleSlider:SetMinMaxValues(dynamicScaleMin, scaleMax)
+        timeline.scaleSlider:SetValue(requiredScale)
+    end
+
+    -- Set the scale
+    timeline.currentScale = requiredScale
+
+    -- Reset horizontal scroll to start
+    if timeline.horizontalSlider then
+        timeline.horizontalSlider:SetValue(0)
+    end
+end
+
 -- Refresh timeline with player's own processed reminders (My Reminders mode)
 function NSI:RefreshMyRemindersTimeline()
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
@@ -1564,6 +1599,7 @@ function NSI:RefreshMyRemindersTimeline()
         self.TimelineWindow.noDataLabel:Hide()
         self.TimelineWindow.timeline:Show()
         self.TimelineWindow.timeline:SetData(data)
+        self:AutoFitTimelineScale(self.TimelineWindow.timeline, data.length)
         self.TimelineWindow.currentEncounterID = encID
         self.TimelineWindow.currentPhases = phases
         self.TimelineWindow.currentDifficulty = difficulty
@@ -1607,6 +1643,7 @@ function NSI:RefreshMyRemindersTimeline()
                     self.TimelineWindow.noDataLabel:Hide()
                     self.TimelineWindow.timeline:Show()
                     self.TimelineWindow.timeline:SetData(bossData)
+                    self:AutoFitTimelineScale(self.TimelineWindow.timeline, bossData.length)
                     self.TimelineWindow.currentEncounterID = bossEncID
                     self.TimelineWindow.currentPhases = bossPhases
                     self.TimelineWindow.currentDifficulty = bossDifficulty
@@ -1645,6 +1682,7 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
         self.TimelineWindow.noDataLabel:Hide()
         self.TimelineWindow.timeline:Show()
         self.TimelineWindow.timeline:SetData(data)
+        self:AutoFitTimelineScale(self.TimelineWindow.timeline, data.length)
         self.TimelineWindow.currentEncounterID = encID
         self.TimelineWindow.currentPhases = phases
         self.TimelineWindow.currentDifficulty = difficulty
@@ -1866,6 +1904,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
         tab.noDataLabel:Hide()
         tab.timeline:Show()
         tab.timeline:SetData(data)
+        self:AutoFitTimelineScale(tab.timeline, data.length)
         tab.currentEncounterID = encID
         tab.currentPhases = phases
         tab.currentDifficulty = difficulty
@@ -1909,6 +1948,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
                     tab.noDataLabel:Hide()
                     tab.timeline:Show()
                     tab.timeline:SetData(bossData)
+                    self:AutoFitTimelineScale(tab.timeline, bossData.length)
                     tab.currentEncounterID = bossEncID
                     tab.currentPhases = bossPhases
                     tab.currentDifficulty = bossDifficulty
@@ -1947,6 +1987,7 @@ function NSI:RefreshEmbeddedAllReminders(tab, reminderName, personal)
         tab.noDataLabel:Hide()
         tab.timeline:Show()
         tab.timeline:SetData(data)
+        self:AutoFitTimelineScale(tab.timeline, data.length)
         tab.currentEncounterID = encID
         tab.currentPhases = phases
         tab.currentDifficulty = difficulty
