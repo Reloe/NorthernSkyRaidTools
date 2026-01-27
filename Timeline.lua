@@ -358,6 +358,17 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
             -- Use settings default if dur not set in reminder
             local dur = reminder.dur or (spellID and NSRT.ReminderSettings.SpellDuration or NSRT.ReminderSettings.TextDuration)
             local text = reminder.text or reminder.rawtext
+            local glowUnit = reminder.glowunit
+            local glowUnitNames = ""
+            if glowUnit and #glowUnit > 0 then
+                for i, name in ipairs(glowUnit) do
+                    glowUnitNames = glowUnitNames ..
+                        NSAPI:Shorten(NSAPI:GetChar(name), 12, false, "GlobalNickNames") .. " "
+                end
+            else 
+                glowUnitNames = nil
+            end
+
 
             if time then
                 -- Convert phase-relative time to absolute time
@@ -387,6 +398,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                     dur = dur,
                     phase = phase,
                     text = text,
+                    glowUnit = glowUnitNames,
                 })
             end
         end
@@ -433,7 +445,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                 true,
                 entry.dur,
                 spellID,
-                payload = {phase = entry.phase, text = entry.text},
+                payload = { phase = entry.phase, text = entry.text, glowUnit = entry.glowUnit },
             })
         end
 
@@ -536,6 +548,20 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
         local dur = line:match("dur:(%d+)")
         local text = line:match("text:([^;]+)")
         local phase = line:match("ph:(%d+)") or "1"
+        local glowUnit = line:match("glowunit:([^;]+)")
+
+        local glowUnitNames = ""
+        if glowUnit then
+            for name in glowUnit:gmatch("([^%s:]+)") do
+                if name ~= "glowunit" then
+                    glowUnitNames = glowUnitNames .. NSAPI:Shorten(NSAPI:GetChar(name), 12, false, "GlobalNickNames") .. " "
+                end
+            end
+        else 
+            glowUnitNames = nil
+        end
+
+        print(glowUnitNames)
 
         if tag and time then
             time = tonumber(time)
@@ -588,6 +614,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                         dur = dur,
                         phase = phase,
                         text = text, -- store text per entry for tooltips
+                        glowUnit = glowUnitNames,
                     })
                 end
             end
@@ -668,7 +695,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                     true,           -- [3] isAura (shows duration bar)
                     entry.dur,      -- [4] auraDuration
                     spellID,        -- [5] blockSpellId
-                    payload = {phase = entry.phase, text = entry.text}, -- use entry-specific text
+                    payload = {phase = entry.phase, text = entry.text, glowUnit = entry.glowUnit}, -- use entry-specific text
                 })
             end
 
@@ -1107,6 +1134,9 @@ function NSI:CreateTimelineWindow()
                     if payload.text then
                         GameTooltip:AddLine("Text: " .. payload.text, 0.5, 0.8, 0.5)
                     end
+                    if payload.glowUnit then
+                        GameTooltip:AddLine("Glow Unit: " .. payload.glowUnit, 1, 1, 0)
+                    end
                 end
                 GameTooltip:Show()
             end
@@ -1298,17 +1328,17 @@ function NSI:CreateTimelineWindow()
 
             -- Update horizontal slider width (position slider)
             if timelineFrame.horizontalSlider then
-                timelineFrame.horizontalSlider:SetWidth(newTimelineWidth)
+                timelineFrame.horizontalSlider:SetWidth(newTimelineWidth + 20)
             end
 
             -- Update scale slider width (stacked below horizontal slider)
             if timelineFrame.scaleSlider then
-                timelineFrame.scaleSlider:SetWidth(newTimelineWidth)
+                timelineFrame.scaleSlider:SetWidth(newTimelineWidth + 20)
             end
 
             -- Update vertical slider height
             if timelineFrame.verticalSlider then
-                timelineFrame.verticalSlider:SetHeight(newTimelineHeight - 40) -- Account for elapsed time header and bottom sliders
+                timelineFrame.verticalSlider:SetHeight(newTimelineHeight) -- Account for elapsed time header and bottom sliders
             end
         end
 

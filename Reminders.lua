@@ -301,6 +301,9 @@ function NSI:ProcessReminder()
         extranote = extranote:gsub("^%s*\n+", "")
         self.DisplayedExtraReminder = extranote
     end
+    if self.TimelineWindow and self.TimelineWindow:IsShown() then
+        self:RefreshTimelineForMode()
+    end
 end
 
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
