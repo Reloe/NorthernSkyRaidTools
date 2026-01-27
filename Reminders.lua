@@ -86,6 +86,14 @@ function NSI:AddToReminder(info)
         end
         info.glowunit = glowtable
     end
+    if info.colors then
+        local colors = {}
+        for color in info.colors:gmatch("([^%s:]+)") do
+            table.insert(colors, tonumber(color))
+        end
+        info.colors = colors
+    end
+
     self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}    
     table.insert(self.ProcessedReminder[info.encID][info.phase], 
     {
@@ -106,6 +114,7 @@ function NSI:AddToReminder(info)
         spellID = info.spellID and tonumber(info.spellID), 
         dur = info.dur or 8,
         skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
+        IsAlert = info.IsAlert,
     })      
 end
 
@@ -168,6 +177,7 @@ function NSI:ProcessReminder()
             local sound = line:match("sound:([^;]+)")
             local glowunit = line:match("glowunit:([^;]+)")
             local bossSpellID = line:match("bossSpell:(%d+)")
+            local colors = line:match("colors:([^;]+)")
             if time and tag and (text or spellID) and encID and encID ~= 0 and not firstline then
                 local displayLine = line
                 phase = phase and tonumber(phase) or 1 
@@ -219,6 +229,9 @@ function NSI:ProcessReminder()
                     end
                     if dur then
                         displayLine = displayLine:gsub("dur:"..dur, "")
+                    end
+                    if colors then
+                        displayLine = displayLine:gsub("colors:"..colors, "")
                     end
                     -- convert names to nicknames and color code them
                     local tagNames = ""
@@ -428,8 +441,12 @@ function NSI:SetProperties(F, info, skipsound, s)
                 F.TimerText:SetTextColor(1, 1, 0, 1)
             end
         end
-    elseif F.TimerText then
-        F.TimerText:SetTextColor(1, 1, 1, 1)
+        F.Text:SetTextColor(unpack(info.colors or s.colors))
+    else
+        F:SetStatusBarColor(unpack(info.colors or s.colors))
+        if F.TimerText then
+            F.TimerText:SetTextColor(1, 1, 1, 1)
+        end
     end
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
@@ -497,7 +514,7 @@ function NSI:CreateIcon(info)
             self.ReminderIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderIcon[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderIcon[i].Text:SetShadowOffset(0, 0)
-            self.ReminderIcon[i].Text:SetTextColor(1, 1, 1, 1)
+            self.ReminderIcon[i].Text:SetTextColor(unpack(info.colors or s.colors))
             self.ReminderIcon[i].Swipe = CreateFrame("Cooldown", nil, self.ReminderIcon[i], "CooldownFrameTemplate")
             self.ReminderIcon[i].Swipe:SetAllPoints()
             self.ReminderIcon[i].Swipe:SetDrawBling(false)
@@ -725,22 +742,23 @@ function NSI:PlayReminderSound(info, default)
 end
 
 function NSI:StartReminders(phase)
-    if NSRT.ReminderSettings.UseTimelineReminders then return end
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}    
     if not self.EncounterID then return end
     if not self.ProcessedReminder[self.EncounterID] then return end
     if not self.ProcessedReminder[self.EncounterID][phase] then return end
-    for i, v in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
-        local time = math.max(v.time-v.dur, 0)
-        self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-            if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
-                self:DisplayReminder(v) 
-            else
-                self:HideAllReminders()
-            end
-        end)
+    for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
+        if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+            local time = math.max(info.time-info.dur, 0)
+            self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
+                    self:DisplayReminder(info) 
+                else
+                    self:HideAllReminders()
+                end
+            end)
+        end
     end
 end
 
@@ -1112,6 +1130,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
+        IsAlert = true, -- this makes this still display when user is using TimelineReminders since that setting is only for actual reminders, not alerts.
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
