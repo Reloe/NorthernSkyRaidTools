@@ -86,6 +86,14 @@ function NSI:AddToReminder(info)
         end
         info.glowunit = glowtable
     end
+    if info.colors then
+        local colors = {}
+        for color in info.colors:gmatch("([^%s:]+)") do
+            table.insert(colors, tonumber(color))
+        end
+        info.colors = colors
+    end
+
     self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}    
     table.insert(self.ProcessedReminder[info.encID][info.phase], 
     {
@@ -106,6 +114,7 @@ function NSI:AddToReminder(info)
         spellID = info.spellID and tonumber(info.spellID), 
         dur = info.dur or 8,
         skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
+        IsAlert = info.IsAlert,
     })      
 end
 
@@ -168,6 +177,7 @@ function NSI:ProcessReminder()
             local sound = line:match("sound:([^;]+)")
             local glowunit = line:match("glowunit:([^;]+)")
             local bossSpellID = line:match("bossSpell:(%d+)")
+            local colors = line:match("colors:([^;]+)")
             if time and tag and (text or spellID) and encID and encID ~= 0 and not firstline then
                 local displayLine = line
                 phase = phase and tonumber(phase) or 1 
@@ -220,10 +230,13 @@ function NSI:ProcessReminder()
                     if dur then
                         displayLine = displayLine:gsub("dur:"..dur, "")
                     end
+                    if colors then
+                        displayLine = displayLine:gsub("colors:"..colors, "")
+                    end
                     -- convert names to nicknames and color code them
                     local tagNames = ""
                     for name in tag:gmatch("(%S+)") do
-                        tagNames = tagNames..NSAPI:Shorten(strtrim(name), 12, false, "GlobalNickNames").." "
+                        tagNames = tagNames..NSAPI:Shorten(NSAPI:GetChar(strtrim(name)), 12, false, "GlobalNickNames").." "
                     end
                     tagNames = strtrim(tagNames)
                     displayLine = displayLine:gsub("tag:([^;]+)", tagNames.." ")
@@ -255,7 +268,7 @@ function NSI:ProcessReminder()
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})   
                             end
                         end
-                        self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
+                        self:AddToReminder({text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
                     end
                 end
             else
@@ -300,6 +313,9 @@ function NSI:ProcessReminder()
         end
         extranote = extranote:gsub("^%s*\n+", "")
         self.DisplayedExtraReminder = extranote
+    end
+    if self.TimelineWindow and self.TimelineWindow:IsShown() then
+        self:RefreshTimelineForMode()
     end
 end
 
@@ -398,11 +414,14 @@ end
 
 function NSI:SetProperties(F, info, skipsound, s)
     F:SetScript("OnUpdate", function()
-        NSI:UpdateReminderDisplay(info, F, skipsound)
+        self:UpdateReminderDisplay(info, F, skipsound)
     end)
     F:SetScript("OnHide", function()        
         if info.glowunit then
-            NSI:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
+            self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
+        end
+        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 then
+            self:HideGlows(nil, nil, F)
         end
         NSI:ArrangeStates(F.Type)
     end)    
@@ -425,8 +444,12 @@ function NSI:SetProperties(F, info, skipsound, s)
                 F.TimerText:SetTextColor(1, 1, 0, 1)
             end
         end
-    elseif F.TimerText then
-        F.TimerText:SetTextColor(1, 1, 1, 1)
+        F.Text:SetTextColor(unpack(info.colors or s.colors))
+    else
+        F:SetStatusBarColor(unpack(info.colors or s.colors))
+        if F.TimerText then
+            F.TimerText:SetTextColor(1, 1, 1, 1)
+        end
     end
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     F:SetScript("OnEvent", function(self, e, ...)
@@ -494,7 +517,7 @@ function NSI:CreateIcon(info)
             self.ReminderIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderIcon[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderIcon[i].Text:SetShadowOffset(0, 0)
-            self.ReminderIcon[i].Text:SetTextColor(1, 1, 1, 1)
+            self.ReminderIcon[i].Text:SetTextColor(unpack(info.colors or s.colors))
             self.ReminderIcon[i].Swipe = CreateFrame("Cooldown", nil, self.ReminderIcon[i], "CooldownFrameTemplate")
             self.ReminderIcon[i].Swipe:SetAllPoints()
             self.ReminderIcon[i].Swipe:SetDrawBling(false)
@@ -693,6 +716,10 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
             if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
             end
+            if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["ph"..info.phase.."id"..info.id] then
+                self.GlowStarted["ph"..info.phase.."id"..info.id] = true
+                self:GlowFrame(nil, nil, F)
+            end
         end
         if F.TimerText then F.TimerText:SetText(remString) end
     else
@@ -722,28 +749,30 @@ function NSI:PlayReminderSound(info, default)
 end
 
 function NSI:StartReminders(phase)
-    if NSRT.ReminderSettings.UseTimelineReminders then return end
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}    
     if not self.EncounterID then return end
     if not self.ProcessedReminder[self.EncounterID] then return end
     if not self.ProcessedReminder[self.EncounterID][phase] then return end
-    for i, v in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
-        local time = math.max(v.time-v.dur, 0)
-        self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-            if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
-                self:DisplayReminder(v) 
-            else
-                self:HideAllReminders()
-            end
-        end)
+    for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
+        if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+            local time = math.max(info.time-info.dur, 0)
+            self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
+                    self:DisplayReminder(info) 
+                else
+                    self:HideAllReminders()
+                end
+            end)
+        end
     end
 end
 
 function NSI:HideAllReminders()
     self.PlayedSound = {}
     self.StartedCountdown = {}
+    self.GlowStarted = {}
     if self.ReminderTimer then
         for i, v in ipairs(self.ReminderTimer) do
             v:Cancel()
@@ -908,7 +937,12 @@ function NSI:InviteListFromReminder(str)
     return found and list or false
 end
 
-function NSI:GlowFrame(unit, id)
+function NSI:GlowFrame(unit, id, F)
+    if F then
+        local s = NSRT.ReminderSettings.GlowSettings
+        self.LCG.ButtonGlow_Start(F)
+        return
+    end
     local color = {0, 1, 0, 1}
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
@@ -923,7 +957,11 @@ function NSI:GlowFrame(unit, id)
     self.LCG.PixelGlow_Start(F, s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id)
 end
 
-function NSI:HideGlows(units, id)    
+function NSI:HideGlows(units, id, F)
+    if F then
+        self.LCG.ButtonGlow_Stop(F) 
+        return
+    end    
     if not units then return end
     for i, unit in ipairs(units) do
         unit = NSAPI:GetChar(unit, true)
@@ -1109,6 +1147,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
+        IsAlert = true, -- this makes this still display when user is using TimelineReminders since that setting is only for actual reminders, not alerts.
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
@@ -1228,8 +1267,9 @@ function NSI:UpdateReminderFrame(personal, all, extra)
     end
     if personal or all then 
         self.PersonalReminderFrame:SetAllPoints(self.PersonalReminderFrameMover)
-        self.PersonalReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.PersonalReminderFrame.Font), NSRT.ReminderSettings.PersonalReminderFrame.FontSize, "OUTLINE")   
-        self.PersonalReminderFrame.Text:SetText(self.DisplayedPersonalReminder)
+        self.PersonalReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.PersonalReminderFrame.Font), NSRT.ReminderSettings.PersonalReminderFrame.FontSize, "OUTLINE") 
+        local text = NSRT.ReminderSettings.TextInPersonalNote and self.DisplayedPersonalReminder..self.DisplayedExtraReminder or self.DisplayedPersonalReminder
+        self.PersonalReminderFrame.Text:SetText(text)
         self.PersonalReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.PersonalReminderFrame.BGcolor))
         if NSRT.ReminderSettings.ShowPersonalReminderFrame then       
             self.PersonalReminderFrame:Show()
@@ -1240,7 +1280,8 @@ function NSI:UpdateReminderFrame(personal, all, extra)
     if all or ((not personal) and not extra) then    
         self.ReminderFrame:SetAllPoints(self.ReminderFrameMover)
         self.ReminderFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.ReminderSettings.ReminderFrame.Font), NSRT.ReminderSettings.ReminderFrame.FontSize, "OUTLINE")   
-        self.ReminderFrame.Text:SetText(self.DisplayedReminder)
+        local text = NSRT.ReminderSettings.TextInSharedNote and self.DisplayedReminder..self.DisplayedExtraReminder or self.DisplayedReminder
+        self.ReminderFrame.Text:SetText(text)
         self.ReminderFrameMover.Border:SetBackdropColor(unpack(NSRT.ReminderSettings.ReminderFrame.BGcolor))
         if NSRT.ReminderSettings.ShowReminderFrame then  
             self.ReminderFrame:Show()

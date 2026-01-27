@@ -222,8 +222,7 @@ function NSI:UnitAura(unit, spell) -- simplify aura checking for myself
         end
     end
 end
-NSI   = NSI   or {}
-NSAPI = NSAPI or {}
+
 NSI.Callbacks = NSI.Callbacks or LibStub("CallbackHandler-1.0"):New(NSI)
 
 function NSI:FireCallback(event, ...)

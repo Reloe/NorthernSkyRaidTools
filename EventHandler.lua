@@ -25,6 +25,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if name == "NorthernSkyRaidTools" then
             if not NSRT then NSRT = {} end
             if not NSRT.NSUI then NSRT.NSUI = {scale = 1} end
+            if not NSRT.NSUI.timeline_window then NSRT.NSUI.timeline_window = { scale = 1 } end
             -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
             -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
             if not NSRT.NickNames then NSRT.NickNames = {} end
@@ -68,8 +69,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.ExtraReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end
             if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
-                NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80, Spacing = -1}
+                NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", colors = {1, 1, 1, 1}, xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80, Spacing = -1}
             end
+            if not NSRT.ReminderSettings.IconSettings.colors then NSRT.ReminderSettings.IconSettings.colors = {1, 1, 1, 1} end
+            if not NSRT.ReminderSettings.IconSettings.Glow then NSRT.ReminderSettings.IconSettings.Glow = 0 end
             if (not NSRT.ReminderSettings.BarSettings) or (not NSRT.ReminderSettings.BarSettings.GrowDirection) then
                 NSRT.ReminderSettings.BarSettings = {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", Width = 300, Height = 40, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = -400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "Expressway", FontSize = 22, TimerFontSize = 22, Spacing = -1}
             end
@@ -86,12 +89,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.PASettings then
                 NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
             end
+            NSRT.PASettings.Spacing = NSRT.PASettings.Spacing or -1
+            NSRT.PASettings.Limit = NSRT.PASettings.Limit or 5
             if not NSRT.PATankSettings then
                 NSRT.PATankSettings = {Spacing = -1, Limit = 5, MultiTankGrowDirection = "UP", GrowDirection = "LEFT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -549, yOffset = -199}
             end
+            NSRT.PATankSettings.Spacing = NSRT.PATankSettings.Spacing or -1
+            NSRT.PATankSettings.Limit = NSRT.PATankSettings.Limit or 5
             if not NSRT.PARaidSettings then
                 NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
             end
+            NSRT.PARaidSettings.Spacing = NSRT.PARaidSettings.Spacing or -1
+            NSRT.PARaidSettings.Limit = NSRT.PARaidSettings.Limit or 5
             if not NSRT.PASounds then NSRT.PASounds = {} end
             NSRT.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
@@ -129,6 +138,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.PlayedSound = {}
             self.StartedCountdown = {}
+            self.GlowStarted = {}
             self:CreateMoveFrames()
             self:InitNickNames()         
         end
@@ -214,6 +224,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.AllGlows = self.AllGlows or {}
         self.PlayedSound = {}
         self.StartedCountdown = {}   
+        self.GlowStarted = {}
         self.Timelines = {}
         self.DefaultAlertID = 10000
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
