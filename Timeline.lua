@@ -293,6 +293,21 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
             math.floor(color[3] * 255),
             abilityData.name)
 
+        -- Add healer/tank role icons if ability is important for that role
+        local roleIcons = ""
+        local abilityForCheck = {category = abilityData.category}
+        if self:IsAbilityImportantForHealer(abilityForCheck) then
+            -- Healer icon from LFG role texture (green cross)
+            roleIcons = roleIcons .. "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:20:20:0:0:64:64:20:39:1:20|t"
+        end
+        if self:IsAbilityImportantForTank(abilityForCheck) then
+            -- Tank icon from LFG role texture (shield)
+            roleIcons = roleIcons .. "|TInterface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES:20:20:0:0:64:64:0:19:22:41|t"
+        end
+        if roleIcons ~= "" then
+            coloredName = roleIcons .. " " .. coloredName
+        end
+
         table.insert(lines, {
             spellId = abilityData.spellID,
             icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
@@ -1021,7 +1036,7 @@ function NSI:CreateTimelineWindow()
         height = window_height - 130,
         header_width = header_width,
         header_detached = true,
-        line_height = 22,
+        line_height = 20,
         line_padding = 1,
         pixels_per_second = 15,
         scale_min = 0.1,
