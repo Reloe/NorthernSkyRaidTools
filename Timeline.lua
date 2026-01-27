@@ -561,8 +561,6 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
             glowUnitNames = nil
         end
 
-        print(glowUnitNames)
-
         if tag and time then
             time = tonumber(time)
             phase = tonumber(phase)
