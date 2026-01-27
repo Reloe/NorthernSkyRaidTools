@@ -1013,14 +1013,14 @@ function NSI:CreateTimelineWindow()
         }
     end
 
-    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
-    bossDisplayLabel:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
-    timelineWindow.bossDisplayLabel = bossDisplayLabel
-
     local bossDisplayDropdown = DF:CreateDropDown(timelineWindow, BuildBossDisplayModeOptions, NSI.BossDisplayModes.SHOW_ALL, 130)
     bossDisplayDropdown:SetTemplate(options_dropdown_template)
-    bossDisplayDropdown:SetPoint("RIGHT", bossDisplayLabel, "LEFT", -5, 0)
+    bossDisplayDropdown:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     timelineWindow.bossDisplayDropdown = bossDisplayDropdown
+
+    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
+    bossDisplayLabel:SetPoint("RIGHT", bossDisplayDropdown, "LEFT", -5, 0)
+    timelineWindow.bossDisplayLabel = bossDisplayLabel
 
     -- No data label (shown when no reminders)
     local noDataLabel = DF:CreateLabel(timelineWindow, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
