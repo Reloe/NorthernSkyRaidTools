@@ -5,7 +5,7 @@ local _, NSI = ... -- Internal namespace
 -- Phoenix fight with ~110s cycles, intermissions at Death Drop
 --------------------------------------------------------------------------------
 
-local     abilities = {
+local abilities = {
         {name = "Voidlight Convergence", spellID = 1242515, category = "raid damage", phase = 1, times = {1}, duration = 6},
         {name = "Holy Burn", spellID = 1244348, category = "debuffs, healing absorb", phase = 1, times = {27}, duration = 0},
         {name = "Light Quill", spellID = 1241992, category = "debuffs", phase = 1, times = {21}, duration = 6},
@@ -65,7 +65,7 @@ local     abilities = {
         {name = "Guardian's Edict", spellID = 1260826, category = "tankbuster, frontal", phase = 5, times = {88}, duration = 0},
         {name = "Death Drop", spellID = 1246709, category = "raid damage, knock, movement", phase = 5, times = {6}, duration = 0},
         {name = "Death Drop", spellID = 1246709, category = "movement", phase = 5, times = {0}, duration = 6},
-    },
+}
 
 local phases = {
         [1] = {start = 0},
