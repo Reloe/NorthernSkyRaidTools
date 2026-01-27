@@ -308,6 +308,19 @@ local function BuildReminderOptions()
             max = 20,
             nocombat = true,
         },
+        {
+            type = "range",
+            name = "Icon-Glow",
+            desc = "At how many seconds you want the Icon to start glowing. 0 = disabled",
+            get = function() return NSRT.ReminderSettings.IconSettings["Glow"] or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings["Glow"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 0,
+            max = 10,
+            nocombat = true,
+        },
 
         {
             type = "label",
@@ -547,6 +560,7 @@ local function BuildReminderOptions()
                 local MyFrame = NSI.LGF.GetUnitFrame("player")
                 NSI.PlayedSound = {}
                 NSI.StartedCountdown = {}
+                NSI.GlowStarted = {}
                 local info1 = {
                     text = "Personals",
                     phase = 1,

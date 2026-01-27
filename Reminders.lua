@@ -236,7 +236,7 @@ function NSI:ProcessReminder()
                     -- convert names to nicknames and color code them
                     local tagNames = ""
                     for name in tag:gmatch("(%S+)") do
-                        tagNames = tagNames..NSAPI:Shorten(strtrim(name), 12, false, "GlobalNickNames").." "
+                        tagNames = tagNames..NSAPI:Shorten(NSAPI:GetChar(strtrim(name)), 12, false, "GlobalNickNames").." "
                     end
                     tagNames = strtrim(tagNames)
                     displayLine = displayLine:gsub("tag:([^;]+)", tagNames.." ")
@@ -268,7 +268,7 @@ function NSI:ProcessReminder()
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})   
                             end
                         end
-                        self:AddToReminder({text = text, phase = phase, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
+                        self:AddToReminder({text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
                     end
                 end
             else
@@ -414,11 +414,14 @@ end
 
 function NSI:SetProperties(F, info, skipsound, s)
     F:SetScript("OnUpdate", function()
-        NSI:UpdateReminderDisplay(info, F, skipsound)
+        self:UpdateReminderDisplay(info, F, skipsound)
     end)
     F:SetScript("OnHide", function()        
         if info.glowunit then
-            NSI:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
+            self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
+        end
+        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 then
+            self:HideGlows(nil, nil, F)
         end
         NSI:ArrangeStates(F.Type)
     end)    
@@ -713,6 +716,10 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
             if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
             end
+            if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["ph"..info.phase.."id"..info.id] then
+                self.GlowStarted["ph"..info.phase.."id"..info.id] = true
+                self:GlowFrame(nil, nil, F)
+            end
         end
         if F.TimerText then F.TimerText:SetText(remString) end
     else
@@ -765,6 +772,7 @@ end
 function NSI:HideAllReminders()
     self.PlayedSound = {}
     self.StartedCountdown = {}
+    self.GlowStarted = {}
     if self.ReminderTimer then
         for i, v in ipairs(self.ReminderTimer) do
             v:Cancel()
@@ -929,7 +937,12 @@ function NSI:InviteListFromReminder(str)
     return found and list or false
 end
 
-function NSI:GlowFrame(unit, id)
+function NSI:GlowFrame(unit, id, F)
+    if F then
+        local s = NSRT.ReminderSettings.GlowSettings
+        self.LCG.ButtonGlow_Start(F)
+        return
+    end
     local color = {0, 1, 0, 1}
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
@@ -944,7 +957,11 @@ function NSI:GlowFrame(unit, id)
     self.LCG.PixelGlow_Start(F, s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id)
 end
 
-function NSI:HideGlows(units, id)    
+function NSI:HideGlows(units, id, F)
+    if F then
+        self.LCG.ButtonGlow_Stop(F) 
+        return
+    end    
     if not units then return end
     for i, unit in ipairs(units) do
         unit = NSAPI:GetChar(unit, true)
