@@ -1052,9 +1052,18 @@ function NSI:CreateTimelineWindow()
 
         -- Line hover callback
         on_enter = function(line)
+            -- Separator rows stay black, don't highlight
+            if line.lineData and line.lineData.isSeparator then
+                return
+            end
             line:SetBackdropColor(unpack(line.backdrop_color_highlight))
         end,
         on_leave = function(line)
+            -- Separator rows always black
+            if line.lineData and line.lineData.isSeparator then
+                line:SetBackdropColor(0, 0, 0, 1)
+                return
+            end
             -- Restore alternating row color based on index
             local idx = line.dataIndex or 0
             if idx % 2 == 1 then
@@ -1066,9 +1075,18 @@ function NSI:CreateTimelineWindow()
 
         -- Called when a line is created - add tooltip to the header
         on_create_line = function(line)
+            -- Set separator rows to black background immediately
+            if line.lineData and line.lineData.isSeparator then
+                line:SetBackdropColor(0, 0, 0, 1)
+            end
+
             if line.lineHeader then
                 line.lineHeader:EnableMouse(true)
                 line.lineHeader:SetScript("OnEnter", function(self)
+                    -- Separator rows stay black, don't highlight
+                    if line.lineData and line.lineData.isSeparator then
+                        return
+                    end
                     -- Highlight the line
                     line:SetBackdropColor(unpack(line.backdrop_color_highlight))
                     -- Show spell tooltip
@@ -1079,6 +1097,12 @@ function NSI:CreateTimelineWindow()
                     end
                 end)
                 line.lineHeader:SetScript("OnLeave", function(self)
+                    -- Separator rows always black
+                    if line.lineData and line.lineData.isSeparator then
+                        line:SetBackdropColor(0, 0, 0, 1)
+                        GameTooltip:Hide()
+                        return
+                    end
                     -- Restore alternating row color based on index
                     local idx = line.dataIndex or 0
                     if idx % 2 == 1 then
