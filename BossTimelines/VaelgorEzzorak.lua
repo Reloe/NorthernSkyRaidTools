@@ -6,34 +6,25 @@ local _, NSI = ... -- Internal namespace
 --------------------------------------------------------------------------------
 
 local abilities = {
-    -- Phase 1 - Dragon (Vaelgor)
-    {name = "Vaelwing", spellID = 1265131, category = "movement", phase = 1, times = {6, 31, 83, 107}, duration = 3},
-    {name = "Tail Lash", spellID = 1264467, category = "tank", phase = 1, times = {9, 34, 59, 90}, duration = 2},
-    {name = "Dread Breath", spellID = 1244221, category = "damage", phase = 1, times = {12, 56, 101}, duration = 4},
-    {name = "Nullbeam", spellID = 1262623, category = "tank", phase = 1, times = {18, 75}, duration = 3},
-    {name = "Nullzone", spellID = 1244672, category = "movement", phase = 1, times = {22, 79}, duration = 30},
-    -- Phase 1 - Hound (Ezzorak)
-    {name = "Void Howl", spellID = 1244917, category = "damage", phase = 1, times = {28, 73, 119}, duration = 3},
-    {name = "Rakfang", spellID = 1245645, category = "tank", phase = 1, times = {37, 62, 87, 112}, duration = 2},
-    {name = "Gloom", spellID = 1245391, category = "damage", phase = 1, times = {41, 91}, duration = 3},
-    {name = "Gloomfield", spellID = 1245420, category = "movement", phase = 1, times = {45, 95}, duration = 20},
-    -- Phase 2
-    {name = "Shadowmark", spellID = 1270497, category = "soak", phase = 2, times = {0, 6, 12, 18, 24, 30, 36, 42}, duration = 5},
-    {name = "Vaelwing", spellID = 1265131, category = "movement", phase = 2, times = {46, 71, 96}, duration = 3},
-    {name = "Nullbeam", spellID = 1262623, category = "tank", phase = 2, times = {7, 50}, duration = 3},
-    {name = "Nullzone", spellID = 1244672, category = "movement", phase = 2, times = {11, 54}, duration = 30},
-    {name = "Dread Breath", spellID = 1244221, category = "damage", phase = 2, times = {15, 21, 61}, duration = 4},
-    {name = "Void Howl", spellID = 1244917, category = "damage", phase = 2, times = {3, 78}, duration = 3},
-    {name = "Impale", spellID = 1265152, category = "tank", phase = 2, times = {32, 57, 85}, duration = 2},
-    {name = "Rakfang", spellID = 1245645, category = "tank", phase = 2, times = {52, 80}, duration = 2},
-    {name = "Gloom", spellID = 1245391, category = "damage", phase = 2, times = {56}, duration = 3},
-    {name = "Gloomfield", spellID = 1245420, category = "movement", phase = 2, times = {60}, duration = 20},
-}
+        {name = "Vaelwing", spellID = 1265131, category = "tankbuster, knock", phase = 1, times = {6, 31, 62, 83, 107, 179, 204, 229}, duration = 0},
+        {name = "Tail Lash", spellID = 1264467, category = "tankbuster, knock", phase = 1, times = {9, 34, 59, 90}, duration = 0},
+        {name = "Rakfang", spellID = 1245645, category = "tankbuster", phase = 1, times = {12, 37, 62, 87, 112, 185, 213}, duration = 0},
+        {name = "Impale", spellID = 1265152, category = "tankbuster", phase = 1, times = {140, 165, 190, 218}, duration = 0},
+        {name = "Nullbeam", spellID = 1262623, category = "tankbuster", phase = 1, times = {18, 75, 140, 183}, duration = 0},
+        {name = "Nullzone", spellID = 1244672, category = "movement, raid damage", phase = 1, times = {22, 79, 144, 187}, duration = 0},
+        {name = "Gloom", spellID = 1245391, category = "group soak", phase = 1, times = {41, 91, 189}, duration = 0},
+        {name = "Gloomfield", spellID = 1245420, category = "soak", phase = 1, times = {45, 95, 193}, duration = 0},
+        {name = "Midnight Manifestation", spellID = 1258744, category = "raid dot", phase = 1, times = {28, 73, 119, 136, 211}, duration = 25},
+        {name = "Dread Breath", spellID = 1244221, category = "movement, debuffs", phase = 1, times = {12, 56, 101, 148, 154, 194}, duration = 7},
+        {name = "Void Howl", spellID = 1244917, category = "raid damage, movement", phase = 1, times = {28, 73, 119, 136, 211}, duration = 0},
+        {name = "Midnight Flames", spellID = 1249748, category = "raid damage, raid dot", phase = 1, times = {133}, duration = 30},
+        {name = "Shadowmark", spellID = 1270497, category = "debuffs", phase = 1, times = {133, 139, 145, 151, 157, 163, 169, 175}, duration = 0},
+    }
 
 local phases = {
-    [1] = {start = 0},
-    [2] = {start = 133},
-}
+        [1] = {start = 0},
+        [2] = {start = 500},
+    }
 
 NSI.BossTimelines[3178] = {
     Mythic = {
