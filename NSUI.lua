@@ -144,9 +144,14 @@ function NSUI:Init()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
 
     -- Version Number in status bar
+    local versionNumber = " v"..C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Version")
+    --@debug@
+        if versionNumber == " v@project-version@" then
+            versionNumber = " Dev Build"
+        end
+    --@end-debug@
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
-    local verisonNumber = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Version")
-    local statusBarText = versionTitle .. " v" .. verisonNumber .. " | |cFFFFFFFF" .. (authorsString) .. "|r"
+    local statusBarText = versionTitle .. versionNumber .. " | |cFFFFFFFF" .. (authorsString) .. "|r"
     NSUI.StatusBar.authorName:SetText(statusBarText)
 end
 
