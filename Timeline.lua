@@ -138,12 +138,12 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
         return {}, 0
     end
 
-    -- Default to "all" if no mode specified (backwards compatible with old boolean param)
+    -- Default to "important_healer" if no mode specified (backwards compatible with old boolean param)
     if displayMode == nil or displayMode == false then
-        displayMode = self.BossDisplayModes.SHOW_ALL
+        displayMode = self.BossDisplayModes.IMPORTANT_HEALER
     elseif displayMode == true then
         -- Legacy: true meant filter important only
-        displayMode = self.BossDisplayModes.IMPORTANT_ONLY
+        displayMode = self.BossDisplayModes.IMPORTANT_HEALER
     end
 
     local abilities, duration, phases, difficulty = self:GetBossTimelineAbilities(encounterID, requestedDifficulty)
@@ -156,16 +156,22 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
     local filteredAbilities = {}
     for _, ability in ipairs(abilities) do
         local include = true
-        if displayMode == self.BossDisplayModes.IMPORTANT_ONLY then
+        if displayMode == self.BossDisplayModes.IMPORTANT_HEALER then
+            include = self:IsAbilityImportantForHealer(ability)
+        elseif displayMode == self.BossDisplayModes.IMPORTANT_TANK then
+            include = self:IsAbilityImportantForTank(ability)
+        elseif displayMode == self.BossDisplayModes.COMBINED_IMPORTANT then
             include = self:IsAbilityImportant(ability)
         end
+        -- SHOW_ALL and COMBINED include all abilities
         if include then
             table.insert(filteredAbilities, ability)
         end
     end
 
-    -- Handle combined mode - put all abilities on one row
-    if displayMode == self.BossDisplayModes.COMBINED then
+    -- Handle combined modes - put all abilities on one row
+    if displayMode == self.BossDisplayModes.COMBINED or
+       displayMode == self.BossDisplayModes.COMBINED_IMPORTANT then
         local combinedTimeline = {}
         local allTimes = {}
 
@@ -293,13 +299,21 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
             math.floor(color[3] * 255),
             abilityData.name)
 
+        -- Check if ability is important for healer/tank roles
+        local abilityForCheck = {category = abilityData.category}
+        local isImportantHealer = self:IsAbilityImportantForHealer(abilityForCheck)
+        local isImportantTank = self:IsAbilityImportantForTank(abilityForCheck)
+
         table.insert(lines, {
             spellId = abilityData.spellID,
-            icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
+            icon = nil, -- We'll use custom icons on the right instead
             text = coloredName,
             timeline = timeline,
             isBossAbility = true,
             category = abilityData.category,
+            bossIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
+            isImportantHealer = isImportantHealer,
+            isImportantTank = isImportantTank,
         })
     end
 
@@ -467,9 +481,11 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
 
         table.insert(lines, {
             spellId = lineSpellId,
-            icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
+            icon = nil, -- We'll use custom icons on the right instead
             text = lineName,
             timeline = timeline,
+            isYourReminder = true,
+            reminderSpellIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
         })
     end
 
@@ -714,14 +730,31 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                 lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
             end
 
-            -- Get shortened player name with color
+            -- Get shortened player name
             local shortPlayer = NSAPI:Shorten(player, 12, false, "GlobalNickNames") or player
+
+            -- Get class color for the player
+            local classColorHex = nil
+            local unitName = NSAPI:GetChar(player, true, "NorthernSkyRaidTools")
+            if unitName and UnitExists(unitName) then
+                local _, classFile = UnitClass(unitName)
+                if classFile then
+                    local color = GetClassColorObj(classFile)
+                    if color then
+                        classColorHex = color:GenerateHexColor()
+                    end
+                end
+            end
 
             table.insert(lines, {
                 spellId = lineSpellId,
-                icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
-                text = shortPlayer .. " - " .. lineName,
+                icon = nil, -- We'll use custom icons on the right instead
+                text = lineName, -- Spell name left-anchored
                 timeline = timeline,
+                isPlayerAssignment = true,
+                playerName = shortPlayer,
+                playerClassColor = classColorHex,
+                playerSpellIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
             })
         end
     end
@@ -745,7 +778,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
             table.insert(finalLines, {
                 spellId = nil,
                 icon = "Interface\\ICONS\\INV_Misc_Gear_01",
-                text = "|cff888888--- Player Assignments ---|r",
+                text = "|cff888888--- Player Reminders ---|r",
                 timeline = {},
                 isSeparator = true,
             })
@@ -943,7 +976,7 @@ function NSI:CreateTimelineWindow()
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
-    timelineWindow.bossDisplayMode = NSI.BossDisplayModes.SHOW_ALL -- Default display mode
+    timelineWindow.bossDisplayMode = NSI.BossDisplayModes.IMPORTANT_HEALER -- Default display mode
 
     local options_switch_template = DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE")
 
@@ -972,16 +1005,24 @@ function NSI:CreateTimelineWindow()
     local function BuildBossDisplayModeOptions()
         return {
             {
-                label = "Show All",
-                value = NSI.BossDisplayModes.SHOW_ALL,
+                label = "Important Healer",
+                value = NSI.BossDisplayModes.IMPORTANT_HEALER,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
                     NSI:RefreshTimelineForMode()
                 end
             },
             {
-                label = "Important Only",
-                value = NSI.BossDisplayModes.IMPORTANT_ONLY,
+                label = "Important Tank",
+                value = NSI.BossDisplayModes.IMPORTANT_TANK,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
+            {
+                label = "Show All",
+                value = NSI.BossDisplayModes.SHOW_ALL,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
                     NSI:RefreshTimelineForMode()
@@ -995,17 +1036,25 @@ function NSI:CreateTimelineWindow()
                     NSI:RefreshTimelineForMode()
                 end
             },
+            {
+                label = "Combined Important",
+                value = NSI.BossDisplayModes.COMBINED_IMPORTANT,
+                onclick = function(_, _, value)
+                    timelineWindow.bossDisplayMode = value
+                    NSI:RefreshTimelineForMode()
+                end
+            },
         }
     end
 
-    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
-    bossDisplayLabel:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
-    timelineWindow.bossDisplayLabel = bossDisplayLabel
-
-    local bossDisplayDropdown = DF:CreateDropDown(timelineWindow, BuildBossDisplayModeOptions, NSI.BossDisplayModes.SHOW_ALL, 130)
+    local bossDisplayDropdown = DF:CreateDropDown(timelineWindow, BuildBossDisplayModeOptions, NSI.BossDisplayModes.IMPORTANT_HEALER, 150)
     bossDisplayDropdown:SetTemplate(options_dropdown_template)
-    bossDisplayDropdown:SetPoint("RIGHT", bossDisplayLabel, "LEFT", -5, 0)
+    bossDisplayDropdown:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     timelineWindow.bossDisplayDropdown = bossDisplayDropdown
+
+    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
+    bossDisplayLabel:SetPoint("RIGHT", bossDisplayDropdown, "LEFT", -5, 0)
+    timelineWindow.bossDisplayLabel = bossDisplayLabel
 
     -- No data label (shown when no reminders)
     local noDataLabel = DF:CreateLabel(timelineWindow, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
@@ -1021,7 +1070,7 @@ function NSI:CreateTimelineWindow()
         height = window_height - 130,
         header_width = header_width,
         header_detached = true,
-        line_height = 22,
+        line_height = 20,
         line_padding = 1,
         pixels_per_second = 15,
         scale_min = 0.1,
@@ -1037,9 +1086,18 @@ function NSI:CreateTimelineWindow()
 
         -- Line hover callback
         on_enter = function(line)
+            -- Separator rows stay black, don't highlight
+            if line.lineData and line.lineData.isSeparator then
+                return
+            end
             line:SetBackdropColor(unpack(line.backdrop_color_highlight))
         end,
         on_leave = function(line)
+            -- Separator rows always black
+            if line.lineData and line.lineData.isSeparator then
+                line:SetBackdropColor(0, 0, 0, 1)
+                return
+            end
             -- Restore alternating row color based on index
             local idx = line.dataIndex or 0
             if idx % 2 == 1 then
@@ -1049,11 +1107,105 @@ function NSI:CreateTimelineWindow()
             end
         end,
 
+        -- Called when a line is refreshed with new data
+        on_refresh_line = function(line)
+            -- Set separator rows to black background
+            if line.lineData and line.lineData.isSeparator then
+                line:SetBackdropColor(0, 0, 0, 1)
+            end
+
+            -- Update custom right-side icons
+            if line.lineHeader then
+                local data = line.lineData
+
+                -- Check line types
+                local isPlayerAssignment = data and data.isPlayerAssignment
+                local isYourReminder = data and data.isYourReminder
+                local isBossAbility = data and data.isBossAbility
+
+                -- Update custom header text (left-anchored)
+                if line.lineHeader.headerText then
+                    if data and data.text then
+                        line.lineHeader.headerText:SetText(data.text)
+                        -- Adjust text width based on line type
+                        if isPlayerAssignment then
+                            line.lineHeader.headerText:SetWidth(90) -- Narrower for player assignments (name + icon)
+                        elseif isYourReminder then
+                            line.lineHeader.headerText:SetWidth(140) -- Wider for your reminders (just icon on right)
+                        else
+                            line.lineHeader.headerText:SetWidth(120) -- Boss abilities (icons on right)
+                        end
+                        line.lineHeader.headerText:Show()
+                    else
+                        line.lineHeader.headerText:Hide()
+                    end
+                end
+
+                -- Boss ability icons (only show for boss abilities)
+                if line.lineHeader.bossIcon then
+                    if isBossAbility and data.bossIcon then
+                        line.lineHeader.bossIcon:SetTexture(data.bossIcon)
+                        line.lineHeader.bossIcon:Show()
+                    else
+                        line.lineHeader.bossIcon:Hide()
+                    end
+                end
+
+                -- Role icons (only for boss abilities)
+                if line.lineHeader.tankIcon then
+                    if isBossAbility and data.isImportantTank then
+                        line.lineHeader.tankIcon:Show()
+                    else
+                        line.lineHeader.tankIcon:Hide()
+                    end
+                end
+
+                if line.lineHeader.healerIcon then
+                    if isBossAbility and data.isImportantHealer then
+                        line.lineHeader.healerIcon:Show()
+                    else
+                        line.lineHeader.healerIcon:Hide()
+                    end
+                end
+
+                -- Player/reminder spell icon (for player assignments and your reminders)
+                if line.lineHeader.playerSpellIcon then
+                    if isPlayerAssignment and data.playerSpellIcon then
+                        line.lineHeader.playerSpellIcon:SetTexture(data.playerSpellIcon)
+                        line.lineHeader.playerSpellIcon:Show()
+                    elseif isYourReminder and data.reminderSpellIcon then
+                        line.lineHeader.playerSpellIcon:SetTexture(data.reminderSpellIcon)
+                        line.lineHeader.playerSpellIcon:Show()
+                    else
+                        line.lineHeader.playerSpellIcon:Hide()
+                    end
+                end
+
+                -- Player name text (only for player assignments)
+                if line.lineHeader.playerNameText then
+                    if isPlayerAssignment and data.playerName then
+                        local displayName = data.playerName
+                        if data.playerClassColor then
+                            displayName = "|c" .. data.playerClassColor .. data.playerName .. "|r"
+                        end
+                        line.lineHeader.playerNameText:SetText(displayName)
+                        line.lineHeader.playerNameText:Show()
+                    else
+                        line.lineHeader.playerNameText:Hide()
+                    end
+                end
+            end
+        end,
+
         -- Called when a line is created - add tooltip to the header
         on_create_line = function(line)
             if line.lineHeader then
                 line.lineHeader:EnableMouse(true)
                 line.lineHeader:SetScript("OnEnter", function(self)
+                    -- Separator rows stay black, don't highlight
+                    if line.lineData and line.lineData.isSeparator then
+                        return
+                    end
                     -- Highlight the line
                     line:SetBackdropColor(unpack(line.backdrop_color_highlight))
                     -- Show spell tooltip
@@ -1064,6 +1216,12 @@ function NSI:CreateTimelineWindow()
                     end
                 end)
                 line.lineHeader:SetScript("OnLeave", function(self)
+                    -- Separator rows always black
+                    if line.lineData and line.lineData.isSeparator then
+                        line:SetBackdropColor(0, 0, 0, 1)
+                        GameTooltip:Hide()
+                        return
+                    end
                     -- Restore alternating row color based on index
                     local idx = line.dataIndex or 0
                     if idx % 2 == 1 then
@@ -1073,11 +1231,58 @@ function NSI:CreateTimelineWindow()
                     end
                     GameTooltip:Hide()
                 end)
+
+                -- Create boss spell icon (rightmost, right-anchored)
+                local bossIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                bossIcon:SetSize(18, 18)
+                bossIcon:SetPoint("RIGHT", line.lineHeader, "RIGHT", -2, 0)
+                bossIcon:Hide()
+                line.lineHeader.bossIcon = bossIcon
+
+                -- Create tank role icon (right next to boss icon)
+                local tankIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                tankIcon:SetSize(16, 16)
+                tankIcon:SetPoint("RIGHT", bossIcon, "LEFT", 0, 0)
+                tankIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES")
+                tankIcon:SetTexCoord(0/64, 19/64, 22/64, 41/64) -- Tank shield
+                tankIcon:Hide()
+                line.lineHeader.tankIcon = tankIcon
+
+                -- Create healer role icon (right next to tank icon)
+                local healerIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                healerIcon:SetSize(16, 16)
+                healerIcon:SetPoint("RIGHT", tankIcon, "LEFT", 0, 0)
+                healerIcon:SetTexture("Interface\\LFGFrame\\UI-LFG-ICON-PORTRAITROLES")
+                healerIcon:SetTexCoord(20/64, 39/64, 1/64, 20/64) -- Healer cross
+                healerIcon:Hide()
+                line.lineHeader.healerIcon = healerIcon
+
+                -- Create player assignment spell icon (rightmost, right-anchored)
+                local playerSpellIcon = line.lineHeader:CreateTexture(nil, "OVERLAY")
+                playerSpellIcon:SetSize(18, 18)
+                playerSpellIcon:SetPoint("RIGHT", line.lineHeader, "RIGHT", -2, 0)
+                playerSpellIcon:Hide()
+                line.lineHeader.playerSpellIcon = playerSpellIcon
+
+                -- Create player name text (to the left of player spell icon)
+                local playerNameText = line.lineHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                playerNameText:SetPoint("RIGHT", playerSpellIcon, "LEFT", -4, 0)
+                playerNameText:SetJustifyH("RIGHT")
+                playerNameText:Hide()
+                line.lineHeader.playerNameText = playerNameText
+
+                -- Create custom header text (left-anchored, like the icons)
+                -- We don't use line.text because it's parented to the timeline body, not the header
+                local headerText = line.lineHeader:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                headerText:SetPoint("LEFT", line.lineHeader, "LEFT", 4, 0)
+                headerText:SetJustifyH("LEFT")
+                headerText:SetWordWrap(false)
+                headerText:SetWidth(120) -- Default for boss abilities
+                line.lineHeader.headerText = headerText
             end
-            -- Constrain text width to prevent overflow
+            -- Hide the default line.text since it's parented to the timeline body and scrolls incorrectly
             if line.text then
-                line.text:SetWordWrap(false)
-                line.text:SetWidth(150) -- header_width (180) - icon (22) - padding (8)
+                line.text:Hide()
             end
         end,
 
@@ -1142,6 +1347,98 @@ function NSI:CreateTimelineWindow()
         block_on_leave = function(block)
             GameTooltip:Hide()
         end,
+
+        -- Called when block data is set - add category-colored border and duration bar
+        block_on_set_data = function(block, data)
+            if not block or not data then return end
+
+            local payload = data.payload
+
+            -- Hide category borders if this is not a boss ability (blocks are reused)
+            if not payload or not payload.isBossAbility then
+                if block.categoryBorderTop then
+                    block.categoryBorderTop:Hide()
+                    block.categoryBorderBottom:Hide()
+                    block.categoryBorderLeft:Hide()
+                    block.categoryBorderRight:Hide()
+                end
+                -- Reset icon size to default
+                if block.icon then
+                    block.icon:SetSize(20, 20)
+                end
+                return
+            end
+
+            -- Get category color from BossTimelineColors
+            local category = payload.category
+            local color = nil
+            if category and NSI.BossTimelineColors then
+                -- Parse first category keyword
+                local firstCategory = category:match("([^,]+)")
+                if firstCategory then
+                    firstCategory = strtrim(firstCategory):lower()
+                    color = NSI.BossTimelineColors[firstCategory]
+                end
+            end
+
+            if not color then return end
+
+            -- Scale down icon and create border around it (4 edge textures)
+            if block.icon then
+                local borderSize = 1
+                local iconSize = 18  -- 20px row - 1px border top - 1px border bottom = 18px
+
+                -- Scale down the icon to make room for border
+                block.icon:SetSize(iconSize, iconSize)
+
+                if not block.categoryBorderTop then
+                    -- Top edge
+                    block.categoryBorderTop = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderTop:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderTop:SetHeight(borderSize)
+                    -- Bottom edge
+                    block.categoryBorderBottom = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderBottom:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderBottom:SetHeight(borderSize)
+                    -- Left edge
+                    block.categoryBorderLeft = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderLeft:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderLeft:SetWidth(borderSize)
+                    -- Right edge
+                    block.categoryBorderRight = block:CreateTexture(nil, "ARTWORK")
+                    block.categoryBorderRight:SetTexture("Interface\\Buttons\\WHITE8X8")
+                    block.categoryBorderRight:SetWidth(borderSize)
+                end
+
+                -- Position borders around the scaled icon
+                block.categoryBorderTop:ClearAllPoints()
+                block.categoryBorderTop:SetPoint("BOTTOMLEFT", block.icon, "TOPLEFT", -borderSize, 0)
+                block.categoryBorderTop:SetPoint("BOTTOMRIGHT", block.icon, "TOPRIGHT", borderSize, 0)
+                block.categoryBorderBottom:ClearAllPoints()
+                block.categoryBorderBottom:SetPoint("TOPLEFT", block.icon, "BOTTOMLEFT", -borderSize, 0)
+                block.categoryBorderBottom:SetPoint("TOPRIGHT", block.icon, "BOTTOMRIGHT", borderSize, 0)
+                block.categoryBorderLeft:ClearAllPoints()
+                block.categoryBorderLeft:SetPoint("TOPRIGHT", block.icon, "TOPLEFT", 0, borderSize)
+                block.categoryBorderLeft:SetPoint("BOTTOMRIGHT", block.icon, "BOTTOMLEFT", 0, -borderSize)
+                block.categoryBorderRight:ClearAllPoints()
+                block.categoryBorderRight:SetPoint("TOPLEFT", block.icon, "TOPRIGHT", 0, borderSize)
+                block.categoryBorderRight:SetPoint("BOTTOMLEFT", block.icon, "BOTTOMRIGHT", 0, -borderSize)
+
+                block.categoryBorderTop:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderBottom:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderLeft:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderRight:SetVertexColor(color[1], color[2], color[3], 1)
+                block.categoryBorderTop:Show()
+                block.categoryBorderBottom:Show()
+                block.categoryBorderLeft:Show()
+                block.categoryBorderRight:Show()
+            end
+
+            -- Color the duration bar if it exists
+            if block.blockLength and block.blockLength.Texture then
+                block.blockLength.Texture:SetVertexColor(color[1], color[2], color[3], 0.7)
+            end
+        end,
     }
 
     -- Elapsed time options for the ruler and vertical grid lines
@@ -1164,38 +1461,68 @@ function NSI:CreateTimelineWindow()
         timelineFrame.elapsedTimeFrame.options.draw_line = false
     end
 
-    -- Hook refresh to create our own grid lines on the overlay
+    -- Override refresh to show labels every 30 seconds instead of pixel-distance-based
     if timelineFrame.elapsedTimeFrame then
-        local originalRefresh = timelineFrame.elapsedTimeFrame.Refresh
-        timelineFrame.elapsedTimeFrame.Refresh = function(self, ...)
-            originalRefresh(self, ...)
-            -- Create grid lines on our overlay frame
-            if self.labels then
-                for i, label in ipairs(self.labels) do
-                    if label:IsShown() then
-                        local gridLine = timelineFrame.gridLines[i]
-                        if not gridLine then
-                            gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
-                            gridLine:SetColorTexture(0.5, 0.5, 0.5, 1)
-                            gridLine:SetWidth(1)
-                            timelineFrame.gridLines[i] = gridLine
-                        end
-                        -- Position the grid line to match the label
-                        gridLine:ClearAllPoints()
-                        gridLine:SetPoint("TOP", label, "BOTTOM", 0, -2)
-                        gridLine:SetPoint("BOTTOM", gridOverlay, "BOTTOM", 0, 0)
-                        gridLine:Show()
-                    else
-                        if timelineFrame.gridLines[i] then
-                            timelineFrame.gridLines[i]:Hide()
-                        end
-                    end
+        timelineFrame.elapsedTimeFrame.Refresh = function(self, elapsedTime, scale)
+            if not elapsedTime then return end
+
+            self:SetHeight(self.options.height)
+
+            local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
+            local currentScale = scale or 1
+            local scaledPixelsPerSecond = pixelsPerSecond * currentScale
+
+            -- Show a label every 30 seconds
+            local intervalSeconds = 30
+            local intervalPixels = intervalSeconds * scaledPixelsPerSecond
+
+            -- Calculate how many 30-second marks fit in the timeline
+            local amountSegments = math.ceil(elapsedTime / intervalSeconds) + 1
+
+            for i = 1, amountSegments do
+                local label = self:GetLabel(i)
+                local timeSeconds = (i - 1) * intervalSeconds
+                local xOffset = timeSeconds * scaledPixelsPerSecond
+
+                label:ClearAllPoints()
+                label:SetPoint("LEFT", self, "LEFT", xOffset, 0)
+
+                -- Format as M:SS
+                local minutes = math.floor(timeSeconds / 60)
+                local seconds = timeSeconds % 60
+                label:SetText(string.format("%d:%02d", minutes, seconds))
+
+                -- Hide the default line (we use gridOverlay instead)
+                if label.line then
+                    label.line:Hide()
                 end
-                -- Hide extra lines
-                for i = #self.labels + 1, #timelineFrame.gridLines do
-                    if timelineFrame.gridLines[i] then
-                        timelineFrame.gridLines[i]:Hide()
-                    end
+
+                label:Show()
+
+                -- Create/update grid line on overlay
+                local gridLine = timelineFrame.gridLines[i]
+                if not gridLine then
+                    gridLine = gridOverlay:CreateTexture(nil, "OVERLAY")
+                    gridLine:SetColorTexture(1, 1, 1, 0.15)
+                    gridLine:SetWidth(1)
+                    timelineFrame.gridLines[i] = gridLine
+                end
+                gridLine:ClearAllPoints()
+                gridLine:SetPoint("TOP", label, "BOTTOM", 0, -2)
+                gridLine:SetPoint("BOTTOM", gridOverlay, "BOTTOM", 0, 0)
+                gridLine:Show()
+            end
+
+            -- Hide extra labels and lines
+            for i = amountSegments + 1, #self.labels do
+                self.labels[i]:Hide()
+                if self.labels[i].line then
+                    self.labels[i].line:Hide()
+                end
+            end
+            for i = amountSegments + 1, #timelineFrame.gridLines do
+                if timelineFrame.gridLines[i] then
+                    timelineFrame.gridLines[i]:Hide()
                 end
             end
         end
@@ -1405,6 +1732,41 @@ function NSI:RefreshTimelineForMode()
     end
 end
 
+-- Auto-fit timeline scale to show full duration (up to 600 seconds max)
+function NSI:AutoFitTimelineScale(timeline, dataLength)
+    if not timeline then return end
+
+    local maxVisibleDuration = 600  -- 10 minutes max
+    local targetDuration = math.min(dataLength or 300, maxVisibleDuration)
+
+    local visibleWidth = timeline:GetWidth() or 880
+    local pixelsPerSecond = timeline.options.pixels_per_second or 15
+    local scaleMax = timeline.options.scale_max or 2.0
+
+    -- Calculate scale needed to fit target duration in visible width
+    local requiredScale = visibleWidth / (targetDuration * pixelsPerSecond)
+
+    -- Dynamic scale_min: the scale needed to show the boss duration (or 600s max)
+    local dynamicScaleMin = requiredScale
+
+    -- Clamp to valid range
+    requiredScale = math.max(dynamicScaleMin, math.min(scaleMax, requiredScale))
+
+    -- Update the slider's min value so user can't zoom out further than needed
+    if timeline.scaleSlider then
+        timeline.scaleSlider:SetMinMaxValues(dynamicScaleMin, scaleMax)
+        timeline.scaleSlider:SetValue(requiredScale)
+    end
+
+    -- Set the scale
+    timeline.currentScale = requiredScale
+
+    -- Reset horizontal scroll to start
+    if timeline.horizontalSlider then
+        timeline.horizontalSlider:SetValue(0)
+    end
+end
+
 -- Refresh timeline with player's own processed reminders (My Reminders mode)
 function NSI:RefreshMyRemindersTimeline()
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
@@ -1417,6 +1779,7 @@ function NSI:RefreshMyRemindersTimeline()
         self.TimelineWindow.noDataLabel:Hide()
         self.TimelineWindow.timeline:Show()
         self.TimelineWindow.timeline:SetData(data)
+        self:AutoFitTimelineScale(self.TimelineWindow.timeline, data.length)
         self.TimelineWindow.currentEncounterID = encID
         self.TimelineWindow.currentPhases = phases
         self.TimelineWindow.currentDifficulty = difficulty
@@ -1460,6 +1823,7 @@ function NSI:RefreshMyRemindersTimeline()
                     self.TimelineWindow.noDataLabel:Hide()
                     self.TimelineWindow.timeline:Show()
                     self.TimelineWindow.timeline:SetData(bossData)
+                    self:AutoFitTimelineScale(self.TimelineWindow.timeline, bossData.length)
                     self.TimelineWindow.currentEncounterID = bossEncID
                     self.TimelineWindow.currentPhases = bossPhases
                     self.TimelineWindow.currentDifficulty = bossDifficulty
@@ -1498,6 +1862,7 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
         self.TimelineWindow.noDataLabel:Hide()
         self.TimelineWindow.timeline:Show()
         self.TimelineWindow.timeline:SetData(data)
+        self:AutoFitTimelineScale(self.TimelineWindow.timeline, data.length)
         self.TimelineWindow.currentEncounterID = encID
         self.TimelineWindow.currentPhases = phases
         self.TimelineWindow.currentDifficulty = difficulty
@@ -1587,7 +1952,7 @@ function NSI:UpdatePhaseMarkers()
             if not marker then
                 -- Create new marker
                 marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
-                marker:SetSize(4, body:GetHeight() - elapsedHeight)
+                marker:SetSize(2, body:GetHeight() - elapsedHeight)
                 marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
 
                 -- Make it draggable
@@ -1658,7 +2023,7 @@ function NSI:UpdatePhaseMarkers()
 
             -- Set color from phase data (default to red for visibility)
             local color = phaseData.color or {0.8, 0.2, 0.2}
-            marker:SetBackdropColor(color[1], color[2], color[3], 0.8)
+            marker:SetBackdropColor(color[1], color[2], color[3], 0.5)
 
             marker:ClearAllPoints()
             marker:SetPoint("TOPLEFT", body, "TOPLEFT", xPos, -elapsedHeight)
@@ -1719,6 +2084,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
         tab.noDataLabel:Hide()
         tab.timeline:Show()
         tab.timeline:SetData(data)
+        self:AutoFitTimelineScale(tab.timeline, data.length)
         tab.currentEncounterID = encID
         tab.currentPhases = phases
         tab.currentDifficulty = difficulty
@@ -1762,6 +2128,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
                     tab.noDataLabel:Hide()
                     tab.timeline:Show()
                     tab.timeline:SetData(bossData)
+                    self:AutoFitTimelineScale(tab.timeline, bossData.length)
                     tab.currentEncounterID = bossEncID
                     tab.currentPhases = bossPhases
                     tab.currentDifficulty = bossDifficulty
@@ -1800,6 +2167,7 @@ function NSI:RefreshEmbeddedAllReminders(tab, reminderName, personal)
         tab.noDataLabel:Hide()
         tab.timeline:Show()
         tab.timeline:SetData(data)
+        self:AutoFitTimelineScale(tab.timeline, data.length)
         tab.currentEncounterID = encID
         tab.currentPhases = phases
         tab.currentDifficulty = difficulty
@@ -1875,7 +2243,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
             local marker = tab.phaseMarkers[phaseNum]
             if not marker then
                 marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
-                marker:SetSize(4, body:GetHeight() - elapsedHeight)
+                marker:SetSize(2, body:GetHeight() - elapsedHeight)
                 marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
 
                 marker:EnableMouse(true)
@@ -1938,7 +2306,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
             local xPos = phaseStart * pixelsPerSecond
 
             local color = phaseData.color or {0.8, 0.2, 0.2}
-            marker:SetBackdropColor(color[1], color[2], color[3], 0.8)
+            marker:SetBackdropColor(color[1], color[2], color[3], 0.5)
 
             marker:ClearAllPoints()
             marker:SetPoint("TOPLEFT", body, "TOPLEFT", xPos, -elapsedHeight)

@@ -10,4 +10,6 @@
     <Script file="LightblindedVanguard.lua"/>
     <Script file="Beloren.lua"/>
     <Script file="Chimaerus.lua"/>
+    <Script file="DimensiusTheAllDevouring.lua"/>
+    <Script file="NexusKingSaladhaar.lua"/>
 </Ui>

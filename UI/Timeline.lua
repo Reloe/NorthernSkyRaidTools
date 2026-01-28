@@ -15,7 +15,7 @@ local function BuildTimelineTabUI(parent)
 
     parent.timelineMode = "my"
     parent.showBossAbilities = true
-    parent.bossDisplayMode = NSI.BossDisplayModes.SHOW_ALL
+    parent.bossDisplayMode = NSI.BossDisplayModes.IMPORTANT_HEALER
 
     local function BuildModeDropdownOptions()
         return {
@@ -114,16 +114,24 @@ local function BuildTimelineTabUI(parent)
     local function BuildBossDisplayModeOptions()
         return {
             {
-                label = "Show All",
-                value = NSI.BossDisplayModes.SHOW_ALL,
+                label = "Important Healer",
+                value = NSI.BossDisplayModes.IMPORTANT_HEALER,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
                     NSI:RefreshEmbeddedTimeline(parent)
                 end
             },
             {
-                label = "Important Only",
-                value = NSI.BossDisplayModes.IMPORTANT_ONLY,
+                label = "Important Tank",
+                value = NSI.BossDisplayModes.IMPORTANT_TANK,
+                onclick = function(_, _, value)
+                    parent.bossDisplayMode = value
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
+            {
+                label = "Show All",
+                value = NSI.BossDisplayModes.SHOW_ALL,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
                     NSI:RefreshEmbeddedTimeline(parent)
@@ -137,6 +145,14 @@ local function BuildTimelineTabUI(parent)
                     NSI:RefreshEmbeddedTimeline(parent)
                 end
             },
+            {
+                label = "Combined Important",
+                value = NSI.BossDisplayModes.COMBINED_IMPORTANT,
+                onclick = function(_, _, value)
+                    parent.bossDisplayMode = value
+                    NSI:RefreshEmbeddedTimeline(parent)
+                end
+            },
         }
     end
 
@@ -144,7 +160,7 @@ local function BuildTimelineTabUI(parent)
     bossDisplayLabel:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     parent.bossDisplayLabel = bossDisplayLabel
 
-    local bossDisplayDropdown = DF:CreateDropDown(parent, BuildBossDisplayModeOptions, NSI.BossDisplayModes.SHOW_ALL, 130)
+    local bossDisplayDropdown = DF:CreateDropDown(parent, BuildBossDisplayModeOptions, NSI.BossDisplayModes.IMPORTANT_HEALER, 150)
     bossDisplayDropdown:SetTemplate(options_dropdown_template)
     bossDisplayDropdown:SetPoint("RIGHT", bossDisplayLabel, "LEFT", -5, 0)
     parent.bossDisplayDropdown = bossDisplayDropdown

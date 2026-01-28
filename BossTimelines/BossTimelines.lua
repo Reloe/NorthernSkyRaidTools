@@ -31,94 +31,148 @@ local _, NSI = ... -- Internal namespace
         },
     }
 
-    Category Keywords (comma-separated, e.g. "raid damage, debuffs"):
-    - raid damage / damage: Raid-wide damage requiring healing cooldowns
-    - tankbuster / tank: Tank-specific mechanics (busters, swaps)
-    - frontal: Frontal cone attacks (often combined with tankbuster)
-    - movement: Positioning/movement mechanics
-    - soak / group soak: Soak mechanics requiring assignments
-    - debuffs: Debuff application mechanics
-    - healing absorb: Healing absorption effects
-    - knock: Knockback mechanics
-    - event: Special event or intermission
-    - intermission: Phase transition abilities
+    Category Keywords (comma-separated, e.g. "raid damage, debuff"):
+    Priority order (highest to lowest):
+    1.  raid damage      - Raid-wide damage requiring healing cooldowns
+    2.  raid aoe         - Raid-wide AOE damage
+    3.  raid soak        - Raid-wide soak mechanics
+    4.  group soak       - Group soak mechanics requiring assignments
+    5.  raid debuff      - Raid-wide debuff application
+    6.  healing absorb   - Healing absorption effects
+    7.  tankbuster       - Tank-specific burst damage
+    8.  tank debuff      - Tank debuff mechanics
+    9.  singletarget     - Single target mechanics
+    10. debuffs          - Multiple debuff application
+    11. debuff           - Single debuff application
+    12. dispel           - Dispellable mechanics
+    13. damage buff      - Damage increase buffs
+    14. damage amp       - Damage amplification effects
+    15. spread           - Spread/positioning mechanics
+    16. frontal          - Frontal cone attacks
+    17. knock            - Knockback mechanics
+    18. soak             - General soak mechanics
+    19. cc               - Crowd control mechanics
+    20. interrupt        - Interruptible casts
+    21. add spawn        - Add spawn events
+    22. phase change     - Phase transition triggers
+    23. event            - Special events
+    24. boss immune      - Boss immunity phases
+    25. intermission     - Intermission phases
 ]]
 
 -- Initialize the BossTimelines table
 NSI.BossTimelines = NSI.BossTimelines or {}
 
 -- Category colors for timeline display
--- Maps category keywords to colors (supports compound categories like "raid damage, debuffs")
+-- Maps category keywords to colors (supports compound categories like "raid damage, debuff")
+-- Colors match wowutils colorMap
 NSI.BossTimelineColors = {
-    -- Damage categories (Red)
-    damage = {0.9, 0.3, 0.3},
-    ["raid damage"] = {0.9, 0.3, 0.3},
+    -- Raid damage categories (Red #B65552)
+    ["raid damage"] = {0.71, 0.33, 0.32},
+    ["raid aoe"] = {0.71, 0.33, 0.32},
 
-    -- Tank categories (Blue)
-    tank = {0.3, 0.5, 0.9},
-    tankbuster = {0.3, 0.5, 0.9},
-    frontal = {0.3, 0.5, 0.9},
+    -- Soak categories
+    ["raid soak"] = {0.75, 0.34, 0},        -- #bf5700 Orange
+    ["group soak"] = {0.88, 0.47, 0.19},    -- #e07830 Light Orange
+    ["soak"] = {0.50, 0, 0.50},             -- #800080 Purple Blue
 
-    -- Movement categories (Yellow/Orange)
-    movement = {0.9, 0.7, 0.2},
-    knock = {0.9, 0.7, 0.2},
+    -- Debuff/Healing categories (Purple/Red)
+    ["raid debuff"] = {0.61, 0.35, 0.71},   -- #9b59b6 Light Purple
+    ["healing absorb"] = {0.91, 0.30, 0.24}, -- #e74c3c Bright Red
+    ["debuffs"] = {0.50, 0, 0.50},          -- #800080 Purple
+    ["debuff"] = {0.50, 0, 0.50},           -- #800080 Purple
 
-    -- Soak categories (Green)
-    soak = {0.5, 0.9, 0.5},
-    ["group soak"] = {0.5, 0.9, 0.5},
+    -- Tank categories (Brown)
+    ["tankbuster"] = {0.43, 0.60, 0.74},    -- #6e98bd Medium Brown
+    ["tank debuff"] = {0.43, 0.47, 0.74},   -- #6e78bd Deep Brown
+    ["singletarget"] = {1, 0.45, 0.45},     -- #ff7373 Light Red
+    ["frontal"] = {0.46, 0.74, 0.37},       -- #75bc5f Light Green
 
-    -- Debuff/Healing categories (Pink/Magenta)
-    debuffs = {0.9, 0.5, 0.7},
-    ["healing absorb"] = {0.9, 0.5, 0.7},
+    -- Utility/Control categories
+    ["dispel"] = {0, 0.48, 1},              -- #007bff Blue
+    ["cc"] = {1, 1, 1},                     -- #FFFFFF White
+    ["interrupt"] = {0, 0.75, 1},           -- #00bfff Light Sky Blue
 
-    -- Event/Intermission categories (Purple)
-    intermission = {0.7, 0.4, 0.9},
-    event = {0.7, 0.4, 0.9},
+    -- Buff categories (Gold)
+    ["damage buff"] = {1, 0.84, 0},         -- #FFD700 Gold
+    ["damage amp"] = {0.95, 0.77, 0.06},    -- #f1c40f Bright Gold
+
+    -- Movement/Positioning categories
+    ["spread"] = {0.10, 0.74, 0.61},        -- #1abc9c Teal
+    ["knock"] = {0, 0.40, 0},               -- #006600 Forest Green
+
+    -- Add spawn / Event / Phase categories (White)
+    ["add spawn"] = {1, 1, 1},              -- #FFFFFF White
+    ["phase change"] = {1, 1, 1},           -- #FFFFFF White
+    ["event"] = {1, 1, 1},                  -- #FFFFFF White
+
+    -- Boss immune / Intermission (Gray)
+    ["boss immune"] = {0.58, 0.65, 0.65},   -- #95a5a6 Gray
+    ["intermission"] = {0.50, 0.55, 0.55},  -- #7f8c8d Dark Gray
 }
 
 -- Category sort priority (lower = higher priority)
+-- Matches BOSS_SPELL_TYPE_ORDER from wowutils
 NSI.BossTimelineCategoryOrder = {
-    -- Damage first
-    damage = 1,
     ["raid damage"] = 1,
-    -- Then soak
-    soak = 2,
-    ["group soak"] = 2,
-    -- Then tank
-    tank = 3,
-    tankbuster = 3,
-    frontal = 3,
-    -- Then debuffs
-    debuffs = 4,
-    ["healing absorb"] = 4,
-    -- Then movement
-    movement = 5,
-    knock = 5,
-    -- Then events/intermission
-    event = 6,
-    intermission = 6,
+    ["raid aoe"] = 2,
+    ["raid soak"] = 3,
+    ["group soak"] = 4,
+    ["raid debuff"] = 5,
+    ["healing absorb"] = 6,
+    ["tankbuster"] = 7,
+    ["tank debuff"] = 8,
+    ["singletarget"] = 9,
+    ["debuffs"] = 10,
+    ["debuff"] = 11,
+    ["dispel"] = 12,
+    ["damage buff"] = 13,
+    ["damage amp"] = 14,
+    ["spread"] = 15,
+    ["frontal"] = 16,
+    ["knock"] = 17,
+    ["soak"] = 18,
+    ["cc"] = 19,
+    ["interrupt"] = 20,
+    ["add spawn"] = 21,
+    ["phase change"] = 22,
+    ["event"] = 23,
+    ["boss immune"] = 24,
+    ["intermission"] = 25,
 }
 
--- Categories considered "important" for filtering
+-- Categories considered "important" for healer filtering
 -- These are mechanics that typically require healing CDs or raid coordination
-NSI.BossTimelineImportantCategories = {
-    damage = true,
+NSI.BossTimelineImportantHealerCategories = {
     ["raid damage"] = true,
-    soak = true,
+    ["raid aoe"] = true,
+    ["raid soak"] = true,
     ["group soak"] = true,
-    intermission = true,
+    ["raid debuff"] = true,
+    ["healing absorb"] = true,
+    ["intermission"] = true,
+}
+
+-- Categories considered "important" for tank filtering
+-- These are mechanics that typically require tank cooldowns or swaps
+NSI.BossTimelineImportantTankCategories = {
+    ["tankbuster"] = true,
+    ["tank debuff"] = true,
+    ["frontal"] = true,
 }
 
 -- Boss display modes for timeline
 NSI.BossDisplayModes = {
-    SHOW_ALL = "all",           -- Show all abilities (default)
-    IMPORTANT_ONLY = "important", -- Show only important abilities
-    COMBINED = "combined",      -- Combine all into one row
+    ["SHOW_ALL"] = "all",
+    ["IMPORTANT_HEALER"] = "important_healer",
+    ["IMPORTANT_TANK"] = "important_tank",
+    ["COMBINED"] = "combined",
+    ["COMBINED_IMPORTANT"] = "combined_important",
 }
 
--- Check if an ability is considered "important" based on its category
--- Returns true if any category keyword is in the important list, or if ability has important=true
-function NSI:IsAbilityImportant(ability)
+-- Check if an ability is considered "important" for healers based on its category
+-- Returns true if any category keyword is in the healer important list, or if ability has important=true
+function NSI:IsAbilityImportantForHealer(ability)
     -- Explicit important flag takes precedence
     if ability.important ~= nil then
         return ability.important
@@ -132,12 +186,42 @@ function NSI:IsAbilityImportant(ability)
 
     for keyword in categoryStr:gmatch("([^,]+)") do
         keyword = strtrim(keyword):lower()
-        if self.BossTimelineImportantCategories[keyword] then
+        if self.BossTimelineImportantHealerCategories[keyword] then
             return true
         end
     end
 
     return false
+end
+
+-- Check if an ability is considered "important" for tanks based on its category
+-- Returns true if any category keyword is in the tank important list, or if ability has important=true
+function NSI:IsAbilityImportantForTank(ability)
+    -- Explicit important flag takes precedence
+    if ability.important ~= nil then
+        return ability.important
+    end
+
+    -- Check category keywords
+    local categoryStr = ability.category
+    if not categoryStr or categoryStr == "" then
+        return false
+    end
+
+    for keyword in categoryStr:gmatch("([^,]+)") do
+        keyword = strtrim(keyword):lower()
+        if self.BossTimelineImportantTankCategories[keyword] then
+            return true
+        end
+    end
+
+    return false
+end
+
+-- Check if an ability is considered "important" for either healers or tanks
+-- Returns true if any category keyword is in either important list, or if ability has important=true
+function NSI:IsAbilityImportant(ability)
+    return self:IsAbilityImportantForHealer(ability) or self:IsAbilityImportantForTank(ability)
 end
 
 -- Parse a compound category string and return color and sort order
@@ -185,6 +269,8 @@ NSI.BossTimelineNames = {
     [3182] = "Belo'ren",
     [3183] = "Midnight Falls",
     [3306] = "Chimaerus",
+    [3134] = "Nexus King Saladhaar",
+    [3135] = "Dimensius the All Devouring",
 }
 
 --------------------------------------------------------------------------------
