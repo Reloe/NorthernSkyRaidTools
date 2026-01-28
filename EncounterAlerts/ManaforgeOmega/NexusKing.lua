@@ -1,6 +1,6 @@
 local _, NSI = ... -- Internal namespace
 
-local encID = 3134
+local encID = 3463
 -- /run NSAPI:DebugEncounter(3134)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
     if not NSRT.EncounterAlerts[encID] then
@@ -10,24 +10,17 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         if not self:DifficultyCheck(16) then return end -- Mythic only
         local function DisplayLine()
             if not C_InstanceEncounter.IsEncounterInProgress then return end -- if this somehow runs outside of the encounter return early
-            if not self.LineTexture then
-                self.LineTexture = self.LineFrame:CreateTexture(nil, "BACKGROUND")
-                self.LineTexture:SetColorTexture(0, 1, 0, 1)
-                self.LineFrame:SetSize(1, 3000)
-                self.LineFrame:SetPoint("BOTTOM", UIParent, "CENTER", 0, 0)  
-                self.LineTexture:SetAllPoints(self.LineFrame)               
-            end                        
-            self.LineFrame:Show()
-            self.LineTexture:Show()
+            if not self.NSRTFrame.LineTexture then
+                self.NSRTFrame.LineTexture = self.NSRTFrame:CreateTexture(nil, "BACKGROUND")
+                self.NSRTFrame.LineTexture:SetColorTexture(0, 1, 0, 1)
+                self.NSRTFrame.LineTexture:SetSize(1, 3000)
+                self.NSRTFrame.LineTexture:SetPoint("BOTTOM", self.NSRTFrame, "CENTER", 0, 0)
+            end                      
+            self.NSRTFrame.LineTexture:Show()
             C_Timer.After(6.5, function() 
-                self.LineTexture:Hide()
-                self.LineFrame:Hide()
+                self.NSRTFrame.LineTexture:Hide()
             end)
         end
-        if not self.LineFrame then
-            self.LineFrame = CreateFrame("Frame")
-        end
-        self.LineFrame:Show()
 
         local Ghosts = self:CreateDefaultAlert("Spirits", "Text", nil, 7, 1, encID) -- Phase 1 Spirit Reminders + Line
         self.SpiritTimers = {}
@@ -108,9 +101,7 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
             v:Cancel()
         end
         self.SpiritTimers = {}
-        if not self.LineFrame then return end
-        self.LineFrame:Hide()
-        if not self.LineTexture then return end
-        self.LineTexture:Hide()
+        if not self.NSRTFrame.LineTexture then return end
+        self.NSRTFrame.LineTexture:Hide()
     end
 end

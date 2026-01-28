@@ -1,6 +1,6 @@
 local _, NSI = ... -- Internal namespace
 
-local encID = 3463
+local encID = 34632
 -- /run NSAPI:DebugEncounter(3463)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
     if not NSRT.EncounterAlerts[encID] then

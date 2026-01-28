@@ -1,9 +1,5 @@
 local _, NSI = ... -- Internal namespace
-local f = CreateFrame("Frame")
-f:RegisterEvent("GROUP_ROSTER_UPDATE")
-f:SetScript("OnEvent", function(self, e, ...)
-    NSI:ArrangeGroups()
-end)
+
 NSI.Groups = {}
 NSI.Groups.Processing = false
 

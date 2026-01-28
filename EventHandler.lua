@@ -1,5 +1,5 @@
 local _, NSI = ... -- Internal namespace
-local f = CreateFrame("Frame")
+local f = NSI.NSRTFrame
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("READY_CHECK")
@@ -145,6 +145,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
         self:InitLDB()
+        self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
         if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(5, function() self:InitRaidPA(false, true) end) end
@@ -201,7 +202,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end        
     elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        NSUI.generic_display:Hide()
+        self.NSRTFrame.generic_display:Hide()
         if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
             self:InitTankPA()
         end        
@@ -414,7 +415,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)      
-    elseif e == "GROUP_ROSTER_UPDATE" and wowevent then        
+    elseif e == "GROUP_ROSTER_UPDATE" and wowevent then      
+        self:ArrangeGroups()  
         if NSRT.PARaidSettings.enabled then
             local diff = select(3, GetInstanceInfo())
             if diff == 23 or self:DifficultyCheck(14) or (diff == 205 and NSRT.Settings["Debug"]) then -- diff 205 are follower dungeons for testing

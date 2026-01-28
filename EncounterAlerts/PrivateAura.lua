@@ -78,10 +78,10 @@ end
 function NSI:InitPA()
     
     if not self.PAFrame then
-        self.PAFrame = CreateFrame("Frame", nil, UIParent)
+        self.PAFrame = CreateFrame("Frame", nil, self.NSRTFrame)
     end
     self.PAFrame:SetSize(1, 1)
-    self.PAFrame:SetPoint(NSRT.PASettings.Anchor, UIParent, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
+    self.PAFrame:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
     
     if not self.AddedPA then self.AddedPA = {} end    
     local xDirection = (NSRT.PASettings.GrowDirection == "RIGHT" and 1) or (NSRT.PASettings.GrowDirection == "LEFT" and -1) or 0
@@ -140,7 +140,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
             end
             if F then
                 if not self.PARaidFrames[i] then
-                    self.PARaidFrames[i] = CreateFrame("Frame", nil, UIParent)
+                    self.PARaidFrames[i] = CreateFrame("Frame", nil, self.NSRTFrame)
                 end
                 self.PARaidFrames[i]:SetSize(1, 1)
                 self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, F, NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
@@ -190,10 +190,10 @@ end
 function NSI:InitTankPA()
     -- initiated on ENCOUNTER_START for tank players
     if not self.PATankFrame then
-        self.PATankFrame = CreateFrame("Frame", nil, UIParent)
+        self.PATankFrame = CreateFrame("Frame", nil, self.NSRTFrame)
     end
     self.PATankFrame:SetSize(1, 1)
-    self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, UIParent, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
+    self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
 
     if not self.AddedTankPA then self.AddedTankPA = {} end
     local xDirection = (NSRT.PATankSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PATankSettings.GrowDirection == "LEFT" and -1) or 0
@@ -282,7 +282,7 @@ function NSI:PreviewPA(Show)
         return
     end
     self.PAFrame:SetSize((NSRT.PASettings.Width), (NSRT.PASettings.Height))
-    self.PAFrame:SetPoint(NSRT.PASettings.Anchor, UIParent, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
+    self.PAFrame:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
     if not self.PAFrame.Border then
         self.PAFrame.Border = CreateFrame("Frame", nil, self.PAFrame, "BackdropTemplate") 
         self.PAFrame.Border:SetPoint("TOPLEFT", self.PAFrame, "TOPLEFT", -6, 6)
@@ -350,7 +350,7 @@ function NSI:PreviewTankPA(Show)
         return
     end
     self.PATankFrame:SetSize((NSRT.PATankSettings.Width), (NSRT.PATankSettings.Height))
-    self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, UIParent, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
+    self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
     if not self.PATankFrame.Border then
         self.PATankFrame.Border = CreateFrame("Frame", nil, self.PATankFrame, "BackdropTemplate") 
         self.PATankFrame.Border:SetPoint("TOPLEFT", self.PATankFrame, "TOPLEFT", -6, 6)
@@ -419,7 +419,7 @@ function NSI:PreviewRaidPA(Show, Init)
         return
     end
     if not self.PARaidPreviewFrame then
-        self.PARaidPreviewFrame = CreateFrame("Frame", nil, UIParent)
+        self.PARaidPreviewFrame = CreateFrame("Frame", nil, self.NSRTFrame)
         self.PARaidPreviewFrame:SetFrameStrata("DIALOG")
     end
     self.PARaidPreviewFrame:SetSize(NSRT.PARaidSettings.Width, NSRT.PARaidSettings.Height)

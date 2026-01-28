@@ -72,15 +72,11 @@ function NSUI:Init()
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
 
     -- Generic text display
-    local generic_display = CreateFrame("Frame", "NSUIGenericDisplay", UIParent, "BackdropTemplate")
-    generic_display:SetPoint("CENTER", UIParent, "CENTER", -200, 400)
-    generic_display:SetSize(300, 100)
-    generic_display.text = generic_display:CreateFontString(nil, "OVERLAY")
-    generic_display.text:SetFont(expressway, 20, "OUTLINE")
-    generic_display.text:SetPoint("TOPLEFT", generic_display, "TOPLEFT", 0, 0)
-    generic_display.text:SetJustifyH("LEFT")
-    generic_display:Hide()
-    NSUI.generic_display = generic_display
+    NSI.NSRTFrame.generic_display = NSI.NSRTFrame:CreateFontString(nil, "OVERLAY")
+    NSI.NSRTFrame.generic_display:SetFont(expressway, 20, "OUTLINE")
+    NSI.NSRTFrame.generic_display:SetPoint("CENTER", NSI.NSRTFrame, "CENTER", -200, 400)
+    NSI.NSRTFrame.generic_display:SetJustifyH("LEFT")
+    NSI.NSRTFrame.generic_display:Hide()
 
     -- Build options tables from modules
     local general_options1_table = BuildGeneralOptions()
@@ -190,13 +186,13 @@ end
 
 function NSI:DisplayText(text, duration)
     if self:Restricted() then return end
-    if NSUI and NSUI.generic_display then
-        NSUI.generic_display.text:SetText(text)
-        NSUI.generic_display:Show()
+    if self.NSRTFrame and self.NSRTFrame.generic_display then
+        self.NSRTFrame.generic_display:SetText(text)
+        self.NSRTFrame.generic_display:Show()
         if self.TextHideTimer then
             self.TextHideTimer:Cancel()
             self.TextHideTimer = nil
         end
-        self.TextHideTimer = C_Timer.NewTimer(duration or 10, function() NSUI.generic_display:Hide() end)
+        self.TextHideTimer = C_Timer.NewTimer(duration or 10, function() self.NSRTFrame.generic_display:Hide() end)
     end
 end
