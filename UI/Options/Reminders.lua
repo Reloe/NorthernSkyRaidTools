@@ -22,6 +22,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["SpellTTS"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellTTS"] = value
+                NSI:ProcessReminder()
             end,
             nocombat = true,
         },
@@ -32,6 +33,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["SpellTTSTimer"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellTTSTimer"] = value
+                NSI:ProcessReminder()
             end,
             min = 0,
             max = 20,
@@ -45,6 +47,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["SpellDuration"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellDuration"] = value
+                NSI:ProcessReminder()
             end,
             min = 5,
             max = 20,
@@ -57,9 +60,23 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["SpellCountdown"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellCountdown"] = value
+                NSI:ProcessReminder()
             end,
             min = 0,
             max = 5,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Announce Duration",
+            desc = "When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'SpellName in 10'",
+            get = function() return NSRT.ReminderSettings["AnnounceSpellDuration"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["AnnounceSpellDuration"] = value
+                NSI:ProcessReminder()
+
+            end,
             nocombat = true,
         },
         {
@@ -70,6 +87,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["SpellName"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellName"] = value
+                NSI:ProcessReminder()
             end,
             nocombat = true,
         },
@@ -130,6 +148,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["TextTTS"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextTTS"] = value
+                NSI:ProcessReminder()
             end,
             nocombat = true,
         },
@@ -140,6 +159,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["TextTTSTimer"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextTTSTimer"] = value
+                NSI:ProcessReminder()
             end,
             min = 0,
             max = 20,
@@ -153,6 +173,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["TextDuration"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextDuration"] = value
+                NSI:ProcessReminder()
             end,
             min = 5,
             max = 20,
@@ -165,9 +186,22 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings["TextCountdown"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextCountdown"] = value
+                NSI:ProcessReminder()
             end,
             min = 0,
             max = 5,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Announce Duration",
+            desc = "When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'Spread in 10'",
+            get = function() return NSRT.ReminderSettings["AnnounceTextDuration"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["AnnounceTextDuration"] = value
+                NSI:ProcessReminder()
+            end,
             nocombat = true,
         },
         {
