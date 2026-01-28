@@ -34,7 +34,6 @@ local function BuildAssignmentsOptions()
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3178] = NSRT.AssignmentSettings[3178] or {}
                 NSRT.AssignmentSettings[3178].Soaks = value
-                self.Assignments = NSRT.AssignmentSettings
             end,
             nocombat = true,
         },
@@ -52,7 +51,6 @@ local function BuildAssignmentsOptions()
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3180] = NSRT.AssignmentSettings[3180] or {}
                 NSRT.AssignmentSettings[3180].Soaks = value
-                self.Assignments = NSRT.AssignmentSettings
             end,
             nocombat = true,
         },
@@ -70,7 +68,6 @@ local function BuildAssignmentsOptions()
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3306] = NSRT.AssignmentSettings[3306] or {}
                 NSRT.AssignmentSettings[3306].Soaks = value
-                self.Assignments = NSRT.AssignmentSettings
             end,
             nocombat = true,
         },
