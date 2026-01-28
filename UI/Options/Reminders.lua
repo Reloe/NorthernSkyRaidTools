@@ -396,10 +396,6 @@ local function BuildReminderOptions()
         },
 
         {
-            type = "breakline"
-        },
-
-        {
             type = "label",
             get = function() return "Bar Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -586,6 +582,9 @@ local function BuildReminderOptions()
             hasAlpha = true,
             nocombat = true
 
+        },
+        {
+            type = "breakline",
         },
 
         {
