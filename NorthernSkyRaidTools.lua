@@ -3,7 +3,7 @@ _G["NSAPI"] = {}
 NSI.specs = {}
 NSI.LCG = LibStub("LibCustomGlow-1.0")
 NSI.LGF = LibStub("LibGetFrame-1.0")
-NSI.NSRTFrame = CreateFrame("Frame", "NSRTFrame", UIParent)
+NSI.NSRTFrame = CreateFrame("Frame", nil, UIParent)
 NSI.NSRTFrame:SetAllPoints(UIParent)
 
 local LDB = LibStub("LibDataBroker-1.1")

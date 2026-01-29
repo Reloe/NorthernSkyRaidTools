@@ -116,38 +116,6 @@ local function BuildEncounterAlertsOptions()
             end,
             nocombat = true,
         },
-        {
-            type = "breakline",
-        },
-        {
-            type = "label",
-            get = function() return "Manaforge Omega" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Nexus King",
-            desc = "Probably a bit rough in 1st week of pre-patch, use at own risk.",
-            get = function() return NSRT.EncounterAlerts[3134] and NSRT.EncounterAlerts[3134].enabled end,
-            set = function(self, fixedparam, value)
-                NSRT.EncounterAlerts[3134] = NSRT.EncounterAlerts[3134] or {}
-                NSRT.EncounterAlerts[3134].enabled = value
-            end,
-            nocombat = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Dimensius",
-            desc = "Probably a bit rough in 1st week of pre-patch, use at own risk.",
-            get = function() return NSRT.EncounterAlerts[3135] and NSRT.EncounterAlerts[3135].enabled end,
-            set = function(self, fixedparam, value)
-                NSRT.EncounterAlerts[3135] = NSRT.EncounterAlerts[3135] or {}
-                NSRT.EncounterAlerts[3135].enabled = value
-            end,
-            nocombat = true,
-        },
     }
 end
 
