@@ -262,11 +262,16 @@ function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettin
     return encoded or ""
 end
 
-function NSI:ImportFromTable(ImportTable)    
+function NSI:ImportFromTable(ImportTable)  
+    local changed = false  
     for k, v in pairs(ImportTable) do
         if v.enabled then
+            changed = true
             NSRT[k] = v.data
         end
+    end
+    if changed then
+        ReloadUI()
     end
 end
 
