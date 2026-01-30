@@ -448,7 +448,7 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
         F.Text:SetTextColor(unpack(info.colors or s.colors))
-    else
+    elseif F:GetObjectType() == "StatusBar" then 
         F:SetStatusBarColor(unpack(info.colors or s.colors))
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
