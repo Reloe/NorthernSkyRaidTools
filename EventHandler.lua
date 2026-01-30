@@ -100,6 +100,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.PARaidSettings then
                 NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
             end
+            if not NSRT.PATextSettings then
+                NSRT.PATextSettings = {Scale = 2.5, xOffset = 0, yOffset = -200, enabled = false, Anchor = "TOP", relativeTo = "TOP"}
+            end
             NSRT.PARaidSettings.Spacing = NSRT.PARaidSettings.Spacing or -1
             NSRT.PARaidSettings.Limit = NSRT.PARaidSettings.Limit or 5
             if not NSRT.PASounds then NSRT.PASounds = {} end
@@ -149,6 +152,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
+        self:InitTextPA()
         if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(5, function() self:InitRaidPA(false, true) end) end
         for spellID, info in pairs(NSRT.PASounds) do
             self:AddPASound(spellID, info.sound)

@@ -142,6 +142,36 @@ local function BuildPrivateAurasOptions()
             nocombat = true,
         },
         {
+            type = "label",
+            get = function() return "Personal Private Aura Text-Warning" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Enabled",
+            desc = "Whether Private Aura Text-Warning is enabled",
+            get = function() return NSRT.PATextSettings.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.PATextSettings.enabled = value
+                NSI:InitTextPA()
+            end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Scale",
+            desc = "Scale of the Private Aura Text-Warning Anchor",
+            get = function() return NSRT.PATextSettings.Scale end,
+            set = function(self, fixedparam, value)
+                NSRT.PATextSettings.Scale = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 0.1,
+            max = 5,
+            step = 0.1,
+        },
+        {
             type = "breakline"
         },
         {

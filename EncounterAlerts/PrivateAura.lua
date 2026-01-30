@@ -75,6 +75,70 @@ function NSI:SavePASound(spellID, sound)
     self:AddPASound(spellID, sound)
 end
 
+function NSI:InitTextPA()   
+    if not self.PATextMoverFrame then
+        self.PATextMoverFrame = CreateFrame("Frame", nil, self.NSRTFrame)     
+        self.PATextMoverFrame:SetPoint(NSRT.PATextSettings.Anchor, self.NSRTFrame, NSRT.PATextSettings.relativeTo, NSRT.PATextSettings.xOffset, NSRT.PATextSettings.yOffset)
+        
+        self.PATextMoverFrame.Text = self.PATextMoverFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")   
+        self.PATextMoverFrame.Text:SetFont(NSI.LSM:Fetch("font", "Expressway"), NSRT.PATextSettings.Scale*20, "OUTLINE")
+        self.PATextMoverFrame.Text:SetText("<secret value> targets you with the spell <secret value>")
+        self.PATextMoverFrame:SetSize(self.PATextMoverFrame.Text:GetStringWidth()*1, self.PATextMoverFrame.Text:GetStringHeight()*1.5)
+        self.PATextMoverFrame.Text:SetPoint("CENTER", self.PATextMoverFrame, "CENTER", 0, 0)
+
+        if not self.PATextMoverFrame.Border then
+            self.PATextMoverFrame.Border = CreateFrame("Frame", nil, self.PATextMoverFrame, "BackdropTemplate") 
+            self.PATextMoverFrame.Border:SetPoint("TOPLEFT", self.PATextMoverFrame, "TOPLEFT", -6, 6)
+            self.PATextMoverFrame.Border:SetPoint("BOTTOMRIGHT", self.PATextMoverFrame, "BOTTOMRIGHT", 6, -6)
+            self.PATextMoverFrame.Border:SetBackdrop({
+                    edgeFile = "Interface\\Buttons\\WHITE8x8",
+                    edgeSize = 2,
+                })
+            self.PATextMoverFrame.Border:SetBackdropBorderColor(1, 1, 1, 1)
+            self.PATextMoverFrame.Border:Hide()
+        end
+        self.PATextMoverFrame:SetMovable(false)
+        self.PATextMoverFrame:EnableMouse(false)
+        self.PATextMoverFrame:SetClampedToScreen(true)
+        self.PATextMoverFrame:RegisterForDrag("LeftButton")
+        self.PATextMoverFrame:Hide()
+        self.PATextMoverFrame.Border:Show()
+        self.PATextMoverFrame:SetScript("OnDragStart", function(self)
+            self:StartMoving()
+        end)
+        self.PATextMoverFrame:SetScript("OnDragStop", function(Frame)
+            Frame:StopMovingOrSizing()       
+            local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
+            xOffset = Round(xOffset)
+            yOffset = Round(yOffset)
+            NSRT.PATextSettings.xOffset = xOffset     
+            NSRT.PATextSettings.yOffset = yOffset  
+            NSRT.PATextSettings.Anchor = Anchor    
+            NSRT.PATextSettings.relativeTo = relativeTo    
+        end)
+    end
+    if NSRT.PATextSettings.enabled then
+        if not self.PATextWarning then
+            self.PATextWarning = CreateFrame("Frame", nil, self.NSRTFrame)
+        end
+
+        local height = self.PATextMoverFrame:GetHeight()
+        self.PATextWarning:SetPoint("TOPLEFT", self.PATextMoverFrame, "TOPLEFT", 0, -0.8*self.PATextMoverFrame:GetHeight()/NSRT.PATextSettings.Scale)
+        self.PATextWarning:SetPoint("BOTTOMRIGHT", self.PATextMoverFrame, "BOTTOMRIGHT", 0, -0.8*self.PATextMoverFrame:GetHeight()/NSRT.PATextSettings.Scale)
+        self.PATextWarning:SetScale(NSRT.PATextSettings.Scale)
+
+        local textanchor = 
+        {
+            point = "CENTER", 
+            relativeTo = self.PATextWarning, 
+            relativePoint = "CENTER", 
+            offsetX = 0, 
+            offsetY = 0
+        }
+        C_UnitAuras.SetPrivateWarningTextAnchor(self.PATextWarning, textanchor)
+    end
+end
+
 function NSI:InitPA()
     
     if not self.PAFrames then
@@ -281,6 +345,7 @@ function NSI:UpdatePADisplay(Personal, Tank)
         else
             self:PreviewPA(false)
             self:InitPA()
+            self:InitTextPA()
         end
     elseif Tank then
         if self.IsTankPAPreview then
@@ -305,8 +370,13 @@ function NSI:PreviewPA(Show)
         if self.PAFrames[1].Border then self.PAFrames[1].Border:Hide() end
         self.PAFrames[1]:SetMovable(false)
         self.PAFrames[1]:EnableMouse(false)
+        self.PATextMoverFrame:SetMovable(false)
+        self.PATextMoverFrame:EnableMouse(false)
+        self.PATextMoverFrame.Border:Hide()
+        self.PATextMoverFrame.Text:Hide()
         self.PAFrames[1]:SetSize(1, 1)
         self:InitPA()
+        self:InitTextPA()
         if self.PAPreviewIcons then
             for _, icon in ipairs(self.PAPreviewIcons) do
                 icon:Hide()
@@ -314,6 +384,9 @@ function NSI:PreviewPA(Show)
         end
         return
     end
+    if not self.PATextMoverFrame then
+        self:InitTextPA()
+    end    
     self.PAFrames[1]:SetSize((NSRT.PASettings.Width), (NSRT.PASettings.Height))
     self.PAFrames[1]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
     if not self.PAFrames[1].Border then
@@ -328,6 +401,13 @@ function NSI:PreviewPA(Show)
         self.PAFrames[1].Border:Hide()
     end
     
+    self.PATextMoverFrame:SetMovable(true)
+    self.PATextMoverFrame:EnableMouse(true)
+    self.PATextMoverFrame:Show()
+    self.PATextMoverFrame.Border:Show()
+    self.PATextMoverFrame.Text:Show()
+    self.PATextMoverFrame.Text:SetFont(NSI.LSM:Fetch("font", "Expressway"), NSRT.PATextSettings.Scale*20, "OUTLINE")
+    self.PATextMoverFrame:SetSize(self.PATextMoverFrame.Text:GetStringWidth()*1, self.PATextMoverFrame.Text:GetStringHeight()*1.5)
     self.PAFrames[1]:SetMovable(true)
     self.PAFrames[1]:EnableMouse(true)
     self.PAFrames[1]:RegisterForDrag("LeftButton")
