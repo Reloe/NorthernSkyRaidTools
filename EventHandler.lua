@@ -39,6 +39,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.PersonalReminder = ""
             self.DisplayedReminder = ""
             self.DisplayedPersonalReminder = ""
+            self.DisplayedExtraReminder = ""
             NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
