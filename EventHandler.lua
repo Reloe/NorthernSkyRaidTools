@@ -276,7 +276,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
-        if self:DifficultyCheck(14) then
+        local diff= select(3, GetInstanceInfo()) or 0   
+        if self:DifficultyCheck(14) or diff == 23 then
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
             end)     
