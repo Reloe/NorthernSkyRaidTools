@@ -369,6 +369,11 @@ end
 
 function NSI:PreviewTankPA(Show)
     if not self.PATankFrames then self:InitTankPA() end
+    if not self.PATankFrames[1] or not self.PATankFrames[1][1] then
+        self.PATankFrames[1] = self.PATankFrames[1] or {}
+        self.PATankFrames[1][1] = CreateFrame("Frame", nil, self.NSRTFrame)
+        self.PATankFrames[1][1]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
+    end
     if not Show then
         if self.PATankFrames[1][1].Border then self.PATankFrames[1][1].Border:Hide() end
         self.PATankFrames[1][1]:SetMovable(false)
@@ -384,11 +389,6 @@ function NSI:PreviewTankPA(Show)
             self:InitTankPA()
         end
         return
-    end
-    if not self.PATankFrames[1] or not self.PATankFrames[1][1] then
-        self.PATankFrames[1] = self.PATankFrames[1] or {}
-        self.PATankFrames[1][1] = CreateFrame("Frame", nil, self.NSRTFrame)
-        self.PATankFrames[1][1]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
     end
     self.PATankFrames[1][1]:SetSize((NSRT.PATankSettings.Width), (NSRT.PATankSettings.Height))
     self.PATankFrames[1][1]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
