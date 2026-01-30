@@ -244,3 +244,44 @@ end
 function NSAPI:UnregisterAllCallbacks(owner)
     return NSI:UnregisterAllCallbacks(owner)
 end
+
+local Serialize = LibStub("AceSerializer-3.0")
+local Compress = LibStub("LibDeflate")
+
+function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettings", ...}
+    local str = ""
+    local ExportTable = {}
+    for k, Settings in pairs(SettingsTable) do
+        if Settings.enabled then
+            ExportTable[k] = Settings
+        end
+    end
+    local serialized = Serialize:Serialize(ExportTable)
+    local compressed = serialized and Compress:CompressDeflate(serialized)
+    local encoded = compressed and Compress:EncodeForPrint(compressed)
+    return encoded or ""
+end
+
+function NSI:ImportFromTable(ImportTable)    
+    for k, v in pairs(ImportTable) do
+        if v.enabled then
+            NSRT[k] = v.data
+        end
+    end
+end
+
+function NSI:ImportSettingsFromString(string)
+    local decoded = Compress:DecodeForPrint(string)
+    local decompressed = decoded and Compress:DecompressDeflate(decoded)
+    if not decompressed then return nil end
+    local success, data = Serialize:Deserialize(decompressed)
+    if success and data then
+        return data
+    else return nil end
+end
+
+function NSAPI:TestImport()
+    local str = NSI:CreateExportString({"ReminderSettings", "PASettings"})
+    local ImportTable = NSI:ImportSettingsFromString(str)
+    NSI:ImportFromTable(ImportTable)
+end

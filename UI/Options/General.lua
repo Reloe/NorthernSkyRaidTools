@@ -89,6 +89,38 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["TTS"] = value
             end,
         },
+        {
+            type = "breakline",
+        },
+        {
+            type = "button",
+            name = "Export Settings",
+            desc = "Exports your current settings to a string that can be shared with others.",
+            func = function(self)
+                if NSUI.export_string_popup:IsShown() then
+                    NSUI.export_string_popup:Hide()
+                else
+                    NSUI.export_string_popup:Show()     
+                end           
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Import Settings",
+            desc = "Imports settings from a string shared by others.",
+            func = function(self)
+                if NSUI.import_string_popup:IsShown() then
+                    NSUI.import_string_popup:Hide()
+                else
+                    NSUI.import_string_popup:Show()     
+                end             
+            end,
+            nocombat = true,
+            spacement = true
+        },
+
     }
 end
 

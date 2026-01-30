@@ -22,6 +22,8 @@ local BuildRemindersEditUI = NSI.UI.Reminders.BuildRemindersEditUI
 local BuildPersonalRemindersEditUI = NSI.UI.Reminders.BuildPersonalRemindersEditUI
 local BuildCooldownsEditUI = NSI.UI.Cooldowns.BuildCooldownsEditUI
 local BuildPASoundEditUI = NSI.UI.PrivateAuras.BuildPASoundEditUI
+local BuildExportStringUI = NSI.UI.General.BuildExportStringUI
+local BuildImportStringUI = NSI.UI.General.BuildImportStringUI
 
 -- Get options builders from modules
 local BuildGeneralOptions = NSI.UI.Options.General.BuildOptions
@@ -142,6 +144,8 @@ function NSUI:Init()
     NSUI.reminders_frame = BuildRemindersEditUI()
     NSUI.pasound_frame = BuildPASoundEditUI()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
+    NSUI.export_string_popup = BuildExportStringUI()
+    NSUI.import_string_popup = BuildImportStringUI()
 
     -- Version Number in status bar
     local versionNumber = " v"..C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Version")

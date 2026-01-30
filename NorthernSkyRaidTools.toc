@@ -53,6 +53,7 @@ UI/Reminders.lua
 UI/Cooldowns.lua
 UI/PrivateAuras.lua
 UI/Timeline.lua
+UI/General.lua
 
 # UI - Options (depend on Core)
 UI/Options/General.lua
