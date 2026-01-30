@@ -264,7 +264,7 @@ local function BuildPrivateAurasOptions()
             type = "toggle",
             boxfirst = true,
             name = "Hide Border",
-            desc = "Hide the Blizzard-border around the Raidframe Private Auras. This includes stuff like the dispel icon.",
+            desc = "Hide the Blizzard-border around the Raidframe Private Auras. This includes stuff like the dispel icon. (Tooltip is always disabled for Raidframes)",
             get = function() return NSRT.PARaidSettings.HideBorder end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.HideBorder = value
