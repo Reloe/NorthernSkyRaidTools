@@ -118,6 +118,30 @@ local function BuildPrivateAurasOptions()
             max = 10,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Border",
+            desc = "Hide the Blizzard-border around the Player Private Auras. This includes stuff like the dispel icon.",
+            get = function() return NSRT.PASettings.HideBorder end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.HideBorder = value
+                NSI:UpdatePADisplay(true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Disable Tooltip",
+            desc = "Hide tooltips on mouseover. The frame will remain clickthrough.",
+            get = function() return NSRT.PASettings.HideTooltip end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.HideTooltip = value
+                NSI:UpdatePADisplay(true)
+            end,
+            nocombat = true,
+        },
+        {
             type = "breakline"
         },
         {
@@ -234,6 +258,19 @@ local function BuildPrivateAurasOptions()
             end,
             min = 1,
             max = 10,
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Border",
+            desc = "Hide the Blizzard-border around the Raidframe Private Auras. This includes stuff like the dispel icon.",
+            get = function() return NSRT.PARaidSettings.HideBorder end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.HideBorder = value
+                NSI:UpdatePADisplay(false)
+            end,
+            nocombat = true,
         },
         {
             type = "breakline"
@@ -382,6 +419,30 @@ local function BuildPrivateAurasOptions()
             end,
             min = 1,
             max = 10,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Border",
+            desc = "Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuff like the dispel icon.",
+            get = function() return NSRT.PATankSettings.HideBorder end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.HideBorder = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Disable Tooltip",
+            desc = "Hide tooltips on mouseover. The frame will remain clickthrough.",
+            get = function() return NSRT.PATankSettings.HideTooltip end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.HideTooltip = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            nocombat = true,
         },
         {
             type = "select",

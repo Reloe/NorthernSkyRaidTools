@@ -77,17 +77,27 @@ end
 
 function NSI:InitPA()
     
-    if not self.PAFrame then
-        self.PAFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+    if not self.PAFrames then
+        self.PAFrames = {}
     end
-    self.PAFrame:SetSize(1, 1)
-    self.PAFrame:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
     
     if not self.AddedPA then self.AddedPA = {} end    
     local xDirection = (NSRT.PASettings.GrowDirection == "RIGHT" and 1) or (NSRT.PASettings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (NSRT.PASettings.GrowDirection == "DOWN" and -1) or (NSRT.PASettings.GrowDirection == "UP" and 1) or 0
-
+    local borderSize = NSRT.PASettings.HideBorder and -100 or NSRT.PASettings.Width/16
     for auraIndex=1, 10 do
+        if not self.PAFrames[auraIndex] then
+            self.PAFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+        end
+        if NSRT.PASettings.HideTooltip then
+            self.PAFrames[auraIndex]:SetSize(1, 1)
+        else
+            self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
+        end
+        self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
+        NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
+        NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
+
         local anchorID = "NSRT_PA"..auraIndex
         if self.AddedPA[anchorID] then
             C_UnitAuras.RemovePrivateAuraAnchor(self.AddedPA[anchorID])
@@ -97,17 +107,18 @@ function NSI:InitPA()
             local privateAnchorArgs = {
                 unitToken = "player",
                 auraIndex = auraIndex,
-                parent = self.PAFrame,
+                parent = self.PAFrames[auraIndex],
                 showCountdownFrame = true,
                 showCountdownNumbers = true,
                 iconInfo = {
                     iconAnchor = {
                         point = "CENTER",
-                        relativeTo = self.PAFrame,
+                        relativeTo = self.PAFrames[auraIndex],
                         relativePoint = "CENTER",
-                        offsetX = 0 + (auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection,
-                        offsetY = 0 + (auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection,
+                        offsetX = 0,
+                        offsetY = 0,
                     },
+                    borderScale = borderSize,
                 iconWidth = NSRT.PASettings.Width,
                 iconHeight = NSRT.PASettings.Height,
                 }
@@ -120,6 +131,7 @@ end
 function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled to clean up old anchors
     if not self.PARaidFrames then self.PARaidFrames = {} end
     if not self.AddedPARaid then self.AddedPARaid = {} end
+    local borderSize = NSRT.PARaidSettings.HideBorder and -100 or NSRT.PARaidSettings.Width/16
     for i=1, party and 5 or 40 do       
         local anchorID = party and "NSRT_PAParty"..i or "NSRT_PARaid"..i
         if self.AddedPARaid and self.AddedPARaid[anchorID] then
@@ -163,6 +175,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                                 offsetX = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection,
                                 offsetY = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection,
                             },
+                            borderScale = borderSize,
                             iconWidth = NSRT.PARaidSettings.Width,
                             iconHeight = NSRT.PARaidSettings.Height,
                         }
@@ -187,13 +200,15 @@ function NSI:RemoveTankPA()
     end
 end
 
+function NSAPI:StartTankAuras()
+    NSI:InitTankPA()
+end
+
 function NSI:InitTankPA()
     -- initiated on ENCOUNTER_START for tank players
-    if not self.PATankFrame then
-        self.PATankFrame = CreateFrame("Frame", nil, self.NSRTFrame)
-    end
-    self.PATankFrame:SetSize(1, 1)
-    self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
+    if not self.PATankFrames then
+        self.PATankFrames = {}
+    end    
 
     if not self.AddedTankPA then self.AddedTankPA = {} end
     local xDirection = (NSRT.PATankSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PATankSettings.GrowDirection == "LEFT" and -1) or 0
@@ -209,9 +224,25 @@ function NSI:InitTankPA()
     end
     -- remove any previous anchor, also calling this on ENCOUNTER_END
     self:RemoveTankPA()
+    local borderSize = NSRT.PATankSettings.HideBorder and -100 or NSRT.PATankSettings.Width/16
     for i, unit in ipairs(units) do
+        if not self.PATankFrames[i] then
+            self.PATankFrames[i] = {}
+        end
         self.AddedTankPA[i] = self.AddedTankPA[i] or {}
         for auraIndex = 1, 10 do
+            if not self.PATankFrames[i][auraIndex] then
+                self.PATankFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+            end
+            if NSRT.PATankSettings.HideTooltip then
+                self.PATankFrames[i][auraIndex]:SetSize(1, 1)
+            else
+                self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
+            end
+            self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
+            NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
+            NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
+
             local anchorID = "NSRT_TankPA"..auraIndex
             if self.AddedTankPA[i][anchorID] then
                 C_UnitAuras.RemovePrivateAuraAnchor(self.AddedTankPA[i][anchorID])
@@ -221,17 +252,18 @@ function NSI:InitTankPA()
                 local privateAnchorArgs = {
                     unitToken = unit,
                     auraIndex = auraIndex,
-                    parent = self.PATankFrame,
+                    parent = self.PATankFrames[i][auraIndex],
                     showCountdownFrame = true,
                     showCountdownNumbers = true,
                     iconInfo = {
                         iconAnchor = {
                             point = "CENTER",
-                            relativeTo = self.PATankFrame,
+                            relativeTo = self.PATankFrames[i][auraIndex],
                             relativePoint = "CENTER",
-                            offsetX = 0 + (auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx,
-                            offsetY = 0 + (auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky,
+                            offsetX = 0,
+                            offsetY = 0,
                         },
+                        borderScale = borderSize,
                     iconWidth = NSRT.PATankSettings.Width,
                     iconHeight = NSRT.PATankSettings.Height,
                     }
@@ -267,12 +299,13 @@ function NSI:UpdatePADisplay(Personal, Tank)
 end
 
 function NSI:PreviewPA(Show)
-    if not self.PAFrame then self:InitPA() end
+    if not self.PAFrames then self:InitPA() end
     if not Show then
-        if self.PAFrame.Border then self.PAFrame.Border:Hide() end
-        self.PAFrame:SetMovable(false)
-        self.PAFrame:EnableMouse(false)
-        self.PAFrame:SetSize(1, 1)
+        
+        if self.PAFrames[1].Border then self.PAFrames[1].Border:Hide() end
+        self.PAFrames[1]:SetMovable(false)
+        self.PAFrames[1]:EnableMouse(false)
+        self.PAFrames[1]:SetSize(1, 1)
         self:InitPA()
         if self.PAPreviewIcons then
             for _, icon in ipairs(self.PAPreviewIcons) do
@@ -281,29 +314,29 @@ function NSI:PreviewPA(Show)
         end
         return
     end
-    self.PAFrame:SetSize((NSRT.PASettings.Width), (NSRT.PASettings.Height))
-    self.PAFrame:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
-    if not self.PAFrame.Border then
-        self.PAFrame.Border = CreateFrame("Frame", nil, self.PAFrame, "BackdropTemplate") 
-        self.PAFrame.Border:SetPoint("TOPLEFT", self.PAFrame, "TOPLEFT", -6, 6)
-        self.PAFrame.Border:SetPoint("BOTTOMRIGHT", self.PAFrame, "BOTTOMRIGHT", 6, -6)
-        self.PAFrame.Border:SetBackdrop({
+    self.PAFrames[1]:SetSize((NSRT.PASettings.Width), (NSRT.PASettings.Height))
+    self.PAFrames[1]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
+    if not self.PAFrames[1].Border then
+        self.PAFrames[1].Border = CreateFrame("Frame", nil, self.PAFrames[1], "BackdropTemplate") 
+        self.PAFrames[1].Border:SetPoint("TOPLEFT", self.PAFrames[1], "TOPLEFT", -6, 6)
+        self.PAFrames[1].Border:SetPoint("BOTTOMRIGHT", self.PAFrames[1], "BOTTOMRIGHT", 6, -6)
+        self.PAFrames[1].Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 2,
             })
-        self.PAFrame.Border:SetBackdropBorderColor(1, 1, 1, 1)
-        self.PAFrame.Border:Hide()
+        self.PAFrames[1].Border:SetBackdropBorderColor(1, 1, 1, 1)
+        self.PAFrames[1].Border:Hide()
     end
     
-    self.PAFrame:SetMovable(true)
-    self.PAFrame:EnableMouse(true)
-    self.PAFrame:RegisterForDrag("LeftButton")
-    self.PAFrame:SetClampedToScreen(true)
-    self.PAFrame.Border:Show()
-    self.PAFrame:SetScript("OnDragStart", function(self)
+    self.PAFrames[1]:SetMovable(true)
+    self.PAFrames[1]:EnableMouse(true)
+    self.PAFrames[1]:RegisterForDrag("LeftButton")
+    self.PAFrames[1]:SetClampedToScreen(true)
+    self.PAFrames[1].Border:Show()
+    self.PAFrames[1]:SetScript("OnDragStart", function(self)
         self:StartMoving()
     end)
-    self.PAFrame:SetScript("OnDragStop", function(Frame)
+    self.PAFrames[1]:SetScript("OnDragStop", function(Frame)
         Frame:StopMovingOrSizing()       
         local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
         xOffset = Round(xOffset)
@@ -319,14 +352,14 @@ function NSI:PreviewPA(Show)
     end
     for i=1, 10 do
         if not self.PAPreviewIcons[i] then
-            self.PAPreviewIcons[i] = self.PAFrame:CreateTexture(nil, "ARTWORK")
+            self.PAPreviewIcons[i] = self.PAFrames[1]:CreateTexture(nil, "ARTWORK")
             self.PAPreviewIcons[i]:SetTexture(237555)
         end
         if NSRT.PASettings.Limit >= i then
             local xOffset = (NSRT.PASettings.GrowDirection == "RIGHT" and (i-1)*(NSRT.PASettings.Width+NSRT.PASettings.Spacing)) or (NSRT.PASettings.GrowDirection == "LEFT" and -(i-1)*(NSRT.PASettings.Width+NSRT.PASettings.Spacing)) or 0
             local yOffset = (NSRT.PASettings.GrowDirection == "UP" and (i-1)*(NSRT.PASettings.Height+NSRT.PASettings.Spacing)) or (NSRT.PASettings.GrowDirection == "DOWN" and -(i-1)*(NSRT.PASettings.Height+NSRT.PASettings.Spacing)) or 0
             self.PAPreviewIcons[i]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
-            self.PAPreviewIcons[i]:SetPoint("CENTER", self.PAFrame, "CENTER", xOffset, yOffset)
+            self.PAPreviewIcons[i]:SetPoint("CENTER", self.PAFrames[1], "CENTER", xOffset, yOffset)
             self.PAPreviewIcons[i]:Show()
         else
             self.PAPreviewIcons[i]:Hide()
@@ -335,43 +368,51 @@ function NSI:PreviewPA(Show)
 end
 
 function NSI:PreviewTankPA(Show)
-    if not self.PATankFrame then self:InitTankPA() end
+    if not self.PATankFrames then self:InitTankPA() end
     if not Show then
-        if self.PATankFrame.Border then self.PATankFrame.Border:Hide() end
-        self.PATankFrame:SetMovable(false)
-        self.PATankFrame:EnableMouse(false)
-        self.PATankFrame:SetSize(1, 1)
+        if self.PATankFrames[1][1].Border then self.PATankFrames[1][1].Border:Hide() end
+        self.PATankFrames[1][1]:SetMovable(false)
+        self.PATankFrames[1][1]:EnableMouse(false)
+        self.PATankFrames[1][1]:SetSize(1, 1)
         if self.PATankPreviewIcons then
             for _, icon in ipairs(self.PATankPreviewIcons) do
                 icon:Hide()
             end
         end
         self:RemoveTankPA()
+        if UnitGroupRolesAssigned("player") == "TANK" or NSRT.Settings.Debug then
+            self:InitTankPA()
+        end
         return
     end
-    self.PATankFrame:SetSize((NSRT.PATankSettings.Width), (NSRT.PATankSettings.Height))
-    self.PATankFrame:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
-    if not self.PATankFrame.Border then
-        self.PATankFrame.Border = CreateFrame("Frame", nil, self.PATankFrame, "BackdropTemplate") 
-        self.PATankFrame.Border:SetPoint("TOPLEFT", self.PATankFrame, "TOPLEFT", -6, 6)
-        self.PATankFrame.Border:SetPoint("BOTTOMRIGHT", self.PATankFrame, "BOTTOMRIGHT", 6, -6)
-        self.PATankFrame.Border:SetBackdrop({
+    if not self.PATankFrames[1] or not self.PATankFrames[1][1] then
+        self.PATankFrames[1] = self.PATankFrames[1] or {}
+        self.PATankFrames[1][1] = CreateFrame("Frame", nil, self.NSRTFrame)
+        self.PATankFrames[1][1]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
+    end
+    self.PATankFrames[1][1]:SetSize((NSRT.PATankSettings.Width), (NSRT.PATankSettings.Height))
+    self.PATankFrames[1][1]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, NSRT.PATankSettings.xOffset, NSRT.PATankSettings.yOffset)
+    if not self.PATankFrames[1][1].Border then
+        self.PATankFrames[1][1].Border = CreateFrame("Frame", nil, self.PATankFrames[1][1], "BackdropTemplate") 
+        self.PATankFrames[1][1].Border:SetPoint("TOPLEFT", self.PATankFrames[1][1], "TOPLEFT", -6, 6)
+        self.PATankFrames[1][1].Border:SetPoint("BOTTOMRIGHT", self.PATankFrames[1][1], "BOTTOMRIGHT", 6, -6)
+        self.PATankFrames[1][1].Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 2,
             })
-        self.PATankFrame.Border:SetBackdropBorderColor(1, 1, 1, 1)
-        self.PATankFrame.Border:Hide()
+        self.PATankFrames[1][1].Border:SetBackdropBorderColor(1, 1, 1, 1)
+        self.PATankFrames[1][1].Border:Hide()
     end
 
-    self.PATankFrame:SetMovable(true)
-    self.PATankFrame:EnableMouse(true)
-    self.PATankFrame:RegisterForDrag("LeftButton")
-    self.PATankFrame:SetClampedToScreen(true)
-    self.PATankFrame.Border:Show()
-    self.PATankFrame:SetScript("OnDragStart", function(self)
+    self.PATankFrames[1][1]:SetMovable(true)
+    self.PATankFrames[1][1]:EnableMouse(true)
+    self.PATankFrames[1][1]:RegisterForDrag("LeftButton")
+    self.PATankFrames[1][1]:SetClampedToScreen(true)
+    self.PATankFrames[1][1].Border:Show()
+    self.PATankFrames[1][1]:SetScript("OnDragStart", function(self)
         self:StartMoving()
     end)
-    self.PATankFrame:SetScript("OnDragStop", function(Frame)
+    self.PATankFrames[1][1]:SetScript("OnDragStop", function(Frame)
         Frame:StopMovingOrSizing()       
         local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
         xOffset = Round(xOffset)
@@ -387,14 +428,14 @@ function NSI:PreviewTankPA(Show)
     end
     for i=1, 10 do
         if not self.PATankPreviewIcons[i] then
-            self.PATankPreviewIcons[i] = self.PATankFrame:CreateTexture(nil, "ARTWORK")
+            self.PATankPreviewIcons[i] = self.PATankFrames[1][1]:CreateTexture(nil, "ARTWORK")
             self.PATankPreviewIcons[i]:SetTexture(236318)
         end
         if NSRT.PATankSettings.Limit >= i then
             local xOffset = (NSRT.PATankSettings.GrowDirection == "RIGHT" and (i-1)*(NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing)) or (NSRT.PATankSettings.GrowDirection == "LEFT" and -(i-1)*(NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing)) or 0
             local yOffset = (NSRT.PATankSettings.GrowDirection == "UP" and (i-1)*(NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing)) or (NSRT.PATankSettings.GrowDirection == "DOWN" and -(i-1)*(NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing)) or 0
             self.PATankPreviewIcons[i]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
-            self.PATankPreviewIcons[i]:SetPoint("CENTER", self.PATankFrame, "CENTER", xOffset, yOffset)
+            self.PATankPreviewIcons[i]:SetPoint("CENTER", self.PATankFrames[1][1], "CENTER", xOffset, yOffset)
             self.PATankPreviewIcons[i]:Show()
         else
             self.PATankPreviewIcons[i]:Hide()
