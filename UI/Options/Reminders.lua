@@ -717,7 +717,7 @@ local function BuildReminderOptions()
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.enabled = value
                 NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
             end,
             nocombat = true,
         },
@@ -731,7 +731,7 @@ local function BuildReminderOptions()
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersNote = value
                 NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
             end,
             nocombat = true,
         },
@@ -744,7 +744,7 @@ local function BuildReminderOptions()
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.MRTNote = value
                 NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
             end,
             nocombat = true,
         },
@@ -799,7 +799,7 @@ local function BuildReminderOptions()
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.UseTimelineReminders = value
                 NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
                 NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
             end,
             nocombat = true,
@@ -826,19 +826,19 @@ local function BuildReminderNoteOptions()
             name = "Unlock All Reminders Note",
             desc = "Locks/Unlocks the All Reminders Note to be moved around",
             func = function(self)
-                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame()
+                if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then                    
+                    NSI:UpdateReminderFrame(false, true)
                     NSI:ToggleMoveFrames(NSI.ReminderFrameMover, false)
                     NSI.ReminderFrameMover.Resizer:Hide()
                     NSI.ReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.ReminderFrameMoveable = false
-                else
-                    NSI:UpdateReminderFrame()
+                    NSRT.ReminderSettings.ReminderFrame.Moveable = false
+                else            
+                    NSI:UpdateReminderFrame(false, true)
                     NSI:ToggleMoveFrames(NSI.ReminderFrameMover, true)
                     NSI.ReminderFrameMover.Resizer:Show()
                     NSI.ReminderFrameMover:SetResizable(true)
                     NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.ReminderFrameMoveable = true
+                    NSRT.ReminderSettings.ReminderFrame.Moveable = true
                 end
             end,
             nocombat = true,
@@ -849,11 +849,11 @@ local function BuildReminderNoteOptions()
             boxfirst = true,
             name = "Show All Reminders Note",
             desc = "Whether you want to show the All Reminders Note on screen permanently",
-            get = function() return NSRT.ReminderSettings.ShowReminderFrame end,
+            get = function() return NSRT.ReminderSettings.ReminderFrame.enabled end,
             set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.ShowReminderFrame = value
-                NSI:ProcessReminder()
-                NSI:UpdateReminderFrame()
+                NSRT.ReminderSettings.ReminderFrame.enabled = value
+                NSI:ProcessReminder()            
+                NSI:UpdateReminderFrame(false, true)
             end,
             nocombat = true,
         },
@@ -863,8 +863,8 @@ local function BuildReminderNoteOptions()
             desc = "Font-Size of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.ReminderFrame.FontSize = value
-                NSI:UpdateReminderFrame()
+                NSRT.ReminderSettings.ReminderFrame.FontSize = value            
+                NSI:UpdateReminderFrame(false, true)
             end,
             min = 2,
             max = 40,
@@ -886,8 +886,8 @@ local function BuildReminderNoteOptions()
             desc = "Width of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
             set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.ReminderFrame.Width = value
-                NSI:UpdateReminderFrame()
+                NSRT.ReminderSettings.ReminderFrame.Width = value            
+                NSI:UpdateReminderFrame(false, true)
             end,
             min = 100,
             max = 2000,
@@ -899,8 +899,8 @@ local function BuildReminderNoteOptions()
             desc = "Height of the All Reminders Note",
             get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
             set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.ReminderFrame.Height = value
-                NSI:UpdateReminderFrame()
+                NSRT.ReminderSettings.ReminderFrame.Height = value            
+                NSI:UpdateReminderFrame(false, true)
             end,
             min = 100,
             max = 2000,
@@ -913,8 +913,8 @@ local function BuildReminderNoteOptions()
             desc = "Color of the Background of the All Reminders Note when unlocked",
             get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
-                NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
-                NSI:UpdateReminderFrame()
+                NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}            
+                NSI:UpdateReminderFrame(false, true)
             end,
             hasAlpha = true,
             nocombat = true,
@@ -963,19 +963,19 @@ local function BuildReminderNoteOptions()
             name = "Unlock Pers Reminder",
             desc = "Locks/Unlocks the Personal Reminders Note to be moved around",
             func = function(self)
-                if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame(true)
+                if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then            
+                    NSI:UpdateReminderFrame(false, false, true)
                     NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, false)
                     NSI.PersonalReminderFrameMover.Resizer:Hide()
                     NSI.PersonalReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.PersonalReminderFrameMoveable = false
-                else
-                    NSI:UpdateReminderFrame(true)
+                    NSRT.ReminderSettings.PersonalReminderFrame.Moveable = false
+                else    
+                    NSI:UpdateReminderFrame(false, false, true)
                     NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, true)
                     NSI.PersonalReminderFrameMover.Resizer:Show()
                     NSI.PersonalReminderFrameMover:SetResizable(true)
                     NSI.PersonalReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.PersonalReminderFrameMoveable = true
+                    NSRT.ReminderSettings.PersonalReminderFrame.Moveable = true
                 end
             end,
             nocombat = true,
@@ -986,11 +986,11 @@ local function BuildReminderNoteOptions()
             boxfirst = true,
             name = "Show Personal Reminder Note",
             desc = "Whether you want to display the Note for Reminders only relevant to you",
-            get = function() return NSRT.ReminderSettings.ShowPersonalReminderFrame end,
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.enabled end,
             set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.ShowPersonalReminderFrame = value
-                NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(true)
+                NSRT.ReminderSettings.PersonalReminderFrame.enabled = value
+                NSI:ProcessReminder()    
+                NSI:UpdateReminderFrame(false, false, true)
             end,
             nocombat = true,
         },
@@ -1001,7 +1001,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.FontSize = value
-                NSI:UpdateReminderFrame(true)
+                NSI:UpdateReminderFrame(false, false, true)
             end,
             min = 2,
             max = 40,
@@ -1024,7 +1024,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Width = value
-                NSI:UpdateReminderFrame(true)
+                NSI:UpdateReminderFrame(false, false, true)
             end,
             min = 100,
             max = 2000,
@@ -1037,7 +1037,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Height = value
-                NSI:UpdateReminderFrame(true)
+                NSI:UpdateReminderFrame(false, false, true)
             end,
             min = 100,
             max = 2000,
@@ -1051,7 +1051,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
-                NSI:UpdateReminderFrame(true)
+                NSI:UpdateReminderFrame(false, false, true)
             end,
             hasAlpha = true,
             nocombat = true
@@ -1065,7 +1065,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.TextInPersonalNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextInPersonalNote = value
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
             end,
         },
 
@@ -1091,18 +1091,18 @@ local function BuildReminderNoteOptions()
             desc = "Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed.",
             func = function(self)
                 if NSI.ExtraReminderFrameMover and NSI.ExtraReminderFrameMover:IsMovable() then
-                    NSI:UpdateReminderFrame(false, false, true)
+                    NSI:UpdateReminderFrame(false, false, false, true)
                     NSI:ToggleMoveFrames(NSI.ExtraReminderFrameMover, false)
                     NSI.ExtraReminderFrameMover.Resizer:Hide()
                     NSI.ExtraReminderFrameMover:SetResizable(false)
-                    NSRT.ReminderSettings.ExtraReminderFrameMoveable = false
+                    NSRT.ReminderSettings.ExtraReminderFrame.Moveable = false
                 else
-                    NSI:UpdateReminderFrame(false, false, true)
+                    NSI:UpdateReminderFrame(false, false, false, true)
                     NSI:ToggleMoveFrames(NSI.ExtraReminderFrameMover, true)
                     NSI.ExtraReminderFrameMover.Resizer:Show()
                     NSI.ExtraReminderFrameMover:SetResizable(true)
                     NSI.ExtraReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
-                    NSRT.ReminderSettings.ExtraReminderFrameMoveable = true
+                    NSRT.ReminderSettings.ExtraReminderFrame.Moveable = true
                 end
             end,
             nocombat = true,
@@ -1113,11 +1113,11 @@ local function BuildReminderNoteOptions()
             boxfirst = true,
             name = "Show Text Note",
             desc = "Whether you want to display the Text-Note",
-            get = function() return NSRT.ReminderSettings.ShowExtraReminderFrame end,
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.enabled end,
             set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.ShowExtraReminderFrame = value
+                NSRT.ReminderSettings.ExtraReminderFrame.enabled = value
                 NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, false, true)
+                NSI:UpdateReminderFrame(false, false, false, true)
             end,
             nocombat = true,
         },
@@ -1128,7 +1128,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.FontSize = value
-                NSI:UpdateReminderFrame(false, false, true)
+                NSI:UpdateReminderFrame(false, false, false, true)
             end,
             min = 2,
             max = 40,
@@ -1151,7 +1151,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.Width = value
-                NSI:UpdateReminderFrame(false, false, true)
+                NSI:UpdateReminderFrame(false, false, false, true)
             end,
             min = 100,
             max = 2000,
@@ -1164,7 +1164,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.Height = value
-                NSI:UpdateReminderFrame(false, false, true)
+                NSI:UpdateReminderFrame(false, false, false, true)
             end,
             min = 100,
             max = 2000,
@@ -1178,7 +1178,7 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ExtraReminderFrame.BGcolor = {r, g, b, a}
-                NSI:UpdateReminderFrame(false, false, true)
+                NSI:UpdateReminderFrame(false, false, false, true)
             end,
             hasAlpha = true,
             nocombat = true

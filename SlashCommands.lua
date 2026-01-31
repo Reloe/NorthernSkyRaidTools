@@ -33,32 +33,34 @@ SlashCmdList["NSUI"] = function(msg)
             NSUI.personal_reminders_frame:Hide()
         end
     elseif msg == "note" or msg == "n" then -- Toggle Showing/Hiding ALL Notes
-        local ShouldShow = not (NSRT.ReminderSettings.ShowReminderFrame or NSRT.ReminderSettings.ShowPersonalReminderFrame or NSRT.ReminderSettings.ShowExtraReminderFrame)
-        NSRT.ReminderSettings.ShowReminderFrame = ShouldShow
-        NSRT.ReminderSettings.ShowPersonalReminderFrame = ShouldShow
-        NSRT.ReminderSettings.ShowExtraReminderFrame = ShouldShow
-        NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(false, true)
-    elseif msg == "anote" or msg == "an" or msg == "snote" or msg == "sn" then -- Toggle the "All Reminders Note"
-        NSRT.ReminderSettings.ShowReminderFrame = not NSRT.ReminderSettings.ShowReminderFrame
-        NSI:ProcessReminder()
-        NSI:UpdateReminderFrame()
-    elseif msg == "pnote" or msg == "pn" then -- Toggle the "Personal Reminders Note"
-        NSRT.ReminderSettings.ShowPersonalReminderFrame = not NSRT.ReminderSettings.ShowPersonalReminderFrame
+        local ShouldShow = not (NSRT.ReminderSettings.ReminderFrame.enabled or NSRT.ReminderSettings.PersonalReminderFrame.enabled or NSRT.ReminderSettings.ExtraReminderFrame.enabled)
+        NSRT.ReminderSettings.ReminderFrame.enabled = ShouldShow
+        NSRT.ReminderSettings.PersonalReminderFrame.enabled = ShouldShow
+        NSRT.ReminderSettings.ExtraReminderFrame.enabled = ShouldShow
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(true)
-    elseif msg == "tnote" or msg == "tn" then -- Toggle the "Text Note"
+    elseif msg == "anote" or msg == "an" or msg == "snote" or msg == "sn" then -- Toggle the "All Reminders Note"
+        NSRT.ReminderSettings.ReminderFrame.enabled = not NSRT.ReminderSettings.ReminderFrame.enabled
+        NSI:ProcessReminder()
+        NSI:UpdateReminderFrame(false, true)
+    elseif msg == "pnote" or msg == "pn" then -- Toggle the "Personal Reminders Note"
+        NSRT.ReminderSettings.PersonalReminderFrame.enabled = not NSRT.ReminderSettings.PersonalReminderFrame.enabled
+        NSI:ProcessReminder()
         NSI:UpdateReminderFrame(false, false, true)
+    elseif msg == "tnote" or msg == "tn" then -- Toggle the "Text Note"
+        NSRT.ReminderSettings.ExtraReminderFrame.enabled = not NSRT.ReminderSettings.ExtraReminderFrame.enabled
+        NSI:ProcessReminder()
+        NSI:UpdateReminderFrame(false, false, false, true)
     elseif msg == "clear" or msg == "c" then -- Clear Active Reminder
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(false, true)
+        NSI:UpdateReminderFrame(true)
     elseif msg == "pclear" or msg == "pc" then -- Clear Active Personal Reminder
         NSRT.ActivePersonalReminder = nil
         NSI.PersonalReminder = ""
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(false, true)
+        NSI:UpdateReminderFrame(true)
     elseif msg == "timeline" or msg == "tl" then
         NSI:ToggleTimelineWindow()
     elseif msg == "help" then

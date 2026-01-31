@@ -61,7 +61,7 @@ local function build_media_options(typename, settingname, isTexture, isReminder,
             onclick = function(_, _, value)
                 NSRT.ReminderSettings[typename][settingname] = list[value]
                 if isReminder then
-                    NSI:UpdateReminderFrame(false, true)
+                    NSI:UpdateReminderFrame(true)
                 else
                     NSI:UpdateExistingFrames()
                 end

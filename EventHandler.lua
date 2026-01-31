@@ -55,16 +55,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
-            if NSRT.ReminderSettings.ShowPersonalReminderFrame == nil then NSRT.ReminderSettings.ShowPersonalReminderFrame = true end
-            NSRT.ReminderSettings.ShowExtraReminderFrame = NSRT.ReminderSettings.ShowExtraReminderFrame or false
             if not NSRT.ReminderSettings.PersonalReminderFrame then
-                NSRT.ReminderSettings.PersonalReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
+                NSRT.ReminderSettings.PersonalReminderFrame = {enabled = true, Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end
             if not NSRT.ReminderSettings.ReminderFrame then
-                NSRT.ReminderSettings.ReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
+                NSRT.ReminderSettings.ReminderFrame = {enabled = false, Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end
             if not NSRT.ReminderSettings.ExtraReminderFrame then
-                NSRT.ReminderSettings.ExtraReminderFrame = {Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
+                NSRT.ReminderSettings.ExtraReminderFrame = {enabled = false, Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
             end
             if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then 
                 NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", colors = {1, 1, 1, 1}, xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80, Spacing = -1}
@@ -120,6 +118,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
 
+            if NSRT.ReminderSettings.ReminderFrame.enabled == nil then -- convert to different format
+                NSRT.ReminderSettings.ReminderFrame.enabled = NSRT.ReminderSettings.ShowReminderFrame 
+                NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame
+                NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame
+            end
+
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}
@@ -148,7 +152,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
             self.Reminder = NSRT.StoredSharedReminder or ""
         end
-        self:UpdateReminderFrame(false, true)
+        self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end        
@@ -294,7 +298,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
                 self:ProcessReminder()
-                self:UpdateReminderFrame(false, true)
+                self:UpdateReminderFrame(true)
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
             self.Assignments = assigntable

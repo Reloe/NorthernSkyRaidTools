@@ -136,7 +136,7 @@ local function BuildRemindersEditUI()
         NSRT.ActiveReminder = nil
         NSI.Reminder = ""
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(false, true)
+        NSI:UpdateReminderFrame(true)
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -244,7 +244,7 @@ local function BuildRemindersEditUI()
             if name ~= "" then
                 NSI:SetReminder(name)
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
             end
         end, 40, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -333,7 +333,7 @@ local function BuildPersonalRemindersEditUI()
         NSRT.ActivePersonalReminder = nil
         NSI.PersonalReminder = ""
         NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(false, true)
+        NSI:UpdateReminderFrame(true)
         Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -431,7 +431,7 @@ local function BuildPersonalRemindersEditUI()
             if name ~= "" then
                 NSI:SetReminder(name, true)
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(true)
             end
         end, 55, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
