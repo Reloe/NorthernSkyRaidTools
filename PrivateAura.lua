@@ -95,12 +95,9 @@ function NSI:InitTextPA()
                     edgeSize = 2,
                 })
             self.PATextMoverFrame.Border:SetBackdropBorderColor(1, 1, 1, 1)
-            self.PATextMoverFrame.Border:Hide()
         end
-        self.PATextMoverFrame:SetMovable(false)
-        self.PATextMoverFrame:EnableMouse(false)
-        self.PATextMoverFrame:SetClampedToScreen(true)
-        self.PATextMoverFrame:RegisterForDrag("LeftButton")
+        self:ToggleMoveFrames(self.PATextMoverFrame, true)
+        self.PATextMoverFrame.Border:Hide()
         self.PATextMoverFrame:Hide()
         self.PATextMoverFrame:SetScript("OnDragStart", function(self)
             self:StartMoving()
@@ -361,12 +358,9 @@ function NSI:PreviewPA(Show)
     if not Show then
         
         if self.PAFrames[1].Border then self.PAFrames[1].Border:Hide() end
-        self.PAFrames[1]:SetMovable(false)
-        self.PAFrames[1]:EnableMouse(false)
-        self.PATextMoverFrame:SetMovable(false)
-        self.PATextMoverFrame:EnableMouse(false)
-        self.PATextMoverFrame.Border:Hide()
-        self.PATextMoverFrame.Text:Hide()
+        
+        self:ToggleMoveFrames(self.PATextMoverFrame, false)
+        self:ToggleMoveFrames(self.PAFrames[1], false)
         self.PATextMoverFrame:Hide()
         self.PAFrames[1]:SetSize(1, 1)
         self:InitPA()
@@ -395,17 +389,13 @@ function NSI:PreviewPA(Show)
         self.PAFrames[1].Border:Hide()
     end
     
-    self.PATextMoverFrame:SetMovable(true)
-    self.PATextMoverFrame:EnableMouse(true)
+    self:ToggleMoveFrames(self.PATextMoverFrame, true)
+    self:ToggleMoveFrames(self.PAFrames[1], true)
     self.PATextMoverFrame:Show()
     self.PATextMoverFrame.Border:Show()
     self.PATextMoverFrame.Text:Show()
     self.PATextMoverFrame.Text:SetFont(self.LSM:Fetch("font", "Expressway"), NSRT.PATextSettings.Scale*20, "OUTLINE")
     self.PATextMoverFrame:SetSize(self.PATextMoverFrame.Text:GetStringWidth()*1, self.PATextMoverFrame.Text:GetStringHeight()*1.5)
-    self.PAFrames[1]:SetMovable(true)
-    self.PAFrames[1]:EnableMouse(true)
-    self.PAFrames[1]:RegisterForDrag("LeftButton")
-    self.PAFrames[1]:SetClampedToScreen(true)
     self.PAFrames[1].Border:Show()
     self.PAFrames[1]:SetScript("OnDragStart", function(self)
         self:StartMoving()
@@ -443,8 +433,7 @@ function NSI:PreviewTankPA(Show)
     end
     if not Show then
         if self.PATankFrames[1][1].Border then self.PATankFrames[1][1].Border:Hide() end
-        self.PATankFrames[1][1]:SetMovable(false)
-        self.PATankFrames[1][1]:EnableMouse(false)
+        self:ToggleMoveFrames(self.PATankFrames[1][1], false)
         self.PATankFrames[1][1]:SetSize(1, 1)
         if self.PATankPreviewIcons then
             for _, icon in ipairs(self.PATankPreviewIcons) do
@@ -471,11 +460,7 @@ function NSI:PreviewTankPA(Show)
         self.PATankFrames[1][1].Border:Hide()
     end
 
-    self.PATankFrames[1][1]:SetMovable(true)
-    self.PATankFrames[1][1]:EnableMouse(true)
-    self.PATankFrames[1][1]:RegisterForDrag("LeftButton")
-    self.PATankFrames[1][1]:SetClampedToScreen(true)
-    self.PATankFrames[1][1].Border:Show()
+    self:ToggleMoveFrames(self.PATankFrames[1][1], true)
     self.PATankFrames[1][1]:SetScript("OnDragStart", function(self)
         self:StartMoving()
     end)

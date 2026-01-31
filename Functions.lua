@@ -296,3 +296,19 @@ function NSI:StopFrameMove(F, SettingsTable)
     SettingsTable.Anchor = Anchor    
     SettingsTable.relativeTo = relativeTo   
 end
+
+function NSI:ToggleMoveFrames(F, Unlock, DontHide)
+    if Unlock then
+        F:SetMovable(true)
+        F:EnableMouse(true)
+        F:RegisterForDrag("LeftButton")
+        F:SetClampedToScreen(true)
+        F.Border:Show()
+        F:Show()
+    else
+        if F.Border then F.Border:Hide() end
+        if F.Text then F.Text:Hide() end
+        F:SetMovable(false)
+        F:EnableMouse(false)
+    end    
+end

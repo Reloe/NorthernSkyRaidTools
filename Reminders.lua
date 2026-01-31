@@ -374,7 +374,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         end
     end
     self:ArrangeStates("Bars")
-    self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings) 
+    self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings, false, true) 
 end
 
 function NSI:ArrangeStates(Type)
@@ -1026,7 +1026,7 @@ end
 
 function NSI:CreateMoveFrames(Show)
     self:CreateReminderMoverFrame("IconMover", NSRT.ReminderSettings.IconSettings, "IconSettings")
-    self:CreateReminderMoverFrame("BarMover", NSRT.ReminderSettings.BarSettings, "BarSettings")
+    self:CreateReminderMoverFrame("BarMover", NSRT.ReminderSettings.BarSettings, "BarSettings", false, true)
     self:CreateReminderMoverFrame("TextMover", NSRT.ReminderSettings.TextSettings, "TextSettings", true)
     self:CreateNoteMoverFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, true, false, false)
     self:CreateNoteMoverFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, false, true, false)
@@ -1042,9 +1042,9 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
         self:MoveFrameInit(self[Name], SettingsName)
-        self:MoveFrameSettings(self[Name], SettingsTable)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText)
     else
-        self:MoveFrameSettings(self[Name], SettingsTable)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText)
     end
     self[Name]:Show()
 end
@@ -1067,13 +1067,14 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
     self[Name.."Mover"]:Show()
 end
 
-function NSI:MoveFrameSettings(F, s, text)    
-    if text then        
+function NSI:MoveFrameSettings(F, s, IsText)    
+    local Width = (IsText and F.Text:GetStringWidth()) or s.Width
+    local Height = (IsText and F.Text:GetStringHeight()) or s.Height
+    if IsText then        
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         F.Text:SetText("Personals - (10)")
-        s.Width, s.Height = F.Text:GetStringWidth(), F.Text:GetStringHeight()   
     end
-    F:SetSize(s.Width, s.Height)
+    F:SetSize(Width, Height)
     F:ClearAllPoints()
     F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset)
 end
@@ -1105,36 +1106,23 @@ function NSI:MoveFrameInit(F, s, text, ReminderColor)
     end
 end
 
-function NSI:ToggleMoveFrames(F, Unlock)
-    if Unlock then
-        F:SetMovable(true)
-        F:EnableMouse(true)
-        F:RegisterForDrag("LeftButton")
-        F:SetClampedToScreen(true)
-        F.Border:Show()
-    else
-        F.Border:Hide()
-        F:SetMovable(false)
-        F:EnableMouse(false)
-    end    
-end
-
 function NSAPI:DebugNextPhase(num)
+    if not NSRT.Settings["Debug"] then return end
     for i=1, num do
         NSI:EventHandler("ENCOUNTER_TIMELINE_EVENT_ADDED")
     end
 end
 
 function NSAPI:DebugEncounter(EncounterID)
-    if NSRT.Settings["Debug"] then
-        NSI.ProcessedReminder = nil
-        NSI.Assignments = NSRT.AssignmentSettings
-        NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
-    end
+    if not NSRT.Settings["Debug"] then return end
+    NSI.ProcessedReminder = nil
+    NSI.Assignments = NSRT.AssignmentSettings
+    NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
 end
 -- /run NSAPI:DebugEncounter(3306)
 -- /run NSAPI:DebugTimeline("ENCOUNTER_TIMELINE_EVENT_ADDED", 120.9)
 function NSAPI:DebugTimeline(e, dur)
+    if not NSRT.Settings["Debug"] then return end
     NSI:EventHandler(e, true, true, {duration = dur})
 end
 
