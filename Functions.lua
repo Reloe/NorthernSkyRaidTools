@@ -284,9 +284,3 @@ function NSI:ImportSettingsFromString(string)
         return data
     else return nil end
 end
-
-function NSAPI:TestImport()
-    local str = NSI:CreateExportString({"ReminderSettings", "PASettings"})
-    local ImportTable = NSI:ImportSettingsFromString(str)
-    NSI:ImportFromTable(ImportTable)
-end
