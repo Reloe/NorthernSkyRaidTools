@@ -109,7 +109,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "button",
             name = "Import Settings",
-            desc = "Imports settings from a string shared by others.",
+            desc = "Imports settings from a string shared by others. Confirming the Import will force reload your UI for the changes to take effect.",
             func = function(self)
                 if NSUI.import_string_popup:IsShown() then
                     NSUI.import_string_popup:Hide()
