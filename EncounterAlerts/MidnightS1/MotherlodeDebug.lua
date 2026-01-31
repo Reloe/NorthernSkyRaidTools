@@ -43,19 +43,32 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
-local detectedDurations = {}
+
+local detectedDurations = {
+    [16] = {
+        {time = 31, phase = function(num) return num+1 end},
+        {time = 33, phase = function(num) return 5 end},
+        {time = 34.5, phase = function(num) return num end},
+    },
+}
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     -- not checking REMOVED event by default but may be needed for some encounters
-    print("added event", e, info and type(info) == "table" and info.duration, self.PhaseSwapTime, now, self.EncounterID, self.Phase)
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
-    for k, v in ipairs(detectedDurations) do
-        if info.duration == v then            
-            self.Phase = self.Phase+1                  
-            self:StartReminders(self.Phase)
-            self.PhaseSwapTime = now
-            break
+    local difficultyID = 16 -- bypass for debug
+    if not difficultyID or not detectedDurations[difficultyID] then return end
+    for _, phaseinfo in ipairs(detectedDurations[difficultyID]) do
+        print("Checking duration:", info.duration, "against", phaseinfo.time)
+        if info.duration == phaseinfo.time then               
+            local newphase = phaseinfo.phase(self.Phase)
+            print("Changing to phase:", newphase, "from", self.Phase)
+            if newphase > self.Phase then         
+                self.Phase = newphase               
+                self:StartReminders(self.Phase)
+                self.PhaseSwapTime = now
+                break
+            end
         end
     end
 end

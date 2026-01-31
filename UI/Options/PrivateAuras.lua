@@ -133,7 +133,7 @@ local function BuildPrivateAurasOptions()
             type = "toggle",
             boxfirst = true,
             name = "Disable Tooltip",
-            desc = "Hide tooltips on mouseover. The frame will remain clickthrough.",
+            desc = "Hide tooltips on mouseover. The frame will be clickthrough regardless.",
             get = function() return NSRT.PASettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.HideTooltip = value
@@ -466,7 +466,7 @@ local function BuildPrivateAurasOptions()
             type = "toggle",
             boxfirst = true,
             name = "Disable Tooltip",
-            desc = "Hide tooltips on mouseover. The frame will remain clickthrough.",
+            desc = "Hide tooltips on mouseover. The frame will be clickthrough regardless.",
             get = function() return NSRT.PATankSettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideTooltip = value
