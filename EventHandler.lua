@@ -45,7 +45,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
             NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
-            NSRT.ReminderSettings.Bars = NSRT.ReminderSettings.Bars or false
             if NSRT.ReminderSettings.SpellTTS == nil then NSRT.ReminderSettings.SpellTTS = true end
             if NSRT.ReminderSettings.TextTTS == nil then NSRT.ReminderSettings.TextTTS = true end
             NSRT.ReminderSettings.SpellDuration = NSRT.ReminderSettings.SpellDuration or 10
@@ -55,9 +54,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.SpellName = NSRT.ReminderSettings.SpellName or true
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
-            NSRT.ReminderSettings.HideTimerText = NSRT.ReminderSettings.HideTimerText or false
             if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
-            NSRT.ReminderSettings.ShowReminderFrame = NSRT.ReminderSettings.ShowReminderFrame or false
             if NSRT.ReminderSettings.ShowPersonalReminderFrame == nil then NSRT.ReminderSettings.ShowPersonalReminderFrame = true end
             NSRT.ReminderSettings.ShowExtraReminderFrame = NSRT.ReminderSettings.ShowExtraReminderFrame or false
             if not NSRT.ReminderSettings.PersonalReminderFrame then
@@ -106,32 +103,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.PARaidSettings.Spacing = NSRT.PARaidSettings.Spacing or -1
             NSRT.PARaidSettings.Limit = NSRT.PARaidSettings.Limit or 5
             if not NSRT.PASounds then NSRT.PASounds = {} end
-            NSRT.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
             NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
-            NSRT.Settings["GlobalNickNames"] = NSRT.Settings["GlobalNickNames"] or false
-            NSRT.Settings["Blizzard"] = NSRT.Settings["Blizzard"] or false
-            NSRT.Settings["Cell"] = NSRT.Settings["Cell"] or false
-            NSRT.Settings["Grid2"] = NSRT.Settings["Grid2"] or false
-            NSRT.Settings["ElvUI"] = NSRT.Settings["ElvUI"] or false
-            NSRT.Settings["Translit"] = NSRT.Settings["Translit"] or false
-            NSRT.Settings["Unhalted"] = NSRT.Settings["Unhalted"] or false
             NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
             NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default
             NSRT.Settings["NickNamesSyncAccept"] = NSRT.Settings["NickNamesSyncAccept"] or 2 -- guild default
             NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 3 -- guild default
-            NSRT.Settings["MRTNoteComparison"] = NSRT.Settings["MRTNoteComparison"] or false
             if NSRT.Settings["TTS"] == nil then NSRT.Settings["TTS"] = true end
             NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
             NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 1
             NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
-            NSRT.Settings["VersionCheckRemoveResponse"] = NSRT.Settings["VersionCheckRemoveResponse"] or false
-            NSRT.Settings["Debug"] = NSRT.Settings["Debug"] or false
-            NSRT.Settings["DebugLogs"] = NSRT.Settings["DebugLogs"] or false
             NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or {}
-            NSRT.Settings["CheckCooldowns"] = NSRT.Settings["CheckCooldowns"] or false
             NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
-            NSRT.Settings["UnreadyOnCooldown"] = NSRT.Settings["UnreadyOnCooldown"] or false
-            NSRT.Settings.MissingRaidBuffs = NSRT.Settings.MissingRaidBuffs or true
+            if NSRT.Settings["MissingRaidBuffs"] == nil then NSRT.Settings["MissingRaidBuffs"] = true end
             if not NSRT.ReadyCheckSettings then NSRT.ReadyCheckSettings = {} end
             NSRT.CooldownList = NSRT.CooldownList or {}
             NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
