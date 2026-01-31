@@ -284,3 +284,15 @@ function NSI:ImportSettingsFromString(string)
         return data
     else return nil end
 end
+
+function NSI:StopFrameMove(F, SettingsTable)
+    if not F then return end
+    F:StopMovingOrSizing()       
+    local Anchor, _, relativeTo, xOffset, yOffset = F:GetPoint()
+    xOffset = Round(xOffset)
+    yOffset = Round(yOffset)
+    SettingsTable.xOffset = xOffset     
+    SettingsTable.yOffset = yOffset  
+    SettingsTable.Anchor = Anchor    
+    SettingsTable.relativeTo = relativeTo   
+end

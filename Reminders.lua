@@ -1135,14 +1135,7 @@ function NSI:MoveFrameInit(F, s, text, ReminderColor)
             self:StartMoving()
         end)
         F:SetScript("OnDragStop", function(Frame)
-            Frame:StopMovingOrSizing()       
-            local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
-            xOffset = Round(xOffset)
-            yOffset = Round(yOffset)
-            NSRT.ReminderSettings[s].xOffset = xOffset     
-            NSRT.ReminderSettings[s].yOffset = yOffset  
-            NSRT.ReminderSettings[s].Anchor = Anchor    
-            NSRT.ReminderSettings[s].relativeTo = relativeTo    
+            self:StopFrameMove(Frame, NSRT.ReminderSettings[s])
             self:UpdateExistingFrames() 
         end)
     end

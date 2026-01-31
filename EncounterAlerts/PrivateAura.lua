@@ -106,14 +106,7 @@ function NSI:InitTextPA()
             self:StartMoving()
         end)
         self.PATextMoverFrame:SetScript("OnDragStop", function(Frame)
-            Frame:StopMovingOrSizing()       
-            local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
-            xOffset = Round(xOffset)
-            yOffset = Round(yOffset)
-            NSRT.PATextSettings.xOffset = xOffset     
-            NSRT.PATextSettings.yOffset = yOffset  
-            NSRT.PATextSettings.Anchor = Anchor    
-            NSRT.PATextSettings.relativeTo = relativeTo    
+            self:StopFrameMove(Frame, NSRT.PATextSettings)
         end)
     end
     if NSRT.PATextSettings.enabled then
@@ -418,14 +411,7 @@ function NSI:PreviewPA(Show)
         self:StartMoving()
     end)
     self.PAFrames[1]:SetScript("OnDragStop", function(Frame)
-        Frame:StopMovingOrSizing()       
-        local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
-        xOffset = Round(xOffset)
-        yOffset = Round(yOffset)
-        NSRT.PASettings.xOffset = xOffset     
-        NSRT.PASettings.yOffset = yOffset  
-        NSRT.PASettings.Anchor = Anchor    
-        NSRT.PASettings.relativeTo = relativeTo    
+        self:StopFrameMove(Frame, NSRT.PASettings)
     end)
 
     if not self.PAPreviewIcons then
@@ -494,14 +480,7 @@ function NSI:PreviewTankPA(Show)
         self:StartMoving()
     end)
     self.PATankFrames[1][1]:SetScript("OnDragStop", function(Frame)
-        Frame:StopMovingOrSizing()       
-        local Anchor, _, relativeTo, xOffset, yOffset = Frame:GetPoint()
-        xOffset = Round(xOffset)
-        yOffset = Round(yOffset)
-        NSRT.PATankSettings.xOffset = xOffset
-        NSRT.PATankSettings.yOffset = yOffset
-        NSRT.PATankSettings.Anchor = Anchor
-        NSRT.PATankSettings.relativeTo = relativeTo
+        self:StopFrameMove(Frame, NSRT.PATankSettings)
     end)
 
     if not self.PATankPreviewIcons then
