@@ -10,9 +10,9 @@ local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expresswa
 
 local buttonmapping = {
     {DefaultDisabled = false, name = "PASettings", label = "Player PA Settings", desc = "Settings for Player Private Aura Display"},
+    {DefaultDisabled = false, name = "PATextSettings", label = "PA Text Settings", desc = "Settings for Private Aura Warning-Text Display"},
     {DefaultDisabled = false, name = "PATankSettings", label = "Co-Tank PA Settings", desc = "Settings for Co-Tank Private Aura Display"},
     {DefaultDisabled = false, name = "PARaidSettings", label = "RaidFrame PA Settings", desc = "Settings for Private Aura Display on Raidframes"},
-    {DefaultDisabled = false, name = "PATextSettings", label = "PA Text Settings", desc = "Settings for Private Aura Warning-Text Display"},
     {DefaultDisabled = false, name = "PASounds", label = "PA Sound Settings", desc = "Settings for Private Aura Sounds"},
     {DefaultDisabled = false, name = "ReminderSettings", label = "Reminder Display Settings", desc = "Settings for Reminder Display"},
     {DefaultDisabled = false, name = "ReadyCheckSettings", label = "Ready Check Settings", desc = "Settings for Ready Check module"},

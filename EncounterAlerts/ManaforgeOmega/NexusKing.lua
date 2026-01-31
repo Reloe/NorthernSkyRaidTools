@@ -3,6 +3,11 @@ local _, NSI = ... -- Internal namespace
 local encID = 3134
 -- /run NSAPI:DebugEncounter(3134)
 
+local phasedetections = {
+    [100] = 2,
+    [185] = 3,
+}
+
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
