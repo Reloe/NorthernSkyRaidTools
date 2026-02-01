@@ -32,7 +32,7 @@ local function BuildPASoundEditUI()
     local function PrepareData(data)
         local data = {}
         for spellID, info in pairs(NSRT.PASounds) do
-            if spellID and info.sound then
+            if spellID and type(info) == "table" and info.sound then
                 local spell = C_Spell.GetSpellInfo(spellID)
                 if spell then
                     tinsert(data, {sound = info.sound, spellID = spellID, name = spell.name})
@@ -212,9 +212,14 @@ local function BuildPASoundEditUI()
 
         local confirmButton = DF:CreateButton(popup, function()
             for spellID, info in pairs(NSRT.PASounds) do
-                NSI:AddPASound(spellID, nil)
+                if info and type(info) == "table" and info.sound then
+                    NSI:AddPASound(spellID, nil)
+                end
             end
-            NSRT.PASounds = {}
+            NSRT.PASounds = {
+                UseDefaultPASounds = NSRT.PASounds.UseDefaultPASounds,
+                UseDefaultMPlusPASounds = NSRT.PASounds.UseDefaultMPlusPASounds
+            }
             PASound_edit_scrollbox:MasterRefresh()
             popup:Hide()
         end, 100, 30, "Confirm")

@@ -325,13 +325,29 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Use Default Private Aura Sounds",
+            name = "Use Default RAID Private Aura Sounds",
             desc = "This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spellid's yourself previously this button will NOT overwrite that.",
             get = function() return NSRT.UseDefaultPASounds end,
             set = function(self, fixedparam, value)
                 NSRT.UseDefaultPASounds = value
                 if NSRT.UseDefaultPASounds then
-                    NSI:ApplyDefaultPASounds()
+                    NSI:ApplyDefaultPASounds(true)
+                    NSI:RefreshPASoundEditUI()
+                end
+            end,
+            nocombat = true,
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Use Default M+ Private Aura Sounds",
+            desc = "This will likely be less maintained than the Raid ones, otherwise it works the same as that one.",
+            get = function() return NSRT.PASounds.UseDefaultMPlusPASounds end,
+            set = function(self, fixedparam, value)
+                NSRT.PASounds.UseDefaultMPlusPASounds = value
+                if NSRT.PASounds.UseDefaultMPlusPASounds then
+                    NSI:ApplyDefaultPASounds(true, true)
                     NSI:RefreshPASoundEditUI()
                 end
             end,

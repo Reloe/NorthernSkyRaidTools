@@ -1,6 +1,6 @@
 local _, NSI = ... -- Internal namespace
 
-local SoundList = {
+local SoundListRaid = {
     -- [spellID] = "SoundName", use false to remove a sound
 
     -- Midnight S1
@@ -38,6 +38,40 @@ local SoundList = {
     [1254113] = "Fixate", -- Vorasius Fixate
 }
 
+local SoundListMPlus = {
+    -- Magister's Terrace
+    [1225792] = "Debuff", -- Runic Mark
+    [1223958] = "Targeted", -- Cosmic Sting
+    [1215897] = "Targeted", -- Devouring Entropy
+    -- Maisara Caverns
+    [1260643] = "Targeted", -- Barrage
+    [1249478] = "Charge", -- Carrion Swoop
+    [1251775] = "Fixate", -- Final Pursuit
+    -- Nexus Point
+    [1251785] = "Targeted", -- Reflux Charge
+    -- Windrunner's Spire
+    [466559] = "Targeted", -- Flaming Updraft
+    [474129] = "Spread", -- Splattering Spew
+    [472793] = "Targeted", -- Heaving Yank
+    [1253054] = "Stack", -- Intimidating Shout
+    [1283247] = "Targeted", -- Reckless Leap
+    [1282911] = "Targeted", -- Bolt Gale
+    -- Nothing in Academy
+    -- Pit of Saron
+    [1261286] = "Targeted", -- Throw Saronite
+    [1264453] = "Fixate", -- Lumbering Fixation
+    [1262772] = "Targeted", -- Rime Blast
+    -- Seat of the Triumvirate
+    [1265426] = "Targeted", -- Discordant Beam
+    -- Skyreach
+    [1252733] = "Targeted", -- Gale Surge
+    [1253511] = "Fixate", -- Burning Pursuit
+    [153954] = "Targeted", -- Cast Down
+    [1253531] = "Beam", -- Lens Flare
+    
+
+}
+
 function NSI:AddPASound(spellID, sound)
     if (not spellID) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then return end
     C_UnitAuras.RemovePrivateAuraAppliedSound(spellID)
@@ -45,7 +79,13 @@ function NSI:AddPASound(spellID, sound)
     local soundPath = NSI.LSM:Fetch("sound", sound)
     if soundPath and soundPath ~= 1 then
         C_UnitAuras.AddPrivateAuraAppliedSound({
-            unitToken = "player",
+            unitToken = "raid2",
+            spellID = spellID,
+            soundFileName = soundPath,
+            outputChannel = "master",
+        })
+        C_UnitAuras.AddPrivateAuraAppliedSound({
+            unitToken = "raid1",
             spellID = spellID,
             soundFileName = soundPath,
             outputChannel = "master",
@@ -53,17 +93,18 @@ function NSI:AddPASound(spellID, sound)
     end
 end
 
-function NSI:ApplyDefaultPASounds()
-    for spellID, sound in pairs(SoundList) do
+function NSI:ApplyDefaultPASounds(changed, mplus) -- only apply sound if changed == true, this happens when user changes the settings but not on login so we don't apply the sounds twice.
+    local list = mplus and SoundListMPlus or SoundListRaid
+    for spellID, sound in pairs(list) do
         local curSound = NSRT.PASounds[spellID]
         if (not curSound) or (not curSound.edited) then -- only add default sound if user hasn't edited it prior
             if not sound then -- if sound is false in the table I have marked it to be removed to clean up the table from old content
                 NSRT.PASounds[spellID] = nil
-                self:AddPASound(spellID, nil)
+                if changed then self:AddPASound(spellID, nil) end
             else
                 sound = "|cFF4BAAC8"..sound.."|r"
                 NSRT.PASounds[spellID] = {sound = sound, edited = false}
-                self:AddPASound(spellID, sound)
+                if changed then self:AddPASound(spellID, sound) end
             end
         end
     end

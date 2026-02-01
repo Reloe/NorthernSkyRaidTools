@@ -123,6 +123,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame
                 NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame
             end
+            if NSRT.UseDefaultPASounds then NSRT.PASounds.UseDefaultPASounds = true end -- migrate old setting            
 
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
@@ -141,11 +142,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
         self:InitTextPA()
         if NSRT.PARaidSettings.enabled and UnitInRaid("player") and not self:Restricted() then C_Timer.After(5, function() self:InitRaidPA(false, true) end) end
-        for spellID, info in pairs(NSRT.PASounds) do
-            self:AddPASound(spellID, info.sound)
-        end
-        if NSRT.UseDefaultPASounds then
+        if NSRT.PASounds.UseDefaultPASounds then
             self:ApplyDefaultPASounds()
+        end
+        if NSRT.PASounds.UseDefaultMPlusPASounds then
+            self:ApplyDefaultPASounds(false, true)
+        end
+        for spellID, info in pairs(NSRT.PASounds) do
+            if type(info) == "table" and info.sound then -- prevents user settings
+                self:AddPASound(spellID, info.sound)
+            end
         end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
