@@ -764,11 +764,7 @@ function NSI:StartReminders(phase)
         if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
             local time = math.max(info.time-info.dur, 0)
             self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
-                    self:DisplayReminder(info) 
-                else
-                    self:HideAllReminders()
-                end
+                self:DisplayReminder(info)
             end)
         end
     end
@@ -807,18 +803,14 @@ function NSI:DelayAllReminders(delay)
                 local time = math.max(info.time-info.dur-timediff+delay, 0)
                 info.time = info.time + delay
                 self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                    if self:Restricted() or self.TestingReminder or NSRT.Settings["Debug"] then 
-                        self:DisplayReminder(info) 
-                    else
-                        self:HideAllReminders()
-                    end
+                    self:DisplayReminder(info) 
                 end)
             end
         end
     end
 end
 
-function NSI:HideAllReminders()
+function NSI:HideAllReminders(FullReset)
     self.PlayedSound = {}
     self.StartedCountdown = {}
     self.GlowStarted = {}
@@ -852,6 +844,14 @@ function NSI:HideAllReminders()
         local F = parent[i]
         if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
     end
+    if not FullReset then return end
+    self.ReminderTimer = nil
+    self.AllGlows = nil
+    self.Timelines = {}
+    if self.EncounterAlertStop[self.EncounterID] then self.EncounterAlertStop[self.EncounterID](self) end
+    self.EncounterID = nil
+    self.TestingReminder = false
+    self.ProcessedReminder = nil
 end
 
 function NSI:GetAllReminderNames(personal)

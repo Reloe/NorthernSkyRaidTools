@@ -191,6 +191,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end        
     elseif e == "PLAYER_ENTERING_WORLD" then
+        if not self:DifficultyCheck(14) then self:HideAllReminders(true) end
         if self:Restricted() then return end
         if NSRT.PARaidSettings.enabled then
             local diff = select(3, GetInstanceInfo())
@@ -234,14 +235,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
             self:RemoveTankPA()
         end
-        self:HideAllReminders()
-        self.EncounterID = nil
-        self.TestingReminder = false
-        self.ReminderTimer = {}
-        self.AllGlows = {}          
-        self.Timelines = {}
-        self.ProcessedReminder = nil
-        if self.EncounterAlertStop[encID] then self.EncounterAlertStop[encID](self) end
+        self:HideAllReminders(true)
         C_Timer.After(1, function()
             if self:Restricted() then return end
             if self.SyncNickNamesStore then
