@@ -1024,9 +1024,9 @@ function NSI:HideGlows(units, id, F)
     end
 end
 
-function NSI:CreateMoveFrames(Show)
+function NSI:CreateMoveFrames()
     self:CreateReminderMoverFrame("IconMover", NSRT.ReminderSettings.IconSettings, "IconSettings")
-    self:CreateReminderMoverFrame("BarMover", NSRT.ReminderSettings.BarSettings, "BarSettings", false, true)
+    self:CreateReminderMoverFrame("BarMover", NSRT.ReminderSettings.BarSettings, "BarSettings")
     self:CreateReminderMoverFrame("TextMover", NSRT.ReminderSettings.TextSettings, "TextSettings", true)
     self:CreateNoteMoverFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, true, false, false)
     self:CreateNoteMoverFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, false, true, false)
@@ -1038,10 +1038,12 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         self[Name] = CreateFrame("Frame", 'NSUIReminder'..Name, UIParent, "BackdropTemplate")
         if IsText then
             self[Name].Text = self[Name]:CreateFontString(Name..'Text', "OVERLAY", "GameFontNormal")
+            self[Name].Text:SetText("Personals - (10)")
+            self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
             self[Name].Text:SetPoint("LEFT", self[Name], "LEFT", 0, 0)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
-        self:MoveFrameInit(self[Name], SettingsName)
+        self:MoveFrameInit(self[Name], SettingsName, IsText)
         self:MoveFrameSettings(self[Name], SettingsTable, IsText)
     else
         self:MoveFrameSettings(self[Name], SettingsTable, IsText)
