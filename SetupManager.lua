@@ -207,36 +207,31 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
         sides["right"] = self:ShiftLeader(sides["right"])
         if odds then
             units = {}
-            local count = 1
             for i, v in ipairs(sides["left"]) do
-                units[count] = v      
-                count = count+1
-                if count > 5 then count = 11 end
-                if count > 15 then count = 21 end
-            end
-            count = 6            
+                if i > 10 then i = i+10
+                elseif i > 5 then i = i+5 end
+                units[i] = v      
+            end     
             for i, v in ipairs(sides["right"]) do
-                units[count] = v      
-                count = count+1
-                if count > 10 then count = 16 end
-                if count > 20 then count = 26 end
+                if i > 10 then i = i +15
+                elseif i > 5 then i = i+10
+                else i = i+5 end
+                units[i] = v      
             end
             self.Groups.units = units
             self:ArrangeGroups(true)
         else         
             units = {}
-            local count = 1
             for i, v in ipairs(sides["left"]) do
-                units[count] = v      
-                count = count+1
+                units[i] = v      
             end
-            if total["ALL"] > 20 then count = 16 
-            elseif total["ALL"] > 10 then count = 11
-            else count = 6
+            local offset = 0
+            if total["ALL"] > 20 then offset = 15 
+            elseif total["ALL"] > 10 then offset = 10
+            else offset = 5
             end
             for i, v in ipairs(sides["right"]) do
-                units[count] = v      
-                count = count+1
+                units[i+offset] = v      
             end
             self.Groups.units = units
             self:ArrangeGroups(true)
