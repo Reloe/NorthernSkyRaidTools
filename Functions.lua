@@ -150,6 +150,17 @@ function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
         else
             sound = tostring(sound)
             local num = voice or NSRT.Settings["TTSVoice"]
+            local voices = C_VoiceChat.GetTtsVoices()
+            local validVoice = false
+            if voices then
+                for i, v in ipairs(voices) do
+                    if v.voiceID == num then
+                        validVoice = true
+                        break
+                    end
+                end
+            end
+            if not validVoice then num = 0 end
             C_VoiceChat.SpeakText(
                 num,
                 sound,
