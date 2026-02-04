@@ -43,6 +43,7 @@ local SoundListMPlus = {
     [1225792] = "Debuff", -- Runic Mark
     [1223958] = "Targeted", -- Cosmic Sting
     [1215897] = "Targeted", -- Devouring Entropy
+    [1253709] = "Linked", -- Neural Link
     -- Maisara Caverns
     [1260643] = "Targeted", -- Barrage
     [1249478] = "Charge", -- Carrion Swoop
