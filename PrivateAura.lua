@@ -110,9 +110,12 @@ function NSI:ApplyDefaultPASounds(changed, mplus) -- only apply sound if changed
 end
 
 function NSI:SavePASound(spellID, sound)
-    if (not spellID) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then return end
+    if (not spellID) then return end
     NSRT.PASounds[spellID] = {sound = sound, edited = true}
     self:AddPASound(spellID, sound)
+    if (not sound) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then
+        NSRT.PASounds[spellID] = nil
+    end
 end
 
 function NSI:InitTextPA()   
@@ -213,8 +216,8 @@ function NSI:InitPA()
                         offsetY = 0,
                     },
                     borderScale = borderSize,
-                iconWidth = NSRT.PASettings.Width,
-                iconHeight = NSRT.PASettings.Height,
+                    iconWidth = NSRT.PASettings.Width,
+                    iconHeight = NSRT.PASettings.Height,
                 }
             }        
             self.AddedPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
