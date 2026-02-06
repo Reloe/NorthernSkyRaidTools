@@ -111,6 +111,16 @@ local function BuildRemindersEditUI()
                     line.InviteButton:Hide()
                     line.ArrangeButton:Hide()
                 end
+                if line.name == NSRT.ActiveReminder then
+                    line.nameTextEntry:SetBackdropBorderColor(0, 1, 0, 1)
+                    line.nameTextEntry.BorderColorG = 1
+                else
+                    line.nameTextEntry:SetBackdropBorderColor(0, 0, 0, 1)
+                    line.nameTextEntry.BorderColorG = 0
+                end
+                line.nameTextEntry.BorderColorR = 0
+                line.nameTextEntry.BorderColorB = 0
+                line.nameTextEntry.BorderColorA = 1
             end
         end
     end
@@ -136,6 +146,7 @@ local function BuildRemindersEditUI()
         NSI.Reminder = ""
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(true)
+        reminders_edit_frame.scrollbox:MasterRefresh()
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -168,6 +179,9 @@ local function BuildRemindersEditUI()
                 for _, reminder in ipairs(NSI:GetAllReminderNames()) do
                     NSI:RemoveReminder(reminder.name)
                 end
+                if NSRT.ActiveReminder then
+                    Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+                end
             else
                 NSI:RemoveReminder(line.name)
             end
@@ -198,6 +212,7 @@ local function BuildRemindersEditUI()
             alldeletecreated = true
             local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
                 DeleteBossReminder(self, line, true)
+                parent:MasterRefresh()
                 end, 100, 24, "Delete ALL Reminders"
             )
             DeleteAllButton:SetPoint("LEFT", ShareButton, "RIGHT", 5, 0)
@@ -227,6 +242,17 @@ local function BuildRemindersEditUI()
         line.nameTextEntry:SetScript("OnEnterPressed", saveNewName)
         line.nameTextEntry:SetScript("OnEditFocusLost", saveNewName)
 
+        line.nameTextEntry:SetScript("OnEnter", function(self)
+            if self.BorderColorR then
+                self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
+            end
+        end)
+        line.nameTextEntry:SetScript("OnLeave", function(self)
+            if self.BorderColorR then
+                self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
+            end
+        end) 
+
         line.deleteButton = DF:CreateButton(line, function()
             DeleteBossReminder(self, line, false)
         end, 12, 12)
@@ -244,6 +270,7 @@ local function BuildRemindersEditUI()
                 NSI:SetReminder(name)
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
                 NSI:UpdateReminderFrame(true)
+                parent:MasterRefresh()
             end
         end, 40, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
@@ -308,6 +335,17 @@ local function BuildPersonalRemindersEditUI()
                 local line = self:GetLine(i)
                 line.name = reminderData.name
                 line.nameTextEntry.text = reminderData.name
+
+                if line.name == NSRT.ActivePersonalReminder then
+                    line.nameTextEntry:SetBackdropBorderColor(0, 1, 0, 1)
+                    line.nameTextEntry.BorderColorG = 1
+                else
+                    line.nameTextEntry:SetBackdropBorderColor(0, 0, 0, 1)
+                    line.nameTextEntry.BorderColorG = 0
+                end
+                line.nameTextEntry.BorderColorR = 0
+                line.nameTextEntry.BorderColorB = 0
+                line.nameTextEntry.BorderColorA = 1
             end
         end
     end
@@ -333,6 +371,7 @@ local function BuildPersonalRemindersEditUI()
         NSI.PersonalReminder = ""
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(true)
+        reminders_edit_frame.scrollbox:MasterRefresh()
         Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
     )
@@ -357,6 +396,9 @@ local function BuildPersonalRemindersEditUI()
             if all then
                 for _, reminder in ipairs(NSI:GetAllReminderNames(true)) do
                     NSI:RemoveReminder(reminder.name, true)
+                end
+                if NSRT.ActivePersonalReminder then
+                    Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
                 end
             else
                 NSI:RemoveReminder(line.name, true)
@@ -404,10 +446,21 @@ local function BuildPersonalRemindersEditUI()
         line.nameTextEntry:SetScript("OnEnterPressed", saveNewName)
         line.nameTextEntry:SetScript("OnEditFocusLost", saveNewName)
 
+        line.nameTextEntry:SetScript("OnEnter", function(self)
+            if self.BorderColorR then
+                self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
+            end
+        end)
+        line.nameTextEntry:SetScript("OnLeave", function(self)
+            if self.BorderColorR then
+                self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
+            end
+        end)    
         if not alldeletecreated then
             alldeletecreated = true
             local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
                 DeleteBossReminder(self, line, true)
+                parent:MasterRefresh()
                 end, 100, 24, "Delete ALL Reminders"
             )
             DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
@@ -431,6 +484,7 @@ local function BuildPersonalRemindersEditUI()
                 NSI:SetReminder(name, true)
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
                 NSI:UpdateReminderFrame(true)
+                parent:MasterRefresh()
             end
         end, 55, 20, "Load")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)

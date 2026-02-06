@@ -964,8 +964,8 @@ function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
     if not name then name = "Default Reminder" end
     local newname = diff and name.." - "..diff or name
     if personal then
-        if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
-            self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
+        if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end
+            self:ImportReminder(name.." 2", values, activate, personal, IsUpdate, diff)
             return
         end
         NSRT.PersonalReminders[newname] = values
@@ -974,8 +974,8 @@ function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
         end
         return
     end
-    if NSRT.Reminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end and also update the string to reflect the new name.
-        self:ImportReminder(name.." 2", values, activate, personal, IsUpdate)
+    if NSRT.Reminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end
+        self:ImportReminder(name.." 2", values, activate, personal, IsUpdate, diff)
         return
     end
     NSRT.Reminders[newname] = values
