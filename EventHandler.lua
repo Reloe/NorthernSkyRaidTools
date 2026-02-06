@@ -52,7 +52,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.ReminderSettings.TextDuration = NSRT.ReminderSettings.TextDuration or 10
             NSRT.ReminderSettings.SpellCountdown = NSRT.ReminderSettings.SpellCountdown or 0
             NSRT.ReminderSettings.TextCountdown = NSRT.ReminderSettings.TextCountdown or 0
-            NSRT.ReminderSettings.SpellName = NSRT.ReminderSettings.SpellName or true
+            if NSRT.ReminderSettings.SpellName == nil then NSRT.ReminderSettings.SpellName = true end -- Keep SpellName enable on first installation, then load from config
             NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
             NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
             if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
