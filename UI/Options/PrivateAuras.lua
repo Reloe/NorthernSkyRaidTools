@@ -118,6 +118,31 @@ local function BuildPrivateAurasOptions()
             max = 10,
         },
         {
+            type = "range",
+            name = "Stack-Scale",
+            desc = "This will scale the Stack Display",
+            get = function() return NSRT.PASettings.StackScale or 4 end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.StackScale = value
+                NSI:UpdatePADisplay(true)
+            end,
+            min = 1,
+            max = 10,
+            step = 0.1,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Upscale Duration Text",
+            desc = "This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it.",
+            get = function() return NSRT.PASettings.UpscaleDuration end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.UpscaleDuration = value
+                NSI:UpdatePADisplay(true)
+            end,
+            nocombat = true,
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Hide Border",
@@ -188,7 +213,7 @@ local function BuildPrivateAurasOptions()
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.enabled = value
                 if NSRT.PARaidSettings.enabled then
-                    NSI:InitRaidPA(UnitInRaid("player"))
+                    NSI:InitRaidPA(not UnitInRaid("player"))
                 else
                     NSI:InitRaidPA(true)
                     NSI:InitRaidPA(false)
@@ -288,6 +313,19 @@ local function BuildPrivateAurasOptions()
             end,
             min = 1,
             max = 10,
+        },
+        {
+            type = "range",
+            name = "Stack-Scale",
+            desc = "This will scale the Stack Display",
+            get = function() return NSRT.PARaidSettings.StackScale or 1 end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.StackScale = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 0.1,
+            max = 5,
+            step = 0.1,
         },
         
         {
@@ -465,6 +503,31 @@ local function BuildPrivateAurasOptions()
             end,
             min = 1,
             max = 10,
+        },
+        {
+            type = "range",
+            name = "Stack-Scale",
+            desc = "This will scale the Stack Display",
+            get = function() return NSRT.PATankSettings.StackScale or 4 end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.StackScale = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            min = 1,
+            max = 10,
+            step = 0.1,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Upscale Duration Text",
+            desc = "This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it.",
+            get = function() return NSRT.PATankSettings.UpscaleDuration end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.UpscaleDuration = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+            nocombat = true,
         },
         {
             type = "toggle",
