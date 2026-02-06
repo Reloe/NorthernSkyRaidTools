@@ -180,29 +180,42 @@ function NSI:InitPA()
     if not self.PADurFrames then
         self.PADurFrames = {}
     end
+    if not self.PAAnchorFrames then
+        self.PAAnchorFrames = {}
+    end
     
     if not self.AddedPA then self.AddedPA = {} end
     if not self.AddedDurPA then self.AddedDurPA = {} end   
     local xDirection = (NSRT.PASettings.GrowDirection == "RIGHT" and 1) or (NSRT.PASettings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (NSRT.PASettings.GrowDirection == "DOWN" and -1) or (NSRT.PASettings.GrowDirection == "UP" and 1) or 0
     local borderSize = NSRT.PASettings.HideBorder and -100 or NSRT.PASettings.Width/16
+    local scale = NSRT.PASettings.Height/25
     for auraIndex=1, 10 do
         if not self.PAFrames[auraIndex] then
             self.PAFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+            self.PAFrames[auraIndex]:SetFrameStrata("HIGH")
         end
         if not self.PADurFrames[auraIndex] then
             self.PADurFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+            self.PADurFrames[auraIndex]:SetSize(0.001, 0.001)
+            self.PADurFrames[auraIndex]:SetFrameStrata("DIALOG")
+            self.PADurFrames[auraIndex]:SetPoint("CENTER", self.PAFrames[auraIndex], "CENTER", 0, 0)
+        end
+        if not self.PAAnchorFrames[auraIndex] then
+            self.PAAnchorFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
         end
         if NSRT.PASettings.HideTooltip then
             self.PAFrames[auraIndex]:SetSize(0.001, 0.001)
         else
             self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
         end
-        local scale = NSRT.PASettings.Height/25
-        self.PADurFrames[auraIndex]:SetSize(0.001, 0.001)
+        self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
         self.PADurFrames[auraIndex]:SetScale((scale))   
-        self.PADurFrames[auraIndex]:SetPoint("CENTER", self.PAFrames[auraIndex], "CENTER", 0, 0) 
         self.PAFrames[auraIndex]:ClearAllPoints()
+        self.PAAnchorFrames[auraIndex]:ClearAllPoints()
+        self.PAAnchorFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
+        NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
+        NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
         self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
         NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
         NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
@@ -245,11 +258,11 @@ function NSI:InitPA()
                 showCountdownNumbers = false,
                 iconInfo = {
                     iconAnchor = {
-                        point = "CENTER",
-                        relativeTo = self.PADurFrames[auraIndex],
-                        relativePoint = "CENTER",
-                        offsetX = 0,
-                        offsetY = 0,
+                        point = "BOTTOMRIGHT",
+                        relativeTo = self.PAAnchorFrames[auraIndex],
+                        relativePoint = "BOTTOMRIGHT",
+                        offsetX = 2,
+                        offsetY = -4,
                     },
                     borderScale = -100,
                     iconWidth = 0.001,
@@ -257,10 +270,10 @@ function NSI:InitPA()
                 },
                 durationAnchor = {
                     point = "CENTER",
-                    relativeTo = self.PADurFrames[auraIndex],
+                    relativeTo = self.PAFrames[auraIndex],
                     relativePoint = "CENTER",
                     offsetX = 0,
-                    offsetY = -0.7*(NSRT.PASettings.Height/scale),
+                    offsetY = 0,
                 },
             }       
             self.AddedPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
@@ -271,8 +284,12 @@ end
 
 function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled to clean up old anchors
     if not self.PARaidFrames then self.PARaidFrames = {} end
+    if not self.PAStackFrames then self.PAStackFrames = {} end
+    if not self.PARaidAnchorFrames then self.PARaidAnchorFrames = {} end
     if not self.AddedPARaid then self.AddedPARaid = {} end
+    if not self.AddedPAStackRaid then self.AddedPAStackRaid = {} end
     local borderSize = NSRT.PARaidSettings.HideBorder and -100 or NSRT.PARaidSettings.Width/16
+    local scale = NSRT.PARaidSettings.Height/30
     for i=1, party and 5 or 40 do       
         local anchorID = party and "NSRT_PAParty"..i or "NSRT_PARaid"..i
         if self.AddedPARaid and self.AddedPARaid[anchorID] then
@@ -280,6 +297,14 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                 if self.AddedPARaid[anchorID][auraIndex] then
                     C_UnitAuras.RemovePrivateAuraAnchor(self.AddedPARaid[anchorID][auraIndex])
                     self.AddedPARaid[anchorID][auraIndex] = nil
+                end
+            end
+        end
+        if self.AddedPAStackRaid and self.AddedPAStackRaid[anchorID] then
+            for auraIndex = 1, 10 do
+                if self.AddedPAStackRaid[anchorID] and self.AddedPAStackRaid[anchorID][auraIndex] then
+                    C_UnitAuras.RemovePrivateAuraAnchor(self.AddedPAStackRaid[anchorID][auraIndex])
+                    self.AddedPAStackRaid[anchorID][auraIndex] = nil
                 end
             end
         end
@@ -294,12 +319,28 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
             if F then
                 if not self.PARaidFrames[i] then
                     self.PARaidFrames[i] = CreateFrame("Frame", nil, self.NSRTFrame)
+                    self.PARaidFrames[i]:SetFrameStrata("HIGH")
                 end
+                if not self.PARaidAnchorFrames[i] then
+                    self.PARaidAnchorFrames[i] = CreateFrame("Frame", nil, self.NSRTFrame)
+                end
+                if not self.PAStackFrames[i] then
+                    self.PAStackFrames[i] = CreateFrame("Frame", nil, self.NSRTFrame)
+                    self.PAStackFrames[i]:SetSize(0.001, 0.001)
+                    self.PAStackFrames[i]:SetFrameStrata("DIALOG")
+                end
+                
+                self.PARaidAnchorFrames[i]:SetSize(NSRT.PARaidSettings.Width, NSRT.PARaidSettings.Height)
+                self.PAStackFrames[i]:SetScale((scale))
+                self.PARaidFrames[i]:ClearAllPoints()
+                self.PARaidAnchorFrames[i]:ClearAllPoints()
+                self.PARaidAnchorFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, F, NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
                 self.PARaidFrames[i]:SetSize(0.001, 0.001)
                 self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, F, NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
                 local xDirection = (NSRT.PARaidSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.GrowDirection == "LEFT" and -1) or 0
                 local yDirection = (NSRT.PARaidSettings.GrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.GrowDirection == "UP" and 1) or 0
                 self.AddedPARaid[anchorID] = {}
+                self.AddedPAStackRaid[anchorID] = {}
                 for auraIndex = 1, 10 do
                     if auraIndex > NSRT.PARaidSettings.Limit then break end
                     local privateAnchorArgs = {
@@ -321,7 +362,27 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                             iconHeight = NSRT.PARaidSettings.Height,
                         }
                     }    
+                    local stackArgs = {
+                        unitToken = u,
+                        auraIndex = auraIndex,
+                        parent = self.PAStackFrames[i],
+                        showCountdownFrame = false,
+                        showCountdownNumbers = false,
+                        iconInfo = {
+                            iconAnchor = {
+                                point = "BOTTOMRIGHT",
+                                relativeTo = self.PARaidAnchorFrames[i],
+                                relativePoint = "BOTTOMRIGHT",
+                                offsetX = 2 +((auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection)/scale,
+                                offsetY = -4 +((auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection)/scale,
+                            },
+                            borderScale = -100,
+                            iconWidth = 0.001,
+                            iconHeight = 0.001,
+                        },
+                    }
                     self.AddedPARaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
+                    self.AddedPAStackRaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(stackArgs)
                 end
             end
         end
@@ -345,14 +406,11 @@ function NSI:RemoveTankPA()
     end
 end
 
-function NSAPI:StartTankAuras()
-    NSI:InitTankPA()
-end
-
 function NSI:InitTankPA()
     -- initiated on ENCOUNTER_START for tank players
     if not self.PATankFrames then self.PATankFrames = {} end    
     if not self.PATankDurFrames then self.PATankDurFrames = {} end
+    if not self.PATankAnchorFrames then self.PATankAnchorFrames = {} end
     if not self.AddedTankPA then self.AddedTankPA = {} end
     if not self.AddedTankDurPA then self.AddedTankDurPA = {} end
     local xDirection = (NSRT.PATankSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PATankSettings.GrowDirection == "LEFT" and -1) or 0
@@ -369,17 +427,26 @@ function NSI:InitTankPA()
     -- remove any previous anchor, also calling this on ENCOUNTER_END
     self:RemoveTankPA()
     local borderSize = NSRT.PATankSettings.HideBorder and -100 or NSRT.PATankSettings.Width/16
+    local scale = NSRT.PATankSettings.Height/25
     for i, unit in ipairs(units) do
         if not self.PATankFrames[i] then self.PATankFrames[i] = {} end
         if not self.PATankDurFrames[i] then self.PATankDurFrames[i] = {} end
+        if not self.PATankAnchorFrames[i] then self.PATankAnchorFrames[i] = {} end
         self.AddedTankPA[i] = self.AddedTankPA[i] or {}
         self.AddedTankDurPA[i] = self.AddedTankDurPA[i] or {}
         for auraIndex = 1, 10 do
             if not self.PATankFrames[i][auraIndex] then
                 self.PATankFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                self.PATankFrames[i][auraIndex]:SetFrameStrata("HIGH")
             end
             if not self.PATankDurFrames[i][auraIndex] then
                 self.PATankDurFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                self.PATankDurFrames[i][auraIndex]:SetSize(0.001, 0.001)
+                self.PATankDurFrames[i][auraIndex]:SetFrameStrata("DIALOG")
+            end
+            if not self.PATankAnchorFrames[i][auraIndex] then
+                self.PATankAnchorFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                self.PATankAnchorFrames[i][auraIndex]:SetAllPoints(self.PATankFrames[i][auraIndex])
             end
             if NSRT.PATankSettings.HideTooltip then
                 self.PATankFrames[i][auraIndex]:SetSize(0.001, 0.001)
@@ -387,11 +454,14 @@ function NSI:InitTankPA()
                 self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
             end
             
-            local scale = NSRT.PATankSettings.Height/25
-            self.PATankDurFrames[i][auraIndex]:SetSize(0.001, 0.001)
+            self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
             self.PATankDurFrames[i][auraIndex]:SetScale((scale))   
             self.PATankDurFrames[i][auraIndex]:SetPoint("CENTER", self.PATankFrames[i][auraIndex], "CENTER", 0, 0) 
             self.PATankFrames[i][auraIndex]:ClearAllPoints()
+            self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
+            self.PATankAnchorFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
+            NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
+            NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
             self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
             NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
             NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
@@ -433,11 +503,11 @@ function NSI:InitTankPA()
                     showCountdownNumbers = false,
                     iconInfo = {
                         iconAnchor = {
-                            point = "CENTER",
-                            relativeTo = self.PATankDurFrames[i][auraIndex],
-                            relativePoint = "CENTER",
-                            offsetX = 0,
-                            offsetY = 0,
+                            point = "BOTTOMRIGHT",
+                            relativeTo = self.PATankAnchorFrames[i][auraIndex],
+                            relativePoint = "BOTTOMRIGHT",
+                            offsetX = 2,
+                            offsetY = -4,
                         },
                         borderScale = -100,
                         iconWidth = 0.001,
@@ -445,10 +515,10 @@ function NSI:InitTankPA()
                     },
                     durationAnchor = {
                         point = "CENTER",
-                        relativeTo = self.PATankDurFrames[i][auraIndex],
+                        relativeTo = self.PATankFrames[i][auraIndex],
                         relativePoint = "CENTER",
                         offsetX = 0,
-                        offsetY = -0.7*(NSRT.PATankSettings.Height/scale),
+                        offsetY = 0,
                     },
                 }    
                 self.AddedTankPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)

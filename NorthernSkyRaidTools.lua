@@ -5,6 +5,7 @@ NSI.LCG = LibStub("LibCustomGlow-1.0")
 NSI.LGF = LibStub("LibGetFrame-1.0")
 NSI.NSRTFrame = CreateFrame("Frame", nil, UIParent)
 NSI.NSRTFrame:SetAllPoints(UIParent)
+NSI.NSRTFrame:SetFrameStrata("BACKGROUND")
 
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
