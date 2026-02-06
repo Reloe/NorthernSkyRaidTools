@@ -70,13 +70,20 @@ function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickn
     name = nick and NSAPI:GetName(name, AddonName) or name
     if UnitExists(name) and UnitIsConnected(name) then return name end
     local chars = NSAPI:GetCharacters(name)
+    local newname, newrealm = nil
     if chars then
         for k, _ in pairs(chars) do
             local name, realm = strsplit("-", k)
             local i = UnitInRaid(k)
             if UnitIsVisible(name) or (i and select(3, GetRaidRosterInfo(i)) <= 4)  then
-                return name, realm
+                newname, newrealm = name, realm
+                if UnitIsUnit(name, "player") then
+                    return name, realm
+                end
             end
+        end
+        if newname and newrealm then
+            return newname, newrealm
         end
     end
     return name -- Return input if nothing was found
