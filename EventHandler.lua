@@ -199,11 +199,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PARaidSettings.enabled then
             C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
         end           
-    elseif e == "ENCOUNTER_START" and wowevent and self:DifficultyCheck(14) then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
-        self.NSRTFrame.generic_display:Hide()
-        if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
+    elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+        local diff = select(3, GetInstanceInfo()) or 0
+        if  NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
             self:InitTankPA()
         end        
+        if diff < 14 and diff > 17 and diff ~= 220 then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
+        self.NSRTFrame.generic_display:Hide()
         if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
