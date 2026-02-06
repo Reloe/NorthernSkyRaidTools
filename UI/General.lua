@@ -5,7 +5,6 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local options_dropdown_template = Core.options_dropdown_template
 local options_button_template = Core.options_button_template
-local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 
 local buttonmapping = {
@@ -40,7 +39,7 @@ local function BuildExportStringUI()
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
+    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     popup.export_confirm_button = DF:CreateButton(popup, function()
         popup:Hide()
     end, 280, 20, "Done")
@@ -87,7 +86,7 @@ local function BuildImportStringUI()
         self:SetFocus()
     end)
     local SettingsTable = {}
-    popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
+    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local ImportString = popup.test_string_text_box:GetText()
         local ImportTable = NSI:ImportSettingsFromString(ImportString)

@@ -5,7 +5,6 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local window_width = Core.window_width
 local window_height = Core.window_height
-local expressway = Core.expressway
 local options_text_template = Core.options_text_template
 local options_dropdown_template = Core.options_dropdown_template
 local options_switch_template = Core.options_switch_template
@@ -156,21 +155,21 @@ local function BuildVersionCheckUI(parent)
         local name = line:CreateFontString(nil, "OVERLAY")
         name:SetWidth(100)
         name:SetJustifyH("LEFT")
-        name:SetFont(expressway, 12, "OUTLINE")
+        name:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "OUTLINE")
         name:SetPoint("LEFT", line, "LEFT", 5, 0)
         line.name = name
 
         local version = line:CreateFontString(nil, "OVERLAY")
         version:SetWidth(100)
         version:SetJustifyH("LEFT")
-        version:SetFont(expressway, 12, "OUTLINE")
+        version:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "OUTLINE")
         version:SetPoint("LEFT", name, "RIGHT", 115, 0)
         line.version = version
 
         local ignorelist = line:CreateFontString(nil, "OVERLAY")
         ignorelist:SetWidth(100)
         ignorelist:SetJustifyH("LEFT")
-        ignorelist:SetFont(expressway, 12, "OUTLINE")
+        ignorelist:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "OUTLINE")
         ignorelist:SetPoint("LEFT", version, "RIGHT", 50, 0)
         line.ignorelist = ignorelist
 

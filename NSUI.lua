@@ -6,7 +6,6 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local window_width = Core.window_width
 local window_height = Core.window_height
-local expressway = Core.expressway
 local TABS_LIST = Core.TABS_LIST
 local authorsString = Core.authorsString
 local options_text_template = Core.options_text_template
@@ -75,7 +74,7 @@ function NSUI:Init()
 
     -- Generic text display
     NSI.NSRTFrame.generic_display = NSI.NSRTFrame:CreateFontString(nil, "OVERLAY")
-    NSI.NSRTFrame.generic_display:SetFont(expressway, 20, "OUTLINE")
+    NSI.NSRTFrame.generic_display:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 20, "OUTLINE")
     NSI.NSRTFrame.generic_display:SetPoint("CENTER", NSI.NSRTFrame, "CENTER", -200, 400)
     NSI.NSRTFrame.generic_display:SetJustifyH("LEFT")
     NSI.NSRTFrame.generic_display:Hide()

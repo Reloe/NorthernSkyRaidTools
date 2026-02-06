@@ -7,9 +7,6 @@ local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 local window_width = 1050
 local window_height = 620
 
--- Fonts
-local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
-
 -- Tabs configuration
 local TABS_LIST = {
     { name = "General",   text = "General" },
@@ -51,7 +48,7 @@ NSUI.OptionsChanged = {
 }
 
 -- Shared helper functions
-local function build_media_options(typename, settingname, isTexture, isReminder, Personal)
+local function build_media_options(typename, settingname, isTexture, isReminder, Personal, GlobalFont)
     local list = NSI.LSM:List(isTexture and "statusbar" or "font")
     local t = {}
     for i, font in ipairs(list) do
@@ -59,6 +56,10 @@ local function build_media_options(typename, settingname, isTexture, isReminder,
             label = font,
             value = i,
             onclick = function(_, _, value)
+                if GlobalFont then
+                    NSRT.Settings.GlobalFont = list[value]
+                    return
+                end
                 NSRT.ReminderSettings[typename][settingname] = list[value]
                 if isReminder then
                     NSI:UpdateReminderFrame(true)
@@ -125,7 +126,6 @@ NSI.UI.Core = {
     NSUI = NSUI,
     window_width = window_width,
     window_height = window_height,
-    expressway = expressway,
     TABS_LIST = TABS_LIST,
     authorsString = authorsString,
     options_text_template = options_text_template,

@@ -4,6 +4,7 @@ local DF = _G["DetailsFramework"]
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local LDBIcon = Core.LDBIcon
+local build_media_options = Core.build_media_options
 
 local function BuildGeneralOptions()
     local tts_text_preview = ""
@@ -119,6 +120,18 @@ Press 'Enter' to hear the TTS]],
             end,
             nocombat = true,
             spacement = true
+        },
+        {
+            type = "breakline",
+        },
+        
+        {
+            type = "select",
+            name = "Global Font",
+            desc = "This changes the Font in just about every part of the Addon, unless that part has a specific font setting for it. You should probably reload after changing this.",
+            get = function() return NSRT.Settings.GlobalFont end,
+            values = function() return build_media_options(false, false, false, false, false, true) end,
+            nocombat = true,
         },
 
     }

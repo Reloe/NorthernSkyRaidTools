@@ -74,7 +74,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                     elseif not self.platetexts[i] then
 
                         self.platetexts[i] = self.plateframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-                        self.platetexts[i]:SetFont(self.LSM:Fetch("font", "Expressway"), 18, "OUTLINE")
+                        self.platetexts[i]:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 18, "OUTLINE")
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
                         self.platetexts[i]:SetShadowColor(0, 0, 0, 1)
                         self.platetexts[i]:SetTextColor(1, 1, 1, 1)

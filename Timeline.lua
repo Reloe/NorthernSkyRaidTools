@@ -1,7 +1,6 @@
 local _, NSI = ... -- Internal namespace
 
 local DF = _G["DetailsFramework"]
-local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 -- Setup timeline hooks for zoom-to-cursor and sticky ruler
 -- Call this after creating a timeline with DF:CreateTimeLineFrame

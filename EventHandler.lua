@@ -35,6 +35,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.InviteList = NSRT.InviteList or {}
             NSRT.ActiveReminder = NSRT.ActiveReminder or nil
             NSRT.ActivePersonalReminder = NSRT.ActivePersonalReminder or nil
+            if not NSRT.Settings.GlobalFont then NSRT.Settings.GlobalFont = "Expressway" end
             self.Reminder = ""   
             self.PersonalReminder = ""
             self.DisplayedReminder = ""

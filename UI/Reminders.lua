@@ -5,7 +5,6 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local options_dropdown_template = Core.options_dropdown_template
 local options_button_template = Core.options_button_template
-local expressway = [[Interface\AddOns\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 
 local function ImportReminderString(name, IsUpdate)
     local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
@@ -24,7 +23,7 @@ local function ImportReminderString(name, IsUpdate)
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
+    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()        
@@ -64,7 +63,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    popup.test_string_text_box.editbox:SetFont(expressway, 13, "OUTLINE")
+    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local import_string = popup.test_string_text_box:GetText()
