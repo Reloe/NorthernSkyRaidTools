@@ -236,7 +236,7 @@ function NSI:ProcessReminder()
                     -- convert names to nicknames and color code them
                     local tagNames = ""
                     for name in tag:gmatch("(%S+)") do
-                        tagNames = tagNames..NSAPI:Shorten(NSAPI:GetChar(strtrim(name)), 12, false, "GlobalNickNames").." "
+                        tagNames = tagNames..NSAPI:Shorten(NSAPI:GetChar(strtrim(name), true), 12, false, "GlobalNickNames").." "
                     end
                     tagNames = strtrim(tagNames)
                     displayLine = displayLine:gsub("tag:([^;]+)", tagNames.." ")
@@ -276,7 +276,7 @@ function NSI:ProcessReminder()
                     if NSRT.Settings["GlobalNickNames"] then
                         local words = {}
                         for word in line:gmatch("[^%s]+") do
-                            local shortened = NSAPI:Shorten(NSAPI:GetChar(word), 12, false, "GlobalNickNames")
+                            local shortened = NSAPI:Shorten(NSAPI:GetChar(word, true), 12, false, "GlobalNickNames")
                             table.insert(words, shortened)
                         end
                         extranote = extranote..table.concat(words, " ").."\n"
@@ -753,10 +753,25 @@ function NSI:PlayReminderSound(info, default)
     end
 end
 
-function NSI:StartReminders(phase)
+function NSI:StartReminders(phase, testrun)
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}    
+    if testrun then
+        if not self.ProcessedReminder then self:ProcessReminder() end
+        if not self.ProcessedReminder then return end
+        for encID, encData in pairs(self.ProcessedReminder) do
+            for i, info in ipairs(encData[phase] or {}) do
+                if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+                    local time = math.max(info.time-info.dur, 0)
+                    self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                        self:DisplayReminder(info)
+                    end)
+                end
+            end
+        end
+        return
+    end
     if not self.EncounterID then return end
     if not self.ProcessedReminder[self.EncounterID] then return end
     if not self.ProcessedReminder[self.EncounterID][phase] then return end

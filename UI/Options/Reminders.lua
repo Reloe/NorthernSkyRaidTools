@@ -804,6 +804,23 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
+        
+        {
+            type = "button",
+            name = "Test Active Reminder",
+            desc = "Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test.",
+            func = function(self)
+                if not NSI.TestingReminder then
+                    NSI.TestingReminder = true
+                    NSI:StartReminders(1, true)
+                else                    
+                    NSI.TestingReminder = false
+                    NSI:HideAllReminders()
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
     }
 end
 
