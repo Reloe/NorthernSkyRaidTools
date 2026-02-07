@@ -250,36 +250,38 @@ function NSI:InitPA()
                     iconHeight = NSRT.PASettings.Height,
                 },
             }        
-            local durationArgs = {
-                unitToken = "player",
-                auraIndex = auraIndex,
-                parent = self.PADurFrames[auraIndex],
-                showCountdownFrame = false,
-                showCountdownNumbers = false,
-                iconInfo = {
-                    iconAnchor = {
-                        point = "BOTTOMRIGHT",
-                        relativeTo = self.PAAnchorFrames[auraIndex],
-                        relativePoint = "BOTTOMRIGHT",
-                        offsetX = 2,
-                        offsetY = -4,
-                    },
-                    borderScale = -100,
-                    iconWidth = 0.001,
-                    iconHeight = 0.001,
-                },
-            }       
-            if NSRT.PASettings.UpscaleDuration then
-                durationArgs.durationAnchor = {
-                    point = "CENTER",
-                    relativeTo = self.PAFrames[auraIndex],
-                    relativePoint = "CENTER",
-                    offsetX = 0,
-                    offsetY = 0,
-                }
-            end
             self.AddedPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
-            self.AddedDurPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(durationArgs)
+            if scale ~= 1 then
+                local durationArgs = {
+                    unitToken = "player",
+                    auraIndex = auraIndex,
+                    parent = self.PADurFrames[auraIndex],
+                    showCountdownFrame = false,
+                    showCountdownNumbers = false,
+                    iconInfo = {
+                        iconAnchor = {
+                            point = "BOTTOMRIGHT",
+                            relativeTo = self.PAAnchorFrames[auraIndex],
+                            relativePoint = "BOTTOMRIGHT",
+                            offsetX = 2,
+                            offsetY = -4,
+                        },
+                        borderScale = -100,
+                        iconWidth = 0.001,
+                        iconHeight = 0.001,
+                    },
+                }       
+                if NSRT.PASettings.UpscaleDuration then
+                    durationArgs.durationAnchor = {
+                        point = "CENTER",
+                        relativeTo = self.PAFrames[auraIndex],
+                        relativePoint = "CENTER",
+                        offsetX = 0,
+                        offsetY = 0,
+                    }
+                end
+                self.AddedDurPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(durationArgs)
+            end
         end
     end
 end
@@ -364,27 +366,29 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                             iconHeight = NSRT.PARaidSettings.Height,
                         }
                     }    
-                    local stackArgs = {
-                        unitToken = u,
-                        auraIndex = auraIndex,
-                        parent = self.PAStackFrames[i],
-                        showCountdownFrame = false,
-                        showCountdownNumbers = false,
-                        iconInfo = {
-                            iconAnchor = {
-                                point = "BOTTOMRIGHT",
-                                relativeTo = self.PARaidAnchorFrames[i],
-                                relativePoint = "BOTTOMRIGHT",
-                                offsetX = 4 +((auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection)/scale,
-                                offsetY = -4 +((auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection)/scale,
-                            },
-                            borderScale = -100,
-                            iconWidth = 0.001,
-                            iconHeight = 0.001,
-                        },
-                    }
                     self.AddedPARaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
-                    self.AddedPAStackRaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(stackArgs)
+                    if scale ~= 1 then
+                        local stackArgs = {
+                            unitToken = u,
+                            auraIndex = auraIndex,
+                            parent = self.PAStackFrames[i],
+                            showCountdownFrame = false,
+                            showCountdownNumbers = false,
+                            iconInfo = {
+                                iconAnchor = {
+                                    point = "BOTTOMRIGHT",
+                                    relativeTo = self.PARaidAnchorFrames[i],
+                                    relativePoint = "BOTTOMRIGHT",
+                                    offsetX = 4 +((auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection)/scale,
+                                    offsetY = -4 +((auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection)/scale,
+                                },
+                                borderScale = -100,
+                                iconWidth = 0.001,
+                                iconHeight = 0.001,
+                            },
+                        }
+                        self.AddedPAStackRaid[anchorID][auraIndex] = C_UnitAuras.AddPrivateAuraAnchor(stackArgs)
+                    end
                 end
             end
         end
@@ -496,37 +500,39 @@ function NSI:InitTankPA()
                     iconWidth = NSRT.PATankSettings.Width,
                     iconHeight = NSRT.PATankSettings.Height,
                     }
-                }        
-                local durationArgs = {
-                    unitToken = unit,
-                    auraIndex = auraIndex,
-                    parent = self.PATankDurFrames[i][auraIndex],
-                    showCountdownFrame = false,
-                    showCountdownNumbers = false,
-                    iconInfo = {
-                        iconAnchor = {
-                            point = "BOTTOMRIGHT",
-                            relativeTo = self.PATankAnchorFrames[i][auraIndex],
-                            relativePoint = "BOTTOMRIGHT",
-                            offsetX = 2,
-                            offsetY = -4,
+                }       
+                self.AddedTankPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs) 
+                if scale ~= 1 then
+                    local durationArgs = {
+                        unitToken = unit,
+                        auraIndex = auraIndex,
+                        parent = self.PATankDurFrames[i][auraIndex],
+                        showCountdownFrame = false,
+                        showCountdownNumbers = false,
+                        iconInfo = {
+                            iconAnchor = {
+                                point = "BOTTOMRIGHT",
+                                relativeTo = self.PATankAnchorFrames[i][auraIndex],
+                                relativePoint = "BOTTOMRIGHT",
+                                offsetX = 2,
+                                offsetY = -4,
+                            },
+                            borderScale = -100,
+                            iconWidth = 0.001,
+                            iconHeight = 0.001,
                         },
-                        borderScale = -100,
-                        iconWidth = 0.001,
-                        iconHeight = 0.001,
-                    },
-                }    
-                if NSRT.PATankSettings.UpscaleDurations then
-                    durationArgs.durationAnchor = {
-                        point = "CENTER",
-                        relativeTo = self.PATankFrames[i][auraIndex],
-                        relativePoint = "CENTER",
-                        offsetX = 0,
-                        offsetY = 0,
-                    }
+                    }    
+                    if NSRT.PATankSettings.UpscaleDurations then
+                        durationArgs.durationAnchor = {
+                            point = "CENTER",
+                            relativeTo = self.PATankFrames[i][auraIndex],
+                            relativePoint = "CENTER",
+                            offsetX = 0,
+                            offsetY = 0,
+                        }
+                    end
+                    self.AddedTankDurPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(durationArgs)
                 end
-                self.AddedTankPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
-                self.AddedTankDurPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(durationArgs)
             end
         end
     end

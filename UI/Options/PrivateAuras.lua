@@ -120,7 +120,7 @@ local function BuildPrivateAurasOptions()
         {
             type = "range",
             name = "Stack-Scale",
-            desc = "This will scale the Stack Display",
+            desc = "This will create a 2nd Stack-Size Text on top of the first one. If big enough you will barely notice the original one. Unfortunately that is the only viable workaround at the moment. You can disable this by setting the Scale to 1.",
             get = function() return NSRT.PASettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.StackScale = value
@@ -134,7 +134,7 @@ local function BuildPrivateAurasOptions()
             type = "toggle",
             boxfirst = true,
             name = "Upscale Duration Text",
-            desc = "This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it.",
+            desc = "This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it. This can only be used together with the Stack-Size Scaling because it is not possible to hide the Stack-Size from a secondary display.",
             get = function() return NSRT.PASettings.UpscaleDuration end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.UpscaleDuration = value
@@ -317,13 +317,13 @@ local function BuildPrivateAurasOptions()
         {
             type = "range",
             name = "Stack-Scale",
-            desc = "This will scale the Stack Display",
-            get = function() return NSRT.PARaidSettings.StackScale or 1 end,
+            desc = "Same as the other Stack-Scales but for this I recommend to use this because the default display is in a rather bad spot. The default is 1.1 to have it enabled but not too big.",
+            get = function() return NSRT.PARaidSettings.StackScale or 1.1 end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.StackScale = value
                 NSI:UpdatePADisplay(false)
             end,
-            min = 0.1,
+            min = 1,
             max = 5,
             step = 0.1,
         },
@@ -507,7 +507,7 @@ local function BuildPrivateAurasOptions()
         {
             type = "range",
             name = "Stack-Scale",
-            desc = "This will scale the Stack Display",
+            desc = "This will create a 2nd Stack-Size Text on top of the first one. If big enough you will barely notice the original one. Unfortunately that is the only viable workaround at the moment. You can disable this by setting the Scale to 1.",
             get = function() return NSRT.PATankSettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.StackScale = value
@@ -521,7 +521,7 @@ local function BuildPrivateAurasOptions()
             type = "toggle",
             boxfirst = true,
             name = "Upscale Duration Text",
-            desc = "This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it.",
+            desc = "This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it. This can only be used together with the Stack-Size Scaling because it is not possible to hide the Stack-Size from a secondary display.",
             get = function() return NSRT.PATankSettings.UpscaleDuration end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.UpscaleDuration = value
