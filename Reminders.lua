@@ -64,11 +64,11 @@ function NSI:AddToReminder(info)
         end)
         info.text = info.text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
     end         
-    if info.spellID then -- display spellname if text is empty, also make TTS that spellname
+    if (NSRT.ReminderSettings.SpellName or NSRT.ReminderSettings.SpellNameTTS) and info.spellID and not info.text then -- display spellname if text is empty, also make TTS that spellname
         local spell = C_Spell.GetSpellInfo(info.spellID) 
-        if spell and not info.text then 
+        if spell then 
             info.text = NSRT.ReminderSettings.SpellName and spell.name or "" -- set text to SpellName
-            info.TTS = info.TTS and type(info.TTS) ~= "string" and (NSRT.ReminderSettings.SpellName or NSRT.ReminderSettings.SpellNameTTS) and spell.name or info.TTS -- Set TTS to SpellName if either of the settings are enabled
+            info.TTS = info.TTS and type(info.TTS) ~= "string" and spell.name or info.TTS -- Set TTS to SpellName
         end
     end
     if info.TTS and info.text and type(info.TTS) == "boolean" then -- if tts is "true" convert it to the rawtext, which is the text before converting it to display raid-icons
