@@ -94,6 +94,18 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = "SpellName TTS if empty",
+            desc = "This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked).",
+            get = function() return NSRT.ReminderSettings.SpellNameTTS end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.SpellNameTTS = value
+                NSI:ProcessReminder()
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Bars",
             desc = "Show Progress Bars instead of icons",
             get = function() return NSRT.ReminderSettings["Bars"] end,
