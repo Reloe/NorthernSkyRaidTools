@@ -32,8 +32,8 @@ function NSI:AddToReminder(info)
     if info.TTS == "false" then info.TTS = false end
     -- default to user settings if not overwritten by the reminders
     if info.TTS == nil then 
-        info.TTS = info.spellID and NSRT.ReminderSettings.SpellTTS or NSRT.ReminderSettings.TextTTS
-    end         
+        info.TTS = (info.spellID and NSRT.ReminderSettings.SpellTTS) or ((not info.spellID) and NSRT.ReminderSettings.TextTTS)
+    end       
     if info.TTSTimer == nil then
         -- set TTS timer to the specified duration or if no duration was specified, set it to the default value
         info.TTSTimer = info.dur or ((info.spellID and NSRT.ReminderSettings.SpellTTSTimer) or NSRT.ReminderSettings.TextTTSTimer)
@@ -64,12 +64,12 @@ function NSI:AddToReminder(info)
         end)
         info.text = info.text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
     end         
-    if NSRT.ReminderSettings.SpellName and info.spellID then -- display spellname if text is empty, also make TTS that spellname
+    if info.spellID then -- display spellname if text is empty, also make TTS that spellname
         local spell = C_Spell.GetSpellInfo(info.spellID) 
         if spell and not info.text then 
-            info.text = spell.name or ""
-            info.TTS = info.TTS and type(info.TTS) ~= "string" and spell.name or info.TTS
-        end 
+            info.text = NSRT.ReminderSettings.SpellName and spell.name or "" -- set text to SpellName
+            info.TTS = info.TTS and type(info.TTS) ~= "string" and (NSRT.ReminderSettings.SpellName or NSRT.ReminderSettings.SpellNameTTS) and spell.name or info.TTS -- Set TTS to SpellName if either of the settings are enabled
+        end
     end
     if info.TTS and info.text and type(info.TTS) == "boolean" then -- if tts is "true" convert it to the rawtext, which is the text before converting it to display raid-icons
         info.TTS = rawtext

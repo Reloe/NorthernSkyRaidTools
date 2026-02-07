@@ -5,7 +5,7 @@ local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 -- Window dimensions
 local window_width = 1050
-local window_height = 620
+local window_height = 640
 
 -- Tabs configuration
 local TABS_LIST = {
