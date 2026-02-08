@@ -140,7 +140,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitLDB()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
-        if NSRT.PASettings.enabled and not self:Restricted() then self:InitPA() end
+        if NSRT.PASettings.enabled then self:InitPA() end
         self:InitTextPA()        
         if NSRT.PARaidSettings.enabled then
             C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
@@ -195,7 +195,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end        
     elseif e == "PLAYER_ENTERING_WORLD" then
         if not self:DifficultyCheck(14) then self:HideAllReminders(true) end
-        if self:Restricted() then return end
         if NSRT.PARaidSettings.enabled then
             C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
         end           

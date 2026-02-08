@@ -191,35 +191,6 @@ function NSI:InitPA()
     local borderSize = NSRT.PASettings.HideBorder and -100 or NSRT.PASettings.Width/16
     local scale = NSRT.PASettings.StackScale or 4
     for auraIndex=1, 10 do
-        if not self.PAFrames[auraIndex] then
-            self.PAFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
-            self.PAFrames[auraIndex]:SetFrameStrata("HIGH")
-        end
-        if not self.PADurFrames[auraIndex] then
-            self.PADurFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
-            self.PADurFrames[auraIndex]:SetSize(0.001, 0.001)
-            self.PADurFrames[auraIndex]:SetFrameStrata("DIALOG")
-            self.PADurFrames[auraIndex]:SetPoint("CENTER", self.PAFrames[auraIndex], "CENTER", 0, 0)
-        end
-        if not self.PAAnchorFrames[auraIndex] then
-            self.PAAnchorFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
-        end
-        if NSRT.PASettings.HideTooltip then
-            self.PAFrames[auraIndex]:SetSize(0.001, 0.001)
-        else
-            self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
-        end
-        self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
-        self.PADurFrames[auraIndex]:SetScale(scale)
-        self.PAFrames[auraIndex]:ClearAllPoints()
-        self.PAAnchorFrames[auraIndex]:ClearAllPoints()
-        self.PAAnchorFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
-        NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
-        NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
-        self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
-        NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
-        NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
-
         local anchorID = "NSRT_PA"..auraIndex
         if self.AddedPA[anchorID] then
             C_UnitAuras.RemovePrivateAuraAnchor(self.AddedPA[anchorID])
@@ -229,7 +200,35 @@ function NSI:InitPA()
             C_UnitAuras.RemovePrivateAuraAnchor(self.AddedDurPA[anchorID])
             self.AddedDurPA[anchorID] = nil
         end
-        if NSRT.PASettings.enabled and NSRT.PASettings.Limit >= auraIndex then
+        if NSRT.PASettings.enabled and NSRT.PASettings.Limit >= auraIndex or auraIndex == 1 then
+            if not self.PAFrames[auraIndex] then
+                self.PAFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                self.PAFrames[auraIndex]:SetFrameStrata("HIGH")
+            end
+            if not self.PADurFrames[auraIndex] then
+                self.PADurFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                self.PADurFrames[auraIndex]:SetSize(0.001, 0.001)
+                self.PADurFrames[auraIndex]:SetFrameStrata("DIALOG")
+                self.PADurFrames[auraIndex]:SetPoint("CENTER", self.PAFrames[auraIndex], "CENTER", 0, 0)
+            end
+            if not self.PAAnchorFrames[auraIndex] then
+                self.PAAnchorFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+            end
+            if NSRT.PASettings.HideTooltip then
+                self.PAFrames[auraIndex]:SetSize(0.001, 0.001)
+            else
+                self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
+            end
+            self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
+            self.PADurFrames[auraIndex]:SetScale(scale)
+            self.PAFrames[auraIndex]:ClearAllPoints()
+            self.PAAnchorFrames[auraIndex]:ClearAllPoints()
+            self.PAAnchorFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
+            NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
+            NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
+            self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
+            NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
+            NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
             local frame = self.PAFrames[auraIndex]
             local privateAnchorArgs = {
                 unitToken = "player",
@@ -441,37 +440,6 @@ function NSI:InitTankPA()
         self.AddedTankPA[i] = self.AddedTankPA[i] or {}
         self.AddedTankDurPA[i] = self.AddedTankDurPA[i] or {}
         for auraIndex = 1, 10 do
-            if not self.PATankFrames[i][auraIndex] then
-                self.PATankFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
-                self.PATankFrames[i][auraIndex]:SetFrameStrata("HIGH")
-            end
-            if not self.PATankDurFrames[i][auraIndex] then
-                self.PATankDurFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
-                self.PATankDurFrames[i][auraIndex]:SetSize(0.001, 0.001)
-                self.PATankDurFrames[i][auraIndex]:SetFrameStrata("DIALOG")
-            end
-            if not self.PATankAnchorFrames[i][auraIndex] then
-                self.PATankAnchorFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
-                self.PATankAnchorFrames[i][auraIndex]:SetAllPoints(self.PATankFrames[i][auraIndex])
-            end
-            if NSRT.PATankSettings.HideTooltip then
-                self.PATankFrames[i][auraIndex]:SetSize(0.001, 0.001)
-            else
-                self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
-            end
-            
-            self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
-            self.PATankDurFrames[i][auraIndex]:SetScale(scale)
-            self.PATankDurFrames[i][auraIndex]:SetPoint("CENTER", self.PATankFrames[i][auraIndex], "CENTER", 0, 0) 
-            self.PATankFrames[i][auraIndex]:ClearAllPoints()
-            self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
-            self.PATankAnchorFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
-            NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
-            NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
-            self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
-            NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
-            NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
-
             local anchorID = "NSRT_TankPA"..auraIndex
             if self.AddedTankPA[i][anchorID] then
                 C_UnitAuras.RemovePrivateAuraAnchor(self.AddedTankPA[i][anchorID])
@@ -481,7 +449,39 @@ function NSI:InitTankPA()
                 C_UnitAuras.RemovePrivateAuraAnchor(self.AddedTankDurPA[i][anchorID])
                 self.AddedTankDurPA[i][anchorID] = nil
             end
+
             if NSRT.PATankSettings.enabled and NSRT.PATankSettings.Limit >= auraIndex then
+                if not self.PATankFrames[i][auraIndex] then
+                    self.PATankFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                    self.PATankFrames[i][auraIndex]:SetFrameStrata("HIGH")
+                end
+                if not self.PATankDurFrames[i][auraIndex] then
+                    self.PATankDurFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                    self.PATankDurFrames[i][auraIndex]:SetSize(0.001, 0.001)
+                    self.PATankDurFrames[i][auraIndex]:SetFrameStrata("DIALOG")
+                end
+                if not self.PATankAnchorFrames[i][auraIndex] then
+                    self.PATankAnchorFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
+                    self.PATankAnchorFrames[i][auraIndex]:SetAllPoints(self.PATankFrames[i][auraIndex])
+                end
+                if NSRT.PATankSettings.HideTooltip then
+                    self.PATankFrames[i][auraIndex]:SetSize(0.001, 0.001)
+                else
+                    self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
+                end
+            
+                self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
+                self.PATankDurFrames[i][auraIndex]:SetScale(scale)
+                self.PATankDurFrames[i][auraIndex]:SetPoint("CENTER", self.PATankFrames[i][auraIndex], "CENTER", 0, 0) 
+                self.PATankFrames[i][auraIndex]:ClearAllPoints()
+                self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
+                self.PATankAnchorFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
+                NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
+                NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
+                self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, 
+                NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx, 
+                NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky)
+
                 local privateAnchorArgs = {
                     unitToken = unit,
                     auraIndex = auraIndex,
