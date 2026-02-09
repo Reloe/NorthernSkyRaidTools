@@ -428,7 +428,7 @@ function NSI:InitNickNames()
         end
     end
 
-    if NSRT.Settings["Unhalted"] then C_AddOns.LoadAddOn("UnhaltedUnitFrames") end
+    C_AddOns.LoadAddOn("UnhaltedUnitFrames")
     if UUFG then
         UUFG:AddTag("NSNickName", "UNIT_NAME_UPDATE", function(unit)
             local name = UnitName(unit)
