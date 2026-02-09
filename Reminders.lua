@@ -1073,8 +1073,8 @@ end
 
 function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
     if not self[Name.."Mover"] then
-        self[Name.."Mover"] = CreateFrame("Frame", 'NSUIExtraReminderFrameMover', UIParent, "BackdropTemplate")
-        self:MoveFrameInit(self[Name.."Mover"], "ExtraReminderFrame", false, SettingsTable.BGcolor)
+        self[Name.."Mover"] = CreateFrame("Frame", "NSUI"..Name.."Mover", UIParent, "BackdropTemplate")
+        self:MoveFrameInit(self[Name.."Mover"], Name, false, SettingsTable.BGcolor)
         self:MoveFrameSettings(self[Name.."Mover"], SettingsTable)
         if SettingsTable.enabled and SettingsTable.Moveable then
             self:UpdateReminderFrame(false, Shared, Personal, Extra)
