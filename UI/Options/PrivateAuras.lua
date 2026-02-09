@@ -22,7 +22,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PASettings.enabled = value
                 NSI:InitPA()
             end,
-            nocombat = true,
         },
         {
             type = "button",
@@ -32,7 +31,6 @@ local function BuildPrivateAurasOptions()
                 NSI.IsPAPreview = not NSI.IsPAPreview
                 NSI:UpdatePADisplay(true)
             end,
-            nocombat = true,
             spacement = true
         },
         {
@@ -41,7 +39,6 @@ local function BuildPrivateAurasOptions()
             desc = "Grow Direction",
             get = function() return NSRT.PASettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PASettings", "GrowDirection") end,
-            nocombat = true,
         },
         {
             type = "range",
@@ -140,7 +137,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PASettings.UpscaleDuration = value
                 NSI:UpdatePADisplay(true)
             end,
-            nocombat = true,
         },
         {
             type = "toggle",
@@ -152,7 +148,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PASettings.HideBorder = value
                 NSI:UpdatePADisplay(true)
             end,
-            nocombat = true,
         },
         {
             type = "toggle",
@@ -164,7 +159,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PASettings.HideTooltip = value
                 NSI:UpdatePADisplay(true)
             end,
-            nocombat = true,
         },
         {
             type = "label",
@@ -181,7 +175,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PATextSettings.enabled = value
                 NSI:InitTextPA()
             end,
-            nocombat = true,
         },
         {
             type = "range",
@@ -219,7 +212,6 @@ local function BuildPrivateAurasOptions()
                     NSI:InitRaidPA(false)
                 end
             end,
-            nocombat = true,
         },
         {
             type = "button",
@@ -229,7 +221,6 @@ local function BuildPrivateAurasOptions()
                 NSI.IsRaidPAPreview = not NSI.IsRaidPAPreview
                 NSI:UpdatePADisplay(false)
             end,
-            nocombat = true,
             spacement = true
         },
         {
@@ -238,7 +229,6 @@ local function BuildPrivateAurasOptions()
             desc = "Grow Direction",
             get = function() return NSRT.PARaidSettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PARaidSettings", "GrowDirection") end,
-            nocombat = true,
         },
         {
             type = "range",
@@ -338,7 +328,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PARaidSettings.HideBorder = value
                 NSI:UpdatePADisplay(false)
             end,
-            nocombat = true,
         },
         {
             type = "breakline"
@@ -357,7 +346,6 @@ local function BuildPrivateAurasOptions()
                     NSUI.pasound_frame:Show()
                 end
             end,
-            nocombat = true,
             spacement = true,
         },
         {
@@ -373,7 +361,6 @@ local function BuildPrivateAurasOptions()
                     NSI:RefreshPASoundEditUI()
                 end
             end,
-            nocombat = true,
         },
         
         {
@@ -389,7 +376,6 @@ local function BuildPrivateAurasOptions()
                     NSI:RefreshPASoundEditUI()
                 end
             end,
-            nocombat = true,
         },
         {
             type = "breakline",
@@ -409,7 +395,6 @@ local function BuildPrivateAurasOptions()
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.enabled = value
             end,
-            nocombat = true,
         },
         {
             type = "button",
@@ -419,7 +404,6 @@ local function BuildPrivateAurasOptions()
                 NSI.IsTankPAPreview = not NSI.IsTankPAPreview
                 NSI:UpdatePADisplay(false, true)
             end,
-            nocombat = true,
             spacement = true
         },
         {
@@ -428,7 +412,6 @@ local function BuildPrivateAurasOptions()
             desc = "Grow Direction",
             get = function() return NSRT.PATankSettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PATankSettings", "GrowDirection") end,
-            nocombat = true,
         },
         {
             type = "range",
@@ -527,7 +510,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PATankSettings.UpscaleDuration = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            nocombat = true,
         },
         {
             type = "toggle",
@@ -539,7 +521,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PATankSettings.HideBorder = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            nocombat = true,
         },
         {
             type = "toggle",
@@ -551,7 +532,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PATankSettings.HideTooltip = value
                 NSI:UpdatePADisplay(false, true)
             end,
-            nocombat = true,
         },
         {
             type = "select",
@@ -559,7 +539,6 @@ local function BuildPrivateAurasOptions()
             desc = "This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included.",
             get = function() return NSRT.PATankSettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PATankSettings", "MultiTankGrowDirection") end,
-            nocombat = true,
         },
     }
 end
