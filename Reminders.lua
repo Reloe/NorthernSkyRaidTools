@@ -59,10 +59,9 @@ function NSI:AddToReminder(info)
         info.text = info.text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
             local id = symbols[name]
             if id then
-                return "{rt" .. id .. "}"
+                return ("{rt"..id.."}"):gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
             end
         end)
-        info.text = info.text:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
     end         
     if (NSRT.ReminderSettings.SpellName or NSRT.ReminderSettings.SpellNameTTS) and info.spellID and not info.text then -- display spellname if text is empty, also make TTS that spellname
         local spell = C_Spell.GetSpellInfo(info.spellID) 
@@ -194,7 +193,13 @@ function NSI:ProcessReminder()
                         displayLine = displayLine:gsub("time:"..time, timeFormatted.." ")
                     end
                     if text then
-                        displayLine = displayLine:gsub("text:"..text, text.. " ")
+                        local displayText = text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
+                            local id = symbols[name]
+                            if id then
+                                return ("{rt"..id.."}"):gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
+                            end
+                        end)
+                        displayLine = displayLine:gsub("text:"..text, displayText.. " ")
                     end
                     -- convert to icon
                     if spellID then
@@ -1202,7 +1207,8 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
     self[Name]:SetClipsChildren(true)         
     self[Name]:SetFrameStrata("MEDIUM")
     self[Name].Text = self[Name]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    self[Name].Text:SetPoint("TOPLEFT", self[Name], "TOPLEFT", 0, 0)       
+    self[Name].Text:SetPoint("TOPLEFT", self[Name], "TOPLEFT", 0, 0)
+    self[Name].Text:SetPoint("BOTTOMRIGHT", self[Name], "BOTTOMRIGHT", 0, 0)
     self[Name].Text:SetTextColor(1, 1, 1, 1)        
     self[Name].Text:SetJustifyH("LEFT")  
     self[Name].Text:SetJustifyV("TOP")
