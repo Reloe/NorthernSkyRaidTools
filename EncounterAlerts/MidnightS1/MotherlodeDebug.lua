@@ -43,11 +43,63 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
 end
 
+NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
+    self.Assignments[encID] = self.Assignments[3306]
+    print("in func")
+    if not (self.Assignments and self.Assignments[encID]) then return end
+    print("past check")
+    local diff = 14
+    if diff < 14 or diff > 16 then return end
+    print("past diff check", diff, self.Assignments[encID].Soaks, self.Assignments[encID].SplitSoaks)
+    if diff == 16 and self.Assignments[encID].Soaks then -- For Mythic we use group 1/2 + 3/4
+        print("in mythic soak check")
+        local subgroup = self:GetSubGroup("player")
+        local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
+        Alert.dur, Alert.TTSTimer = 10, 5
+        for phase = 1, 3 do
+            Alert.phase = phase
+            Alert.time, Alert.text  = 18.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            self:AddToReminder(Alert)
+            Alert.time, Alert.text = 71.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            self:AddToReminder(Alert)
+            Alert.time, Alert.text = 138.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            self:AddToReminder(Alert)
+        end
+        if NSRT.AssignmentSettings.OnPull then
+            local group = subgroup <= 2 and "First" or "Second"
+            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+        end
+    elseif self.Assignments[encID].SplitSoaks then -- For Normal & Heroic we auto split the group to speed up splits
+        local _, first = NSI:GetSortedGroup(true, false, false)
+        local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
+        local group = 2
+        for i, v in ipairs(first) do
+            print(v.unitid)
+            if UnitIsUnit(v.unitid, "player") and not (UnitGroupRolesAssigned("player") == "TANK") then
+                group = 1
+                break
+            end
+        end
+        Alert.dur, Alert.TTSTimer = 10, 5
+        for phase = 1, 3 do
+            Alert.phase = phase
+            Alert.time, Alert.text  = 18.7, group <= 1 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            self:AddToReminder(Alert)
+            Alert.time, Alert.text = 71.4, group >= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            self:AddToReminder(Alert)
+        end
+        if NSRT.AssignmentSettings.OnPull then
+            local group = group <= 1 and "First" or "Second"
+            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+        end
+    end
+end
+
 
 local detectedDurations = {
     [16] = {
-        {time = 31, phase = function(num) return 3 end},
-        {time = 33, phase = function(num) return 2 end},
+        {time = 31, phase = function(num) return 1 end},
+        {time = 33, phase = function(num) return 1 end},
         {time = 34.5, phase = function(num) return num end},
     },
 }

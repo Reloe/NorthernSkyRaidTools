@@ -62,12 +62,24 @@ local function BuildAssignmentsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Alndust Upheaval",
+            name = "Alndust Upheaval - Mythic",
             desc = "Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast",
             get = function() return NSRT.AssignmentSettings[3306] and NSRT.AssignmentSettings[3306].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3306] = NSRT.AssignmentSettings[3306] or {}
                 NSRT.AssignmentSettings[3306].Soaks = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Alndust Upheaval - Normal/Heroic",
+            desc = "For Normal & Heroic the Addon automatically splits healers & dps in half. Tanks are ignored.",
+            get = function() return NSRT.AssignmentSettings[3306] and NSRT.AssignmentSettings[3306].SplitSoaks end,
+            set = function(self, fixedparam, value)
+                NSRT.AssignmentSettings[3306] = NSRT.AssignmentSettings[3306] or {}
+                NSRT.AssignmentSettings[3306].SplitSoaks = value
             end,
             nocombat = true,
         },
