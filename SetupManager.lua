@@ -103,8 +103,7 @@ NSI.spectable = {
     [257]  = 40, -- Priest: Holy
 }
 
-
-function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, healer
+function NSI:GetSortedGroup(Flex, default, odds)
     local units = {}
     local lastgroup = Flex and 6 or 4
     local total = {["ALL"] = 0, ["TANK"] = 0, ["HEALER"] = 0, ["DAMAGER"] = 0}
@@ -138,8 +137,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
     self.Groups.total = total["ALL"]
     if default then
         units = self:ShiftLeader(units)
-        self.Groups.units = units
-        self:ArrangeGroups(true)
+        return units
     else
         local sides = {["left"] = {}, ["right"] = {}}
         local classes = {["left"] = {}, ["right"] = {}}
@@ -218,8 +216,7 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
                 else i = i+5 end
                 units[i] = v      
             end
-            self.Groups.units = units
-            self:ArrangeGroups(true)
+            return units, sides["left"], sides["right"]
         else         
             units = {}
             for i, v in ipairs(sides["left"]) do
@@ -233,10 +230,15 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
             for i, v in ipairs(sides["right"]) do
                 units[i+offset] = v      
             end
-            self.Groups.units = units
-            self:ArrangeGroups(true)
+            return units, sides["left"], sides["right"]
         end
-    end    
+    end  
+end
+
+
+function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, healer
+    self.Groups.units = self:GetSortedGroup(Flex, default, odds)
+    self:ArrangeGroups(true)
 end
 
 function NSI:ShiftLeader(group)
