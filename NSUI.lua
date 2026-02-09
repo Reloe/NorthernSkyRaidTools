@@ -58,6 +58,7 @@ function NSUI:Init()
         backdrop_border_color = { 0.1, 0.1, 0.1, 0.4 }
     })
     tabContainer:SetPoint("CENTER", NSUI, "CENTER", 0, 0)
+    NSUI.MenuFrame = tabContainer  -- Store reference for later access
 
     -- Get tab frames
     local general_tab = tabContainer:GetTabFrameByName("General")

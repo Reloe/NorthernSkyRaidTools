@@ -853,7 +853,7 @@ local function BuildReminderNoteOptions()
 
         {
             type = "button",
-            name = "Unlock All Reminders Note",
+            name = "Toggle All Reminders",
             desc = "Locks/Unlocks the All Reminders Note to be moved around",
             func = function(self)
                 if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then                    
@@ -990,7 +990,7 @@ local function BuildReminderNoteOptions()
 
         {
             type = "button",
-            name = "Unlock Pers Reminder",
+            name = "Toggle Pers Reminder",
             desc = "Locks/Unlocks the Personal Reminders Note to be moved around",
             func = function(self)
                 if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then            
@@ -1117,7 +1117,7 @@ local function BuildReminderNoteOptions()
 
         {
             type = "button",
-            name = "Unlock Text Note",
+            name = "Toggle Text Note",
             desc = "Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed.",
             func = function(self)
                 if NSI.ExtraReminderFrameMover and NSI.ExtraReminderFrameMover:IsMovable() then

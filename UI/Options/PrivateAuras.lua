@@ -226,9 +226,28 @@ local function BuildPrivateAurasOptions()
         {
             type = "select",
             name = "Grow Direction",
-            desc = "Grow Direction",
+            desc = "Grow Direction. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change.",
             get = function() return NSRT.PARaidSettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PARaidSettings", "GrowDirection") end,
+        },
+        {
+            type = "select",
+            name = "Row-Grow Direction",
+            desc = "Row-Grow Direction for a Grid-Style. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change.",
+            get = function() return NSRT.PARaidSettings.RowGrowDirection end,
+            values = function() return build_PAgrowdirection_options("PARaidSettings", "RowGrowDirection") end,
+        },
+        {
+            type = "range",
+            name = "Icons per Row",
+            desc = "How many Icons will be displayed per Row.",
+            get = function() return NSRT.PARaidSettings.PerRow end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.PerRow = value
+                NSI:UpdatePADisplay(false)
+            end,
+            min = 1,
+            max = 10,
         },
         {
             type = "range",

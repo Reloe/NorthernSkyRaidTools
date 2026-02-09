@@ -342,10 +342,14 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                 self.PARaidFrames[i]:SetPoint(NSRT.PARaidSettings.Anchor, F, NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
                 local xDirection = (NSRT.PARaidSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.GrowDirection == "LEFT" and -1) or 0
                 local yDirection = (NSRT.PARaidSettings.GrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.GrowDirection == "UP" and 1) or 0
+                local xRowDirection = (NSRT.PARaidSettings.RowGrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.RowGrowDirection == "LEFT" and -1) or 0
+                local yRowDirection = (NSRT.PARaidSettings.RowGrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.RowGrowDirection == "UP" and 1) or 0
                 self.AddedPARaid[anchorID] = {}
                 self.AddedPAStackRaid[anchorID] = {}
                 for auraIndex = 1, 10 do
                     if auraIndex > NSRT.PARaidSettings.Limit then break end
+                    local row = math.ceil(auraIndex/NSRT.PARaidSettings.PerRow)
+                    local column = auraIndex - (row-1)*NSRT.PARaidSettings.PerRow
                     local privateAnchorArgs = {
                         unitToken = u,
                         auraIndex = auraIndex,
@@ -357,8 +361,8 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                                 point = NSRT.PARaidSettings.Anchor,
                                 relativeTo = self.PARaidFrames[i],
                                 relativePoint = NSRT.PARaidSettings.relativeTo,
-                                offsetX = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection,
-                                offsetY = 0 + (auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection,
+                                offsetX = (column - 1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection + (row - 1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xRowDirection,
+                                offsetY = (column - 1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection + (row - 1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yRowDirection,
                             },
                             borderScale = borderSize,
                             iconWidth = NSRT.PARaidSettings.Width,
@@ -378,8 +382,8 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                                     point = "BOTTOMRIGHT",
                                     relativeTo = self.PARaidAnchorFrames[i],
                                     relativePoint = "BOTTOMRIGHT",
-                                    offsetX = 4 +((auraIndex-1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection)/scale,
-                                    offsetY = -4 +((auraIndex-1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection)/scale,
+                                    offsetX = 4 + ((column - 1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection)/scale,
+                                    offsetY = -4 + ((row - 1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection)/scale,
                                 },
                                 borderScale = -100,
                                 iconWidth = 0.001,
@@ -726,19 +730,32 @@ function NSI:PreviewRaidPA(Show, Init)
         self.PARaidPreviewIcons = {}
     end
 
+    local xDirection = (NSRT.PARaidSettings.GrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.GrowDirection == "LEFT" and -1) or 0
+    local yDirection = (NSRT.PARaidSettings.GrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.GrowDirection == "UP" and 1) or 0
+    local xRowDirection = (NSRT.PARaidSettings.RowGrowDirection == "RIGHT" and 1) or (NSRT.PARaidSettings.RowGrowDirection == "LEFT" and -1) or 0
+    local yRowDirection = (NSRT.PARaidSettings.RowGrowDirection == "DOWN" and -1) or (NSRT.PARaidSettings.RowGrowDirection == "UP" and 1) or 0
     for i=1, 10 do
+        local row = math.ceil(i/NSRT.PARaidSettings.PerRow)
+        local column = i - (row-1)*NSRT.PARaidSettings.PerRow
         if not self.PARaidPreviewIcons[i] then
             self.PARaidPreviewIcons[i] = self.PARaidPreviewFrame:CreateTexture(nil, "ARTWORK")
             self.PARaidPreviewIcons[i]:SetTexture(237555)
+            self.PARaidPreviewIcons[i].Text = self.PARaidPreviewFrame:CreateFontString(nil, "OVERLAY")
+            self.PARaidPreviewIcons[i].Text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 16, "OUTLINE")
+            self.PARaidPreviewIcons[i].Text:SetPoint("CENTER", self.PARaidPreviewIcons[i], "CENTER", 0, 0)
+            self.PARaidPreviewIcons[i].Text:SetText(i)
+            self.PARaidPreviewIcons[i].Text:SetTextColor(1, 0, 0, 1)
         end
         if NSRT.PARaidSettings.Limit >= i then
-            local xOffset = (NSRT.PARaidSettings.GrowDirection == "RIGHT" and (i-1)*(NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing)) or (NSRT.PARaidSettings.GrowDirection == "LEFT" and -(i-1)*(NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing)) or 0
-            local yOffset = (NSRT.PARaidSettings.GrowDirection == "UP" and (i-1)*(NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing)) or (NSRT.PARaidSettings.GrowDirection == "DOWN" and -(i-1)*(NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing)) or 0
+            local xOffset = (column - 1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xDirection + (row - 1) * (NSRT.PARaidSettings.Width+NSRT.PARaidSettings.Spacing) * xRowDirection
+            local yOffset = (column - 1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yDirection + (row- 1) * (NSRT.PARaidSettings.Height+NSRT.PARaidSettings.Spacing) * yRowDirection
             self.PARaidPreviewIcons[i]:SetSize(NSRT.PARaidSettings.Width, NSRT.PARaidSettings.Height)
             self.PARaidPreviewIcons[i]:SetPoint("CENTER", self.PARaidPreviewFrame, "CENTER", xOffset, yOffset)
             self.PARaidPreviewIcons[i]:Show()
+            self.PARaidPreviewIcons[i].Text:Show()
         else
             self.PARaidPreviewIcons[i]:Hide()
+            self.PARaidPreviewIcons[i].Text:Hide()
         end
     end
 end

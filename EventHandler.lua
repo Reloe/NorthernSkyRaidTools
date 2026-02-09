@@ -94,7 +94,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.PATankSettings.Spacing = NSRT.PATankSettings.Spacing or -1
             NSRT.PATankSettings.Limit = NSRT.PATankSettings.Limit or 5
             if not NSRT.PARaidSettings then
-                NSRT.PARaidSettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
+                NSRT.PARaidSettings = {PerRow = 3, RowGrowDirection = "UP", Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
+            end
+            if not NSRT.PARaidSettings.PerRow then
+                NSRT.PARaidSettings.PerRow = 3
+                NSRT.PARaidSettings.RowGrowDirection = "UP"
+                NSRT.PASettings.PerRow = 10
+                NSRT.PASettings.RowGrowDirection = "UP"
             end
             if not NSRT.PATextSettings then
                 NSRT.PATextSettings = {Scale = 2.5, xOffset = 0, yOffset = -200, enabled = false, Anchor = "TOP", relativeTo = "TOP"}
