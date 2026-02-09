@@ -74,11 +74,16 @@ function NSUI:Init()
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
 
     -- Generic text display
-    NSI.NSRTFrame.generic_display = NSI.NSRTFrame:CreateFontString(nil, "OVERLAY")
-    NSI.NSRTFrame.generic_display:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 20, "OUTLINE")
-    NSI.NSRTFrame.generic_display:SetPoint("CENTER", NSI.NSRTFrame, "CENTER", -200, 400)
-    NSI.NSRTFrame.generic_display:SetJustifyH("LEFT")
+    NSI.NSRTFrame.generic_display = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
     NSI.NSRTFrame.generic_display:Hide()
+    NSI.NSRTFrame.generic_display:SetPoint(NSRT.Settings.GenericDisplay.Anchor, NSI.NSRTFrame, NSRT.Settings.GenericDisplay.relativeTo, NSRT.Settings.GenericDisplay.xOffset, NSRT.Settings.GenericDisplay.yOffset)
+    NSI.NSRTFrame.generic_display.Text = NSI.NSRTFrame.generic_display:CreateFontString(nil, "OVERLAY")
+    NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 20, "OUTLINE")
+    NSI.NSRTFrame.generic_display.Text:SetPoint("TOPLEFT", NSI.NSRTFrame.generic_display, "TOPLEFT", 0, 0)
+    NSI.NSRTFrame.generic_display.Text:SetJustifyH("LEFT")
+    NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
+    NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
+    NSI:MoveFrameInit(NSI.NSRTFrame.generic_display, "Generic")
 
     -- Build options tables from modules
     local general_options1_table = BuildGeneralOptions()
@@ -196,8 +201,9 @@ end
 function NSI:DisplayText(text, duration)
     if self:Restricted() then return end
     if self.NSRTFrame and self.NSRTFrame.generic_display then
-        self.NSRTFrame.generic_display:SetText(text)
+        self.NSRTFrame.generic_display.Text:SetText(text)
         self.NSRTFrame.generic_display:Show()
+        self.NSRTFrame.generic_display.Text:Show()
         if self.TextHideTimer then
             self.TextHideTimer:Cancel()
             self.TextHideTimer = nil

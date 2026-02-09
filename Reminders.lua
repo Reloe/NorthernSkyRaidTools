@@ -1063,7 +1063,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             self[Name].Text:SetPoint("LEFT", self[Name], "LEFT", 0, 0)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
-        self:MoveFrameInit(self[Name], SettingsName, IsText)
+        self:MoveFrameInit(self[Name], SettingsName)
         self:MoveFrameSettings(self[Name], SettingsTable, IsText)
     else
         self:MoveFrameSettings(self[Name], SettingsTable, IsText)
@@ -1074,7 +1074,7 @@ end
 function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
     if not self[Name.."Mover"] then
         self[Name.."Mover"] = CreateFrame("Frame", "NSUI"..Name.."Mover", UIParent, "BackdropTemplate")
-        self:MoveFrameInit(self[Name.."Mover"], Name, false, SettingsTable.BGcolor)
+        self:MoveFrameInit(self[Name.."Mover"], Name, SettingsTable.BGcolor)
         self:MoveFrameSettings(self[Name.."Mover"], SettingsTable)
         if SettingsTable.enabled and SettingsTable.Moveable then
             self:UpdateReminderFrame(false, Shared, Personal, Extra)
@@ -1101,7 +1101,7 @@ function NSI:MoveFrameSettings(F, s, IsText)
     F:SetPoint(s.Anchor, UIParent, s.relativeTo, s.xOffset, s.yOffset)
 end
 
-function NSI:MoveFrameInit(F, s, text, ReminderColor)
+function NSI:MoveFrameInit(F, s, ReminderColor)
     if F then             
         F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate") 
         local x = s == "BarSettings" and -6-NSRT.ReminderSettings[s].Height or -6 -- extra offset for bars to account for the icon
@@ -1122,7 +1122,8 @@ function NSI:MoveFrameInit(F, s, text, ReminderColor)
             self:StartMoving()
         end)
         F:SetScript("OnDragStop", function(Frame)
-            self:StopFrameMove(Frame, NSRT.ReminderSettings[s])
+            local settingsTable = s == "Generic" and NSRT.Settings.GenericDisplay or NSRT.ReminderSettings[s]
+            self:StopFrameMove(Frame, settingsTable)
             self:UpdateExistingFrames() 
         end)
     end

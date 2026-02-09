@@ -126,6 +126,22 @@ Press 'Enter' to hear the TTS]],
         },
         
         {
+            type = "button",
+            name = "Move Text Display",
+            desc = "This lets you move the generic text display used for example the ready check module or the assignments on pull.",
+            func = function(self)
+                if NSI.NSRTFrame.generic_display:IsMovable() then
+                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, false)
+                else
+                    NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
+                    NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
+                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, true)
+                end         
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
             type = "select",
             name = "Global Font",
             desc = "This changes the Font in just about every part of the Addon, unless that part has a specific font setting for it. You should probably reload after changing this.",

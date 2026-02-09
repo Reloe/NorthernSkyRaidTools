@@ -308,7 +308,7 @@ function NSI:StopFrameMove(F, SettingsTable)
     SettingsTable.relativeTo = relativeTo   
 end
 
-function NSI:ToggleMoveFrames(F, Unlock, DontHide)
+function NSI:ToggleMoveFrames(F, Unlock)
     if Unlock then
         F:SetMovable(true)
         F:EnableMouse(true)
@@ -316,6 +316,8 @@ function NSI:ToggleMoveFrames(F, Unlock, DontHide)
         F:SetClampedToScreen(true)
         F.Border:Show()
         F:Show()
+        if F.Border then F.Border:Show() end
+        if F.Text then F.Text:Show() end
     else
         if F.Border then F.Border:Hide() end
         if F.Text then F.Text:Hide() end
