@@ -25,11 +25,12 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
             self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
         end
     elseif self.Assignments[encID].SplitSoaks then -- For Normal & Heroic we auto split the group to speed up splits
+        if UnitGroupRolesAssigned("player") == "TANK" then return end -- just end early for tanks
         local _, first = NSI:GetSortedGroup(true, false, false)
         local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
         local group = 2
         for i, v in ipairs(first) do
-            if UnitIsUnit(v.unitid, "player") and not (UnitGroupRolesAssigned("player") == "TANK") then
+            if UnitIsUnit(v.unitid, "player") then
                 group = 1
                 break
             end
