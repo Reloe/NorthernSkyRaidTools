@@ -399,6 +399,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
 end
 
 function NSI:RemoveTankPA()
+    if not self.AddedTankPA then return end
     for i, anchortable in ipairs(self.AddedTankPA) do
         if self.AddedTankPA[i] then
             for anchorID, anchor in pairs(anchortable) do
