@@ -223,6 +223,7 @@ function NSI:InitPA()
             self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, 
             NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection, 
             NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection)
+            if not NSRT.PASettings.enabled then return end
             local frame = self.PAFrames[auraIndex]
             local privateAnchorArgs = {
                 unitToken = "player",
