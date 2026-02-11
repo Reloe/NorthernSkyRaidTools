@@ -349,7 +349,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                         auraIndex = auraIndex,
                         parent = self.PARaidFrames[i],
                         showCountdownFrame = true,
-                        showCountdownNumbers = true,
+                        showCountdownNumbers = not NSRT.PARaidSettings.HideDurationText,
                         iconInfo = {
                             iconAnchor = {
                                 point = NSRT.PARaidSettings.Anchor,

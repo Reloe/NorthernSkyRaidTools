@@ -349,6 +349,17 @@ local function BuildPrivateAurasOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Duration Text",
+            desc = "Hide the duration text on the Raidframe Private Auras. Since it's not feasible to rescale the duration text this option exists instead if you think it is overlapping too much and you're fine with only having the swipe.",
+            get = function() return NSRT.PARaidSettings.HideDurationText end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.HideDurationText = value
+                NSI:UpdatePADisplay(false)
+            end,
+        },
+        {
             type = "breakline"
         },
         {
