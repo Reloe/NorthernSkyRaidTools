@@ -204,7 +204,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end        
     elseif e == "PLAYER_ENTERING_WORLD" then
         if not self:DifficultyCheck(14) then self:HideAllReminders(true) end
-        if NSRT.PARaidSettings.enabled then
+        local IsLogin, IsReload = ...
+        if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
             C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
         end           
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
