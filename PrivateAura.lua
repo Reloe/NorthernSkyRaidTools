@@ -78,13 +78,7 @@ function NSI:AddPASound(spellID, sound)
     local soundPath = NSI.LSM:Fetch("sound", sound)
     if soundPath and soundPath ~= 1 then
         C_UnitAuras.AddPrivateAuraAppliedSound({
-            unitToken = "raid2",
-            spellID = spellID,
-            soundFileName = soundPath,
-            outputChannel = "master",
-        })
-        C_UnitAuras.AddPrivateAuraAppliedSound({
-            unitToken = "raid1",
+            unitToken = "player",
             spellID = spellID,
             soundFileName = soundPath,
             outputChannel = "master",

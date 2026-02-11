@@ -144,7 +144,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "select",
             name = "Global Font",
-            desc = "This changes the Font in just about every part of the Addon, unless that part has a specific font setting for it. You should probably reload after changing this.",
+            desc = "This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility.",
             get = function() return NSRT.Settings.GlobalFont end,
             values = function() return build_media_options(false, false, false, false, false, true) end,
             nocombat = true,
