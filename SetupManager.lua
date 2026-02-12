@@ -541,11 +541,12 @@ function NSI:ArrangeFromReminder(str)
     self.Groups.Processing = false
     self.Groups.units = {}
     self.Groups.total = 0
-    if list and not self:Restricted() then
-        for i, name in ipairs(list) do
-            self.Groups.units[i] = {name = name}
-            self.Groups.total = self.Groups.total + 1
-        end
-        self:ArrangeGroups(true)
+    if self:Restricted() then print("You are currently in combat, cannot sort groups right now.") return end
+    if not list then print("No invite list found.") return end
+    for i, name in ipairs(list) do
+        self.Groups.units[i] = {name = name}
+        self.Groups.total = self.Groups.total + 1
     end
+    self:ShiftLeader(self.Groups.units)
+    self:ArrangeGroups(true)
 end
