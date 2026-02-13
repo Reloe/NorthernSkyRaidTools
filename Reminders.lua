@@ -92,6 +92,10 @@ function NSI:AddToReminder(info)
         end
         info.colors = colors
     end
+    -- play default sound if enabled and no TTS/Sound was specified
+    if NSRT.ReminderSettings.PlayDefaultSound and (type(info.TTS) == "boolean" or not info.TTS) and (not info.sound) and (not info.IsAlert) then 
+        info.sound = NSRT.ReminderSettings.DefaultSound
+    end
 
     self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}    
     table.insert(self.ProcessedReminder[info.encID][info.phase], 

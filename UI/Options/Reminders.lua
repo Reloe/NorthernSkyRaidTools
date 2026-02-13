@@ -6,6 +6,7 @@ local NSUI = Core.NSUI
 local build_media_options = Core.build_media_options
 local build_growdirection_options = Core.build_growdirection_options
 local build_raidframeicon_options = Core.build_raidframeicon_options
+local build_sound_dropdown = Core.build_sound_dropdown
 
 local function BuildReminderOptions()
     return {
@@ -252,6 +253,7 @@ local function BuildReminderOptions()
             max = 20,
             nocombat = true,
         },
+
         {
             type = "breakline"
         },
@@ -596,6 +598,34 @@ local function BuildReminderOptions()
             nocombat = true
 
         },
+        {
+            type = "label",
+            get = function() return "Universal Settings" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Play Sound instead of TTS",
+            desc = "This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work.",
+            get = function() return NSRT.ReminderSettings["PlayDefaultSound"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["PlayDefaultSound"] = value
+                NSI:ProcessReminder()
+            end,
+            nocombat = true,
+        },
+        
+        {
+            type = "select",
+            name = "Sound",
+            desc = "Sound",
+            get = function() return NSRT.ReminderSettings.DefaultSound end,
+            values = function() return build_sound_dropdown() end,
+            nocombat = true,
+        },
+
         {
             type = "breakline",
         },

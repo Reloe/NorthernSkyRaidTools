@@ -137,6 +137,24 @@ local function build_raidframeicon_options()
     return t
 end
 
+local soundlist = NSI.LSM:List("sound")
+local function build_sound_dropdown()
+    local t = {}
+    for i, sound in ipairs(soundlist) do
+        tinsert(t, {
+            label = sound,
+            value = i,
+            onclick = function(_, _, value)
+                local toplay = NSI.LSM:Fetch("sound", sound)
+                PlaySoundFile(toplay, "Master")
+                NSRT.ReminderSettings.DefaultSound = soundlist[value]
+                return value
+            end
+        })
+    end
+    return t
+end
+
 -- Export to namespace
 NSI.UI = NSI.UI or {}
 NSI.UI.Core = {
@@ -154,6 +172,7 @@ NSI.UI.Core = {
     build_growdirection_options = build_growdirection_options,
     build_PAgrowdirection_options = build_PAgrowdirection_options,
     build_raidframeicon_options = build_raidframeicon_options,
+    build_sound_dropdown = build_sound_dropdown,
     LDBIcon = LDBIcon,
 }
 

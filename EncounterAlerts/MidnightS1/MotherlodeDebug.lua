@@ -47,8 +47,8 @@ end
 local detectedDurations = {
     [16] = {
         {time = 31, phase = function(num) return 3 end},
-        {time = 33, phase = function(num) return 2 end},
-        {time = 34.5, phase = function(num) return num end},
+        {time = 33, phase = function(num) return 1 end},
+        {time = 34.5, phase = function(num) return 2 end},
     },
 }
 
