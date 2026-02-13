@@ -1257,15 +1257,15 @@ function NSI:FlashFrameBackground(F, SettingsTable)
     F.Border:Show()
     local holdDuration = 1
     local fadeDuration = 2
-    local flashColor = {1, 0, 0, 0.5}
+    local flashColor = {1, 0, 0, 0.4}
     local originalColor = {0, 0, 0, 0}
 
     F.Border:SetBackdropColor(unpack(flashColor))
 
     local elapsed = 0
     F.IsActiveFlash = true
-    C_Timer.NewTicker(0.01, function(ticker)
-        elapsed = elapsed + 0.01
+    C_Timer.NewTicker(0.1, function(ticker)
+        elapsed = elapsed + 0.1
         
         if elapsed < holdDuration then
             return
