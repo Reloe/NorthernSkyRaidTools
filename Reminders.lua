@@ -1257,10 +1257,8 @@ function NSI:FlashFrameBackground(F, SettingsTable)
     F.Border:Show()
     local holdDuration = 1
     local fadeDuration = 2
-    local flashColor = {1, 0, 0, 0.4}
-    local originalColor = {0, 0, 0, 0}
 
-    F.Border:SetBackdropColor(unpack(flashColor))
+    F.Border:SetBackdropColor(1, 0, 0, 0.4)
 
     local elapsed = 0
     F.IsActiveFlash = true
@@ -1274,10 +1272,10 @@ function NSI:FlashFrameBackground(F, SettingsTable)
         local fadeElapsed = elapsed - holdDuration
         local progress = math.min(fadeElapsed / fadeDuration, 1)
 
-        local r = flashColor[1]
-        local g = flashColor[2]
-        local b = flashColor[3]
-        local a = flashColor[4] + (originalColor[4] - flashColor[4]) * progress
+        local r = 1
+        local g = 0
+        local b = 0
+        local a = 0.4 + (0 - 0.4) * progress
 
         F.Border:SetBackdropColor(r, g, b, a)
 
