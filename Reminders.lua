@@ -1241,10 +1241,57 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
     self[Name]:SetAllPoints(self[Name.."Mover"])
     self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")   
     self[Name].Text:SetText(text)
-    self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor))
+    if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
     if SettingsTable.enabled then  
         self[Name]:Show()
     elseif self[Name] then
         self[Name]:Hide()
     end
+end
+
+function NSI:FlashFrameBackground(F, SettingsTable)
+    if not F or not F.Border then return end
+    if not SettingsTable.enabled then return end
+    if F.IsActiveFlash then return end
+    local wasshown = F.Border:IsShown()
+    F.Border:Show()
+    local holdDuration = 1
+    local fadeDuration = 2
+    local flashColor = {1, 0, 0, 0.5}
+    local originalColor = {0, 0, 0, 0}
+
+    F.Border:SetBackdropColor(unpack(flashColor))
+
+    local elapsed = 0
+    F.IsActiveFlash = true
+    C_Timer.NewTicker(0.01, function(ticker)
+        elapsed = elapsed + 0.01
+        
+        if elapsed < holdDuration then
+            return
+        end
+        
+        local fadeElapsed = elapsed - holdDuration
+        local progress = math.min(fadeElapsed / fadeDuration, 1)
+
+        local r = flashColor[1]
+        local g = flashColor[2]
+        local b = flashColor[3]
+        local a = flashColor[4] + (originalColor[4] - flashColor[4]) * progress
+
+        F.Border:SetBackdropColor(r, g, b, a)
+
+        if progress >= 1 then
+            if not wasshown then F.Border:Hide() end
+            if wasshown then F.Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
+            ticker:Cancel()
+            F.IsActiveFlash = false
+        end
+    end)
+end
+
+function NSI:FlashNoteBackgrounds()
+    self:FlashFrameBackground(NSI.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame)
+    self:FlashFrameBackground(NSI.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
+    self:FlashFrameBackground(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame)
 end

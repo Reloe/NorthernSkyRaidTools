@@ -309,6 +309,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.Reminder = reminderstring
                 self:ProcessReminder()
                 self:UpdateReminderFrame(true)
+                if skipcheck then self:FlashNoteBackgrounds() end -- only show animation if reminder was manually shared
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
             if assigntable then self.Assignments = assigntable end

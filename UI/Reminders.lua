@@ -170,11 +170,11 @@ local function BuildRemindersEditUI()
                 Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
             end
             if all then
-                for _, reminder in ipairs(NSI:GetAllReminderNames()) do
-                    NSI:RemoveReminder(reminder.name)
-                end
                 if NSRT.ActiveReminder then
                     Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+                end
+                for _, reminder in ipairs(NSI:GetAllReminderNames()) do
+                    NSI:RemoveReminder(reminder.name)
                 end
             else
                 NSI:RemoveReminder(line.name)
@@ -389,11 +389,11 @@ local function BuildPersonalRemindersEditUI()
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
             end
             if all then
-                for _, reminder in ipairs(NSI:GetAllReminderNames(true)) do
-                    NSI:RemoveReminder(reminder.name, true)
-                end
                 if NSRT.ActivePersonalReminder then
                     Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+                end
+                for _, reminder in ipairs(NSI:GetAllReminderNames(true)) do
+                    NSI:RemoveReminder(reminder.name, true)
                 end
             else
                 NSI:RemoveReminder(line.name, true)
