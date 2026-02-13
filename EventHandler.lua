@@ -303,7 +303,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
-        if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit)) and skipcheck) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
+        if UnitIsGroupLeader(unit) or ((UnitIsGroupAssistant(unit) and skipcheck) and (self:DifficultyCheck(14) or skipcheck)) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and reminderstring ~= "" then
                 NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
@@ -311,7 +311,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateReminderFrame(true)
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
-            self.Assignments = assigntable
+            if assigntable then self.Assignments = assigntable end
         end
     elseif e == "NSI_READY_CHECK" and internal then
         local text = ""

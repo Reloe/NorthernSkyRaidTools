@@ -146,6 +146,7 @@ local function BuildRemindersEditUI()
         NSI.Reminder = ""
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(true)
+        NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
@@ -153,13 +154,6 @@ local function BuildRemindersEditUI()
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
 
-    local ShareButton = DF:CreateButton(reminders_edit_frame, function()
-        NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, NSRT.AssignmentSettings, true)
-        NSI.LastBroadcast = GetTime()
-    end, 100, 24, "Share Reminder"
-    )
-    ShareButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
-    ShareButton:SetTemplate(options_button_template)
 
     local function DeleteBossReminder(self, line, all)
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Reminder Deletion", "NSRTDeleteReminderPopup")
@@ -215,7 +209,7 @@ local function BuildRemindersEditUI()
                 parent:MasterRefresh()
                 end, 100, 24, "Delete ALL Reminders"
             )
-            DeleteAllButton:SetPoint("LEFT", ShareButton, "RIGHT", 5, 0)
+            DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
             DeleteAllButton:SetTemplate(options_button_template)
         end
 
@@ -270,6 +264,7 @@ local function BuildRemindersEditUI()
                 NSI:SetReminder(name)
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
                 NSI:UpdateReminderFrame(true)
+                NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, nil, true)
                 parent:MasterRefresh()
             end
         end, 40, 20, "Load")
