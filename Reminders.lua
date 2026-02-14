@@ -261,6 +261,7 @@ function NSI:ProcessReminder()
                 for name in tag:gmatch("(%S+)") do
                     tags[strtrim(name)] = true
                 end
+                specid = specid and tostring(specid)
                 if tag == "everyone" or 
                 tags[myname] or 
                 tags[mynickname] or
