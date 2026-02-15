@@ -149,8 +149,6 @@ function NSI:InitTextPA()
         end
 
         local height = self.PATextMoverFrame:GetHeight()
-        height = scale * 30
-        -0.8*scale*30/scale
         -- I have absolutely no clue why this math works out but it does
         self.PATextWarning:SetPoint("TOPLEFT", self.PATextMoverFrame, "TOPLEFT", 0, -0.8*height/NSRT.PATextSettings.Scale)
         self.PATextWarning:SetPoint("BOTTOMRIGHT", self.PATextMoverFrame, "BOTTOMRIGHT", 0, -0.8*height/NSRT.PATextSettings.Scale)
