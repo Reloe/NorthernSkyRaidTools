@@ -168,15 +168,9 @@ end
 
 function NSI:InitPA()
     
-    if not self.PAFrames then
-        self.PAFrames = {}
-    end
-    if not self.PADurFrames then
-        self.PADurFrames = {}
-    end
-    if not self.PAAnchorFrames then
-        self.PAAnchorFrames = {}
-    end
+    if not self.PAFrames then self.PAFrames = {} end
+    if not self.PADurFrames then self.PADurFrames = {} end
+    if not self.PAAnchorFrames then self.PAAnchorFrames = {} end
     
     if not self.AddedPA then self.AddedPA = {} end
     if not self.AddedDurPA then self.AddedDurPA = {} end   
