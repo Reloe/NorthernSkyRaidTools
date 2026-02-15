@@ -151,15 +151,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled then self:InitPA() end
         self:InitTextPA()
-        if NSRT.PARaidSettings.enabled then
-            C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
-        if NSRT.PASounds.UseDefaultPASounds then
-            self:ApplyDefaultPASounds()
-        end
-        if NSRT.PASounds.UseDefaultMPlusPASounds then
-            self:ApplyDefaultPASounds(false, true)
-        end
+        if NSRT.PARaidSettings.enabled then C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end) end
+        if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
+        if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
+        -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
+        if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true) -- loading active personal reminder from last session
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs

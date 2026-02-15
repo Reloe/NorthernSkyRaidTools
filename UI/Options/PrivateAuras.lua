@@ -363,6 +363,17 @@ local function BuildPrivateAurasOptions()
             type = "breakline"
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Allow Dispel-Type Border",
+            desc = "This will attach the Blizzard Debuff-Type Indicator to ALL Private Aura Displays. This only works if the Border is enabled. This is a global setting and it will apply to all private auras, regardless which addon is creating them.",
+            get = function() return NSRT.PARaidSettings.DebuffTypeBorder end,
+            set = function(self, fixedparam, value)
+                NSRT.PARaidSettings.DebuffTypeBorder = value
+                C_UnitAuras.TriggerPrivateAuraShowDispelType(value)
+            end,
+        },
+        {
             type = "label",
             get = function() return "Private Aura Sounds" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
