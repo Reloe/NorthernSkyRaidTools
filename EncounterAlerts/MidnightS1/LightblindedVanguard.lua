@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3180
 -- /run NSAPI:DebugEncounter(3180)
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
+NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
@@ -50,7 +50,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if IsHealer then
         for i, v in ipairs(healer) do
             if UnitIsUnit("player", v.unit) then
-                mygroup = i                  
+                mygroup = i
             end
         end
     else
@@ -69,7 +69,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     Alert.TTS, Alert.TTSTimer, Alert.text = 92, TTS, 10, text
     local phaselength = 162.7 -- guess based on Zealous Spirit in logs
 
-    for phase = 0, 2 do        
+    for phase = 0, 2 do
         Alert.time = 92 + (phase * phaselength)
         self:AddToReminder(Alert)
         if self:DifficultyCheck(16) then -- second cast is mythic only in case I want to support Heroic as well

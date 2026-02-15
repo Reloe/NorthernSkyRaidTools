@@ -378,7 +378,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                     glowUnitNames = glowUnitNames ..
                         NSAPI:Shorten(NSAPI:GetChar(name), 12, false, "GlobalNickNames") .. " "
                 end
-            else 
+            else
                 glowUnitNames = nil
             end
 
@@ -572,7 +572,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                     glowUnitNames = glowUnitNames .. NSAPI:Shorten(NSAPI:GetChar(name), 12, false, "GlobalNickNames") .. " "
                 end
             end
-        else 
+        else
             glowUnitNames = nil
         end
 

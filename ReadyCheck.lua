@@ -50,7 +50,7 @@ end
 function NSI:BuffCheck()
     if self:Restricted() then return end
     local class = select(3, UnitClass("player"))
-    local spellID = buffs[class]    
+    local spellID = buffs[class]
     if spellID then
         for unit in self:IterateGroupMembers() do
             local specID = self.specs and self.specs[unit] or select(3, UnitClass(unit)) -- if specdata exists we use that, otherwise class which means maybe some useless buffs are being done.
@@ -80,8 +80,8 @@ function NSI:BuffCheck()
                     local name = spellInfo and spellInfo.name or ""
                     NSAPI:TTS("Rebuff "..name)
                     return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
-                end     
-            end       
+                end
+            end
         end
     end
     return false
@@ -99,7 +99,7 @@ local SlotName = {
     "Wrist",     --  9
     "Hands",     -- 10
     "Finger 1",  -- 11
-    "Finger 2",  -- 12 
+    "Finger 2",  -- 12
     "Trinket 1", -- 13
     "Trinket 2", -- 14
     "Back",      -- 15
@@ -107,7 +107,7 @@ local SlotName = {
     "Off Hand"   -- 17
 }
 
-function NSI:GemCheck(slot, itemString)    
+function NSI:GemCheck(slot, itemString)
     local gemsMissing = 0
     if slot == 2 or slot == 11 or slot == 12 then
         gemsMissing = 1
@@ -136,18 +136,18 @@ function NSI:GemCheck(slot, itemString)
 end
 
 function NSI:EnchantCheck(slot, itemString)
-    local enchantedSlots = {3, 5, 7, 8, 11, 12, 16, 17}    
-    if tContains(enchantedSlots, slot) and itemString then 
+    local enchantedSlots = {3, 5, 7, 8, 11, 12, 16, 17}
+    if tContains(enchantedSlots, slot) and itemString then
         if slot == 17 and select(12, C_Item.GetItemInfo(itemString)) == 4 then return false end -- skip shield/offhand
         local link = select(2, C_Item.GetItemInfo(itemString))
         local _, enchant = link:match("item:(%d+):(%d+)")
-        if enchant then return false else return true end        
+        if enchant then return false else return true end
     else
         return false
     end
 end
 
-function NSI:GearCheck()          
+function NSI:GearCheck()
     local missing = {}
     local crafted = 0
     local tier = 0
@@ -156,17 +156,17 @@ function NSI:GearCheck()
     local ilvl = UnitLevel("player") >= 90 and minlvl or 100
     self.MainstatGem = false
     for slot = 1, #SlotName do
-        local itemString = GetInventoryItemLink("player", slot)            
+        local itemString = GetInventoryItemLink("player", slot)
         if itemString then
             if NSRT.ReadyCheckSettings.CraftedCheck and string.find(itemString, "8960") then
                 crafted = crafted+1
             end
             if NSRT.ReadyCheckSettings.EnchantCheck and UnitLevel("player") >= 90 and self:EnchantCheck(slot,itemString) then
-                table.insert(missing, "Missing Enchant on: |cFF00FF00"..SlotName[slot].."|r")        
-            end                
+                table.insert(missing, "Missing Enchant on: |cFF00FF00"..SlotName[slot].."|r")
+            end
             if NSRT.ReadyCheckSettings.GemCheck and UnitLevel("player") >= 90 and self:GemCheck(slot, itemString) then
                 table.insert(missing, "Missing Gem in: |cFF00FF00"..SlotName[slot].."|r")
-            end                
+            end
             if NSRT.ReadyCheckSettings.ItemLevelCheck and slot ~= 4 and select(4, C_Item.GetItemInfo(itemString)) < ilvl then
                 table.insert(missing, "Low Itemlvl equipped on: |cFF00FF00"..SlotName[slot].."|r")
             end
@@ -175,19 +175,19 @@ function NSI:GearCheck()
                 if min and min/max <= 0.2 then
                     repair = true
                 end
-            end   
+            end
             if NSRT.ReadyCheckSettings.TierCheck then
                 if self:TierCheck(slot) then
                     tier = tier+1
                 end
             end
-        elseif NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 then  
+        elseif NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 then
             if slot == 17 then
                 itemString = GetInventoryItemLink("player", 16)
                 local type = itemString and select(13, C_Item.GetItemInfo(itemString)) or ""
                 local onehand = {0, 4, 7, 9, 11, 12, 13, 15, 19}
                 if tContains(onehand, type) or spec == 72 then -- only check offhand if mainhand is a onehand or player is a fury warrior
-                    table.insert(missing, "|cFFFF0000Not equipped:|r |cFF00FF00"..SlotName[slot].."|r")                        
+                    table.insert(missing, "|cFFFF0000Not equipped:|r |cFF00FF00"..SlotName[slot].."|r")
                 end
             else
                 table.insert(missing, "|cFFFF0000Not equipped:|r |cFF00FF00"..SlotName[slot].."|r")
@@ -218,7 +218,7 @@ function NSI:GearCheck()
     local text = ""
     for i=1, #missing do
         text = text..missing[i].."\n"
-    end  
+    end
     return text
 end
 
@@ -268,12 +268,12 @@ local keymapping = {
     [169] = "MULTIACTIONBAR7BUTTON",
 }
 
-function NSI:CheckGateWayKeybind(Slot)    
+function NSI:CheckGateWayKeybind(Slot)
     for SlotRange, BarName in pairs(keymapping) do
         if Slot >= SlotRange and Slot < SlotRange+12 then
             local buttonnum = Slot % 12 == 0 and 12 or Slot % 12
             if BarName == "CustomName" then
-                if Bartender4 then                    
+                if Bartender4 then
                     BarName = "CLICK BT4Button"..Slot..":Keybind"
                 elseif ElvUI then
                     BarName = "ELVUIBAR"..math.ceil(Slot/12).."BUTTON"..buttonnum
@@ -288,7 +288,7 @@ function NSI:CheckGateWayKeybind(Slot)
     end
 end
 
-local validsets = { 
+local validsets = {
     -- Manaforge Sets
     [1921] = true, -- Druid
     [1923] = true, -- Hunter
@@ -303,7 +303,7 @@ local validsets = {
     [1920] = true, -- Demon Hunter
     [1925] = true, -- Monk
     [1922] = true, -- Evoker
-    
+
     -- Midnight S1
     [1980] = true, -- Druid
     [1982] = true, -- Hunter

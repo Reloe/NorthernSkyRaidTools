@@ -36,7 +36,7 @@ function NSI:Print(...)
 end
 
 function NSI:SortTable(t, reversed)
-    table.sort(t, 
+    table.sort(t,
         function(a, b)
             if a.prio == b.prio then -- sort by GUID if same spec
                 return (reversed and b.GUID > a.GUID) or a.GUID < b.GUID
@@ -54,7 +54,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
         local specid = 0
         if unit then specid = NSI:GetSpecs(unit) or 0 end
         local icon = select(4, GetSpecializationInfoByID(specid))
-        if icon then 
+        if icon then
             specicon = "\124T"..icon..":12:12:0:0:64:64:4:60:4:60\124t"
         elseif not roleicon then -- if we didn't get the specid can at least try to return the role icon unless that one was specifically requested as well
             specicon = UnitGroupRolesAssigned(unit)
@@ -113,7 +113,7 @@ function NSI:GetNote() -- simply for note comparison now
 end
 
 function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
-    local difficultyID = select(3, GetInstanceInfo()) or 0    
+    local difficultyID = select(3, GetInstanceInfo()) or 0
     return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or (NSRT.Settings["Debug"] and 16)
 end
 
@@ -132,7 +132,7 @@ end
 -- keeping these two in global as I might want to use them elsewhere still
 function NSAPI:TTSCountdown(num)
     for i= num, 1, -1 do
-        if i == num then 
+        if i == num then
             NSAPI:TTS(i)
         else
             C_Timer.After(num-i, function() NSAPI:TTS(i) end)
@@ -144,7 +144,7 @@ local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
         local secret = issecretvalue(sound)
-        local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))          
+        local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
         if handle then
             PlaySoundFile(path..sound..".ogg", "Master")
         else
@@ -169,7 +169,7 @@ function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
                 overlap
             )
         end
-    end    
+    end
 end
 
 function NSI:GetSubGroup(unit)
@@ -204,7 +204,7 @@ function NSI:Utf8Sub(str, startChar, endChar)
             endIndex = currentIndex - 1
             break
         end
-        
+
         local c = string.byte(str, currentIndex)
         if c < 0x80 then
             currentIndex = currentIndex + 1
@@ -226,7 +226,7 @@ function NSI:UnitAura(unit, spell) -- simplify aura checking for myself
         if type(spell) == "string" or not C_UnitAuras.GetUnitAuraBySpellID then
             local spelltable = C_Spell.GetSpellInfo(spell)
             return spelltable and C_UnitAuras.GetAuraDataBySpellName(unit, spelltable.name)
-        elseif type(spell) == "number" then 
+        elseif type(spell) == "number" then
             return C_UnitAuras.GetUnitAuraBySpellID(unit, spell)
         else
             return false
@@ -273,8 +273,8 @@ function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettin
     return encoded or ""
 end
 
-function NSI:ImportFromTable(ImportTable)  
-    local changed = false  
+function NSI:ImportFromTable(ImportTable)
+    local changed = false
     for k, v in pairs(ImportTable) do
         if v.enabled then
             changed = true
@@ -298,14 +298,14 @@ end
 
 function NSI:StopFrameMove(F, SettingsTable)
     if not F then return end
-    F:StopMovingOrSizing()       
+    F:StopMovingOrSizing()
     local Anchor, _, relativeTo, xOffset, yOffset = F:GetPoint()
     xOffset = Round(xOffset)
     yOffset = Round(yOffset)
-    SettingsTable.xOffset = xOffset     
-    SettingsTable.yOffset = yOffset  
-    SettingsTable.Anchor = Anchor    
-    SettingsTable.relativeTo = relativeTo   
+    SettingsTable.xOffset = xOffset
+    SettingsTable.yOffset = yOffset
+    SettingsTable.Anchor = Anchor
+    SettingsTable.relativeTo = relativeTo
 end
 
 function NSI:ToggleMoveFrames(F, Unlock)
@@ -323,5 +323,5 @@ function NSI:ToggleMoveFrames(F, Unlock)
         if F.Text then F.Text:Hide() end
         F:SetMovable(false)
         F:EnableMouse(false)
-    end    
+    end
 end

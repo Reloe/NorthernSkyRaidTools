@@ -120,7 +120,7 @@ function NSI:CheckCooldowns()
                 end
             end
         end
-        if NSRT.CooldownList[spec] and NSRT.CooldownList[spec]["item"] then    
+        if NSRT.CooldownList[spec] and NSRT.CooldownList[spec]["item"] then
             for k, v in pairs(NSRT.CooldownList[spec]["item"]) do
                 local startTime, duration = C_Container.GetItemCooldown(k)
                 local timeRemaining = duration and duration ~= 0 and duration + startTime - now
@@ -130,7 +130,7 @@ function NSI:CheckCooldowns()
                     end
                 end
             end
-        end     
+        end
         if NSRT.CooldownList[1] and NSRT.CooldownList[1]["spell"] then
             for k, v in pairs(NSRT.CooldownList[1]["spell"]) do
                 local charges = C_Spell.GetSpellCharges(k)
@@ -153,7 +153,7 @@ function NSI:CheckCooldowns()
                 end
             end
         end
-        if NSRT.CooldownList[1] and NSRT.CooldownList[1]["item"] then            
+        if NSRT.CooldownList[1] and NSRT.CooldownList[1]["item"] then
             for k, v in pairs(NSRT.CooldownList[1]["item"]) do
                 local startTime, duration = C_Container.GetItemCooldown(k)
                 local timeRemaining = duration and duration ~= 0 and duration + startTime - now
@@ -164,7 +164,7 @@ function NSI:CheckCooldowns()
                 end
             end
         end
-        if highest.time > 0 then            
+        if highest.time > 0 then
             if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
             SendChatMessage("NSRT: My "..highest.name.." is on cooldown for "..Round(highest.time).." seconds.", "RAID")
         end

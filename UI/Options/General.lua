@@ -101,8 +101,8 @@ Press 'Enter' to hear the TTS]],
                 if NSUI.export_string_popup:IsShown() then
                     NSUI.export_string_popup:Hide()
                 else
-                    NSUI.export_string_popup:Show()     
-                end           
+                    NSUI.export_string_popup:Show()
+                end
             end,
             nocombat = true,
             spacement = true
@@ -115,8 +115,8 @@ Press 'Enter' to hear the TTS]],
                 if NSUI.import_string_popup:IsShown() then
                     NSUI.import_string_popup:Hide()
                 else
-                    NSUI.import_string_popup:Show()     
-                end             
+                    NSUI.import_string_popup:Show()
+                end
             end,
             nocombat = true,
             spacement = true
@@ -124,7 +124,7 @@ Press 'Enter' to hear the TTS]],
         {
             type = "breakline",
         },
-        
+
         {
             type = "button",
             name = "Move Text Display",
@@ -136,7 +136,7 @@ Press 'Enter' to hear the TTS]],
                     NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
                     NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
                     NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, true)
-                end         
+                end
             end,
             nocombat = true,
             spacement = true

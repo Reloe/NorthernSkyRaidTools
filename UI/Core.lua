@@ -100,20 +100,20 @@ local function build_PAgrowdirection_options(SettingName, SecondaryName)
                 if SecondaryName == "GrowDirection" and
                 (list[value] == NSRT[SettingName]["RowGrowDirection"] or
                 (list[value] == "UP" and NSRT[SettingName]["RowGrowDirection"] == "DOWN") or (list[value] == "DOWN" and NSRT[SettingName]["RowGrowDirection"] == "UP") or
-                (list[value] == "LEFT" and NSRT[SettingName]["RowGrowDirection"] == "RIGHT") or (list[value] == "RIGHT" and NSRT[SettingName]["RowGrowDirection"] == "LEFT")) then                        
+                (list[value] == "LEFT" and NSRT[SettingName]["RowGrowDirection"] == "RIGHT") or (list[value] == "RIGHT" and NSRT[SettingName]["RowGrowDirection"] == "LEFT")) then
                     NSRT[SettingName]["RowGrowDirection"] = NSRT[SettingName]["GrowDirection"]
                     swapped = true
 
                 elseif SecondaryName == "RowGrowDirection" and
                 (list[value] == NSRT[SettingName]["GrowDirection"] or
                 (list[value] == "UP" and NSRT[SettingName]["GrowDirection"] == "DOWN") or (list[value] == "DOWN" and NSRT[SettingName]["GrowDirection"] == "UP") or
-                (list[value] == "LEFT" and NSRT[SettingName]["GrowDirection"] == "RIGHT") or (list[value] == "RIGHT" and NSRT[SettingName]["GrowDirection"] == "LEFT")) then                        
+                (list[value] == "LEFT" and NSRT[SettingName]["GrowDirection"] == "RIGHT") or (list[value] == "RIGHT" and NSRT[SettingName]["GrowDirection"] == "LEFT")) then
                     NSRT[SettingName]["GrowDirection"] = NSRT[SettingName]["RowGrowDirection"]
                     swapped = true
                 end
                 NSRT[SettingName][SecondaryName] = list[value]
                 NSI:UpdatePADisplay(SettingName == "PASettings", SettingName == "PATankSettings")
-                                
+
                 if swapped then NSUI.MenuFrame:GetTabFrameByName("PrivateAura"):RefreshOptions() end
             end
         })

@@ -45,7 +45,7 @@ local function BuildExportStringUI()
     end, 280, 20, "Done")
     popup.export_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.export_confirm_button:SetTemplate(options_button_template)
-    
+
     local ExportTable = {}
     for i, v in ipairs(buttonmapping) do
         ExportTable[v.name] = {data = NSRT[v.name], enabled = true}
@@ -116,7 +116,7 @@ local function BuildImportStringUI()
         label:SetPoint("LEFT", checkboxes[i], "RIGHT", 5, 0)
         checkboxes[i]:Hide()
     end
-    
+
 
     popup.test_string_text_box.editbox:SetScript("OnTextChanged", function(self)
         local ImportTable = NSI:ImportSettingsFromString(popup.test_string_text_box:GetText())

@@ -336,7 +336,7 @@ local function BuildPrivateAurasOptions()
             max = 5,
             step = 0.1,
         },
-        
+
         {
             type = "toggle",
             boxfirst = true,
@@ -392,7 +392,7 @@ local function BuildPrivateAurasOptions()
                 end
             end,
         },
-        
+
         {
             type = "toggle",
             boxfirst = true,

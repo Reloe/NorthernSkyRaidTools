@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3179
 -- /run NSAPI:DebugEncounter(3179)
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
+NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
@@ -11,7 +11,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
 
 
         -- using same timers for all difficulties atm
-        local id = self:DifficultyCheck(14) or 0        
+        local id = self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
             [14] = {102.6, 224.2, 346, 467.7},
@@ -65,7 +65,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                         end
                         self.platetexts[i]:ClearAllPoints()
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
-                        
+
                         self.platetexts[i]:Show()
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
@@ -86,7 +86,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                         self.platetexts[i].bgTexture:SetAllPoints(self.platetexts[i].bgFrame)
                         self.platetexts[i].bgFrame:SetSize(25, 25)
                         self.platetexts[i].bgFrame:SetPoint("CENTER", self.platetexts[i], "CENTER", 0, 0)
-                                                
+
                         if aura2 then
                             self.platetexts[i]:SetText("WAIT")
                             self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
@@ -94,7 +94,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                             self.platetexts[i]:SetText("CC")
                             self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         end
-                        
+
                         self.platetexts[i]:Show()
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
@@ -149,7 +149,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                 end
             end
         end
-        
+
         if not self.plateframe then
             self.plateframe = CreateFrame("Frame")
             self.plateframe:SetScript("OnEvent", function(_, e, u)
@@ -169,9 +169,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
     if NSRT.EncounterAlerts[encID].enabled then
-        if self.plateframe then            
+        if self.plateframe then
             for i, v in ipairs(self.platetexts) do
                 v:Hide()
                 v.bgFrame:Hide()

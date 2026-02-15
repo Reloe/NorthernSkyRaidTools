@@ -7,7 +7,7 @@ function NSI:RequestVersionNumber(type, name) -- type == "Addon" or "WA" or "Not
         self:Broadcast("NSI_VERSION_REQUEST", "RAID", type, name)
         for unit in self:IterateGroupMembers() do
             if UnitInRaid(unit) and not UnitIsUnit("player", unit) then
-                local index = UnitInRaid(unit) 
+                local index = UnitInRaid(unit)
                 local response = select(8, GetRaidRosterInfo(index)) and "No Response" or "Offline"
                 self:VersionResponse({name = UnitName(unit), version = response, ignoreCheck = false})
             end
@@ -26,7 +26,7 @@ function NSI:GetVersionNumber(type, name, unit)
        if C_FriendList.IsIgnored(u) then
             ignoreCheck = true
             break
-       end 
+       end
     end
     if type == "Addon" then
         local ver = C_AddOns.GetAddOnMetadata(name, "Version") or "Addon Missing"
@@ -42,7 +42,7 @@ function NSI:GetVersionNumber(type, name, unit)
         else
             hashed = C_AddOns.GetAddOnMetadata("MRT", "Version") and "MRT not enabled" or "MRT not installed"
         end
-    
+
         return unit, hashed, "", ignoreCheck
     elseif type == "Reminder" then
         local reminder = self.Reminder and self.Reminder ~= "" and self:GetHash(self.Reminder) or "Reminder Missing"

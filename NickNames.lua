@@ -118,7 +118,7 @@ function NSI:Grid2NickNameUpdated(all, unit)
                     end
                 else
                     Grid2Status:UpdateIndicators(u)
-                end    
+                end
             end
         end
      end
@@ -127,7 +127,7 @@ end
 function NSI:DandersFramesNickNameUpdated(all, unit)
     if DandersFrames then
         if all then
-            DandersFrames:IterateCompactFrames(function(frame) 
+            DandersFrames:IterateCompactFrames(function(frame)
                 DandersFrames:UpdateNameText(frame)
             end)
         elseif unit then
@@ -198,7 +198,7 @@ function NSI:BlizzardNickNameUpdated()
                     return
                 end
                 frame.name:SetText(NSAPI:GetName(frame.unit, "Blizzard"))
-            end)            
+            end)
         end
         local inRaid = UnitInRaid("player")
         if inRaid then
@@ -244,7 +244,7 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                 end
                 return
             elseif nickname == "" then -- newnick is an empty string so remove any old nick we still have
-                if oldnick then -- if there is an oldnick, remove it 
+                if oldnick then -- if there is an oldnick, remove it
                     local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
                     if i then
                         table.remove(CellDB.nicknames.list, i)
@@ -294,14 +294,14 @@ function NSI:ElvUINickNameUpdated()
         for i=1, 12 do
             ElvUF.Tags:RefreshMethods("NSNickName:"..i)
         end
-    end    
+    end
 end
 
 -- UUFG Option Change
 function NSI:UnhaltedNickNameUpdated()
     if UUFG and UUFG.UpdateAllTags then
-        UUFG:UpdateAllTags() 
-    end    
+        UUFG:UpdateAllTags()
+    end
 end
 
 -- Global NickName Option Change
@@ -321,14 +321,14 @@ function NSI:GlobalNickNameUpdate()
             CharList[nickname][name] = true
         end
     end
-    
+
     -- instant display update for all addons
     self:UpdateNickNameDisplay(true)
 end
 
 
 
-function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)    
+function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before doing any changes to the nickname database
     if nickname == ""  and NSRT.NickNames[name.."-"..realm] then
         NSRT.NickNames[name.."-"..realm] = nil
@@ -336,7 +336,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
         fullNameList[name] = nil
         sortedCharList[nickname] = nil
         CharList[nickname] = nil
-    end     
+    end
     self:Grid2NickNameUpdated(unit)
     self:ElvUINickNameUpdated()
     self:UnhaltedNickNameUpdated()
@@ -361,7 +361,7 @@ function NSI:InitNickNames()
         CharList[nickname][name] = true
     end
 
-    if NSRT.Settings["GlobalNickNames"] and NSRT.Settings["Blizzard"] then      
+    if NSRT.Settings["GlobalNickNames"] and NSRT.Settings["Blizzard"] then
     	self:BlizzardNickNameUpdated()
     end
 
@@ -394,7 +394,7 @@ function NSI:InitNickNames()
 
         Grid2.setupFunc["NSNickName"] = Create
 
-        Grid2:DbSetStatusDefaultValue( "NSNickName", {type = "NSNickName"})        
+        Grid2:DbSetStatusDefaultValue( "NSNickName", {type = "NSNickName"})
     end
 
     if ElvUF and ElvUF.Tags then
@@ -457,7 +457,7 @@ function NSI:SendNickName(channel, requestback)
             self:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, requestback, "RAID")
         end
         if (NSRT.Settings["ShareNickNames"] == 2 or NSRT.Settings["ShareNickNames"] == 3) and (channel == "Any" or channel == "GUILD") then
-            self:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, requestback, "GUILD") 
+            self:Broadcast("NSI_NICKNAMES_COMMS", "GUILD", nickname, name, realm, requestback, "GUILD")
         end
     end
 end
@@ -468,9 +468,9 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         if channel == "GUILD" and NSRT.Settings["AcceptNickNames"] ~= 2 then return end
         if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
     end
-    if not nickname or not name or not realm then return end   
-    local oldnick = NSRT.NickNames[name.."-"..realm]      
-    if oldnick and oldnick == nickname then  return end -- stop early if we already have this exact nickname  
+    if not nickname or not name or not realm then return end
+    local oldnick = NSRT.NickNames[name.."-"..realm]
+    if oldnick and oldnick == nickname then  return end -- stop early if we already have this exact nickname
     if nickname == "" then
         self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
@@ -507,7 +507,7 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
                     end
                 else
                     error("Error parsing names: "..str, 1)
-            
+
                 end
             end
         end

@@ -6,14 +6,14 @@ NSI.Groups.Processing = false
 NSI.meleetable = { -- ignoring tanks for this
     [263]  = true, -- Shaman: Enhancement
     [255]  = true, -- Hunter: Survival
-    [259]  = true, -- Rogue: Assassination  
-    [260]  = true, -- Rogue: Outlaw  
+    [259]  = true, -- Rogue: Assassination
+    [260]  = true, -- Rogue: Outlaw
     [261]  = true, -- Rogue: Subtlety
-    [71]   = true, -- Warrior: Arms  
-    [72]   = true, -- Warrior: Fury 
+    [71]   = true, -- Warrior: Arms
+    [72]   = true, -- Warrior: Fury
     [251]  = true, -- Death Knight: Frost
     [252]  = true, -- Death Knight: Unholy
-    [103]  = true, -- Druid: Feral 
+    [103]  = true, -- Druid: Feral
     [70]   = true, -- Paladin: Retribution
     [269]  = true, -- Monk: Windwalker
     [577]  = true, -- Demon Hunter: Havoc
@@ -28,7 +28,7 @@ NSI.lusttable = {
     [1467] = true, -- Evoker: Devastation
     [253]  = true, -- Hunter: Beast Mastery
     [254]  = true, -- Hunter: Marksmanship
-    [262]  = true, -- Shaman: Elemental 
+    [262]  = true, -- Shaman: Elemental
     [64]   = true, -- Mage: Frost
     [62]   = true, -- Mage: Arcane
     [63]   = true, -- Mage: Fire
@@ -36,23 +36,23 @@ NSI.lusttable = {
     [264]  = true, -- Shaman: Restoration
 }
 
-NSI.resstable = {    
+NSI.resstable = {
     [66]   =  true, -- Prot Pally
     [104]  =  true, -- Guardian Druid
     [250]  =  true, -- Blood DK
     [251]  = true, -- Death Knight: Frost
     [252]  = true, -- Death Knight: Unholy
-    [103]  = true, -- Druid: Feral 
+    [103]  = true, -- Druid: Feral
     [70]   = true, -- Paladin: Retribution
     [102]  = true, -- Druid: Balance
-    [265]  = true, -- Warlock: Affliction 
-    [266]  = true, -- Warlock: Demonology  
-    [267]  = true, -- Warlock: Destruction    
+    [265]  = true, -- Warlock: Affliction
+    [266]  = true, -- Warlock: Demonology
+    [267]  = true, -- Warlock: Destruction
     [65]   = true, -- Paladin: Holy
     [105]  = true, -- Druid: Restoration
 }
 
-NSI.spectable = {    
+NSI.spectable = {
     -- Tanks
     [0] = 100, -- probably offline/no data, we put them last
     [268]  =  1, -- Brewmaster
@@ -67,12 +67,12 @@ NSI.spectable = {
     [255]  = 8, -- Hunter: Survival
     [251]  = 9, -- Death Knight: Frost
     [252]  = 10, -- Death Knight: Unholy
-    [259]  = 11, -- Rogue: Assassination  
-    [260]  = 12, -- Rogue: Outlaw  
+    [259]  = 11, -- Rogue: Assassination
+    [260]  = 12, -- Rogue: Outlaw
     [261]  = 13, -- Rogue: Subtlety
-    [71]   = 14, -- Warrior: Arms  
-    [72]   = 15, -- Warrior: Fury 
-    [103]  = 16, -- Druid: Feral 
+    [71]   = 14, -- Warrior: Arms
+    [72]   = 15, -- Warrior: Fury
+    [103]  = 16, -- Druid: Feral
     [70]   = 17, -- Paladin: Retribution
     [269]  = 18, -- Monk: Windwalker
     [577]  = 19, -- Demon Hunter: Havoc
@@ -81,25 +81,25 @@ NSI.spectable = {
     [1480] = 20, -- Demon Hunter: Devourer
     [1473] = 21, -- Evoker: Augmentation
     [1467] = 22, -- Evoker: Devastation
-    [262]  = 23, -- Shaman: Elemental 
+    [262]  = 23, -- Shaman: Elemental
     [258]  = 24, -- Priest: Shadow
     [102]  = 25, -- Druid: Balance
-    [265]  = 26, -- Warlock: Affliction 
-    [266]  = 27, -- Warlock: Demonology  
-    [267]  = 28, -- Warlock: Destruction    
+    [265]  = 26, -- Warlock: Affliction
+    [266]  = 27, -- Warlock: Demonology
+    [267]  = 28, -- Warlock: Destruction
     [64]   = 29, -- Mage: Frost
     [62]   = 30, -- Mage: Arcane
     [63]   = 31, -- Mage: Fire
     [253]  = 32, -- Hunter: Beast Mastery
     [254]  = 33, -- Hunter: Marksmanship
-    
+
     -- Healers
     [65]   = 34, -- Paladin: Holy
     [270]  = 35, -- Monk: Mistweaver
     [1468] = 36, -- Evoker: Preservation
     [105]  = 37, -- Druid: Restoration
     [264]  = 38, -- Shaman: Restoration
-    [256]  = 39, -- Priest: Discipline 
+    [256]  = 39, -- Priest: Discipline
     [257]  = 40, -- Priest: Holy
 }
 
@@ -125,7 +125,7 @@ function NSI:GetSortedGroup(Flex, default, odds)
             poscount[pos] = poscount[pos]+1
             table.insert(units, {name = UnitName(unit), processed = false, unitid = unit, specid = specid, index = i, role = role, class = class, pos = pos, canlust = self.lusttable[class], canress = self.resstable[class], GUID = UnitGUID(unit)})
         end
-    end    
+    end
     table.sort(units, -- default sorting with tanks - melee - ranged - healer
     function(a, b)
         if a.specid == b.specid then
@@ -159,7 +159,7 @@ function NSI:GetSortedGroup(Flex, default, odds)
                     elseif roles["left"].role >= total[role]/2 then side = "right" -- if left side already has half of the total players of that role, rest goes to right side
                     elseif roles["right"].role >= total[role]/2 then side = "left" -- if right side already has half of the total players of that role, rest goes to left side
                     elseif pos["left"][v.pos] >= poscount[v.pos]/2 then side = "right" -- if one side already has enough melee, insert to the other side
-                    elseif pos["right"][v.pos]  >= poscount[v.pos]/2 then side = "left" -- same as last               
+                    elseif pos["right"][v.pos]  >= poscount[v.pos]/2 then side = "left" -- same as last
                     elseif classes["right"][v.class] and not classes["left"][v.class] then side = "left" -- if one side has this class already but the other doesn't
                     elseif classes["left"][v.class] and not classes["right"][v.class] then side = "right" -- if one side has this class already but the other doesn't
                     elseif (not classes["left"][v.class]) and (not classes["right"][v.class]) then -- if neither side has this class yet
@@ -184,7 +184,7 @@ function NSI:GetSortedGroup(Flex, default, odds)
                     end
                 end
             end
-        end       
+        end
         table.sort(sides["left"], -- sort again within each table with tanks - melee - ranged - healer
         function(a, b)
             if a.specid == b.specid then
@@ -192,7 +192,7 @@ function NSI:GetSortedGroup(Flex, default, odds)
             else
                 return self.spectable[a.specid] < self.spectable[b.specid]
             end
-        end) -- a < b low first, a > b high first        
+        end) -- a < b low first, a > b high first
         table.sort(sides["right"], -- sort again within each table with tanks - melee - ranged - healer
         function(a, b)
             if a.specid == b.specid then
@@ -208,31 +208,31 @@ function NSI:GetSortedGroup(Flex, default, odds)
             for i, v in ipairs(sides["left"]) do
                 if i > 10 then i = i+10
                 elseif i > 5 then i = i+5 end
-                units[i] = v      
-            end     
+                units[i] = v
+            end
             for i, v in ipairs(sides["right"]) do
                 if i > 10 then i = i +15
                 elseif i > 5 then i = i+10
                 else i = i+5 end
-                units[i] = v      
+                units[i] = v
             end
             return units, sides["left"], sides["right"]
-        else         
+        else
             units = {}
             for i, v in ipairs(sides["left"]) do
-                units[i] = v      
+                units[i] = v
             end
             local offset = 0
-            if total["ALL"] > 20 then offset = 15 
+            if total["ALL"] > 20 then offset = 15
             elseif total["ALL"] > 10 then offset = 10
             else offset = 5
             end
             for i, v in ipairs(sides["right"]) do
-                units[i+offset] = v      
+                units[i+offset] = v
             end
             return units, sides["left"], sides["right"]
         end
-    end  
+    end
 end
 
 
@@ -271,11 +271,11 @@ end
 function NSI:ArrangeGroups(firstcall, finalcheck)
     if not firstcall and not self.Groups.Processing then return end
     local now = GetTime()
-    if firstcall then 
+    if firstcall then
         self:Print("Split Table Data:", self.Groups.units)
-        self.Groups.Processing = true 
-        self.Groups.Processed = 0 
-        self.Groups.ProcessStart = now 
+        self.Groups.Processing = true
+        self.Groups.Processed = 0
+        self.Groups.ProcessStart = now
         for i=1, 40 do
             local group = math.ceil(i/5)
             local subgrouppos = i % 5 == 0 and 5 or i % 5
@@ -290,21 +290,21 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indexlink = {}
-    for i=1, 40 do indexlink[i] = {} end 
+    for i=1, 40 do indexlink[i] = {} end
     for i=1, 40 do
         local name, _, subgroup = GetRaidRosterInfo(i)
         if not name then break end
         groupSize[subgroup] = groupSize[subgroup]+1
-        postoindex[((subgroup-1)*5)+groupSize[subgroup]] = i 
+        postoindex[((subgroup-1)*5)+groupSize[subgroup]] = i
         indexlink[i] = {subgroup = subgroup, pos = ((subgroup-1)*5)+groupSize[subgroup]}
     end
 
-    if self.Groups.Processed >= self.Groups.total then 
+    if self.Groups.Processed >= self.Groups.total then
         if finalcheck then
             local allprocessed = true
             for i=1, 40 do
                 local v = self.Groups.units[i]
-                if v then 
+                if v then
                     local index = UnitInRaid(v.name)
                     if postoindex[v.pos] ~= index then
                         v.processed = false
@@ -324,8 +324,8 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
     end
 
     for i=1, 40 do -- position in table is where the player should end up in
-        local v = self.Groups.units[i]    
-        if v and (not v.processed) and (not UnitAffectingCombat(v.name)) then 
+        local v = self.Groups.units[i]
+        if v and (not v.processed) and (not UnitAffectingCombat(v.name)) then
             local index = UnitInRaid(v.name)
             local indexgoal = postoindex[v.pos]
             if indexgoal ~= index then -- check if player is already in correct spot
@@ -336,7 +336,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                     else -- if not enough players are in the group to move this player to the desired spot we need to put someone who is not in the correct position yet there.
                         for j=1, 40 do
                             if i ~= j then
-                                local u = self.Groups.units[j]  
+                                local u = self.Groups.units[j]
                                 if u and (not u.processed) and v.group ~= indextosubgroup[UnitInRaid(u.name)] then
                                     SetRaidSubgroup(UnitInRaid(u.name), v.group)
                                     break
@@ -365,9 +365,9 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                                 found = true
                                 break
                             end
-                        end     
-                    end        
-                    if not found then -- if we were somehow unable to find anyone we can swap this person with, swap them with someone who was already processed but not the raid leader  
+                        end
+                    end
+                    if not found then -- if we were somehow unable to find anyone we can swap this person with, swap them with someone who was already processed but not the raid leader
                         for j=1, 40 do
                             local u = self.Groups.units[j]
                             if u and (not UnitIsGroupLeader(u.name)) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
@@ -375,8 +375,8 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                                 found = true
                                 break
                             end
-                        end   
-                    end  
+                        end
+                    end
                     break
                 end
             else -- character is already in the correct position
@@ -385,14 +385,14 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                 self:ArrangeGroups(false, finalcheck)
                 break
             end
-        end        
+        end
     end
 end
 
 function NSI:SplitGroupInit(Flex, default, odds)
     if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
-        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
+        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             self.specs = {}
@@ -429,9 +429,9 @@ function NSI:UpdateRaidBuffFrame()
     end
     local LFGFrame = PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == 1
     local parent = (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
-    if parent then   
+    if parent then
         self.RaidBuffCheck:ClearAllPoints()
-        self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)        
+        self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)
         self.RaidBuffCheck:SetHeight(parent:GetHeight()*parent:GetScale()-4)
         self.RaidBuffCheck:Show()
         local count = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -458,7 +458,7 @@ function NSI:UpdateRaidBuffFrame()
                 text = text..GetClassColorObj(className[i]):WrapTextInColorCode("Missing "..MissingTexts[i].."\n")
             end
         end
-        if resscount > 0 then            
+        if resscount > 0 then
             text = text.."Available Resses: "..resscount.."\n"
         else
             text = text.."|cFFFF0000No Resses Available\n|r"
@@ -501,8 +501,8 @@ function NSI:InviteFromReminder(str, init)
         self.CurrentInviteList = list
         self.InviteInProgress = true
         self:InviteList(list)
-        if self.InviteTimer then 
-            self.InviteTimer:Cancel() 
+        if self.InviteTimer then
+            self.InviteTimer:Cancel()
             self.InviteTimer = nil
         end
         self.InviteTimer = C_Timer.NewTimer(10, function()
@@ -529,11 +529,11 @@ function NSI:InviteList(list)
 end
 
 function NSI:ArrangeFromReminder(str)
-    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end 
+    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
     local now = GetTime()
     if self.LastGroupSort and self.LastGroupSort > now - 5 then
         print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
-        return 
+        return
     end
     self.LastGroupSort = now
     local list = NSRT.InviteList[str]

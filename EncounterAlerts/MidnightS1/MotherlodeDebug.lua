@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3463
 -- /run NSAPI:DebugEncounter(3463)
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START   
+NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
@@ -16,10 +16,10 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
 end
 
 NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENCOUNTER_WARNING
-    if NSRT.EncounterAlerts[encID].enabled then        
+    if NSRT.EncounterAlerts[encID].enabled then
         local severity, dur = info.severity, info.duration
         if severity == 0 then
-        elseif severity == 1 then    
+        elseif severity == 1 then
         elseif severity == 2 then
         end
         --[[ Example
@@ -60,11 +60,11 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     if not difficultyID or not detectedDurations[difficultyID] then return end
     for _, phaseinfo in ipairs(detectedDurations[difficultyID]) do
         print("Checking duration:", info.duration, "against", phaseinfo.time)
-        if info.duration == phaseinfo.time then               
+        if info.duration == phaseinfo.time then
             local newphase = phaseinfo.phase(self.Phase)
             print("Changing to phase:", newphase, "from", self.Phase)
-            if newphase > self.Phase then         
-                self.Phase = newphase               
+            if newphase > self.Phase then
+                self.Phase = newphase
                 self:StartReminders(self.Phase)
                 self.PhaseSwapTime = now
                 break
@@ -73,7 +73,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     end
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END   
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
     if NSRT.EncounterAlerts[encID].enabled then
     end
 end

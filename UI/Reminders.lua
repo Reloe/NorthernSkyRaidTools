@@ -26,7 +26,7 @@ local function ImportReminderString(name, IsUpdate)
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     local importtext = IsUpdate and "Update" or "Import"
     popup.import_confirm_button = DF:CreateButton(popup, function()
-        local import_string = popup.test_string_text_box:GetText()        
+        local import_string = popup.test_string_text_box:GetText()
         if IsUpdate then
             NSI:ImportReminder(name, import_string, false, false, true)
         else
@@ -245,7 +245,7 @@ local function BuildRemindersEditUI()
             if self.BorderColorR then
                 self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
             end
-        end) 
+        end)
 
         line.deleteButton = DF:CreateButton(line, function()
             DeleteBossReminder(self, line, false)
@@ -450,7 +450,7 @@ local function BuildPersonalRemindersEditUI()
             if self.BorderColorR then
                 self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
             end
-        end)    
+        end)
         if not alldeletecreated then
             alldeletecreated = true
             local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
