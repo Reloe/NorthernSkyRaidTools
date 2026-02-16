@@ -390,6 +390,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
 end
 
 function NSI:SplitGroupInit(Flex, default, odds)
+    if C_ChatInfo.InChatMessagingLockdown() then print("Addon Messages are currently restricted and thus this action cannot be performed") return end
     if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
         if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end

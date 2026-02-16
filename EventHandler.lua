@@ -250,7 +250,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end)
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
-        if self:Restricted() or not self:DifficultyCheck(14) then return end
+        if C_ChatInfo.InChatMessagingLockdown() or not self:DifficultyCheck(14) then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
@@ -263,7 +263,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
-        if self:Restricted() then return end
+        if self:DifficultyCheck(14) or diff == 23 then
+            C_Timer.After(1, function()
+                self:EventHandler("NSI_READY_CHECK", false, true)
+            end)
+        end
+        if C_ChatInfo.InChatMessagingLockdown() then return end
         self.LastBroadcast = GetTime()
         if UnitIsGroupLeader("player") then
             -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
@@ -275,14 +280,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Assignments = NSRT.AssignmentSettings
         end
         local diff= select(3, GetInstanceInfo()) or 0
-        if self:DifficultyCheck(14) or diff == 23 then
-            C_Timer.After(1, function()
-                self:EventHandler("NSI_READY_CHECK", false, true)
-            end)
-        end
-        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
-            self:CheckCooldowns()
-        end
         self.specs = {}
         self.GUIDS = {}
         self.HasNSRT = {}
@@ -297,6 +294,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         -- broadcast spec info
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
+        if self:Restricted() then return end
+        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
+            self:CheckCooldowns()
+        end
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
         if UnitIsGroupLeader(unit) or ((UnitIsGroupAssistant(unit) and skipcheck) and (self:DifficultyCheck(14) or skipcheck)) then -- skipcheck allows manually sent reminders to bypass difficulty checks
@@ -348,7 +349,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, ver, ignoreCheck = ...
         self:VersionResponse({name = UnitName(unit), version = ver, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and internal then
-        if self:Restricted() then return end
+        if C_ChatInfo.InChatMessagingLockdown() then return end
         local unit, type, name = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) then
@@ -412,7 +413,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.GUIDS[unit] = G
         end
     elseif e == "NSI_SPEC_REQUEST" then
-        if self:Restricted() then return end
+        if C_ChatInfo.InChatMessagingLockdown() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
