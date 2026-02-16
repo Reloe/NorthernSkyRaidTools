@@ -72,7 +72,7 @@ local SoundListMPlus = {
 }
 
 function NSI:AddPASound(spellID, sound)
-    if (not spellID) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then return end
+    if (not spellID) or (not C_UnitAuras.AuraIsPrivate(spellID)) then return end
     C_UnitAuras.RemovePrivateAuraAppliedSound(spellID)
     if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
     local soundPath = NSI.LSM:Fetch("sound", sound)
@@ -91,10 +91,10 @@ function NSI:ApplyDefaultPASounds(changed, mplus) -- only apply sound if changed
     for spellID, sound in pairs(list) do
         local curSound = NSRT.PASounds[spellID]
         if (not curSound) or (not curSound.edited) then -- only add default sound if user hasn't edited it prior
-            if not sound then -- if sound is false in the table I have marked it to be removed to clean up the table from old content
+            if sound == "empty" then -- if sound is "empty" in the table I have marked it to be removed to clean up the table from old content
                 NSRT.PASounds[spellID] = nil
                 if changed then self:AddPASound(spellID, nil) end
-            else
+            elseif C_UnitAuras.AuraIsPrivate(spellID) then
                 sound = "|cFF4BAAC8"..sound.."|r"
                 NSRT.PASounds[spellID] = {sound = sound, edited = false}
                 if changed then self:AddPASound(spellID, sound) end
@@ -107,7 +107,7 @@ function NSI:SavePASound(spellID, sound)
     if (not spellID) then return end
     NSRT.PASounds[spellID] = {sound = sound, edited = true}
     self:AddPASound(spellID, sound)
-    if (not sound) or (not (C_UnitAuras.AuraIsPrivate(spellID))) then
+    if not (C_UnitAuras.AuraIsPrivate(spellID)) then
         NSRT.PASounds[spellID] = nil
     end
 end

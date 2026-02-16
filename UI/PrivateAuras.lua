@@ -59,7 +59,7 @@ local function BuildPASoundEditUI()
         for i = 1, totalLines do
             local index = i + offset
             local Data = data[index]
-            if Data then
+            if Data and Data.sound then
                 local line = self:GetLine(i)
 
                 line.name.text = Data.name
