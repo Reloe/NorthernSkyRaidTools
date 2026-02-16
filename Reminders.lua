@@ -244,11 +244,13 @@ function NSI:ProcessReminder()
                     end
                     -- convert names to nicknames and color code them
                     local tagNames = ""
-                    for name in tag:gmatch("(%S+)") do
-                        tagNames = tagNames..NSAPI:Shorten(NSAPI:GetChar(strtrim(name), true), 12, false, "GlobalNickNames").." "
+                    if not NSRT.ReminderSettings.HidePlayerNames then
+                        for name in tag:gmatch("(%S+)") do
+                            tagNames = tagNames..NSAPI:Shorten(NSAPI:GetChar(strtrim(name), true), 12, false, "GlobalNickNames").." "
+                        end
                     end
                     tagNames = strtrim(tagNames)
-                    displayLine = displayLine:gsub("tag:([^;]+)", tagNames.." ")
+                    displayLine = NSRT.ReminderSettings.HidePlayerNames and displayLine:gsub("tag:([^;]+)", "") or displayLine:gsub("tag:([^;]+)", tagNames.." ")
                     -- remove remaining semicolons
                     displayLine = displayLine:gsub(";", "")
                     if shared and not addedreminders[key] then

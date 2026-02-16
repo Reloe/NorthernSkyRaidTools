@@ -991,6 +991,23 @@ local function BuildReminderNoteOptions()
             end,
         },
         {
+            type = "label",
+            get = function() return "Universal Settings - these apply to all 3 Notes" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Player-Names in Note",
+            desc = "Hides the Player Names for Reminders in the Note.",
+            get = function() return NSRT.ReminderSettings.HidePlayerNames end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.HidePlayerNames = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(true)
+            end,
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Show Only Spell-Reminders",
