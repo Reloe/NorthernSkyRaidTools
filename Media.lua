@@ -12,7 +12,7 @@ NSI.LSM:Register("sound","|cFF4BAAC806|r", [[Interface\Addons\NorthernSkyRaidToo
 NSI.LSM:Register("sound","|cFF4BAAC807|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\7.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC808|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\8.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC809|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\9.ogg]])
-NSI.LSM:Register("sound","|cFF4BAAC810|r", [[Interface\Addons\NorthernSkyMRaidTools\Media\Sounds\10.ogg]])
+NSI.LSM:Register("sound","|cFF4BAAC810|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\10.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Dispel|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Dispel.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Yellow|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Yellow.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Orange|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Orange.ogg]])
