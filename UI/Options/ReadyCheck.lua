@@ -15,8 +15,8 @@ local function BuildReadyCheckOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Missing Item Check",
-            desc = "Checks if any slots are empty",
+            name = "Missing/Wrong Item Check",
+            desc = "Checks if any slots are empty or have an item with the wrong armor type equipped",
             get = function() return NSRT.ReadyCheckSettings.MissingItemCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.MissingItemCheck = value
@@ -71,7 +71,7 @@ local function BuildReadyCheckOptions()
             type = "toggle",
             boxfirst = true,
             name = "Gem Check",
-            desc = "Checks if you have all slots gemmed",
+            desc = "Checks if you have all slots gemmed. Checking for the unique epic gem currently only works on an english client.",
             get = function() return NSRT.ReadyCheckSettings.GemCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.GemCheck = value

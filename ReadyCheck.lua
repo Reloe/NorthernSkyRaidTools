@@ -147,6 +147,22 @@ function NSI:EnchantCheck(slot, itemString)
     end
 end
 
+local ArmorTypes = {
+    [1] = 4, -- Warrior
+    [2] = 4, -- Paladin
+    [3] = 3, -- Hunter
+    [4] = 2, -- Rogue
+    [5] = 1, -- Priest
+    [6] = 4, -- Death Knight
+    [7] = 3, -- Shaman
+    [8] = 1, -- Mage
+    [9] = 1, -- Warlock
+    [10] = 2, -- Monk
+    [11] = 2, -- Druid
+    [12] = 2, -- Demon Hunter
+    [13] = 3, -- Evoker
+}
+
 function NSI:GearCheck()
     local missing = {}
     local crafted = 0
@@ -155,6 +171,7 @@ function NSI:GearCheck()
     local spec = GetSpecializationInfo(GetSpecialization())
     local ilvl = UnitLevel("player") >= 90 and minlvl or 100
     self.MainstatGem = false
+    local MyArmorType = ArmorTypes[select(3, UnitClass("player"))]
     for slot = 1, #SlotName do
         local itemString = GetInventoryItemLink("player", slot)
         if itemString then
@@ -179,6 +196,13 @@ function NSI:GearCheck()
             if NSRT.ReadyCheckSettings.TierCheck then
                 if self:TierCheck(slot) then
                     tier = tier+1
+                end
+            end
+            -- Cloak is always considered Cloth, also don't even need to check for cloth wearers
+            if MyArmorType ~= 1 and NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 and slot ~= 15 then
+                local armorType = itemString and select(13, C_Item.GetItemInfo(itemString))
+                if armorType and armorType <= 4 and armorType ~= MyArmorType and armorType ~= 0 then
+                    table.insert(missing, "|cFFFF0000Wrong armor type:|r |cFF00FF00"..SlotName[slot].."|r")
                 end
             end
         elseif NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 then
