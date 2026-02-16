@@ -343,6 +343,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:BlizzardNickNameUpdated()
     self:DandersFramesNickNameUpdated(all, unit)
     self:VuhDoNickNameUpdated()
+    self.Callbacks:Fire("NSRT_NICKNAME_UPDATED", all, unit, name, realm, oldnick, nickname)
 end
 
 function NSI:InitNickNames()
