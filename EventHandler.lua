@@ -154,6 +154,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PARaidSettings.enabled then C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end) end
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
+        for spellID, info in pairs(NSRT.PASounds) do
+            if type(info) == "table" and info.sound then -- prevents user settings
+                self:AddPASound(spellID, info.sound)
+            end
+        end
         -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
         if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         self:SetReminder(NSRT.ActiveReminder) -- loading active reminder from last session
@@ -199,14 +204,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
             C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
         end
-        local instanceType = select(2, GetInstanceInfo())
-        if instanceType == "party" or (instanceType == "raid" and C_InstanceEncounter.IsEncounterInProgress()) then -- register PA Sounds for dungeons, raid is covered by ENCOUNTER_START
-            for spellID, info in pairs(NSRT.PASounds) do
-                if type(info) == "table" and info.sound then -- prevents user settings
-                    self:AddPASound(spellID, info.sound)
-                end
-            end
-        end
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
         if  NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
@@ -222,11 +219,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.IsInPreview = false
         for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
             self:ToggleMoveFrames(self[v], false)
-        end
-        for spellID, info in pairs(NSRT.PASounds) do
-            if type(info) == "table" and info.sound then -- prevents user settings
-                self:AddPASound(spellID, info.sound)
-            end
         end
         self.EncounterID = ...
         self.Phase = 1
