@@ -71,23 +71,25 @@ local SoundListMPlus = {
     [1253531] = "Beam", -- Lens Flare
 }
 
-function NSI:AddPASound(spellID, sound)
+function NSI:AddPASound(spellID, sound, unit)
     if (not spellID) or (not C_UnitAuras.AuraIsPrivate(spellID)) then return end
+    if not unit then unit = "player" end
     if not self.PrivateAuraSoundIDs then self.PrivateAuraSoundIDs = {} end
-    if self.PrivateAuraSoundIDs[spellID] then
-        C_UnitAuras.RemovePrivateAuraAppliedSound(self.PrivateAuraSoundIDs[spellID])
-        self.PrivateAuraSoundIDs[spellID] = nil
+    if not self.PrivateAuraSoundIDs[unit] then self.PrivateAuraSoundIDs[unit] = {} end
+    if self.PrivateAuraSoundIDs[unit][spellID] then
+        C_UnitAuras.RemovePrivateAuraAppliedSound(self.PrivateAuraSoundIDs[unit][spellID])
+        self.PrivateAuraSoundIDs[unit][spellID] = nil
     end
     if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
     local soundPath = NSI.LSM:Fetch("sound", sound)
     if soundPath and soundPath ~= 1 then
         local soundID = C_UnitAuras.AddPrivateAuraAppliedSound({
-            unitToken = "player",
+            unitToken = unit,
             spellID = spellID,
             soundFileName = soundPath,
             outputChannel = "master",
         })
-        self.PrivateAuraSoundIDs[spellID] = soundID
+        self.PrivateAuraSoundIDs[unit][spellID] = soundID
     end
 end
 
