@@ -31,7 +31,7 @@ local function BuildQoLOptions()
                 NSI:UpdateQoLTextDisplay()
             end,
             min = 5,
-            max = 40,
+            max = 70,
         },
         {
             type = "toggle",
