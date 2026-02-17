@@ -175,6 +175,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
         self:InitLDB()
+        self:InitQoL()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled then self:InitPA() end
