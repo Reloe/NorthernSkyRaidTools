@@ -925,7 +925,7 @@ function NSI:SetReminder(name, personal, skipupdate)
         self:ProcessReminder()
         if not skipupdate then self:UpdateReminderFrame(true) end
     end
-    self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
+    if not skipupdate then self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder) end
 end
 
 function NSI:RemoveReminder(name, personal)
