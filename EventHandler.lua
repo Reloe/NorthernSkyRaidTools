@@ -250,8 +250,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end)
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
-        if C_ChatInfo.InChatMessagingLockdown() or not self:DifficultyCheck(14) then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
+        self.LastBroadcast = GetTime()
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") then
@@ -268,8 +268,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:EventHandler("NSI_READY_CHECK", false, true)
             end)
         end
-        if C_ChatInfo.InChatMessagingLockdown() then return end
-        self.LastBroadcast = GetTime()
         if UnitIsGroupLeader("player") then
             -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
             local tosend = ""
@@ -279,6 +277,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
+        -- broadcast spec info
+        local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
+        self:Broadcast("NSI_SPEC", "RAID", specid)
+        if C_ChatInfo.InChatMessagingLockdown() then return end
+        self.LastBroadcast = GetTime()
         local diff= select(3, GetInstanceInfo()) or 0
         self.specs = {}
         self.GUIDS = {}
@@ -291,9 +294,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.GUIDS[u] = issecretvalue(G) and "" or G
             end
         end
-        -- broadcast spec info
-        local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
-        self:Broadcast("NSI_SPEC", "RAID", specid)
         if self:Restricted() then return end
         if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
             self:CheckCooldowns()
@@ -349,7 +349,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local unit, ver, ignoreCheck = ...
         self:VersionResponse({name = UnitName(unit), version = ver, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and internal then
-        if C_ChatInfo.InChatMessagingLockdown() then return end
         local unit, type, name = ...
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
         if UnitExists(unit) then
@@ -413,7 +412,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.GUIDS[unit] = G
         end
     elseif e == "NSI_SPEC_REQUEST" then
-        if C_ChatInfo.InChatMessagingLockdown() then return end
         local specid = GetSpecializationInfo(GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
