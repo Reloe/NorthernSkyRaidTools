@@ -285,7 +285,7 @@ function NSI:ProcessReminder()
                 end
             else
                 if (not firstline) and (not line:find("invitelist:")) then
-                    if NSRT.Settings["GlobalNickNames"] then
+                    if NSRT.Settings["GlobalNickNames"] and false then
                         local words = {}
                         for word in line:gmatch("[^%s]+") do
                             local shortened = NSAPI:Shorten(NSAPI:GetChar(word, true), 12, false, "GlobalNickNames")
@@ -901,29 +901,29 @@ function NSI:GetAllReminderNames(personal)
     return list
 end
 
-function NSI:SetReminder(name, personal)
+function NSI:SetReminder(name, personal, skipupdate)
     if personal then
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
             NSRT.ActivePersonalReminder = name
             self:ProcessReminder()
-            self:UpdateReminderFrame(true)
+            if not skipupdate then self:UpdateReminderFrame(true) end
         else
             self.PersonalReminder = ""
             NSRT.ActivePersonalReminder = nil
             self:ProcessReminder()
-            self:UpdateReminderFrame(true)
+            if not skipupdate then self:UpdateReminderFrame(true) end
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
         self:ProcessReminder()
-        self:UpdateReminderFrame(true)
+        if not skipupdate then self:UpdateReminderFrame(true) end
     else
         self.Reminder = ""
         NSRT.ActiveReminder = nil
         self:ProcessReminder()
-        self:UpdateReminderFrame(true)
+        if not skipupdate then self:UpdateReminderFrame(true) end
     end
     self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
 end
@@ -1245,11 +1245,11 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
 end
 
 function NSI:UpdateNoteFrame(Name, SettingsTable, text)
-    self[Name]:SetAllPoints(self[Name.."Mover"])
-    self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
-    self[Name].Text:SetText(text)
-    if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
     if SettingsTable.enabled then
+        self[Name]:SetAllPoints(self[Name.."Mover"])
+        self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
+        self[Name].Text:SetText(text)
+        if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
         self[Name]:Show()
     elseif self[Name] then
         self[Name]:Hide()
