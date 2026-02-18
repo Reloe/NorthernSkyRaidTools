@@ -146,7 +146,7 @@ local function BuildRemindersEditUI()
         NSI.Reminder = ""
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(true)
-        NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, nil, true)
+        NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"
