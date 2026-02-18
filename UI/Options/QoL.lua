@@ -61,6 +61,17 @@ local function BuildQoLOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Loot Boss Reminder",
+            desc = "Shows a Text after killing a Raid-Boss to remind you to loot the boss for your crests.",
+            get = function() return NSRT.QoL.LootBossReminder end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.LootBossReminder = value
+                NSI:UpdateQoLTextDisplay()
+            end,
+        },
+        {
             type = "breakline",
         },
     }

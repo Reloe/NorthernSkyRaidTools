@@ -8,9 +8,11 @@ end)
 
 local GatewayIcon = "\124T"..C_Spell.GetSpellTexture(111771)..":12:12:0:0:64:64:4:60:4:60\124t"
 local ResetBossIcon = "\124T"..C_Spell.GetSpellTexture(57724)..":12:12:0:0:64:64:4:60:4:60\124t"
+local CrestIcon = "\124T"..C_CurrencyInfo.GetCurrencyInfo(3347).iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
 local TextDisplays = {
     Gateway = GatewayIcon.."Gateway Useable"..GatewayIcon,
     ResetBoss = ResetBossIcon.."Reset Boss"..ResetBossIcon,
+    LootBoss = CrestIcon.."Loot Boss"..CrestIcon,
 }
 
 local LustDebuffs = {
@@ -21,7 +23,7 @@ local LustDebuffs = {
     390435, -- Exhaustion
 }
 function NSI:QoLEvents(e, ...)
-    if e == "ACTIONBAR_UPDATE_USABLE" then
+    if e == "ACTIONBAR_UPDATE_USABLE" then -- only thing needed for Gateway
         if C_Item.IsUsableItem(188152) then
             self.QoLTextDisplays.Gateway = {SettingsName = "GatewayUseableDisplay", text = TextDisplays.Gateway}
         else
@@ -80,28 +82,38 @@ function NSI:QoLEvents(e, ...)
             end
         end
     elseif e == "PLAYER_ENTERING_WORLD" then
-        if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
-            f:RegisterEvent("UNIT_AURA")
-        else
-            f:UnregisterEvent("UNIT_AURA")
+        if self:DifficultyCheck(14) then
+            if NSRT.QoL.ResetBossDisplay and not self:Restricted() then
+                if self:HasLustDebuff() then
+                    self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+                end
+            end
+        end
+        self:QoLOnZoneSwap()
+    elseif e == "ENCOUNTER_END" and self:DifficultyCheck(14) then
+        if NSRT.QoL.LootBossReminder then
+            local success = select(5, ...)
+            if success == 1 then
+                self.QoLTextDisplays.LootBoss = {SettingsName = "LootBossReminder", text = TextDisplays.LootBoss}
+                self:UpdateQoLTextDisplay()
+                self.LootReminderTimer = C_Timer.NewTimer(40, function() -- backup hide in case something goes wrong
+                    self.QoLTextDisplays.LootBoss = nil
+                    self:UpdateQoLTextDisplay()
+                end)
+            end
+        end
+    elseif self:DifficultyCheck(14) and (e == "LOOT_OPENED" or e == "CHAT_MSG_MONEY" or e == "ENCOUNTER_START") then
+        if NSRT.QoL.LootBossReminder and self.QoLTextDisplays.LootBoss then
+            self.QoLTextDisplays.LootBoss = nil
+            self:UpdateQoLTextDisplay()
         end
     end
 end
 
 function NSI:InitQoL()
     self.QoLTextDisplays = {}
-    f:RegisterEvent("PLAYER_ENTERING_WORLD")
-    if NSRT.QoL.GatewayUseableDisplay then
-        f:RegisterEvent("ACTIONBAR_UPDATE_USABLE")
-    end
-    if NSRT.QoL.ResetBossDisplay then
-        f:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
-        if self:DifficultyCheck(14) and not self:Restricted() then
-            f:RegisterEvent("UNIT_AURA")
-        else
-            f:UnregisterEvent("UNIT_AURA")
-        end
-    end
+    self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
+    self:QoLOnZoneSwap()
 end
 
 function NSI:ToggleQoLEvent(event, enable)
@@ -112,6 +124,30 @@ function NSI:ToggleQoLEvent(event, enable)
     end
 end
 
+function NSI:QoLOnZoneSwap() -- only register events while player is in raid
+    local InRaid = self:DifficultyCheck(14)
+    if NSRT.QoL.GatewayUseableDisplay then
+        self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", InRaid)
+    end
+    if NSRT.QoL.ResetBossDisplay then
+        self:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", InRaid)
+        if InRaid and not self:Restricted() then
+            self:ToggleQoLEvent("UNIT_AURA", true)
+        else
+            self:ToggleQoLEvent("UNIT_AURA", false)
+        end
+    end
+    if NSRT.QoL.LootBossReminder then
+        self:ToggleQoLEvent("ENCOUNTER_END", InRaid)
+        self:ToggleQoLEvent("LOOT_OPENED", InRaid)
+        self:ToggleQoLEvent("CHAT_MSG_MONEY", InRaid)
+        self:ToggleQoLEvent("ENCOUNTER_START", InRaid)
+    end
+    if not InRaid then
+        self.QoLTextDisplays = {}
+        self:UpdateQoLTextDisplay()
+    end
+end
 
 function NSI:HasLustDebuff()
     for _, spellID in ipairs(LustDebuffs) do
