@@ -284,8 +284,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.LastBroadcast = GetTime()
         local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:Broadcast("NSI_SPEC", "RAID", specid)
-        if UnitIsGroupLeader("player") then
-            local tosend = ""
+        if UnitIsGroupLeader("player") and UnitInRaid("player") then
+            local tosend = false
             if NSRT.ReminderSettings.AutoShare then
                 tosend = self.Reminder
             end
@@ -298,9 +298,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:EventHandler("NSI_READY_CHECK", false, true)
             end)
         end
-        if UnitIsGroupLeader("player") then
+        if UnitIsGroupLeader("player") and UnitInRaid("player") then
             -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
-            local tosend = ""
+            local tosend = false
             if NSRT.ReminderSettings.AutoShare then
                 tosend = self.Reminder
             end
@@ -330,8 +330,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
-        if UnitIsGroupLeader(unit) or ((UnitIsGroupAssistant(unit) and skipcheck) and (self:DifficultyCheck(14) or skipcheck)) then -- skipcheck allows manually sent reminders to bypass difficulty checks
-            if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and reminderstring ~= "" then
+        if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
+            if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
                 NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
                 self:ProcessReminder()
