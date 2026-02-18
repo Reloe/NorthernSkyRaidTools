@@ -159,3 +159,39 @@ function NSI:HasLustDebuff()
     end
     return false
 end
+
+local VantusIds = {
+
+}
+function NSI:VantusRuneCheck()
+    if self:Restricted() then print("Auras are currently secret so this is unvailable.") return end
+    if not UnitInRaid("player") then return end
+    local name = C_Spell.GetSpellInfo(1276691).name
+    local prefix = name:match("^([^:]+)") -- get localized name of vantus runes
+    local maxgroup = self:DifficultyCheck(16) and 4 or 6 -- if outside raidlead checks this always goes to 6 but guess that'S fine
+    local text = ""
+    for i=1, 40 do
+        local name, _, subgroup = GetRaidRosterInfo(i)
+        if name and subgroup and subgroup <= maxgroup then
+            local unitid = UnitTokenFromGUID(UnitGUID(name))
+            local found = false
+            for j=1, 100 do
+                local buff = C_UnitAuras.GetAuraDataByIndex(unitid, j, "HELPFUL")
+                if not buff then break end
+                if buff.name:find(prefix) then
+                    found = true
+                    break
+                end
+            end
+            if not found then
+                if text == "" then text = name else text = text..", "..name end
+            end
+        end
+    end
+    if text ~= "" then
+        text = "Missing Vantus Runes: "..text
+        print(text)
+    else
+        print("Everyone has a Vantus Rune!")
+    end
+end

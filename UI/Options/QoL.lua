@@ -80,6 +80,20 @@ local function BuildQoLOptions()
         {
             type = "breakline",
         },
+        {
+            type = "label",
+            get = function() return "Other QoL Things" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "button",
+            name = "Check Vantus-Rune",
+            desc = "Check the Vantus Rune status for all raid members.",
+            func = function(self)
+                NSI:VantusRuneCheck()
+            end,
+            spacement = true
+        },
     }
 end
 
