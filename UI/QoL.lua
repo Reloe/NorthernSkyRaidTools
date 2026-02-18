@@ -30,8 +30,7 @@ function NSI:CreateQoLTextDisplay()
     F:SetPoint(NSRT.QoL.TextDisplay.Anchor, self.NSRTFrame, NSRT.QoL.TextDisplay.relativeTo, NSRT.QoL.TextDisplay.xOffset, NSRT.QoL.TextDisplay.yOffset)
     F:SetFrameStrata("DIALOG")
     F.text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
-    F.text:SetPoint("TOPLEFT", F, "TOPLEFT", 0, 0)
-    F.text:SetJustifyH("LEFT")
+    F.text:SetPoint("TOP", F, "TOP", 0, 0)
     F.text:SetTextColor(1, 1, 1, 1)
     F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
     F.Border:SetPoint("TOPLEFT", F, "TOPLEFT", -6, 6)
@@ -68,7 +67,7 @@ function NSI:ToggleQoLTextPreview()
         end
         local F = self.NSRTFrame.QoLText
         F.text:SetText(text)
-        F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight()*1)
+        F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
         self:ToggleMoveFrames(F, true)
     else
         self:ToggleMoveFrames(self.NSRTFrame.QoLText)

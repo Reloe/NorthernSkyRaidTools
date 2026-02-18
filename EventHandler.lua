@@ -137,10 +137,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.QoL then
                 NSRT.QoL = {
                     TextDisplay = {
-                        Anchor = "TOP",
-                        relativeTo = "TOP",
+                        Anchor = "CENTER",
+                        relativeTo = "CENTER",
                         xOffset = 0,
-                        yOffset = -300,
+                        yOffset = 0,
                         FontSize = 18,
                     },
                     IconDisplay = {
