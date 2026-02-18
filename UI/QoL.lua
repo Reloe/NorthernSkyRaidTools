@@ -5,12 +5,12 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
 function NSI:UpdateQoLTextDisplay()
-    local F = self.NSRTFrame.QoLText
     if self.IsQoLTextPreview then
         self:ToggleQoLTextPreview()
         return
     end
     self:CreateQoLTextDisplay()
+    local F = self.NSRTFrame.QoLText
     F:ClearAllPoints()
     F:SetPoint(NSRT.QoL.TextDisplay.Anchor, self.NSRTFrame, NSRT.QoL.TextDisplay.relativeTo, NSRT.QoL.TextDisplay.xOffset, NSRT.QoL.TextDisplay.yOffset)
     F.text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
