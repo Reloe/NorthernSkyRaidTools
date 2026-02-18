@@ -141,7 +141,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                         relativeTo = "CENTER",
                         xOffset = 0,
                         yOffset = 0,
-                        FontSize = 18,
+                        FontSize = 30,
                     },
                     IconDisplay = {
                         Anchor = "TOP",
