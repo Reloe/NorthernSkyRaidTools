@@ -19,7 +19,6 @@ local LustDebuffs = {
     80354, -- Time Warp
     264689, -- Fatigued
     390435, -- Exhaustion
-    65081,
 }
 function NSI:QoLEvents(e, ...)
     if e == "ACTIONBAR_UPDATE_USABLE" then
