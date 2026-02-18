@@ -27,6 +27,7 @@ SetupManager.lua
 CooldownCheck.lua
 ReadyCheck.lua
 PrivateAura.lua
+QoL.lua
 
 # Encounter Alerts
 EncounterAlerts/MidnightS1/ImperatorAverzian.lua
@@ -54,6 +55,7 @@ UI/Cooldowns.lua
 UI/PrivateAuras.lua
 UI/Timeline.lua
 UI/General.lua
+UI/QoL.lua
 
 # UI - Options (depend on Core)
 UI/Options/General.lua
@@ -64,6 +66,7 @@ UI/Options/Assignments.lua
 UI/Options/EncounterAlerts.lua
 UI/Options/ReadyCheck.lua
 UI/Options/PrivateAuras.lua
+UI/Options/QoL.lua
 
 # UI - Entry Point (loads all UI modules and initializes)
 NSUI.lua
