@@ -69,6 +69,12 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.LootBossReminder = value
                 NSI:UpdateQoLTextDisplay()
+                local turnon = value and NSI:DifficultyCheck(14) and not NSI:Restricted()
+                NSI:ToggleQoLEvent("ENCOUNTER_END", turnon)
+                NSI:ToggleQoLEvent("LOOT_OPENED", turnon)
+                NSI:ToggleQoLEvent("CHAT_MSG_MONEY", turnon)
+                NSI:ToggleQoLEvent("ENCOUNTER_START", turnon)
+
             end,
         },
         {
