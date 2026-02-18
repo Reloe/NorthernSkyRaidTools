@@ -24,7 +24,7 @@ local function BuildQoLOptions()
         {
             type = "range",
             name = "Font Size",
-            desc = "Font Size for Text Display",
+            desc = "Font Size for Text Display. The Font itself is controlled by the Global Font found in General Settings.",
             get = function() return NSRT.QoL.TextDisplay.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.TextDisplay.FontSize = value
