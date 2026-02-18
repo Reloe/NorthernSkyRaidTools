@@ -134,6 +134,38 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.Settings.GenericDisplay then
                 NSRT.Settings.GenericDisplay = {Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 400}
             end
+            if not NSRT.QoL then
+                NSRT.QoL = {
+                    TextDisplay = {
+                        Anchor = "CENTER",
+                        relativeTo = "CENTER",
+                        xOffset = 0,
+                        yOffset = 0,
+                        FontSize = 30,
+                    },
+                    IconDisplay = {
+                        Anchor = "TOP",
+                        relativeTo = "TOP",
+                        GrowDirection = "DOWN",
+                        Scpaing = 5,
+                        xOffset = 0,
+                        yOffset = -350,
+                        Width = 40,
+                        Height = 40,
+                    },
+                    TradeableItems = {
+                        Anchor = "TOP",
+                        relativeTo = "TOP",
+                        GrowDirection = "DOWN",
+                        Spacing = 5,
+                        xOffset = 0,
+                        yOffset = -400,
+                        FontSize = 18,
+                        Width = 30,
+                        Height = 30,
+                    },
+                }
+            end
 
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
