@@ -146,6 +146,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     IconDisplay = {
                         Anchor = "TOP",
                         relativeTo = "TOP",
+                        GrowDirection = "DOWN",
+                        Scpaing = 5,
                         xOffset = 0,
                         yOffset = -350,
                         Width = 40,
@@ -154,6 +156,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     TradeableItems = {
                         Anchor = "TOP",
                         relativeTo = "TOP",
+                        GrowDirection = "DOWN",
+                        Spacing = 5,
                         xOffset = 0,
                         yOffset = -400,
                         FontSize = 18,
