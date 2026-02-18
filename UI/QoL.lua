@@ -59,9 +59,10 @@ end
 function NSI:ToggleQoLTextPreview()
     if self.IsQoLTextPreview then
         self:CreateQoLTextDisplay()
+        local GatewayIcon = "\124T"..C_Spell.GetSpellTexture(111771)..":12:12:0:0:64:64:4:60:4:60\124t"
         local PrevieWTexts = {
             "This is a preview of the QoL Text Display.",
-            "You can move this display around and change its font size in the options.",
+            GatewayIcon.."Gateway Useable"..GatewayIcon,
             "All enabled Text Displays will show here.",
         }
         local text = ""
