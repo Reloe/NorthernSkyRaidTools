@@ -42,7 +42,6 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.GatewayUseableDisplay = value
                 NSI:QoLEvents("ACTIONBAR_UPDATE_USABLE")
-                NSI:UpdateQoLTextDisplay()
                 NSI:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", value)
             end,
         },

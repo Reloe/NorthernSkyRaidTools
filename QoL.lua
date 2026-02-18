@@ -24,7 +24,7 @@ local LustDebuffs = {
 }
 function NSI:QoLEvents(e, ...)
     if e == "ACTIONBAR_UPDATE_USABLE" then -- only thing needed for Gateway
-        if C_Item.IsUsableItem(188152) then
+        if C_Item.IsUsableItem(188152) and NSRT.QoL.GatewayUseableDisplay then
             self.QoLTextDisplays.Gateway = {SettingsName = "GatewayUseableDisplay", text = TextDisplays.Gateway}
         else
             self.QoLTextDisplays.Gateway = nil
@@ -113,6 +113,9 @@ end
 function NSI:InitQoL()
     self.QoLTextDisplays = {}
     self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
+    -- Gateway Reminder specifically we don't care about being in raid or not as it's also useful in m+
+    -- if there's other stuff in the future where this also applies we'll add it here instead of the zoneswap function
+    if NSRT.QoL.GatewayUseableDisplay then self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", true) end
     self:QoLOnZoneSwap()
 end
 
@@ -126,9 +129,6 @@ end
 
 function NSI:QoLOnZoneSwap() -- only register events while player is in raid
     local InRaid = self:DifficultyCheck(14)
-    if NSRT.QoL.GatewayUseableDisplay then
-        self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", InRaid)
-    end
     if NSRT.QoL.ResetBossDisplay then
         self:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", InRaid)
         if InRaid and not self:Restricted() then
