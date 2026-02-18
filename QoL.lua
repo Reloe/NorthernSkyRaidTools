@@ -6,8 +6,9 @@ f:SetScript("OnEvent", function(self, e, ...)
     NSI:QoLEvents(e, ...)
 end)
 
+local GatewayIcon = "\124T"..C_Spell.GetSpellTexture(111771)..":12:12:0:0:64:64:4:60:4:60\124t"
 local TextDisplays = {
-    Gateway = "Gateway Useable",
+    Gateway = GatewayIcon.."Gateway Useable"..GatewayIcon,
 }
 
 function NSI:QoLEvents(e, ...)
