@@ -53,8 +53,9 @@ local function BuildQoLOptions()
             get = function() return NSRT.QoL.ResetBossDisplay end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.ResetBossDisplay = value
-                NSI:UpdateQoLTextDisplay()
-                local turnon = value and NSI:DifficultyCheck(14) and not NSI:Restricted()
+                local diff = NSI:DifficultyCheck(14)
+                if diff or not value then NSI:UpdateQoLTextDisplay() end
+                local turnon = value and diff and not NSI:Restricted()
                 NSI:ToggleQoLEvent("UNIT_AURA", turnon)
                 NSI:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", turnon)
             end,

@@ -86,6 +86,7 @@ function NSI:QoLEvents(e, ...)
             if NSRT.QoL.ResetBossDisplay and not self:Restricted() then
                 if self:HasLustDebuff() then
                     self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+                    self:UpdateQoLTextDisplay()
                 end
             end
         end
