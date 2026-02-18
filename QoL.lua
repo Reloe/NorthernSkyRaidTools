@@ -65,7 +65,8 @@ function NSI:QoLEvents(e, ...)
             elseif updateInfo.addedAuras then
                 for _, auraData in ipairs(updateInfo.addedAuras) do
                     for _, spellID in ipairs(LustDebuffs) do
-                        if auraData.spellId == spellID then
+                        -- idk how this can ever be secret because I'm checking that at the very start but it can
+                        if (not issecretvalue(auraData.spellId)) and auraData.spellId == spellID then
                             self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
                             self:UpdateQoLTextDisplay()
                             return
@@ -193,8 +194,8 @@ end
 function NSI:HasLustDebuff()
     for _, spellID in ipairs(LustDebuffs) do
         local debuff = self:UnitAura("player", spellID)
-        if debuff then
-            return debuff
+        if (not issecretvalue(debuff)) and debuff then
+            return true
         end
     end
     return false
