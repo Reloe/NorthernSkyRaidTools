@@ -68,7 +68,7 @@ function NSI:ToggleQoLTextPreview()
         end
         local F = self.NSRTFrame.QoLText
         F.text:SetText(text)
-        F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight()*1.5)
+        F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight()*1)
         self:ToggleMoveFrames(F, true)
     else
         self:ToggleMoveFrames(self.NSRTFrame.QoLText)
