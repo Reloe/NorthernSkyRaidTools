@@ -110,6 +110,39 @@ function NSI:QoLEvents(e, ...)
         end
     elseif e == "MERCHANT_SHOW" and NSRT.QoL.AutoRepair then
         RepairAllItems(true)
+    elseif (e == "CHAT_MSG_WHISPER" or e == "CHAT_MSG_BN_WHISPER") and NSRT.QoL.AutoInvite then
+        local msg, playerName = ...
+        if issecretvalue(msg) or issecretvalue(playerName) then return end
+        if msg == "inv" or msg == "invite" then
+            if e == "CHAT_MSG_BN_WHISPER" then
+                local bnSenderID = select(13, ...)
+                for i = 1, BNGetNumFriends() do
+                    local accountInfo = C_BattleNet.GetFriendAccountInfo(i)
+                    if bnSenderID == accountInfo.bnetAccountID then
+                        for j = 1, C_BattleNet.GetFriendNumGameAccounts(i) do
+                            local gameInfo = C_BattleNet.GetFriendGameAccountInfo(i, j)
+                            if gameInfo then
+                                local char = gameInfo.characterName
+                                local realm = gameInfo.realmName
+                                if char and realm then
+                                    playerName = char.."-"..realm
+                                    break
+                                end
+                            end
+                        end
+                        break
+                    end
+                end
+            end
+            -- unfortunately have to check guild roster because C_GuildInfo.MemberExistsByName is a security risk as it can't check the realm
+            for i=1, GetNumGuildMembers() do
+                local name = GetGuildRosterInfo(i)
+                if name == playerName then
+                    C_PartyInfo.InviteUnit(playerName)
+                    return
+                end
+            end
+        end
     end
 end
 
@@ -120,6 +153,10 @@ function NSI:InitQoL()
     -- if there's other stuff in the future where this also applies we'll add it here instead of the zoneswap function
     if NSRT.QoL.GatewayUseableDisplay then self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", true) end
     if NSRT.QoL.AutoRepair then self:ToggleQoLEvent("MERCHANT_SHOW", true) end
+    if NSRT.QoL.AutoInvite then
+        self:ToggleQoLEvent("CHAT_MSG_WHISPER", true)
+        self:ToggleQoLEvent("CHAT_MSG_BN_WHISPER", true)
+    end
     self:QoLOnZoneSwap()
 end
 

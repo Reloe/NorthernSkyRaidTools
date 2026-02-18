@@ -105,6 +105,18 @@ local function BuildQoLOptions()
                 NSI:ToggleQoLEvent("MERCHANT_SHOW", value)
             end,
         },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Auto-Invite on Whisper",
+            desc = "Whether you want to automatically invite Guild-Members when they whisper you with 'inv' or 'invite'.",
+            get = function() return NSRT.QoL.AutoInvite end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.AutoInvite = value
+                NSI:ToggleQoLEvent("CHAT_MSG_WHISPER", value)
+                NSI:ToggleQoLEvent("CHAT_MSG_BN_WHISPER", value)
+            end,
+        },
     }
 end
 
