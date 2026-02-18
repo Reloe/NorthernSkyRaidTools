@@ -47,6 +47,20 @@ local function BuildQoLOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Reset Boss Display",
+            desc = "Shows a Text while out of combat when you have the lust debuff to remind you that the boss needs to be reset.",
+            get = function() return NSRT.QoL.ResetBossDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.ResetBossDisplay = value
+                NSI:UpdateQoLTextDisplay()
+                local turnon = value and NSI:DifficultyCheck(14) and not NSI:Restricted()
+                NSI:ToggleQoLEvent("UNIT_AURA", turnon)
+                NSI:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", turnon)
+            end,
+        },
+        {
             type = "breakline",
         },
     }

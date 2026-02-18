@@ -60,14 +60,18 @@ function NSI:ToggleQoLTextPreview()
     if self.IsQoLTextPreview then
         self:CreateQoLTextDisplay()
         local GatewayIcon = "\124T"..C_Spell.GetSpellTexture(111771)..":12:12:0:0:64:64:4:60:4:60\124t"
+        local ResetBossIcon = "\124T"..C_Spell.GetSpellTexture(57724)..":12:12:0:0:64:64:4:60:4:60\124t"
         local PrevieWTexts = {
             "This is a preview of the QoL Text Display.",
-            GatewayIcon.."Gateway Useable"..GatewayIcon,
+            NSRT.QoL.GatewayUseableDisplay and GatewayIcon.."Gateway Useable"..GatewayIcon or "",
+            NSRT.QoL.ResetBossDisplay and ResetBossIcon.."Reset Boss"..ResetBossIcon or "",
             "All enabled Text Displays will show here.",
         }
         local text = ""
         for _, v in ipairs(PrevieWTexts) do -- table structure: {enabled = bool, text = string}
-            text = text..v.."\n"
+            if v ~= "" then
+                text = text..v.."\n"
+            end
         end
         local F = self.NSRTFrame.QoLText
         F.text:SetText(text)
