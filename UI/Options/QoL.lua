@@ -94,6 +94,17 @@ local function BuildQoLOptions()
             end,
             spacement = true
         },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Auto-Repair",
+            desc = "Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs).",
+            get = function() return NSRT.QoL.AutoRepair end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.AutoRepair = value
+                NSI:ToggleQoLEvent("MERCHANT_SHOW", value)
+            end,
+        },
     }
 end
 

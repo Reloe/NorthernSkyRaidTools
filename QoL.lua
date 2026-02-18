@@ -108,6 +108,8 @@ function NSI:QoLEvents(e, ...)
             self.QoLTextDisplays.LootBoss = nil
             self:UpdateQoLTextDisplay()
         end
+    elseif e == "MERCHANT_SHOW" and NSRT.QoL.AutoRepair then
+        RepairAllItems(true)
     end
 end
 
@@ -117,6 +119,7 @@ function NSI:InitQoL()
     -- Gateway Reminder specifically we don't care about being in raid or not as it's also useful in m+
     -- if there's other stuff in the future where this also applies we'll add it here instead of the zoneswap function
     if NSRT.QoL.GatewayUseableDisplay then self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", true) end
+    if NSRT.QoL.AutoRepair then self:ToggleQoLEvent("MERCHANT_SHOW", true) end
     self:QoLOnZoneSwap()
 end
 
