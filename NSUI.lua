@@ -44,6 +44,8 @@ local BuildRaidBuffMenu = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback = NSI.UI.Options.ReadyCheck.BuildCallback
 local BuildPrivateAurasOptions = NSI.UI.Options.PrivateAuras.BuildOptions
 local BuildPrivateAurasCallback = NSI.UI.Options.PrivateAuras.BuildCallback
+local BuildQoLOptions = NSI.UI.Options.QoL.BuildOptions
+local BuildQoLCallback = NSI.UI.Options.QoL.BuildCallback
 
 function NSUI:Init()
     -- Create the scale bar
@@ -72,6 +74,7 @@ function NSUI:Init()
     local encounteralerts_tab = tabContainer:GetTabFrameByName("EncounterAlerts")
     local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
+    local QoL_tab = tabContainer:GetTabFrameByName("QoL")
 
     -- Generic text display
     NSI.NSRTFrame.generic_display = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
@@ -96,6 +99,7 @@ function NSUI:Init()
     local readycheck_options1_table = BuildReadyCheckOptions()
     local RaidBuffMenu = BuildRaidBuffMenu()
     local privateaura_options1_table = BuildPrivateAurasOptions()
+    local QoL_options1_table = BuildQoLOptions()
 
     -- Build callbacks
     local general_callback = BuildGeneralCallback()
@@ -107,6 +111,7 @@ function NSUI:Init()
     local encounteralerts_callback = BuildEncounterAlertsCallback()
     local readycheck_callback = BuildReadyCheckCallback()
     local privateaura_callback = BuildPrivateAurasCallback()
+    local QoL_callback = BuildQoLCallback()
 
     -- Build options menu for each tab
     DF:BuildMenu(general_tab, general_options1_table, 10, -100, window_height - 10, false, options_text_template,
@@ -139,6 +144,9 @@ function NSUI:Init()
     DF:BuildMenu(privateaura_tab, privateaura_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
+    DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        QoL_callback)
     NSI.RaidBuffCheck:SetMovable(false)
     NSI.RaidBuffCheck:EnableMouse(false)
 

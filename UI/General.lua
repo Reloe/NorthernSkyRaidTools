@@ -20,7 +20,8 @@ local buttonmapping = {
     {DefaultDisabled = true, name = "Reminders", label = "Reminder Strings", desc = "All Reminder Strings imported into 'Shared Reminders'"},
     {DefaultDisabled = true, name = "PersonalReminders", label = "Personal Reminder Strings", desc = "All Reminder Strings imported into 'Personal Reminders'"},
     {DefaultDisabled = true, name = "NickNames", label = "Nicknames", desc = "All saved Nicknames"},
-    {DefaultDisabled = true, name = "Settings", label = "General Settings", desc = "General Settings. This basically includes everything that is not covered in any of the other categories."}
+    {DefaultDisabled = true, name = "Settings", label = "General Settings", desc = "General Settings. This basically includes everything that is not covered in any of the other categories."},
+    {DefaultDisabled = true, name = "QoL", label = "Quality of Life Settings", desc = "All Settings in the 'Quality of Life' Tab."}
 }
 
 local function BuildExportStringUI()
