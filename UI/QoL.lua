@@ -5,9 +5,12 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
 function NSI:UpdateQoLTextDisplay()
-    if self.IsQoLTextPreview then return end
-    self:CreateQoLTextDisplay()
     local F = self.NSRTFrame.QoLText
+    if self.IsQoLTextPreview then
+        self:ToggleQoLTextPreview()
+        return
+    end
+    self:CreateQoLTextDisplay()
     F:ClearAllPoints()
     F:SetPoint(NSRT.QoL.TextDisplay.Anchor, self.NSRTFrame, NSRT.QoL.TextDisplay.relativeTo, NSRT.QoL.TextDisplay.xOffset, NSRT.QoL.TextDisplay.yOffset)
     F.text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
@@ -57,9 +60,9 @@ function NSI:ToggleQoLTextPreview()
     if self.IsQoLTextPreview then
         self:CreateQoLTextDisplay()
         local PrevieWTexts = {
-        "This is a preview of the QoL Text Display.",
-        "You can move this display around and change its font size in the options.",
-        "All enabled Text Displays will show here.",
+            "This is a preview of the QoL Text Display.",
+            "You can move this display around and change its font size in the options.",
+            "All enabled Text Displays will show here.",
         }
         local text = ""
         for _, v in ipairs(PrevieWTexts) do -- table structure: {enabled = bool, text = string}
@@ -67,6 +70,7 @@ function NSI:ToggleQoLTextPreview()
         end
         local F = self.NSRTFrame.QoLText
         F.text:SetText(text)
+        F.text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
         F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
         self:ToggleMoveFrames(F, true)
     else
