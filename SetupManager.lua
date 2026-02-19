@@ -246,10 +246,10 @@ function NSI:ShiftLeader(group)
     local currentpos = 0
     local goalpos = 0
     for i, v in ipairs(group) do
-        if UnitIsGroupLeader(v.unitid) then
+        if v.unitid and UnitIsGroupLeader(v.unitid) then
             currentpos = i
             -- for tanks put them first in their current group, for others put them first in not the first group so they don't appear above the tanks unless there are less than 6 players available.
-            goalpos = (v.role == "TANK" and math.floor((i - 1) / 5) * 5 + 1) or (i > 5 and math.floor((i - 1) / 5) * 5 + 1) or (#group > 5 and 6) or 1
+            goalpos = (v.role and v.role == "TANK" and math.floor((i - 1) / 5) * 5 + 1) or (i > 5 and math.floor((i - 1) / 5) * 5 + 1) or (#group > 5 and 6) or 1
         end
     end
     if goalpos ~= 0 and currentpos ~= goalpos then
@@ -545,9 +545,12 @@ function NSI:ArrangeFromReminder(str)
     if self:Restricted() then print("You are currently in combat, cannot sort groups right now.") return end
     if not list then print("No invite list found.") return end
     for i, name in ipairs(list) do
-        self.Groups.units[i] = {name = name}
+        local pos = UnitInRaid(name)
+        local unit = pos and "raid"..pos
+        local role = unit and UnitGroupRolesAssigned(unit)
+        self.Groups.units[i] = {name = name, unitid = unit, role = role}
         self.Groups.total = self.Groups.total + 1
     end
-    self:ShiftLeader(self.Groups.units)
+    self.Groups.units = self:ShiftLeader(self.Groups.units)
     self:ArrangeGroups(true)
 end
