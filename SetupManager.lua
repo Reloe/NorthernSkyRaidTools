@@ -397,7 +397,7 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             self.specs = {}
-            NSI:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
+            self:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
