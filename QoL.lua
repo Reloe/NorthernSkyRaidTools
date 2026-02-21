@@ -291,6 +291,11 @@ function NSI:VantusRuneCheck()
 end
 
 function NSI:HandleQolComm(unitName, type)
+    -- We can get addon comms from anywhere, but only show notifs from players we can actually see.
+    if not UnitIsVisible(unitName) then
+        return
+    end
+
     local displayTimerSeconds = NSRT.QoL.ConsumableNotificationDurationSeconds
     local displayName = WrapTextInColorCode(unitName, C_ClassColor.GetClassColor(select(2, UnitClass(unitName))):GenerateHexColor())
     if type == "FEAST" then
