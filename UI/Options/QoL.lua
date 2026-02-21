@@ -78,6 +78,62 @@ local function BuildQoLOptions()
             end,
         },
         {
+            type = "label",
+            get = function() return "Consumable Notifications" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Soulwell",
+            desc = "Shows a Text when a Soulwell has been dropped and you have less than 3 Healthstones.",
+            get = function() return NSRT.QoL.SoulwellDropped end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.SoulwellDropped = value
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Feast",
+            desc = "Shows a Text when a Feast has been dropped and your Well Fed buff is missing or has less than 10 minutes left.",
+            get = function() return NSRT.QoL.FeastDropped end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.FeastDropped = value
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Cauldron",
+            desc = "Shows a Text when a Cauldron has been dropped.",
+            get = function() return NSRT.QoL.CauldronDropped end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.CauldronDropped = value
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Repair",
+            desc = "Shows a Text when a Repair Bot/Anvil has been dropped and your durability is less than 90%.",
+            get = function() return NSRT.QoL.RepairDropped end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.RepairDropped = value
+            end,
+        },
+        {
+            type = "range",
+            name = "Duration Seconds",
+            desc = "Show dropped consumable notifications for the selected number of seconds.",
+            get = function() return NSRT.QoL.ConsumableNotificationDurationSeconds or 5 end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.ConsumableNotificationDurationSeconds = value
+            end,
+            min = 1,
+            max = 20,
+        },
+        {
             type = "breakline",
         },
         {
