@@ -15,6 +15,29 @@ local TextDisplays = {
     LootBoss = CrestIcon.."Loot Boss"..CrestIcon,
 }
 
+local ConsumableSpells = {
+    [1259657] = "FEAST", -- Quel'dorei Medley    
+    [1278915] = "FEAST", -- Hearty Quel'dorei Medley    
+
+    [1259658] = "FEAST", -- Harandar Celebration
+    [1278929] = "FEAST", -- Hearty Rootland Celebration
+
+    [1237104] = "FEAST", -- Blooming Feast
+    [1278909] = "FEAST", -- Hearty Blooming Feast
+
+    [1259659] = "FEAST", -- Silvermoon Parade
+    [1278895] = "FEAST", -- Hearty Silvermoon Parade
+
+    [1240267] = "CAULDRON", -- Voidlight Potion Cauldron
+    [1240195] = "CAULDRON", -- Voidlight of Sin'dorei Flasks
+
+    [698] = "SUMMONING_STONE",
+    [29893] = "SOULWELL",
+
+    [199109] = "REPAIR", -- Auto-Hammer
+    [67826] = "REPAIR", -- Jeeves
+}
+
 local LustDebuffs = {
     57723, -- Exhaustion
     57724, -- Sated
@@ -48,6 +71,11 @@ function NSI:QoLEvents(e, ...)
             else
                 self.QoLTextDisplays.ResetBoss = nil
             end
+        end
+        if C_ChatInfo.InChatMessagingLockdown() then
+            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", false)
+        else
+            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
         end
         self:UpdateQoLTextDisplay()
     elseif e == "UNIT_AURA" then
@@ -144,6 +172,15 @@ function NSI:QoLEvents(e, ...)
                 end
             end
         end
+    elseif e == "UNIT_SPELLCAST_SUCCEEDED" then
+        -- registered only for 'player' so we don't need a unitTarget check or a secret check
+        local spellId = select(3, ...)
+        if IsInGroup() and ConsumableSpells[spellId] then
+            NSI:Broadcast("QoL_Comms", "RAID", ConsumableSpells[spellId])
+        end
+    elseif e == "QoL_Comms" then
+        local unitName, type = ...
+        print(unitName, 'dropped', type)
     end
 end
 
@@ -158,12 +195,22 @@ function NSI:InitQoL()
         self:ToggleQoLEvent("CHAT_MSG_WHISPER", true)
         self:ToggleQoLEvent("CHAT_MSG_BN_WHISPER", true)
     end
+
+    -- Need this enabled regardless of personal settings so that other people in our group get the comm.
+    self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
+
     self:QoLOnZoneSwap()
 end
 
-function NSI:ToggleQoLEvent(event, enable)
+function NSI:ToggleQoLEvent(event, enable, unit)
     if enable then
-        f:RegisterEvent(event)
+        -- TODO: can this just be f:RegisterUnitEvent(event, unit)?
+        -- not sure if RegisterUnitEvent with a nil unit is identical to RegisterEvent
+        if unit then
+            f:RegisterUnitEvent(event, unit)
+        else
+            f:RegisterEvent(event)
+        end
     else
         f:UnregisterEvent(event)
     end
