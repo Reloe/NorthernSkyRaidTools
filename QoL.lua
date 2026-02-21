@@ -296,6 +296,10 @@ function NSI:HandleQolComm(unitName, type)
         return
     end
 
+    if UnitIsUnit(unitName, "player") then
+        return
+    end
+
     local displayTimerSeconds = NSRT.QoL.ConsumableNotificationDurationSeconds
     local displayName = WrapTextInColorCode(unitName, C_ClassColor.GetClassColor(select(2, UnitClass(unitName))):GenerateHexColor())
     if type == "FEAST" then
