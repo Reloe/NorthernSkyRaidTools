@@ -182,7 +182,7 @@ function NSI:QoLEvents(e, ...)
     elseif e == "UNIT_SPELLCAST_SUCCEEDED" then
         -- registered only for 'player' so we don't need a unitTarget check or a secret check
         local spellId = select(3, ...)
-        if (not C_ChatInfo.InChatMessagingLockdown()) and IsInGroup() and ConsumableSpells[spellId] then
+        if IsInGroup() and ConsumableSpells[spellId] then
             NSI:Broadcast("QoL_Comms", "RAID", ConsumableSpells[spellId])
         end
     elseif e == "QoL_Comms" then
