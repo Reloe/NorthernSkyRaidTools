@@ -24,8 +24,8 @@ local TextDisplays = {
 }
 
 local ConsumableSpells = {
-    [1259657] = "FEAST", -- Quel'dorei Medley    
-    [1278915] = "FEAST", -- Hearty Quel'dorei Medley    
+    [1259657] = "FEAST", -- Quel'dorei Medley
+    [1278915] = "FEAST", -- Hearty Quel'dorei Medley
 
     [1259658] = "FEAST", -- Harandar Celebration
     [1278929] = "FEAST", -- Hearty Rootland Celebration
@@ -61,28 +61,27 @@ function NSI:QoLEvents(e, ...)
         end
         self:UpdateQoLTextDisplay()
     elseif e == "ADDON_RESTRICTION_STATE_CHANGED" then
+        if C_ChatInfo.InChatMessagingLockdown() then
+            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", false)
+        else
+            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
+        end
         if not NSRT.QoL.ResetBossDisplay then -- shouldn't be possible but another safety check
             self.QoLTextDisplays.ResetBoss = nil
             self:UpdateQoLTextDisplay()
             self:ToggleQoLEvent("UNIT_AURA", false)
             return
-        end
-        if self:Restricted() then
+        elseif self:Restricted() then
             self.QoLTextDisplays.ResetBoss = nil
             self:ToggleQoLEvent("UNIT_AURA", false)
         else
-            self:ToggleQoLEvent("UNIT_AURA", true)
+            self:ToggleQoLEvent("UNIT_AURA", true, "player")
             local debuffed = self:HasLustDebuff()
             if debuffed then
                 self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
             else
                 self.QoLTextDisplays.ResetBoss = nil
             end
-        end
-        if C_ChatInfo.InChatMessagingLockdown() then
-            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", false)
-        else
-            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
         end
         self:UpdateQoLTextDisplay()
     elseif e == "UNIT_AURA" then
@@ -118,12 +117,10 @@ function NSI:QoLEvents(e, ...)
             end
         end
     elseif e == "PLAYER_ENTERING_WORLD" then
-        if self:DifficultyCheck(14) then
-            if NSRT.QoL.ResetBossDisplay and not self:Restricted() then
-                if self:HasLustDebuff() then
-                    self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
-                    self:UpdateQoLTextDisplay()
-                end
+        if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
+            if self:HasLustDebuff() then
+                self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+                self:UpdateQoLTextDisplay()
             end
         end
         self:QoLOnZoneSwap()
@@ -134,8 +131,10 @@ function NSI:QoLEvents(e, ...)
                 self.QoLTextDisplays.LootBoss = {SettingsName = "LootBossReminder", text = TextDisplays.LootBoss}
                 self:UpdateQoLTextDisplay()
                 self.LootReminderTimer = C_Timer.NewTimer(40, function() -- backup hide in case something goes wrong
-                    self.QoLTextDisplays.LootBoss = nil
-                    self:UpdateQoLTextDisplay()
+                    if self.QoLTextDisplays.LootBoss then
+                        self.QoLTextDisplays.LootBoss = nil
+                        self:UpdateQoLTextDisplay()
+                    end
                 end)
             end
         end
@@ -183,10 +182,10 @@ function NSI:QoLEvents(e, ...)
         -- registered only for 'player' so we don't need a unitTarget check or a secret check
         local spellId = select(3, ...)
         if IsInGroup() and ConsumableSpells[spellId] then
-            NSI:Broadcast("QoL_Comms", "RAID", ConsumableSpells[spellId])
+            self:Broadcast("QoL_Comms", "RAID", ConsumableSpells[spellId])
         end
     elseif e == "QoL_Comms" then
-        self:HandleQolComm(...)
+        self:HandleQoLComm(...)
     end
 end
 
@@ -204,19 +203,14 @@ function NSI:InitQoL()
 
     -- Need this enabled regardless of personal settings so that other people in our group get the comm.
     self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
+    self:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", true)
 
     self:QoLOnZoneSwap()
 end
 
 function NSI:ToggleQoLEvent(event, enable, unit)
     if enable then
-        -- TODO: can this just be f:RegisterUnitEvent(event, unit)?
-        -- not sure if RegisterUnitEvent with a nil unit is identical to RegisterEvent
-        if unit then
-            f:RegisterUnitEvent(event, unit)
-        else
-            f:RegisterEvent(event)
-        end
+        f:RegisterUnitEvent(event, unit)
     else
         f:UnregisterEvent(event)
     end
@@ -225,9 +219,8 @@ end
 function NSI:QoLOnZoneSwap() -- only register events while player is in raid
     local InRaid = self:DifficultyCheck(14)
     if NSRT.QoL.ResetBossDisplay then
-        self:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", InRaid)
         if InRaid and not self:Restricted() then
-            self:ToggleQoLEvent("UNIT_AURA", true)
+            self:ToggleQoLEvent("UNIT_AURA", true, "player")
         else
             self:ToggleQoLEvent("UNIT_AURA", false)
         end
@@ -290,7 +283,7 @@ function NSI:VantusRuneCheck()
     end
 end
 
-function NSI:HandleQolComm(unitName, type)
+function NSI:HandleQoLComm(unitName, type)
     -- We can get addon comms from anywhere, but only show notifs from players we can actually see.
     if not UnitIsVisible(unitName) then
         return
@@ -301,14 +294,14 @@ function NSI:HandleQolComm(unitName, type)
     end
 
     local displayTimerSeconds = NSRT.QoL.ConsumableNotificationDurationSeconds
-    local displayName = WrapTextInColorCode(unitName, C_ClassColor.GetClassColor(select(2, UnitClass(unitName))):GenerateHexColor())
+    local displayName = NSAPI:Shorten(unitName, 8, false, "GlobalNickNames")
     if type == "FEAST" then
         -- can't check buff duration/presence in combat
-        if InCombatLockdown()  then
+        if self:Restricted() then
             return
         end
 
-        local wellFedBuff = C_UnitAuras.GetAuraDataBySpellName("player", "Well Fed")
+        local wellFedBuff = self:UnitAura("player", "Well Fed")
         local okayBuffDurationSeconds = 10 * 60
         if wellFedBuff and (wellFedBuff.expirationTime - GetTime() > okayBuffDurationSeconds) then
             return
