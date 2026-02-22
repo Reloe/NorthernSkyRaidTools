@@ -196,7 +196,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true, true) -- loading active personal reminder from last session
-        self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
+        self:ProcessReminder()
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
             self.Reminder = NSRT.StoredSharedReminder or ""
         end

@@ -906,26 +906,22 @@ function NSI:SetReminder(name, personal, skipupdate)
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
             NSRT.ActivePersonalReminder = name
-            self:ProcessReminder()
-            if not skipupdate then self:UpdateReminderFrame(true) end
         else
             self.PersonalReminder = ""
             NSRT.ActivePersonalReminder = nil
-            self:ProcessReminder()
-            if not skipupdate then self:UpdateReminderFrame(true) end
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
-        self:ProcessReminder()
-        if not skipupdate then self:UpdateReminderFrame(true) end
     else
         self.Reminder = ""
         NSRT.ActiveReminder = nil
-        self:ProcessReminder()
-        if not skipupdate then self:UpdateReminderFrame(true) end
     end
-    if not skipupdate then self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder) end
+    if not skipupdate then
+        self:UpdateReminderFrame(true)
+        self:ProcessReminder()
+        self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
+    end
 end
 
 function NSI:RemoveReminder(name, personal)
