@@ -134,7 +134,7 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
 end
 
 
-AceComm:RegisterComm("NSWA_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false, false) end)
-AceComm:RegisterComm("NSWA_MSG2", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, false) end)
+-- AceComm:RegisterComm("NSWA_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false, false) end)
+-- AceComm:RegisterComm("NSWA_MSG2", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, false) end)
 AceComm:RegisterComm("NSI_MSG", function(_, text, chan, sender) ReceiveComm(text, chan, sender, false, true) end)
 AceComm:RegisterComm("NSI_WHISPER", function(_, text, chan, sender) ReceiveComm(text, chan, sender, true, true) end)
