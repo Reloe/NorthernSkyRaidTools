@@ -215,7 +215,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
             if #todelete > 0 then
-                print("deleting", #todelete, "old NSRT macros as they are no longer beinng used.")
+                print("deleting", #todelete, "old NSRT macros as they are no longer being used.")
                 for i=#todelete, 1, -1 do
                     DeleteMacro(todelete[i])
                 end
