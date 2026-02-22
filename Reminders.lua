@@ -133,13 +133,13 @@ function NSI:ProcessReminder()
     self.DisplayedExtraReminder = ""
     local pers = NSRT.ReminderSettings.PersonalReminderFrame.enabled
     local shared = NSRT.ReminderSettings.ReminderFrame.enabled
-    -- UseTimelineReminders makes it process the note but then stops the display at a later point. This allows still displaying the note.
-    if (NSRT.ReminderSettings.enabled or NSRT.ReminderSettings.UseTimelineReminders) and self.Reminder then str = self.Reminder end
-    if NSRT.ReminderSettings.MRTNote or NSRT.ReminderSettings.UseTimelineReminders then
+    -- self:IsUsingTLRemindders() makes it process the note but then stops the display at a later point. This allows still displaying the note.
+    if (NSRT.ReminderSettings.enabled or self:IsUsingTLRemindders()) and self.Reminder then str = self.Reminder end
+    if NSRT.ReminderSettings.MRTNote or self:IsUsingTLRemindders() then
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
         str = note and str ~= "" and str.."\n"..note or note or str
     end
-    if NSRT.ReminderSettings.PersNote or NSRT.ReminderSettings.UseTimelineReminders then
+    if NSRT.ReminderSettings.PersNote or self:IsUsingTLRemindders() then
         local note = self.PersonalReminder
         str = note and str ~= "" and str.."\n"..note or note or str
     end
@@ -774,7 +774,7 @@ function NSI:StartReminders(phase, testrun)
         if not self.ProcessedReminder then return end
         for encID, encData in pairs(self.ProcessedReminder) do
             for i, info in ipairs(encData[phase] or {}) do
-                if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+                if info.IsAlert or not self:IsUsingTLRemindders() then
                     local time = math.max(info.time-info.dur, 0)
                     self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
                         self:DisplayReminder(info)
@@ -788,7 +788,7 @@ function NSI:StartReminders(phase, testrun)
     if not self.ProcessedReminder[self.EncounterID] then return end
     if not self.ProcessedReminder[self.EncounterID][phase] then return end
     for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
-        if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+        if info.IsAlert or not self:IsUsingTLRemindders() then
             local time = math.max(info.time-info.dur, 0)
             self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
                 self:DisplayReminder(info)
@@ -825,7 +825,7 @@ function NSI:DelayAllReminders(delay)
     end
 
     for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
-        if info.IsAlert or not NSRT.ReminderSettings.UseTimelineReminders then
+        if info.IsAlert or not self:IsUsingTLRemindders() then
             if info.time-info.dur > timediff then -- if time is 0 then this reminder has already started
                 local time = math.max(info.time-info.dur-timediff+delay, 0)
                 info.time = info.time + delay
@@ -1312,4 +1312,8 @@ function NSAPI:ToggleTLReminders(enable)
     NSI:ProcessReminders()
     NSI:UpdateReminderFrame(true)
     NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
+end
+
+function NSI:IsUsingTLRemindders()
+    return NSRT.ReminderSettings.UseTimelineReminders and C_AddOns.IsAddOnLoaded("TimelineRemidners")
 end
