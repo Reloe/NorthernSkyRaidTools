@@ -1306,3 +1306,10 @@ function NSI:FlashNoteBackgrounds()
     self:FlashFrameBackground(NSI.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame)
     self:FlashFrameBackground(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame)
 end
+
+function NSAPI:ToggleTLReminders(enable)
+    NSRT.ReminderSettings.UseTimelineReminders = enable
+    NSI:ProcessReminders()
+    NSI:UpdateReminderFrame(true)
+    NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
+end

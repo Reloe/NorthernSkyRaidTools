@@ -834,21 +834,6 @@ local function BuildReminderOptions()
         },
 
         {
-            type = "toggle",
-            boxfirst = true,
-            name = "Use TimelineReminders",
-            desc = "Toggling this on will make NSRT not display any reminders, but still allow TimelineReminders to read any shared or personal reminder you have and also allow the Note-Display to work.",
-            get = function() return NSRT.ReminderSettings.UseTimelineReminders end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings.UseTimelineReminders = value
-                NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(true)
-                NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
-            end,
-            nocombat = true,
-        },
-
-        {
             type = "button",
             name = "Test Active Reminder",
             desc = "Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test.",
