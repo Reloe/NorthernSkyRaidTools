@@ -53,8 +53,8 @@ function NSI:BuffCheck()
     local spellID = buffs[class]
     if spellID then
         for unit in self:IterateGroupMembers() do
-            local specID = self.specs and self.specs[unit] or select(3, UnitClass(unit)) -- if specdata exists we use that, otherwise class which means maybe some useless buffs are being done.
-            if specID and (class == 5 or class == 13 or class == 11 or class == 7 or tContains(buffrequired[class], specID)) and UnitIsVisible(unit) then
+            local specID = (self.specs and self.specs[unit]) or select(3, UnitClass(unit)) -- if specdata exists we use that, otherwise class which means maybe some useless buffs are being done.
+            if specID and (class == 5 or class == 13 or class == 11 or class == 7 or (buffrequired[class] and tContains(buffrequired[class], specID))) and UnitIsVisible(unit) then
                 local buffed
                 if type(spellID) == "table" then -- for Evoker Buff
                     for i=1, #spellID do
