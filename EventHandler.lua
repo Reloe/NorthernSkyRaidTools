@@ -482,5 +482,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local text, name, dur = ...
         if not self:DifficultyCheck(14) then return end
         if self.ShowBossWhisperAlert[self.EncounterID] then self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur) end
+    elseif e == "QoL_Comms" and internal then
+        self:QoLEvents(e, ...)
     end
 end
