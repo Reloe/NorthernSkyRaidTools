@@ -1305,7 +1305,7 @@ end
 
 function NSAPI:ToggleTLReminders(enable)
     NSRT.ReminderSettings.UseTLReminders = enable
-    NSI:ProcessReminders()
+    NSI:ProcessReminder()
     NSI:UpdateReminderFrame(true)
     NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
 end
