@@ -407,9 +407,9 @@ function NSI:ArrangeStates(Type)
         end
     end)
     for i, v in ipairs(pos) do
-        local diff = Type == "Texts" and s.FontSize or s.Height
+        local diff = Type == "Texts" and v.Frame.Text and v.Frame.Text:GetStringHeight() or s.Height or 0
         local Spacing = s.Spacing or 0
-        local yoffset = (s.GrowDirection == "Up" and (i-1) * (s.Height+Spacing) or (s.GrowDirection == "Down" and -(i-1) * (s.Height+Spacing))) or 0
+        local yoffset = (s.GrowDirection == "Up" and (i-1) * (diff+Spacing) or (s.GrowDirection == "Down" and -(i-1) * (diff+Spacing))) or 0
         local xoffset = Type == "Icons" and ((s.GrowDirection == "Right" and (i-1) * (s.Width+Spacing)) or (s.GrowDirection == "Left" and -(i-1) * (s.Width+Spacing))) or 0
         v.Frame:ClearAllPoints()
         if Type == "Texts" then

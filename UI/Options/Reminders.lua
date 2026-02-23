@@ -671,7 +671,6 @@ local function BuildReminderOptions()
                 for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
                     NSI:ToggleMoveFrames(NSI[v], true)
                 end
-                NSI:UpdateExistingFrames()
                 NSI.AllGlows = NSI.AllGlows or {}
                 local MyFrame = NSI.LGF.GetUnitFrame("player")
                 NSI.PlayedSound = {}
@@ -747,6 +746,7 @@ local function BuildReminderOptions()
                     dur = NSRT.ReminderSettings.SpellDuration,
                 }
                 NSI:DisplayReminder(info6)
+                NSI:UpdateExistingFrames()
             end,
             nocombat = true,
             spacement = true
