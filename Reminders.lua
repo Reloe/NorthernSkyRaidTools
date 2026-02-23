@@ -1311,5 +1311,5 @@ function NSAPI:ToggleTLReminders(enable)
 end
 
 function NSI:IsUsingTLRemindders()
-    return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineRemidners")
+    return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineReminders")
 end
