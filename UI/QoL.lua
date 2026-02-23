@@ -22,7 +22,12 @@ function NSI:UpdateQoLTextDisplay()
         end
     end
     F.text:SetText(text)
-    F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
+    if text == "" then
+        F:Hide()
+    else
+        F:Show()
+        F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
+    end
 end
 
 function NSI:CreateQoLTextDisplay()
@@ -79,6 +84,7 @@ function NSI:ToggleQoLTextPreview()
         F.text:SetText(text)
         F.text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
         F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
+        F:Show()
         self:ToggleMoveFrames(F, true)
     else
         self:ToggleMoveFrames(self.NSRTFrame.QoLText)
