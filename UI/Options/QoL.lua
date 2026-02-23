@@ -79,8 +79,9 @@ local function BuildQoLOptions()
         },
         {
             type = "label",
-            get = function() return "Consumable Notifications" end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+            get = function() return "Consumable Notifications\nrequires others to have NSRT" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
         },
         {
             type = "toggle",
