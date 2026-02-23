@@ -102,6 +102,24 @@ local function BuildReadyCheckOptions()
         },
 
         {
+            type = "label",
+            get = function() return "Exceptions" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Skip Gateway Keybind-Check",
+            desc = "If enabled, the addon will not check if your Gateway Shard is bound as there might be addon-combinations where this is producing a false-positive. In those cases you can enable this setting to remove the redundant alert.",
+            get = function() return NSRT.ReadyCheckSettings.SkipGatewayKeybindCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.SkipGatewayKeybindCheck = value
+            end,
+            nocombat = true,
+        },
+
+        {
             type = "breakline"
         },
 

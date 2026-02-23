@@ -261,6 +261,7 @@ function NSI:GatewayControlCheck()
                         if bound then break end
                     end
                 end
+                bound = bound or (NSRT.ReadyCheckSettings.SkipGatewayKeybindCheck and onbar)
                 if bound then
                     return false
                 elseif onbar then
