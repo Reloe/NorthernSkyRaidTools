@@ -200,8 +200,6 @@ function NSI:InitQoL()
         self:ToggleQoLEvent("CHAT_MSG_WHISPER", true)
         self:ToggleQoLEvent("CHAT_MSG_BN_WHISPER", true)
     end
-
-    self:QoLOnZoneSwap()
 end
 
 function NSI:ToggleQoLEvent(event, enable, unit)
