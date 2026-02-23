@@ -347,7 +347,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_READY_CHECK" and internal then
         local text = ""
-        if UnitLevel("player") < 80 then return end
+        if UnitLevel("player") < 90 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
             local buff = self:BuffCheck()
             if buff and buff ~= "" then text = buff end
@@ -362,14 +362,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        if UnitLevel("player") >= 80 then
-            local Gear = self:GearCheck()
-            if Gear and Gear ~= "" then
-                if text == "" then
-                    text = Gear
-                else
-                    text = text.."\n"..Gear
-                end
+        local Gear = self:GearCheck()
+        if Gear and Gear ~= "" then
+            if text == "" then
+                text = Gear
+            else
+                text = text.."\n"..Gear
             end
         end
         if text ~= "" then

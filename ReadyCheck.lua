@@ -169,7 +169,7 @@ function NSI:GearCheck()
     local tier = 0
     local repair = false
     local spec = GetSpecializationInfo(GetSpecialization())
-    local ilvl = UnitLevel("player") >= 90 and minlvl or 100
+    local ilvl = minlvl
     self.MainstatGem = false
     local MyArmorType = ArmorTypes[select(3, UnitClass("player"))]
     for slot = 1, #SlotName do
@@ -178,10 +178,10 @@ function NSI:GearCheck()
             if NSRT.ReadyCheckSettings.CraftedCheck and string.find(itemString, "8960") then
                 crafted = crafted+1
             end
-            if NSRT.ReadyCheckSettings.EnchantCheck and UnitLevel("player") >= 90 and self:EnchantCheck(slot,itemString) then
+            if NSRT.ReadyCheckSettings.EnchantCheck and self:EnchantCheck(slot,itemString) then
                 table.insert(missing, "Missing Enchant on: |cFF00FF00"..SlotName[slot].."|r")
             end
-            if NSRT.ReadyCheckSettings.GemCheck and UnitLevel("player") >= 90 and self:GemCheck(slot, itemString) then
+            if NSRT.ReadyCheckSettings.GemCheck and self:GemCheck(slot, itemString) then
                 table.insert(missing, "Missing Gem in: |cFF00FF00"..SlotName[slot].."|r")
             end
             if NSRT.ReadyCheckSettings.ItemLevelCheck and slot ~= 4 and select(4, C_Item.GetItemInfo(itemString)) < ilvl then
@@ -223,7 +223,7 @@ function NSI:GearCheck()
         local Gateway = self:GatewayControlCheck()
         if Gateway then table.insert(missing, Gateway) end
     end
-    if UnitLevel("player") >= 90 and NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
+    if NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
         table.insert(missing, "Missing |cFF00FF00Mainstat Gem|r")
     end
     if repair then
