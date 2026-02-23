@@ -1304,12 +1304,12 @@ function NSI:FlashNoteBackgrounds()
 end
 
 function NSAPI:ToggleTLReminders(enable)
-    NSRT.ReminderSettings.UseTimelineReminders = enable
+    NSRT.ReminderSettings.UseTLReminders = enable
     NSI:ProcessReminders()
     NSI:UpdateReminderFrame(true)
     NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
 end
 
 function NSI:IsUsingTLRemindders()
-    return NSRT.ReminderSettings.UseTimelineReminders and C_AddOns.IsAddOnLoaded("TimelineRemidners")
+    return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineRemidners")
 end
