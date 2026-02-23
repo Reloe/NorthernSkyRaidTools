@@ -26,8 +26,6 @@ local TextDisplays = {
 local ConsumableSpells = {
     [1259657] = "FEAST", -- Quel'dorei Medley
     [1278915] = "FEAST", -- Hearty Quel'dorei Medley
-    [774] = "FEAST",
-    [8936] = "REPAIR",
 
     [1259658] = "FEAST", -- Harandar Celebration
     [1278929] = "FEAST", -- Hearty Rootland Celebration
