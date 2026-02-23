@@ -26,6 +26,8 @@ local TextDisplays = {
 local ConsumableSpells = {
     [1259657] = "FEAST", -- Quel'dorei Medley
     [1278915] = "FEAST", -- Hearty Quel'dorei Medley
+    [774] = "FEAST",
+    [8936] = "REPAIR",
 
     [1259658] = "FEAST", -- Harandar Celebration
     [1278929] = "FEAST", -- Hearty Rootland Celebration
@@ -191,19 +193,13 @@ end
 
 function NSI:InitQoL()
     self.QoLTextDisplays = {}
+    -- stuff in here is ALWAYS enabled.
     self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
-    -- Gateway Reminder specifically we don't care about being in raid or not as it's also useful in m+
-    -- if there's other stuff in the future where this also applies we'll add it here instead of the zoneswap function
-    if NSRT.QoL.GatewayUseableDisplay then self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", true) end
     if NSRT.QoL.AutoRepair then self:ToggleQoLEvent("MERCHANT_SHOW", true) end
     if NSRT.QoL.AutoInvite then
         self:ToggleQoLEvent("CHAT_MSG_WHISPER", true)
         self:ToggleQoLEvent("CHAT_MSG_BN_WHISPER", true)
     end
-
-    -- Need this enabled regardless of personal settings so that other people in our group get the comm.
-    self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
-    self:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", true)
 
     self:QoLOnZoneSwap()
 end
@@ -218,6 +214,7 @@ end
 
 function NSI:QoLOnZoneSwap() -- only register events while player is in raid
     local InRaid = self:DifficultyCheck(14)
+    local InInstance = select(2, GetInstanceInfo()) == "party"
     if NSRT.QoL.ResetBossDisplay then
         if InRaid and not self:Restricted() then
             self:ToggleQoLEvent("UNIT_AURA", true, "player")
@@ -225,13 +222,21 @@ function NSI:QoLOnZoneSwap() -- only register events while player is in raid
             self:ToggleQoLEvent("UNIT_AURA", false)
         end
     end
-    if NSRT.QoL.LootBossReminder then
+
+    if NSRT.QoL.LootBossReminder then -- Loot Reminder is active in raid and any non-m+ dungeon
         self:ToggleQoLEvent("ENCOUNTER_END", InRaid)
         self:ToggleQoLEvent("LOOT_OPENED", InRaid)
         self:ToggleQoLEvent("CHAT_MSG_MONEY", InRaid)
         self:ToggleQoLEvent("ENCOUNTER_START", InRaid)
     end
-    if not InRaid then
+
+    if NSRT.QoL.GatewayUseableDisplay then self:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", InRaid or InInstance) end
+
+    -- always keeping these enabled when in a raid or instance as they are required for addon comms to work and addon restriction is used for multiple checks.
+    self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", InRaid or InInstance, "player")
+    self:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", InRaid or InInstance)
+
+    if (not InRaid) and (not InInstance) then -- if zoning outside of raid&dungeon -> remove all displays
         self.QoLTextDisplays = {}
         self:UpdateQoLTextDisplay()
     end
@@ -303,7 +308,7 @@ function NSI:HandleQoLComm(unitName, type)
 
         local wellFedBuff = self:UnitAura("player", "Well Fed")
         local okayBuffDurationSeconds = 10 * 60
-        if wellFedBuff and (wellFedBuff.expirationTime - GetTime() > okayBuffDurationSeconds) then
+        if wellFedBuff and wellFedBuff.expirationTime and (wellFedBuff.expirationTime - GetTime() > okayBuffDurationSeconds) then
             return
         end
 
