@@ -142,10 +142,7 @@ local function BuildRemindersEditUI()
     ImportButton:SetTemplate(options_button_template)
 
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
-        NSRT.ActiveReminder = nil
-        NSI.Reminder = ""
-        NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(true)
+        NSI:SetReminder(nil)
         NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
         Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
@@ -362,10 +359,7 @@ local function BuildPersonalRemindersEditUI()
     ImportButton:SetTemplate(options_button_template)
 
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
-        NSRT.ActivePersonalReminder = nil
-        NSI.PersonalReminder = ""
-        NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(true)
+        NSI:SetReminder(nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
         Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
         end, 100, 24, "Clear Reminder"

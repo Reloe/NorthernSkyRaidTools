@@ -52,15 +52,10 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:ProcessReminder()
         NSI:UpdateReminderFrame(false, false, false, true)
     elseif msg == "clear" or msg == "c" then -- Clear Active Reminder
-        NSRT.ActiveReminder = nil
-        NSI.Reminder = ""
-        NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(true)
+        NSI:SetReminder(nil)
+        NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
     elseif msg == "pclear" or msg == "pc" then -- Clear Active Personal Reminder
-        NSRT.ActivePersonalReminder = nil
-        NSI.PersonalReminder = ""
-        NSI:ProcessReminder()
-        NSI:UpdateReminderFrame(true)
+        NSI:SetReminder(nil, true)
     elseif msg == "timeline" or msg == "tl" then
         NSI:ToggleTimelineWindow()
     elseif msg == "help" then
