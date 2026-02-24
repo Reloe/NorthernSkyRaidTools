@@ -6,83 +6,106 @@ local NSUI = Core.NSUI
 local options_dropdown_template = Core.options_dropdown_template
 local options_button_template = Core.options_button_template
 
+local ImportReminderStringFrame
 local function ImportReminderString(name, IsUpdate)
-    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
-        DontRightClickClose = true
-    })
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    popup:SetFrameLevel(100)
+    local popup = ImportReminderStringFrame
+    if not popup then
+        popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
+            DontRightClickClose = true
+        })
+        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        popup:SetFrameLevel(100)
+        ImportReminderStringFrame = popup
+    end
 
-    popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ReminderTextEdit", true, false, true)
-    popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-    popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
-    DF:ApplyStandardBackdrop(popup.test_string_text_box)
-    DF:ReskinSlider(popup.test_string_text_box.scroll)
-    popup.test_string_text_box:SetFocus()
-    popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
-    popup.test_string_text_box:SetScript("OnMouseDown", function(self)
-        self:SetFocus()
-    end)
+    if not popup.test_string_text_box then
+        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ReminderTextEdit", true, false, true)
+        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+        DF:ApplyStandardBackdrop(popup.test_string_text_box)
+        DF:ReskinSlider(popup.test_string_text_box.scroll)
+        popup.test_string_text_box:SetScript("OnMouseDown", function(self)
+            self:SetFocus()
+        end)
+    end
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+    popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
+    popup.test_string_text_box:SetFocus()
     local importtext = IsUpdate and "Update" or "Import"
-    popup.import_confirm_button = DF:CreateButton(popup, function()
-        local import_string = popup.test_string_text_box:GetText()
-        if IsUpdate then
-            NSI:ImportReminder(name, import_string, false, false, true)
-        else
-            NSI:ImportFullReminderString(import_string, false, false, name)
-        end
-        if IsUpdate and NSRT.ActiveReminder then
-            NSI:SetReminder(NSRT.ActiveReminder) -- refresh active reminder
-        end
-        popup.test_string_text_box:SetText("")
-        NSUI.reminders_frame:Hide()
-        NSUI.reminders_frame:Show()
-        popup:Hide()
-    end, 280, 20, importtext)
-    popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
-    popup.import_confirm_button:SetTemplate(options_button_template)
-
+    if not popup.import_confirm_button then
+        popup.import_confirm_button = DF:CreateButton(popup, function()
+            local import_string = popup.test_string_text_box:GetText()
+            if popup._isUpdate then
+                NSI:ImportReminder(popup._name, import_string, false, false, true)
+            else
+                NSI:ImportFullReminderString(import_string, false, false, popup._name)
+            end
+            if popup._isUpdate and NSRT.ActiveReminder then
+                NSI:SetReminder(NSRT.ActiveReminder) -- refresh active reminder
+            end
+            popup.test_string_text_box:SetText("")
+            NSUI.reminders_frame:Hide()
+            NSUI.reminders_frame:Show()
+            popup:Hide()
+        end, 280, 20, importtext)
+        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+        popup.import_confirm_button:SetTemplate(options_button_template)
+    end
+    popup.import_confirm_button:SetText(importtext)
+    popup._name = name
+    popup._isUpdate = IsUpdate
+    popup:Show()
     return popup
 end
 
 local function ImportPersonalReminderString(name, IsUpdate)
-    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
-        DontRightClickClose = true
-    })
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    popup:SetFrameLevel(100)
+    local popup = ImportPersonalReminderStringFrame
+    if not popup then
+        popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
+            DontRightClickClose = true
+        })
+        popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        popup:SetFrameLevel(100)
+        ImportPersonalReminderStringFrame = popup
+    end
 
-    popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "PersonalReminderTextEdit", true, false, true)
-    popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
-    popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
-    DF:ApplyStandardBackdrop(popup.test_string_text_box)
-    DF:ReskinSlider(popup.test_string_text_box.scroll)
-    popup.test_string_text_box:SetFocus()
-    popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
-    popup.test_string_text_box:SetScript("OnMouseDown", function(self)
-        self:SetFocus()
-    end)
+    if not popup.test_string_text_box then
+        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "PersonalReminderTextEdit", true, false, true)
+        popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+        popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
+        DF:ApplyStandardBackdrop(popup.test_string_text_box)
+        DF:ReskinSlider(popup.test_string_text_box.scroll)
+        popup.test_string_text_box:SetScript("OnMouseDown", function(self)
+            self:SetFocus()
+        end)
+    end
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+    popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
+    popup.test_string_text_box:SetFocus()
     local importtext = IsUpdate and "Update" or "Import"
-    popup.import_confirm_button = DF:CreateButton(popup, function()
-        local import_string = popup.test_string_text_box:GetText()
-        if IsUpdate then
-            NSI:ImportReminder(name, import_string, false, true, true)
-        else
-            NSI:ImportFullReminderString(import_string, true, false, name)
-        end
-        if IsUpdate and NSRT.ActivePersonalReminder then
-            NSI:SetReminder(NSRT.ActivePersonalReminder, true) -- refresh active personal reminder
-        end
-        popup.test_string_text_box:SetText("")
-        NSUI.personal_reminders_frame:Hide()
-        NSUI.personal_reminders_frame:Show()
-        popup:Hide()
-    end, 280, 20, importtext)
-    popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
-    popup.import_confirm_button:SetTemplate(options_button_template)
-
+    if not popup.import_confirm_button then
+        popup.import_confirm_button = DF:CreateButton(popup, function()
+            local import_string = popup.test_string_text_box:GetText()
+            if popup._isUpdate then
+                NSI:ImportReminder(popup._name, import_string, false, true, true)
+            else
+                NSI:ImportFullReminderString(import_string, true, false, popup._name)
+            end
+            if popup._isUpdate and NSRT.ActivePersonalReminder then
+                NSI:SetReminder(NSRT.ActivePersonalReminder, true) -- refresh active personal reminder
+            end
+            popup.test_string_text_box:SetText("")
+            NSUI.personal_reminders_frame:Hide()
+            NSUI.personal_reminders_frame:Show()
+            popup:Hide()
+        end, 280, 20, importtext)
+        popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+        popup.import_confirm_button:SetTemplate(options_button_template)
+    end
+    popup.import_confirm_button:SetText(importtext)
+    popup._name = name
+    popup._isUpdate = IsUpdate
+    popup:Show()
     return popup
 end
 
