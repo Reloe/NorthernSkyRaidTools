@@ -26,6 +26,7 @@ local symbols = {
 function NSI:AddToReminder(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
+    if self:IsUsingTLReminders() and not info.IsAlert then return end
     info.spellID = info.spellID and tonumber(info.spellID)
     -- convert to booleans
     if info.TTS == "true" then info.TTS = true end
@@ -774,12 +775,10 @@ function NSI:StartReminders(phase, testrun)
         if not self.ProcessedReminder then return end
         for encID, encData in pairs(self.ProcessedReminder) do
             for i, info in ipairs(encData[phase] or {}) do
-                if info.IsAlert or not self:IsUsingTLReminders() then
-                    local time = math.max(info.time-info.dur, 0)
-                    self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                        self:DisplayReminder(info)
-                    end)
-                end
+                local time = math.max(info.time-info.dur, 0)
+                self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                    self:DisplayReminder(info)
+                end)
             end
         end
         return
@@ -788,12 +787,10 @@ function NSI:StartReminders(phase, testrun)
     if not self.ProcessedReminder[self.EncounterID] then return end
     if not self.ProcessedReminder[self.EncounterID][phase] then return end
     for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
-        if info.IsAlert or not self:IsUsingTLReminders() then
-            local time = math.max(info.time-info.dur, 0)
-            self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                self:DisplayReminder(info)
-            end)
-        end
+        local time = math.max(info.time-info.dur, 0)
+        self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+            self:DisplayReminder(info)
+        end)
     end
 end
 
@@ -825,14 +822,12 @@ function NSI:DelayAllReminders(delay)
     end
 
     for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
-        if info.IsAlert or not self:IsUsingTLReminders() then
-            if info.time-info.dur > timediff then -- if time is 0 then this reminder has already started
-                local time = math.max(info.time-info.dur-timediff+delay, 0)
-                info.time = info.time + delay
-                self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                    self:DisplayReminder(info)
-                end)
-            end
+        if info.time-info.dur > timediff then -- if time is 0 then this reminder has already started
+            local time = math.max(info.time-info.dur-timediff+delay, 0)
+            info.time = info.time + delay
+            self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                self:DisplayReminder(info)
+            end)
         end
     end
 end
