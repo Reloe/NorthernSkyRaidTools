@@ -915,8 +915,8 @@ function NSI:SetReminder(name, personal, skipupdate)
         NSRT.ActiveReminder = nil
     end
     if not skipupdate then
-        self:UpdateReminderFrame(true)
         self:ProcessReminder()
+        self:UpdateReminderFrame(true)
         self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
     end
 end
