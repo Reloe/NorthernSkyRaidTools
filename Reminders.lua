@@ -136,9 +136,11 @@ function NSI:ProcessReminder()
     local shared = NSRT.ReminderSettings.ReminderFrame.enabled
     -- self:IsUsingTLReminders() makes it process the note but then stops the display at a later point. This allows still displaying the note.
     if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and self.Reminder then str = self.Reminder end
-    if NSRT.ReminderSettings.MRTNote or self:IsUsingTLReminders() then
+    if NSRT.ReminderSettings.MRTNote or (self:IsUsingTLReminders() and LiquidRemindersSaved.settings.timeline.mrtNote) then
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
         str = note and str ~= "" and str.."\n"..note or note or str
+        local persnote = VMRT and VMRT.Note and VMRT.Note.SelfText or ""
+        str = persnote and str ~= "" and str.."\n"..persnote or persnote or str
     end
     if NSRT.ReminderSettings.PersNote or self:IsUsingTLReminders() then
         local note = self.PersonalReminder
