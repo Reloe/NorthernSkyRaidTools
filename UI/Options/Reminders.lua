@@ -255,6 +255,19 @@ local function BuildReminderOptions()
         },
 
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Center-Aligned Text",
+            desc = "When enabled, text reminders will be center-aligned instead of left-aligned.",
+            get = function() return NSRT.ReminderSettings.TextSettings.CenterAligned end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TextSettings.CenterAligned = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
+        },
+
+        {
             type = "breakline"
         },
         {

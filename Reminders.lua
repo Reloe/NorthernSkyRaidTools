@@ -341,6 +341,9 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         if F and F:IsShown() then
             local s = NSRT.ReminderSettings.TextSettings
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            local anchor = s.CenterAligned and "CENTER" or "LEFT"
+            F.Text:ClearAllPoints()
+            F.Text:SetPoint(anchor, F, anchor, 0, 0)
         end
     end
     self:ArrangeStates("Texts")
@@ -494,7 +497,8 @@ function NSI:CreateText(info)
             self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
             self.ReminderText[i]:SetFrameStrata("HIGH")
             self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderText[i].Text:SetPoint("LEFT", self.ReminderText[i], "LEFT", 0, 0)
+            local anchor = s.CenterAligned and "CENTER" or "LEFT"
+            self.ReminderText[i].Text:SetPoint(anchor, self.ReminderText[i], anchor, 0, 0)
             self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
             self.ReminderText[i].Text:SetShadowOffset(0, 0)
