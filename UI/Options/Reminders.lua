@@ -1014,7 +1014,7 @@ local function BuildReminderNoteOptions()
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.OnlySpellReminders = value
                 NSI:ProcessReminder()
-                NSI:UpdateReminderFrame(false, true)
+                NSI:UpdateReminderFrame(false, true, true)
             end,
         },
         {

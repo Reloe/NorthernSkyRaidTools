@@ -134,6 +134,7 @@ function NSI:ProcessReminder()
     self.DisplayedExtraReminder = ""
     local pers = NSRT.ReminderSettings.PersonalReminderFrame.enabled
     local shared = NSRT.ReminderSettings.ReminderFrame.enabled
+    local phasedisplayed = {}
     -- self:IsUsingTLReminders() makes it process the note but then stops the display at a later point. This allows still displaying the note.
     if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and self.Reminder then str = self.Reminder end
     if NSRT.ReminderSettings.MRTNote or (self:IsUsingTLReminders() and LiquidRemindersSaved.settings.timeline.mrtNote) then
@@ -190,7 +191,10 @@ function NSI:ProcessReminder()
                 local key = encID..phase..time..tag..(text or spellID)
                 if (pers or shared) and (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                     -- display phase more readable
-                    displayLine = displayLine:gsub("ph:"..phase, "P"..phase.." ")
+                    displayLine = displayLine:gsub("ph:"..phase, "")
+                    if not phasedisplayed[phase] then
+                        displayLine = "Phase "..phase.."\n"..displayLine
+                    end
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
@@ -258,6 +262,7 @@ function NSI:ProcessReminder()
                     displayLine = displayLine:gsub(";", "")
                     if shared and not addedreminders[key] then
                         table.insert(remindertable, {str = displayLine, time = tonumber(time), phase = phase})
+                        phasedisplayed[phase] = true
                         addedreminders[key] = true
                     end
                 end
@@ -281,6 +286,7 @@ function NSI:ProcessReminder()
                         if pers then
                             if (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})
+                                phasedisplayed[phase] = true
                             end
                         end
                         self:AddToReminder({text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
