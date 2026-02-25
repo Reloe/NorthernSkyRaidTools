@@ -1246,6 +1246,11 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
         self[Name.."Mover"]:StopMovingOrSizing()
         SettingsTable.Width = self[Name.."Mover"]:GetWidth()
         SettingsTable.Height = self[Name.."Mover"]:GetHeight()
+        local anchor, _, relativeTo, xOffset, yOffset = self[Name.."Mover"]:GetPoint(nil, UIParent)
+        SettingsTable.Anchor = anchor
+        SettingsTable.relativeTo = relativeTos
+        SettingsTable.xOffset = Round(xOffset)
+        SettingsTable.yOffset = Round(yOffset)
     end)
     if not SettingsTable.Moveable then
         self[Name.."Mover"].Resizer:Hide()
