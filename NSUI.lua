@@ -50,7 +50,8 @@ local BuildQoLCallback = NSI.UI.Options.QoL.BuildCallback
 function NSUI:Init()
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
-    NSUI:SetScale(NSRT.NSUI.scale)
+    local scale = math.max(NSRT.NSUI.scale, 0.6) -- prevent negative numbers
+    NSUI:SetScale(scale)
 
     -- Create the tab container
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
