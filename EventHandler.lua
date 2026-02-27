@@ -184,7 +184,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         if NSRT.PASettings.enabled then self:InitPA() end
         self:InitTextPA()
-        if NSRT.PARaidSettings.enabled then C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end) end
+        if NSRT.PARaidSettings.enabled then
+            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
+        end
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
         for spellID, info in pairs(NSRT.PASounds) do
@@ -236,7 +238,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not self:DifficultyCheck(14) then self:HideAllReminders(true) end
         local IsLogin, IsReload = ...
         if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
-            C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
+            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
         end
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
@@ -401,10 +404,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
                 self.SyncNickNamesStore = nil
             end
-            if self.WAString and self.WAString.unit and self.WAString.string then
-                self:EventHandler("NSI_WA_SYNC", false, true, self.WAString.unit, self.WAString.string)
-                self.WAString = nil
-            end
         end)
     elseif e == "NSI_NICKNAMES_SYNC" and internal then
         local unit, nicknametable, channel = ...
@@ -415,19 +414,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.SyncNickNamesStore = {unit = unit, nicknametable = nicknametable, channel = channel}
             else
                 self:NickNamesSyncPopup(unit, nicknametable)
-            end
-        end
-    elseif e == "NSI_WA_SYNC" and internal then
-        local unit, str = ...
-        local setting = NSRT.Settings["WeakAurasImportAccept"]
-        if setting == 3 then return end
-        if UnitExists(unit) and not UnitIsUnit("player", unit) then
-            if setting == 2 or (GetGuildInfo(unit) == GetGuildInfo("player")) then -- only accept this from same guild to prevent abuse
-                if self:Restricted() or UnitAffectingCombat("player") then
-                    self.WAString = {unit = unit, string = str}
-                else
-                    self:WAImportPopup(unit, str)
-                end
             end
         end
 
@@ -449,7 +435,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         self:ArrangeGroups()
         if NSRT.PARaidSettings.enabled then
-            C_Timer.After(5, function() self:InitRaidPA(not UnitInRaid("player"), true) end)
+            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
         end
 
         self:UpdateRaidBuffFrame()
