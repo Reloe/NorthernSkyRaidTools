@@ -312,7 +312,8 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
         if NSRT.PARaidSettings.enabled and UnitExists(u) then
             local F = self.LGF.GetUnitFrame(u)
             if firstcall and not F then
-                C_Timer.After(5, function() self:InitRaidPA(party, false) end)
+                if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+                self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(party, false) end)
                 return
             end
             if F then
