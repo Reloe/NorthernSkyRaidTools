@@ -75,7 +75,9 @@ function NSI:QoLEvents(e, ...)
             self.QoLTextDisplays.ResetBoss = nil
             self:ToggleQoLEvent("UNIT_AURA", false)
         else
-            self:ToggleQoLEvent("UNIT_AURA", true, "player")
+            local inRaid = self:DifficultyCheck(14)
+            if not inRaid then return end
+            self:ToggleQoLEvent("UNIT_AURA", inRaid, "player")
             local debuffed = self:HasLustDebuff()
             if debuffed then
                 self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
