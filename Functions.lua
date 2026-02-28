@@ -309,6 +309,7 @@ function NSI:StopFrameMove(F, SettingsTable)
 end
 
 function NSI:ToggleMoveFrames(F, Unlock)
+    if not F then return end
     if Unlock then
         F:SetMovable(true)
         F:EnableMouse(true)
