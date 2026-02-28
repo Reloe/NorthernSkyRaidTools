@@ -5,6 +5,7 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
 function NSI:UpdateQoLTextDisplay()
+    if self.IsBuilding then return end
     if self.IsQoLTextPreview then
         self:ToggleQoLTextPreview()
         return

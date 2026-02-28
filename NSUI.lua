@@ -48,6 +48,7 @@ local BuildQoLOptions = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback = NSI.UI.Options.QoL.BuildCallback
 
 function NSUI:Init()
+    NSI.IsBuilding = true
     -- Create the scale bar
     DF:CreateScaleBar(NSUI, NSRT.NSUI)
     local scale = math.max(NSRT.NSUI.scale, 0.6) -- prevent negative numbers
@@ -171,6 +172,7 @@ function NSUI:Init()
     local versionTitle = C_AddOns.GetAddOnMetadata("NorthernSkyRaidTools", "Title")
     local statusBarText = versionTitle .. versionNumber .. " | |cFFFFFFFF" .. (authorsString) .. "|r"
     NSUI.StatusBar.authorName:SetText(statusBarText)
+    NSI.IsBuilding = false
 end
 
 function NSUI:ToggleOptions()

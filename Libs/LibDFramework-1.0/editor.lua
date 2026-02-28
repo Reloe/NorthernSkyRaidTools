@@ -66,7 +66,7 @@ local _
 ---@field profilekeymap table
 ---@field subtablepath string?
 ---@field extraoptions table
----@field callback function?
+---@field callback fun(object:df_editor_objectinfo, key:string, value:any, profileTable:table, profileKey:string)
 ---@field options df_editobjectoptions
 ---@field selectButton button
 ---@field refFrame frame usually the parent of the object registered
@@ -1138,6 +1138,8 @@ detailsFramework.EditorMixin = {
                     if (bHasValue) then
                         local parentTable = getParentTable(profileTable, profileKey)
 
+                        assert(detailsFramework:IsValidWidgetForBuildMenu(option.widget), "Invalid widget type for option with key and name: " .. option.key .. ", " .. option.label)
+
                         if (option.key == "anchor" or option.key == "anchoroffsetx" or option.key == "anchoroffsety") then
                             anchorSettings = parentTable
                         end
@@ -1260,7 +1262,13 @@ detailsFramework.EditorMixin = {
     ---@param self df_editor
     ---@param anchorSettings df_anchor
     StartObjectMovement = function(self, anchorSettings)
+        local registeredObject = self:GetEditingRegisteredObject()
         local object = self:GetEditingObject()
+
+        assert(anchorSettings, "Object \"" .. registeredObject.id .. "\" without anchorSettings and can_move is 'True'.\nIf this came as surprise, add can_move = false into the table of the 10th argument of editor:RegisterObject().")
+
+        --registeredObjectInfo
+        --print(object.label, ob)
 
         --update guidelines
         if (self:GetEditingOptions().use_guide_lines) then
@@ -1378,7 +1386,7 @@ detailsFramework.EditorMixin = {
     end,
 
     UpdateProfileTableOnAllRegisteredObjects = function(self, profileTable)
-        assert(type(profileTable) == "table", "UpdateProfileTableOnAllRegisteredObjects() expects a table on #1 parameter.")
+        assert(type(profileTable) == "table", "UpdateProfileTableOnAllRegisteredObjects() expects a table on #2 parameter.")
 
         local registeredObjects = self:GetAllRegisteredObjects()
 
@@ -1392,8 +1400,8 @@ detailsFramework.EditorMixin = {
     end,
 
     UpdateProfileSubTablePath = function(self, identifier, subTablePath)
-        assert(identifier, "UpdateProfileSubTablePath() expects a registered object identifier on #1 parameter.")
-        assert(type(subTablePath) == "string", "UpdateProfileSubTablePath() expects a pathstring or nil on #2 parameter.")
+        assert(identifier, "UpdateProfileSubTablePath() expects a registered object identifier on #2 parameter.")
+        assert(type(subTablePath) == "string", "UpdateProfileSubTablePath() expects a pathstring or nil on #3 parameter.")
 
         local objectRegistered = getRegisteredObject(self, identifier)
         assert(type(objectRegistered) == "table", "UpdateProfileSubTablePath() registered object not found.")
@@ -1408,8 +1416,8 @@ detailsFramework.EditorMixin = {
     ---@param profileTable table
     ---@return boolean
     UpdateProfileTable = function(self, identifier, profileTable)
-        assert(identifier, "UpdateProfileTable() expects a registered object identifier on #1 parameter.")
-        assert(type(profileTable) == "table", "UpdateProfileTable() expects a table on #2 parameter.")
+        assert(identifier, "UpdateProfileTable() expects a registered object identifier on #2 parameter.")
+        assert(type(profileTable) == "table", "UpdateProfileTable() expects a table on #3 parameter.")
 
         local objectRegistered = getRegisteredObject(self, identifier)
         assert(type(objectRegistered) == "table", "UpdateProfileTable() registered object not found.")
@@ -1420,11 +1428,11 @@ detailsFramework.EditorMixin = {
     end,
 
     RegisterObject = function(self, object, localizedLabel, id, profileTable, subTablePath, profileKeyMap, extraOptions, callback, options, refFrame)
-        assert(type(object) == "table", "RegisterObjectToEdit() expects an UIObject on #1 parameter.")
-        assert(object.GetObjectType, "RegisterObjectToEdit() expects an UIObject on #1 parameter.")
-        assert(type(profileTable) == "table", "RegisterObjectToEdit() expects a table on #4 parameter.")
-        assert(type(id) ~= "nil" and type(id) ~= "boolean", "RegisterObjectToEdit() expects an ID on parameter #3.")
-        assert(type(callback) == "function" or callback == nil, "RegisterObjectToEdit() expects a function or nil as the #7 parameter.")
+        assert(type(object) == "table", "editor:RegisterObject() expects an UIObject on #2 parameter.")
+        assert(object.GetObjectType, "editor:RegisterObject() expects an UIObject on #2 parameter.")
+        assert(type(profileTable) == "table", "editor:RegisterObject() expects a table on #5 parameter.")
+        assert(type(id) ~= "nil" and type(id) ~= "boolean", "editor:RegisterObject() expects an ID on parameter #4.")
+        assert(type(callback) == "function" or callback == nil, "editor:RegisterObject() expects a function or nil as the #8 parameter.")
 
         local registeredObjects = self:GetAllRegisteredObjects()
 
@@ -1432,7 +1440,7 @@ detailsFramework.EditorMixin = {
         for i = 1, #registeredObjects do
             local objectRegistered = registeredObjects[i]
             if (objectRegistered.object == object) then
-                error("RegisterObjectToEdit() object already registered.")
+                error("editor:RegisterObject(UIObject) UIObject (param #2) already registered.")
             end
         end
 
@@ -1463,6 +1471,8 @@ detailsFramework.EditorMixin = {
 
         registeredObjects[#registeredObjects+1] = objectRegistered
         self.registeredObjectsByID[id] = objectRegistered
+
+        selectButton:SetFrameLevel(self:GetFrameLevel() + #registeredObjects)
 
         local objectSelector = self:GetObjectSelector()
         objectSelector:RefreshMe()
@@ -1650,6 +1660,7 @@ detailsFramework.EditorMixin = {
         local moverObject = self:GetMoverObject()
         moverObject:Hide()
         self.AnchorFrames:DisableAllAnchors()
+        self.overTheTopFrame:Hide()
     end,
 
     ---@param self df_editor
@@ -1660,6 +1671,7 @@ detailsFramework.EditorMixin = {
             self:EditObjectByIndex(objectIndex)
             self.objectSelector:RefreshMe()
         end
+        self.overTheTopFrame:Show()
     end,
 }
 

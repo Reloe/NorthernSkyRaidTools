@@ -53,6 +53,7 @@ local LustDebuffs = {
     390435, -- Exhaustion
 }
 function NSI:QoLEvents(e, ...)
+    if self.IsBuilding then return end
     if e == "ACTIONBAR_UPDATE_USABLE" then -- only thing needed for Gateway
         if C_Item.IsUsableItem(188152) and NSRT.QoL.GatewayUseableDisplay then
             self.QoLTextDisplays.Gateway = {SettingsName = "GatewayUseableDisplay", text = TextDisplays.Gateway}
@@ -203,6 +204,7 @@ function NSI:InitQoL()
 end
 
 function NSI:ToggleQoLEvent(event, enable, unit)
+    if self.IsBuilding then return end
     if enable then
         f:RegisterUnitEvent(event, unit)
     else
