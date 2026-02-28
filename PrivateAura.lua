@@ -567,10 +567,9 @@ end
 
 function NSI:PreviewPA(Show)
     if not self.PAFrames then self:InitPA() end
+    if not self.PATextMoverFrame then self:InitTextPA() end
     if not Show then
-
         if self.PAFrames[1].Border then self.PAFrames[1].Border:Hide() end
-
         self:ToggleMoveFrames(self.PATextMoverFrame, false)
         self:ToggleMoveFrames(self.PAFrames[1], false)
         self.PATextMoverFrame:Hide()
@@ -583,9 +582,6 @@ function NSI:PreviewPA(Show)
             end
         end
         return
-    end
-    if not self.PATextMoverFrame then
-        self:InitTextPA()
     end
     self.PAFrames[1]:SetSize((NSRT.PASettings.Width), (NSRT.PASettings.Height))
     self.PAFrames[1]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, NSRT.PASettings.xOffset, NSRT.PASettings.yOffset)
