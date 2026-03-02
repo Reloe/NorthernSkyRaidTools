@@ -69,6 +69,7 @@ local SoundListMPlus = {
     [1253511] = "Fixate", -- Burning Pursuit
     [153954] = "Targeted", -- Cast Down
     [1253531] = "Beam", -- Lens Flare
+    [1249020] = "Spread", -- Eclipsing Step
 }
 
 function NSI:AddPASound(spellID, sound, unit)
