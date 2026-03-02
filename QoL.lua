@@ -147,7 +147,7 @@ function NSI:QoLEvents(e, ...)
             self:UpdateQoLTextDisplay()
         end
     elseif e == "MERCHANT_SHOW" and NSRT.QoL.AutoRepair then
-        RepairAllItems(true)
+        RepairAllItems(CanGuildBankRepair())
     elseif (e == "CHAT_MSG_WHISPER" or e == "CHAT_MSG_BN_WHISPER") and NSRT.QoL.AutoInvite then
         local msg, playerName = ...
         if issecretvalue(msg) or issecretvalue(playerName) then return end
