@@ -41,15 +41,18 @@ local SoundListRaid = {
 local SoundListMPlus = {
     -- Magister's Terrace
     [1225792] = "Debuff", -- Runic Mark
-    [1223958] = "Targeted", -- Cosmic Sting
+    [1223958] = "Debuff", -- Cosmic Sting
     [1215897] = "Targeted", -- Devouring Entropy
     [1253709] = "Linked", -- Neural Link
+    [1224299] = "Targeted", -- Astral Grasp
     -- Maisara Caverns
     [1260643] = "Targeted", -- Barrage
     [1249478] = "Charge", -- Carrion Swoop
     [1251775] = "Fixate", -- Final Pursuit
+    [1252675] = "Targeted", -- Crush Souls
     -- Nexus Point
     [1251785] = "Targeted", -- Reflux Charge
+    [1282678] = "Fixate", -- Flailstorm
     -- Windrunner's Spire
     [466559] = "Targeted", -- Flaming Updraft
     [474129] = "Spread", -- Splattering Spew
@@ -57,6 +60,9 @@ local SoundListMPlus = {
     [1253054] = "Stack", -- Intimidating Shout
     [1283247] = "Targeted", -- Reckless Leap
     [1282911] = "Targeted", -- Bolt Gale
+    [470966] = "Fixate", -- Bladestorm
+    [1253834] = "Fixate", -- Curse of Darkness
+    [1253979] = "Clear", -- Gust Shot
     -- Nothing in Academy
     -- Pit of Saron
     [1261286] = "Targeted", -- Throw Saronite
@@ -64,12 +70,27 @@ local SoundListMPlus = {
     [1262772] = "Targeted", -- Rime Blast
     -- Seat of the Triumvirate
     [1265426] = "Targeted", -- Discordant Beam
+    [1280064] = "Phase Dash", -- Targeted
     -- Skyreach
     [1252733] = "Targeted", -- Gale Surge
     [1253511] = "Fixate", -- Burning Pursuit
     [153954] = "Targeted", -- Cast Down
     [1253531] = "Beam", -- Lens Flare
+    [1253541] = "Debuff", -- Scorching Ray
     [1249020] = "Spread", -- Eclipsing Step
+    -- Den of Nalorakk
+    [1242869] = "Spread", -- Echoing Maul
+    -- Murder Row
+    [1214352] = "Spread", -- Fire Bomb
+    [474545] = "Targeted", -- Murder in a Row
+    -- Blinding Vale
+    [1237091] = "Fixate", -- Bloodthirsty Gaze
+    [1261276] = "Targeted", -- Thornblade
+    [1240222] = "Targeted", -- Pulverizing Strikes
+    -- Nexus Point
+    [1283506] = "Fixate", -- Fixate
+    [1225011] = "Debuff", -- Ethereal Shards
+    [1222098] = "Targeted", -- Nether Dash
 }
 
 function NSI:AddPASound(spellID, sound, unit)
