@@ -141,6 +141,9 @@ function NSI:QoLEvents(e, ...)
                 end)
             end
         end
+    elseif e == "ENCOUNTER_START" and self:DifficultyCheck(14) then
+        self.QoLTextDisplays = {}
+        self:UpdateQoLTextDisplay()
     elseif self:DifficultyCheck(14) and (e == "LOOT_OPENED" or e == "CHAT_MSG_MONEY" or e == "ENCOUNTER_START") then
         if NSRT.QoL.LootBossReminder and self.QoLTextDisplays.LootBoss then
             self.QoLTextDisplays.LootBoss = nil
@@ -196,6 +199,7 @@ function NSI:InitQoL()
     self.QoLTextDisplays = {}
     -- stuff in here is ALWAYS enabled.
     self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
+    self:ToggleQoLEvent("ENCOUNTER_START", true)
     if NSRT.QoL.AutoRepair then self:ToggleQoLEvent("MERCHANT_SHOW", true) end
     if NSRT.QoL.AutoInvite then
         self:ToggleQoLEvent("CHAT_MSG_WHISPER", true)
@@ -290,6 +294,7 @@ end
 
 function NSI:HandleQoLComm(unitName, type)
     -- We can get addon comms from anywhere, but only show notifs from players we can actually see.
+    if C_InstanceEncounter.IsEncounterInProgress() then return end -- don't popup anything while in boss combat
     if not UnitIsVisible(unitName) then
         return
     end
