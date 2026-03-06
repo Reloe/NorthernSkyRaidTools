@@ -367,6 +367,11 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            if NSRT.ReminderSettings.HideTimerText then
+                F.TimerText:Hide()
+            else
+                F.TimerText:Show()
+            end
             F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
@@ -393,6 +398,11 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            if NSRT.ReminderSettings.HideTimerText then
+                F.TimerText:Hide()
+            else
+                F.TimerText:Show()
+            end
             F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
@@ -465,10 +475,13 @@ function NSI:SetProperties(F, info, skipsound, s)
             F.TimerText:Hide()
         else
             F.Swipe:SetCooldown(GetTime(), info.dur)
-            if NSRT.ReminderSettings.HideTimerText then
-                F.TimerText:Hide()
-            else
+            if F.TimerText then
                 F.TimerText:SetTextColor(1, 1, 0, 1)
+                if NSRT.ReminderSettings.HideTimerText then
+                    F.TimerText:Hide()
+                else
+                    F.TimerText:Show()
+                end
             end
         end
         F.Text:SetTextColor(unpack(info.colors or s.colors))
@@ -476,6 +489,11 @@ function NSI:SetProperties(F, info, skipsound, s)
         F:SetStatusBarColor(unpack(info.colors or s.colors))
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
+            if NSRT.ReminderSettings.HideTimerText then
+                F.TimerText:Hide()
+            else
+                F.TimerText:Show()
+            end
         end
     end
     F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")

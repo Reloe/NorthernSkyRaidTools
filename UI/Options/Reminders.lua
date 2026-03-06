@@ -411,19 +411,6 @@ local function BuildReminderOptions()
         },
 
         {
-            type = "toggle",
-            boxfirst = true,
-            name = "Hide Timer Text",
-            desc = "Hides the Timer Text shown on the Icon",
-            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings["HideTimerText"] = value
-                NSI:UpdateExistingFrames()
-            end,
-            nocombat = true,
-        },
-
-        {
             type = "label",
             get = function() return "Bar Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -615,6 +602,19 @@ local function BuildReminderOptions()
             type = "label",
             get = function() return "Universal Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Timer Text",
+            desc = "Hides the Timer Text shown on either the Icon or the Bar",
+            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTimerText"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
         },
 
         {
