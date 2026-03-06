@@ -36,6 +36,8 @@ local function BuildAssignmentsOptions()
                 NSRT.AssignmentSettings[3178].Soaks = value
             end,
             nocombat = true,
+            icontexture = 4914669,
+            iconsize = {16, 16},
         },
         {
             type = "label",
@@ -53,6 +55,8 @@ local function BuildAssignmentsOptions()
                 NSRT.AssignmentSettings[3180].Soaks = value
             end,
             nocombat = true,
+            icontexture = 613954,
+            iconsize = {16, 16},
         },
         {
             type = "label",
@@ -70,6 +74,8 @@ local function BuildAssignmentsOptions()
                 NSRT.AssignmentSettings[3306].Soaks = value
             end,
             nocombat = true,
+            icontexture = 5788297,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -82,6 +88,8 @@ local function BuildAssignmentsOptions()
                 NSRT.AssignmentSettings[3306].SplitSoaks = value
             end,
             nocombat = true,
+            icontexture = 5788297,
+            iconsize = {16, 16},
         },
     }
 end

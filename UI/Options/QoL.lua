@@ -44,6 +44,8 @@ local function BuildQoLOptions()
                 NSI:QoLEvents("ACTIONBAR_UPDATE_USABLE")
                 NSI:ToggleQoLEvent("ACTIONBAR_UPDATE_USABLE", value)
             end,
+            icontexture = 607512,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -59,7 +61,10 @@ local function BuildQoLOptions()
                 NSI:ToggleQoLEvent("UNIT_AURA", turnon)
                 NSI:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", turnon)
             end,
+            icontexture = 136090,
+            iconsize = {16, 16},
         },
+
         {
             type = "toggle",
             boxfirst = true,
@@ -74,8 +79,9 @@ local function BuildQoLOptions()
                 NSI:ToggleQoLEvent("LOOT_OPENED", turnon)
                 NSI:ToggleQoLEvent("CHAT_MSG_MONEY", turnon)
                 NSI:ToggleQoLEvent("ENCOUNTER_START", turnon)
-
             end,
+            icontexture = 7639523,
+            iconsize = {16, 16},
         },
         {
             type = "label",
@@ -92,6 +98,8 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.SoulwellDropped = value
             end,
+            icontexture = 538745,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -102,6 +110,8 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.FeastDropped = value
             end,
+            icontexture = 5793729,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -112,6 +122,8 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.CauldronDropped = value
             end,
+            icontexture = 1385153,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -122,6 +134,8 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.RepairDropped = value
             end,
+            icontexture = 1405803,
+            iconsize = {16, 16},
         },
         {
             type = "range",
@@ -161,6 +175,8 @@ local function BuildQoLOptions()
                 NSRT.QoL.AutoRepair = value
                 NSI:ToggleQoLEvent("MERCHANT_SHOW", value)
             end,
+            icontexture = 134520,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -173,6 +189,8 @@ local function BuildQoLOptions()
                 NSI:ToggleQoLEvent("CHAT_MSG_WHISPER", value)
                 NSI:ToggleQoLEvent("CHAT_MSG_BN_WHISPER", value)
             end,
+            icontexture = 133460,
+            iconsize = {16, 16},
         },
     }
 end

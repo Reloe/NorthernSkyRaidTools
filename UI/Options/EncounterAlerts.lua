@@ -19,6 +19,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3176].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448209,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -31,6 +33,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3177].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448210,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -43,6 +47,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3179].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448212,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -55,6 +61,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3178].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448207,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -67,6 +75,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3180].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448211,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -79,6 +89,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3181].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448205,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -91,11 +103,13 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3306].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448202,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Beloren",
+            name = "Belo'ren",
             desc = "Enables Alerts for Beloren.",
             get = function() return NSRT.EncounterAlerts[3182] and NSRT.EncounterAlerts[3182].enabled end,
             set = function(self, fixedparam, value)
@@ -103,6 +117,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3182].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448203,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -115,6 +131,8 @@ local function BuildEncounterAlertsOptions()
                 NSRT.EncounterAlerts[3183].enabled = value
             end,
             nocombat = true,
+            icontexture = 7448204,
+            iconsize = {16, 16},
         },
     }
 end

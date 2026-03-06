@@ -44,6 +44,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.CraftedCheck = value
             end,
             nocombat = true,
+            icontexture = 4549159,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -66,6 +68,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.EnchantCheck = value
             end,
             nocombat = true,
+            icontexture = 4620672,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -77,6 +81,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.GemCheck = value
             end,
             nocombat = true,
+            icontexture = 135998,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -88,6 +94,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.RepairCheck = value
             end,
             nocombat = true,
+            icontexture = 134520,
+            iconsize = {16, 16},
         },
         {
             type = "toggle",
@@ -99,6 +107,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.GatewayShardCheck = value
             end,
             nocombat = true,
+            icontexture = 607513,
+            iconsize = {16, 16},
         },
 
         {
@@ -139,6 +149,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.RaidBuffCheck = value
             end,
             nocombat = true,
+            icontexture = 136078,
+            iconsize = {16, 16},
         },
 
         {
@@ -151,6 +163,8 @@ local function BuildReadyCheckOptions()
                 NSRT.ReadyCheckSettings.SoulstoneCheck = value
             end,
             nocombat = true,
+            icontexture = 136210,
+            iconsize = {16, 16},
         },
 
         {
