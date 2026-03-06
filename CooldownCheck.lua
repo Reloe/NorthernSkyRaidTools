@@ -94,6 +94,7 @@ function NSI:GetAllSpecializationIDs()
 end
 
 function NSI:CheckCooldowns()
+    if self:Restricted() then return end
     local spec = GetSpecializationInfo(GetSpecialization())
     if NSRT.CooldownList then
         local now = GetTime()
