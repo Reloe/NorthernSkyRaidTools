@@ -303,7 +303,7 @@ function NSI:HandleQoLComm(unitName, type)
         return
     end
 
-    local displayTimerSeconds = NSRT.QoL.ConsumableNotificationDurationSeconds
+    local displayTimerSeconds = NSRT.QoL.ConsumableNotificationDurationSeconds or 5
     local displayName = NSAPI:Shorten(unitName, 8, false, "GlobalNickNames")
     if type == "FEAST" then
         -- can't check buff duration/presence in combat
