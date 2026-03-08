@@ -134,7 +134,6 @@ function NSI:ProcessReminder()
     self.DisplayedExtraReminder = ""
     local pers = NSRT.ReminderSettings.PersonalReminderFrame.enabled
     local shared = NSRT.ReminderSettings.ReminderFrame.enabled
-    local phasedisplayed = {}
     -- self:IsUsingTLReminders() makes it process the note but then stops the display at a later point. This allows still displaying the note.
     if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and self.Reminder then str = self.Reminder end
     if NSRT.ReminderSettings.MRTNote or (self:IsUsingTLReminders() and LiquidRemindersSaved.settings.timeline.mrtNote) then
@@ -185,16 +184,13 @@ function NSI:ProcessReminder()
             local glowunit = line:match("glowunit:([^;]+)")
             local bossSpellID = line:match("bossSpell:(%d+)")
             local colors = line:match("colors:([^;]+)")
-            if time and tag and (text or spellID) and encID and encID ~= 0 and not firstline then
+            if time and tag and (text or spellID) and encID and encIDs ~= 0 and not firstline then
                 local displayLine = line
                 phase = phase and tonumber(phase) or 1
                 local key = encID..phase..time..tag..(text or spellID)
                 if (pers or shared) and (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
-                    -- display phase more readable
+                    -- remove phase as we add it back later
                     displayLine = displayLine:gsub("ph:"..phase, "")
-                    if not phasedisplayed[phase] then
-                        displayLine = "Phase "..phase.."\n"..displayLine
-                    end
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
@@ -210,7 +206,8 @@ function NSI:ProcessReminder()
                                 return ("{rt"..id.."}"):gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
                             end
                         end)
-                        displayLine = displayLine:gsub("text:"..text, displayText.. " ")
+                        local s, e = displayLine:find("text:"..text, 1, true)
+                        if s then displayLine = displayLine:sub(1, s-1).."- "..displayText.." "..displayLine:sub(e+1) end
                     end
                     -- convert to icon
                     if spellID then
@@ -286,7 +283,6 @@ function NSI:ProcessReminder()
                         if pers then
                             if (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})
-                                phasedisplayed[phase] = true
                             end
                         end
                         self:AddToReminder({text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
@@ -309,6 +305,7 @@ function NSI:ProcessReminder()
         end
 
         if shared then
+            local phasedisplayed = {}
             table.sort(remindertable, function(a, b)
                 if a.phase == b.phase then
                     return a.time < b.time
@@ -317,10 +314,15 @@ function NSI:ProcessReminder()
                 end
             end)
             for _, data in ipairs(remindertable) do
+                if not phasedisplayed[data.phase] then
+                    data.str = "Phase "..data.phase.."\n"..data.str
+                    phasedisplayed[data.phase] = true
+                end
                 self.DisplayedReminder = self.DisplayedReminder..data.str.."\n"
             end
         end
         if pers then
+            local phasedisplayed = {}
             table.sort(personalremindertable, function(a, b)
                 if a.phase == b.phase then
                     return a.time < b.time
@@ -329,6 +331,10 @@ function NSI:ProcessReminder()
                 end
             end)
             for _, data in ipairs(personalremindertable) do
+                if not phasedisplayed[data.phase] then
+                    data.str = "Phase "..data.phase.."\n"..data.str
+                    phasedisplayed[data.phase] = true
+                end
                 self.DisplayedPersonalReminder = self.DisplayedPersonalReminder..data.str.."\n"
             end
         end
