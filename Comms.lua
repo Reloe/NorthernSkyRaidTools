@@ -62,8 +62,6 @@ function NSI:Broadcast(event, channel, ...) -- using internal broadcast function
 
         if argType == "table" then
             functionArg = LibSerialize:Serialize(functionArg)
-            functionArg = LibDeflate:CompressDeflate(functionArg)
-            functionArg = LibDeflate:EncodeForWoWAddonChannel(functionArg)
             message = string.format("%s"..del.."%s(%s)", message, tostring(functionArg), argType)
         else
             if argType ~= "string" and argType ~= "number" and argType ~= "boolean" then
@@ -73,6 +71,8 @@ function NSI:Broadcast(event, channel, ...) -- using internal broadcast function
             message = string.format("%s"..del.."%s(%s)", message, tostring(functionArg), argType)
         end
     end
+    message = LibDeflate:CompressDeflate(message)
+    message = LibDeflate:EncodeForWoWAddonChannel(message)
     if channel == "WHISPER" then -- create "fake" whisper addon msg that actually just uses RAID instead and will be checked on receive
         AceComm:SendCommMessage("NSI_WHISPER", message, "RAID")
     else
@@ -81,6 +81,9 @@ function NSI:Broadcast(event, channel, ...) -- using internal broadcast function
 end
 
 local function ReceiveComm(text, chan, sender, whisper, internal)
+    local decoded = LibDeflate:DecodeForWoWAddonChannel(text)
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if decompressed then text = decompressed end -- if decompression fails we got a msg from an outdated version of the addon so we use the original value instead
     local argTable = {strsplit(del, text)}
     local event = argTable[1]
     if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and allowedcomms[event]) then -- block addon msg's from outside the raid, only exception being the guild nickname comms.
@@ -105,8 +108,6 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
                 argValue = argValue == "true" or false
                 tonext = nil
             elseif argType == "table" then
-                argValue = LibDeflate:DecodeForWoWAddonChannel(argValue)
-                argValue = LibDeflate:DecompressDeflate(argValue)
                 local success, t = LibSerialize:Deserialize(argValue)
                 if success then
                     argValue = t
