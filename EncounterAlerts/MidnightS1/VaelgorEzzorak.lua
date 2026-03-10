@@ -28,7 +28,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
-    -- Assigning Group 1&2 on first soak, Group 3&4 on second soak
+    -- Assigning Group 1&2 on first soak, Group 3&4 on second soak. This is overkill as only 7 people are required but not sure how the strat is gonna be yet
     local Soak = self:CreateDefaultAlert(subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", nil, nil, 10, 1, encID)
     Alert.time, Alert.text, Alert.TTSTimer = 54.4, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", 4
     self:AddToReminder(Alert)

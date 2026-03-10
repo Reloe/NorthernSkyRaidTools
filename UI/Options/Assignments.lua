@@ -28,8 +28,8 @@ local function BuildAssignmentsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Gloom Soaks",
-            desc = "Automatically tells Group 2 to soak the first Cast of Gloom and Group 3 to soak the second cast",
+            name = "Gloom Soaks - Mythic Only",
+            desc = "Assigns Group 1&2 to soak the first cast, Group 3&4 to soak the second cast. This is overkill as only 7 people are required but I'm not sure yet what the strat is going to be.",
             get = function() return NSRT.AssignmentSettings[3178] and NSRT.AssignmentSettings[3178].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3178] = NSRT.AssignmentSettings[3178] or {}
@@ -47,7 +47,7 @@ local function BuildAssignmentsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Execution Sentence",
+            name = "Execution Sentence - Mythic Only",
             desc = "Automatically assigns players to Star, Orange, Triangle and Purple for Execution Sentence. Melee are preferred for Star/Orange, Ranged for Triangle/Purple. You should be putting down World Markers for this.",
             get = function() return NSRT.AssignmentSettings[3180] and NSRT.AssignmentSettings[3180].Soaks end,
             set = function(self, fixedparam, value)

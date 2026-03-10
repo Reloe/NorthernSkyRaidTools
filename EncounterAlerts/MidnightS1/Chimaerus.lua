@@ -26,7 +26,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
         end
     elseif self.Assignments[encID].SplitSoaks then -- For Normal & Heroic we auto split the group to speed up splits
         if UnitGroupRolesAssigned("player") == "TANK" then return end -- just end early for tanks
-        local _, first = NSI:GetSortedGroup(true, false, false)
+        local _, first = self:GetSortedGroup(true, false, false)
         local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
         local group = 2
         for i, v in ipairs(first) do

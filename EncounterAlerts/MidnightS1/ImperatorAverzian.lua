@@ -18,6 +18,5 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             Alert.time = v
             self:AddToReminder(Alert)
         end
-
     end
 end
