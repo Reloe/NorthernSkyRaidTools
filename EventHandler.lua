@@ -167,6 +167,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 }
             end
 
+            if NSRT.EncounterAlerts[3179] then -- automatically enable CC Add display if user had previously enabled alerts for the first time loging in after adding the option.
+                if NSRT.EncounterAlerts[3179].CCAddsDisplay == nil then
+                    if NSRT.EncounterAlerts[3179] and NSRT.EncounterAlerts[3179].enabled then
+                        NSRT.EncounterAlerts[3179].CCAddsDisplay = true
+                    else
+                        NSRT.EncounterAlerts[3179].CCAddsDisplay = false
+                    end
+                end
+            else
+                NSRT.EncounterAlerts[3179] = {enabled = false, CCAddsDisplay = false}
+            end
+
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}

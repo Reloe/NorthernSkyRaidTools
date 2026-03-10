@@ -5,6 +5,12 @@ local function BuildEncounterAlertsOptions()
     return {
         {
             type = "label",
+            get = function() return "Enabling these adds some generic premade Reminders to some of the bosses. Think of these like the text-reminders for an upcoming ability from previous WA packs.\nIn some rare cases special stuff might be included in here. A recent example that would've fallen under this would've been the line on Nexus King to look at ghosts." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true
+        },
+        {
+            type = "label",
             get = function() return "Midnight S1" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
@@ -45,6 +51,20 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3179] = NSRT.EncounterAlerts[3179] or {}
                 NSRT.EncounterAlerts[3179].enabled = value
+            end,
+            nocombat = true,
+            icontexture = 7448212,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Fallen King Salhadaar - CC Adds Display",
+            desc = "This specifally only toggles the CC Display above the nameplate of the adds on&off so you can choose to only one of them.",
+            get = function() return NSRT.EncounterAlerts[3179] and NSRT.EncounterAlerts[3179].CCAddsDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3179] = NSRT.EncounterAlerts[3179] or {}
+                NSRT.EncounterAlerts[3179].CCAddsDisplay = value
             end,
             nocombat = true,
             icontexture = 7448212,

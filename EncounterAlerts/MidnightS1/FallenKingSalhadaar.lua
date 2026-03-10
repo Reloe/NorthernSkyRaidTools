@@ -6,12 +6,12 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
+    local id = self:DifficultyCheck(14) or 0
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
 
 
         -- using same timers for all difficulties atm
-        local id = self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
             [14] = {102.6, 224.2, 346, 467.7},
@@ -46,9 +46,8 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             Alert.time = v
             self:AddToReminder(Alert)
         end
-
-
-        if id ~= 16 then return end -- Shield Mechanic is mythic only
+    end
+    if NSRT.EncounterAlerts[encID].CCAddsDisplay and id == 16 then
         self.platetexts = self.platetexts or {}
         local plateref = {}
         local function DisplayNameplateText(aura1, aura2, u)
@@ -170,7 +169,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    if NSRT.EncounterAlerts[encID].enabled then
+    if NSRT.EncounterAlerts[encID].CCAddsDisplay then
         if self.plateframe then
             for i, v in ipairs(self.platetexts) do
                 v:Hide()
