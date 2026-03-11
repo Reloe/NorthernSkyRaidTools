@@ -259,7 +259,6 @@ function NSI:ProcessReminder()
                     displayLine = displayLine:gsub(";", "")
                     if shared and not addedreminders[key] then
                         table.insert(remindertable, {str = displayLine, time = tonumber(time), phase = phase})
-                        phasedisplayed[phase] = true
                         addedreminders[key] = true
                     end
                 end
