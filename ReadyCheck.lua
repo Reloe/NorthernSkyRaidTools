@@ -136,7 +136,7 @@ function NSI:GemCheck(slot, itemString)
 end
 
 function NSI:EnchantCheck(slot, itemString)
-    local enchantedSlots = {3, 5, 7, 8, 11, 12, 16, 17}
+    local enchantedSlots = {1, 3, 5, 7, 8, 11, 12, 16, 17}
     if tContains(enchantedSlots, slot) and itemString then
         if slot == 17 and select(12, C_Item.GetItemInfo(itemString)) == 4 then return false end -- skip shield/offhand
         local link = select(2, C_Item.GetItemInfo(itemString))
