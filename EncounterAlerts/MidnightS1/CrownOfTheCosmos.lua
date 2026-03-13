@@ -10,7 +10,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         for k, v in ipairs(self.Timelines) do
             if now < v+0.1 then
                 count = count+1
-                if count >= 3 then
+                if count >= 3 then -- default fallback phase transition detection, needs to be edited after seeing the encounter
                     self.Phase = self.Phase+1
                     self:StartReminders(self.Phase)
                     self.PhaseSwapTime = now

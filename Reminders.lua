@@ -466,6 +466,7 @@ function NSI:SetProperties(F, info, skipsound, s)
             self:HideGlows(nil, nil, F)
         end
         NSI:ArrangeStates(F.Type)
+        F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
     end)
     F.info = info
     if not info.spellID then
@@ -501,12 +502,13 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
     end
-    F:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    F:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
     F:SetScript("OnEvent", function(self, e, ...)
-        local unit, _, spellID = ...
-        if (not issecretvalue(spellID)) and (not issecretvalue(info.spellID)) and spellID == info.spellID and UnitIsUnit("player", unit) and self:IsShown() then
-            self:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-            self:Hide()
+        -- only registered for player so spellID is never secret
+        local _, _, spellID = ...
+        if (not issecretvalue(info.spellID)) and spellID == info.spellID and self:IsShown() then
+            F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+            F:Hide()
         end
     end)
 end
