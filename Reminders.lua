@@ -57,11 +57,9 @@ function NSI:AddToReminder(info)
     if not info.phase then info.phase = 1 end
     local rawtext = info.text
     if info.text then
-        info.text = info.text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
-            local id = symbols[name]
-            if id then
-                return ("{rt"..id.."}"):gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
-            end
+        info.text = info.text:gsub("{(%a*%d*)}", function(token) -- convert {star}/{rt1} etc. to raid target icons
+            local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
+            if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
         end)
     end
     if (NSRT.ReminderSettings.SpellName or NSRT.ReminderSettings.SpellNameTTS) and info.spellID and not info.text then -- display spellname if text is empty, also make TTS that spellname
@@ -200,11 +198,9 @@ function NSI:ProcessReminder()
                         displayLine = displayLine:gsub("time:"..time, timeFormatted.." ")
                     end
                     if text then
-                        local displayText = text:gsub("{(%a+)}", function(name) -- convert {star} to {rt1}, {orange} to {rt2} etc.
-                            local id = symbols[name]
-                            if id then
-                                return ("{rt"..id.."}"):gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:0|t")  -- convert {rt1} to the actual icon for display
-                            end
+                        local displayText = text:gsub("{(%a*%d*)}", function(token) -- convert {star}/{rt1} etc. to raid target icons
+                            local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
+                            if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
                         end)
                         local s, e = displayLine:find("text:"..text, 1, true)
                         if s then displayLine = displayLine:sub(1, s-1).."- "..displayText.." "..displayLine:sub(e+1) end
@@ -289,6 +285,10 @@ function NSI:ProcessReminder()
                 end
             else
                 if (not firstline) and (not line:find("invitelist:")) then
+                    line = line:gsub("{(%a*%d*)}", function(token) -- convert {star}/{rt1} etc. to raid target icons
+                        local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
+                        if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
+                    end)
                     if NSRT.Settings["GlobalNickNames"] and false then
                         local words = {}
                         for word in line:gmatch("[^%s]+") do
