@@ -126,7 +126,7 @@ local function BuildRemindersEditUI()
             if reminderData then
                 local line = self:GetLine(i)
                 line.name = reminderData.name
-                line.nameTextEntry.text = reminderData.name
+                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name.." (No Encounter)")
                 if NSRT.InviteList[reminderData.name] then
                     line.InviteButton:Show()
                     line.ArrangeButton:Show()
@@ -135,13 +135,15 @@ local function BuildRemindersEditUI()
                     line.ArrangeButton:Hide()
                 end
                 if line.name == NSRT.ActiveReminder then
-                    line.nameTextEntry:SetBackdropBorderColor(0, 1, 0, 1)
-                    line.nameTextEntry.BorderColorG = 1
+                    local colors = reminderData.hasencID and {0, 1, 0, 1} or {1, 0, 0, 1}
+                    line.nameTextEntry:SetBackdropBorderColor(unpack(colors))
+                    line.nameTextEntry.BorderColorR = colors[1]
+                    line.nameTextEntry.BorderColorG = colors[2]
                 else
                     line.nameTextEntry:SetBackdropBorderColor(0, 0, 0, 1)
+                    line.nameTextEntry.BorderColorR = 0
                     line.nameTextEntry.BorderColorG = 0
                 end
-                line.nameTextEntry.BorderColorR = 0
                 line.nameTextEntry.BorderColorB = 0
                 line.nameTextEntry.BorderColorA = 1
             end
@@ -190,9 +192,7 @@ local function BuildRemindersEditUI()
                 Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
             end
             if all then
-                if NSRT.ActiveReminder then
-                    Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
-                end
+                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
                 for _, reminder in ipairs(NSI:GetAllReminderNames()) do
                     NSI:RemoveReminder(reminder.name)
                 end
@@ -279,7 +279,7 @@ local function BuildRemindersEditUI()
         line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
 
         line.LoadButton = DF:CreateButton(line, function()
-            local name = line.nameTextEntry:GetText()
+            local name = line.name
             if name ~= "" then
                 NSI:SetReminder(name)
                 Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
@@ -292,7 +292,7 @@ local function BuildRemindersEditUI()
         line.LoadButton:SetTemplate(options_button_template)
 
         line.ShowButton = DF:CreateButton(line, function()
-            local name = line.nameTextEntry:GetText()
+            local name = line.name
             ImportReminderString(name, true)
         end, 40, 20, "Show")
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
@@ -349,16 +349,18 @@ local function BuildPersonalRemindersEditUI()
             if reminderData then
                 local line = self:GetLine(i)
                 line.name = reminderData.name
-                line.nameTextEntry.text = reminderData.name
+                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name.." (No Encounter)")
 
                 if line.name == NSRT.ActivePersonalReminder then
-                    line.nameTextEntry:SetBackdropBorderColor(0, 1, 0, 1)
-                    line.nameTextEntry.BorderColorG = 1
+                    local colors = reminderData.hasencID and {0, 1, 0, 1} or {1, 0, 0, 1}
+                    line.nameTextEntry:SetBackdropBorderColor(unpack(colors))
+                    line.nameTextEntry.BorderColorR = colors[1]
+                    line.nameTextEntry.BorderColorG = colors[2]
                 else
                     line.nameTextEntry:SetBackdropBorderColor(0, 0, 0, 1)
+                    line.nameTextEntry.BorderColorR = 0
                     line.nameTextEntry.BorderColorG = 0
                 end
-                line.nameTextEntry.BorderColorR = 0
                 line.nameTextEntry.BorderColorB = 0
                 line.nameTextEntry.BorderColorA = 1
             end
@@ -406,9 +408,7 @@ local function BuildPersonalRemindersEditUI()
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
             end
             if all then
-                if NSRT.ActivePersonalReminder then
-                    Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
-                end
+                Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
                 for _, reminder in ipairs(NSI:GetAllReminderNames(true)) do
                     NSI:RemoveReminder(reminder.name, true)
                 end
@@ -491,7 +491,7 @@ local function BuildPersonalRemindersEditUI()
         line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
 
         line.LoadButton = DF:CreateButton(line, function()
-            local name = line.nameTextEntry:GetText()
+            local name = line.name
             if name ~= "" then
                 NSI:SetReminder(name, true)
                 Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
@@ -503,7 +503,7 @@ local function BuildPersonalRemindersEditUI()
         line.LoadButton:SetTemplate(options_button_template)
 
         line.ShowButton = DF:CreateButton(line, function()
-            local name = line.nameTextEntry:GetText()
+            local name = line.name
             ImportPersonalReminderString(name, true)
         end, 55, 20, "Show")
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)

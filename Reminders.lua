@@ -920,10 +920,8 @@ function NSI:GetAllReminderNames(personal)
     local tocheck = personal and NSRT.PersonalReminders or NSRT.Reminders
     for k, v in pairs(tocheck) do
         local encID = v:match("EncounterID:(%d+)")
-        if encID then
-            local order = self.EncounterOrder[tonumber(encID)] or 1000
-            table.insert(list, {name = k, order = order})
-        end
+        local order = encID and self.EncounterOrder[tonumber(encID)] or 1000
+        table.insert(list, {name = k, order = order, hasencID = encID})
     end
     table.sort(list, function(a, b)
         if a.order == b.order then
