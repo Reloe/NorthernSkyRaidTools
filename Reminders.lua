@@ -136,13 +136,15 @@ function NSI:ProcessReminder()
     if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and self.Reminder then str = self.Reminder end
     if NSRT.ReminderSettings.MRTNote or (self:IsUsingTLReminders() and LiquidRemindersSaved.settings.timeline.mrtNote) then
         local note = VMRT and VMRT.Note and VMRT.Note.Text1 or ""
-        str = note and str ~= "" and str.."\n"..note or note or str
+        note = strtrim(note)
+        str = (note == "" and str) or (str ~= "" and note.."\n"..str) or note
         local persnote = VMRT and VMRT.Note and VMRT.Note.SelfText or ""
-        str = persnote and str ~= "" and str.."\n"..persnote or persnote or str
+        persnote = strtrim(persnote)
+        str = (persnote == "" and str) or (str ~= "" and persnote.."\n"..str) or persnote
     end
     if NSRT.ReminderSettings.PersNote or self:IsUsingTLReminders() then
-        local note = self.PersonalReminder
-        str = note and str ~= "" and str.."\n"..note or note or str
+        local note = self.PersonalReminder or ""
+        str = (note == "" and str) or (str ~= "" and note.."\n"..str) or note
     end
     if str ~= "" then
         local subgroup = self:GetSubGroup("player")
