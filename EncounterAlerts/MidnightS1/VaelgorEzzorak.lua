@@ -21,12 +21,41 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
     end
+    if NSRT.EncounterAlerts[encID].HealthDisplay then
+        if not self.VaelgorEzzorakFrame then
+            print("created")
+            self.VaelgorEzzorakFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
+            self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)
+                if e == "UNIT_HEALTH" then
+                    local text = ""
+                    local name1 = UnitName("boss1")
+                    local name2 = UnitName("boss2")
+                    local health1 = C_StringUtil.RoundToNearestString(UnitHealthPercent("boss1", true, CurveConstants.ScaleTo100))
+                    local health2 = C_StringUtil.RoundToNearestString(UnitHealthPercent("boss2", true, CurveConstants.ScaleTo100))
+                    self:DisplaySecretText("%s %s\n%s %s", false, {health1, name1, health2, name2})
+                end
+            end)
+        end
+        local name1 = UnitName("boss1")
+        local name2 = UnitName("boss2")
+        self:DisplaySecretText("%s %s\n%s %s", false, {"100", name1, "100", name2})
+        self.VaelgorEzzorakFrame:RegisterUnitEvent("UNIT_HEALTH", "boss1", "boss2")
+        self.VaelgorEzzorakFrame:Show()
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
+    if NSRT.EncounterAlerts[encID].HealthDisplay then
+        if self.VaelgorEzzorakFrame then self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH") end
+        self.VaelgorEzzorakFrame:Hide()
+        self:DisplaySecretText(false, true)
+    end
 end
 
 NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     if not self:DifficultyCheck(16) then return end -- Mythic only
-    local subgroup = self:GetSubGroup("player")
+    local subgroup = self:GetSubGroup("player") or 0
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
     -- Assigning Group 1&2 on first soak, Group 3&4 on second soak. This is overkill as only 7 people are required but not sure how the strat is gonna be yet
     local Soak = self:CreateDefaultAlert(subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", nil, nil, 10, 1, encID)

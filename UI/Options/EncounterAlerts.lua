@@ -10,6 +10,18 @@ local function BuildEncounterAlertsOptions()
             spacement = true
         },
         {
+            type = "range",
+            name = "Encounter Text Font-Size",
+            desc = "Some encounters might display static text(for example on the dragons boss). In that case the position of the text in the General-Tab is used but you can individually change the font-size here.",
+            get = function() return NSRT.Settings["GlobalEncounterFontSize"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["GlobalEncounterFontSize"] = value
+                NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
+            end,
+            min = 0,
+            max = 100,
+        },
+        {
             type = "label",
             get = function() return "Midnight S1" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -79,6 +91,20 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3178] = NSRT.EncounterAlerts[3178] or {}
                 NSRT.EncounterAlerts[3178].enabled = value
+            end,
+            nocombat = true,
+            icontexture = 7448207,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Vaelgor & Ezzorak - Health Display",
+            desc = "Enables Health Display for Vaelgor & Ezzorak to show their health next to each other. This is the text display from the General-Tab.",
+            get = function() return NSRT.EncounterAlerts[3178] and NSRT.EncounterAlerts[3178].HealthDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3178] = NSRT.EncounterAlerts[3178] or {}
+                NSRT.EncounterAlerts[3178].HealthDisplay = value
             end,
             nocombat = true,
             icontexture = 7448207,
