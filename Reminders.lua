@@ -26,7 +26,13 @@ local symbols = {
 function NSI:AddToReminder(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
-    if self:IsUsingTLReminders() and not info.IsAlert then return end
+    if self:IsUsingTLReminders() then
+        if info.IsAlert then
+            self:FireCallback("NSRT_ALERT_ADDED", info)
+        else
+            return
+        end
+    end
     info.spellID = info.spellID and tonumber(info.spellID)
     -- convert to booleans
     if info.TTS == "true" then info.TTS = true end
