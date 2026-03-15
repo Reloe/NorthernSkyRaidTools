@@ -849,7 +849,7 @@ local function BuildReminderOptions()
         {
             type = "button",
             name = "Test Active Reminder",
-            desc = "Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test.",
+            desc = "Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test. This button does nothing if you are using TimelineReminders to display Reminders.",
             func = function(self)
                 if not NSI.TestingReminder then
                     NSI.TestingReminder = true
