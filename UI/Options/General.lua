@@ -149,7 +149,18 @@ Press 'Enter' to hear the TTS]],
             values = function() return build_media_options(false, false, false, false, false, true) end,
             nocombat = true,
         },
-
+        {
+            type = "range",
+            name = "Global Font-Size",
+            desc = "Size of the global font",
+            get = function() return NSRT.Settings["GlobalFontSize"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["GlobalFontSize"] = value
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
+            end,
+            min = 0,
+            max = 100,
+        },
     }
 end
 

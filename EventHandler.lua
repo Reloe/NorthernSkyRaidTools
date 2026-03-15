@@ -179,6 +179,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.EncounterAlerts[3179] = {enabled = false, CCAddsDisplay = false}
             end
 
+            if not NSRT.Settings["GlobalFontSize"] then NSRT.Settings["GlobalFontSize"] = 20 end
+            if not NSRT.Settings["GlobalEncounterFontSize"] then NSRT.Settings["GlobalEncounterFontSize"] = 20 end
+
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}

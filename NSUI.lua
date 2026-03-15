@@ -83,12 +83,23 @@ function NSUI:Init()
     NSI.NSRTFrame.generic_display:Hide()
     NSI.NSRTFrame.generic_display:SetPoint(NSRT.Settings.GenericDisplay.Anchor, NSI.NSRTFrame, NSRT.Settings.GenericDisplay.relativeTo, NSRT.Settings.GenericDisplay.xOffset, NSRT.Settings.GenericDisplay.yOffset)
     NSI.NSRTFrame.generic_display.Text = NSI.NSRTFrame.generic_display:CreateFontString(nil, "OVERLAY")
-    NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 20, "OUTLINE")
+    NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
     NSI.NSRTFrame.generic_display.Text:SetPoint("TOPLEFT", NSI.NSRTFrame.generic_display, "TOPLEFT", 0, 0)
     NSI.NSRTFrame.generic_display.Text:SetJustifyH("LEFT")
     NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
     NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
     NSI:MoveFrameInit(NSI.NSRTFrame.generic_display, "Generic")
+
+    -- Frame to display secret text
+    NSI.NSRTFrame.SecretDisplay = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
+    NSI.NSRTFrame.SecretDisplay:Hide()
+    NSI.NSRTFrame.SecretDisplay:SetPoint(NSRT.Settings.GenericDisplay.Anchor, NSI.NSRTFrame, NSRT.Settings.GenericDisplay.relativeTo, NSRT.Settings.GenericDisplay.xOffset, NSRT.Settings.GenericDisplay.yOffset)
+    NSI.NSRTFrame.SecretDisplay.Text = NSI.NSRTFrame.SecretDisplay:CreateFontString(nil, "OVERLAY")
+    NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
+    NSI.NSRTFrame.SecretDisplay.Text:SetPoint("TOPLEFT", NSI.NSRTFrame.generic_display, "TOPLEFT", 0, 0)
+    NSI.NSRTFrame.SecretDisplay.Text:SetJustifyH("LEFT")
+    NSI.NSRTFrame.SecretDisplay.Text:SetText("")
+    NSI.NSRTFrame.SecretDisplay:SetSize(2000, 2000)
 
     -- Build options tables from modules
     local general_options1_table = BuildGeneralOptions()
@@ -220,5 +231,18 @@ function NSI:DisplayText(text, duration)
             self.TextHideTimer = nil
         end
         self.TextHideTimer = C_Timer.NewTimer(duration or 10, function() self.NSRTFrame.generic_display:Hide() end)
+    end
+end
+
+function NSI:DisplaySecretText(format, Hide, args)
+    if self.NSRTFrame and self.NSRTFrame.SecretDisplay then
+        if Hide then
+            self.NSRTFrame.SecretDisplay:Hide()
+            self.NSRTFrame.SecretDisplay.Text:Hide()
+            return
+        end
+        self.NSRTFrame.SecretDisplay.Text:SetFormattedText(format or "%s", unpack(args or {}))
+        self.NSRTFrame.SecretDisplay:Show()
+        self.NSRTFrame.SecretDisplay.Text:Show()
     end
 end
