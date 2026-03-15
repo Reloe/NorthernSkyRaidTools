@@ -10,26 +10,14 @@ local function BuildEncounterAlertsOptions()
             spacement = true
         },
         {
-            type = "range",
-            name = "Encounter Text Font-Size",
-            desc = "Some encounters might display static text(for example on the dragons boss). In that case the position of the text in the General-Tab is used but you can individually change the font-size here.",
-            get = function() return NSRT.Settings["GlobalEncounterFontSize"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["GlobalEncounterFontSize"] = value
-                NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
-            end,
-            min = 0,
-            max = 100,
-        },
-        {
             type = "label",
-            get = function() return "Midnight S1" end,
+            get = function() return "Imperator Averzian" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Imperator Averzian",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Imperator Averzian.",
             get = function() return NSRT.EncounterAlerts[3176] and NSRT.EncounterAlerts[3176].enabled end,
             set = function(self, fixedparam, value)
@@ -41,9 +29,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Vorasius" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Vorasius",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Vorasius.",
             get = function() return NSRT.EncounterAlerts[3177] and NSRT.EncounterAlerts[3177].enabled end,
             set = function(self, fixedparam, value)
@@ -55,9 +48,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Fallen King Salhadaar" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Fallen King Salhadaar",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Fallen King Salhadaar.",
             get = function() return NSRT.EncounterAlerts[3179] and NSRT.EncounterAlerts[3179].enabled end,
             set = function(self, fixedparam, value)
@@ -71,7 +69,7 @@ local function BuildEncounterAlertsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Fallen King Salhadaar - CC Adds Display",
+            name = "CC Adds Display",
             desc = "This specifally only toggles the CC Display above the nameplate of the adds on&off so you can choose to only one of them.",
             get = function() return NSRT.EncounterAlerts[3179] and NSRT.EncounterAlerts[3179].CCAddsDisplay end,
             set = function(self, fixedparam, value)
@@ -83,9 +81,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Vaelgor & Ezzorak" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Vaelgor & Ezzorak",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Vaelgor & Ezzorak.",
             get = function() return NSRT.EncounterAlerts[3178] and NSRT.EncounterAlerts[3178].enabled end,
             set = function(self, fixedparam, value)
@@ -99,7 +102,7 @@ local function BuildEncounterAlertsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Vaelgor & Ezzorak - Health Display",
+            name = "Health Display",
             desc = "Enables Health Display for Vaelgor & Ezzorak to show their health next to each other. This is the text display from the General-Tab.",
             get = function() return NSRT.EncounterAlerts[3178] and NSRT.EncounterAlerts[3178].HealthDisplay end,
             set = function(self, fixedparam, value)
@@ -111,9 +114,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Lightblinded Vanguard" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Lightblinded Vanguard",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Lightblinded Vanguard.",
             get = function() return NSRT.EncounterAlerts[3180] and NSRT.EncounterAlerts[3180].enabled end,
             set = function(self, fixedparam, value)
@@ -125,9 +133,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Crown of the Cosmos" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Crown of the Cosmos",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Crown of the Cosmos.",
             get = function() return NSRT.EncounterAlerts[3181] and NSRT.EncounterAlerts[3181].enabled end,
             set = function(self, fixedparam, value)
@@ -139,9 +152,23 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "breakline",
+        },
+        {
+            type = "label",
+            get = function() return "" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "label",
+            get = function() return "Chimaerus" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Chimaerus",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Chimaerus.",
             get = function() return NSRT.EncounterAlerts[3306] and NSRT.EncounterAlerts[3306].enabled end,
             set = function(self, fixedparam, value)
@@ -153,9 +180,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Belo'ren" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Belo'ren",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Beloren.",
             get = function() return NSRT.EncounterAlerts[3182] and NSRT.EncounterAlerts[3182].enabled end,
             set = function(self, fixedparam, value)
@@ -167,9 +199,14 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "Midnight Falls" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
             type = "toggle",
             boxfirst = true,
-            name = "Midnight Falls",
+            name = "Generic Alerts",
             desc = "Enables Alerts for Midnight Falls.",
             get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].enabled end,
             set = function(self, fixedparam, value)
@@ -179,6 +216,27 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 7448204,
             iconsize = {16, 16},
+        },
+        {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
+            type = "range",
+            name = "Encounter Text Font-Size",
+            desc = "Some encounters might display static text(for example on the dragons boss). In that case the position of the text in the General-Tab is used but you can individually change the font-size here.",
+            get = function() return NSRT.Settings["GlobalEncounterFontSize"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["GlobalEncounterFontSize"] = value
+                NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
+            end,
+            min = 0,
+            max = 100,
         },
     }
 end
