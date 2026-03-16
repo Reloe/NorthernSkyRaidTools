@@ -315,6 +315,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
+        self.ProcessDone = false
         if self:DifficultyCheck(14) or diff == 23 then
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
@@ -356,14 +357,19 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
                 NSRT.StoredSharedReminder = self.Reminder -- store in SV to reload on next login
                 self.Reminder = reminderstring
-                self:ProcessReminder()
-                self:UpdateReminderFrame(true)
-                if skipcheck then self:FlashNoteBackgrounds() end -- only show animation if reminder was manually shared
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
+            self:ProcessReminder()
+            self:UpdateReminderFrame(true)
+            self.ProcessDone = true
+            if skipcheck then self:FlashNoteBackgrounds() end -- only show animation if reminder was manually shared
             if assigntable then self.Assignments = assigntable end
         end
     elseif e == "NSI_READY_CHECK" and internal then
+        if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
+            self:ProcessReminder()
+            self:UpdateReminderFrame(true)
+        end
         local text = ""
         if UnitLevel("player") < 90 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
