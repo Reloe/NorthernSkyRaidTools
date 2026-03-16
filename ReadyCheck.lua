@@ -198,8 +198,8 @@ function NSI:GearCheck()
                     tier = tier+1
                 end
             end
-            -- Cloak is always considered Cloth, also don't even need to check for cloth wearers
-            if MyArmorType ~= 1 and NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 and slot ~= 15 then
+            -- Cloak is always considered Cloth, also don't even need to check for cloth wearers. Also don't check weapons
+            if MyArmorType ~= 1 and NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 and slot ~= 15 and slot ~= 16 and slot ~= 17 then
                 local armorType = itemString and select(13, C_Item.GetItemInfo(itemString))
                 if armorType and armorType <= 4 and armorType ~= MyArmorType and armorType ~= 0 then
                     table.insert(missing, "|cFFFF0000Wrong armor type:|r |cFF00FF00"..SlotName[slot].."|r")
