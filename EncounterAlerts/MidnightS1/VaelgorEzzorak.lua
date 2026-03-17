@@ -23,7 +23,6 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end
     if NSRT.EncounterAlerts[encID].HealthDisplay then
         if not self.VaelgorEzzorakFrame then
-            print("created")
             self.VaelgorEzzorakFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)
                 if e == "UNIT_HEALTH" then
