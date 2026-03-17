@@ -126,9 +126,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
 
             if NSRT.ReminderSettings.ReminderFrame.enabled == nil then -- convert to different format
-                NSRT.ReminderSettings.ReminderFrame.enabled = NSRT.ReminderSettings.ShowReminderFrame
-                NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame
-                NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame
+                NSRT.ReminderSettings.ReminderFrame.enabled = NSRT.ReminderSettings.ShowReminderFrame or false
+                NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
+                NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame or false
             end
             if NSRT.UseDefaultPASounds then NSRT.PASounds.UseDefaultPASounds = true end -- migrate old setting
             if not NSRT.Settings.GenericDisplay then
