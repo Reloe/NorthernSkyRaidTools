@@ -50,15 +50,15 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-local detectedDurations = { -- Devour = ~120.9
+local detectedDurations = {
     [14] = {
-        {time = 120, phase = function(num) return num+1 end},
+        {time = 164.5, phase = function(num) return num+1 end},
     },
     [15] = {
-        {time = 120, phase = function(num) return num+1 end},
+        {time = 151.36, phase = function(num) return num+1 end},
     },
     [16] = {
-        {time = 120, phase = function(num) return num+1 end},
+        {time = 120, phase = function(num) return num+1 end}, -- dunno about mythic timer yet but this should work for now
     },
 }
 
@@ -67,16 +67,14 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    if not difficultyID or not detectedDurations[difficultyID] then return end
-    for _, phaseinfo in ipairs(detectedDurations[difficultyID]) do
-        if info.duration > phaseinfo.time then -- for now this should work until I know the exact number from heroic week
-            local newphase = phaseinfo.phase(self.Phase)
-            if newphase > self.Phase then
-                self.Phase = newphase
-                self:StartReminders(self.Phase)
-                self.PhaseSwapTime = now
-                break
-            end
+    if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
+    local phaseinfo = detectedDurations[difficultyID][self.Phase]
+    if info.duration >= phaseinfo.time then
+        local newphase = phaseinfo.phase(self.Phase)
+        if newphase > self.Phase then
+            self.Phase = newphase
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = now
         end
     end
 end
