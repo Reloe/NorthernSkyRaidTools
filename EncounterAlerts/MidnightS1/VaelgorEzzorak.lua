@@ -27,16 +27,16 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)
                 if e == "UNIT_HEALTH" then
                     local text = ""
-                    local name1 = UnitName("boss1")
-                    local name2 = UnitName("boss2")
+                    local name1 = UnitName("boss1") or ""
+                    local name2 = UnitName("boss2") or ""
                     local health1 = C_StringUtil.RoundToNearestString(UnitHealthPercent("boss1", true, CurveConstants.ScaleTo100))
                     local health2 = C_StringUtil.RoundToNearestString(UnitHealthPercent("boss2", true, CurveConstants.ScaleTo100))
                     self:DisplaySecretText("%s %s\n%s %s", false, {health1, name1, health2, name2})
                 end
             end)
         end
-        local name1 = UnitName("boss1")
-        local name2 = UnitName("boss2")
+        local name1 = UnitName("boss1") or ""
+        local name2 = UnitName("boss2") or ""
         self:DisplaySecretText("%s %s\n%s %s", false, {"100", name1, "100", name2})
         self.VaelgorEzzorakFrame:RegisterUnitEvent("UNIT_HEALTH", "boss1", "boss2")
         self.VaelgorEzzorakFrame:Show()
