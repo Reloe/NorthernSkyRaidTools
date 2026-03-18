@@ -33,17 +33,5 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             Alert.time = v
             self:AddToReminder(Alert)
         end
-
-        Alert.text, Alert.TTS = "Dodge", "Dodge"
-        timers = {
-            [0] = {},
-            [14] = {81, 91, 202, 212, 322, 332},
-            [15] = {81, 91, 202, 212, 322, 332},
-            [16] = {81, 91, 202, 212, 322, 332},
-        }
-        for i, v in ipairs(timers[id] or {}) do -- Dodge during adds
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
     end
 end
