@@ -29,8 +29,8 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                     local text = ""
                     local name1 = UnitName("boss1") or ""
                     local name2 = UnitName("boss2") or ""
-                    local health1 = C_StringUtil.RoundToNearestString(UnitHealthPercent("boss1", true, CurveConstants.ScaleTo100))
-                    local health2 = C_StringUtil.RoundToNearestString(UnitHealthPercent("boss2", true, CurveConstants.ScaleTo100))
+                    local health1 = name1 and C_StringUtil.RoundToNearestString(UnitHealthPercent("boss1", true, CurveConstants.ScaleTo100)) or ""
+                    local health2 = name2 and C_StringUtil.RoundToNearestString(UnitHealthPercent("boss2", true, CurveConstants.ScaleTo100)) or ""
                     self:DisplaySecretText("%s %s\n%s %s", false, {health1, name1, health2, name2})
                 end
             end)
