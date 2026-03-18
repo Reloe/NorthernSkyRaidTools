@@ -3,8 +3,20 @@ local _, NSI = ... -- Internal namespace
 local encID = 3178
 -- /run NSAPI:DebugEncounter(3178)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
-    if not NSRT.EncounterAlerts[encID] then
-        NSRT.EncounterAlerts[encID] = {enabled = false}
+    if (not self:DifficultyCheck(16)) then
+        if not self.VaelgorPhaseFrame then
+            self.VaelgorPhaseFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
+            self.VaelgorPhaseFrame:SetScript("OnEvent", function(_, e, u)
+                if e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" and self.Phase and self.Phase == 1 and UnitExists("boss3") then
+                    self.Phase = 2
+                    self:StartReminders(self.Phase)
+                end
+            end)
+        end
+        self.VaelgorPhaseFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+        if not NSRT.EncounterAlerts[encID] then
+            NSRT.EncounterAlerts[encID] = {enabled = false}
+        end
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
@@ -48,6 +60,9 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
         if self.VaelgorEzzorakFrame then self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH") end
         self.VaelgorEzzorakFrame:Hide()
         self:DisplaySecretText(false, true)
+    end
+    if self.VaelgorPhaseFrame then
+        self.VaelgorPhaseFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
 end
 
