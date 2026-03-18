@@ -18,8 +18,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {137.4, 313.3},
             [16] = {137.4, 313.3},
         }
-        local timers = self:DifficultyCheck(14) and {137.4, 313.3} or {}
-        for _, time in ipairs(timers[id]) do
+        for _, time in ipairs(timers[id] or {}) do
             Alert.time = time
             self:AddToReminder(Alert)
         end
