@@ -87,6 +87,16 @@ function NSI:QoLEvents(e, ...)
             end
         end
         self:UpdateQoLTextDisplay()
+    elseif e == "PLAYER_REGEN_DISABLED" and NSRT.QoLResetBossDisplay then
+        self.QoLTextDisplays.ResetBoss = nil
+        self:UpdateQoLTextDisplay()
+    elseif e == "PLAYER_REGEN_ENABLED" and NSRT.QoLResetBossDisplay then
+        if self:HasLustDebuff() then
+            self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+        else
+            self.QoLTextDisplays.ResetBoss = nil
+        end
+        self:UpdateQoLTextDisplay()
     elseif e == "UNIT_AURA" then
         if self:Restricted() then return end -- shouldn't happen because we unregister but just a safety check
         local unit, updateInfo = ...
@@ -222,8 +232,12 @@ function NSI:QoLOnZoneSwap() -- only register events while player is in raid
     if NSRT.QoL.ResetBossDisplay then
         if InRaid and not self:Restricted() then
             self:ToggleQoLEvent("UNIT_AURA", true, "player")
+            self:ToggleQoLEvent("PLAYER_REGEN_ENABLED", true)
+            self:ToggleQoLEvent("PLAYER_REGEN_DISABLED", true)
         else
             self:ToggleQoLEvent("UNIT_AURA", false)
+            self:ToggleQoLEvent("PLAYER_REGEN_ENABLED", false)
+            self:ToggleQoLEvent("PLAYER_REGEN_DISABLED", false)
         end
     end
 
