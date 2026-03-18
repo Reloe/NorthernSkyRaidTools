@@ -40,7 +40,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
             Alert.phase = phase
             Alert.time, Alert.text  = 18.7, group <= 1 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 71.4, group >= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.time, Alert.text = 91.4, group >= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             self:AddToReminder(Alert)
         end
         if NSRT.AssignmentSettings.OnPull then
