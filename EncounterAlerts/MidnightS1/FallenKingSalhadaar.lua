@@ -26,8 +26,8 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
         timers = {
             [0] = {},
-            [14] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
-            [15] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+            [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
+            [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
             [16] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
         }
         for i, v in ipairs(timers[id]) do -- Void Convergence (Adds)
@@ -38,8 +38,8 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         Alert.text, Alert.TTS = "CC Adds", "CC Adds"
         timers = {
             [0] = {},
-            [14] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
-            [15] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+            [14] = {20, 65, 141, 187, 263, 308, 385, 431},
+            [15] = {20, 65, 141, 187, 263, 308, 385, 431},
             [16] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
         }
         for i, v in ipairs(timers[id]) do -- Fractured Projection (CC Adds)
