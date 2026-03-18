@@ -17,7 +17,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {12, 132, 252},
             [16] = {12, 132, 252},
         }
-        for i, v in ipairs(timers[id]) do -- Primordial Roar
+        for i, v in ipairs(timers[id] or {}) do -- Primordial Roar
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -29,7 +29,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {102, 223, 343},
             [16] = {102, 223, 343},
         }
-        for i, v in ipairs(timers[id]) do -- Void Breath
+        for i, v in ipairs(timers[id] or {}) do -- Void Breath
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -41,7 +41,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {81, 91, 202, 212, 322, 332},
             [16] = {81, 91, 202, 212, 322, 332},
         }
-        for i, v in ipairs(timers[id]) do -- Dodge during adds
+        for i, v in ipairs(timers[id] or {}) do -- Dodge during adds
             Alert.time = v
             self:AddToReminder(Alert)
         end
