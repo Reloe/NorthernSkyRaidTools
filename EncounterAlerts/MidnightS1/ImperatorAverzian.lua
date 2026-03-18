@@ -12,6 +12,8 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         local id = self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
+            [14] = {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415}, -- Mythic only for now
+            [15] = {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415}, -- Mythic only for now
             [16] = {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415}, -- Mythic only for now
         }
         for i, v in ipairs(timers[id]) do
