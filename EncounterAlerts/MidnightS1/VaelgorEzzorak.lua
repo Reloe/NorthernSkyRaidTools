@@ -14,9 +14,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             end)
         end
         self.VaelgorPhaseFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-        if not NSRT.EncounterAlerts[encID] then
-            NSRT.EncounterAlerts[encID] = {enabled = false}
-        end
+    end
+    if not NSRT.EncounterAlerts[encID] then
+        NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         -- local Alert = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
@@ -28,16 +28,16 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)
                 if e == "UNIT_HEALTH" then
                     local text = ""
-                    local name1 = UnitName("boss1") or ""
-                    local name2 = UnitName("boss2") or ""
+                    local name1 = UnitExists("boss1") and UnitName("boss1") or ""
+                    local name2 = UnitExists("boss2") and UnitName("boss2") or ""
                     local health1 = name1 and C_StringUtil.RoundToNearestString(UnitHealthPercent("boss1", true, CurveConstants.ScaleTo100)) or ""
                     local health2 = name2 and C_StringUtil.RoundToNearestString(UnitHealthPercent("boss2", true, CurveConstants.ScaleTo100)) or ""
                     self:DisplaySecretText("%s %s\n%s %s", false, {health1, name1, health2, name2})
                 end
             end)
         end
-        local name1 = UnitName("boss1") or ""
-        local name2 = UnitName("boss2") or ""
+        local name1 = UnitExists("boss1") and UnitName("boss1") or ""
+        local name2 = UnitExists("boss2") and UnitName("boss2") or ""
         self:DisplaySecretText("%s %s\n%s %s", false, {"100", name1, "100", name2})
         self.VaelgorEzzorakFrame:RegisterUnitEvent("UNIT_HEALTH", "boss1", "boss2")
         self.VaelgorEzzorakFrame:Show()
