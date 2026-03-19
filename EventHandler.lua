@@ -258,9 +258,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
-        if NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
-            self:InitTankPA()
-        end
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
@@ -371,6 +368,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
+        end
+        local diff = select(3, GetInstanceInfo()) or 0
+        if NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
+            self:InitTankPA()
         end
         local text = ""
         if UnitLevel("player") < 90 then return end
