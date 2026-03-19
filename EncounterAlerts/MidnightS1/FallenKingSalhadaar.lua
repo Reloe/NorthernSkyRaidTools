@@ -18,7 +18,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {102.6, 224.2, 346, 467.7},
             [16] = {102.6, 224.2, 346, 467.7},
         }
-        for i, v in ipairs(timers[id]) do -- Entropic Unraveling
+        for i, v in ipairs(timers[id] or {}) do -- Entropic Unraveling
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -30,7 +30,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
             [16] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
         }
-        for i, v in ipairs(timers[id]) do -- Void Convergence (Adds)
+        for i, v in ipairs(timers[id] or {}) do -- Void Convergence (Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end
@@ -42,7 +42,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             [15] = {20, 65, 141, 187, 263, 308, 385, 431},
             [16] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
         }
-        for i, v in ipairs(timers[id]) do -- Fractured Projection (CC Adds)
+        for i, v in ipairs(timers[id] or {}) do -- Fractured Projection (CC Adds)
             Alert.time = v
             self:AddToReminder(Alert)
         end
