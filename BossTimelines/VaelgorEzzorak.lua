@@ -6,25 +6,29 @@ local _, NSI = ... -- Internal namespace
 --------------------------------------------------------------------------------
 
 local heroicAbilities = {
-    {name = "Vaelwing", spellID = 1265131, category = "tankbuster, knock", phase = 1, times = {6, 31, 56, 88, 145, 171, 196, 220, 271, 304, 346, 371, 406}, duration = 0},
-    {name = "Tail Lash", spellID = 1264467, category = "tankbuster, knock", phase = 1, times = {9, 34, 59, 90, 273, 307, 349, 373, 409}, duration = 0},
-    {name = "Rakfang", spellID = 1245645, category = "tankbuster", phase = 1, times = {13, 37, 63, 88, 138, 163, 188, 216, 279, 312, 346, 379, 412}, duration = 0},
-    {name = "Impale", spellID = 1265152, category = "tankbuster", phase = 1, times = {140, 165, 190, 218, 281, 314, 348, 381, 414}, duration = 0},
-    {name = "Nullbeam", spellID = 1262623, category = "tankbuster", phase = 1, times = {19, 60, 183, 288, 363}, duration = 0},
-    {name = "Nullzone", spellID = 1244672, category = "movement, raid damage", phase = 1, times = {23, 64, 187, 292, 367}, duration = 0},
-    {name = "Gloom", spellID = 1245391, category = "tankbuster", phase = 1, times = {51, 147, 192, 237, 318, 384}, duration = 0},
-    {name = "Gloomfield", spellID = 1245420, category = "soak", phase = 1, times = {55, 151, 196, 241, 322, 388}, duration = 0},
-    {name = "Midnight Manifestation", spellID = 1258744, category = "raid dot", phase = 1, times = {9, 29, 49, 141, 161, 181, 274, 301, 327, 354, 381}, duration = 25},
-    {name = "Dread Breath", spellID = 1244221, category = "movement", phase = 1, times = {10, 44, 79, 163, 207, 276, 335, 395}, duration = 7},
-    {name = "Dread Breath", spellID = 1244221, category = "event", phase = 1, times = {17, 51, 86, 170, 214, 283, 342, 402}, duration = 0},
-    {name = "Void Howl", spellID = 1244917, category = "raid damage, movement", phase = 1, times = {28, 73, 145, 179, 214, 299, 359, 420}, duration = 0},
-    {name = "Midnight Flames", spellID = 1249748, category = "raid damage, raid dot", phase = 1, times = {118, 251}, duration = 25},
-    {name = "Shadowmark", spellID = 1270497, category = "debuffs", phase = 1, times = {117, 123, 129, 136, 142, 148, 155, 161, 248, 254, 260, 266, 272, 278, 285, 291}, duration = 0},
+    {name = "Vaelwing", spellID = 1265131, category = "", phase = 1, times = {6, 32, 56, 81}, duration = 0},
+    {name = "Nullbeam", spellID = 1262623, category = "tankbuster", phase = 1, times = {14, 64}, duration = 0},
+    {name = "Nullzone", spellID = 1244672, category = "tankbuster", phase = 1, times = {18, 68}, duration = 0},
+    {name = "Dread Breath", spellID = 1244221, category = "movement, dispel", phase = 1, times = {24, 52, 68, 84, 104}, duration = 8},
+    {name = "Gloom", spellID = 1245391, category = "tankbuster", phase = 1, times = {55}, duration = 0},
+    {name = "Gloomfield", spellID = 1245420, category = "group soak", phase = 1, times = {64}, duration = 0},
+    {name = "Void Howl", spellID = 1244917, category = "raid damage, add spawn", phase = 1, times = {33, 78}, duration = 0},
+    {name = "Vaelwing", spellID = 1265131, category = "tankbuster, knock", phase = 2, times = {157, 188, 220, 251, 282, 313, 345}, duration = 0},
+    {name = "Rakfang", spellID = 1245645, category = "tankbuster", phase = 2, times = {26, 51, 76, 101, 165, 196, 233, 258, 290, 321, 352}, duration = 0},
+    {name = "Impale", spellID = 1265152, category = "tankbuster", phase = 2, times = {28, 53, 78, 103, 167, 198, 235, 260, 292, 323, 354}, duration = 0},
+    {name = "Nullbeam", spellID = 1262623, category = "tankbuster", phase = 2, times = {73, 166, 229, 291, 354}, duration = 0},
+    {name = "Nullzone", spellID = 1244672, category = "tankbuster", phase = 2, times = {77, 170, 233, 295, 358}, duration = 0},
+    {name = "Dread Breath", spellID = 1244221, category = "movement, dispel", phase = 2, times = {44, 95, 211, 297}, duration = 8},
+    {name = "Gloom", spellID = 1245391, category = "tankbuster", phase = 2, times = {34, 84, 205, 267, 330}, duration = 0},
+    {name = "Gloomfield", spellID = 1245420, category = "group soak", phase = 2, times = {44, 94, 214, 276, 339}, duration = 0},
+    {name = "Midnight Flames", spellID = 1249748, category = "raid damage", phase = 2, times = {6, 138, 388}, duration = 10},
+    {name = "Void Howl", spellID = 1244917, category = "raid damage, add spawn", phase = 2, times = {38, 62, 88, 112, 177, 228, 280, 336}, duration = 0},
 }
 
 local heroicPhases = {
     [1] = {start = 0},
-    [2] = {start = 500},
+    [2] = {start = 113},
+    [3] = {start = 500},
 }
 
 local mythicAbilities = {
