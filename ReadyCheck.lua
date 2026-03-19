@@ -47,6 +47,34 @@ function NSI:SoulstoneCheck()
     return refresh and "Refresh Soulstone" or "|cFFFF0000Soulstone Missing|r"
 end
 
+function NSI:SourceOfMagicCheck()
+    if self:Restricted() then return end
+    local class = select(3, UnitClass("player"))
+    if class ~= 13 then return end
+    local spellID = 369459
+    local sourceTalented = C_SpellBook.IsSpellKnownOrInSpellBook(spellID, nil, true)
+    if not sourceTalented then return end
+    local refresh = false
+    for unit in self:IterateGroupMembers() do
+        if UnitGroupRolesAssigned(unit) == "HEALER" and UnitIsVisible(unit) and not UnitIsUnit(unit, "player") then
+            local aura = self:UnitAura(unit, spellID)
+            if aura then
+                local source = aura.sourceUnit
+                if UnitExists(source) and UnitIsUnit("player", source) then
+                    local expires = aura.expirationTime
+                    if expires and expires - GetTime() > 300 then
+                        return false
+                    else
+                        refresh = true
+                    end
+                end
+            end
+        end
+    end
+    NSAPI:TTS("Source of Magic")
+    return refresh and "Refresh Source of Magic" or "|cFFFF0000Source of Magic Missing|r"
+end
+
 function NSI:BuffCheck()
     if self:Restricted() then return end
     local class = select(3, UnitClass("player"))
