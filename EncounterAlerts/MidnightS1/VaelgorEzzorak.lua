@@ -3,18 +3,6 @@ local _, NSI = ... -- Internal namespace
 local encID = 3178
 -- /run NSAPI:DebugEncounter(3178)
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
-    if (not self:DifficultyCheck(16)) then
-        if not self.VaelgorPhaseFrame then
-            self.VaelgorPhaseFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
-            self.VaelgorPhaseFrame:SetScript("OnEvent", function(_, e, u)
-                if e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" and self.Phase and self.Phase == 1 and UnitExists("boss3") then
-                    self.Phase = 2
-                    self:StartReminders(self.Phase)
-                end
-            end)
-        end
-        self.VaelgorPhaseFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-    end
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
@@ -50,8 +38,9 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
         self.VaelgorEzzorakFrame:Hide()
         self:DisplaySecretText(false, true)
     end
-    if self.VaelgorPhaseFrame then
-        self.VaelgorPhaseFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+    if self.VaelgorPhaseTimer then
+        self.VaelgorPhaseTimer:Cancel()
+        self.VaelgorPhaseTimer = nil
     end
 end
 
@@ -71,9 +60,38 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     Alert.time, Alert.text = 246.1, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
     self:AddToReminder(Alert)
 
-
     if NSRT.AssignmentSettings.OnPull then
         local group = subgroup <= 2 and "First" or "Second"
         self:DisplayText("You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00"..group.."|r Group", 5)
+    end
+end
+
+local detectedDurations = {
+    [14] = {
+        {time = 8, phase = function(num) return 2 end},
+    },
+    [15] = {
+        {time = 8, phase = function(num) return 2 end},
+    },
+}
+
+NSI.DetectPhaseChange[encID] = function(self, e, info)
+    local now = GetTime()
+    -- not checking REMOVED event by default but may be needed for some encounters
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
+    local difficultyID = select(3, GetInstanceInfo()) or 0
+    if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
+    local phaseinfo = detectedDurations[difficultyID][1]
+    if phaseinfo and info.duration == phaseinfo.time then
+        self.VaelgorPhaseTimer = nil
+        self.VaelgorPhaseTimer = C_Timer.NewTimer(8, function()
+            if not self.EncounterID then return end -- if wipe happened during these 8s
+            local newphase = phaseinfo.phase(self.Phase)
+            if newphase > self.Phase then
+                self.Phase = newphase
+                self:StartReminders(self.Phase)
+                self.PhaseSwapTime = now
+            end
+        end)
     end
 end
