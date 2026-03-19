@@ -168,6 +168,20 @@ local function BuildReadyCheckOptions()
         },
 
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Source of Magic Check",
+            desc = "Checks for Evokers whether they have Source of Magic on a healer and it has at least 5m duration left.",
+            get = function() return NSRT.ReadyCheckSettings.SourceOfMagicCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.SourceOfMagicCheck = value
+            end,
+            nocombat = true,
+            icontexture = 4630412,
+            iconsize = {16, 16},
+        },
+
+        {
             type = "breakline"
         },
 
