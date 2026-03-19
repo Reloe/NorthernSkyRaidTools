@@ -19,19 +19,8 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         end
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
+        -- local Alert = self:CreateDefaultAlert("Breath", "Bar", 1244221, 4, 1, encID)
         -- same timer on all difficultes for now, timers behaved a bit weirdly on beta
-        local id = self:DifficultyCheck(14) or 0
-        local timers = {
-            [0] = {},
-            [14] = {17.3, 51.3, 86.3, 174.3, 220.2},
-            [15] = {17.3, 51.3, 86.3, 174.3, 220.2},
-            [16] = {17.3, 51.3, 86.3, 174.3, 220.2},
-        }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
     end
     if NSRT.EncounterAlerts[encID].HealthDisplay then
         if not self.VaelgorEzzorakFrame then
