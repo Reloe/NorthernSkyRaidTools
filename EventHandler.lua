@@ -386,6 +386,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        if NSRT.ReadyCheckSettings.SourceOfMagicCheck and not self:Restricted() then
+            local SourceOfMagic = self:SourceOfMagicCheck()
+            if SourceOfMagic and SourceOfMagic ~= "" then
+                if text == "" then
+                    text = SourceOfMagic
+                else
+                    text = text.."\n"..SourceOfMagic
+                end
+            end
+        end
         local Gear = self:GearCheck()
         if Gear and Gear ~= "" then
             if text == "" then
