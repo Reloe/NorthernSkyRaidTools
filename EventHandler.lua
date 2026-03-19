@@ -288,8 +288,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:StartReminders(self.Phase)
-    elseif e == "ENCOUNTER_END" and wowevent and self:DifficultyCheck(14) then
+    elseif e == "ENCOUNTER_END" and wowevent then
         local encID, encounterName = ...
+        local diff = select(3, GetInstanceInfo()) or 0
+        if (diff < 14 or diff > 17) and diff ~= 220 then return end
         if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
             self:RemoveTankPA()
         end
