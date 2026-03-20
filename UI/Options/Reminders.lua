@@ -51,7 +51,7 @@ local function BuildReminderOptions()
                 NSI:ProcessReminder()
             end,
             min = 5,
-            max = 20,
+            max = 100,
             nocombat = true,
         },
         {
@@ -177,7 +177,7 @@ local function BuildReminderOptions()
                 NSI:ProcessReminder()
             end,
             min = 5,
-            max = 20,
+            max = 100,
             nocombat = true,
         },
         {
