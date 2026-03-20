@@ -1018,6 +1018,16 @@ local function BuildReminderNoteOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Countdown and Hide Timers in Notes",
+            desc = "With this enabled, Timers will count down during combat and completed timers will hide.",
+            get = function() return NSRT.ReminderSettings.NoteCountdown end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.NoteCountdown = value
+            end,
+        },
+        {
             type = "breakline",
             spacement = true,
         },

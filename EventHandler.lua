@@ -300,6 +300,20 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:StartReminders(self.Phase)
+        if NSRT.ReminderSettings.NoteCountdown then
+            local frames = {"ReminderFrame", "PersonalReminderFrame"}
+            for i, name in ipairs(frames) do
+                if self[name] and self[name]:IsShown() then
+                    if self[name].UpdateTimer then
+                        self[name].UpdateTimer:Cancel()
+                        self[name].UpdateTimer = nil
+                    end
+                    self[name].UpdateTimer = C_Timer.NewTicker(1, function()
+                        self:CountdownNoteFrame(self[name])
+                    end)
+                end
+            end
+        end
     elseif e == "ENCOUNTER_END" and wowevent then
         local encID, encounterName = ...
         local diff = select(3, GetInstanceInfo()) or 0

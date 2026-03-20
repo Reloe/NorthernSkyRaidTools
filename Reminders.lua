@@ -843,6 +843,42 @@ function NSI:StartReminders(phase, testrun)
     end
 end
 
+function NSI:CountdownNoteFrame(frame)
+    if not frame or not frame:IsShown() then return end
+    local text = frame.Text:GetText()
+    if not text then return end
+    local newtext = ""
+    local now = (GetTime() - self.PhaseSwapTime)
+    local curphase = 100
+    for line in text:gmatch('([^\n]*)\n') do
+        local ShouldDelete = false
+        local phase = line:match("Phase (%d+)")
+        curphase = phase and tonumber(phase) or curphase
+        if curphase < self.Phase then
+            ShouldDelete = true
+        end
+        if not phase then
+            local minutes, seconds = line:match("(%d+):(%d%d)")
+            local time = minutes and seconds and (minutes*60) + seconds
+            if time then
+                local newtime = time - 1
+                if newtime > 0 then
+                    local newminutes = math.floor(newtime/60)
+                    local newseconds = math.floor(newtime%60)
+                    local timeFormatted = string.format("%d:%02d", newminutes, newseconds)
+                    line = line:gsub(minutes..":"..seconds.." ", timeFormatted.." ")
+                else
+                    ShouldDelete = true
+                end
+            end
+        end
+        if not ShouldDelete then
+            newtext = newtext..line.."\n"
+        end
+    end
+    frame.Text:SetText(newtext)
+end
+
 function NSI:DelayAllReminders(delay)
     if not self.ReminderTimer then return end
     for i, v in ipairs(self.ReminderTimer) do
