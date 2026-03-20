@@ -80,8 +80,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
-    if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
-    local phaseinfo = detectedDurations[difficultyID][1]
+    local phaseinfo = detectedDurations[difficultyID] and detectedDurations[difficultyID][self.Phase]
     if phaseinfo and info.duration == phaseinfo.time then
         self.VaelgorPhaseTimer = nil
         self.VaelgorPhaseTimer = C_Timer.NewTimer(8, function()
