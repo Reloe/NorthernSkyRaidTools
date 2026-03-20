@@ -464,8 +464,11 @@ function NSI:ArrangeStates(Type)
 end
 
 function NSI:SetProperties(F, info, skipsound, s)
-    F:SetScript("OnUpdate", function()
-        self:UpdateReminderDisplay(info, F, skipsound)
+    F:SetScript("OnUpdate", function(self, elapsed)
+        self.elapsed = (self.elapsed or 0) + elapsed
+        if self.elapsed < 0.05 then return end
+        self.elapsed = 0
+        NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
     F:SetScript("OnHide", function()
         if info.glowunit then
