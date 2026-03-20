@@ -128,12 +128,18 @@ function NSI:DandersFramesNickNameUpdated(all, unit)
     if DandersFrames then
         if all then
             DandersFrames:IterateCompactFrames(function(frame)
-                DandersFrames:UpdateNameText(frame)
+                DandersFrames:UpdateName(frame)
             end)
         elseif unit then
             local frame = DandersFrames:GetFrameForUnit(unit)
             if frame then
-                DandersFrames:UpdateNameText(frame)
+                DandersFrames:UpdateName(frame)
+            end
+        end
+        if NSRT.Settings["DandersFrames"] then
+            function DandersFrames:GetUnitName(unit)
+                local name = UnitName(unit)
+                return name and NSAPI:GetName(name, "DandersFrames") or name
             end
         end
     end
@@ -422,7 +428,7 @@ function NSI:InitNickNames()
         end
     end
 
-    if DandersFrames then
+    if DandersFrames and NSRT.Settings["DandersFrames"] then
         function DandersFrames:GetUnitName(unit)
             local name = UnitName(unit)
             return name and NSAPI:GetName(name, "DandersFrames") or name
