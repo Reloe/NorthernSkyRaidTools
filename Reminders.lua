@@ -32,6 +32,7 @@ function NSI:AddToReminder(info)
         else
             return
         end
+        -- put return outside the if statement when bart has added it to TimelineReminders
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     -- convert to booleans
@@ -1288,12 +1289,12 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
     end
 end
 
-function NSI:UpdateNoteFrame(Name, SettingsTable, text)
-    if SettingsTable.enabled then
+function NSI:UpdateNoteFrame(Name, SettingsTable, text, ForceHide)
+    if SettingsTable.enabled and not ForceHide then
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
         self[Name].Text:SetWidth(SettingsTable.Width)
-        self[Name].Text:SetText(text)
+        if text ~= "" then self[Name].Text:SetText(text) end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
         self[Name]:Show()
     elseif self[Name] then
