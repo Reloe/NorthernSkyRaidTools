@@ -329,6 +329,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self.SyncNickNamesStore = nil
             end
         end)
+        if NSRT.ReminderSettings.NoteCountdown then
+            self:ProcessReminder() -- need to recalculate reminders if the user has countdown enabled
+        end
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
