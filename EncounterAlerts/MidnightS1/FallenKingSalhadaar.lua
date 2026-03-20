@@ -124,13 +124,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                 end
                 return
             elseif e == "NAME_PLATE_UNIT_ADDED" or e == "UNIT_AURA" then
-                local found = e == "NAME_PLATE_UNIT_ADDED"
-                for i=1, 40 do
-                    if found then break end
-                    local unit = "nameplate"..i
-                    if unit == u then found = true break end
-                end
-                if not found then return end -- only allow nameplate units for UNIT_AURA
+                if e == "UNIT_AURA" and not u:find("^nameplate%d") then return end -- only allow nameplate units for UNIT_AURA
                 if UnitLevel(u) ~= -1 then
                     local aura1 = C_UnitAuras.GetAuraDataByIndex(u, 1, "HELPFUL")
                     if aura1 then
