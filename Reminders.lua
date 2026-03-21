@@ -996,6 +996,7 @@ function NSI:SetReminder(name, personal, skipupdate)
         NSRT.ActiveReminder = nil
     end
     if not skipupdate then
+        print("should be processing", name, self.Reminder, self.PersonalReminder)
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
@@ -1333,7 +1334,7 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text, ForceHide)
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
         self[Name].Text:SetWidth(SettingsTable.Width)
-        if text ~= "" then self[Name].Text:SetText(text) end
+        if text ~= "skip" then self[Name].Text:SetText(text) end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
         self[Name]:Show()
     elseif self[Name] then

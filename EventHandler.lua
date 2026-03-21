@@ -253,9 +253,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ZONE_CHANGED_NEW_AREA" then
         local diff = select(3, GetInstanceInfo()) or 0
         local ForceHide = diff > 17 or diff < 14
-        self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "", ForceHide)
-        self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "", ForceHide)
-        self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "", ForceHide)
+        self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
+        self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
+        self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
         if ForceHide then self:HideAllReminders(true) end
     elseif e == "PLAYER_ENTERING_WORLD" then
         local IsLogin, IsReload = ...
@@ -263,9 +263,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local ForceHide = diff > 17 or diff < 14
         if ForceHide then self:HideAllReminders(true) end
         if IsLogin or IsReload then
-            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "", ForceHide)
-            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "", ForceHide)
-            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "", ForceHide)
+            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
+            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
+            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
         end
         if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
             if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
