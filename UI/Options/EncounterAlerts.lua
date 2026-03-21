@@ -235,7 +235,7 @@ local function BuildEncounterAlertsOptions()
                 NSRT.Settings["GlobalEncounterFontSize"] = value
                 NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
             end,
-            min = 0,
+            min = 1,
             max = 100,
         },
     }
