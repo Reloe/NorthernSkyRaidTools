@@ -15,12 +15,10 @@ local SoundListRaid = {
     [1253024] = "Targeted", -- Shattering Twilight (Tank)
     [1270497] = "Spread", -- Shadowmark
     [1264756] = "Targeted", -- Rift Madness
-    [1260027] = "Targeted", -- Grasp of Emptiness
-    [1232470] = "Targeted", -- Grasp of Emptiness (idk which one is correct)
+    [1232470] = "Targeted", -- Grasp of Emptiness
     [1260203] = "Soak", -- Umbral Collapse
     [1249265] = "Soak", -- Umbral Collapse (one of them is 2nd cast I think?)
-    [1259861] = "Targeted", -- Ranger Captain's Mark
-    [1237623] = "Targeted", -- Ranger Captain's Mark(idk which one is correct)
+    [1237623] = "Clear", -- Ranger Captain's Mark
  --   [1262983] = "Light", -- Twilight Seal (Light) - maybe adding this later, not sure if this is used at all
  --   [1262972] = "Void", -- Twilight Seal (Void) - maybe adding this later, not sure if this is used at all
     [1257087] = "Clear", -- Consuming Miasma
@@ -34,8 +32,8 @@ local SoundListRaid = {
     [1241339] = "Void", -- Void Dive
     [1241292] = "Light", -- Light Dive
     [1239111] = "Break", -- Aspect of the End
-    [1233887] = "Debuff", -- Null Corona
     [1254113] = "Fixate", -- Vorasius Fixate
+    [1233602] = "Clear", -- Silverstrike Arrow
 }
 
 local SoundListMPlus = {
