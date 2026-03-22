@@ -2,6 +2,34 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3181
 -- /run NSAPI:DebugEncounter(3181)
+
+NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
+    if not NSRT.EncounterAlerts[encID] then
+        NSRT.EncounterAlerts[encID] = {enabled = false}
+    end
+    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+        if self:IsMelee("player") then return end -- Bait is only for ranged
+        local id = self:DifficultyCheck(14) or 0
+
+        local Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 1, encID) -- Void Expulsion Bait
+        local timers = {
+            [15] = {15, 63, 102}, -- don't care about normal, adding mythic later
+        }
+        for i, v in ipairs(timers[id] or {}) do
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+        Alert.phase = 3
+        timers = {
+            [15] = {19, 39, 59, 79, 99, 119, 139, 159, 179, 199}, -- don't care about normal, adding mythic later
+        }
+        for i, v in ipairs(timers[id] or {}) do
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+    end
+end
+
 local detectedDurations = { -- Devour = ~120.9
     [14] = {
         {time = 1.5, phase = function(num) return 2 end},

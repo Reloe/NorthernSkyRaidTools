@@ -326,3 +326,26 @@ function NSI:ToggleMoveFrames(F, Unlock)
         F:EnableMouse(false)
     end
 end
+
+function NSI:IsMelee(unit)
+    local role = UnitGroupRolesAssigned(unit)
+    if unit == "player" then
+        local spec = GetSpecializationInfo(GetSpecialization())
+        local melee = false
+        if self.meleetable[spec] or role == "TANK" then
+            melee = true
+        end
+        return melee
+    else
+        local spec = NSI:GetSpecs(unit) or 0
+        if spec and spec ~= 0 then
+            local melee = false
+            if self.meleetable[spec] or role == "TANK" then
+                melee = true
+            end
+            return melee
+        else
+            return role == "TANK"
+        end
+    end
+end
