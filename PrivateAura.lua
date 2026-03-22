@@ -4,36 +4,45 @@ local SoundListRaid = {
     -- [spellID] = "SoundName", use false to remove a sound
 
     -- Midnight S1
-    [1284527] = "Targeted", -- Galvanize
-    [1283236] = "Targeted", --Void Expulsion
-    [1283069] = "Fixate", -- Weakened
-    [1281184] = "Spread", -- Criticality
-    [1280023] = "Targeted", -- Void Marked
     --[1279512] = "idk", -- Shatterglass - maybe adding this later
-    [1249609] = "Rune", -- Dark Rune
-    [1268992] = "Targeted", -- Shattering Twilight
-    [1253024] = "Targeted", -- Shattering Twilight (Tank)
-    [1270497] = "Spread", -- Shadowmark
-    [1264756] = "Targeted", -- Rift Madness
-    [1232470] = "Targeted", -- Grasp of Emptiness
-    [1260203] = "Soak", -- Umbral Collapse
-    [1249265] = "Soak", -- Umbral Collapse (one of them is 2nd cast I think?)
-    [1237623] = "Clear", -- Ranger Captain's Mark
  --   [1262983] = "Light", -- Twilight Seal (Light) - maybe adding this later, not sure if this is used at all
  --   [1262972] = "Void", -- Twilight Seal (Void) - maybe adding this later, not sure if this is used at all
-    [1257087] = "Clear", -- Consuming Miasma
-    [1255612] = "Targeted", -- Dread Breath
+
+    [1260203] = "Soak", -- Umbral Collapse
+    [1249265] = "Soak", -- Umbral Collapse (one of them is 2nd cast I think?)
+    [1280023] = "Targeted", -- Void Marked
+    [1283069] = "Fixate", -- Weakened
+
+    [1254113] = "Fixate", -- Vorasius Fixate
+
     [1248697] = "Debuff", -- Despotic Command
+    [1268992] = "Targeted", -- Shattering Twilight
+    [1253024] = "Targeted", -- Shattering Twilight (Tank)
+
+    [1255612] = "Targeted", -- Dread Breath
+
     [1248994] = "Targeted", -- Execution Sentence
     [1248985] = "Targeted", -- Execution Sentence (not sure if this one is used)
     [1246487] = "Spread", -- Avenger's Shield
-    [1242091] = "Targeted", -- Void Quill
-    [1241992] = "Targeted", -- Light Quill
+
+    [1232470] = "Obelisk", -- Grasp of Emptiness
+    [1239111] = "Break", -- Aspect of the End
+    [1233602] = "Targeted", -- Silverstrike Arrow
+    [1237623] = "Targeted", -- Ranger Captain's Mark
+    [1283236] = "DropPool", --Void Expulsion
+
+    [1257087] = "Clear", -- Consuming Miasma
+    [1264756] = "Targeted", -- Rift Madness
+
     [1241339] = "Void", -- Void Dive
     [1241292] = "Light", -- Light Dive
-    [1239111] = "Break", -- Aspect of the End
-    [1254113] = "Fixate", -- Vorasius Fixate
-    [1233602] = "Clear", -- Silverstrike Arrow
+    [1242091] = "Targeted", -- Void Quill
+    [1241992] = "Targeted", -- Light Quill
+
+    [1284527] = "Targeted", -- Galvanize
+    [1281184] = "Spread", -- Criticality
+    [1249609] = "Rune", -- Dark Rune
+    [1270497] = "Spread", -- Shadowmark
 }
 
 local SoundListMPlus = {

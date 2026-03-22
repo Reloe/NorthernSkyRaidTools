@@ -303,14 +303,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
             for i, name in ipairs(frames) do
-                if self[name] and self[name]:IsShown() then
+                if self[name] then
                     if self[name].UpdateTimer then
                         self[name].UpdateTimer:Cancel()
                         self[name].UpdateTimer = nil
                     end
-                    self[name].UpdateTimer = C_Timer.NewTicker(1, function()
-                        self:CountdownNoteFrame(self[name])
-                    end)
+                    if self[name]:IsShown() then
+                        self[name].UpdateTimer = C_Timer.NewTicker(1, function()
+                            self:CountdownNoteFrame(self[name])
+                        end)
+                    end
                 end
             end
         end
