@@ -58,6 +58,10 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:SetReminder(nil, true)
     elseif msg == "timeline" or msg == "tl" then
         NSI:ToggleTimelineWindow()
+    elseif msg == "invite" then
+        NSI:InviteFromReminder(NSRT.ActiveReminder, true)
+    elseif msg == "arrange" then
+        NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
     elseif msg == "help" then
         print("|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n")
         print("  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development")
@@ -72,6 +76,8 @@ SlashCmdList["NSUI"] = function(msg)
         print("  |cFF00FFFF/ns pnote|r or |cFF00FFFF/ns pn|r - Toggle personal reminders note")
         print("  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note")
         print("  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window")
+        print("  |cFF00FFFF/ns invite|r - Invite players from active reminder to group")
+        print("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group")
     elseif msg == "" then
         NSI.NSUI:ToggleOptions()
     elseif msg then
