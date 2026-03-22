@@ -857,7 +857,7 @@ function NSI:CountdownNoteFrame(frame)
         if curphase < self.Phase then
             ShouldDelete = true
         end
-        if not phase then
+        if curphase == self.Phase and not phase then
             local minutes, seconds = line:match("(%d+):(%d%d)")
             local time = minutes and seconds and (minutes*60) + seconds
             if time then
