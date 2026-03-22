@@ -55,7 +55,7 @@ local LustDebuffs = {
 function NSI:QoLEvents(e, ...)
     if self.IsBuilding then return end
     if e == "ACTIONBAR_UPDATE_USABLE" then -- only thing needed for Gateway
-        if C_Item.IsUsableItem(188152) and NSRT.QoL.GatewayUseableDisplay then
+        if NSRT.QoL.GatewayUseableDisplay and C_Item.IsUsableItem(188152) then
             self.QoLTextDisplays.Gateway = {SettingsName = "GatewayUseableDisplay", text = TextDisplays.Gateway}
         else
             self.QoLTextDisplays.Gateway = nil
@@ -129,7 +129,7 @@ function NSI:QoLEvents(e, ...)
                 self:UpdateQoLTextDisplay()
             end
         end
-    elseif e == "PLAYER_ENTERING_WORLD" then
+    elseif e == "ZONE_CHANGED_NEW_AREA" or e == "PLAYER_ENTERING_WORLD" then
         if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
             if self:HasLustDebuff() then
                 self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
@@ -208,6 +208,7 @@ end
 function NSI:InitQoL()
     self.QoLTextDisplays = {}
     -- stuff in here is ALWAYS enabled.
+    self:ToggleQoLEvent("ZONE_CHANGED_NEW_AREA", true)
     self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
     self:ToggleQoLEvent("ENCOUNTER_START", true)
     if NSRT.QoL.AutoRepair then self:ToggleQoLEvent("MERCHANT_SHOW", true) end
