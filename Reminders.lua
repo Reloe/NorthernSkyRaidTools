@@ -845,23 +845,23 @@ end
 
 function NSI:CountdownNoteFrame(frame)
     if not frame or not frame:IsShown() then return end
-    local text = frame.Text:GetText()
-    if not text then return end
+    local originalText = frame.OriginalText or frame.Text:GetText()
+    if not originalText then return end
     local newtext = ""
-    local now = (GetTime() - self.PhaseSwapTime)
+    local PassedTime = (GetTime() - self.PhaseSwapTime)
     local curphase = 100
-    for line in text:gmatch('([^\n]*)\n') do
+    if not originalText:match('\n$') then originalText = originalText..'\n' end
+    for line in originalText:gmatch('([^\n]*)\n') do
         local ShouldDelete = false
         local phase = line:match("Phase (%d+)")
         curphase = phase and tonumber(phase) or curphase
         if curphase < self.Phase then
             ShouldDelete = true
-        end
-        if curphase == self.Phase and not phase then
+        elseif curphase == self.Phase and not phase then
             local minutes, seconds = line:match("(%d+):(%d%d)")
-            local time = minutes and seconds and (minutes*60) + seconds
-            if time then
-                local newtime = time - 1
+            local originalTime = minutes and seconds and (minutes*60) + seconds
+            if originalTime then
+                local newtime = originalTime - PassedTime
                 if newtime > 0 then
                     local newminutes = math.floor(newtime/60)
                     local newseconds = math.floor(newtime%60)
@@ -1333,7 +1333,7 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text, ForceHide)
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
         self[Name].Text:SetWidth(SettingsTable.Width)
-        if text ~= "skip" then self[Name].Text:SetText(text) end
+        if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
         self[Name]:Show()
     elseif self[Name] then
