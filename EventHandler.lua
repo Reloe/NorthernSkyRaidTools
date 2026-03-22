@@ -131,7 +131,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
                 NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame or false
             end
-            if NSRT.UseDefaultPASounds then NSRT.PASounds.UseDefaultPASounds = true end -- migrate old setting
             if not NSRT.Settings.GenericDisplay then
                 NSRT.Settings.GenericDisplay = {Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 400}
             end
@@ -183,6 +182,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.Settings["GlobalFontSize"] then NSRT.Settings["GlobalFontSize"] = 20 end
             if not NSRT.Settings["GlobalEncounterFontSize"] then NSRT.Settings["GlobalEncounterFontSize"] = 20 end
 
+            if NSRT.PASounds.UseDefaultPASounds == nil then -- convert old setting
+                NSRT.PASounds.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
+            end
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}
