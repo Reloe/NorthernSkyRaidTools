@@ -2,11 +2,11 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3179
 -- /run NSAPI:DebugEncounter(3179)
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
+NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
-    local id = self:DifficultyCheck(14) or 0
+    local id = id or self:DifficultyCheck(14) or 0
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
 

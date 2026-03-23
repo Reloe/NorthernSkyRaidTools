@@ -3,12 +3,12 @@ local _, NSI = ... -- Internal namespace
 local encID = 3181
 -- /run NSAPI:DebugEncounter(3181)
 
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
+NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local id = self:DifficultyCheck(14) or 0
+        local id = id or self:DifficultyCheck(14) or 0
         local ExplosionTimers = {
             [15] = {33, 53, 73, 93, 113, 133, 153, 173, 193, 213}
         }

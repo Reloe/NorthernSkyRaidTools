@@ -3,9 +3,9 @@ local _, NSI = ... -- Internal namespace
 local encID = 3306
 -- /run NSAPI:DebugEncounter(3306)
 
-NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    local diff = select(3, GetInstanceInfo())
+    local diff = id or select(3, GetInstanceInfo())
     if diff < 14 or diff > 16 then return end
     if diff == 16 and self.Assignments[encID].Soaks then -- For Mythic we use group 1/2 + 3/4
         local subgroup = self:GetSubGroup("player")

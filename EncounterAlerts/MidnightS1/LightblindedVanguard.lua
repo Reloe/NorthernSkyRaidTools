@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3180
 -- /run NSAPI:DebugEncounter(3180)
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
+NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
@@ -11,7 +11,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
 
         -- same timer on all difficulties for now
         Alert.TTS = false
-        local id = self:DifficultyCheck(14) or 0
+        local id = id or self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
             [14] = {137.4, 314},
@@ -25,9 +25,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end
 end
 
-NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    if not self:DifficultyCheck(16) then return end -- Mythic only
+    if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
     local group = {}
