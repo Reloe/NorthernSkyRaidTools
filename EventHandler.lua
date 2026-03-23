@@ -14,7 +14,6 @@ f:RegisterEvent("ENCOUNTER_WARNING")
 f:RegisterEvent("RAID_BOSS_WHISPER")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -252,27 +251,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
-    elseif e == "ZONE_CHANGED_NEW_AREA" then
-        local diff = select(3, GetInstanceInfo()) or 0
-        local ForceHide = diff > 17 or diff < 14
-        self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
-        self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
-        self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
-        if ForceHide then self:HideAllReminders(true) end
     elseif e == "PLAYER_ENTERING_WORLD" then
         local IsLogin, IsReload = ...
-        local diff = select(3, GetInstanceInfo()) or 0
-        local ForceHide = diff > 17 or diff < 14
-        if ForceHide then self:HideAllReminders(true) end
-        if IsLogin or IsReload then
-            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
-            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
-            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
-        end
-        if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
-            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
-            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
+        C_Timer.After(0.01, function()
+            local diff = select(3, GetInstanceInfo()) or 0
+            local ForceHide = diff > 17 or diff < 14
+            if ForceHide then self:HideAllReminders(true) end
+            if IsLogin or IsReload then
+                self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
+                self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
+                self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
+            end
+            if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
+                if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+                self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
+            end
+        end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.

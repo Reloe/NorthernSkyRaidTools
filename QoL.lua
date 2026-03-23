@@ -28,7 +28,7 @@ local ConsumableSpells = {
     [1278915] = "FEAST", -- Hearty Quel'dorei Medley
 
     [1259658] = "FEAST", -- Harandar Celebration
-    [1278929] = "FEAST", -- Hearty Rootland Celebration
+    [1278929] = "FEAST", -- Hearty Harandar Celebration
 
     [1237104] = "FEAST", -- Blooming Feast
     [1278909] = "FEAST", -- Hearty Blooming Feast
@@ -129,14 +129,16 @@ function NSI:QoLEvents(e, ...)
                 self:UpdateQoLTextDisplay()
             end
         end
-    elseif e == "ZONE_CHANGED_NEW_AREA" or e == "PLAYER_ENTERING_WORLD" then
-        if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
-            if self:HasLustDebuff() then
-                self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
-                self:UpdateQoLTextDisplay()
+    elseif e == "PLAYER_ENTERING_WORLD" then
+        C_Timer.After(0.01, function()
+            if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
+                if self:HasLustDebuff() then
+                    self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+                    self:UpdateQoLTextDisplay()
+                end
             end
-        end
-        self:QoLOnZoneSwap()
+            self:QoLOnZoneSwap()
+        end)
     elseif e == "ENCOUNTER_END" and self:DifficultyCheck(14) then
         if NSRT.QoL.LootBossReminder then
             local success = select(5, ...)
@@ -208,7 +210,6 @@ end
 function NSI:InitQoL()
     self.QoLTextDisplays = {}
     -- stuff in here is ALWAYS enabled.
-    self:ToggleQoLEvent("ZONE_CHANGED_NEW_AREA", true)
     self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
     self:ToggleQoLEvent("ENCOUNTER_START", true)
     if NSRT.QoL.AutoRepair then self:ToggleQoLEvent("MERCHANT_SHOW", true) end
