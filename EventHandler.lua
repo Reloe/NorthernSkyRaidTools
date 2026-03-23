@@ -358,6 +358,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
+        local diff= select(3, GetInstanceInfo()) or 0
         if self:DifficultyCheck(14) or diff == 23 then
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
@@ -377,7 +378,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if C_ChatInfo.InChatMessagingLockdown() then return end
         self.LastBroadcast = GetTime()
-        local diff= select(3, GetInstanceInfo()) or 0
         self.specs = {}
         self.GUIDS = {}
         self.HasNSRT = {}
