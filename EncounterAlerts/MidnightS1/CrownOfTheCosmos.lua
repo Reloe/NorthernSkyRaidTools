@@ -10,7 +10,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         id = id or self:DifficultyCheck(14) or 0
         local ExplosionTimers = {
-            [15] = {33, 53, 73, 93, 113, 133, 153, 173, 193, 213}
+            [15] = {33, 53, 75, 95, 117, 137, 159, 179, 201, 221}
         }
         local Explosion = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 5, 3, encID) -- Void Expulsion Dmg Event
         for i, v in ipairs(ExplosionTimers[id] or {}) do
@@ -30,7 +30,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         end
         Alert.phase = 3
         timers = {
-            [15] = {19, 39, 59, 79, 99, 119, 139, 159, 179, 199}, -- don't care about normal, adding mythic later
+            [15] = {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}, -- don't care about normal, adding mythic later
         }
         for i, v in ipairs(timers[id] or {}) do
             Alert.time = v
