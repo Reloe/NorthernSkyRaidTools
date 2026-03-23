@@ -293,6 +293,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.GlowStarted = {}
         self.Timelines = {}
         self.DefaultAlertID = 10000
+        self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:StartReminders(self.Phase)
@@ -312,6 +313,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
         local encID, encounterName = ...
         local diff = select(3, GetInstanceInfo()) or 0

@@ -26,13 +26,11 @@ local symbols = {
 function NSI:AddToReminder(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
-    if self:IsUsingTLReminders() then
-        if info.IsAlert then
-            self:FireCallback("NSRT_ALERT_ADDED", info)
-        else
-            return
-        end
-        -- put return outside the if statement when bart has added it to TimelineReminders
+    if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
+        table.insert(self.TLAlerts, info)
+        return
+    elseif self:IsUsingTLReminders() and (not info.IsAlert) and (not info.IsAssignment) then
+        return
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     -- convert to booleans
@@ -1230,7 +1228,7 @@ function NSAPI:DebugTimeline(e, dur)
     NSI:EventHandler(e, true, true, {duration = dur})
 end
 
-function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
+function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssignment)
     local id = self.DefaultAlertID or 10000
     self.DefaultAlertID = self.DefaultAlertID and self.DefaultAlertID + 1 or 10001
     local info =
@@ -1245,7 +1243,8 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
-        IsAlert = true, -- this makes this still display when user is using TimelineReminders since that setting is only for actual reminders, not alerts.
+        IsAssignment = IsAssignment,
+        IsAlert = not IsAssignment,
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
@@ -1386,8 +1385,10 @@ function NSI:FlashNoteBackgrounds()
     self:FlashFrameBackground(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame)
 end
 
-function NSAPI:ToggleTLReminders(enable)
-    NSRT.ReminderSettings.UseTLReminders = enable
+function NSAPI:ToggleTLReminders()
+    NSRT.ReminderSettings.UseTLReminders = LiquidRemindersSaved.settings.timeline.nsrtNote
+    NSRT.ReminderSettings.UseTLAssignments = LiquidRemindersSaved.settings.timeline.nsrtAssignments
+    NSRT.ReminderSettings.UseTLAlerts = LiquidRemindersSaved.settings.timeline.nsrtAlerts
     NSI:ProcessReminder()
     NSI:UpdateReminderFrame(true)
     NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
@@ -1395,4 +1396,21 @@ end
 
 function NSI:IsUsingTLReminders()
     return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineReminders")
+end
+
+function NSI:IsUsingTLAlerts()
+    return NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
+end
+
+function NSI:IsUsingTLAssignments()
+    return NSRT.ReminderSettings.UseTLAssignments and C_AddOns.IsAddOnLoaded("TimelineReminders")
+end
+
+function NSAPI:GetAlerts(encounterID, id)
+    if not NSI:IsUsingTLReminders() then return end
+    NSI.TLAlerts = {}
+    if NSI.EncounterAlertStart[encounterID] then NSI.EncounterAlertStart[encounterID](NSI, id) end
+    if NSI.AddAssignments[encounterID] then NSI.AddAssignments[encounterID](NSI, id) end
+    if NSI.EncounterAlertStop[encounterID] then NSI.EncounterAlertStop[encounterID](NSI) end
+    return NSI.TLAlerts
 end
