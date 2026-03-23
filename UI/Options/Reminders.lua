@@ -1028,6 +1028,18 @@ local function BuildReminderNoteOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Outside of Raid",
+            desc = "With this enabled the Notes will still show outside of raid instances.",
+            get = function() return NSRT.ReminderSettings.ShowOutsideOfRaid end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowOutsideOfRaid = value
+                NSI:UpdateReminderFrame(true)
+            end,
+        },
+
+        {
             type = "breakline",
             spacement = true,
         },

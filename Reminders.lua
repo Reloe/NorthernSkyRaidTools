@@ -1328,14 +1328,19 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
     end
 end
 
-function NSI:UpdateNoteFrame(Name, SettingsTable, text, ForceHide)
-    if SettingsTable.enabled and not ForceHide then
+function NSI:UpdateNoteFrame(Name, SettingsTable, text)
+    if SettingsTable.enabled then
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
-        self[Name]:Show()
+        local diff = select(3, GetInstanceInfo()) or 0
+        if (diff > 17 or diff < 14) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
+            self[Name]:Hide()
+        else
+            self[Name]:Show()
+        end
     elseif self[Name] then
         self[Name]:Hide()
     end

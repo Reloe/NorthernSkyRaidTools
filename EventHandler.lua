@@ -257,11 +257,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local diff = select(3, GetInstanceInfo()) or 0
             local ForceHide = diff > 17 or diff < 14
             if ForceHide then self:HideAllReminders(true) end
-            if IsLogin or IsReload then
-                self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
-                self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
-                self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
-            end
+            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
+            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
+            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
                 if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
                 self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
