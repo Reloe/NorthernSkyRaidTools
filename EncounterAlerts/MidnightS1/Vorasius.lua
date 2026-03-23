@@ -10,7 +10,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local Alert = self:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID)
 
         -- Boss appears to have same timers on all difficulties
-        local id = id or self:DifficultyCheck(14) or 0
+        id = id or self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
             [14] = {12, 132, 252},

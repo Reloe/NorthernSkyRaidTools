@@ -8,7 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local id = id or self:DifficultyCheck(14) or 0
+        id = id or self:DifficultyCheck(14) or 0
         local ExplosionTimers = {
             [15] = {33, 53, 73, 93, 113, 133, 153, 173, 193, 213}
         }

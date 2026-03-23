@@ -11,7 +11,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 
         -- same timer on all difficulties for now
         Alert.TTS = false
-        local id = id or self:DifficultyCheck(14) or 0
+        id = id or self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
             [14] = {137.4, 314},
