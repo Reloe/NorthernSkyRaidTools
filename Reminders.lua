@@ -1245,6 +1245,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssign
         startTime = GetTime(),
         IsAssignment = IsAssignment,
         IsAlert = not IsAssignment,
+        countdown = false,
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
