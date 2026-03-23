@@ -1231,8 +1231,8 @@ function NSAPI:DebugTimeline(e, dur)
 end
 
 function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
-    local id = self.DefaultAlertID
-    self.DefaultAlertID = self.DefaultAlertID + 1
+    local id = self.DefaultAlertID or 10000
+    self.DefaultAlertID = self.DefaultAlertID and self.DefaultAlertID + 1 or 10001
     local info =
     {
         dur = dur,

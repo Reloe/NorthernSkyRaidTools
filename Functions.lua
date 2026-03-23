@@ -349,3 +349,10 @@ function NSI:IsMelee(unit)
         end
     end
 end
+
+function NSAPI:GetAlerts(encounterID)
+    if not NSI:IsUsingTLReminders() then return end
+    if NSI.EncounterAlertStart[encounterID] then NSI.EncounterAlertStart[encounterID](NSI) end
+    if NSI.AddAssignments[encounterID] then NSI.AddAssignments[encounterID](NSI) end
+    if NSI.EncounterAlertStop[encounterID] then NSI.EncounterAlertStop[encounterID](NSI) end
+end
