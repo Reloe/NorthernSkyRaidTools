@@ -12,7 +12,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
         local ExplosionTimers = {
             [15] = {33, 53, 73, 93, 113, 133, 153, 173, 193, 213}
         }
-        local Explosion = self:CreateDefaultAlert("Explosion", "Bar", nil, 5, 3, encID) -- Void Expulsion Bait
+        local Explosion = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 5, 3, encID) -- Void Expulsion Dmg Event
         for i, v in ipairs(ExplosionTimers[id] or {}) do
             Explosion.time = v
             self:AddToReminder(Explosion)
