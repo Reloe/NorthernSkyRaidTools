@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3180
 -- /run NSAPI:DebugEncounter(3180)
@@ -7,7 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Peace Aura
+        local Alert = self:CreateDefaultAlert(L["ENCOUNTER_ALERT_PEACE_AURA"], "Text", nil, 10, 1, encID) -- Peace Aura
 
         -- same timer on all difficulties for now
         Alert.TTS = false
@@ -62,10 +63,10 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         end
     end
     if not mygroup then return end
-    local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or "Flex Spot"
-    local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
-    local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
-    Alert.TTS, Alert.TTSTimer, Alert.text = 92, TTS, 10, text
+    local pos = (mygroup == 1 and L["ENCOUNTER_SPOT_STAR"]) or (mygroup == 2 and L["ENCOUNTER_SPOT_ORANGE"]) or (mygroup == 3 and L["ENCOUNTER_SPOT_PURPLE"]) or (mygroup == 4 and L["ENCOUNTER_SPOT_GREEN"]) or L["ENCOUNTER_SPOT_FLEX"]
+    local text = (IsHealer and string.format(L["ENCOUNTER_GO_TO_RT"], mygroup)) or string.format(L["ENCOUNTER_SOAK_RT"], mygroup)
+    local TTS = (IsHealer and string.format(L["ENCOUNTER_GO_TO_POS"], pos)) or string.format(L["ENCOUNTER_SOAK_POS"], pos)
+    Alert.time, Alert.TTS, Alert.TTSTimer, Alert.text = 92, TTS, 10, text
     local phaselength = 162.7 -- guess based on Zealous Spirit in logs
 
     for phase = 0, 2 do
@@ -78,7 +79,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     end
 
     if NSRT.AssignmentSettings.OnPull then
-        local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""
-        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the "..text.." Group", 5)
+        local text = mygroup == 1 and L["ENCOUNTER_SPOT_STAR"] or mygroup == 2 and L["ENCOUNTER_SPOT_ORANGE"] or mygroup == 3 and L["ENCOUNTER_SPOT_PURPLE"] or mygroup == 4 and L["ENCOUNTER_SPOT_GREEN"] or ""
+        self:DisplayText(string.format(L["ENCOUNTER_ASSIGN_SOAK_EXECUTION"], text), 5)
     end
 end

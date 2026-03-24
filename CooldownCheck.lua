@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 NSI.SPECIALIZATION_MAP = {
     -- Death Knight
@@ -167,7 +168,7 @@ function NSI:CheckCooldowns()
         end
         if highest.time > 0 then
             if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
-            SendChatMessage("NSRT: My "..highest.name.." is on cooldown for "..Round(highest.time).." seconds.", "RAID")
+            SendChatMessage(string.format(L["COOLDOWN_CHAT_ON_CD_FMT"], highest.name, Round(highest.time)), "RAID")
         end
     end
 end

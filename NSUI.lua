@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 -- Get references from Core module
 local Core = NSI.UI.Core
@@ -55,7 +56,7 @@ function NSUI:Init()
     NSUI:SetScale(scale)
 
     -- Create the tab container
-    local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
+    local tabContainer = DF:CreateTabContainer(NSUI, L["ADDON_TITLE"], "NSUI_TabsTemplate", TABS_LIST, {
         width = window_width,
         height = window_height - 5,
         backdrop_color = { 0, 0, 0, 0.2 },
@@ -86,7 +87,7 @@ function NSUI:Init()
     NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
     NSI.NSRTFrame.generic_display.Text:SetPoint("TOPLEFT", NSI.NSRTFrame.generic_display, "TOPLEFT", 0, 0)
     NSI.NSRTFrame.generic_display.Text:SetJustifyH("LEFT")
-    NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
+    NSI.NSRTFrame.generic_display.Text:SetText(L["GENERIC_DISPLAY_PREVIEW_TEXT"])
     NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
     NSI:MoveFrameInit(NSI.NSRTFrame.generic_display, "Generic")
 
@@ -195,25 +196,25 @@ function NSUI:ToggleOptions()
 end
 
 function NSI:NickNamesSyncPopup(unit, nicknametable)
-    local popup = DF:CreateSimplePanel(UIParent, 300, 120, "Sync Nicknames", "SyncNicknamesPopup", {
+    local popup = DF:CreateSimplePanel(UIParent, 300, 120, L["NICK_SYNC_TITLE"], "SyncNicknamesPopup", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    local label = DF:CreateLabel(popup, NSAPI:Shorten(unit) .. " is attempting to sync their nicknames with you.", 11)
+    local label = DF:CreateLabel(popup, string.format(L["NICK_SYNC_PROMPT"], NSAPI:Shorten(unit)), 11)
 
     label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
     label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
     label:SetJustifyH("CENTER")
 
-    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, "Cancel")
+    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, L["COMMON_CANCEL"])
     cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
     cancel_button:SetTemplate(options_button_template)
 
     local accept_button = DF:CreateButton(popup, function()
         NSI:SyncNickNamesAccept(nicknametable)
         popup:Hide()
-    end, 130, 20, "Accept")
+    end, 130, 20, L["COMMON_CONFIRM"])
     accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
     accept_button:SetTemplate(options_button_template)
 

@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local Core = NSI.UI.Core
 local options_dropdown_template = Core.options_dropdown_template
@@ -24,7 +25,7 @@ local function build_sound_dropdown()
 end
 
 local function BuildPASoundEditUI()
-    local PASound_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Private Aura Sounds", "PASoundEditFrame", {
+    local PASound_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, L["PA_SOUND_TITLE"], "PASoundEditFrame", {
         DontRightClickClose = true
     })
     PASound_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -147,15 +148,15 @@ local function BuildPASoundEditUI()
         PASound_edit_scrollbox:CreateLine(createLineFunc)
     end
 
-    local SpellName = DF:CreateLabel(PASound_edit_frame, "Spell Name", 11)
+    local SpellName = DF:CreateLabel(PASound_edit_frame, L["PA_COL_SPELL_NAME"], 11)
     SpellName:SetPoint("TOPLEFT", PASound_edit_frame, "TOPLEFT", 40, -30)
     SpellName:SetWidth(100)
 
-    local SpellID = DF:CreateLabel(PASound_edit_frame, "Spell-ID", 11)
+    local SpellID = DF:CreateLabel(PASound_edit_frame, L["PA_COL_SPELL_ID"], 11)
     SpellID:SetPoint("LEFT", SpellName, "RIGHT", 55, 0)
     SpellID:SetWidth(70)
 
-    local Sound = DF:CreateLabel(PASound_edit_frame, "Sound", 11)
+    local Sound = DF:CreateLabel(PASound_edit_frame, L["PA_COL_SOUND"], 11)
     Sound:SetWidth(120)
     Sound:SetPoint("LEFT", SpellID, "RIGHT", 0, 0)
 
@@ -164,7 +165,7 @@ local function BuildPASoundEditUI()
     end)
 
     local label_width = 80
-    local NewSpellID = DF:CreateLabel(PASound_edit_frame, "SpellID:", 11)
+    local NewSpellID = DF:CreateLabel(PASound_edit_frame, L["PA_NEW_SPELL_ID"], 11)
     NewSpellID:SetPoint("BOTTOMLEFT", PASound_edit_frame, "BOTTOMLEFT", 10, 50)
     NewSpellID:SetWidth(label_width)
 
@@ -172,7 +173,7 @@ local function BuildPASoundEditUI()
     NewSpellIDTextEntry:SetPoint("LEFT", NewSpellID, "RIGHT", -10, 0)
     NewSpellIDTextEntry:SetTemplate(options_dropdown_template)
 
-    local NewSound = DF:CreateLabel(PASound_edit_frame, "Sound:", 11)
+    local NewSound = DF:CreateLabel(PASound_edit_frame, L["PA_NEW_SOUND"], 11)
     NewSound:SetPoint("LEFT", NewSpellIDTextEntry, "RIGHT", 10, 0)
     NewSound:SetWidth(label_width)
 
@@ -191,22 +192,22 @@ local function BuildPASoundEditUI()
             if C_UnitAuras.AuraIsPrivate(spellID) then
                 NSI:SavePASound(spellID, sound)
             else
-                print("Your entered spellID does not appear to be a Private Aura.")
+                print(L["PA_INVALID_SPELL_ID"])
             end
             PASound_edit_scrollbox:MasterRefresh()
 
         end
-    end, 60, 20, "Add")
+    end, 60, 20, L["PA_BTN_ADD"])
     add_button:SetPoint("LEFT", NewSoundDropdown, "RIGHT", 10, 0)
     add_button:SetTemplate(options_button_template)
 
     local function DeleteAllPASounds(self)
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Deleting ALL Private Aura Sounds", "NSRTDeleteALLPASoundsPopup")
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["PA_DELETE_ALL_TITLE"], "NSRTDeleteALLPASoundsPopup")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
         local text = DF:CreateLabel(popup,
-            "Are you sure you want to delete all \nPrivate Aura Sounds?", 12, "orange")
+            L["PA_DELETE_ALL_TEXT"], 12, "orange")
         text:SetPoint("TOP", popup, "TOP", 0, -30)
         text:SetJustifyH("CENTER")
 
@@ -222,12 +223,12 @@ local function BuildPASoundEditUI()
             }
             PASound_edit_scrollbox:MasterRefresh()
             popup:Hide()
-        end, 100, 30, "Confirm")
+        end, 100, 30, L["COMMON_CONFIRM"])
         confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
         confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         local cancelButton = DF:CreateButton(popup, function()
             popup:Hide()
-        end, 100, 30, "Cancel")
+        end, 100, 30, L["COMMON_CANCEL"])
         cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         popup:Show()
@@ -236,7 +237,7 @@ local function BuildPASoundEditUI()
     local delete_all_button = DF:CreateButton(PASound_edit_frame, function()
         DeleteAllPASounds(self)
         PASound_edit_scrollbox:MasterRefresh()
-    end, 60, 20, "Delete ALL")
+    end, 60, 20, L["PA_BTN_DELETE_ALL"])
     delete_all_button:SetPoint("BOTTOMRIGHT", PASound_edit_frame, "BOTTOMRIGHT", -10, 10)
     delete_all_button:SetTemplate(options_button_template)
 

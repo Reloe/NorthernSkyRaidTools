@@ -11,10 +11,11 @@ local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 function NSI:InitLDB()
+    local L = NSI.L
     if LDB then
         local databroker = LDB:NewDataObject("NSRT", {
             type = "launcher",
-            label = "Northern Sky Raid Tools",
+            label = L["ADDON_TITLE"],
             icon = [[Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo]],
             showInCompartment = true,
             OnClick = function(self, button)
@@ -23,8 +24,8 @@ function NSI:InitLDB()
                 end
             end,
             OnTooltipShow = function(tooltip)
-                tooltip:AddLine("Northern Sky Raid Tools", 0, 1, 1)
-                tooltip:AddLine("|cFFCFCFCFLeft click|r: Show/Hide Options Window")
+                tooltip:AddLine(L["MINIMAP_TOOLTIP_TITLE"], 0, 1, 1)
+                tooltip:AddLine(L["MINIMAP_TOOLTIP_LEFTCLICK"])
             end
         })
 

@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local Core = NSI.UI.Core
 local window_width = Core.window_width
@@ -20,7 +21,7 @@ local function BuildTimelineTabUI(parent)
     local function BuildModeDropdownOptions()
         return {
             {
-                label = "My Reminders",
+                label = L["TIMELINE_MODE_MY"],
                 value = "my",
                 onclick = function(_, _, value)
                     parent.timelineMode = value
@@ -30,7 +31,7 @@ local function BuildTimelineTabUI(parent)
                 end
             },
             {
-                label = "All Reminders (Raid Leader)",
+                label = L["TIMELINE_MODE_ALL"],
                 value = "all",
                 onclick = function(_, _, value)
                     parent.timelineMode = value
@@ -42,7 +43,7 @@ local function BuildTimelineTabUI(parent)
         }
     end
 
-    local modeLabel = DF:CreateLabel(parent, "View:", 11, "white")
+    local modeLabel = DF:CreateLabel(parent, L["TIMELINE_MODE_VIEW"], 11, "white")
     modeLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, top_offset)
 
     local modeDropdown = DF:CreateDropDown(parent, BuildModeDropdownOptions, "my", 200)
@@ -65,10 +66,10 @@ local function BuildTimelineTabUI(parent)
         end
         local personalList = NSI:GetAllReminderNames(true)
         if #personalList > 0 then
-            table.insert(options, { label = "--- Personal ---", value = nil })
+            table.insert(options, { label = L["TIMELINE_PERSONAL_SEPARATOR"], value = nil })
             for _, data in ipairs(personalList) do
                 table.insert(options, {
-                    label = data.name .. " (Personal)",
+                    label = data.name .. L["TIMELINE_PERSONAL_SUFFIX"],
                     value = {name = data.name, personal = true},
                     onclick = function(_, _, value)
                         parent.currentReminder = value
@@ -80,7 +81,7 @@ local function BuildTimelineTabUI(parent)
         return options
     end
 
-    local reminderLabel = DF:CreateLabel(parent, "Reminder Set:", 11, "white")
+    local reminderLabel = DF:CreateLabel(parent, L["TIMELINE_LABEL_REMINDER_SET"], 11, "white")
     reminderLabel:SetPoint("LEFT", modeDropdown, "RIGHT", 20, 0)
     parent.reminderLabel = reminderLabel
     reminderLabel:Hide()
@@ -108,13 +109,13 @@ local function BuildTimelineTabUI(parent)
     bossAbilitiesToggle:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -15, top_offset + 2)
     parent.bossAbilitiesToggle = bossAbilitiesToggle
 
-    local bossAbilitiesLabel = DF:CreateLabel(parent, "Show Boss Abilities", 11, "white")
+    local bossAbilitiesLabel = DF:CreateLabel(parent, L["TIMELINE_SHOW_BOSS_ABILITIES"], 11, "white")
     bossAbilitiesLabel:SetPoint("RIGHT", bossAbilitiesToggle, "LEFT", -5, 0)
 
     local function BuildBossDisplayModeOptions()
         return {
             {
-                label = "Important Healer",
+                label = L["TIMELINE_BOSS_MODE_HEALER"],
                 value = NSI.BossDisplayModes.IMPORTANT_HEALER,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
@@ -122,7 +123,7 @@ local function BuildTimelineTabUI(parent)
                 end
             },
             {
-                label = "Important Tank",
+                label = L["TIMELINE_BOSS_MODE_TANK"],
                 value = NSI.BossDisplayModes.IMPORTANT_TANK,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
@@ -130,7 +131,7 @@ local function BuildTimelineTabUI(parent)
                 end
             },
             {
-                label = "Show All",
+                label = L["TIMELINE_BOSS_MODE_ALL"],
                 value = NSI.BossDisplayModes.SHOW_ALL,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
@@ -138,7 +139,7 @@ local function BuildTimelineTabUI(parent)
                 end
             },
             {
-                label = "Combined",
+                label = L["TIMELINE_BOSS_MODE_COMBINED"],
                 value = NSI.BossDisplayModes.COMBINED,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
@@ -146,7 +147,7 @@ local function BuildTimelineTabUI(parent)
                 end
             },
             {
-                label = "Combined Important",
+                label = L["TIMELINE_BOSS_MODE_COMBINED_IMPORTANT"],
                 value = NSI.BossDisplayModes.COMBINED_IMPORTANT,
                 onclick = function(_, _, value)
                     parent.bossDisplayMode = value
@@ -156,7 +157,7 @@ local function BuildTimelineTabUI(parent)
         }
     end
 
-    local bossDisplayLabel = DF:CreateLabel(parent, "Boss Display:", 11, "white")
+    local bossDisplayLabel = DF:CreateLabel(parent, L["TIMELINE_BOSS_DISPLAY_LABEL"], 11, "white")
     bossDisplayLabel:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     parent.bossDisplayLabel = bossDisplayLabel
 
@@ -165,7 +166,7 @@ local function BuildTimelineTabUI(parent)
     bossDisplayDropdown:SetPoint("RIGHT", bossDisplayLabel, "LEFT", -5, 0)
     parent.bossDisplayDropdown = bossDisplayDropdown
 
-    local noDataLabel = DF:CreateLabel(parent, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
+    local noDataLabel = DF:CreateLabel(parent, L["TIMELINE_NO_DATA_DEFAULT"], 14, "gray")
     noDataLabel:SetPoint("CENTER", parent, "CENTER", 0, 0)
     parent.noDataLabel = noDataLabel
     noDataLabel:Hide()
@@ -247,11 +248,11 @@ local function BuildTimelineTabUI(parent)
                     end
                 end
 
-                GameTooltip:AddLine(spellName ~= "" and spellName or "Reminder", 1, 1, 1)
-                GameTooltip:AddLine("Time: " .. timeStr, 0.7, 0.7, 0.7)
+                GameTooltip:AddLine(spellName ~= "" and spellName or L["TIMELINE_REMINDER_FALLBACK"], 1, 1, 1)
+                GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_TIME"], timeStr), 0.7, 0.7, 0.7)
                 local duration = tonumber(block.info.duration) or 0
                 if duration > 0 then
-                    GameTooltip:AddLine("Duration: " .. duration .. "s", 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_DURATION"], duration), 0.7, 0.7, 0.7)
                 end
 
                 if block.blockData and block.blockData.payload then
@@ -265,15 +266,15 @@ local function BuildTimelineTabUI(parent)
                             intermission = "|cffb366e6",
                         }
                         local colorCode = categoryColors[payload.category] or "|cffb3b3b3"
-                        GameTooltip:AddLine("Category: " .. colorCode .. payload.category .. "|r", 0.7, 0.7, 0.7)
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_CATEGORY"], colorCode, payload.category), 0.7, 0.7, 0.7)
                         if payload.important then
-                            GameTooltip:AddLine("|cffff9900Use Healing CDs!|r", 1, 0.6, 0)
+                            GameTooltip:AddLine(L["TIMELINE_HEALING_CDS"], 1, 0.6, 0)
                         end
                     elseif payload.phase then
-                        GameTooltip:AddLine("Phase: " .. payload.phase, 0.7, 0.7, 0.7)
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_PHASE"], payload.phase), 0.7, 0.7, 0.7)
                     end
                     if payload.text then
-                        GameTooltip:AddLine("Text: " .. payload.text, 0.5, 0.8, 0.5)
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_TEXT"], payload.text), 0.5, 0.8, 0.5)
                     end
                 end
                 GameTooltip:Show()
@@ -426,7 +427,7 @@ local function BuildTimelineTabUI(parent)
             NSI:UpdateEmbeddedPhaseMarkers(parent)
         end)
 
-        local helpLabel = DF:CreateLabel(parent, "Scroll: Navigate | Ctrl+Scroll: Zoom | Shift+Scroll: Vertical", 10, "gray")
+        local helpLabel = DF:CreateLabel(parent, L["TIMELINE_HELP_TEXT"], 10, "gray")
         helpLabel:SetPoint("TOPLEFT", timelineFrame.scaleSlider, "BOTTOMLEFT", 0, -5)
     end
 

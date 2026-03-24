@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3177
 -- /run NSAPI:DebugEncounter(3177)
@@ -7,7 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID)
+        local Alert = self:CreateDefaultAlert(L["ENCOUNTER_ALERT_KNOCK"], "Text", nil, 5, 1, encID)
 
         -- Boss appears to have same timers on all difficulties
         id = id or self:DifficultyCheck(14) or 0
@@ -22,7 +23,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
 
-        Alert.text, Alert.TTS = "Breath", "Breath"
+        Alert.text, Alert.TTS = L["ENCOUNTER_ALERT_BREATH"], L["ENCOUNTER_ALERT_BREATH"]
         timers = {
             [0] = {},
             [14] = {102, 223, 343},

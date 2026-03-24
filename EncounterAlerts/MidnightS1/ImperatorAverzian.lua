@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3176
 -- /run NSAPI:DebugEncounter(3176)
@@ -7,7 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Soak", "Text", nil, 5.5, 1, encID) -- Group Soaks
+        local Alert = self:CreateDefaultAlert(L["ENCOUNTER_ALERT_SOAK"], "Text", nil, 5.5, 1, encID) -- Group Soaks
 
         id = id or self:DifficultyCheck(14) or 0
         local timers = {

@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -12,14 +13,14 @@ local function BuildReminderOptions()
     return {
         {
             type = "label",
-            get = function() return "Spell Settings" end,
+            get = function() return L["OPT_REM_SPELL_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "TTS",
-            desc = "Whether a TTS sound should be played",
+            name = L["OPT_COMMON_TTS"],
+            desc = L["OPT_REM_DESC_TTS_PLAYED"],
             get = function() return NSRT.ReminderSettings["SpellTTS"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellTTS"] = value
@@ -29,8 +30,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "TTSTimer",
-            desc = "At how much remaining Time the TTS should be played",
+            name = L["OPT_COMMON_TTS_TIMER"],
+            desc = L["OPT_REM_DESC_TTS_TIMER"],
             get = function() return NSRT.ReminderSettings["SpellTTSTimer"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellTTSTimer"] = value
@@ -43,8 +44,8 @@ local function BuildReminderOptions()
 
         {
             type = "range",
-            name = "Duration",
-            desc = "How long a reminder should be shown for",
+            name = L["OPT_COMMON_DURATION"],
+            desc = L["OPT_REM_DESC_DURATION"],
             get = function() return NSRT.ReminderSettings["SpellDuration"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellDuration"] = value
@@ -56,8 +57,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Countdown",
-            desc = "Whether or not you want a countdown for these reminders. 0 = disabled",
+            name = L["OPT_COMMON_COUNTDOWN"],
+            desc = L["OPT_REM_DESC_COUNTDOWN"],
             get = function() return NSRT.ReminderSettings["SpellCountdown"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellCountdown"] = value
@@ -70,8 +71,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Announce Duration",
-            desc = "When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'SpellName in 10'",
+            name = L["OPT_REM_ANNOUNCE_DURATION"],
+            desc = L["OPT_REM_DESC_ANNOUNCE_SPELL_DURATION"],
             get = function() return NSRT.ReminderSettings["AnnounceSpellDuration"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["AnnounceSpellDuration"] = value
@@ -83,8 +84,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "SpellName",
-            desc = "Display the SpellName if no text is provided",
+            name = L["OPT_REM_SPELLNAME"],
+            desc = L["OPT_REM_DESC_SPELLNAME"],
             get = function() return NSRT.ReminderSettings["SpellName"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["SpellName"] = value
@@ -95,8 +96,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "SpellName TTS if empty",
-            desc = "This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked).",
+            name = L["OPT_REM_SPELLNAME_TTS_IF_EMPTY"],
+            desc = L["OPT_REM_DESC_SPELLNAME_TTS_IF_EMPTY"],
             get = function() return NSRT.ReminderSettings.SpellNameTTS end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.SpellNameTTS = value
@@ -107,8 +108,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Bars",
-            desc = "Show Progress Bars instead of icons",
+            name = L["OPT_REM_BARS"],
+            desc = L["OPT_REM_DESC_BARS"],
             get = function() return NSRT.ReminderSettings["Bars"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["Bars"] = value
@@ -118,8 +119,8 @@ local function BuildReminderOptions()
         {
             type = "range",
             boxfirst = true,
-            name = "Sticky",
-            desc = "Keep Reminders shown for X seconds if the spell hasn't been pressed yet",
+            name = L["OPT_REM_STICKY"],
+            desc = L["OPT_REM_DESC_STICKY"],
             get = function() return NSRT.ReminderSettings["Sticky"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["Sticky"] = value
@@ -130,13 +131,13 @@ local function BuildReminderOptions()
         },
         {
             type = "label",
-            get = function() return "Text Settings" end,
+            get = function() return L["OPT_REM_TEXT_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "select",
-            name = "Grow Direction",
-            desc = "Grow Direction",
+            name = L["OPT_COMMON_GROW_DIRECTION"],
+            desc = L["OPT_COMMON_GROW_DIRECTION"],
             get = function() return NSRT.ReminderSettings.TextSettings.GrowDirection end,
             values = function() return build_growdirection_options("TextSettings") end,
             nocombat = true,
@@ -144,8 +145,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "TTS",
-            desc = "Whether a TTS sound should be played",
+            name = L["OPT_COMMON_TTS"],
+            desc = L["OPT_REM_DESC_TTS_PLAYED"],
             get = function() return NSRT.ReminderSettings["TextTTS"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextTTS"] = value
@@ -155,8 +156,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "TTSTimer",
-            desc = "At how much remaining Time the TTS should be played",
+            name = L["OPT_COMMON_TTS_TIMER"],
+            desc = L["OPT_REM_DESC_TTS_TIMER"],
             get = function() return NSRT.ReminderSettings["TextTTSTimer"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextTTSTimer"] = value
@@ -169,8 +170,8 @@ local function BuildReminderOptions()
 
         {
             type = "range",
-            name = "Duration",
-            desc = "How long a reminder should be shown for",
+            name = L["OPT_COMMON_DURATION"],
+            desc = L["OPT_REM_DESC_DURATION"],
             get = function() return NSRT.ReminderSettings["TextDuration"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextDuration"] = value
@@ -182,8 +183,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Countdown",
-            desc = "Whether or not you want a countdown for these reminders. 0 = disabled",
+            name = L["OPT_COMMON_COUNTDOWN"],
+            desc = L["OPT_REM_DESC_COUNTDOWN"],
             get = function() return NSRT.ReminderSettings["TextCountdown"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["TextCountdown"] = value
@@ -196,8 +197,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Announce Duration",
-            desc = "When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'Spread in 10'",
+            name = L["OPT_REM_ANNOUNCE_DURATION"],
+            desc = L["OPT_REM_DESC_ANNOUNCE_TEXT_DURATION"],
             get = function() return NSRT.ReminderSettings["AnnounceTextDuration"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["AnnounceTextDuration"] = value
@@ -207,16 +208,16 @@ local function BuildReminderOptions()
         },
         {
             type = "select",
-            name = "Font",
-            desc = "Font",
+            name = L["OPT_COMMON_FONT"],
+            desc = L["OPT_COMMON_FONT"],
             get = function() return NSRT.ReminderSettings.TextSettings.Font end,
             values = function() return build_media_options("TextSettings", "Font") end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "Font-Size",
-            desc = "Font Size",
+            name = L["OPT_COMMON_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.TextSettings.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextSettings.FontSize = value
@@ -229,8 +230,8 @@ local function BuildReminderOptions()
 
         {
             type = "color",
-            name = "Text-Color",
-            desc = "Color of Text-Reminders",
+            name = L["OPT_REM_TEXT_COLOR"],
+            desc = L["OPT_REM_DESC_TEXT_COLOR"],
             get = function() return NSRT.ReminderSettings.TextSettings.colors end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.TextSettings.colors = {r, g, b, a}
@@ -242,8 +243,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Spacing",
-            desc = "Spacing between Text reminders",
+            name = L["OPT_REM_SPACING"],
+            desc = L["OPT_REM_DESC_TEXT_SPACING"],
             get = function() return NSRT.ReminderSettings.TextSettings["Spacing"] or 0 end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextSettings["Spacing"] = value
@@ -257,8 +258,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Center-Aligned Text",
-            desc = "When enabled, text reminders will be center-aligned instead of left-aligned.",
+            name = L["OPT_REM_CENTER_ALIGNED_TEXT"],
+            desc = L["OPT_REM_DESC_CENTER_ALIGNED_TEXT"],
             get = function() return NSRT.ReminderSettings.TextSettings.CenterAligned end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextSettings.CenterAligned = value
@@ -272,21 +273,21 @@ local function BuildReminderOptions()
         },
         {
             type = "label",
-            get = function() return "Icon Settings" end,
+            get = function() return L["OPT_REM_ICON_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "select",
-            name = "Grow Direction",
-            desc = "Grow Direction",
+            name = L["OPT_COMMON_GROW_DIRECTION"],
+            desc = L["OPT_COMMON_GROW_DIRECTION"],
             get = function() return NSRT.ReminderSettings.IconSettings.GrowDirection end,
             values = function() return build_growdirection_options("IconSettings", true) end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "Icon-Width",
-            desc = "Width of the Icon",
+            name = L["OPT_REM_ICON_WIDTH"],
+            desc = L["OPT_REM_DESC_ICON_WIDTH"],
             get = function() return NSRT.ReminderSettings.IconSettings.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.Width = value
@@ -298,8 +299,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Icon-Height",
-            desc = "Height of the Icon",
+            name = L["OPT_REM_ICON_HEIGHT"],
+            desc = L["OPT_REM_DESC_ICON_HEIGHT"],
             get = function() return NSRT.ReminderSettings.IconSettings.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.Height = value
@@ -312,16 +313,16 @@ local function BuildReminderOptions()
 
         {
             type = "select",
-            name = "Font",
-            desc = "Font",
+            name = L["OPT_COMMON_FONT"],
+            desc = L["OPT_COMMON_FONT"],
             get = function() return NSRT.ReminderSettings.IconSettings.Font end,
             values = function() return build_media_options("IconSettings", "Font") end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "Font-Size",
-            desc = "Font Size",
+            name = L["OPT_COMMON_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.IconSettings.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.FontSize = value
@@ -333,8 +334,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Text-X-Offset",
-            desc = "X-Offset of the Text of the Icon",
+            name = L["OPT_REM_TEXT_X_OFFSET"],
+            desc = L["OPT_REM_DESC_ICON_TEXT_X_OFFSET"],
             get = function() return NSRT.ReminderSettings.IconSettings.xTextOffset end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.xTextOffset = value
@@ -346,8 +347,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Text-Y-Offset",
-            desc = "Y-Offset of the Text of the Icon",
+            name = L["OPT_REM_TEXT_Y_OFFSET"],
+            desc = L["OPT_REM_DESC_ICON_TEXT_Y_OFFSET"],
             get = function() return NSRT.ReminderSettings.IconSettings.yTextOffset end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.yTextOffset = value
@@ -359,8 +360,8 @@ local function BuildReminderOptions()
         },
         {
             type = "toggle",
-            name = "Right-Aligned Text",
-            desc = "Change the Text to be right-aligned, you still have to fix the offset yourself.",
+            name = L["OPT_REM_RIGHT_ALIGNED_TEXT"],
+            desc = L["OPT_REM_DESC_RIGHT_ALIGNED_TEXT"],
             get = function() return NSRT.ReminderSettings.IconSettings.RightAlignedText end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.RightAlignedText = value
@@ -372,8 +373,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Timer-Text Font-Size",
-            desc = "Font Size of the Timer-Text",
+            name = L["OPT_REM_TIMER_TEXT_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_TIMER_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.IconSettings.TimerFontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings.TimerFontSize = value
@@ -385,8 +386,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Spacing",
-            desc = "Spacing between Icon reminders",
+            name = L["OPT_REM_SPACING"],
+            desc = L["OPT_REM_DESC_ICON_SPACING"],
             get = function() return NSRT.ReminderSettings.IconSettings["Spacing"] or 0 end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings["Spacing"] = value
@@ -398,8 +399,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Icon-Glow",
-            desc = "At how many seconds you want the Icon to start glowing. 0 = disabled",
+            name = L["OPT_REM_ICON_GLOW"],
+            desc = L["OPT_REM_DESC_ICON_GLOW"],
             get = function() return NSRT.ReminderSettings.IconSettings["Glow"] or 0 end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IconSettings["Glow"] = value
@@ -412,21 +413,21 @@ local function BuildReminderOptions()
 
         {
             type = "label",
-            get = function() return "Bar Settings" end,
+            get = function() return L["OPT_REM_BAR_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "select",
-            name = "Grow Direction",
-            desc = "Grow Direction",
+            name = L["OPT_COMMON_GROW_DIRECTION"],
+            desc = L["OPT_COMMON_GROW_DIRECTION"],
             get = function() return NSRT.ReminderSettings.BarSettings.GrowDirection end,
             values = function() return build_growdirection_options("BarSettings") end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "Bar-Width",
-            desc = "Width of the Bar",
+            name = L["OPT_REM_BAR_WIDTH"],
+            desc = L["OPT_REM_DESC_BAR_WIDTH"],
             get = function() return NSRT.ReminderSettings.BarSettings.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.BarSettings.Width = value
@@ -438,8 +439,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Bar-Height",
-            desc = "Height of the Bar",
+            name = L["OPT_REM_BAR_HEIGHT"],
+            desc = L["OPT_REM_DESC_BAR_HEIGHT"],
             get = function() return NSRT.ReminderSettings.BarSettings.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.BarSettings.Height = value
@@ -451,24 +452,24 @@ local function BuildReminderOptions()
         },
         {
             type = "select",
-            name = "Texture",
-            desc = "Texture",
+            name = L["OPT_REM_TEXTURE"],
+            desc = L["OPT_REM_DESC_TEXTURE"],
             get = function() return NSRT.ReminderSettings.BarSettings.Texture end,
             values = function() return build_media_options("BarSettings", "Texture", true) end,
             nocombat = true,
         },
         {
             type = "select",
-            name = "Font",
-            desc = "Font",
+            name = L["OPT_COMMON_FONT"],
+            desc = L["OPT_COMMON_FONT"],
             get = function() return NSRT.ReminderSettings.BarSettings.Font end,
             values = function() return build_media_options("BarSettings", "Font") end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "Font-Size",
-            desc = "Font Size",
+            name = L["OPT_COMMON_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.BarSettings.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.BarSettings.FontSize = value
@@ -480,8 +481,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Timer-Text Font-Size",
-            desc = "Font Size of the Timer-Text",
+            name = L["OPT_REM_TIMER_TEXT_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_TIMER_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.BarSettings.TimerFontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.BarSettings.TimerFontSize = value
@@ -493,8 +494,8 @@ local function BuildReminderOptions()
         },
         {
             type = "color",
-            name = "Bar-Color",
-            desc = "Color of the Bars",
+            name = L["OPT_REM_BAR_COLOR"],
+            desc = L["OPT_REM_DESC_BAR_COLOR"],
             get = function() return NSRT.ReminderSettings.BarSettings.colors end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.BarSettings.colors = {r, g, b, a}
@@ -506,8 +507,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Spacing",
-            desc = "Spacing between Bar reminders",
+            name = L["OPT_REM_SPACING"],
+            desc = L["OPT_REM_DESC_BAR_SPACING"],
             get = function() return NSRT.ReminderSettings.BarSettings["Spacing"] or 0 end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.BarSettings["Spacing"] = value
@@ -522,13 +523,13 @@ local function BuildReminderOptions()
         },
         {
             type = "label",
-            get = function() return "Raidframe Icon Settings" end,
+            get = function() return L["OPT_REM_RAIDFRAME_ICON_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "range",
-            name = "Icon-Width",
-            desc = "Width of the Icon",
+            name = L["OPT_REM_ICON_WIDTH"],
+            desc = L["OPT_REM_DESC_ICON_WIDTH"],
             get = function() return NSRT.ReminderSettings.UnitIconSettings.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.UnitIconSettings.Width = value
@@ -540,8 +541,8 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "Icon-Height",
-            desc = "Height of the Icon",
+            name = L["OPT_REM_ICON_HEIGHT"],
+            desc = L["OPT_REM_DESC_ICON_HEIGHT"],
             get = function() return NSRT.ReminderSettings.UnitIconSettings.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.UnitIconSettings.Height = value
@@ -553,15 +554,15 @@ local function BuildReminderOptions()
         },
         {
             type = "select",
-            name = "Position",
-            desc = "position on the raidframe",
+            name = L["OPT_REM_POSITION"],
+            desc = L["OPT_REM_DESC_RAIDFRAME_POSITION"],
             get = function() return NSRT.ReminderSettings.UnitIconSettings.Position end,
             values = function() return build_raidframeicon_options() end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "x-Offset",
+            name = L["OPT_REM_X_OFFSET"],
             desc = "",
             get = function() return NSRT.ReminderSettings.UnitIconSettings.xOffset end,
             set = function(self, fixedparam, value)
@@ -574,7 +575,7 @@ local function BuildReminderOptions()
         },
         {
             type = "range",
-            name = "y-Offset",
+            name = L["OPT_REM_Y_OFFSET"],
             desc = "",
             get = function() return NSRT.ReminderSettings.UnitIconSettings.yOffset end,
             set = function(self, fixedparam, value)
@@ -588,8 +589,8 @@ local function BuildReminderOptions()
 
         {
             type = "color",
-            name = "Glow-Color",
-            desc = "Color of Raidframe Glows",
+            name = L["OPT_REM_GLOW_COLOR"],
+            desc = L["OPT_REM_DESC_RAIDFRAME_GLOW_COLOR"],
             get = function() return NSRT.ReminderSettings.GlowSettings.colors end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.GlowSettings.colors = {r, g, b, a}
@@ -600,15 +601,15 @@ local function BuildReminderOptions()
         },
         {
             type = "label",
-            get = function() return "Universal Settings" end,
+            get = function() return L["OPT_REM_UNIVERSAL_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "toggle",
             boxfirst = true,
-            name = "Hide Timer Text",
-            desc = "Hides the Timer Text shown on either the Icon or the Bar",
+            name = L["OPT_REM_HIDE_TIMER_TEXT"],
+            desc = L["OPT_REM_DESC_HIDE_TIMER_TEXT"],
             get = function() return NSRT.ReminderSettings["HideTimerText"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["HideTimerText"] = value
@@ -620,8 +621,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Play Sound instead of TTS",
-            desc = "This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work.",
+            name = L["OPT_REM_PLAY_SOUND_INSTEAD_OF_TTS"],
+            desc = L["OPT_REM_DESC_PLAY_DEFAULT_SOUND"],
             get = function() return NSRT.ReminderSettings["PlayDefaultSound"] end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings["PlayDefaultSound"] = value
@@ -632,8 +633,8 @@ local function BuildReminderOptions()
 
         {
             type = "select",
-            name = "Sound",
-            desc = "Sound",
+            name = L["OPT_REM_SOUND"],
+            desc = L["OPT_REM_DESC_SOUND"],
             get = function() return NSRT.ReminderSettings.DefaultSound end,
             values = function() return build_sound_dropdown() end,
             nocombat = true,
@@ -645,13 +646,13 @@ local function BuildReminderOptions()
 
         {
             type = "label",
-            get = function() return "Manage Reminders" end,
+            get = function() return L["OPT_REM_MANAGE_REMINDERS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "button",
-            name = "Preview Alerts",
-            desc = "Preview Reminders and unlock their anchors to move them around",
+            name = L["OPT_REM_PREVIEW_ALERTS"],
+            desc = L["OPT_REM_DESC_PREVIEW_ALERTS"],
             func = function(self)
                 if NSI.PreviewTimer then
                     NSI.PreviewTimer:Cancel()
@@ -767,8 +768,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Use Shared Reminders",
-            desc = "Enables reminders set by the raidleader or shared by an assist",
+            name = L["OPT_REM_USE_SHARED_REMINDERS"],
+            desc = L["OPT_REM_DESC_USE_SHARED"],
             get = function() return NSRT.ReminderSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.enabled = value
@@ -781,8 +782,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Use Personal Reminders",
-            desc = "Enables reminders set into your personal reminder",
+            name = L["OPT_REM_USE_PERSONAL_REMINDERS"],
+            desc = L["OPT_REM_DESC_USE_PERSONAL"],
             get = function() return NSRT.ReminderSettings.PersNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersNote = value
@@ -794,8 +795,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Use MRT Note Reminders",
-            desc = "Enables reminders entered into MRT note",
+            name = L["OPT_REM_USE_MRT_NOTE_REMINDERS"],
+            desc = L["OPT_REM_DESC_USE_MRT_NOTE"],
             get = function() return NSRT.ReminderSettings.MRTNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.MRTNote = value
@@ -807,8 +808,8 @@ local function BuildReminderOptions()
 
         {
             type = "button",
-            name = "Shared Reminders",
-            desc = "Shows a list of all Reminders",
+            name = L["OPT_REM_SHARED_REMINDERS"],
+            desc = L["OPT_REM_DESC_SHARED_LIST"],
             func = function(self)
                 if not NSUI.reminders_frame:IsShown() then
                     NSUI.reminders_frame:Show()
@@ -821,8 +822,8 @@ local function BuildReminderOptions()
         },
         {
             type = "button",
-            name = "Personal Reminders",
-            desc = "Shows a list of all Personal Reminders",
+            name = L["OPT_REM_PERSONAL_REMINDERS"],
+            desc = L["OPT_REM_DESC_PERSONAL_LIST"],
             func = function(self)
                 if not NSUI.personal_reminders_frame:IsShown() then
                     NSUI.personal_reminders_frame:Show()
@@ -837,8 +838,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Share on Ready Check",
-            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
+            name = L["OPT_REM_SHARE_ON_RC"],
+            desc = L["OPT_REM_DESC_SHARE_ON_RC"],
             get = function() return NSRT.ReminderSettings.AutoShare end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.AutoShare = value
@@ -848,8 +849,8 @@ local function BuildReminderOptions()
 
         {
             type = "button",
-            name = "Test Active Reminder",
-            desc = "Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test. This button does nothing if you are using TimelineReminders to display Reminders.",
+            name = L["OPT_REM_TEST_ACTIVE"],
+            desc = L["OPT_REM_DESC_TEST_ACTIVE"],
             func = function(self)
                 if not NSI.TestingReminder then
                     NSI.TestingReminder = true
@@ -869,20 +870,20 @@ local function BuildReminderNoteOptions()
     return {
         {
             type = "label",
-            get = function() return "This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 3 types of displays. The first one shows all reminders, the second one shows only those that will activate for you. And the third shows all text that is not a reminder." end,
+            get = function() return L["OPT_REM_NOTE_INTRO"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             spacement = true,
         },
         {
             type = "label",
-            get = function() return "All Reminders Note" end,
+            get = function() return L["OPT_REM_ALL_NOTE_TITLE"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "button",
-            name = "Toggle All Reminders",
-            desc = "Locks/Unlocks the All Reminders Note to be moved around",
+            name = L["OPT_REM_TOGGLE_ALL_NOTE"],
+            desc = L["OPT_REM_DESC_TOGGLE_ALL_NOTE"],
             func = function(self)
                 if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(false, true)
@@ -905,8 +906,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show All Reminders Note",
-            desc = "Whether you want to show the All Reminders Note on screen permanently",
+            name = L["OPT_REM_SHOW_ALL_NOTE"],
+            desc = L["OPT_REM_DESC_SHOW_ALL_NOTE"],
             get = function() return NSRT.ReminderSettings.ReminderFrame.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.enabled = value
@@ -917,8 +918,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Font-Size",
-            desc = "Font-Size of the All Reminders Note",
+            name = L["OPT_COMMON_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_ALL_NOTE_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.ReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.FontSize = value
@@ -930,8 +931,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "select",
-            name = "Font",
-            desc = "Font of the All Reminders Note",
+            name = L["OPT_COMMON_FONT"],
+            desc = L["OPT_REM_DESC_ALL_NOTE_FONT"],
             get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
             values = function()
                 return build_media_options("ReminderFrame", "Font", false, true, false)
@@ -940,8 +941,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Width",
-            desc = "Width of the All Reminders Note",
+            name = L["OPT_COMMON_WIDTH"],
+            desc = L["OPT_REM_DESC_ALL_NOTE_WIDTH"],
             get = function() return NSRT.ReminderSettings.ReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Width = value
@@ -953,8 +954,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Height",
-            desc = "Height of the All Reminders Note",
+            name = L["OPT_COMMON_HEIGHT"],
+            desc = L["OPT_REM_DESC_ALL_NOTE_HEIGHT"],
             get = function() return NSRT.ReminderSettings.ReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ReminderFrame.Height = value
@@ -967,8 +968,8 @@ local function BuildReminderNoteOptions()
 
         {
             type = "color",
-            name = "Background-Color",
-            desc = "Color of the Background of the All Reminders Note when unlocked",
+            name = L["OPT_COMMON_BG_COLOR"],
+            desc = L["OPT_REM_DESC_ALL_NOTE_BG"],
             get = function() return NSRT.ReminderSettings.ReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ReminderFrame.BGcolor = {r, g, b, a}
@@ -980,8 +981,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Text-Note in All Reminders Note",
-            desc = "Display the Text-Note inside the All Reminders Note.",
+            name = L["OPT_REM_SHOW_TEXT_IN_ALL_NOTE"],
+            desc = L["OPT_REM_DESC_TEXT_IN_ALL_NOTE"],
             get = function() return NSRT.ReminderSettings.TextInSharedNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextInSharedNote = value
@@ -990,14 +991,14 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "label",
-            get = function() return "Universal Settings - these apply to all 3 Notes" end,
+            get = function() return L["OPT_REM_UNIVERSAL_NOTE_SETTINGS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Hide Player-Names in Note",
-            desc = "Hides the Player Names for Reminders in the Note.",
+            name = L["OPT_REM_HIDE_PLAYER_NAMES_IN_NOTE"],
+            desc = L["OPT_REM_DESC_HIDE_PLAYER_NAMES"],
             get = function() return NSRT.ReminderSettings.HidePlayerNames end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.HidePlayerNames = value
@@ -1008,8 +1009,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Only Spell-Reminders",
-            desc = "With this enabled you will only see Spell-Reminders in your notes.",
+            name = L["OPT_REM_SHOW_ONLY_SPELL_REMINDERS"],
+            desc = L["OPT_REM_DESC_ONLY_SPELL_REMINDERS"],
             get = function() return NSRT.ReminderSettings.OnlySpellReminders end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.OnlySpellReminders = value
@@ -1020,8 +1021,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Countdown and Hide Timers in Notes",
-            desc = "With this enabled, Timers will count down during combat and completed timers will hide.",
+            name = L["OPT_REM_COUNTDOWN_HIDE_TIMERS_IN_NOTES"],
+            desc = L["OPT_REM_DESC_NOTE_COUNTDOWN"],
             get = function() return NSRT.ReminderSettings.NoteCountdown end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.NoteCountdown = value
@@ -1030,8 +1031,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Outside of Raid",
-            desc = "With this enabled the Notes will still show outside of raid instances.",
+            name = L["OPT_REM_SHOW_OUTSIDE_OF_RAID"],
+            desc = L["OPT_REM_DESC_SHOW_OUTSIDE_RAID"],
             get = function() return NSRT.ReminderSettings.ShowOutsideOfRaid end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ShowOutsideOfRaid = value
@@ -1051,14 +1052,14 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "label",
-            get = function() return "Personal Reminder-Note" end,
+            get = function() return L["OPT_REM_PERSONAL_NOTE_TITLE"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "button",
-            name = "Toggle Pers Reminder",
-            desc = "Locks/Unlocks the Personal Reminders Note to be moved around",
+            name = L["OPT_REM_TOGGLE_PERSONAL_NOTE"],
+            desc = L["OPT_REM_DESC_TOGGLE_PERSONAL_NOTE"],
             func = function(self)
                 if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(false, false, true)
@@ -1081,8 +1082,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Personal Reminder Note",
-            desc = "Whether you want to display the Note for Reminders only relevant to you",
+            name = L["OPT_REM_SHOW_PERSONAL_NOTE"],
+            desc = L["OPT_REM_DESC_SHOW_PERSONAL_NOTE"],
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.enabled = value
@@ -1093,8 +1094,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Font-Size",
-            desc = "Font-Size of the Personal Reminders Note",
+            name = L["OPT_COMMON_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_PERSONAL_NOTE_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.FontSize = value
@@ -1106,8 +1107,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "select",
-            name = "Font",
-            desc = "Font of the Personal Reminders Note",
+            name = L["OPT_COMMON_FONT"],
+            desc = L["OPT_REM_DESC_PERSONAL_NOTE_FONT"],
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Font end,
             values = function()
                 return build_media_options("PersonalReminderFrame", "Font", false, true, true)
@@ -1116,8 +1117,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Width",
-            desc = "Width of the Personal Reminders Note",
+            name = L["OPT_COMMON_WIDTH"],
+            desc = L["OPT_REM_DESC_PERSONAL_NOTE_WIDTH"],
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Width = value
@@ -1129,8 +1130,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Height",
-            desc = "Height of the Personal Reminders Note",
+            name = L["OPT_COMMON_HEIGHT"],
+            desc = L["OPT_REM_DESC_PERSONAL_NOTE_HEIGHT"],
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.PersonalReminderFrame.Height = value
@@ -1143,8 +1144,8 @@ local function BuildReminderNoteOptions()
 
         {
             type = "color",
-            name = "Background-Color",
-            desc = "Color of the Background of the Personal Reminders Note when unlocked",
+            name = L["OPT_COMMON_BG_COLOR"],
+            desc = L["OPT_REM_DESC_PERSONAL_NOTE_BG"],
             get = function() return NSRT.ReminderSettings.PersonalReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.PersonalReminderFrame.BGcolor = {r, g, b, a}
@@ -1157,8 +1158,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Text-Note in Personal Reminders Note",
-            desc = "Display the Text-Note inside the Personal Reminders Note.",
+            name = L["OPT_REM_SHOW_TEXT_IN_PERSONAL_NOTE"],
+            desc = L["OPT_REM_DESC_TEXT_IN_PERSONAL_NOTE"],
             get = function() return NSRT.ReminderSettings.TextInPersonalNote end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextInPersonalNote = value
@@ -1178,14 +1179,14 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "label",
-            get = function() return "Text-Note" end,
+            get = function() return L["OPT_REM_TEXT_NOTE_TITLE"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "button",
-            name = "Toggle Text Note",
-            desc = "Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed.",
+            name = L["OPT_REM_TOGGLE_TEXT_NOTE"],
+            desc = L["OPT_REM_DESC_TOGGLE_TEXT_NOTE"],
             func = function(self)
                 if NSI.ExtraReminderFrameMover and NSI.ExtraReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(false, false, false, true)
@@ -1208,8 +1209,8 @@ local function BuildReminderNoteOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Text Note",
-            desc = "Whether you want to display the Text-Note",
+            name = L["OPT_REM_SHOW_TEXT_NOTE"],
+            desc = L["OPT_REM_DESC_SHOW_TEXT_NOTE"],
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.enabled = value
@@ -1220,8 +1221,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Font-Size",
-            desc = "Font-Size of the Text-Note",
+            name = L["OPT_COMMON_FONT_SIZE"],
+            desc = L["OPT_REM_DESC_TEXT_NOTE_FONT_SIZE"],
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.FontSize = value
@@ -1233,8 +1234,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "select",
-            name = "Font",
-            desc = "Font of the Text-Note",
+            name = L["OPT_COMMON_FONT"],
+            desc = L["OPT_REM_DESC_TEXT_NOTE_FONT"],
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Font end,
             values = function()
                 return build_media_options("ExtraReminderFrame", "Font", false, true, true)
@@ -1243,8 +1244,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Width",
-            desc = "Width of the Text-Note",
+            name = L["OPT_COMMON_WIDTH"],
+            desc = L["OPT_REM_DESC_TEXT_NOTE_WIDTH"],
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Width end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.Width = value
@@ -1256,8 +1257,8 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "range",
-            name = "Height",
-            desc = "Height of the Text-Note",
+            name = L["OPT_COMMON_HEIGHT"],
+            desc = L["OPT_REM_DESC_TEXT_NOTE_HEIGHT"],
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Height end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.ExtraReminderFrame.Height = value
@@ -1270,8 +1271,8 @@ local function BuildReminderNoteOptions()
 
         {
             type = "color",
-            name = "Background-Color",
-            desc = "Color of the Background of the Text-Note when unlocked",
+            name = L["OPT_COMMON_BG_COLOR"],
+            desc = L["OPT_REM_DESC_TEXT_NOTE_BG"],
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.BGcolor end,
             set = function(self, r, g, b, a)
                 NSRT.ReminderSettings.ExtraReminderFrame.BGcolor = {r, g, b, a}
@@ -1293,13 +1294,13 @@ local function BuildReminderNoteOptions()
         },
         {
             type = "label",
-            get = function() return "Timeline" end,
+            get = function() return L["OPT_REM_TIMELINE"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "button",
-            name = "Open Timeline",
-            desc = "Opens the Timeline window (Also opened by the `/ns tl` or `/ns timeline` slash command)",
+            name = L["OPT_REM_OPEN_TIMELINE"],
+            desc = L["OPT_REM_DESC_OPEN_TIMELINE"],
             func = function(self)
                 NSI:ToggleTimelineWindow()
             end,

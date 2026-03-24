@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 NSI.Groups = {}
 NSI.Groups.Processing = false
@@ -390,10 +391,10 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
 end
 
 function NSI:SplitGroupInit(Flex, default, odds)
-    if C_ChatInfo.InChatMessagingLockdown() then print("Addon Messages are currently restricted and thus this action cannot be performed") return end
+    if C_ChatInfo.InChatMessagingLockdown() then print(L["SETUP_ERR_CHAT_RESTRICTED"]) return end
     if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
-        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
+        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print(L["SETUP_ERR_PROCESS_RUNNING"]) return end
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             self.specs = {}
@@ -402,7 +403,7 @@ function NSI:SplitGroupInit(Flex, default, odds)
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
         else
-            print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
+            print(L["SETUP_ERR_SPAM_PROTECTION"])
         end
     end
 end
@@ -530,10 +531,10 @@ function NSI:InviteList(list)
 end
 
 function NSI:ArrangeFromReminder(str)
-    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
+    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print(L["SETUP_ERR_PROCESS_RUNNING"]) return end
     local now = GetTime()
     if self.LastGroupSort and self.LastGroupSort > now - 5 then
-        print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
+        print(L["SETUP_ERR_SPAM_PROTECTION"])
         return
     end
     self.LastGroupSort = now
@@ -542,8 +543,8 @@ function NSI:ArrangeFromReminder(str)
     self.Groups.Processing = false
     self.Groups.units = {}
     self.Groups.total = 0
-    if self:Restricted() then print("You are currently in combat, cannot sort groups right now.") return end
-    if not list then print("No invite list found.") return end
+    if self:Restricted() then print(L["SETUP_ERR_IN_COMBAT"]) return end
+    if not list then print(L["SETUP_ERR_NO_INVITE_LIST"]) return end
     for i, name in ipairs(list) do
         local pos = UnitInRaid(name)
         local unit = pos and "raid"..pos

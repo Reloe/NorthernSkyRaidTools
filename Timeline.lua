@@ -1,6 +1,49 @@
 local _, NSI = ... -- Internal namespace
 
 local DF = _G["DetailsFramework"]
+local L = NSI.L
+
+local function LocalizeBossCategory(categoryStr)
+    if not categoryStr or categoryStr == "" then
+        return categoryStr
+    end
+    local categoryKeyMap = {
+        ["raid damage"] = "TIMELINE_CAT_RAID_DAMAGE",
+        ["raid aoe"] = "TIMELINE_CAT_RAID_AOE",
+        ["raid soak"] = "TIMELINE_CAT_RAID_SOAK",
+        ["group soak"] = "TIMELINE_CAT_GROUP_SOAK",
+        ["raid debuff"] = "TIMELINE_CAT_RAID_DEBUFF",
+        ["healing absorb"] = "TIMELINE_CAT_HEALING_ABSORB",
+        ["tankbuster"] = "TIMELINE_CAT_TANKBUSTER",
+        ["tank debuff"] = "TIMELINE_CAT_TANK_DEBUFF",
+        ["singletarget"] = "TIMELINE_CAT_SINGLE_TARGET",
+        ["debuffs"] = "TIMELINE_CAT_DEBUFFS",
+        ["debuff"] = "TIMELINE_CAT_DEBUFF",
+        ["dispel"] = "TIMELINE_CAT_DISPEL",
+        ["damage buff"] = "TIMELINE_CAT_DAMAGE_BUFF",
+        ["damage amp"] = "TIMELINE_CAT_DAMAGE_AMP",
+        ["spread"] = "TIMELINE_CAT_SPREAD",
+        ["frontal"] = "TIMELINE_CAT_FRONTAL",
+        ["knock"] = "TIMELINE_CAT_KNOCK",
+        ["soak"] = "TIMELINE_CAT_SOAK",
+        ["cc"] = "TIMELINE_CAT_CC",
+        ["interrupt"] = "TIMELINE_CAT_INTERRUPT",
+        ["add spawn"] = "TIMELINE_CAT_ADD_SPAWN",
+        ["phase change"] = "TIMELINE_CAT_PHASE_CHANGE",
+        ["event"] = "TIMELINE_CAT_EVENT",
+        ["boss immune"] = "TIMELINE_CAT_BOSS_IMMUNE",
+        ["intermission"] = "TIMELINE_CAT_INTERMISSION",
+        ["movement"] = "TIMELINE_CAT_MOVEMENT",
+        ["raid dot"] = "TIMELINE_CAT_RAID_DOT",
+    }
+    local localizedParts = {}
+    for keyword in categoryStr:gmatch("([^,]+)") do
+        local key = strtrim(keyword):lower()
+        local mapKey = categoryKeyMap[key]
+        table.insert(localizedParts, mapKey and (L[mapKey] or keyword) or keyword)
+    end
+    return table.concat(localizedParts, ", ")
+end
 
 -- Setup timeline hooks for zoom-to-cursor and sticky ruler
 -- Call this after creating a timeline with DF:CreateTimeLineFrame
@@ -176,12 +219,20 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
 
         for _, ability in ipairs(filteredAbilities) do
             for i, time in ipairs(ability.times) do
+                local localizedAbilityName = ability.name
+                if ability.spellID then
+                    local spellInfo = C_Spell.GetSpellInfo(ability.spellID)
+                    if spellInfo and spellInfo.name then
+                        localizedAbilityName = spellInfo.name
+                    end
+                end
                 table.insert(allTimes, {
                     time = time,
                     dur = ability.duration or 3,
                     spellID = ability.spellID,
-                    name = ability.name,
-                    category = ability.category,
+                    name = localizedAbilityName,
+                    category = ability.primaryCategory or ability.category,
+                    categoryDisplay = LocalizeBossCategory(ability.category),
                     color = ability.color,
                 })
             end
@@ -200,6 +251,7 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
                 entry.spellID,
                 payload = {
                     category = entry.category,
+                    categoryDisplay = entry.categoryDisplay,
                     abilityName = entry.name,
                     isBossAbility = true,
                 },
@@ -209,7 +261,7 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
         table.insert(lines, {
             spellId = nil,
             icon = "Interface\\ICONS\\Achievement_Boss_KilJaeden",
-            text = "|cffff8800Boss Abilities|r",
+            text = L["TIMELINE_BOSS_ABILITIES"],
             timeline = combinedTimeline,
             isBossAbility = true,
             isCombined = true,
@@ -274,7 +326,8 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
                 entry.dur,
                 abilityData.spellID,
                 payload = {
-                    category = abilityData.category,
+                    category = abilityData.primaryCategory or abilityData.category,
+                    categoryDisplay = LocalizeBossCategory(abilityData.category),
                     important = abilityData.important,
                     isBossAbility = true,
                 },
@@ -393,8 +446,8 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                 end
 
                 -- For processed reminders, we don't have tag info
-                -- Use "You" as the player name since these are your reminders
-                local player = "You"
+                -- Use localized "You" lane for own reminders
+                local player = L["TIMELINE_PLAYER_YOU"]
 
                 -- Determine the key for this ability
                 local abilityKey = spellID and tostring(spellID) or "text"
@@ -422,8 +475,8 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
 
     -- Sort abilities by spellID then text
     local sortedAbilities = {}
-    if playerReminders["You"] then
-        for abilityKey, data in pairs(playerReminders["You"]) do
+    if playerReminders[L["TIMELINE_PLAYER_YOU"]] then
+        for abilityKey, data in pairs(playerReminders[L["TIMELINE_PLAYER_YOU"]]) do
             table.insert(sortedAbilities, {key = abilityKey, data = data})
         end
     end
@@ -474,7 +527,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                 lineName = spellInfo.name or ""
             end
         else
-            lineName = "Notes"
+            lineName = L["TIMELINE_NOTES"]
             lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
         end
 
@@ -507,7 +560,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
             table.insert(finalLines, {
                 spellId = nil,
                 icon = "Interface\\ICONS\\INV_Misc_Gear_01",
-                text = "|cff888888--- Your Reminders ---|r",
+                text = L["TIMELINE_SEP_YOUR_REM"],
                 timeline = {},
                 isSeparator = true,
             })
@@ -602,7 +655,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
 
                 -- Convert "everyone" and "all" to a unified "Everyone" lane
                 if lowerPlayer == "everyone" or lowerPlayer == "all" then
-                    player = "Everyone"
+                    player = L["TIMELINE_PLAYER_EVERYONE"]
                 -- Skip role/group tags
                 elseif lowerPlayer == "healer" or
                        lowerPlayer == "tank" or
@@ -649,8 +702,8 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
         table.insert(sortedPlayers, player)
     end
     table.sort(sortedPlayers, function(a, b)
-        if a == "Everyone" then return true end
-        if b == "Everyone" then return false end
+        if a == L["TIMELINE_PLAYER_EVERYONE"] then return true end
+        if b == L["TIMELINE_PLAYER_EVERYONE"] then return false end
         return a < b
     end)
 
@@ -725,7 +778,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                 end
             else
                 -- Text-only reminders: label the lane as "Notes"
-                lineName = "Notes"
+                lineName = L["TIMELINE_NOTES"]
                 lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
             end
 
@@ -777,7 +830,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
             table.insert(finalLines, {
                 spellId = nil,
                 icon = "Interface\\ICONS\\INV_Misc_Gear_01",
-                text = "|cff888888--- Player Reminders ---|r",
+                text = L["TIMELINE_SEP_PLAYER_REM"],
                 timeline = {},
                 isSeparator = true,
             })
@@ -811,7 +864,7 @@ function NSI:CreateTimelineWindow()
     local window_height = 550
 
     local timelineWindow = DF:CreateSimplePanel(UIParent, window_width, window_height,
-        "|cFF00FFFFNorthern Sky|r Timeline", "NSUITimelineWindow", {
+        L["TIMELINE_WINDOW_TITLE"], "NSUITimelineWindow", {
         DontRightClickClose = true,
         UseStatusBar = false,
             UseScaleBar = true,
@@ -892,7 +945,7 @@ function NSI:CreateTimelineWindow()
     local function BuildModeDropdownOptions()
         return {
             {
-                label = "My Reminders",
+                label = L["TIMELINE_MODE_MY"],
                 value = "my",
                 onclick = function(_, _, value)
                     timelineWindow.mode = value
@@ -902,7 +955,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "All Reminders (Raid Leader)",
+                label = L["TIMELINE_MODE_ALL"],
                 value = "all",
                 onclick = function(_, _, value)
                     timelineWindow.mode = value
@@ -914,7 +967,7 @@ function NSI:CreateTimelineWindow()
         }
     end
 
-    local modeLabel = DF:CreateLabel(timelineWindow, "View:", 11, "white")
+    local modeLabel = DF:CreateLabel(timelineWindow, L["TIMELINE_MODE_VIEW"], 11, "white")
     modeLabel:SetPoint("TOPLEFT", timelineWindow, "TOPLEFT", 10, -30)
 
     local modeDropdown = DF:CreateDropDown(timelineWindow, BuildModeDropdownOptions, "my", 200)
@@ -943,12 +996,12 @@ function NSI:CreateTimelineWindow()
         local personalList = self:GetAllReminderNames(true)
         if #personalList > 0 then
             table.insert(options, {
-                label = "--- Personal ---",
+                label = L["TIMELINE_PERSONAL_SEPARATOR"],
                 value = nil,
             })
             for _, data in ipairs(personalList) do
                 table.insert(options, {
-                    label = data.name .. " (Personal)",
+                    label = data.name .. L["TIMELINE_PERSONAL_SUFFIX"],
                     value = {name = data.name, personal = true},
                     onclick = function(_, _, value)
                         self:RefreshAllRemindersTimeline(value.name, value.personal)
@@ -962,7 +1015,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Reminder selection dropdown (only shown in "All Reminders" mode)
-    local reminderLabel = DF:CreateLabel(timelineWindow, "Reminder Set:", 11, "white")
+    local reminderLabel = DF:CreateLabel(timelineWindow, L["TIMELINE_LABEL_REMINDER_SET"], 11, "white")
     reminderLabel:SetPoint("LEFT", modeDropdown, "RIGHT", 20, 0)
     timelineWindow.reminderLabel = reminderLabel
     reminderLabel:Hide() -- Hidden by default (My Reminders mode)
@@ -997,14 +1050,14 @@ function NSI:CreateTimelineWindow()
     bossAbilitiesToggle:SetPoint("TOPRIGHT", timelineWindow, "TOPRIGHT", -15, -28)
     timelineWindow.bossAbilitiesToggle = bossAbilitiesToggle
 
-    local bossAbilitiesLabel = DF:CreateLabel(timelineWindow, "Show Boss Abilities", 11, "white")
+    local bossAbilitiesLabel = DF:CreateLabel(timelineWindow, L["TIMELINE_SHOW_BOSS_ABILITIES"], 11, "white")
     bossAbilitiesLabel:SetPoint("RIGHT", bossAbilitiesToggle, "LEFT", -5, 0)
 
     -- Boss display mode dropdown
     local function BuildBossDisplayModeOptions()
         return {
             {
-                label = "Important Healer",
+                label = L["TIMELINE_BOSS_MODE_HEALER"],
                 value = NSI.BossDisplayModes.IMPORTANT_HEALER,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1012,7 +1065,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Important Tank",
+                label = L["TIMELINE_BOSS_MODE_TANK"],
                 value = NSI.BossDisplayModes.IMPORTANT_TANK,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1020,7 +1073,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Show All",
+                label = L["TIMELINE_BOSS_MODE_ALL"],
                 value = NSI.BossDisplayModes.SHOW_ALL,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1028,7 +1081,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Combined",
+                label = L["TIMELINE_BOSS_MODE_COMBINED"],
                 value = NSI.BossDisplayModes.COMBINED,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1036,7 +1089,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Combined Important",
+                label = L["TIMELINE_BOSS_MODE_COMBINED_IMPORTANT"],
                 value = NSI.BossDisplayModes.COMBINED_IMPORTANT,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1051,12 +1104,12 @@ function NSI:CreateTimelineWindow()
     bossDisplayDropdown:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     timelineWindow.bossDisplayDropdown = bossDisplayDropdown
 
-    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
+    local bossDisplayLabel = DF:CreateLabel(timelineWindow, L["TIMELINE_BOSS_DISPLAY_LABEL"], 11, "white")
     bossDisplayLabel:SetPoint("RIGHT", bossDisplayDropdown, "LEFT", -5, 0)
     timelineWindow.bossDisplayLabel = bossDisplayLabel
 
     -- No data label (shown when no reminders)
-    local noDataLabel = DF:CreateLabel(timelineWindow, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
+    local noDataLabel = DF:CreateLabel(timelineWindow, L["TIMELINE_NO_DATA_DEFAULT"], 14, "gray")
     noDataLabel:SetPoint("CENTER", timelineWindow, "CENTER", 0, 0)
     timelineWindow.noDataLabel = noDataLabel
     noDataLabel:Hide()
@@ -1306,12 +1359,12 @@ function NSI:CreateTimelineWindow()
                     spellName = block.blockData.payload.abilityName
                 end
 
-                GameTooltip:AddLine(spellName ~= "" and spellName or "Reminder", 1, 1, 1)
-                GameTooltip:AddLine("Time: " .. timeStr, 0.7, 0.7, 0.7)
+                GameTooltip:AddLine(spellName ~= "" and spellName or L["TIMELINE_REMINDER_FALLBACK"], 1, 1, 1)
+                GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_TIME"], timeStr), 0.7, 0.7, 0.7)
                 -- Duration is stored at position [4] in the block data (auraDuration)
                 local duration = block.blockData and tonumber(block.blockData[4]) or 0
                 if duration > 0 then
-                    GameTooltip:AddLine("Duration: " .. duration .. "s", 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_DURATION"], duration), 0.7, 0.7, 0.7)
                 end
 
                 -- Show category for boss abilities
@@ -1326,18 +1379,19 @@ function NSI:CreateTimelineWindow()
                             intermission = "|cffb366e6",
                         }
                         local colorCode = categoryColors[payload.category] or "|cffb3b3b3"
-                        GameTooltip:AddLine("Category: " .. colorCode .. payload.category .. "|r", 0.7, 0.7, 0.7)
+                        local displayCategory = payload.categoryDisplay or payload.category
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_CATEGORY"], colorCode, displayCategory), 0.7, 0.7, 0.7)
                         if payload.important then
-                            GameTooltip:AddLine("|cffff9900Use Healing CDs!|r", 1, 0.6, 0)
+                            GameTooltip:AddLine(L["TIMELINE_HEALING_CDS"], 1, 0.6, 0)
                         end
                     elseif payload.phase then
-                        GameTooltip:AddLine("Phase: " .. payload.phase, 0.7, 0.7, 0.7)
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_PHASE"], payload.phase), 0.7, 0.7, 0.7)
                     end
                     if payload.text then
-                        GameTooltip:AddLine("Text: " .. payload.text, 0.5, 0.8, 0.5)
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_TEXT"], payload.text), 0.5, 0.8, 0.5)
                     end
                     if payload.glowUnit then
-                        GameTooltip:AddLine("Glow Unit: " .. payload.glowUnit, 1, 1, 0)
+                        GameTooltip:AddLine(string.format(L["TIMELINE_LABEL_GLOW_UNIT"], payload.glowUnit), 1, 1, 0)
                     end
                 end
                 GameTooltip:Show()
@@ -1633,7 +1687,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Help text (positioned at bottom, below the sliders)
-    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Navigate | Ctrl+Scroll: Zoom | Shift+Scroll: Vertical", 10, "gray")
+    local helpLabel = DF:CreateLabel(timelineWindow, L["TIMELINE_HELP_TEXT"], 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
     -- Handle window resize to update timeline dimensions
@@ -1723,7 +1777,7 @@ function NSI:RefreshTimelineForMode()
                 self.TimelineWindow.currentReminder = {name = activeReminder, personal = isPersonal}
                 self.TimelineWindow.reminderDropdown:Select({name = activeReminder, personal = isPersonal})
             else
-                self.TimelineWindow.noDataLabel:SetText("Select a reminder set from the dropdown.")
+                self.TimelineWindow.noDataLabel:SetText(L["TIMELINE_NO_DATA_SELECT_REMINDER"])
                 self.TimelineWindow.noDataLabel:Show()
                 self.TimelineWindow.timeline:Hide()
             end
@@ -1833,7 +1887,7 @@ function NSI:RefreshMyRemindersTimeline()
             end
         end
 
-        self.TimelineWindow.noDataLabel:SetText("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you.")
+        self.TimelineWindow.noDataLabel:SetText(L["TIMELINE_NO_DATA_MY"])
         self.TimelineWindow.noDataLabel:Show()
         self.TimelineWindow.timeline:SetData({
             length = 300,
@@ -1868,7 +1922,7 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
         self:UpdatePhaseMarkers()
         self:UpdateTimelineTitle()
     else
-        self.TimelineWindow.noDataLabel:SetText("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)")
+        self.TimelineWindow.noDataLabel:SetText(L["TIMELINE_NO_DATA_ALL"])
         self.TimelineWindow.noDataLabel:Show()
         self.TimelineWindow.timeline:SetData({
             length = 300,
@@ -1889,7 +1943,7 @@ function NSI:UpdateTimelineTitle()
     local window = self.TimelineWindow
     if not window then return end
 
-    local title = "|cFF00FFFFNorthern Sky|r Timeline"
+    local title = L["TIMELINE_WINDOW_TITLE"]
 
     local encID = window.currentEncounterID
     if encID then
@@ -1897,9 +1951,9 @@ function NSI:UpdateTimelineTitle()
         local difficulty = window.currentDifficulty
 
         if difficulty then
-            title = string.format("|cFF00FFFFNorthern Sky|r Timeline - %s (%s)", bossName, difficulty)
+            title = string.format("%s - %s (%s)", L["TIMELINE_WINDOW_TITLE"], bossName, difficulty)
         else
-            title = string.format("|cFF00FFFFNorthern Sky|r Timeline - %s", bossName)
+            title = string.format("%s - %s", L["TIMELINE_WINDOW_TITLE"], bossName)
         end
     end
 
@@ -1990,14 +2044,14 @@ function NSI:UpdatePhaseMarkers()
                 -- Tooltip
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or ("Phase " .. self.phaseNum)
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or string.format(L["TIMELINE_PHASE_DEFAULT"], self.phaseNum)
                     local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
-                    GameTooltip:AddLine(string.format("Start: %d:%02d", minutes, seconds), 0.7, 0.7, 0.7)
-                    GameTooltip:AddLine("|cff00ff00Drag to adjust timing|r", 0, 1, 0)
-                    GameTooltip:AddLine("|cffff9900Right-click to reset|r", 1, 0.6, 0)
+                    GameTooltip:AddLine(string.format(L["TIMELINE_PHASE_START"], minutes, seconds), 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(L["TIMELINE_PHASE_DRAG"], 0, 1, 0)
+                    GameTooltip:AddLine(L["TIMELINE_PHASE_RESET"], 1, 0.6, 0)
                     GameTooltip:Show()
                 end)
 
@@ -2063,7 +2117,7 @@ function NSI:RefreshEmbeddedTimeline(tab)
                 tab.currentReminder = {name = activeReminder, personal = isPersonal}
                 tab.reminderDropdown:Select({name = activeReminder, personal = isPersonal})
             else
-                tab.noDataLabel:SetText("Select a reminder set from the dropdown.")
+                tab.noDataLabel:SetText(L["TIMELINE_NO_DATA_SELECT_REMINDER"])
                 tab.noDataLabel:Show()
                 tab.timeline:Hide()
             end
@@ -2138,7 +2192,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
             end
         end
 
-        tab.noDataLabel:SetText("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you.")
+        tab.noDataLabel:SetText(L["TIMELINE_NO_DATA_MY"])
         tab.noDataLabel:Show()
         tab.timeline:SetData({
             length = 300,
@@ -2173,7 +2227,7 @@ function NSI:RefreshEmbeddedAllReminders(tab, reminderName, personal)
         self:UpdateEmbeddedPhaseMarkers(tab)
         self:UpdateEmbeddedTimelineTitle(tab)
     else
-        tab.noDataLabel:SetText("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)")
+        tab.noDataLabel:SetText(L["TIMELINE_NO_DATA_ALL"])
         tab.noDataLabel:Show()
         tab.timeline:SetData({
             length = 300,
@@ -2276,14 +2330,14 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
 
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or ("Phase " .. self.phaseNum)
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or string.format(L["TIMELINE_PHASE_DEFAULT"], self.phaseNum)
                     local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
-                    GameTooltip:AddLine(string.format("Start: %d:%02d", minutes, seconds), 0.7, 0.7, 0.7)
-                    GameTooltip:AddLine("|cff00ff00Drag to adjust timing|r", 0, 1, 0)
-                    GameTooltip:AddLine("|cffff9900Right-click to reset|r", 1, 0.6, 0)
+                    GameTooltip:AddLine(string.format(L["TIMELINE_PHASE_START"], minutes, seconds), 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(L["TIMELINE_PHASE_DRAG"], 0, 1, 0)
+                    GameTooltip:AddLine(L["TIMELINE_PHASE_RESET"], 1, 0.6, 0)
                     GameTooltip:Show()
                 end)
 

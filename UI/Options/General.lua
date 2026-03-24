@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -11,12 +12,12 @@ local function BuildGeneralOptions()
     local client = IsWindowsClient()
 
     return {
-        { type = "label", get = function() return "General Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return L["OPT_GEN_TITLE"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Disable Minimap Button",
-            desc = "Hide the minimap button.",
+            name = L["OPT_GEN_DISABLE_MINIMAP"],
+            desc = L["OPT_GEN_DISABLE_MINIMAP_DESC"],
             get = function() return NSRT.Settings["Minimap"].hide end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["Minimap"].hide = value
@@ -27,8 +28,8 @@ local function BuildGeneralOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Enable Debug Logging",
-            desc = "Enables Debug Logging, which prints a bunch of information and adds it to DevTool. This might Error if you do not have the DevTool Addon installed.",
+            name = L["OPT_GEN_ENABLE_DEBUG_LOG"],
+            desc = L["OPT_GEN_ENABLE_DEBUG_LOG_DESC"],
             get = function() return NSRT.Settings["DebugLogs"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["DEBUGLOGS"] = true
@@ -39,11 +40,11 @@ local function BuildGeneralOptions()
         {
             type = "breakline"
         },
-        { type = "label", get = function() return "TTS Options" end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return L["OPT_GEN_TTS_TITLE"] end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "range",
-            name = "TTS Voice",
-            desc = "Voice to use for TTS. Most users will only have ~2 different voices. These voices depend on your installed language packs.",
+            name = L["OPT_GEN_TTS_VOICE"],
+            desc = L["OPT_GEN_TTS_VOICE_DESC"],
             get = function() return NSRT.Settings["TTSVoice"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["TTS_VOICE"] = true
@@ -54,8 +55,8 @@ local function BuildGeneralOptions()
         },
         {
             type = "range",
-            name = "TTS Volume",
-            desc = "Volume of the TTS",
+            name = L["OPT_GEN_TTS_VOLUME"],
+            desc = L["OPT_GEN_TTS_VOLUME_DESC"],
             get = function() return NSRT.Settings["TTSVolume"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["TTSVolume"] = value
@@ -65,10 +66,8 @@ local function BuildGeneralOptions()
         },
         {
             type = "textentry",
-            name = "TTS Preview",
-            desc = [[Enter any text to preview TTS
-
-Press 'Enter' to hear the TTS]],
+            name = L["OPT_GEN_TTS_PREVIEW"],
+            desc = L["OPT_GEN_TTS_PREVIEW_DESC"],
             get = function() return tts_text_preview end,
             set = function(self, fixedparam, value)
                 tts_text_preview = value
@@ -82,8 +81,8 @@ Press 'Enter' to hear the TTS]],
         {
             type = "toggle",
             boxfirst = true,
-            name = "Enable TTS",
-            desc = "Enable TTS",
+            name = L["OPT_GEN_ENABLE_TTS"],
+            desc = L["OPT_GEN_ENABLE_TTS_DESC"],
             get = function() return NSRT.Settings["TTS"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.general["TTS_ENABLED"] = true
@@ -95,8 +94,8 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Export Settings",
-            desc = "Exports your current settings to a string that can be shared with others.",
+            name = L["OPT_GEN_EXPORT_SETTINGS"],
+            desc = L["OPT_GEN_EXPORT_SETTINGS_DESC"],
             func = function(self)
                 if NSUI.export_string_popup:IsShown() then
                     NSUI.export_string_popup:Hide()
@@ -109,8 +108,8 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Import Settings",
-            desc = "Imports settings from a string shared by others. Confirming the Import will force reload your UI for the changes to take effect.",
+            name = L["OPT_GEN_IMPORT_SETTINGS"],
+            desc = L["OPT_GEN_IMPORT_SETTINGS_DESC"],
             func = function(self)
                 if NSUI.import_string_popup:IsShown() then
                     NSUI.import_string_popup:Hide()
@@ -127,13 +126,13 @@ Press 'Enter' to hear the TTS]],
 
         {
             type = "button",
-            name = "Move Text Display",
-            desc = "This lets you move the generic text display used for example the ready check module or the assignments on pull.",
+            name = L["OPT_GEN_MOVE_TEXT_DISPLAY"],
+            desc = L["OPT_GEN_MOVE_TEXT_DISPLAY_DESC"],
             func = function(self)
                 if NSI.NSRTFrame.generic_display:IsMovable() then
                     NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, false)
                 else
-                    NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
+                    NSI.NSRTFrame.generic_display.Text:SetText(L["GENERIC_DISPLAY_PREVIEW_TEXT"])
                     NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
                     NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, true)
                 end
@@ -143,16 +142,16 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "select",
-            name = "Global Font",
-            desc = "This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility.",
+            name = L["OPT_GEN_GLOBAL_FONT"],
+            desc = L["OPT_GEN_GLOBAL_FONT_DESC"],
             get = function() return NSRT.Settings.GlobalFont end,
             values = function() return build_media_options(false, false, false, false, false, true) end,
             nocombat = true,
         },
         {
             type = "range",
-            name = "Global Font-Size",
-            desc = "Size of the global font",
+            name = L["OPT_GEN_GLOBAL_FONT_SIZE"],
+            desc = L["OPT_GEN_GLOBAL_FONT_SIZE_DESC"],
             get = function() return NSRT.Settings["GlobalFontSize"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["GlobalFontSize"] = value
