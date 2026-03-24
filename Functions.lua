@@ -179,6 +179,7 @@ function NSI:GetSubGroup(unit)
             return subgroup
         end
     end
+    return 1 -- fallback to 1 if not in raid
 end
 
 function NSI:SpecToName(specid)
