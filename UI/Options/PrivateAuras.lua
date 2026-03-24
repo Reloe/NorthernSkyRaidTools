@@ -161,6 +161,17 @@ local function BuildPrivateAurasOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Alternate Display",
+            desc = "Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5",
+            get = function() return NSRT.PASettings.AlternateDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.AlternateDisplay = value
+                NSI:UpdatePADisplay(true)
+            end,
+        },
+        {
             type = "label",
             get = function() return "Personal Private Aura Text-Warning" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
@@ -572,6 +583,17 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PATankSettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideTooltip = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Alternate Display",
+            desc = "Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5",
+            get = function() return NSRT.PATankSettings.AlternateDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.AlternateDisplay = value
                 NSI:UpdatePADisplay(false, true)
             end,
         },
