@@ -517,8 +517,11 @@ function NSI:SetProperties(F, info, skipsound, s)
         -- only registered for player so spellID is never secret
         local _, _, spellID = ...
         if (not issecretvalue(info.spellID)) and spellID == info.spellID and self:IsShown() then
-            F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-            F:Hide()
+            local rem = info.dur - (GetTime() - info.startTime)
+            if rem and rem <= 5 then
+                F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+                F:Hide()
+            end
         end
     end)
 end
@@ -1413,6 +1416,7 @@ function NSI:IsUsingTLAssignments()
 end
 
 function NSAPI:GetAlerts(encounterID, id)
+    if C_InstanceEncounter.IsEncounterInProgress() then return end
     NSI.TLAlerts = {}
     if NSI.EncounterAlertStart[encounterID] and NSI:IsUsingTLAlerts() then NSI.EncounterAlertStart[encounterID](NSI, id) end
     if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
