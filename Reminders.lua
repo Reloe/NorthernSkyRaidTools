@@ -77,7 +77,7 @@ function NSI:AddToReminder(info)
     if info.TTS and info.text and type(info.TTS) == "boolean" then -- if tts is "true" convert it to the rawtext, which is the text before converting it to display raid-icons
         info.TTS = rawtext
     end
-    if info.TTS and type(info.TTS) == "string" and ((NSRT.ReminderSettings.AnnounceSpellDuration and info.spellID) or (NSRT.ReminderSettings.AnnounceTextDuration and not info.spellID)) and not info.IsAlert then
+    if info.TTS and type(info.TTS) == "string" and ((NSRT.ReminderSettings.AnnounceSpellDuration and info.spellID) or (NSRT.ReminderSettings.AnnounceTextDuration and not info.spellID)) and not (info.IsAlert or info.IsAssignment) then
         info.TTS = info.TTS.." in "..info.TTSTimer
     end
     if info.glowunit then
@@ -97,7 +97,7 @@ function NSI:AddToReminder(info)
         info.colors = colors
     end
     -- play default sound if enabled and no TTS/Sound was specified
-    if NSRT.ReminderSettings.PlayDefaultSound and (type(info.TTS) == "boolean" or not info.TTS) and (not info.sound) and (not info.IsAlert) then
+    if NSRT.ReminderSettings.PlayDefaultSound and (type(info.TTS) == "boolean" or not info.TTS) and (not info.sound) and (not (info.IsAlert or info.IsAssignment)) then
         info.sound = NSRT.ReminderSettings.DefaultSound
     end
 

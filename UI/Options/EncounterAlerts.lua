@@ -136,6 +136,19 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 7448211,
             iconsize = {16, 16},
+        },{
+            type = "toggle",
+            boxfirst = true,
+            name = "Nameplate Taunt Alerts",
+            desc = "This will display a Taunt under the nameplate of the Boss you should be taunting during the Judgment cast. The text will go away after you press taunt or after 3 seconds. It is possible that there could be some false positives triggering from the caster boss. It requires having the nameplate visible on screen at the moment of the cast start.",
+            get = function() return NSRT.EncounterAlerts[3180] and NSRT.EncounterAlerts[3180].TauntAlerts end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3180] = NSRT.EncounterAlerts[3180] or {}
+                NSRT.EncounterAlerts[3180].TauntAlerts = value
+            end,
+            nocombat = true,
+            icontexture = 7448211,
+            iconsize = {16, 16},
         },
         {
             type = "label",
