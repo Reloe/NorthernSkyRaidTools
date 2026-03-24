@@ -232,14 +232,12 @@ function NSI:QoLOnZoneSwap() -- only register events while player is in raid
     local InRaid = self:DifficultyCheck(14)
     local InInstance = select(2, GetInstanceInfo()) == "party"
     if NSRT.QoL.ResetBossDisplay then
+        self:ToggleQoLEvent("PLAYER_REGEN_ENABLED", true)
+        self:ToggleQoLEvent("PLAYER_REGEN_DISABLED", true)
         if InRaid and not self:Restricted() then
             self:ToggleQoLEvent("UNIT_AURA", true, "player")
-            self:ToggleQoLEvent("PLAYER_REGEN_ENABLED", true)
-            self:ToggleQoLEvent("PLAYER_REGEN_DISABLED", true)
         else
             self:ToggleQoLEvent("UNIT_AURA", false)
-            self:ToggleQoLEvent("PLAYER_REGEN_ENABLED", false)
-            self:ToggleQoLEvent("PLAYER_REGEN_DISABLED", false)
         end
     end
 

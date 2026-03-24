@@ -59,7 +59,8 @@ local function BuildQoLOptions()
                 if diff or not value then NSI:UpdateQoLTextDisplay() end
                 local turnon = value and diff and not NSI:Restricted()
                 NSI:ToggleQoLEvent("UNIT_AURA", turnon)
-                NSI:ToggleQoLEvent("ADDON_RESTRICTION_STATE_CHANGED", turnon)
+                NSI:ToggleQoLEvent("PLAYER_REGEN_ENABLED", value)
+                NSI:ToggleQoLEvent("PLAYER_REGEN_DISABLED", value)
             end,
             icontexture = 136090,
             iconsize = {16, 16},
