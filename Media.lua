@@ -41,7 +41,11 @@ NSI.LSM:Register("sound","|cFF4BAAC8Linked|r", [[Interface\Addons\NorthernSkyRai
 NSI.LSM:Register("sound","|cFF4BAAC8DropPool|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\DropPool.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Obelisk|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Obelisk.ogg]])
 --Fonts
-NSI.LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
+local Expressway = [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
+if GetLocale() ~= "enUS" then
+    Expressway = [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\HarmonyOS_Sans_SC_Regular.ttf]]
+end
+NSI.LSM:Register("font","Expressway", Expressway)
 --StatusBars
 NSI.LSM:Register("statusbar","Atrocity", [[Interface\Addons\NorthernSkyRaidTools\Media\StatusBars\Atrocity]])
 

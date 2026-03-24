@@ -1,6 +1,25 @@
 local _, NSI = ... -- Internal namespace
 local L = NSI.L
 local f = NSI.NSRTFrame
+
+local function ApplyGameCooltipFont()
+    if NSI._GameCooltipFontHooked then
+        return
+    end
+
+    if not _G.GameCooltip or type(_G.GameCooltip.Preset) ~= "function" then
+        return
+    end
+
+    hooksecurefunc(_G.GameCooltip, "Preset", function(self, presetId)
+        if presetId == 2 and NSRT and NSRT.Settings and NSRT.Settings.GlobalFont then
+            self:SetOption("TextFont", NSRT.Settings.GlobalFont)
+        end
+    end)
+
+    NSI._GameCooltipFontHooked = true
+end
+
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("READY_CHECK")
@@ -196,6 +215,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
+        ApplyGameCooltipFont()
         self.NSUI:Init()
         self:InitLDB()
         self:InitQoL()
