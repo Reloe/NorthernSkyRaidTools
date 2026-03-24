@@ -989,6 +989,8 @@ function NSI:CreateTimelineWindow()
     reminderDropdown:Hide() -- Hidden by default (My Reminders mode)
 
     local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
+    local playColor = { 20 / 255, 245 / 255, 87 / 255, 1 } -- {r,g,b,a}
+    local stopColor = { 247 / 255, 32 / 255, 61 / 255, 1 } -- {r,g,b,a}
     local playButton = DF:CreateButton(timelineWindow, function()
         if timelineWindow.previewActive then
             timelineWindow.previewActive = false
@@ -998,7 +1000,8 @@ function NSI:CreateTimelineWindow()
             end
             NSI:HideAllReminders()
             timelineWindow.playButton.text = "Play Preview"
-            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
+                14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
         else
             if not NSI.ProcessedReminder then NSI:ProcessReminder() end
             if not NSI.ProcessedReminder then return end
@@ -1006,11 +1009,13 @@ function NSI:CreateTimelineWindow()
             timelineWindow.previewStartTime = GetTime()
             NSI:StartReminders(1, true)
             timelineWindow.playButton.text = "Stop Preview"
-            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "stop_icon"), 14, 14, "OVERLAY", nil, {1, 0, 0, 1})
+            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\stop_icon.png", 14,
+                14, "OVERLAY", { 0.12, 0.88, 0.12, 0.88 }, stopColor)
         end
-    end, 130, 22, "Play Preview")
+    end, 32, 22, "Play Preview")
     playButton:SetTemplate(options_button_template)
-    playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+    playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
+        14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
     playButton:SetPoint("LEFT", modeDropdown, "RIGHT", 15, 0)
     timelineWindow.playButton = playButton
 
@@ -1786,8 +1791,11 @@ function NSI:ToggleTimelineWindow()
         self.TimelineWindow:Hide()
     else
         self.TimelineWindow:Show()
-        -- Default to "My Reminders" mode
-        self:RefreshTimelineForMode()
+        if not self.ProcessedReminder then
+            self:ProcessReminder() -- also calls RefreshTimelineForMode at its end
+        else
+            self:RefreshTimelineForMode()
+        end
     end
 end
 
