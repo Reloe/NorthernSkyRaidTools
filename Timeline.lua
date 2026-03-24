@@ -898,6 +898,7 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.mode = value
                     timelineWindow.reminderLabel:Hide()
                     timelineWindow.reminderDropdown:Hide()
+                    if timelineWindow.playButton then timelineWindow.playButton:Show() end
                     self:RefreshTimelineForMode()
                 end
             },
@@ -908,6 +909,20 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.mode = value
                     timelineWindow.reminderLabel:Show()
                     timelineWindow.reminderDropdown:Show()
+                    if timelineWindow.playButton then
+                            -- Stop preview and hide play button in "All Reminders" mode
+                        if timelineWindow.previewActive then
+                            timelineWindow.previewActive = false
+                            timelineWindow.previewStartTime = nil
+                            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
+                                timelineWindow.timeline.previewLine:Hide()
+                            end
+                            NSI:HideAllReminders()
+                            timelineWindow.playButton.text = "Play Preview"
+                            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                        end
+                        timelineWindow.playButton:Hide()
+                    end
                     self:RefreshTimelineForMode()
                 end
             },
@@ -972,6 +987,32 @@ function NSI:CreateTimelineWindow()
     reminderDropdown:SetPoint("LEFT", reminderLabel, "RIGHT", 10, 0)
     timelineWindow.reminderDropdown = reminderDropdown
     reminderDropdown:Hide() -- Hidden by default (My Reminders mode)
+
+    local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
+    local playButton = DF:CreateButton(timelineWindow, function()
+        if timelineWindow.previewActive then
+            timelineWindow.previewActive = false
+            timelineWindow.previewStartTime = nil
+            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
+                timelineWindow.timeline.previewLine:Hide()
+            end
+            NSI:HideAllReminders()
+            timelineWindow.playButton.text = "Play Preview"
+            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+        else
+            if not NSI.ProcessedReminder then NSI:ProcessReminder() end
+            if not NSI.ProcessedReminder then return end
+            timelineWindow.previewActive = true
+            timelineWindow.previewStartTime = GetTime()
+            NSI:StartReminders(1, true)
+            timelineWindow.playButton.text = "Stop Preview"
+            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "stop_icon"), 14, 14, "OVERLAY", nil, {1, 0, 0, 1})
+        end
+    end, 130, 22, "Play Preview")
+    playButton:SetTemplate(options_button_template)
+    playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+    playButton:SetPoint("LEFT", modeDropdown, "RIGHT", 15, 0)
+    timelineWindow.playButton = playButton
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
@@ -1601,7 +1642,25 @@ function NSI:CreateTimelineWindow()
         cursorLine:Hide()
     end)
 
-    -- Use OnUpdate for smooth cursor tracking
+    -- Preview line (green, animated during play preview)
+    local previewLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    previewLine:SetWidth(2)
+    previewLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 200)
+    previewLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+    previewLine:SetBackdropColor(0, 0.85, 0, 0.9)
+    previewLine:Hide()
+    timelineFrame.previewLine = previewLine
+
+    local previewTimeLabel = previewLine:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    previewTimeLabel:SetPoint("TOP", previewLine, "BOTTOM", 0, -2)
+    previewTimeLabel:SetTextColor(0.3, 1, 0.3, 1)
+
+    local previewTimeBg = previewLine:CreateTexture(nil, "BACKGROUND")
+    previewTimeBg:SetColorTexture(0, 0, 0, 0.7)
+    previewTimeBg:SetPoint("TOPLEFT", previewTimeLabel, "TOPLEFT", -3, 2)
+    previewTimeBg:SetPoint("BOTTOMRIGHT", previewTimeLabel, "BOTTOMRIGHT", 3, -1)
+
+    -- Use OnUpdate for smooth cursor tracking and preview line animation
     local updateThrottle = 0
     timelineFrame.body:SetScript("OnUpdate", function(self, elapsed)
         updateThrottle = updateThrottle + elapsed
@@ -1609,6 +1668,39 @@ function NSI:CreateTimelineWindow()
             updateThrottle = 0
             if self:IsMouseOver() then
                 updateCursorLine()
+            end
+            if timelineWindow.previewActive and timelineWindow.previewStartTime then
+                local previewElapsed = GetTime() - timelineWindow.previewStartTime
+                local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
+                local currentScale = timelineFrame.currentScale or 1
+                local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+                local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
+                local previewX = previewElapsed * pixelsPerSecond * currentScale - scrollX
+                local bodyWidth = timelineFrame.body:GetWidth() or 0
+
+                if previewX >= 0 and previewX <= bodyWidth then
+                    previewLine:ClearAllPoints()
+                    previewLine:SetPoint("TOP", timelineFrame.body, "TOPLEFT", previewX, -elapsedHeight)
+                    previewLine:SetPoint("BOTTOM", timelineFrame.body, "BOTTOMLEFT", previewX, 0)
+                    local minutes = math.floor(previewElapsed / 60)
+                    local seconds = math.floor(previewElapsed % 60)
+                    previewTimeLabel:SetText(string.format("%d:%02d", minutes, seconds))
+                    previewLine:Show()
+                else
+                    previewLine:Hide()
+                end
+
+                local timelineLength = (timelineFrame.data and timelineFrame.data.length) or 300
+                if previewElapsed >= timelineLength then
+                    timelineWindow.previewActive = false
+                    timelineWindow.previewStartTime = nil
+                    previewLine:Hide()
+                    NSI:HideAllReminders()
+                    if timelineWindow.playButton then
+                        timelineWindow.playButton.text = "Play Preview"
+                        timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                    end
+                end
             end
         end
     end)

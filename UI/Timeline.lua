@@ -174,6 +174,28 @@ local function BuildTimelineTabUI(parent)
     titleLabel:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, top_offset - 25)
     parent.titleLabel = titleLabel
 
+    local playButton = DF:CreateButton(parent, function()
+        if parent.previewActive then
+            parent.previewActive = false
+            parent.previewStartTime = nil
+            if parent.timeline and parent.timeline.previewLine then
+                parent.timeline.previewLine:Hide()
+            end
+            NSI:HideAllReminders()
+            parent.playButton.text = "Play Preview"
+        else
+            if not NSI.ProcessedReminder then NSI:ProcessReminder() end
+            if not NSI.ProcessedReminder then return end
+            parent.previewActive = true
+            parent.previewStartTime = GetTime()
+            NSI:StartReminders(1, true)
+            parent.playButton.text = "Stop Preview"
+        end
+    end, 120, 22, "Play Preview")
+    playButton:SetTemplate(options_button_template)
+    playButton:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -15, top_offset - 23)
+    parent.playButton = playButton
+
     local timelineOptions = {
         width = timeline_width,
         height = timeline_height,
@@ -399,6 +421,24 @@ local function BuildTimelineTabUI(parent)
         cursorLine:Hide()
     end)
 
+    -- Preview line (green, animated during play preview)
+    local previewLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    previewLine:SetWidth(2)
+    previewLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 200)
+    previewLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+    previewLine:SetBackdropColor(0, 0.85, 0, 0.9)
+    previewLine:Hide()
+    timelineFrame.previewLine = previewLine
+
+    local previewTimeLabel = previewLine:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    previewTimeLabel:SetPoint("TOP", previewLine, "BOTTOM", 0, -2)
+    previewTimeLabel:SetTextColor(0.3, 1, 0.3, 1)
+
+    local previewTimeBg = previewLine:CreateTexture(nil, "BACKGROUND")
+    previewTimeBg:SetColorTexture(0, 0, 0, 0.7)
+    previewTimeBg:SetPoint("TOPLEFT", previewTimeLabel, "TOPLEFT", -3, 2)
+    previewTimeBg:SetPoint("BOTTOMRIGHT", previewTimeLabel, "BOTTOMRIGHT", 3, -1)
+
     local updateThrottle = 0
     timelineFrame.body:SetScript("OnUpdate", function(self, elapsed)
         updateThrottle = updateThrottle + elapsed
@@ -406,6 +446,38 @@ local function BuildTimelineTabUI(parent)
             updateThrottle = 0
             if self:IsMouseOver() then
                 updateCursorLine()
+            end
+            if parent.previewActive and parent.previewStartTime then
+                local previewElapsed = GetTime() - parent.previewStartTime
+                local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
+                local currentScale = timelineFrame.currentScale or 1
+                local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+                local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
+                local previewX = previewElapsed * pixelsPerSecond * currentScale - scrollX
+                local bodyWidth = timelineFrame.body:GetWidth() or 0
+
+                if previewX >= 0 and previewX <= bodyWidth then
+                    previewLine:ClearAllPoints()
+                    previewLine:SetPoint("TOP", timelineFrame.body, "TOPLEFT", previewX, -elapsedHeight)
+                    previewLine:SetPoint("BOTTOM", timelineFrame.body, "BOTTOMLEFT", previewX, 0)
+                    local minutes = math.floor(previewElapsed / 60)
+                    local seconds = math.floor(previewElapsed % 60)
+                    previewTimeLabel:SetText(string.format("%d:%02d", minutes, seconds))
+                    previewLine:Show()
+                else
+                    previewLine:Hide()
+                end
+
+                local timelineLength = (timelineFrame.data and timelineFrame.data.length) or 300
+                if previewElapsed >= timelineLength then
+                    parent.previewActive = false
+                    parent.previewStartTime = nil
+                    previewLine:Hide()
+                    NSI:HideAllReminders()
+                    if parent.playButton then
+                        parent.playButton.text = "Play Preview"
+                    end
+                end
             end
         end
     end)
@@ -433,6 +505,18 @@ local function BuildTimelineTabUI(parent)
     parent.phaseMarkers = {}
 
     parent:SetScript("OnShow", function(self)
+        -- Stop any active preview when returning to this tab
+        if self.previewActive then
+            self.previewActive = false
+            self.previewStartTime = nil
+            if self.timeline and self.timeline.previewLine then
+                self.timeline.previewLine:Hide()
+            end
+            NSI:HideAllReminders()
+            if self.playButton then
+                self.playButton.text = "Play Preview"
+            end
+        end
         NSI:RefreshEmbeddedTimeline(self)
     end)
 
