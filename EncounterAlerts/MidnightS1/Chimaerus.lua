@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3306
 -- /run NSAPI:DebugEncounter(3306)
@@ -13,19 +14,19 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.dur, Alert.TTSTimer = 10, 5
         for phase = 1, 3 do
             Alert.phase = phase
-            Alert.time, Alert.text  = 18.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-            Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
+            Alert.time, Alert.text  = 18.7, subgroup <= 2 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
+            Alert.TTS = subgroup <= 2 and L["ENCOUNTER_TTS_SOAK"] or L["ENCOUNTER_TTS_DONT_SOAK"]
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 71.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-            Alert.TTS = subgroup >= 3 and "Soak" or "Don't soak"
+            Alert.time, Alert.text = 71.4, subgroup >= 3 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
+            Alert.TTS = subgroup >= 3 and L["ENCOUNTER_TTS_SOAK"] or L["ENCOUNTER_TTS_DONT_SOAK"]
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 138.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-            Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
+            Alert.time, Alert.text = 138.7, subgroup <= 2 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
+            Alert.TTS = subgroup <= 2 and L["ENCOUNTER_TTS_SOAK"] or L["ENCOUNTER_TTS_DONT_SOAK"]
             self:AddToReminder(Alert)
         end
         if NSRT.AssignmentSettings.OnPull then
-            local group = subgroup <= 2 and "First" or "Second"
-            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+            local group = subgroup <= 2 and L["ENCOUNTER_GROUP_FIRST"] or L["ENCOUNTER_GROUP_SECOND"]
+            self:DisplayText(string.format(L["ENCOUNTER_ASSIGN_SOAK_ALNDUST"], group), 5)
         end
     elseif self.Assignments[encID].SplitSoaks and diff ~= 16 then -- For Normal & Heroic we auto split the group to speed up splits
         if UnitGroupRolesAssigned("player") == "TANK" then return end -- just end early for tanks
@@ -41,16 +42,16 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.dur, Alert.TTSTimer = 10, 5
         for phase = 1, 3 do
             Alert.phase = phase
-            Alert.time, Alert.text  = 18.7, group <= 1 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-            Alert.TTS = group <= 1 and "Soak" or "Don't soak"
+            Alert.time, Alert.text  = 18.7, group <= 1 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
+            Alert.TTS = group <= 1 and L["ENCOUNTER_TTS_SOAK"] or L["ENCOUNTER_TTS_DONT_SOAK"]
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 91.4, group >= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-            Alert.TTS = group >= 2 and "Soak" or "Don't soak"
+            Alert.time, Alert.text = 91.4, group >= 2 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
+            Alert.TTS = group >= 2 and L["ENCOUNTER_TTS_SOAK"] or L["ENCOUNTER_TTS_DONT_SOAK"]
             self:AddToReminder(Alert)
         end
         if NSRT.AssignmentSettings.OnPull then
-            local group = group <= 1 and "First" or "Second"
-            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+            local group = group <= 1 and L["ENCOUNTER_GROUP_FIRST"] or L["ENCOUNTER_GROUP_SECOND"]
+            self:DisplayText(string.format(L["ENCOUNTER_ASSIGN_SOAK_ALNDUST"], group), 5)
         end
     end
 end

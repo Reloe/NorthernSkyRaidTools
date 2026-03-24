@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -10,7 +11,7 @@ local ImportReminderStringFrame
 local function ImportReminderString(name, IsUpdate)
     local popup = ImportReminderStringFrame
     if not popup then
-        popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
+        popup = DF:CreateSimplePanel(NSUI, 800, 800, L["REM_IMPORT_TITLE"], "NSUIReminderImport", {
             DontRightClickClose = true
         })
         popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -31,7 +32,7 @@ local function ImportReminderString(name, IsUpdate)
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
     popup.test_string_text_box:SetFocus()
-    local importtext = IsUpdate and "Update" or "Import"
+    local importtext = IsUpdate and L["COMMON_UPDATE"] or L["COMMON_IMPORT"]
     if not popup.import_confirm_button then
         popup.import_confirm_button = DF:CreateButton(popup, function()
             local import_string = popup.test_string_text_box:GetText()
@@ -61,7 +62,7 @@ end
 local function ImportPersonalReminderString(name, IsUpdate)
     local popup = ImportPersonalReminderStringFrame
     if not popup then
-        popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
+        popup = DF:CreateSimplePanel(NSUI, 800, 800, L["REM_IMPORT_PERSONAL_TITLE"], "NSUIPersonalReminderImport", {
             DontRightClickClose = true
         })
         popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -82,7 +83,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
     popup.test_string_text_box:SetFocus()
-    local importtext = IsUpdate and "Update" or "Import"
+    local importtext = IsUpdate and L["COMMON_UPDATE"] or L["COMMON_IMPORT"]
     if not popup.import_confirm_button then
         popup.import_confirm_button = DF:CreateButton(popup, function()
             local import_string = popup.test_string_text_box:GetText()
@@ -110,7 +111,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
 end
 
 local function BuildRemindersEditUI()
-    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Reminders Management", "RemindersEditFrame", {
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, L["REM_MGMT_TITLE"], "RemindersEditFrame", {
         DontRightClickClose = true
     })
     reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -126,7 +127,7 @@ local function BuildRemindersEditUI()
             if reminderData then
                 local line = self:GetLine(i)
                 line.name = reminderData.name
-                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name.." (No Encounter)")
+                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name.." "..L["REM_NO_ENCOUNTER_SUFFIX"])
                 if NSRT.InviteList[reminderData.name] then
                     line.InviteButton:Show()
                     line.ArrangeButton:Show()
@@ -150,18 +151,18 @@ local function BuildRemindersEditUI()
         end
     end
 
-    local Active_Text = DF:CreateLabel(reminders_edit_frame, "Active Reminder", 11)
+    local Active_Text = DF:CreateLabel(reminders_edit_frame, L["REM_ACTIVE_LABEL"], 11)
     Active_Text:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 50)
     Active_Text:SetWidth(380)
     if NSRT.ActiveReminder and NSRT.ActiveReminder ~= "" then
-        Active_Text.text = "Active Reminder: |cFFFFFFFF" .. NSRT.ActiveReminder
+        Active_Text.text = string.format(L["REM_ACTIVE_FMT"], NSRT.ActiveReminder)
     else
-        Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+        Active_Text.text = string.format(L["REM_ACTIVE_FMT"], L["COMMON_NONE"])
     end
 
     local ImportButton = DF:CreateButton(reminders_edit_frame, function()
         ImportReminderString(nil, false)
-        end, 100, 24, "Import Reminder"
+        end, 100, 24, L["REM_BTN_IMPORT"]
     )
     ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
     ImportButton:SetTemplate(options_button_template)
@@ -170,29 +171,29 @@ local function BuildRemindersEditUI()
         NSI:SetReminder(nil)
         NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
-        Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
-        end, 100, 24, "Clear Reminder"
+        Active_Text.text = string.format(L["REM_ACTIVE_FMT"], L["COMMON_NONE"])
+        end, 100, 24, L["REM_BTN_CLEAR"]
     )
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
 
 
     local function DeleteBossReminder(self, line, all)
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Reminder Deletion", "NSRTDeleteReminderPopup")
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["REM_DELETE_TITLE"], "NSRTDeleteReminderPopup")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
-        local text = all and DF:CreateLabel(popup, "Are you sure you want to \ndelete ALL reminders?", 12, "orange") or DF:CreateLabel(popup,
-            "Are you sure you want to \ndelete this reminder?", 12, "orange")
+        local text = all and DF:CreateLabel(popup, L["REM_DELETE_ALL_TEXT"], 12, "orange") or DF:CreateLabel(popup,
+            L["REM_DELETE_ONE_TEXT"], 12, "orange")
         text:SetPoint("TOP", popup, "TOP", 0, -30)
         text:SetJustifyH("CENTER")
 
         local confirmButton = DF:CreateButton(popup, function()
             if line and NSRT.ActiveReminder and NSRT.ActiveReminder == line.name then
-                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+                Active_Text.text = string.format(L["REM_ACTIVE_FMT"], L["COMMON_NONE"])
             end
             if all then
-                Active_Text.text = "Active Reminder: |cFFFFFFFFNone"
+                Active_Text.text = string.format(L["REM_ACTIVE_FMT"], L["COMMON_NONE"])
                 for _, reminder in ipairs(NSI:GetAllReminderNames()) do
                     NSI:RemoveReminder(reminder.name)
                 end
@@ -202,13 +203,13 @@ local function BuildRemindersEditUI()
             self:SetData(NSI:GetAllReminderNames())
             self:MasterRefresh()
             popup:Hide()
-        end, 100, 30, "Confirm")
+        end, 100, 30, L["COMMON_CONFIRM"])
         confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
         confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
 
         local cancelButton = DF:CreateButton(popup, function()
             popup:Hide()
-        end, 100, 30, "Cancel")
+        end, 100, 30, L["COMMON_CANCEL"])
         cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         popup:Show()
@@ -227,7 +228,7 @@ local function BuildRemindersEditUI()
             local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
                 DeleteBossReminder(self, line, true)
                 parent:MasterRefresh()
-                end, 100, 24, "Delete ALL Reminders"
+                end, 100, 24, L["REM_BTN_DELETE_ALL"]
             )
             DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
             DeleteAllButton:SetTemplate(options_button_template)
@@ -245,7 +246,7 @@ local function BuildRemindersEditUI()
             NSRT.Reminders[newname] = NSRT.Reminders[oldname]
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             if NSRT.ActiveReminder == oldname then
-                Active_Text.text = "Active Reminder: |cFFFFFFFF" .. newname
+                Active_Text.text = string.format(L["REM_ACTIVE_FMT"], newname)
                 NSRT.ActiveReminder = newname
             end
             NSRT.Reminders[oldname] = nil
@@ -282,31 +283,31 @@ local function BuildRemindersEditUI()
             local name = line.name
             if name ~= "" then
                 NSI:SetReminder(name)
-                Active_Text.text = "Active Reminder: |cFFFFFFFF" .. name
+                Active_Text.text = string.format(L["REM_ACTIVE_FMT"], name)
                 NSI:UpdateReminderFrame(true)
                 NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, nil, true)
                 parent:MasterRefresh()
             end
-        end, 40, 20, "Load")
+        end, 40, 20, L["COMMON_LOAD"])
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
         line.LoadButton:SetTemplate(options_button_template)
 
         line.ShowButton = DF:CreateButton(line, function()
             local name = line.name
             ImportReminderString(name, true)
-        end, 40, 20, "Show")
+        end, 40, 20, L["COMMON_SHOW"])
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)
 
         line.InviteButton = DF:CreateButton(line, function(self)
             NSI:InviteFromReminder(line.name, true)
-        end, 40, 20, "Invite")
+        end, 40, 20, L["COMMON_INVITE"])
         line.InviteButton:SetPoint("RIGHT", line.ShowButton, "LEFT", 0, 0)
         line.InviteButton:SetTemplate(options_button_template)
 
         line.ArrangeButton = DF:CreateButton(line, function(self)
             NSI:ArrangeFromReminder(line.name)
-        end, 40, 20, "Arrange")
+        end, 40, 20, L["COMMON_ARRANGE"])
         line.ArrangeButton:SetPoint("RIGHT", line.InviteButton, "LEFT", 0, 0)
         line.ArrangeButton:SetTemplate(options_button_template)
         return line
@@ -333,7 +334,7 @@ local function BuildRemindersEditUI()
 end
 
 local function BuildPersonalRemindersEditUI()
-    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, "Personal Reminders Management", "RemindersEditFrame", {
+    local reminders_edit_frame = DF:CreateSimplePanel(UIParent, 460, 410, L["REM_PERSONAL_MGMT_TITLE"], "RemindersEditFrame", {
         DontRightClickClose = true
     })
     reminders_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -349,7 +350,7 @@ local function BuildPersonalRemindersEditUI()
             if reminderData then
                 local line = self:GetLine(i)
                 line.name = reminderData.name
-                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name.." (No Encounter)")
+                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name.." "..L["REM_NO_ENCOUNTER_SUFFIX"])
 
                 if line.name == NSRT.ActivePersonalReminder then
                     local colors = reminderData.hasencID and {0, 1, 0, 1} or {1, 0, 0, 1}
@@ -367,18 +368,18 @@ local function BuildPersonalRemindersEditUI()
         end
     end
 
-    local Active_Text = DF:CreateLabel(reminders_edit_frame, "Active Personal Reminder", 11)
+    local Active_Text = DF:CreateLabel(reminders_edit_frame, L["REM_PERSONAL_ACTIVE_LABEL"], 11)
     Active_Text:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 50)
     Active_Text:SetWidth(380)
     if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder ~= "" then
-        Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. NSRT.ActivePersonalReminder
+        Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], NSRT.ActivePersonalReminder)
     else
-        Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+        Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], L["COMMON_NONE"])
     end
 
     local ImportButton = DF:CreateButton(reminders_edit_frame, function()
         ImportPersonalReminderString(nil, false)
-        end, 100, 24, "Import Personal Reminder"
+        end, 100, 24, L["REM_PERSONAL_BTN_IMPORT"]
     )
     ImportButton:SetPoint("BOTTOMLEFT", reminders_edit_frame, "BOTTOMLEFT", 5, 10)
     ImportButton:SetTemplate(options_button_template)
@@ -386,29 +387,29 @@ local function BuildPersonalRemindersEditUI()
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
         NSI:SetReminder(nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
-        Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
-        end, 100, 24, "Clear Reminder"
+        Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], L["COMMON_NONE"])
+        end, 100, 24, L["REM_BTN_CLEAR"]
     )
     ClearButton:SetPoint("LEFT", ImportButton, "RIGHT", 5, 0)
     ClearButton:SetTemplate(options_button_template)
 
     local function DeleteBossReminder(self, line, all)
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Personal Reminder Deletion", "NSRTDeletePersonalReminderPopup")
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["REM_PERSONAL_DELETE_TITLE"], "NSRTDeletePersonalReminderPopup")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
         local text = all and DF:CreateLabel(popup,
-            "Are you sure you want to \ndelete ALL reminders?", 12, "orange") or DF:CreateLabel(popup,
-            "Are you sure you want to \ndelete this Personal Reminder?", 12, "orange")
+            L["REM_DELETE_ALL_TEXT"], 12, "orange") or DF:CreateLabel(popup,
+            L["REM_PERSONAL_DELETE_ONE_TEXT"], 12, "orange")
         text:SetPoint("TOP", popup, "TOP", 0, -30)
         text:SetJustifyH("CENTER")
 
         local confirmButton = DF:CreateButton(popup, function()
             if NSRT.ActivePersonalReminder and NSRT.ActivePersonalReminder == line.name then
-                Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+                Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], L["COMMON_NONE"])
             end
             if all then
-                Active_Text.text = "Active Personal Reminder: |cFFFFFFFFNone"
+                Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], L["COMMON_NONE"])
                 for _, reminder in ipairs(NSI:GetAllReminderNames(true)) do
                     NSI:RemoveReminder(reminder.name, true)
                 end
@@ -418,13 +419,13 @@ local function BuildPersonalRemindersEditUI()
             self:SetData(NSI:GetAllReminderNames(true))
             self:MasterRefresh()
             popup:Hide()
-        end, 100, 30, "Confirm")
+        end, 100, 30, L["COMMON_CONFIRM"])
         confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
         confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
 
         local cancelButton = DF:CreateButton(popup, function()
             popup:Hide()
-        end, 100, 30, "Cancel")
+        end, 100, 30, L["COMMON_CANCEL"])
         cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         popup:Show()
@@ -448,7 +449,7 @@ local function BuildPersonalRemindersEditUI()
             if NSRT.PersonalReminders[newname] then return end
             NSRT.PersonalReminders[newname] = NSRT.PersonalReminders[oldname]
             if NSRT.ActivePersonalReminder == oldname then
-                Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. newname
+                Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], newname)
                 NSRT.ActivePersonalReminder = newname
             end
             NSRT.PersonalReminders[oldname] = nil
@@ -473,7 +474,7 @@ local function BuildPersonalRemindersEditUI()
             local DeleteAllButton = DF:CreateButton(reminders_edit_frame, function()
                 DeleteBossReminder(self, line, true)
                 parent:MasterRefresh()
-                end, 100, 24, "Delete ALL Reminders"
+                end, 100, 24, L["REM_BTN_DELETE_ALL"]
             )
             DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 5, 0)
             DeleteAllButton:SetTemplate(options_button_template)
@@ -494,18 +495,18 @@ local function BuildPersonalRemindersEditUI()
             local name = line.name
             if name ~= "" then
                 NSI:SetReminder(name, true)
-                Active_Text.text = "Active Personal Reminder: |cFFFFFFFF" .. name
+                Active_Text.text = string.format(L["REM_PERSONAL_ACTIVE_FMT"], name)
                 NSI:UpdateReminderFrame(true)
                 parent:MasterRefresh()
             end
-        end, 55, 20, "Load")
+        end, 55, 20, L["COMMON_LOAD"])
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
         line.LoadButton:SetTemplate(options_button_template)
 
         line.ShowButton = DF:CreateButton(line, function()
             local name = line.name
             ImportPersonalReminderString(name, true)
-        end, 55, 20, "Show")
+        end, 55, 20, L["COMMON_SHOW"])
         line.ShowButton:SetPoint("RIGHT", line.LoadButton, "LEFT", 0, 0)
         line.ShowButton:SetTemplate(options_button_template)
         return line

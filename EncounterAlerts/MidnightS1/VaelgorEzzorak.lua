@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3178
 -- /run NSAPI:DebugEncounter(3178)
@@ -50,19 +51,19 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     local subgroup = self:GetSubGroup("player") or 0
     local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID, true) -- text, Type, spellID, dur, phase, encID
     -- Assigning Group 1&2 on first soak, Group 3&4 on second soak. This is overkill as only 7 people are required but not sure how the strat is gonna be yet
-    local Soak = self:CreateDefaultAlert(subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", nil, nil, 10, 1, encID)
-    Alert.time, Alert.text, Alert.TTSTimer = 54.4, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK", 4
+    local Soak = self:CreateDefaultAlert(subgroup <= 2 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"], nil, nil, 10, 1, encID)
+    Alert.time, Alert.text, Alert.TTSTimer = 54.4, subgroup <= 2 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"], 4
     self:AddToReminder(Alert)
-    Alert.time, Alert.text = 156.1, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+    Alert.time, Alert.text = 156.1, subgroup >= 3 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
     self:AddToReminder(Alert)
-    Alert.time, Alert.text = 201.2, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+    Alert.time, Alert.text = 201.2, subgroup <= 2 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
     self:AddToReminder(Alert)
-    Alert.time, Alert.text = 246.1, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+    Alert.time, Alert.text = 246.1, subgroup >= 3 and L["ENCOUNTER_SOAK_YES"] or L["ENCOUNTER_SOAK_NO"]
     self:AddToReminder(Alert)
 
     if NSRT.AssignmentSettings.OnPull then
-        local group = subgroup <= 2 and "First" or "Second"
-        self:DisplayText("You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00"..group.."|r Group", 5)
+        local group = subgroup <= 2 and L["ENCOUNTER_GROUP_FIRST"] or L["ENCOUNTER_GROUP_SECOND"]
+        self:DisplayText(string.format(L["ENCOUNTER_ASSIGN_SOAK_GLOOM"], group), 5)
     end
 end
 

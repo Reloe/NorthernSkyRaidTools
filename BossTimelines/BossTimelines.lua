@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 --[[
     Boss Timeline Data
@@ -260,17 +261,17 @@ end
 
 -- Encounter name lookup
 NSI.BossTimelineNames = {
-    [3176] = "Imperator Averzian",
-    [3177] = "Vorasius",
-    [3178] = "Vaelgor & Ezzorak",
-    [3179] = "Fallen King Salhadaar",
-    [3180] = "Lightblinded Vanguard",
-    [3181] = "Crown of the Cosmos",
-    [3182] = "Belo'ren",
-    [3183] = "Midnight Falls",
-    [3306] = "Chimaerus",
-    [3134] = "Nexus King Saladhaar",
-    [3135] = "Dimensius the All Devouring",
+    [3176] = L["BOSS_NAME_3176"],
+    [3177] = L["BOSS_NAME_3177"],
+    [3178] = L["BOSS_NAME_3178"],
+    [3179] = L["BOSS_NAME_3179"],
+    [3180] = L["BOSS_NAME_3180"],
+    [3181] = L["BOSS_NAME_3181"],
+    [3182] = L["BOSS_NAME_3182"],
+    [3183] = L["BOSS_NAME_3183"],
+    [3306] = L["BOSS_NAME_3306"],
+    [3134] = L["BOSS_NAME_3134"],
+    [3135] = L["BOSS_NAME_3135"],
 }
 
 --------------------------------------------------------------------------------
@@ -418,8 +419,16 @@ function NSI:GetBossTimelineAbilities(encounterID, difficulty)
             -- Parse compound category for color and sort order
             local color, sortOrder, primaryCategory = self:ParseCategoryForDisplay(ability.category)
 
+            local localizedName = ability.name
+            if ability.spellID then
+                local spellInfo = C_Spell.GetSpellInfo(ability.spellID)
+                if spellInfo and spellInfo.name then
+                    localizedName = spellInfo.name
+                end
+            end
+
             table.insert(result, {
-                name = ability.name,
+                name = localizedName,
                 spellID = ability.spellID,
                 category = ability.category,           -- Keep original for tooltip display
                 primaryCategory = primaryCategory,     -- Parsed primary category

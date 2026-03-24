@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -8,24 +9,24 @@ local options_button_template = Core.options_button_template
 
 
 local buttonmapping = {
-    {DefaultDisabled = false, name = "PASettings", label = "Player PA Settings", desc = "Settings for Player Private Aura Display"},
-    {DefaultDisabled = false, name = "PATextSettings", label = "PA Text Settings", desc = "Settings for Private Aura Warning-Text Display"},
-    {DefaultDisabled = false, name = "PATankSettings", label = "Co-Tank PA Settings", desc = "Settings for Co-Tank Private Aura Display"},
-    {DefaultDisabled = false, name = "PARaidSettings", label = "RaidFrame PA Settings", desc = "Settings for Private Aura Display on Raidframes"},
-    {DefaultDisabled = false, name = "PASounds", label = "PA Sound Settings", desc = "Settings for Private Aura Sounds"},
-    {DefaultDisabled = false, name = "ReminderSettings", label = "Reminder Display Settings", desc = "Settings for Reminder Display"},
-    {DefaultDisabled = false, name = "ReadyCheckSettings", label = "Ready Check Settings", desc = "Settings for Ready Check module"},
-    {DefaultDisabled = true, name = "CooldownList", label = "Cooldown Settings", desc = "Cooldowns & Items to be checked on ready check"},
-    {DefaultDisabled = true, name = "EncounterAlerts", label = "Encounter Alerts Settings", desc = "Settings for Encounter Alerts"},
-    {DefaultDisabled = true, name = "Reminders", label = "Reminder Strings", desc = "All Reminder Strings imported into 'Shared Reminders'"},
-    {DefaultDisabled = true, name = "PersonalReminders", label = "Personal Reminder Strings", desc = "All Reminder Strings imported into 'Personal Reminders'"},
-    {DefaultDisabled = true, name = "NickNames", label = "Nicknames", desc = "All saved Nicknames"},
-    {DefaultDisabled = true, name = "Settings", label = "General Settings", desc = "General Settings. This basically includes everything that is not covered in any of the other categories."},
-    {DefaultDisabled = true, name = "QoL", label = "Quality of Life Settings", desc = "All Settings in the 'Quality of Life' Tab."}
+    {DefaultDisabled = false, name = "PASettings", label = L["GEN_EXP_PLAYER_PA_SETTINGS"], desc = L["GEN_EXP_PLAYER_PA_SETTINGS_DESC"]},
+    {DefaultDisabled = false, name = "PATextSettings", label = L["GEN_EXP_PA_TEXT_SETTINGS"], desc = L["GEN_EXP_PA_TEXT_SETTINGS_DESC"]},
+    {DefaultDisabled = false, name = "PATankSettings", label = L["GEN_EXP_COTANK_PA_SETTINGS"], desc = L["GEN_EXP_COTANK_PA_SETTINGS_DESC"]},
+    {DefaultDisabled = false, name = "PARaidSettings", label = L["GEN_EXP_RAIDFRAME_PA_SETTINGS"], desc = L["GEN_EXP_RAIDFRAME_PA_SETTINGS_DESC"]},
+    {DefaultDisabled = false, name = "PASounds", label = L["GEN_EXP_PA_SOUND_SETTINGS"], desc = L["GEN_EXP_PA_SOUND_SETTINGS_DESC"]},
+    {DefaultDisabled = false, name = "ReminderSettings", label = L["GEN_EXP_REMINDER_DISPLAY_SETTINGS"], desc = L["GEN_EXP_REMINDER_DISPLAY_SETTINGS_DESC"]},
+    {DefaultDisabled = false, name = "ReadyCheckSettings", label = L["GEN_EXP_READYCHECK_SETTINGS"], desc = L["GEN_EXP_READYCHECK_SETTINGS_DESC"]},
+    {DefaultDisabled = true, name = "CooldownList", label = L["GEN_EXP_COOLDOWN_SETTINGS"], desc = L["GEN_EXP_COOLDOWN_SETTINGS_DESC"]},
+    {DefaultDisabled = true, name = "EncounterAlerts", label = L["GEN_EXP_ENCOUNTER_ALERTS_SETTINGS"], desc = L["GEN_EXP_ENCOUNTER_ALERTS_SETTINGS_DESC"]},
+    {DefaultDisabled = true, name = "Reminders", label = L["GEN_EXP_REMINDER_STRINGS"], desc = L["GEN_EXP_REMINDER_STRINGS_DESC"]},
+    {DefaultDisabled = true, name = "PersonalReminders", label = L["GEN_EXP_PERSONAL_REMINDER_STRINGS"], desc = L["GEN_EXP_PERSONAL_REMINDER_STRINGS_DESC"]},
+    {DefaultDisabled = true, name = "NickNames", label = L["GEN_EXP_NICKNAMES"], desc = L["GEN_EXP_NICKNAMES_DESC"]},
+    {DefaultDisabled = true, name = "Settings", label = L["GEN_EXP_GENERAL_SETTINGS"], desc = L["GEN_EXP_GENERAL_SETTINGS_DESC"]},
+    {DefaultDisabled = true, name = "QoL", label = L["GEN_EXP_QOL_SETTINGS"], desc = L["GEN_EXP_QOL_SETTINGS_DESC"]}
 }
 
 local function BuildExportStringUI()
-    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Export String", "NSUIExportString", {
+    local popup = DF:CreateSimplePanel(NSUI, 800, 800, L["GEN_EXPORT_TITLE"], "NSUIExportString", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -43,7 +44,7 @@ local function BuildExportStringUI()
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     popup.export_confirm_button = DF:CreateButton(popup, function()
         popup:Hide()
-    end, 280, 20, "Done")
+    end, 280, 20, L["COMMON_DONE"])
     popup.export_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.export_confirm_button:SetTemplate(options_button_template)
 
@@ -71,7 +72,7 @@ local function BuildExportStringUI()
 end
 
 local function BuildImportStringUI()
-    local popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import String", "NSUIImportString", {
+    local popup = DF:CreateSimplePanel(NSUI, 800, 800, L["GEN_IMPORT_TITLE"], "NSUIImportString", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -101,7 +102,7 @@ local function BuildImportStringUI()
         end
         NSI:ImportFromTable(ImportTable)
         popup:Hide()
-    end, 280, 20, "Import")
+    end, 280, 20, L["COMMON_IMPORT"])
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.import_confirm_button:SetTemplate(options_button_template)
 

@@ -1,13 +1,14 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 
 local function BuildAssignmentsOptions()
     return {
         {
             type = "toggle",
             boxfirst = true,
-            name = "Show Assignment on Pull",
-            desc = "Shows your Assignment on Pull",
+            name = L["OPT_ASSIGN_SHOW_ON_PULL"],
+            desc = L["OPT_ASSIGN_DESC_SHOW_ON_PULL"],
             get = function() return NSRT.AssignmentSettings.OnPull end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings.OnPull = value
@@ -16,20 +17,20 @@ local function BuildAssignmentsOptions()
         },
         {
             type = "label",
-            get = function() return "For the following Boxes only the Settings of the Raidleader matter." end,
+            get = function() return L["OPT_ASSIGN_RAIDLEADER_ONLY"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
         {
             type = "label",
-            get = function() return "Vaelgor & Ezzorak" end,
+            get = function() return L["OPT_ASSIGN_VAELGOR_EZZORAK"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Gloom Soaks - Mythic Only",
-            desc = "Assigns Group 1&2 to soak the first cast, Group 3&4 to soak the second cast. This is overkill as only 7 people are required but I'm not sure yet what the strat is going to be.",
+            name = L["OPT_ASSIGN_GLOOM_SOAKS_MYTHIC"],
+            desc = L["OPT_ASSIGN_DESC_GLOOM_SOAKS_MYTHIC"],
             get = function() return NSRT.AssignmentSettings[3178] and NSRT.AssignmentSettings[3178].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3178] = NSRT.AssignmentSettings[3178] or {}
@@ -41,14 +42,14 @@ local function BuildAssignmentsOptions()
         },
         {
             type = "label",
-            get = function() return "Lightblinded Vanguard" end,
+            get = function() return L["OPT_ASSIGN_LIGHTBLINDED_VANGUARD"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Execution Sentence - Mythic Only",
-            desc = "Automatically assigns players to Star, Orange, Triangle and Purple for Execution Sentence. Melee are preferred for Star/Orange, Ranged for Triangle/Purple. You should be putting down World Markers for this.",
+            name = L["OPT_ASSIGN_EXECUTION_SENTENCE_MYTHIC"],
+            desc = L["OPT_ASSIGN_DESC_EXECUTION_SENTENCE_MYTHIC"],
             get = function() return NSRT.AssignmentSettings[3180] and NSRT.AssignmentSettings[3180].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3180] = NSRT.AssignmentSettings[3180] or {}
@@ -60,14 +61,14 @@ local function BuildAssignmentsOptions()
         },
         {
             type = "label",
-            get = function() return "Chimaerus" end,
+            get = function() return L["OPT_ASSIGN_CHIMAERUS"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = "Alndust Upheaval - Mythic",
-            desc = "Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast",
+            name = L["OPT_ASSIGN_ALNDUST_MYTHIC"],
+            desc = L["OPT_ASSIGN_DESC_ALNDUST_MYTHIC"],
             get = function() return NSRT.AssignmentSettings[3306] and NSRT.AssignmentSettings[3306].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3306] = NSRT.AssignmentSettings[3306] or {}
@@ -80,8 +81,8 @@ local function BuildAssignmentsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Alndust Upheaval - Normal/Heroic",
-            desc = "For Normal & Heroic the Addon automatically splits healers & dps in half. Tanks are ignored.",
+            name = L["OPT_ASSIGN_ALNDUST_NORMAL_HEROIC"],
+            desc = L["OPT_ASSIGN_DESC_ALNDUST_NORMAL_HEROIC"],
             get = function() return NSRT.AssignmentSettings[3306] and NSRT.AssignmentSettings[3306].SplitSoaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3306] = NSRT.AssignmentSettings[3306] or {}

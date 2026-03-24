@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 SLASH_NSUI1 = "/ns"
 SLASH_NSUI2 = "/nsrt"
@@ -9,10 +10,10 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "debug" then
         if NSRT.Settings["Debug"] then
             NSRT.Settings["Debug"] = false
-            print("|cFF00FFFFNSRT|r Debug mode is now disabled")
+            print(L["SLASH_DEBUG_DISABLED"])
         else
             NSRT.Settings["Debug"] = true
-            print("|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing.")
+            print(L["SLASH_DEBUG_ENABLED"])
         end
     elseif msg == "cd" then
         if NSI.NSUI.cooldowns_frame:IsShown() then
@@ -63,25 +64,25 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "arrange" then
         NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
     elseif msg == "help" then
-        print("|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n")
-        print("  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development")
-        print("  |cFF00FFFF/ns wipe|r - Wipe ALL NSRT settings and reload UI")
-        print("  |cFF00FFFF/ns cd|r - Toggle cooldowns frame")
-        print("  |cFF00FFFF/ns clear|r or |cFF00FFFF/ns c|r - Clear active reminder")
-        print("  |cFF00FFFF/ns pclear|r or |cFF00FFFF/ns pc|r - Clear active personal reminder")
-        print("  |cFF00FFFF/ns reminders|r or |cFF00FFFF/ns r|r - Shortcut to shared reminders list")
-        print("  |cFF00FFFF/ns preminders|r or |cFF00FFFF/ns pr|r - Shortcut to personal reminders list")
-        print("  |cFF00FFFF/ns note|r or |cFF00FFFF/ns n|r - Toggle all notes (all reminders, personal reminders, and text note)")
-        print("  |cFF00FFFF/ns anote|r or |cFF00FFFF/ns an|r or |cFF00FFFF/ns snote|r or |cFF00FFFF/ns sn|r - Toggle shared reminders note")
-        print("  |cFF00FFFF/ns pnote|r or |cFF00FFFF/ns pn|r - Toggle personal reminders note")
-        print("  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note")
-        print("  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window")
-        print("  |cFF00FFFF/ns invite|r - Invite players from active reminder to group")
-        print("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group")
+        print(L["SLASH_HELP_TITLE"])
+        print(L["SLASH_HELP_1"])
+        print(L["SLASH_HELP_2"])
+        print(L["SLASH_HELP_3"])
+        print(L["SLASH_HELP_4"])
+        print(L["SLASH_HELP_5"])
+        print(L["SLASH_HELP_6"])
+        print(L["SLASH_HELP_7"])
+        print(L["SLASH_HELP_8"])
+        print(L["SLASH_HELP_9"])
+        print(L["SLASH_HELP_10"])
+        print(L["SLASH_HELP_11"])
+        print(L["SLASH_HELP_12"])
+        print(L["SLASH_HELP_13"])
+        print(L["SLASH_HELP_14"])
     elseif msg == "" then
         NSI.NSUI:ToggleOptions()
     elseif msg then
-        print("|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands.")
+        print(L["SLASH_UNKNOWN"])
     else
         NSI.NSUI:ToggleOptions()
     end

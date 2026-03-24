@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3181
 -- /run NSAPI:DebugEncounter(3181)
@@ -12,7 +13,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local ExplosionTimers = {
             [15] = {33, 53, 75, 95, 117, 137, 159, 179, 201, 221}
         }
-        local Explosion = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 5, 3, encID) -- Void Expulsion Dmg Event
+        local Explosion = self:CreateDefaultAlert(L["ENCOUNTER_ALERT_EXPLOSION"], "Bar", 1233819, 5, 3, encID) -- Void Expulsion Dmg Event
         for i, v in ipairs(ExplosionTimers[id] or {}) do
             Explosion.time = v
             self:AddToReminder(Explosion)
@@ -20,7 +21,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 
         if self:IsMelee("player") then return end -- Bait is only for ranged
 
-        local Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 1, encID) -- Void Expulsion Bait
+        local Alert = self:CreateDefaultAlert(L["ENCOUNTER_ALERT_BAIT"], "Text", nil, 5, 1, encID) -- Void Expulsion Bait
         local timers = {
             [15] = {15, 63, 102}, -- don't care about normal, adding mythic later
         }

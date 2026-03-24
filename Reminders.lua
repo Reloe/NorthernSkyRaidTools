@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 NSI.EncounterOrder = {
     [3176] = 1, -- Imperator
@@ -1137,7 +1138,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         self[Name] = CreateFrame("Frame", 'NSUIReminder'..Name, UIParent, "BackdropTemplate")
         if IsText then
             self[Name].Text = self[Name]:CreateFontString(Name..'Text', "OVERLAY", "GameFontNormal")
-            self[Name].Text:SetText("Personals - (10)")
+            self[Name].Text:SetText(L["REM_PREVIEW_PERSONALS"])
             self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
             self[Name].Text:SetPoint("LEFT", self[Name], "LEFT", 0, 0)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
@@ -1173,7 +1174,7 @@ function NSI:MoveFrameSettings(F, s, IsText)
     local Height = (IsText and F.Text:GetStringHeight()) or s.Height
     if IsText then
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-        F.Text:SetText("Personals - (10)")
+        F.Text:SetText(L["REM_PREVIEW_PERSONALS"])
     end
     F:SetSize(Width, Height)
     F:ClearAllPoints()

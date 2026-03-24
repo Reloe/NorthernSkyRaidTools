@@ -12,6 +12,10 @@
 # Libraries
 Libs\libs.xml
 
+# Localization (must load before main files)
+Locales/enUS.lua
+Locales/zhCN.lua
+
 # Main Files
 NorthernSkyRaidTools.lua
 Functions.lua

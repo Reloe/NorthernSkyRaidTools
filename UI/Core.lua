@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = NSI.L
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
@@ -9,20 +10,20 @@ local window_height = 640
 
 -- Tabs configuration
 local TABS_LIST = {
-    { name = "General",   text = "General" },
-    { name = "Nicknames", text = "Nicknames" },
-    { name = "Versions",  text = "Versions" },
-    { name = "SetupManager", text = "Setup Manager"},
-    { name = "ReadyCheck", text = "Ready Check"},
-    { name = "Reminders", text = "Reminders"},
-    { name = "Reminders-Note", text = "Reminders-Note"},
-    { name = "Assignments", text = "Assignments"},
-    { name = "EncounterAlerts", text = "Encounter Alerts"},
-    { name = "PrivateAura", text = "Private Auras"},
-    { name = "QoL", text = "Quality of Life"},
+    { name = "General",   text = L["CORE_TAB_GENERAL"] },
+    { name = "Nicknames", text = L["CORE_TAB_NICKNAMES"] },
+    { name = "Versions",  text = L["CORE_TAB_VERSIONS"] },
+    { name = "SetupManager", text = L["CORE_TAB_SETUP_MANAGER"]},
+    { name = "ReadyCheck", text = L["CORE_TAB_READY_CHECK"]},
+    { name = "Reminders", text = L["CORE_TAB_REMINDERS"]},
+    { name = "Reminders-Note", text = L["CORE_TAB_REMINDERS_NOTE"]},
+    { name = "Assignments", text = L["CORE_TAB_ASSIGNMENTS"]},
+    { name = "EncounterAlerts", text = L["CORE_TAB_ENCOUNTER_ALERTS"]},
+    { name = "PrivateAura", text = L["CORE_TAB_PRIVATE_AURAS"]},
+    { name = "QoL", text = L["CORE_TAB_QOL"]},
 }
 
-local authorsString = "By Reloe & Rav"
+local authorsString = L["CORE_AUTHOR_STRING"]
 
 -- Templates
 local options_text_template = DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE")
@@ -35,7 +36,7 @@ local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLAT
 local NSUI_panel_options = {
     UseStatusBar = true
 }
-local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Raid Tools", "NSUI",
+local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, L["CORE_MAIN_TITLE"], "NSUI",
     NSUI_panel_options)
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")

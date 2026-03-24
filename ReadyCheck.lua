@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local minlvl = 200
 
@@ -44,7 +45,7 @@ function NSI:SoulstoneCheck()
         end
     end
     NSAPI:TTS("Soulstone")
-    return refresh and "Refresh Soulstone" or "|cFFFF0000Soulstone Missing|r"
+    return refresh and L["RC_REFRESH_SOULSTONE"] or L["RC_SOULSTONE_MISSING"]
 end
 
 function NSI:SourceOfMagicCheck()
@@ -72,7 +73,7 @@ function NSI:SourceOfMagicCheck()
         end
     end
     NSAPI:TTS("Source of Magic")
-    return refresh and "Refresh Source of Magic" or "|cFFFF0000Source of Magic Missing|r"
+    return refresh and L["RC_REFRESH_SOURCE_OF_MAGIC"] or L["RC_SOURCE_OF_MAGIC_MISSING"]
 end
 
 function NSI:BuffCheck()
@@ -98,7 +99,7 @@ function NSI:BuffCheck()
                         -- this means someone has the buff but it's from another player that is no longer in the raid so the buff would disappear on pull.
                         local name = C_Spell.GetSpellInfo(spellID).name
                         NSAPI:TTS("Rebuff "..name)
-                        return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
+                        return string.format(L["RC_REBUFF_FMT"], name)
                     end
                 elseif buffed ~= "" then
                     if type(spellID) == "table" then
@@ -107,7 +108,7 @@ function NSI:BuffCheck()
                     local spellInfo = C_Spell.GetSpellInfo(spellID)
                     local name = spellInfo and spellInfo.name or ""
                     NSAPI:TTS("Rebuff "..name)
-                    return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
+                    return string.format(L["RC_REBUFF_FMT"], name)
                 end
             end
         end
@@ -207,13 +208,13 @@ function NSI:GearCheck()
                 crafted = crafted+1
             end
             if NSRT.ReadyCheckSettings.EnchantCheck and self:EnchantCheck(slot,itemString) then
-                table.insert(missing, "Missing Enchant on: |cFF00FF00"..SlotName[slot].."|r")
+                table.insert(missing, string.format(L["RC_MISSING_ENCHANT_FMT"], SlotName[slot]))
             end
             if NSRT.ReadyCheckSettings.GemCheck and self:GemCheck(slot, itemString) then
-                table.insert(missing, "Missing Gem in: |cFF00FF00"..SlotName[slot].."|r")
+                table.insert(missing, string.format(L["RC_MISSING_GEM_FMT"], SlotName[slot]))
             end
             if NSRT.ReadyCheckSettings.ItemLevelCheck and slot ~= 4 and select(4, C_Item.GetItemInfo(itemString)) < ilvl then
-                table.insert(missing, "Low Itemlvl equipped on: |cFF00FF00"..SlotName[slot].."|r")
+                table.insert(missing, string.format(L["RC_LOW_ILVL_FMT"], SlotName[slot]))
             end
             if NSRT.ReadyCheckSettings.RepairCheck and not repair then
                 local min, max = GetInventoryItemDurability(slot)
@@ -230,7 +231,7 @@ function NSI:GearCheck()
             if MyArmorType ~= 1 and NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 and slot ~= 15 and slot ~= 16 and slot ~= 17 then
                 local armorType = itemString and select(13, C_Item.GetItemInfo(itemString))
                 if armorType and armorType <= 4 and armorType ~= MyArmorType and armorType ~= 0 then
-                    table.insert(missing, "|cFFFF0000Wrong armor type:|r |cFF00FF00"..SlotName[slot].."|r")
+                    table.insert(missing, string.format(L["RC_WRONG_ARMOR_FMT"], SlotName[slot]))
                 end
             end
         elseif NSRT.ReadyCheckSettings.MissingItemCheck and slot ~= 4 then
@@ -239,10 +240,10 @@ function NSI:GearCheck()
                 local type = itemString and select(13, C_Item.GetItemInfo(itemString)) or ""
                 local onehand = {0, 4, 7, 9, 11, 12, 13, 15, 19}
                 if tContains(onehand, type) or spec == 72 then -- only check offhand if mainhand is a onehand or player is a fury warrior
-                    table.insert(missing, "|cFFFF0000Not equipped:|r |cFF00FF00"..SlotName[slot].."|r")
+                    table.insert(missing, string.format(L["RC_NOT_EQUIPPED_FMT"], SlotName[slot]))
                 end
             else
-                table.insert(missing, "|cFFFF0000Not equipped:|r |cFF00FF00"..SlotName[slot].."|r")
+                table.insert(missing, string.format(L["RC_NOT_EQUIPPED_FMT"], SlotName[slot]))
             end
         end
     end
@@ -252,19 +253,19 @@ function NSI:GearCheck()
         if Gateway then table.insert(missing, Gateway) end
     end
     if NSRT.ReadyCheckSettings.GemCheck and not self.MainstatGem then
-        table.insert(missing, "Missing |cFF00FF00Mainstat Gem|r")
+        table.insert(missing, L["RC_MISSING_MAINSTAT_GEM"])
     end
     if repair then
-        table.insert(missing, "Item needs |cFF00FF00Repair|r")
+        table.insert(missing, L["RC_NEEDS_REPAIR"])
     end
     if NSRT.ReadyCheckSettings.CraftedCheck and crafted < 2 then
-        table.insert(missing, "Missing |cFF00FF00Embellishment|r")
+        table.insert(missing, L["RC_MISSING_EMBELLISHMENT"])
     end
     if NSRT.ReadyCheckSettings.TierCheck and tier < 4 then
         if tier < 2 then
-            table.insert(missing, "|cFFFF0000No Set Bonus equipped|r")
+            table.insert(missing, L["RC_NO_SET_BONUS"])
         else
-            table.insert(missing, "|cFFFF0000Only 2pc equipped|r")
+            table.insert(missing, L["RC_ONLY_2PC"])
         end
     end
     local text = ""
@@ -293,14 +294,14 @@ function NSI:GatewayControlCheck()
                 if bound then
                     return false
                 elseif onbar then
-                    return "|cFF00FF00Gateway Control Shard|r Not Bound"
+                    return L["RC_GATEWAY_NOT_BOUND"]
                 else
-                    return "|cFF00FF00Gateway Control Shard|r Not on Actionbar"
+                    return L["RC_GATEWAY_NOT_ON_BAR"]
                 end
             end
         end
     end
-    return "|cFF00FF00Gateway Control Shard|r Missing"
+    return L["RC_GATEWAY_MISSING"]
 end
 
 local keymapping = {

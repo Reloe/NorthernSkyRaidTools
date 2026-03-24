@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local SoundListRaid = {
     -- [spellID] = "SoundName", use false to remove a sound
@@ -156,7 +157,7 @@ function NSI:InitTextPA()
 
         self.PATextMoverFrame.Text = self.PATextMoverFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         self.PATextMoverFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.PATextSettings.Scale*20, "OUTLINE")
-        self.PATextMoverFrame.Text:SetText("<secret value> targets you with the spell <secret value>")
+        self.PATextMoverFrame.Text:SetText(L["PA_TEXT_WARNING_PREVIEW"])
         self.PATextMoverFrame:SetSize(self.PATextMoverFrame.Text:GetStringWidth()*1, self.PATextMoverFrame.Text:GetStringHeight()*1.5)
         self.PATextMoverFrame.Text:SetPoint("CENTER", self.PATextMoverFrame, "CENTER", 0, 0)
 
@@ -755,7 +756,7 @@ function NSI:PreviewRaidPA(Show, Init)
             if self.RepeatRaidPAPreview then self.RepeatRaidPAPreview:Cancel() end
             self.RepeatRaidPAPreview = C_Timer.NewTimer(0.2, function() self:PreviewRaidPA(Show, false) end)
         else
-            print("Couldn't find a matching raid frame for the player, aborting preview")
+            print(L["PA_PREVIEW_RAIDFRAME_NOT_FOUND"])
             self.IsRaidPAPreview = false
         end
         return

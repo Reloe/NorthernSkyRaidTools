@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local encID = 3179
 -- /run NSAPI:DebugEncounter(3179)
@@ -8,7 +9,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
     id = id or self:DifficultyCheck(14) or 0
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
+        local Alert = self:CreateDefaultAlert(L["ENCOUNTER_ALERT_BEAMS"], "Text", nil, 8, 1, encID)
 
 
         -- using same timers for all difficulties atm
@@ -23,7 +24,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
 
-        Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
+        Alert.text, Alert.TTS, Alert.dur = L["ENCOUNTER_ALERT_ADDS"], L["ENCOUNTER_ALERT_ADDS"], 5
         timers = {
             [0] = {},
             [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
@@ -35,7 +36,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
 
-        Alert.text, Alert.TTS = "CC Adds", "CC Adds"
+        Alert.text, Alert.TTS = L["ENCOUNTER_ALERT_CC_ADDS"], L["ENCOUNTER_ALERT_CC_ADDS"]
         timers = {
             [0] = {},
             [14] = {20, 65, 141, 187, 263, 308, 385, 431},
@@ -56,10 +57,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                 for i=1, #self.platetexts+1 do
                     if self.platetexts[i] and not self.platetexts[i]:IsShown() then
                         if aura2 then
-                            self.platetexts[i]:SetText("WAIT")
+                            self.platetexts[i]:SetText(L["ENCOUNTER_PLATE_WAIT"])
                             self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
                         else
-                            self.platetexts[i]:SetText("CC")
+                            self.platetexts[i]:SetText(L["ENCOUNTER_PLATE_CC"])
                             self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         end
                         self.platetexts[i]:ClearAllPoints()
@@ -87,10 +88,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i].bgFrame:SetPoint("CENTER", self.platetexts[i], "CENTER", 0, 0)
 
                         if aura2 then
-                            self.platetexts[i]:SetText("WAIT")
+                            self.platetexts[i]:SetText(L["ENCOUNTER_PLATE_WAIT"])
                             self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
                         else
-                            self.platetexts[i]:SetText("CC")
+                            self.platetexts[i]:SetText(L["ENCOUNTER_PLATE_CC"])
                             self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         end
 

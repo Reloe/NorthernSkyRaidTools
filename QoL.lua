@@ -1,4 +1,5 @@
 local _, NSI = ... -- Internal namespace
+local L = NSI.L
 
 local f = CreateFrame("Frame")
 
@@ -14,13 +15,13 @@ local CauldronIcon = "\124T"..C_Spell.GetSpellTexture(448001)..":12:12:0:0:64:64
 local SoulwellIcon = "\124T"..C_Spell.GetSpellTexture(6262)..":12:12:0:0:64:64:4:60:4:60\124t"
 local RepairIcon = "\124T"..C_Spell.GetSpellTexture(126462)..":12:12:0:0:64:64:4:60:4:60\124t"
 local TextDisplays = {
-    Gateway = GatewayIcon.."Gateway Useable"..GatewayIcon,
-    ResetBoss = ResetBossIcon.."Reset Boss"..ResetBossIcon,
-    LootBoss = CrestIcon.."Loot Boss"..CrestIcon,
-    SoulwellDropped = SoulwellIcon.."%s Dropped a Soulwell"..SoulwellIcon,
-    FeastDropped = FeastIcon.."%s Dropped a Feast"..FeastIcon,
-    RepairDropped = RepairIcon.."%s Dropped a Repair"..RepairIcon,
-    CauldronDropped = CauldronIcon.."%s Dropped a Cauldron"..CauldronIcon,
+    Gateway = GatewayIcon..L["QOL_TEXT_GATEWAY_USEABLE"]..GatewayIcon,
+    ResetBoss = ResetBossIcon..L["QOL_TEXT_RESET_BOSS"]..ResetBossIcon,
+    LootBoss = CrestIcon..L["QOL_TEXT_LOOT_BOSS"]..CrestIcon,
+    SoulwellDropped = SoulwellIcon..L["QOL_TEXT_SOULWELL_DROPPED_FMT"]..SoulwellIcon,
+    FeastDropped = FeastIcon..L["QOL_TEXT_FEAST_DROPPED_FMT"]..FeastIcon,
+    RepairDropped = RepairIcon..L["QOL_TEXT_REPAIR_DROPPED_FMT"]..RepairIcon,
+    CauldronDropped = CauldronIcon..L["QOL_TEXT_CAULDRON_DROPPED_FMT"]..CauldronIcon,
 }
 
 local ConsumableSpells = {
@@ -274,7 +275,7 @@ local VantusIds = {
 
 }
 function NSI:VantusRuneCheck()
-    if self:Restricted() then print("Auras are currently secret so this is unvailable.") return end
+    if self:Restricted() then print(L["QOL_VANTUS_RESTRICTED"]) return end
     if not UnitInRaid("player") then return end
     local name = C_Spell.GetSpellInfo(1276691).name
     local prefix = name:match("^([^:]+)") -- get localized name of vantus runes
@@ -299,10 +300,10 @@ function NSI:VantusRuneCheck()
         end
     end
     if text ~= "" then
-        text = "Missing Vantus Runes: "..text
+        text = string.format(L["QOL_VANTUS_MISSING_FMT"], text)
         print(text)
     else
-        print("Everyone has a Vantus Rune!")
+        print(L["QOL_VANTUS_ALL_HAVE"])
     end
 end
 
