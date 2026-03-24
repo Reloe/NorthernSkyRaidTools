@@ -11,36 +11,41 @@ function NSI:SetupTimelineHooks(timeline)
     local scaleSlider = timeline.scaleSlider
     local elapsedTimeFrame = timeline.elapsedTimeFrame
 
-    -- Hook mousewheel for zoom-to-cursor behavior
-    -- We need to capture state BEFORE the zoom, then adjust AFTER
+    -- Override mousewheel: scroll = zoom-to-cursor, shift+scroll = vertical pan
     if scaleSlider and horizontalSlider then
         -- Storage for pre-zoom state
         timeline.preZoomState = {}
 
-        timeline:HookScript("OnMouseWheel", function(self, delta)
+        timeline:SetScript("OnMouseWheel", function(self, delta)
             if IsControlKeyDown() then
-                -- Capture state before zoom
-                local pixelPerSecond = timeline.options.pixels_per_second or 15
-                local currentScale = timeline.currentScale or 1
-
-                -- Get mouse X position relative to the visible timeline frame
-                local cursorX = GetCursorPosition()
-                local uiScale = 1 / UIParent:GetEffectiveScale()
-                cursorX = cursorX * uiScale
-                local frameLeft = timeline:GetLeft() or 0
-                local mouseXInFrame = cursorX - frameLeft
-
-                -- Get current scroll position
-                local scrollPosition = horizontalSlider:GetValue()
-
-                -- Calculate time under mouse
-                local timeUnderMouse = (scrollPosition + mouseXInFrame) / (pixelPerSecond * currentScale)
-
-                -- Store for post-zoom adjustment
-                timeline.preZoomState.timeUnderMouse = timeUnderMouse
-                timeline.preZoomState.mouseXInFrame = mouseXInFrame
-                timeline.preZoomState.pixelPerSecond = pixelPerSecond
+                -- Vertical scroll
+                if timeline.verticalSlider then
+                    local cur = timeline.verticalSlider:GetValue()
+                    local vMin, vMax = timeline.verticalSlider:GetMinMaxValues()
+                    timeline.verticalSlider:SetValue(math.max(vMin, math.min(vMax, cur - delta * 3)))
+                end
+                return
             end
+
+            -- Zoom to cursor (always, no modifier needed)
+            local pixelPerSecond = timeline.options.pixels_per_second or 15
+            local currentScale = timeline.currentScale or 1
+
+            local cursorX = GetCursorPosition()
+            local uiScale = 1 / UIParent:GetEffectiveScale()
+            cursorX = cursorX * uiScale
+            local frameLeft = timeline:GetLeft() or 0
+            local mouseXInFrame = cursorX - frameLeft
+            local scrollPosition = horizontalSlider:GetValue()
+            local timeUnderMouse = (scrollPosition + mouseXInFrame) / (pixelPerSecond * currentScale)
+
+            timeline.preZoomState.timeUnderMouse = timeUnderMouse
+            timeline.preZoomState.mouseXInFrame = mouseXInFrame
+            timeline.preZoomState.pixelPerSecond = pixelPerSecond
+
+            local sMin, sMax = scaleSlider:GetMinMaxValues()
+            local newScale = math.max(sMin, math.min(sMax, currentScale * (delta > 0 and 1.15 or (1 / 1.15))))
+            scaleSlider:SetValue(newScale)
         end)
 
         -- Hook scale slider to adjust scroll after zoom
@@ -1665,12 +1670,50 @@ function NSI:CreateTimelineWindow()
     previewTimeBg:SetPoint("TOPLEFT", previewTimeLabel, "TOPLEFT", -3, 2)
     previewTimeBg:SetPoint("BOTTOMRIGHT", previewTimeLabel, "BOTTOMRIGHT", 3, -1)
 
+    -- Right-click drag panning state
+    local isDraggingTimeline = false
+    local dragStartMouseX = 0
+    local dragStartScroll = 0
+
+    local function startRightDrag()
+        isDraggingTimeline = true
+        local uiScale = 1 / UIParent:GetEffectiveScale()
+        dragStartMouseX = GetCursorPosition() * uiScale
+        dragStartScroll = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+    end
+
+    local function stopRightDrag()
+        isDraggingTimeline = false
+    end
+
+    timelineFrame:EnableMouse(true)
+    timelineFrame:HookScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then startRightDrag() end
+    end)
+    timelineFrame:HookScript("OnMouseUp", function(self, button)
+        if button == "RightButton" then stopRightDrag() end
+    end)
+
+    timelineFrame.body:HookScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then startRightDrag() end
+    end)
+    timelineFrame.body:HookScript("OnMouseUp", function(self, button)
+        if button == "RightButton" then stopRightDrag() end
+    end)
+
     -- Use OnUpdate for smooth cursor tracking and preview line animation
     local updateThrottle = 0
     timelineFrame.body:SetScript("OnUpdate", function(self, elapsed)
         updateThrottle = updateThrottle + elapsed
         if updateThrottle >= 0.016 then  -- ~60fps
             updateThrottle = 0
+            if isDraggingTimeline and timelineFrame.horizontalSlider then
+                local uiScale = 1 / UIParent:GetEffectiveScale()
+                local currentMouseX = GetCursorPosition() * uiScale
+                local delta = dragStartMouseX - currentMouseX
+                local hMin, hMax = timelineFrame.horizontalSlider:GetMinMaxValues()
+                timelineFrame.horizontalSlider:SetValue(math.max(hMin, math.min(hMax, dragStartScroll + delta)))
+            end
             if self:IsMouseOver() then
                 updateCursorLine()
             end
@@ -1730,7 +1773,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Help text (positioned at bottom, below the sliders)
-    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Navigate | Ctrl+Scroll: Zoom | Shift+Scroll: Vertical", 10, "gray")
+    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical", 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
     -- Handle window resize to update timeline dimensions
