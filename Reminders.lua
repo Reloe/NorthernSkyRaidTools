@@ -27,7 +27,7 @@ function NSI:AddToReminder(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
-        table.insert(self.TLAlerts, info)
+        table.insert(self.TLAlerts, CopyTable(info))
         return
     elseif self:IsUsingTLReminders() and (not info.IsAlert) and (not info.IsAssignment) then
         return
@@ -1413,10 +1413,9 @@ function NSI:IsUsingTLAssignments()
 end
 
 function NSAPI:GetAlerts(encounterID, id)
-    if not NSI:IsUsingTLReminders() then return end
     NSI.TLAlerts = {}
-    if NSI.EncounterAlertStart[encounterID] then NSI.EncounterAlertStart[encounterID](NSI, id) end
-    if NSI.AddAssignments[encounterID] then NSI.AddAssignments[encounterID](NSI, id) end
-    if NSI.EncounterAlertStop[encounterID] then NSI.EncounterAlertStop[encounterID](NSI) end
+    if NSI.EncounterAlertStart[encounterID] and NSI:IsUsingTLAlerts() then NSI.EncounterAlertStart[encounterID](NSI, id) end
+    if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
+    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI) end
     return NSI.TLAlerts
 end
