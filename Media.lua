@@ -40,6 +40,7 @@ NSI.LSM:Register("sound","|cFF4BAAC8Charge|r", [[Interface\Addons\NorthernSkyRai
 NSI.LSM:Register("sound","|cFF4BAAC8Linked|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Linked.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8DropPool|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\DropPool.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Obelisk|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Obelisk.ogg]])
+NSI.LSM:Register("sound","|cFF4BAAC8HealAbsorb|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\HealAbsorb.ogg]])
 --Fonts
 NSI.LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars
