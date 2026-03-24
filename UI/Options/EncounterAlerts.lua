@@ -23,6 +23,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3176] = NSRT.EncounterAlerts[3176] or {}
                 NSRT.EncounterAlerts[3176].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3176)
             end,
             nocombat = true,
             icontexture = 7448209,
@@ -42,6 +43,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3177] = NSRT.EncounterAlerts[3177] or {}
                 NSRT.EncounterAlerts[3177].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3177)
             end,
             nocombat = true,
             icontexture = 7448210,
@@ -61,6 +63,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3179] = NSRT.EncounterAlerts[3179] or {}
                 NSRT.EncounterAlerts[3179].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3179)
             end,
             nocombat = true,
             icontexture = 7448212,
@@ -94,6 +97,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3178] = NSRT.EncounterAlerts[3178] or {}
                 NSRT.EncounterAlerts[3178].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3178)
             end,
             nocombat = true,
             icontexture = 7448207,
@@ -127,6 +131,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3180] = NSRT.EncounterAlerts[3180] or {}
                 NSRT.EncounterAlerts[3180].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3180)
             end,
             nocombat = true,
             icontexture = 7448211,
@@ -146,6 +151,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3181] = NSRT.EncounterAlerts[3181] or {}
                 NSRT.EncounterAlerts[3181].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3181)
             end,
             nocombat = true,
             icontexture = 7448205,
@@ -174,6 +180,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3306] = NSRT.EncounterAlerts[3306] or {}
                 NSRT.EncounterAlerts[3306].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3306)
             end,
             nocombat = true,
             icontexture = 7448202,
@@ -193,6 +200,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3182] = NSRT.EncounterAlerts[3182] or {}
                 NSRT.EncounterAlerts[3182].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3182)
             end,
             nocombat = true,
             icontexture = 7448203,
@@ -212,6 +220,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
                 NSRT.EncounterAlerts[3183].enabled = value
+                self:FireCallback("NSRT_ALERT_TOGGLE", 3183)
             end,
             nocombat = true,
             icontexture = 7448204,
