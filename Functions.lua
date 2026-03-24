@@ -238,11 +238,7 @@ end
 NSI.Callbacks = NSI.Callbacks or LibStub("CallbackHandler-1.0"):New(NSI)
 
 function NSI:FireCallback(event, ...)
-    if self:IsUsingTLReminders() then
-        self.Callbacks:Fire(event, ...)
-    else
-        self.Callbacks:Fire(event, "", "") -- send empty strings if setting is disabled
-    end
+    self.Callbacks:Fire(event, ...)
 end
 
 function NSAPI:RegisterCallback(event, callback, owner)
