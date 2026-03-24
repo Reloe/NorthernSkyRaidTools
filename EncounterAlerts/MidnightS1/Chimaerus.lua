@@ -14,10 +14,13 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         for phase = 1, 3 do
             Alert.phase = phase
             Alert.time, Alert.text  = 18.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
             Alert.time, Alert.text = 71.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.TTS = subgroup >= 3 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
             Alert.time, Alert.text = 138.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
         end
         if NSRT.AssignmentSettings.OnPull then
@@ -39,8 +42,10 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         for phase = 1, 3 do
             Alert.phase = phase
             Alert.time, Alert.text  = 18.7, group <= 1 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.TTS = group <= 1 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
             Alert.time, Alert.text = 91.4, group >= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.TTS = group >= 2 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
         end
         if NSRT.AssignmentSettings.OnPull then
