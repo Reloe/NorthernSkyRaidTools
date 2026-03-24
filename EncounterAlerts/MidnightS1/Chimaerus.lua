@@ -3,9 +3,9 @@ local _, NSI = ... -- Internal namespace
 local encID = 3306
 -- /run NSAPI:DebugEncounter(3306)
 
-NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
+NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    local diff = select(3, GetInstanceInfo())
+    local diff = id or select(3, GetInstanceInfo())
     if diff < 14 or diff > 16 then return end
     if diff == 16 and self.Assignments[encID].Soaks then -- For Mythic we use group 1/2 + 3/4
         local subgroup = self:GetSubGroup("player")
@@ -27,7 +27,7 @@ NSI.AddAssignments[encID] = function(self) -- on ENCOUNTER_START
     elseif self.Assignments[encID].SplitSoaks and diff ~= 16 then -- For Normal & Heroic we auto split the group to speed up splits
         if UnitGroupRolesAssigned("player") == "TANK" then return end -- just end early for tanks
         local _, first = self:GetSortedGroup(true, false, false)
-        local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID) -- text, Type, spellID, dur, phase, encID
+        local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID, true) -- text, Type, spellID, dur, phase, encID
         local group = 2
         for i, v in ipairs(first) do
             if UnitIsUnit(v.unitid, "player") then

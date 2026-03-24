@@ -14,7 +14,6 @@ f:RegisterEvent("ENCOUNTER_WARNING")
 f:RegisterEvent("RAID_BOSS_WHISPER")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -46,6 +45,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
             NSRT.ReminderSettings = NSRT.ReminderSettings or {}
             if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
+            if NSRT.ReminderSettings.PersNote == nil then NSRT.ReminderSettings.PersNote = true end
             NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
             if NSRT.ReminderSettings.SpellTTS == nil then NSRT.ReminderSettings.SpellTTS = true end
             if NSRT.ReminderSettings.TextTTS == nil then NSRT.ReminderSettings.TextTTS = true end
@@ -131,7 +131,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
                 NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame or false
             end
-            if NSRT.UseDefaultPASounds then NSRT.PASounds.UseDefaultPASounds = true end -- migrate old setting
             if not NSRT.Settings.GenericDisplay then
                 NSRT.Settings.GenericDisplay = {Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 400}
             end
@@ -183,6 +182,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if not NSRT.Settings["GlobalFontSize"] then NSRT.Settings["GlobalFontSize"] = 20 end
             if not NSRT.Settings["GlobalEncounterFontSize"] then NSRT.Settings["GlobalEncounterFontSize"] = 20 end
 
+            if NSRT.PASounds.UseDefaultPASounds == nil then -- convert old setting
+                NSRT.PASounds.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
+            end
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}
@@ -214,10 +216,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         self:SetReminder(NSRT.ActivePersonalReminder, true, true) -- loading active personal reminder from last session
-        self:ProcessReminder()
         if self.Reminder == "" then -- if user doesn't have their own active Reminder, load shared one from last session. This should cover disconnects/relogs
             self.Reminder = NSRT.StoredSharedReminder or ""
         end
+        self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
@@ -250,27 +252,20 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
-    elseif e == "ZONE_CHANGED_NEW_AREA" then
-        local diff = select(3, GetInstanceInfo()) or 0
-        local ForceHide = diff > 17 or diff < 14
-        self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
-        self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
-        self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
-        if ForceHide then self:HideAllReminders(true) end
     elseif e == "PLAYER_ENTERING_WORLD" then
         local IsLogin, IsReload = ...
-        local diff = select(3, GetInstanceInfo()) or 0
-        local ForceHide = diff > 17 or diff < 14
-        if ForceHide then self:HideAllReminders(true) end
-        if IsLogin or IsReload then
-            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip", ForceHide)
-            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip", ForceHide)
-            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip", ForceHide)
-        end
-        if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
-            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
-            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
+        C_Timer.After(0.01, function()
+            local diff = select(3, GetInstanceInfo()) or 0
+            local ForceHide = diff > 17 or diff < 14
+            if ForceHide then self:HideAllReminders(true) end
+            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
+            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
+            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
+                if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+                self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
+            end
+        end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
@@ -297,6 +292,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.GlowStarted = {}
         self.Timelines = {}
         self.DefaultAlertID = 10000
+        self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:StartReminders(self.Phase)
@@ -316,6 +312,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
         local encID, encounterName = ...
         local diff = select(3, GetInstanceInfo()) or 0
@@ -356,6 +353,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
+        local diff= select(3, GetInstanceInfo()) or 0
         if self:DifficultyCheck(14) or diff == 23 then
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
@@ -375,7 +373,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
         if C_ChatInfo.InChatMessagingLockdown() then return end
         self.LastBroadcast = GetTime()
-        local diff= select(3, GetInstanceInfo()) or 0
         self.specs = {}
         self.GUIDS = {}
         self.HasNSRT = {}

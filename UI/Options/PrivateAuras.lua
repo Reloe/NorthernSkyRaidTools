@@ -161,6 +161,17 @@ local function BuildPrivateAurasOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Alternate Display",
+            desc = "Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5",
+            get = function() return NSRT.PASettings.AlternateDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.AlternateDisplay = value
+                NSI:UpdatePADisplay(true)
+            end,
+        },
+        {
             type = "label",
             get = function() return "Personal Private Aura Text-Warning" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
@@ -395,10 +406,10 @@ local function BuildPrivateAurasOptions()
             boxfirst = true,
             name = "Use Default RAID Private Aura Sounds",
             desc = "This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spellid's yourself previously this button will NOT overwrite that.",
-            get = function() return NSRT.UseDefaultPASounds end,
+            get = function() return NSRT.PASounds.UseDefaultPASounds end,
             set = function(self, fixedparam, value)
-                NSRT.UseDefaultPASounds = value
-                if NSRT.UseDefaultPASounds then
+                NSRT.PASounds.UseDefaultPASounds = value
+                if NSRT.PASounds.UseDefaultPASounds then
                     NSI:ApplyDefaultPASounds(true)
                     NSI:RefreshPASoundEditUI()
                 end
@@ -572,6 +583,17 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PATankSettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideTooltip = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Alternate Display",
+            desc = "Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5",
+            get = function() return NSRT.PATankSettings.AlternateDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.AlternateDisplay = value
                 NSI:UpdatePADisplay(false, true)
             end,
         },

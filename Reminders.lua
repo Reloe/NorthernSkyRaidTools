@@ -26,13 +26,11 @@ local symbols = {
 function NSI:AddToReminder(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
-    if self:IsUsingTLReminders() then
-        if info.IsAlert then
-            self:FireCallback("NSRT_ALERT_ADDED", info)
-        else
-            return
-        end
-        -- put return outside the if statement when bart has added it to TimelineReminders
+    if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
+        table.insert(self.TLAlerts, info)
+        return
+    elseif self:IsUsingTLReminders() and (not info.IsAlert) and (not info.IsAssignment) then
+        return
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     -- convert to booleans
@@ -845,23 +843,23 @@ end
 
 function NSI:CountdownNoteFrame(frame)
     if not frame or not frame:IsShown() then return end
-    local text = frame.Text:GetText()
-    if not text then return end
+    local originalText = frame.OriginalText or frame.Text:GetText()
+    if not originalText then return end
     local newtext = ""
-    local now = (GetTime() - self.PhaseSwapTime)
+    local PassedTime = (GetTime() - self.PhaseSwapTime)
     local curphase = 100
-    for line in text:gmatch('([^\n]*)\n') do
+    if not originalText:match('\n$') then originalText = originalText..'\n' end
+    for line in originalText:gmatch('([^\n]*)\n') do
         local ShouldDelete = false
         local phase = line:match("Phase (%d+)")
         curphase = phase and tonumber(phase) or curphase
         if curphase < self.Phase then
             ShouldDelete = true
-        end
-        if curphase == self.Phase and not phase then
+        elseif curphase == self.Phase and not phase then
             local minutes, seconds = line:match("(%d+):(%d%d)")
-            local time = minutes and seconds and (minutes*60) + seconds
-            if time then
-                local newtime = time - 1
+            local originalTime = minutes and seconds and (minutes*60) + seconds
+            if originalTime then
+                local newtime = originalTime - PassedTime
                 if newtime > 0 then
                     local newminutes = math.floor(newtime/60)
                     local newseconds = math.floor(newtime%60)
@@ -1230,9 +1228,9 @@ function NSAPI:DebugTimeline(e, dur)
     NSI:EventHandler(e, true, true, {duration = dur})
 end
 
-function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
-    local id = self.DefaultAlertID
-    self.DefaultAlertID = self.DefaultAlertID + 1
+function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssignment)
+    local id = self.DefaultAlertID or 10000
+    self.DefaultAlertID = self.DefaultAlertID and self.DefaultAlertID + 1 or 10001
     local info =
     {
         dur = dur,
@@ -1245,7 +1243,9 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID)
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
-        IsAlert = true, -- this makes this still display when user is using TimelineReminders since that setting is only for actual reminders, not alerts.
+        IsAssignment = IsAssignment,
+        IsAlert = not IsAssignment,
+        countdown = false,
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
@@ -1328,14 +1328,19 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
     end
 end
 
-function NSI:UpdateNoteFrame(Name, SettingsTable, text, ForceHide)
-    if SettingsTable.enabled and not ForceHide then
+function NSI:UpdateNoteFrame(Name, SettingsTable, text)
+    if SettingsTable.enabled then
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
         self[Name].Text:SetWidth(SettingsTable.Width)
-        if text ~= "skip" then self[Name].Text:SetText(text) end
+        if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
-        self[Name]:Show()
+        local diff = select(3, GetInstanceInfo()) or 0
+        if (diff > 17 or diff < 14) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
+            self[Name]:Hide()
+        else
+            self[Name]:Show()
+        end
     elseif self[Name] then
         self[Name]:Hide()
     end
@@ -1386,8 +1391,10 @@ function NSI:FlashNoteBackgrounds()
     self:FlashFrameBackground(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame)
 end
 
-function NSAPI:ToggleTLReminders(enable)
-    NSRT.ReminderSettings.UseTLReminders = enable
+function NSAPI:ToggleTLReminders()
+    NSRT.ReminderSettings.UseTLReminders = LiquidRemindersSaved.settings.timeline.nsrtNote
+    NSRT.ReminderSettings.UseTLAssignments = LiquidRemindersSaved.settings.timeline.nsrtAssignments
+    NSRT.ReminderSettings.UseTLAlerts = LiquidRemindersSaved.settings.timeline.nsrtAlerts
     NSI:ProcessReminder()
     NSI:UpdateReminderFrame(true)
     NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
@@ -1395,4 +1402,21 @@ end
 
 function NSI:IsUsingTLReminders()
     return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineReminders")
+end
+
+function NSI:IsUsingTLAlerts()
+    return NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
+end
+
+function NSI:IsUsingTLAssignments()
+    return NSRT.ReminderSettings.UseTLAssignments and C_AddOns.IsAddOnLoaded("TimelineReminders")
+end
+
+function NSAPI:GetAlerts(encounterID, id)
+    if not NSI:IsUsingTLReminders() then return end
+    NSI.TLAlerts = {}
+    if NSI.EncounterAlertStart[encounterID] then NSI.EncounterAlertStart[encounterID](NSI, id) end
+    if NSI.AddAssignments[encounterID] then NSI.AddAssignments[encounterID](NSI, id) end
+    if NSI.EncounterAlertStop[encounterID] then NSI.EncounterAlertStop[encounterID](NSI) end
+    return NSI.TLAlerts
 end

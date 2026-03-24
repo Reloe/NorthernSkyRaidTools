@@ -28,7 +28,7 @@ local ConsumableSpells = {
     [1278915] = "FEAST", -- Hearty Quel'dorei Medley
 
     [1259658] = "FEAST", -- Harandar Celebration
-    [1278929] = "FEAST", -- Hearty Rootland Celebration
+    [1278929] = "FEAST", -- Hearty Harandar Celebration
 
     [1237104] = "FEAST", -- Blooming Feast
     [1278909] = "FEAST", -- Hearty Blooming Feast
@@ -55,7 +55,7 @@ local LustDebuffs = {
 function NSI:QoLEvents(e, ...)
     if self.IsBuilding then return end
     if e == "ACTIONBAR_UPDATE_USABLE" then -- only thing needed for Gateway
-        if C_Item.IsUsableItem(188152) and NSRT.QoL.GatewayUseableDisplay then
+        if NSRT.QoL.GatewayUseableDisplay and C_Item.IsUsableItem(188152) then
             self.QoLTextDisplays.Gateway = {SettingsName = "GatewayUseableDisplay", text = TextDisplays.Gateway}
         else
             self.QoLTextDisplays.Gateway = nil
@@ -130,13 +130,15 @@ function NSI:QoLEvents(e, ...)
             end
         end
     elseif e == "PLAYER_ENTERING_WORLD" then
-        if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
-            if self:HasLustDebuff() then
-                self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
-                self:UpdateQoLTextDisplay()
+        C_Timer.After(0.01, function()
+            if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
+                if self:HasLustDebuff() then
+                    self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+                    self:UpdateQoLTextDisplay()
+                end
             end
-        end
-        self:QoLOnZoneSwap()
+            self:QoLOnZoneSwap()
+        end)
     elseif e == "ENCOUNTER_END" and self:DifficultyCheck(14) then
         if NSRT.QoL.LootBossReminder then
             local success = select(5, ...)
