@@ -29,7 +29,7 @@ function NSI:AddToReminder(info)
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
         table.insert(self.TLAlerts, CopyTable(info))
         return
-    elseif self:IsUsingTLReminders() and (not info.IsAlert) and (not info.IsAssignment) then
+    elseif self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment) then
         return
     end
     info.spellID = info.spellID and tonumber(info.spellID)
