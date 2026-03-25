@@ -23,7 +23,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
 
-        Alert.text, Alert.TTS, Alert.dur = "Adds", "Adds ", 5
+        Alert.text, Alert.TTS, Alert.dur = "Orbs", "Orbs ", 5
         timers = {
             [0] = {},
             [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
