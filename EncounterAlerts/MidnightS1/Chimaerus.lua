@@ -3,6 +3,53 @@ local _, NSI = ... -- Internal namespace
 local encID = 3306
 -- /run NSAPI:DebugEncounter(3306)
 
+local function RiftMadnessTimers()
+    local diff = select(3, GetInstanceInfo()) or 0
+    if diff == 16 and NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+        if UnitGroupRolesAssigned("player") == "TANK" then return end
+        local dur = 6
+        local Alert = NSI:CreateDefaultAlert("Debuffs Soon", "Text", nil, dur, 1, encID) -- Group Soaks
+        Alert.TTS = false
+        local timers = {39, 112}
+        if NSI.AlertTimers then
+            for i, v in ipairs(NSI.AlertTimers) do
+                if v and v.Cancel then
+                    v:Cancel()
+                end
+            end
+            NSI.AlertTimers = nil
+        end
+        NSI.AlertTimers = {}
+        for i, v in ipairs(timers or {}) do
+            NSI.AlertTimers[i] = C_Timer.NewTimer(v-dur, function()
+                if UnitExists("boss2") then
+                    NSI:DisplayReminder(Alert)
+                end
+            end)
+        end
+    end
+end
+
+NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
+    if not NSRT.EncounterAlerts[encID] then
+        NSRT.EncounterAlerts[encID] = {enabled = false}
+    end
+    if NSRT.EncounterAlerts[encID].enabled then
+        RiftMadnessTimers()
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
+    if self.AlertTimers then
+        for i, v in ipairs(self.AlertTimers) do
+            if v and v.Cancel then
+                v:Cancel()
+            end
+        end
+        self.AlertTimers = nil
+    end
+end
+
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
     local diff = id or select(3, GetInstanceInfo())
@@ -80,6 +127,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
             self.Phase = newphase
             self:StartReminders(self.Phase)
             self.PhaseSwapTime = now
+            RiftMadnessTimers()
         end
     end
 end
