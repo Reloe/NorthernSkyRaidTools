@@ -64,6 +64,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     self.TauntFrame.Text:Hide()
                     self.TauntTimersCancel = nil
                 end)
+                self.TauntFrame:UnregisterEvent("UNIT_SPELLCAST_START") -- unregister on first detection to help reduce false positives
             elseif e == "UNIT_SPELLCAST_SUCCEEDED" and Taunts[spellID] then
                 if self.TauntTimersCancel then
                     self.TauntTimersCancel:Cancel()
