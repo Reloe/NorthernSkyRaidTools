@@ -24,6 +24,7 @@ local SoundListRaid = {
     [1248994] = "Targeted", -- Execution Sentence
     [1248985] = "Targeted", -- Execution Sentence (not sure if this one is used)
     [1246487] = "Spread", -- Avenger's Shield
+    [1248721] = "HealAbsorb", -- Tyr's Wrath
 
     [1232470] = "Obelisk", -- Grasp of Emptiness
     [1239111] = "Break", -- Aspect of the End
@@ -255,9 +256,6 @@ function NSI:InitPA()
             self.PAAnchorFrames[auraIndex]:ClearAllPoints()
             local xPoint = NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection
             local yPoint = NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection
-            self.PAAnchorFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo,
-            NSRT.PASettings.AlternateDisplay and xPoint/scale or xPoint,
-            NSRT.PASettings.AlternateDisplay and yPoint/scale or yPoint)
             self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo,
             NSRT.PASettings.AlternateDisplay and xPoint/scale or xPoint,
             NSRT.PASettings.AlternateDisplay and yPoint/scale or yPoint)
@@ -284,6 +282,9 @@ function NSI:InitPA()
             }
             self.AddedPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
             if scale ~= 1 and not NSRT.PASettings.AlternateDisplay then
+                self.PAAnchorFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo,
+                xPoint,
+                yPoint)
                 local durationArgs = {
                     unitToken = "player",
                     auraIndex = auraIndex,
@@ -523,9 +524,6 @@ function NSI:InitTankPA()
                 self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
                 local xPoint = NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx
                 local yPoint = NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky
-                self.PATankAnchorFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo,
-                NSRT.PATankSettings.AlternateDisplay and xPoint/scale or xPoint,
-                NSRT.PATankSettings.AlternateDisplay and yPoint/scale or yPoint)
                 self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo,
                 NSRT.PATankSettings.AlternateDisplay and xPoint/scale or xPoint,
                 NSRT.PATankSettings.AlternateDisplay and yPoint/scale or yPoint)
@@ -551,6 +549,9 @@ function NSI:InitTankPA()
                 }
                 self.AddedTankPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
                 if scale ~= 1 and not NSRT.PATankSettings.AlternateDisplay then
+                    self.PATankAnchorFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo,
+                    xPoint,
+                    yPoint)
                     local durationArgs = {
                         unitToken = unit,
                         auraIndex = auraIndex,
