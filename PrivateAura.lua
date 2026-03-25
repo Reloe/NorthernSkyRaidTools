@@ -101,6 +101,7 @@ local SoundListMPlus = {
 }
 
 function NSI:AddPASound(spellID, sound, unit)
+    if self:Restricted() then return end
     if (not spellID) or (not C_UnitAuras.AuraIsPrivate(spellID)) then return end
     if not unit then unit = "player" end
     if not self.PrivateAuraSoundIDs then self.PrivateAuraSoundIDs = {} end
@@ -149,6 +150,7 @@ function NSI:SavePASound(spellID, sound)
 end
 
 function NSI:InitTextPA()
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.PATextMoverFrame then
         self.PATextMoverFrame = CreateFrame("Frame", nil, self.NSRTFrame)
@@ -204,6 +206,7 @@ function NSI:InitTextPA()
 end
 
 function NSI:InitPA()
+    if self:Restricted() then return end
     if self.IsBuilding then return end
 
     if not self.PAFrames then self.PAFrames = {} end
@@ -316,6 +319,7 @@ function NSI:InitPA()
 end
 
 function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled to clean up old anchors
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.PARaidFrames then self.PARaidFrames = {} end
     if not self.PAStackFrames then self.PAStackFrames = {} end
@@ -431,6 +435,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
 end
 
 function NSI:RemoveTankPA()
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.AddedTankPA then return end
     for i, anchortable in ipairs(self.AddedTankPA) do
@@ -450,6 +455,7 @@ function NSI:RemoveTankPA()
 end
 
 function NSI:InitTankPA()
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     -- initiated on ENCOUNTER_START for tank players
     if not self.PATankFrames then self.PATankFrames = {} end
@@ -581,6 +587,7 @@ function NSI:InitTankPA()
 end
 
 function NSI:UpdatePADisplay(Personal, Tank)
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if Personal then
         if self.IsPAPreview then
@@ -607,6 +614,7 @@ function NSI:UpdatePADisplay(Personal, Tank)
 end
 
 function NSI:PreviewPA(Show)
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.PAFrames then self:InitPA() end
     if not self.PATextMoverFrame then self:InitTextPA() end
@@ -677,6 +685,7 @@ function NSI:PreviewPA(Show)
 end
 
 function NSI:PreviewTankPA(Show)
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.PATankFrames then self:InitTankPA() end
     if not self.PATankFrames[1] or not self.PATankFrames[1][1] then
@@ -744,6 +753,7 @@ function NSI:PreviewTankPA(Show)
 end
 
 function NSI:PreviewRaidPA(Show, Init)
+    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not Show then
         if self.PARaidPreviewFrame then self.PARaidPreviewFrame:Hide() end
