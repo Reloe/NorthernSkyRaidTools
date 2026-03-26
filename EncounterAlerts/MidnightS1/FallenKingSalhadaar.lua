@@ -23,12 +23,12 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
 
-        Alert.text, Alert.TTS, Alert.dur = "Orbs", "Orbs ", 5
+        Alert.text, Alert.TTS, Alert.dur = "Orbs", "Orbs", 5
         timers = {
             [0] = {},
             [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
             [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
-            [16] = {17.1, 62.1, 140, 185.7, 261.5, 306.6, 384.1, 429.5, 505},
+            [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6, 385.1, 430.5, 506},
         }
         for i, v in ipairs(timers[id] or {}) do -- Void Convergence (Adds)
             Alert.time = v
@@ -40,7 +40,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [0] = {},
             [14] = {20, 65, 141, 187, 263, 308, 385, 431},
             [15] = {20, 65, 141, 187, 263, 308, 385, 431},
-            [16] = {26.6, 72, 149.8, 195.9, 271.4, 316.5, 393.2, 439},
+            [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5, 394.2, 440},
         }
         for i, v in ipairs(timers[id] or {}) do -- Fractured Projection (CC Adds)
             Alert.time = v
