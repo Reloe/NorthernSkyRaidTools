@@ -8,7 +8,7 @@ local function RiftMadnessTimers()
     if diff == 16 and NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         if UnitGroupRolesAssigned("player") == "TANK" then return end
         local dur = 6
-        local Alert = NSI:CreateDefaultAlert("Debuffs Soon", "Text", nil, dur, 1, encID) -- Group Soaks
+        local Alert = NSI:CreateDefaultAlert("Debuffs", "Text", nil, dur, 1, encID) -- Group Soaks
         Alert.TTS = false
         local timers = {39, 112}
         if NSI.AlertTimers then
@@ -17,15 +17,29 @@ local function RiftMadnessTimers()
                     v:Cancel()
                 end
             end
-            NSI.AlertTimers = nil
+            NSI.AlertTimers = {}
         end
         NSI.AlertTimers = {}
         for i, v in ipairs(timers or {}) do
             NSI.AlertTimers[i] = C_Timer.NewTimer(v-dur, function()
-                if UnitExists("boss2") then
-                    NSI:DisplayReminder(Alert)
+                for i=1, 40 do
+                    local u = "nameplate"..i
+                    if UnitExists(u) and UnitLevel(u) == 92 then
+                        NSI:DisplayReminder(Alert)
+                        break
+                    end
                 end
             end)
+        end
+        if NSI:ISUsingTLAlerts() then
+            Alert.isConditional = true
+            for i=1, 2 do
+                Alert.phase = i
+                for _, time in ipairs(timers or {}) do
+                    Alert.time = time-dur
+                    NSI:AddToReminder(Alert)
+                end
+            end
         end
     end
 end
