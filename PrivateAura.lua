@@ -31,6 +31,7 @@ local SoundListRaid = {
     [1233602] = "Targeted", -- Silverstrike Arrow
     [1237623] = "Targeted", -- Ranger Captain's Mark
     [1283236] = "DropPool", --Void Expulsion
+    [1238708] = "Feather", -- Feather
 
     [1257087] = "Clear", -- Consuming Miasma
     [1264756] = "Targeted", -- Rift Madness
@@ -244,7 +245,7 @@ function NSI:InitPA()
             if not self.PAAnchorFrames[auraIndex] then
                 self.PAAnchorFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
             end
-            if NSRT.PASettings.HideTooltip then
+            if NSRT.PASettings.HideTooltip or NSRT.PASettings.AlternateDisplay then
                 self.PAFrames[auraIndex]:SetSize(0.001, 0.001)
             else
                 self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
@@ -510,7 +511,7 @@ function NSI:InitTankPA()
                     self.PATankAnchorFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
                     self.PATankAnchorFrames[i][auraIndex]:SetAllPoints(self.PATankFrames[i][auraIndex])
                 end
-                if NSRT.PATankSettings.HideTooltip then
+                if NSRT.PATankSettings.HideTooltip or NSRT.PATankSettings.AlternateDisplay then
                     self.PATankFrames[i][auraIndex]:SetSize(0.001, 0.001)
                 else
                     self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
