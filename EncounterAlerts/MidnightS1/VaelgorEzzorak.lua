@@ -34,8 +34,10 @@ end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
     if NSRT.EncounterAlerts[encID].HealthDisplay then
-        if self.VaelgorEzzorakFrame then self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH") end
-        self.VaelgorEzzorakFrame:Hide()
+        if self.VaelgorEzzorakFrame then
+            self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH")
+            self.VaelgorEzzorakFrame:Hide()
+         end
         self:DisplaySecretText(false, true)
     end
     if self.VaelgorPhaseTimer then
