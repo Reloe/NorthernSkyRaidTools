@@ -31,7 +31,7 @@ local function RiftMadnessTimers(id)
                 end
             end)
         end
-        if NSI:ISUsingTLAlerts() then
+        if NSI:IsUsingTLAlerts() then
             Alert.isConditional = true
             for i=1, 2 do
                 Alert.phase = i
