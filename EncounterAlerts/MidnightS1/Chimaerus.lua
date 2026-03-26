@@ -36,7 +36,7 @@ local function RiftMadnessTimers(id)
             for i=1, 2 do
                 Alert.phase = i
                 for _, time in ipairs(timers or {}) do
-                    Alert.time = time-dur
+                    Alert.time = time
                     NSI:AddToReminder(Alert)
                 end
             end
