@@ -251,7 +251,7 @@ function NSI:InitPA()
             end
             self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
             self.PADurFrames[auraIndex]:SetScale(scale)
-            if NSRT.PASettings.AlternateDisplay then self.PAFrames[auraIndex]:SetScale(scale) end
+            if NSRT.PASettings.AlternateDisplay then self.PAFrames[auraIndex]:SetScale(scale) else self.PAFrames[auraIndex]:SetScale(1) end
             self.PAFrames[auraIndex]:ClearAllPoints()
             self.PAAnchorFrames[auraIndex]:ClearAllPoints()
             local xPoint = NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection
@@ -518,7 +518,7 @@ function NSI:InitTankPA()
 
                 self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
                 self.PATankDurFrames[i][auraIndex]:SetScale(scale)
-                if NSRT.PATankSettings.AlternateDisplay then self.PATankFrames[i][auraIndex]:SetScale(scale) end
+                if NSRT.PATankSettings.AlternateDisplay then self.PATankFrames[i][auraIndex]:SetScale(scale) else self.PATankFrames[i][auraIndex]:SetScale(1) end
                 self.PATankDurFrames[i][auraIndex]:SetPoint("CENTER", self.PATankFrames[i][auraIndex], "CENTER", 0, 0)
                 self.PATankFrames[i][auraIndex]:ClearAllPoints()
                 self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
