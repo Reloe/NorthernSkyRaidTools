@@ -3,8 +3,8 @@ local _, NSI = ... -- Internal namespace
 local encID = 3306
 -- /run NSAPI:DebugEncounter(3306)
 
-local function RiftMadnessTimers()
-    local diff = select(3, GetInstanceInfo()) or 0
+local function RiftMadnessTimers(id)
+    local diff = id or select(3, GetInstanceInfo()) or 0
     if diff == 16 and NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         if UnitGroupRolesAssigned("player") == "TANK" then return end
         local dur = 6
@@ -49,7 +49,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     if NSRT.EncounterAlerts[encID].enabled then
-        RiftMadnessTimers()
+        RiftMadnessTimers(id)
     end
 end
 
