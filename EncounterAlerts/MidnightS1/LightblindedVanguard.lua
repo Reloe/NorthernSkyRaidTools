@@ -36,6 +36,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [56222] = true,
             [185245] = true,
             [2649] = true,
+            [6795] = true,
             [355] = true,
             [62124] = true,
             [49576] = true,
