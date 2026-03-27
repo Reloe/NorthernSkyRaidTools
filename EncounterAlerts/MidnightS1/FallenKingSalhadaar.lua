@@ -14,9 +14,9 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         -- using same timers for all difficulties atm
         local timers = {
             [0] = {},
-            [14] = {102.6, 224.2, 346, 467.7},
-            [15] = {102.6, 224.2, 346, 467.7},
-            [16] = {102.6, 224.2, 346, 467.7},
+            [14] = {102.6, 224.2, 346},
+            [15] = {102.6, 224.2, 346},
+            [16] = {102.6, 224.2, 346},
         }
         for i, v in ipairs(timers[id] or {}) do -- Entropic Unraveling
             Alert.time = v
@@ -26,9 +26,9 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.text, Alert.TTS, Alert.dur = "Orbs", "Orbs", 5
         timers = {
             [0] = {},
-            [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
-            [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6, 379.1, 424.5, 500},
-            [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6, 385.1, 430.5, 506},
+            [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
+            [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
+            [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6},
         }
         for i, v in ipairs(timers[id] or {}) do -- Void Convergence (Adds)
             Alert.time = v
@@ -38,9 +38,9 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.text, Alert.TTS = "CC Adds", "CC Adds"
         timers = {
             [0] = {},
-            [14] = {20, 65, 141, 187, 263, 308, 385, 431},
-            [15] = {20, 65, 141, 187, 263, 308, 385, 431},
-            [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5, 394.2, 440},
+            [14] = {20, 65, 141, 187, 263, 308},
+            [15] = {20, 65, 141, 187, 263, 308},
+            [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5},
         }
         for i, v in ipairs(timers[id] or {}) do -- Fractured Projection (CC Adds)
             Alert.time = v
