@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibGetFrame-1.0"
-local MINOR_VERSION = 70
+local MINOR_VERSION = 71
 if not LibStub then
   error(MAJOR_VERSION .. " requires LibStub.")
 end
@@ -49,6 +49,7 @@ local defaultFramePriorities = {
   "^oUF_.-Party", -- generic oUF
   "^PitBull4_Groups_Party", -- pitbull4
   "^XPerl_party%d", -- xperl
+  "^DandersRaidGroup%dHeader", -- New Danders format?
   "^DandersRaidFrame", -- Danders
   "^DandersFrames_Party", -- Danders
   "^DandersFrames_Player$", -- Danders (used for party frames)
@@ -182,6 +183,7 @@ local defaultRaidFrames = {
   "^SUFHeaderraid",
   "^LUFHeaderraid",
   "^XPerl_Raid_Grp",
+  "^DandersRaidGroup%dHeader", -- New Danders format?
   "^DandersRaidFrame",
   "^CompactRaid",
 }
