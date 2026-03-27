@@ -274,6 +274,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.StartedCountdown = {}
         self.GlowStarted = {}
         self.Timelines = {}
+        self.RemovedTimelines = {}
         self.DefaultAlertID = 10000
         self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end

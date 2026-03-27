@@ -52,27 +52,65 @@ local detectedDurations = { -- Devour = ~120.9
         {time = 1.5, phase = function(num) return 4 end},
         {time = 60, phase = function(num) return 5 end},
     },
-    [16] = {
-        {time = 1.5, phase = function(num) return 2 end},
-        {time = 24, phase = function(num) return 3 end},
-        {time = 1.5, phase = function(num) return 4 end},
-        {time = 60, phase = function(num) return 5 end},
-    },
 }
+
+local RequiredTimers = {2, 4, 0, 4}
+
+local function MythicPhaseDetect(self, e, info)
+    if (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) then return end
+    local now = GetTime()
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
+        table.insert(self.RemovedTimelines, now)
+    else
+        table.insert(self.Timelines, now)
+    end
+    local addedcount = 0
+    local removedcount = 0
+    for k, v in ipairs(self.Timelines) do
+        if now < v+0.1 and (self.Phase >= 2 or (self.Phase == 1 and (info.duration == 1.5 or info.duration == 25))) then
+            addedcount = addedcount+1
+        end
+    end
+    if self.Phase == 3 then
+        for k, v in ipairs(self.RemovedTimelines) do
+            if now < v+0.1 then
+                removedcount = removedcount+1
+            end
+        end
+        if removedcount >= 2 and addedcount == 0 then
+            self.Phase = 4
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = now
+        end
+    elseif RequiredTimers[self.Phase] and addedcount >= RequiredTimers[self.Phase] then
+        self.Phase = self.Phase+1
+        self:StartReminders(self.Phase)
+        self.Timelines = {}
+        self.RemovedTimelines = {}
+        self.PhaseSwapTime = now
+    end
+end
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    -- not checking REMOVED event by default but may be needed for some encounters
-    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
+    if difficultyID == 16 then
+        MythicPhaseDetect(self, e, info)
+        return
+    end
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
-    if phaseinfo and info.duration == phaseinfo.time then
-        local newphase = phaseinfo.phase(self.Phase)
-        if newphase > self.Phase then
-            self.Phase = newphase
-            self:StartReminders(self.Phase)
-            self.PhaseSwapTime = now
+    if difficultyID == 16 and phaseinfo then
+
+    else
+        if phaseinfo and info.duration == phaseinfo.time then
+            local newphase = phaseinfo.phase(self.Phase)
+            if newphase > self.Phase then
+                self.Phase = newphase
+                self:StartReminders(self.Phase)
+                self.PhaseSwapTime = now
+            end
         end
     end
 end
