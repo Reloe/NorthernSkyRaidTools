@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
 
 local function BuildEncounterAlertsOptions()
     return {
@@ -136,7 +137,8 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 7448211,
             iconsize = {16, 16},
-        },{
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Nameplate Taunt Alerts",
@@ -149,6 +151,49 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 7448211,
             iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Heal Absorb Ticks",
+            desc = "This will display a Heal Absorb Tick-Bar to properly track when a new healabsorb is being applied.",
+            get = function() return NSRT.EncounterAlerts[3180] and NSRT.EncounterAlerts[3180].HealAbsorbTicks end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3180] = NSRT.EncounterAlerts[3180] or {}
+                NSRT.EncounterAlerts[3180].HealAbsorbTicks = value
+            end,
+            nocombat = true,
+            icontexture = 5764904,
+            iconsize = {16, 16},
+        },
+        {
+            type = "button",
+            name = "Heal Absorb WA",
+            desc = "Link to a WA that shows the Heal Absorb on Raidframes - requires you to get a functional WA fork yourself.",
+            func = function(self)
+                local popup = DF:CreateSimplePanel(UIParent, 300, 60, "Heal Absorb WA", "PaladinsHealAbsorb")
+                popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+                popup:SetFrameLevel(100)
+
+                popup.text_entry = DF:CreateTextEntry(popup, function() end, 280, 20)
+                popup.text_entry:SetTemplate(options_button_template)
+                popup.text_entry:SetPoint("TOP", popup, "TOP", 0, -30)
+                popup.text_entry:SetText("https://wago.io/lylBMpoMB")
+                popup.text_entry.editbox:SetJustifyH("CENTER")
+
+                -- Disable editing the text technically
+                popup.text_entry:SetScript("OnTextChanged", function(self)
+                    popup.text_entry:SetText("https://wago.io/lylBMpoMB")
+                    popup.text_entry.editbox:HighlightText()
+                end)
+
+                popup.text_entry:SetScript("OnEditFocusGained", function(self)
+                    popup.text_entry.editbox:HighlightText()
+                end)
+                popup:Show()
+                popup.text_entry:SetFocus()
+            end,
+            nocombat = true
         },
         {
             type = "label",
