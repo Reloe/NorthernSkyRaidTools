@@ -43,7 +43,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         }
         local timers = {
             [0] = {},
-            [15] = {10, 29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350}, -- cast success timers from wcl
+            [15] = {29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350}, -- cast success timers from wcl
+            [16] = {25, 29, 61, 65, 115, 119, 151, 155, 169, 173, 223, 227, 277, 281, 313, 317, 331, 335, 385, 389, 439, 443}, -- cast success timers from wcl}
         }
         local blacklist = {}
         self.TauntFrame:SetScript("OnEvent", function(_, e, u, _, spellID)
