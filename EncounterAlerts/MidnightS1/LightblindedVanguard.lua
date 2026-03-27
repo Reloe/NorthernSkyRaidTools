@@ -46,7 +46,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local timers = {
             [0] = {},
             [15] = {147.3, 324.4},
-            [16] = {143, 302},
+            [16] = {34.4, 142.6, 192.5, 302},
         }
         self.AlertTimers = self.AlertTimers or {}
         local dur = id == 16 and 20 or 15
