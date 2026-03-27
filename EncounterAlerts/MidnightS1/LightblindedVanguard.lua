@@ -6,21 +6,67 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if not NSRT.EncounterAlerts[encID] then
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
+    id = id or self:DifficultyCheck(14) or 0
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Peace Aura
+        if UnitGroupRolesAssigned("player") ~= "TANK" then return end
+        local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Aura for Tanks
 
         -- same timer on all difficulties for now
         Alert.TTS = false
-        id = id or self:DifficultyCheck(14) or 0
         local timers = {
             [0] = {},
-            [14] = {137.4, 314},
-            [15] = {137.4, 314},
-            [16] = {137.4, 314},
+            [16] = {132, 291, 450},
         }
         for _, time in ipairs(timers[id] or {}) do
             Alert.time = time
             self:AddToReminder(Alert)
+        end
+
+        Alert.text = "Devotion Aura"
+        local timers = {
+            [0] = {},
+            [16] = {26, 184.7, 343.5},
+        }
+        for _, time in ipairs(timers[id] or {}) do
+            Alert.time = time
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text = "Aura of Wrath"
+        local timers = {
+            [0] = {},
+            [16] = {78.5, 237.5, 396.5},
+        }
+        for _, time in ipairs(timers[id] or {}) do
+            Alert.time = time
+            self:AddToReminder(Alert)
+        end
+    end
+    if NSRT.EncounterAlerts[encID].HealAbsorbTicks then
+        local timers = {
+            [0] = {},
+            [15] = {147.3, 324.4},
+            [16] = {143, 302},
+        }
+        self.AlertTimers = self.AlertTimers or {}
+        local dur = id == 16 and 20 or 15
+        local Alert = self:CreateDefaultAlert("", "Bar", 1248721, dur, 1, encID) -- text, Type, spellID, dur, phase, encID, isAssignment
+        Alert.TTS = false
+        Alert.colors = {0, 1, 0, 1}
+        for i, v in ipairs(timers[id] or {}) do
+            self.AlertTimers[i] = C_Timer.NewTimer(v, function()
+                local F = self:DisplayReminder(Alert)
+                if F then
+                    if id == 16 then
+                        self:AddTickToBar(F, 0.25)
+                        self:AddTickToBar(F, 0.5)
+                        self:AddTickToBar(F, 0.75)
+                    else
+                        self:AddTickToBar(F, 0.333)
+                        self:AddTickToBar(F, 0.666)
+                    end
+                end
+            end)
         end
     end
     if NSRT.EncounterAlerts[encID].TauntAlerts and UnitGroupRolesAssigned("player") == "TANK" then
@@ -103,6 +149,14 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
         self.TauntFrame:UnregisterEvent("UNIT_SPELLCAST_START")
         self.TauntFrame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         self.TauntFrame.Text:Hide()
+    end
+    if self.AlertTimers then
+        for i, v in ipairs(self.AlertTimers) do
+            if v and v.Cancel then
+                v:Cancel()
+            end
+        end
+        self.AlertTimers = nil
     end
 end
 
