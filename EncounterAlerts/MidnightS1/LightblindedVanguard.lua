@@ -53,6 +53,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local Alert = self:CreateDefaultAlert("", "Bar", 1248721, dur, 1, encID) -- text, Type, spellID, dur, phase, encID, isAssignment
         Alert.TTS = false
         Alert.colors = {0, 1, 0, 1}
+        Alert.Ticks = id == 16 and {5, 10, 15} or {5, 10}
         for i, v in ipairs(timers[id] or {}) do
             self.AlertTimers[i] = C_Timer.NewTimer(v, function()
                 local F = self:DisplayReminder(Alert)
@@ -67,6 +68,12 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     end
                 end
             end)
+        end
+        if self:IsUsingTLALerts() then
+            for _, time in ipairs(timers[id] or {}) do
+                Alert.time = time
+                self:AddToReminder(Alert)
+            end
         end
     end
     if NSRT.EncounterAlerts[encID].TauntAlerts and UnitGroupRolesAssigned("player") == "TANK" then
