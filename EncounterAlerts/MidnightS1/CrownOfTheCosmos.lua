@@ -101,16 +101,12 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
-    if difficultyID == 16 and phaseinfo then
-
-    else
-        if phaseinfo and info.duration == phaseinfo.time then
-            local newphase = phaseinfo.phase(self.Phase)
-            if newphase > self.Phase then
-                self.Phase = newphase
-                self:StartReminders(self.Phase)
-                self.PhaseSwapTime = now
-            end
+    if phaseinfo and info.duration == phaseinfo.time then
+        local newphase = phaseinfo.phase(self.Phase)
+        if newphase > self.Phase then
+            self.Phase = newphase
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = now
         end
     end
 end
