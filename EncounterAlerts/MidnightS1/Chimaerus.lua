@@ -77,10 +77,10 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
             Alert.time, Alert.text  = 18.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 71.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.time, Alert.text = 91.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             Alert.TTS = subgroup >= 3 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 138.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.time, Alert.text = 158.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
         end
