@@ -39,7 +39,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
 end
 
-local detectedDurations = { -- Devour = ~120.9
+local detectedDurations = {
     [14] = {
         {time = 1.5, phase = function(num) return 2 end},
         {time = 24, phase = function(num) return 3 end},
@@ -54,11 +54,11 @@ local detectedDurations = { -- Devour = ~120.9
     },
 }
 
-local RequiredTimers = {2, 4, 0, 4}
+local RequiredTimers = {2, 4, false, 4}
 
 local function MythicPhaseDetect(self, e, info)
-    if (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) then return end
     local now = GetTime()
+    if (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) then return end
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
         table.insert(self.RemovedTimelines, now)
     else
