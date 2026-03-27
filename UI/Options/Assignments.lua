@@ -29,7 +29,7 @@ local function BuildAssignmentsOptions()
             type = "toggle",
             boxfirst = true,
             name = "Gloom Soaks - Mythic Only",
-            desc = "Assigns Group 1&2 to soak the first cast, Group 3&4 to soak the second cast. This is overkill as only 7 people are required but I'm not sure yet what the strat is going to be.",
+            desc = "Assigns Group 1&2 to soak the first cast, Group 3&4 to soak the second cast. This is overkill as only 7 people are required. Alternatively you can create a custom Assignment through wowutils.",
             get = function() return NSRT.AssignmentSettings[3178] and NSRT.AssignmentSettings[3178].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3178] = NSRT.AssignmentSettings[3178] or {}
