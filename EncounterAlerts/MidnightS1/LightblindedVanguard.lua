@@ -7,8 +7,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     id = id or self:DifficultyCheck(14) or 0
-    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        if UnitGroupRolesAssigned("player") ~= "TANK" then return end
+    if NSRT.EncounterAlerts[encID].enabled and UnitGroupRolesAssigned("player") == "TANK" then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Aura for Tanks
 
         -- same timer on all difficulties for now
@@ -54,25 +53,26 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.TTS = false
         Alert.colors = {0, 1, 0, 1}
         Alert.Ticks = id == 16 and {5, 10, 15} or {5, 10}
-        for i, v in ipairs(timers[id] or {}) do
-            self.AlertTimers[i] = C_Timer.NewTimer(v, function()
-                local F = self:DisplayReminder(Alert)
-                if F then
-                    if id == 16 then
-                        self:AddTickToBar(F, 0.25)
-                        self:AddTickToBar(F, 0.5)
-                        self:AddTickToBar(F, 0.75)
-                    else
-                        self:AddTickToBar(F, 0.333)
-                        self:AddTickToBar(F, 0.666)
-                    end
-                end
-            end)
-        end
         if self:IsUsingTLALerts() then
             for _, time in ipairs(timers[id] or {}) do
                 Alert.time = time
                 self:AddToReminder(Alert)
+            end
+        else
+            for i, v in ipairs(timers[id] or {}) do
+                self.AlertTimers[i] = C_Timer.NewTimer(v, function()
+                    local F = self:DisplayReminder(Alert)
+                    if F then
+                        if id == 16 then
+                            self:AddTickToBar(F, 0.25)
+                            self:AddTickToBar(F, 0.5)
+                            self:AddTickToBar(F, 0.75)
+                        else
+                            self:AddTickToBar(F, 0.333)
+                            self:AddTickToBar(F, 0.666)
+                        end
+                    end
+                end)
             end
         end
     end
