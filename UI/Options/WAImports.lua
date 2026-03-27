@@ -1,0 +1,76 @@
+local _, NSI = ...
+local DF = _G["DetailsFramework"]
+local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
+
+local wa_popup
+
+local function WAButton(Text, Name, URL)
+    if not wa_popup then
+        wa_popup = DF:CreateSimplePanel(UIParent, 300, 60, "", "NSRTWAImportPopup")
+        wa_popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        wa_popup:SetFrameLevel(100)
+
+        wa_popup.text_entry = DF:CreateTextEntry(wa_popup, function() end, 280, 20)
+        wa_popup.text_entry:SetTemplate(options_button_template)
+        wa_popup.text_entry:SetPoint("TOP", wa_popup, "TOP", 0, -30)
+        wa_popup.text_entry.editbox:SetJustifyH("CENTER")
+
+        wa_popup.text_entry:SetScript("OnEditFocusGained", function(self)
+            wa_popup.text_entry.editbox:HighlightText()
+        end)
+    end
+
+    wa_popup:SetTitle(Text)
+
+    local currentURL = URL
+    wa_popup.text_entry:SetText(currentURL)
+    wa_popup.text_entry:SetScript("OnTextChanged", function(self)
+        wa_popup.text_entry:SetText(currentURL)
+        wa_popup.text_entry.editbox:HighlightText()
+    end)
+
+    wa_popup:Show()
+    wa_popup.text_entry:SetFocus()
+end
+
+local function BuildWAImportsOptions()
+    return {
+        {
+            type = "label",
+            get = function() return "You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Heal Absorb WA",
+            desc = "Link to a WA that shows the Heal Absorb on Raidframes.",
+            func = function(self)
+                WAButton("Heal Absorb WA", "PaladinsHealAbsorb", "https://wago.io/lylBMpoMB")
+            end,
+            nocombat = true
+        },
+        {
+            type = "button",
+            name = "Paladins Dispel Assign",
+            desc = "Link to a WA that assigns avenger's shield dispels, everyone should have this. It is expected and assumed by the WA that you ALWAYS and ONLY use dwarf for self-dispels.",
+            func = function(self)
+                WAButton("Paladins Dispel Assign", "PaladinsDispelAssign", "https://wago.io/NspRXIk6n")
+            end,
+            nocombat = true
+        },
+    }
+end
+
+local function BuildWACallback()
+    return function(_, _, _, optionTable)
+    end
+end
+
+-- Export to namespace
+NSI.UI = NSI.UI or {}
+NSI.UI.Options = NSI.UI.Options or {}
+NSI.UI.Options.WAImports = {
+    BuildOptions = BuildWAImportsOptions,
+    BuildCallback = BuildWACallback,
+}

@@ -46,6 +46,8 @@ local BuildPrivateAurasOptions = NSI.UI.Options.PrivateAuras.BuildOptions
 local BuildPrivateAurasCallback = NSI.UI.Options.PrivateAuras.BuildCallback
 local BuildQoLOptions = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback = NSI.UI.Options.QoL.BuildCallback
+local BuildWAImportsOptions = NSI.UI.Options.WAImports.BuildOptions
+local BuildWACallback = NSI.UI.Options.WAImports.BuildCallback
 
 function NSUI:Init()
     NSI.IsBuilding = true
@@ -77,6 +79,7 @@ function NSUI:Init()
     local readycheck_tab = tabContainer:GetTabFrameByName("ReadyCheck")
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
     local QoL_tab = tabContainer:GetTabFrameByName("QoL")
+    local WAImports_tab = tabContainer:GetTabFrameByName("WAImports")
 
     -- Generic text display
     NSI.NSRTFrame.generic_display = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
@@ -113,6 +116,7 @@ function NSUI:Init()
     local RaidBuffMenu = BuildRaidBuffMenu()
     local privateaura_options1_table = BuildPrivateAurasOptions()
     local QoL_options1_table = BuildQoLOptions()
+    local WAImports_options1_table = BuildWAImportsOptions()
 
     -- Build callbacks
     local general_callback = BuildGeneralCallback()
@@ -125,6 +129,7 @@ function NSUI:Init()
     local readycheck_callback = BuildReadyCheckCallback()
     local privateaura_callback = BuildPrivateAurasCallback()
     local QoL_callback = BuildQoLCallback()
+    local WAImports_callback = BuildWACallback()
 
     -- Build options menu for each tab
     DF:BuildMenu(general_tab, general_options1_table, 10, -100, window_height - 10, false, options_text_template,
@@ -160,6 +165,9 @@ function NSUI:Init()
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -100, window_height - 10, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         QoL_callback)
+    DF:BuildMenu(WAImports_tab, WAImports_options1_table, 10, -100, window_height - 10, false, options_text_template,
+        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+        WAImports_callback)
     NSI.RaidBuffCheck:SetMovable(false)
     NSI.RaidBuffCheck:EnableMouse(false)
 

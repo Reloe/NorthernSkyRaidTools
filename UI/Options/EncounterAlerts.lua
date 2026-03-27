@@ -1,31 +1,5 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
-local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
-
-local function WAButton(Text, Name, URL)
-    local popup = DF:CreateSimplePanel(UIParent, 300, 60, Text, Name)
-    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    popup:SetFrameLevel(100)
-
-    popup.text_entry = DF:CreateTextEntry(popup, function() end, 280, 20)
-    popup.text_entry:SetTemplate(options_button_template)
-    popup.text_entry:SetPoint("TOP", popup, "TOP", 0, -30)
-    popup.text_entry:SetText(URL)
-    popup.text_entry.editbox:SetJustifyH("CENTER")
-
-    -- Disable editing the text technically
-    popup.text_entry:SetScript("OnTextChanged", function(self)
-        popup.text_entry:SetText(URL)
-            popup.text_entry.editbox:HighlightText()
-    end)
-
-    popup.text_entry:SetScript("OnEditFocusGained", function(self)
-        popup.text_entry.editbox:HighlightText()
-    end)
-    popup:Show()
-    popup.text_entry:SetFocus()
-
-end
 
 local function BuildEncounterAlertsOptions()
     return {
@@ -190,15 +164,6 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 5764904,
             iconsize = {16, 16},
-        },
-        {
-            type = "button",
-            name = "Heal Absorb WA",
-            desc = "Link to a WA that shows the Heal Absorb on Raidframes - requires you to get a functional WA fork yourself.",
-            func = function(self)
-                WAButton("Heal Absorb WA", "PaladinsHealAbsorb", "https://wago.io/lylBMpoMB")
-            end,
-            nocombat = true
         },
         {
             type = "label",

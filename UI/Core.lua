@@ -20,6 +20,7 @@ local TABS_LIST = {
     { name = "EncounterAlerts", text = "Encounter Alerts"},
     { name = "PrivateAura", text = "Private Auras"},
     { name = "QoL", text = "Quality of Life"},
+    { name = "WAImports", text = "WA Imports"},
 }
 
 local authorsString = "By Reloe & Rav"
