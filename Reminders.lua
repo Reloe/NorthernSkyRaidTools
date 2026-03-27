@@ -477,6 +477,11 @@ function NSI:SetProperties(F, info, skipsound, s)
         end
         NSI:ArrangeStates(F.Type)
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+        if F.Ticks then
+            for _, tick in ipairs(F.Ticks) do
+                tick:Hide()
+            end
+        end
     end)
     F.info = info
     if not info.spellID then
@@ -691,6 +696,30 @@ function NSI:CreateBar(info)
     end
 end
 
+function NSI:AddTickToBar(F, percent)
+    if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
+    local s = NSRT.ReminderSettings.BarSettings
+    local width = s.Width * (percent)
+    local height = s.Height
+    F.Ticks = F.Ticks or {}
+    for i=1, #F.Ticks+1 do
+        if F.Ticks[i] and not F.Ticks[i]:IsShown() then
+            F.Ticks[i]:ClearAllPoints()
+            F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
+            F.Ticks[i]:Show()
+            return
+        end
+        if not F.Ticks[i] then
+            F.Ticks[i] = F:CreateTexture(nil, "OVERLAY")
+            F.Ticks[i]:SetColorTexture(1, 1, 1, 1)
+            F.Ticks[i]:SetSize(2, height)
+            F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
+            F.Ticks[i]:Show()
+            return
+        end
+    end
+end
+
 function NSI:DisplayReminder(info)
     local now = GetTime()
     local dur = info.dur or 8
@@ -747,6 +776,7 @@ function NSI:DisplayReminder(info)
             end
         end
     end
+    return F
 end
 
 function NSI:UpdateReminderDisplay(info, F, skipsound)
