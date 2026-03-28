@@ -53,7 +53,7 @@ local function BuildWAImportsOptions()
         {
             type = "button",
             name = "Paladins Dispel Assign",
-            desc = "Link to a WA that assigns avenger's shield dispels, everyone should have this. It is expected and assumed by the WA that you ALWAYS and ONLY use dwarf for self-dispels.",
+            desc = "Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available.",
             func = function(self)
                 WAButton("Paladins Dispel Assign", "PaladinsDispelAssign", "https://wago.io/NspRXIk6n")
             end,
