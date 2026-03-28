@@ -53,7 +53,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.TTS = false
         Alert.colors = {0, 1, 0, 1}
         Alert.Ticks = id == 16 and {5, 10, 15} or {5, 10}
-        if self:IsUsingTLALerts() then
+        if self:IsUsingTLAlerts() then
             for _, time in ipairs(timers[id] or {}) do
                 Alert.time = time
                 self:AddToReminder(Alert)
