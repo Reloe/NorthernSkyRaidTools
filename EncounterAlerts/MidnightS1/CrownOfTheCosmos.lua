@@ -67,7 +67,7 @@ local function MythicPhaseDetect(self, e, info)
     local addedcount = 0
     local removedcount = 0
     for k, v in ipairs(self.Timelines) do
-        if now < v+0.1 and (self.Phase >= 2 or (self.Phase == 1 and (info.duration == 1.5 or info.duration == 25))) then
+        if e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and now < v+0.1 and (self.Phase >= 2 or (self.Phase == 1 and (info.duration == 1.5 or info.duration == 25))) then
             addedcount = addedcount+1
         end
     end
