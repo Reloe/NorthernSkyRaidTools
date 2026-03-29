@@ -24,10 +24,11 @@ local symbols = {
 }
 
 function NSI:AddToReminder(info)
+    info = CopyTable(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
-        table.insert(self.TLAlerts, CopyTable(info))
+        table.insert(self.TLAlerts, info)
         return
     elseif self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment) then
         return

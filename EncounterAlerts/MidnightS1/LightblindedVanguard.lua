@@ -7,11 +7,23 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         NSRT.EncounterAlerts[encID] = {enabled = false}
     end
     id = id or self:DifficultyCheck(14) or 0
-    if NSRT.EncounterAlerts[encID].enabled and UnitGroupRolesAssigned("player") == "TANK" then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 10, 1, encID) -- Aura for Tanks
+    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
+        local Alert = self:CreateDefaultAlert("Divine Toll", "Text", nil, 5, 1, encID)
 
+        local timers = {
+            [0] = {},
+            [16] = {22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382},
+        }
+        for _, time in ipairs(timers[id] or {}) do
+            Alert.time = time
+            self:AddToReminder(Alert)
+        end
+
+        if UnitGroupRolesAssigned("player") ~= "TANK" then return end
         -- same timer on all difficulties for now
         Alert.TTS = false
+        Alert.dur = 8
+        Alert.text = "Peace Aura"
         local timers = {
             [0] = {},
             [16] = {132, 291, 450},
