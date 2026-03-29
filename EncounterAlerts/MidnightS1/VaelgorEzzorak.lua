@@ -19,10 +19,19 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
         Alert.text = "Tether"
-        Alert.TTS = false
+        Alert.TTS = nil
         timers = {
             [0] = {},
             [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 325.3, 441.7},
+        }
+        for _, time in ipairs(timers[id] or {}) do
+            Alert.time = time
+            self:AddToReminder(Alert)
+        end
+        Alert.text = "Breath"
+        timers = {
+            [0] = {},
+            [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
         }
         for _, time in ipairs(timers[id] or {}) do
             Alert.time = time
