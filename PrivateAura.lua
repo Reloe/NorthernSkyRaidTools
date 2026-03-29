@@ -220,7 +220,7 @@ function NSI:InitPA()
     local xDirection = (NSRT.PASettings.GrowDirection == "RIGHT" and 1) or (NSRT.PASettings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (NSRT.PASettings.GrowDirection == "DOWN" and -1) or (NSRT.PASettings.GrowDirection == "UP" and 1) or 0
     local borderSize = NSRT.PASettings.HideBorder and -100 or NSRT.PASettings.Width/16
-    local scale = NSRT.PASettings.StackScale or 4
+    local stackscale = NSRT.PASettings.StackScale or 4
     for auraIndex=1, 10 do
         local anchorID = "NSRT_PA"..auraIndex
         if self.AddedPA[anchorID] then
@@ -251,15 +251,16 @@ function NSI:InitPA()
                 self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
             end
             self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
-            self.PADurFrames[auraIndex]:SetScale(scale)
-            if NSRT.PASettings.AlternateDisplay then self.PAFrames[auraIndex]:SetScale(scale) else self.PAFrames[auraIndex]:SetScale(1) end
+            self.PADurFrames[auraIndex]:SetScale(stackscale)
             self.PAFrames[auraIndex]:ClearAllPoints()
             self.PAAnchorFrames[auraIndex]:ClearAllPoints()
+            local framescale = NSRT.PASettings.AlternateDisplay and stackscale or 1
+            self.PAFrames[auraIndex]:SetScale(framescale)
             local xPoint = NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection
             local yPoint = NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection
             self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo,
-            NSRT.PASettings.AlternateDisplay and xPoint/scale or xPoint,
-            NSRT.PASettings.AlternateDisplay and yPoint/scale or yPoint)
+            NSRT.PASettings.AlternateDisplay and xPoint/framescale or xPoint,
+            NSRT.PASettings.AlternateDisplay and yPoint/framescale or yPoint)
             if not NSRT.PASettings.enabled then return end
             local frame = self.PAFrames[auraIndex]
             local privateAnchorArgs = {
@@ -277,12 +278,12 @@ function NSI:InitPA()
                         offsetY = 0,
                     },
                     borderScale = borderSize,
-                    iconWidth = NSRT.PASettings.AlternateDisplay and NSRT.PASettings.Width/scale or NSRT.PASettings.Width,
-                    iconHeight = NSRT.PASettings.AlternateDisplay and NSRT.PASettings.Height/scale or NSRT.PASettings.Height,
+                    iconWidth = NSRT.PASettings.AlternateDisplay and NSRT.PASettings.Width/framescale or NSRT.PASettings.Width,
+                    iconHeight = NSRT.PASettings.AlternateDisplay and NSRT.PASettings.Height/framescale or NSRT.PASettings.Height,
                 },
             }
             self.AddedPA[anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
-            if scale ~= 1 and not NSRT.PASettings.AlternateDisplay then
+            if stackscale ~= 1 and not NSRT.PASettings.AlternateDisplay then
                 self.PAAnchorFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo,
                 xPoint,
                 yPoint)
@@ -479,7 +480,7 @@ function NSI:InitTankPA()
     -- remove any previous anchor, also calling this on ENCOUNTER_END
     self:RemoveTankPA()
     local borderSize = NSRT.PATankSettings.HideBorder and -100 or NSRT.PATankSettings.Width/16
-    local scale = NSRT.PATankSettings.StackScale or 4
+    local stackscale = NSRT.PATankSettings.StackScale or 4
     for i, unit in ipairs(units) do
         if not self.PATankFrames[i] then self.PATankFrames[i] = {} end
         if not self.PATankDurFrames[i] then self.PATankDurFrames[i] = {} end
@@ -518,16 +519,17 @@ function NSI:InitTankPA()
                 end
 
                 self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
-                self.PATankDurFrames[i][auraIndex]:SetScale(scale)
-                if NSRT.PATankSettings.AlternateDisplay then self.PATankFrames[i][auraIndex]:SetScale(scale) else self.PATankFrames[i][auraIndex]:SetScale(1) end
+                self.PATankDurFrames[i][auraIndex]:SetScale(stackscale)
                 self.PATankDurFrames[i][auraIndex]:SetPoint("CENTER", self.PATankFrames[i][auraIndex], "CENTER", 0, 0)
                 self.PATankFrames[i][auraIndex]:ClearAllPoints()
                 self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
+                local framescale = NSRT.PATankSettings.AlternateDisplay and stackscale or 1
+                self.PATankFrames[i][auraIndex]:SetScale(framescale)
                 local xPoint = NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx
                 local yPoint = NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky
                 self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo,
-                NSRT.PATankSettings.AlternateDisplay and xPoint/scale or xPoint,
-                NSRT.PATankSettings.AlternateDisplay and yPoint/scale or yPoint)
+                NSRT.PATankSettings.AlternateDisplay and xPoint/framescale or xPoint,
+                NSRT.PATankSettings.AlternateDisplay and yPoint/framescale or yPoint)
 
                 local privateAnchorArgs = {
                     unitToken = unit,
@@ -544,12 +546,12 @@ function NSI:InitTankPA()
                             offsetY = 0,
                         },
                         borderScale = borderSize,
-                    iconWidth = NSRT.PATankSettings.AlternateDisplay and NSRT.PATankSettings.Width/scale or NSRT.PATankSettings.Width,
-                    iconHeight = NSRT.PATankSettings.AlternateDisplay and NSRT.PATankSettings.Height/scale or NSRT.PATankSettings.Height,
+                    iconWidth = NSRT.PATankSettings.AlternateDisplay and NSRT.PATankSettings.Width/framescale or NSRT.PATankSettings.Width,
+                    iconHeight = NSRT.PATankSettings.AlternateDisplay and NSRT.PATankSettings.Height/framescale or NSRT.PATankSettings.Height,
                     }
                 }
                 self.AddedTankPA[i][anchorID] = C_UnitAuras.AddPrivateAuraAnchor(privateAnchorArgs)
-                if scale ~= 1 and not NSRT.PATankSettings.AlternateDisplay then
+                if stackscale ~= 1 and not NSRT.PATankSettings.AlternateDisplay then
                     self.PATankAnchorFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo,
                     xPoint,
                     yPoint)
