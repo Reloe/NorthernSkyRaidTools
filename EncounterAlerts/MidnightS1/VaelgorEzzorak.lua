@@ -75,7 +75,7 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
-    if not (self.Assignments and self.Assignments[encID]) then return end
+    if not (self.Assignments and self.Assignments[encID] and self.Assignments[encID].Soaks) then return end
     if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     if not subgroup then return end
