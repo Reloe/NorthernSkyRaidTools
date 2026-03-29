@@ -22,7 +22,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.TTS = nil
         timers = {
             [0] = {},
-            [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 325.3, 441.7},
+            [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7},
         }
         for _, time in ipairs(timers[id] or {}) do
             Alert.time = time
