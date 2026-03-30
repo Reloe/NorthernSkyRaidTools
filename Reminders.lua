@@ -989,6 +989,7 @@ function NSI:HideAllReminders(FullReset)
     self.AllGlows = nil
     self.Timelines = {}
     self.RemovedTimelines = {}
+    self.CustomEvents = {}
     if self.EncounterAlertStop[self.EncounterID] then self.EncounterAlertStop[self.EncounterID](self) end
     self.EncounterID = nil
     self.TestingReminder = false

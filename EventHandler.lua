@@ -275,6 +275,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.GlowStarted = {}
         self.Timelines = {}
         self.RemovedTimelines = {}
+        self.CustomEvents = self.CustomEvents or {}
         self.DefaultAlertID = 10000
         self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
@@ -300,6 +301,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ENCOUNTER_END" and wowevent then
         local encID, encounterName = ...
         local diff = select(3, GetInstanceInfo()) or 0
+        self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
         if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
             self:RemoveTankPA()
@@ -511,9 +513,20 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
 
         if not self:DifficultyCheck(14) then return end
-    elseif (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" or e == "ENCOUNTER_TIMELINE_EVENT_REMOVED") and wowevent then
+    elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck(14) then return end
         local info = ...
+        if info.source ~= Enum.EncounterTimelineEventSource.Encounter then
+            self.CustomEvents[info.id] = true
+            return
+        end
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
+    elseif e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" and wowevent then
+        if not self:DifficultyCheck(14) then return end
+        local eventID = ...
+        if self.CustomEvents[eventID] then
+            return
+        end
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_WARNING" and wowevent then
         local info = ...
