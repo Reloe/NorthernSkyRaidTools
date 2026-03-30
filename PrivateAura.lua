@@ -258,9 +258,7 @@ function NSI:InitPA()
             self.PAFrames[auraIndex]:SetScale(framescale)
             local xPoint = NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection
             local yPoint = NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection
-            self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo,
-            NSRT.PASettings.AlternateDisplay and xPoint/framescale or xPoint,
-            NSRT.PASettings.AlternateDisplay and yPoint/framescale or yPoint)
+            self.PAFrames[auraIndex]:SetPoint(NSRT.PASettings.Anchor, self.NSRTFrame, NSRT.PASettings.relativeTo, xPoint/framescale, yPoint/framescale)
             if not NSRT.PASettings.enabled then return end
             local frame = self.PAFrames[auraIndex]
             local privateAnchorArgs = {
@@ -527,9 +525,7 @@ function NSI:InitTankPA()
                 self.PATankFrames[i][auraIndex]:SetScale(framescale)
                 local xPoint = NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx
                 local yPoint = NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky
-                self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo,
-                NSRT.PATankSettings.AlternateDisplay and xPoint/framescale or xPoint,
-                NSRT.PATankSettings.AlternateDisplay and yPoint/framescale or yPoint)
+                self.PATankFrames[i][auraIndex]:SetPoint(NSRT.PATankSettings.Anchor, self.NSRTFrame, NSRT.PATankSettings.relativeTo, xPoint/framescale, yPoint/framescale)
 
                 local privateAnchorArgs = {
                     unitToken = unit,
