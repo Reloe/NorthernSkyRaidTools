@@ -517,6 +517,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not self:DifficultyCheck(14) then return end
         local info = ...
         if info.source ~= Enum.EncounterTimelineEventSource.Encounter then
+            self.CustomEvents = self.CustomEvents or {}
             self.CustomEvents[info.id] = true
             return
         end
@@ -524,7 +525,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" and wowevent then
         if not self:DifficultyCheck(14) then return end
         local eventID = ...
-        if self.CustomEvents[eventID] then
+        if self.CustomEvents and self.CustomEvents[eventID] then
             return
         end
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
