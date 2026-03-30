@@ -530,8 +530,8 @@ function NSI:InviteList(list)
 end
 
 function NSI:ArrangeFromReminder(str)
-    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
     local now = GetTime()
+    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
     if self.LastGroupSort and self.LastGroupSort > now - 5 then
         print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
         return
