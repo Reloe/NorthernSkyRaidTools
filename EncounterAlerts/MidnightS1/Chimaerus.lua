@@ -20,17 +20,6 @@ local function RiftMadnessTimers(id)
             NSI.AlertTimers = {}
         end
         NSI.AlertTimers = {}
-        for i, v in ipairs(timers or {}) do
-            NSI.AlertTimers[i] = C_Timer.NewTimer(v-dur, function()
-                for i=1, 40 do
-                    local u = "nameplate"..i
-                    if UnitExists(u) and UnitLevel(u) == 92 then
-                        NSI:DisplayReminder(Alert)
-                        break
-                    end
-                end
-            end)
-        end
         if NSI:IsUsingTLAlerts() then
             Alert.isConditional = true
             for i=1, 2 do
@@ -39,6 +28,18 @@ local function RiftMadnessTimers(id)
                     Alert.time = time
                     NSI:AddToReminder(Alert)
                 end
+            end
+        else
+            for i, v in ipairs(timers or {}) do
+                NSI.AlertTimers[i] = C_Timer.NewTimer(v-dur, function()
+                    for i=1, 40 do
+                        local u = "nameplate"..i
+                        if UnitExists(u) and UnitLevel(u) == 92 then
+                            NSI:DisplayReminder(Alert)
+                            break
+                        end
+                    end
+                end)
             end
         end
     end
