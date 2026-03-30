@@ -19,38 +19,38 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddToReminder(Alert)
         end
 
-        if UnitGroupRolesAssigned("player") ~= "TANK" then return end
-        -- same timer on all difficulties for now
-        Alert.TTS = false
-        Alert.dur = 8
-        Alert.text = "Peace Aura"
-        local timers = {
-            [0] = {},
-            [16] = {132, 291, 450},
-        }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
+        if UnitGroupRolesAssigned("player") == "TANK" then
+            Alert.TTS = false
+            Alert.dur = 8
+            Alert.text = "Peace Aura"
+            local timers = {
+                [0] = {},
+                [16] = {132, 291, 450},
+            }
+            for _, time in ipairs(timers[id] or {}) do
+                Alert.time = time
+                self:AddToReminder(Alert)
+            end
 
-        Alert.text = "Devotion Aura"
-        local timers = {
-            [0] = {},
-            [16] = {26, 184.7, 343.5},
-        }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
+            Alert.text = "Devotion Aura"
+            local timers = {
+                [0] = {},
+                [16] = {26, 184.7, 343.5},
+            }
+            for _, time in ipairs(timers[id] or {}) do
+                Alert.time = time
+                self:AddToReminder(Alert)
+            end
 
-        Alert.text = "Aura of Wrath"
-        local timers = {
-            [0] = {},
-            [16] = {78.5, 237.5, 396.5},
-        }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
+            Alert.text = "Aura of Wrath"
+            local timers = {
+                [0] = {},
+                [16] = {78.5, 237.5, 396.5},
+            }
+            for _, time in ipairs(timers[id] or {}) do
+                Alert.time = time
+                self:AddToReminder(Alert)
+            end
         end
     end
     if NSRT.EncounterAlerts[encID].HealAbsorbTicks then
