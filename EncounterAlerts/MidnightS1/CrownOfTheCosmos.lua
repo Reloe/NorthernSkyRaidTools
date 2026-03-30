@@ -62,22 +62,24 @@ local function MythicPhaseDetect(self, e, info)
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
         table.insert(self.RemovedTimelines, now)
     else
-        table.insert(self.Timelines, now)
+        if self.Phase >= 2 or (self.Phase == 1 and (info.duration == 1.5 or info.duration == 25 or info.duration == 6)) then
+            table.insert(self.Timelines, now)
+        end
     end
     local addedcount = 0
     local removedcount = 0
     for k, v in ipairs(self.Timelines) do
-        if now < v+0.1 and (self.Phase >= 2 or (self.Phase == 1 and (info.duration == 1.5 or info.duration == 25 or info.duration == 6))) then
+        if now < v+0.1 then
             addedcount = addedcount+1
         end
     end
-    if self.Phase == 3 then
+    if self.Phase == 3 and e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
         for k, v in ipairs(self.RemovedTimelines) do
             if now < v+0.1 then
                 removedcount = removedcount+1
             end
         end
-        if removedcount >= 2 and addedcount == 0 then
+        if removedcount >= 2 and addedcount < 4 then
             self.Phase = 4
             self:StartReminders(self.Phase)
             self.Timelines = {}
