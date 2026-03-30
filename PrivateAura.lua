@@ -245,16 +245,16 @@ function NSI:InitPA()
             if not self.PAAnchorFrames[auraIndex] then
                 self.PAAnchorFrames[auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
             end
-            if NSRT.PASettings.HideTooltip or NSRT.PASettings.AlternateDisplay then
+            local framescale = NSRT.PASettings.AlternateDisplay and stackscale or 1
+            if NSRT.PASettings.HideTooltip then
                 self.PAFrames[auraIndex]:SetSize(0.001, 0.001)
             else
-                self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
+                self.PAFrames[auraIndex]:SetSize(NSRT.PASettings.Width/framescale, NSRT.PASettings.Height/framescale)
             end
-            self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width, NSRT.PASettings.Height)
+            self.PAAnchorFrames[auraIndex]:SetSize(NSRT.PASettings.Width/framescale, NSRT.PASettings.Height/framescale)
             self.PADurFrames[auraIndex]:SetScale(stackscale)
             self.PAFrames[auraIndex]:ClearAllPoints()
             self.PAAnchorFrames[auraIndex]:ClearAllPoints()
-            local framescale = NSRT.PASettings.AlternateDisplay and stackscale or 1
             self.PAFrames[auraIndex]:SetScale(framescale)
             local xPoint = NSRT.PASettings.xOffset+(auraIndex-1) * (NSRT.PASettings.Width+NSRT.PASettings.Spacing) * xDirection
             local yPoint = NSRT.PASettings.yOffset+(auraIndex-1) * (NSRT.PASettings.Height+NSRT.PASettings.Spacing) * yDirection
@@ -265,7 +265,7 @@ function NSI:InitPA()
                 unitToken = "player",
                 auraIndex = auraIndex,
                 parent = frame,
-                showCountdownFrame = true,
+                showCountdownFrame = false,
                 showCountdownNumbers = not NSRT.PASettings.UpscaleDuration,
                 iconInfo = {
                     iconAnchor = {
@@ -289,7 +289,7 @@ function NSI:InitPA()
                     unitToken = "player",
                     auraIndex = auraIndex,
                     parent = self.PADurFrames[auraIndex],
-                    showCountdownFrame = false,
+                    showCountdownFrame = true,
                     showCountdownNumbers = false,
                     iconInfo = {
                         iconAnchor = {
@@ -510,18 +510,18 @@ function NSI:InitTankPA()
                     self.PATankAnchorFrames[i][auraIndex] = CreateFrame("Frame", nil, self.NSRTFrame)
                     self.PATankAnchorFrames[i][auraIndex]:SetAllPoints(self.PATankFrames[i][auraIndex])
                 end
-                if NSRT.PATankSettings.HideTooltip or NSRT.PATankSettings.AlternateDisplay then
+                local framescale = NSRT.PATankSettings.AlternateDisplay and stackscale or 1
+                if NSRT.PATankSettings.HideTooltip then
                     self.PATankFrames[i][auraIndex]:SetSize(0.001, 0.001)
                 else
-                    self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
+                    self.PATankFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width/framescale, NSRT.PATankSettings.Height/framescale)
                 end
 
-                self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width, NSRT.PATankSettings.Height)
+                self.PATankAnchorFrames[i][auraIndex]:SetSize(NSRT.PATankSettings.Width/framescale, NSRT.PATankSettings.Height/framescale)
                 self.PATankDurFrames[i][auraIndex]:SetScale(stackscale)
                 self.PATankDurFrames[i][auraIndex]:SetPoint("CENTER", self.PATankFrames[i][auraIndex], "CENTER", 0, 0)
                 self.PATankFrames[i][auraIndex]:ClearAllPoints()
                 self.PATankAnchorFrames[i][auraIndex]:ClearAllPoints()
-                local framescale = NSRT.PATankSettings.AlternateDisplay and stackscale or 1
                 self.PATankFrames[i][auraIndex]:SetScale(framescale)
                 local xPoint = NSRT.PATankSettings.xOffset+(auraIndex-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * xDirection + (i-1) * (NSRT.PATankSettings.Width+NSRT.PATankSettings.Spacing) * multiTankx
                 local yPoint = NSRT.PATankSettings.yOffset+(auraIndex-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * yDirection + (i-1) * (NSRT.PATankSettings.Height+NSRT.PATankSettings.Spacing) * multiTanky
