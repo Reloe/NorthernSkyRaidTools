@@ -8,7 +8,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
     id = id or self:DifficultyCheck(14) or 0
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Divine Toll", "Text", nil, 5, 1, encID)
+        local Alert = self:CreateDefaultAlert("Sacred Toll", "Text", nil, 5, 1, encID)
 
         local timers = {
             [0] = {},
