@@ -204,6 +204,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         for i, v in ipairs(healer) do
             if UnitIsUnit("player", v.unit) then
                 mygroup = i
+                mygroup = math.min(4, mygroup)
             end
         end
     else
