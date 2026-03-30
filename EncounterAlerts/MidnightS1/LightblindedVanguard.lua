@@ -142,11 +142,11 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         end)
         self.TauntFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
         for i, time in ipairs(timers[id] or {}) do
-            time = time-3.5
+            time = time-3.2
             self.TauntTimers = self.TauntTimers or {}
             self.TauntTimers[i] = C_Timer.NewTimer(time, function()
                 self.TauntFrame:RegisterEvent("UNIT_SPELLCAST_START")
-                C_Timer.After(1, function()
+                C_Timer.After(0.4, function()
                     self.TauntFrame:UnregisterEvent("UNIT_SPELLCAST_START")
                 end)
                 C_Timer.After(7, function()
