@@ -90,7 +90,7 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
         local formattedArgTable = {}
         table.remove(argTable, 1)
         if whisper then
-            local target, argType = argTable[2]:match("(.*)%((%a+)%)") -- initially first entry is event, 2nd the unitid of the sender and 3rd the whisper target but we already removed first table entry
+            local target, argType = argTable[2]:match("(.*)%((%a+)%)$") -- initially first entry is event, 2nd the unitid of the sender and 3rd the whisper target but we already removed first table entry
             if not (UnitIsUnit("player", target)) then
                 return
             end
@@ -98,8 +98,10 @@ local function ReceiveComm(text, chan, sender, whisper, internal)
         end
 
         local tonext
+        local knownTypes = {string = true, number = true, boolean = true, table = true}
         for i, functionArg in ipairs(argTable) do
-            local argValue, argType = functionArg:match("(.*)%((%a+)%)")
+            local argValue, argType = functionArg:match("(.*)%((%a+)%)$")
+            if argType and not knownTypes[argType] then argValue, argType = nil, nil end
             if tonext and argValue then argValue = tonext..argValue end
             if argType == "number" then
                 argValue = tonumber(argValue)
