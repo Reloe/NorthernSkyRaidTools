@@ -162,7 +162,7 @@ function NSI:ProcessReminder()
         local mynickname = strlower(NSAPI:GetName("player", "GlobalNickNames"))
         local myname = strlower(UnitName("player"))
         local myrole = strlower(UnitGroupRolesAssigned("player"))
-        local myclass = strlower(select(2, UnitClass("player")))
+        local myclass = select(2, UnitClass("player"))
         pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
         local extranote = ""
         if not str:match('\n$') then
