@@ -183,7 +183,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID] and self.Assignments[encID].Soaks) then return end
     if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
-    local Alert = self:CreateDefaultAlert("", nil, nil, nil, 1, encID, true) -- text, Type, spellID, dur, phase, encID
+    local Alert = self:CreateDefaultAlert("", nil, nil, 8, 1, encID, true) -- text, Type, spellID, dur, phase, encID
     local group = {}
     local healer = {}
     for unit in self:IterateGroupMembers() do
@@ -220,16 +220,13 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or "Flex Spot"
     local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
     local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
-    Alert.TTS, Alert.TTSTimer, Alert.text = TTS, 10, text
-    local phaselength = 162.7 -- guess based on Zealous Spirit in logs
+    Alert.TTS, Alert.text = TTS, text
 
-    for phase = 0, 2 do
-        Alert.time = 92 + (phase * phaselength)
+    local timers = {90.5, 145.9, 249.4, 305.4}
+
+    for i, time in ipairs(timers) do
+        Alert.time = time
         self:AddToReminder(Alert)
-        if self:DifficultyCheck(16) then -- second cast is mythic only in case I want to support Heroic as well
-            Alert.time = 149.2 + (phase * phaselength)
-            self:AddToReminder(Alert)
-        end
     end
 
     if NSRT.AssignmentSettings.OnPull then
