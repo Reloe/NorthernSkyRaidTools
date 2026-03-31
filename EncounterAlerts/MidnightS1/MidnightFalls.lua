@@ -48,6 +48,11 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 local detectedDurations = {
+    [15] = {
+        {time = 45, phase = function(num) return 2 end},
+        {time = 96, phase = function(num) return 3 end},
+        {time = 180, phase = function(num) return 4 end},
+    },
 }
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
