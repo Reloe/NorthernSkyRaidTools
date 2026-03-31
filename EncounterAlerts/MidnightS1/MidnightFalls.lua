@@ -44,6 +44,46 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             Alert.time = v
             self:AddToReminder(Alert)
         end
+
+        Alert.phase = 3
+        Alert.text = "Soaks"
+        timers = {
+            [15] = {21, 50.5, 81}
+        }
+        for i, v in ipairs(timers[id] or {}) do
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text = "Orbs"
+        timers = {
+            [15] = {36.5, 66, 96.5}
+        }
+        for i, v in ipairs(timers[id] or {}) do
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        -- Phase start at 329.5
+        Alert.phase = 4
+
+        Alert.text = "Crystal"
+        timers = {
+            [15] = {22, 60, 98}
+        }
+        for i, v in ipairs(timers[id] or {}) do
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
+
+        Alert.text = "Soaks"
+        timers = {
+            [15] = {30.5, 68.5, 106.5}
+        }
+        for i, v in ipairs(timers[id] or {}) do
+            Alert.time = v
+            self:AddToReminder(Alert)
+        end
     end
 end
 
