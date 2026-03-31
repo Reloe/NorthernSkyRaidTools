@@ -278,6 +278,7 @@ function NSI:VantusRuneCheck()
     if not UnitInRaid("player") then return end
     local name = C_Spell.GetSpellInfo(1276691).name
     local prefix = name:match("^([^:]+)") -- get localized name of vantus runes
+    if issecretvalue(prefix) then return end
     local maxgroup = self:DifficultyCheck(16) and 4 or 6 -- if outside raidlead checks this always goes to 6 but guess that'S fine
     local text = ""
     for i=1, 40 do
@@ -288,7 +289,7 @@ function NSI:VantusRuneCheck()
             for j=1, 100 do
                 local buff = C_UnitAuras.GetAuraDataByIndex(unitid, j, "HELPFUL")
                 if not buff then break end
-                if buff.name:find(prefix) then
+                if (not issecretvalue(buff.name)) and buff.name:find(prefix) then
                     found = true
                     break
                 end
