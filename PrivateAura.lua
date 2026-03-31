@@ -265,7 +265,7 @@ function NSI:InitPA()
                 unitToken = "player",
                 auraIndex = auraIndex,
                 parent = frame,
-                showCountdownFrame = false,
+                showCountdownFrame = true,
                 showCountdownNumbers = not NSRT.PASettings.UpscaleDuration,
                 iconInfo = {
                     iconAnchor = {
