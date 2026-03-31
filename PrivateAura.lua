@@ -20,6 +20,7 @@ local SoundListRaid = {
     [1253024] = "Targeted", -- Shattering Twilight (Tank)
 
     [1255612] = "Targeted", -- Dread Breath
+    [1270497] = "Spread", -- Shadowmark
 
     [1248994] = "Targeted", -- Execution Sentence
     [1248985] = "Targeted", -- Execution Sentence (not sure if this one is used)
@@ -44,7 +45,8 @@ local SoundListRaid = {
     [1284527] = "Targeted", -- Galvanize
     [1281184] = "Spread", -- Criticality
     [1249609] = "Rune", -- Dark Rune
-    [1270497] = "Spread", -- Shadowmark
+    [1285510] = "Targeted", -- Starsplinter
+    [1279512] = "Targeted", -- Starsplinter
 }
 
 local SoundListMPlus = {
