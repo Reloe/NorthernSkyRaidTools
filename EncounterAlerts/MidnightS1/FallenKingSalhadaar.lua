@@ -9,9 +9,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck(14) or 0
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
-
-
-        -- using same timers for all difficulties atm
         local timers = {
             [0] = {},
             [14] = {102.6, 224.2, 346},
@@ -20,7 +17,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        Alert.text, Alert.TTS, Alert.dur = "Orbs", "Orbs", 5
+        local Alert = self:CreateDefaultAlert("Orbs", "Text", nil, 5, 1, encID)
         timers = {
             [0] = {},
             [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
@@ -29,7 +26,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        Alert.text, Alert.TTS = "CC Adds", "CC Adds"
+        local Alert = self:CreateDefaultAlert("CC Adds", "CC Adds", nil, 5, 1, encID)
         timers = {
             [0] = {},
             [14] = {20, 65, 141, 187, 263, 308},

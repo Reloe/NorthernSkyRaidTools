@@ -19,7 +19,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        Alert.text, Alert.TTS = "Breath", "Breath"
+        local Alert = self:CreateDefaultAlert("Breath", "Text", nil, 5, 1, encID)
         timers = {
             [0] = {},
             [14] = {102, 223, 343},

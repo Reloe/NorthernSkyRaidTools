@@ -16,7 +16,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        timers = {
+        local timers = {
             [0] = {},
             [16] = {27, 67, 99.5, 126.6},
         }
@@ -25,27 +25,25 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Boom.Ticks = {6}
         self:AddRemindersFromTable(Boom, timers[id])
 
-        Alert.phase = 3
-        timers = {
+        local Boom = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 12, 3, encID)
+        local timers = {
             [15] = {39, 59, 81, 101, 123, 143, 165, 185, 207, 227},
             [16] = {37, 62, 89, 114},
         }
         self:AddRemindersFromTable(Boom, timers[id])
 
-        Alert.phase = 5
+        local Boom = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 12, 5, encID)
         timers = {
             [16] = {54, 114, 174},
         }
         self:AddRemindersFromTable(Boom, timers[id])
 
-        Alert.phase = 2
-        Alert.text = "Immune"
-        Alert.TTS = false
+
+        local Alert = self:CreateDefaultAlert("Immune", "Text", nil, 10, 2, encID) -- Arrows
         Alert.time = 25
-        Alert.dur = 10
         self:AddToReminder(Alert) -- P2 Immune timer
 
-        Alert = self:CreateDefaultAlert("Tether", "Text", nil, 6, 5, encID) -- Tether
+        local Alert = self:CreateDefaultAlert("Tether", "Text", nil, 6, 5, encID) -- Tether
         timers = {
             [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
         }
@@ -54,21 +52,21 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 
         if self:IsMelee("player") then return end -- Bait is only for ranged
 
-        Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 1, encID) -- Baits
-        timers = {
+        local Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 1, encID) -- Baits
+        local timers = {
             [15] = {15, 63, 102},
             [16] = {13, 53, 85.6, 112.6}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        Alert.phase = 3
-        timers = {
+        local Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 3, encID) -- Baits
+        local timers = {
             [15] = {19, 39, 61, 81, 103, 123, 145, 165, 187, 207},
             [16] = {23, 48, 75, 100, 127},
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        Alert.phase = 5
+        local Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 5, encID) -- Baits
         timers = {
             [16] = {40, 100, 160},
         }

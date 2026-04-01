@@ -15,14 +15,15 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
         }
         self:AddRemindersFromTable(Alert, timers[id])
-        Alert.text = "Tether"
-        Alert.TTS = nil
+
+        local Alert = self:CreateDefaultAlert("Tether", "Text", nil, 5, 1, encID)
         timers = {
             [0] = {},
             [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7},
         }
         self:AddRemindersFromTable(Alert, timers[id])
-        Alert.text = "Breath"
+
+        local Alert = self:CreateDefaultAlert("Breath", "Text", nil, 5, 1, encID)
         timers = {
             [0] = {},
             [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
