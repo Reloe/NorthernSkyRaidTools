@@ -38,7 +38,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].CCAddsDisplay and id == 16 then
         self.platetexts = self.platetexts or {}
         local plateref = {}
-        local function DisplayNameplateText(aura1, aura2, u)
+        local function DisplayNameplateText(u)
             local plate = C_NamePlate.GetNamePlateForUnit(u)
             if plate then
                 local interruptible = select(8, UnitCastingInfo(u))
@@ -52,7 +52,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
                         plateref[u] = i
-                        self.platetexts[i]:SetAlphaFromBool(interruptible, 0, 1)
+                        self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
+                        self.platetexts[i].bgFrame:SetAlphaFromBoolean(interruptible, 0, 1)
                         return
                     elseif not self.platetexts[i] then
 
@@ -74,6 +75,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i].unit = u
                         plateref[u] = i
                         self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
+                        self.platetexts[i].bgFrame:SetAlphaFromBoolean(interruptible, 0, 1)
                         return
                     end
                 end
@@ -99,12 +101,11 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     end
                 end
                 return
-            elseif e == "NAME_PLATE_UNIT_ADDED" or e == "UNIT_AURA" then
-                if e == "UNIT_AURA" and not u:find("^nameplate%d") then return end -- only allow nameplate units for UNIT_AURA
+            elseif e == "NAME_PLATE_UNIT_ADDED" or e == "UNIT_AURA" or e == "UNIT_SPELLCAST_START" then
+                if (e == "UNIT_AURA" or e == "UNIT_SPELLCAST_START") and not u:find("^nameplate%d") then return end -- only allow nameplate units for UNIT_AURA
                 if UnitLevel(u) ~= -1 then
                     local aura1 = C_UnitAuras.GetAuraDataByIndex(u, 1, "HELPFUL")
                     if aura1 then
-                        local aura2 = C_UnitAuras.GetAuraDataByIndex(u, 2, "HELPFUL")
                         if plateref[u] then
                             if self.platetexts[plateref[u]] then
                                 self.platetexts[plateref[u]]:Hide()
@@ -113,7 +114,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                                 plateref[u] = nil
                             end
                         end
-                        DisplayNameplateText(aura1, aura2, u)
+                        DisplayNameplateText(u)
                     end
                 end
             end
@@ -128,12 +129,15 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     UpdateNameplateTexts(e, u)
                 elseif e == "UNIT_AURA" then
                     UpdateNameplateTexts(e, u)
+                elseif e == "UNIT_SPELLCAST_START" then
+                    UpdateNameplateTexts(e, u)
                 end
             end)
         end
         self.plateframe:RegisterEvent("NAME_PLATE_UNIT_ADDED")
         self.plateframe:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
         self.plateframe:RegisterEvent("UNIT_AURA")
+        self.plateframe:RegisterEvent("UNIT_SPELLCAST_START")
         self.plateframe:Show()
     end
 end
@@ -148,6 +152,7 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
             self.plateframe:UnregisterEvent("NAME_PLATE_UNIT_ADDED")
             self.plateframe:UnregisterEvent("NAME_PLATE_UNIT_REMOVED")
             self.plateframe:UnregisterEvent("UNIT_AURA")
+            self.plateframe:UnregisterEvent("UNIT_SPELLCAST_START")
             self.plateframe:Hide()
         end
     end
