@@ -9,33 +9,71 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         id = id or self:DifficultyCheck(14) or 0
-        local ExplosionTimers = {
-            [15] = {33, 53, 75, 95, 117, 137, 159, 179, 201, 221}
+
+        local Alert = self:CreateDefaultAlert("Arrows", "Text", nil, 5, 1, encID) -- Arrows
+        local timers = {
+            [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6}
         }
-        local Explosion = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 5, 3, encID) -- Void Expulsion Dmg Event
-        for i, v in ipairs(ExplosionTimers[id] or {}) do
-            Explosion.time = v
-            self:AddToReminder(Explosion)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        timers = {
+            [0] = {},
+            [16] = {27, 67, 99.5, 126.6},
+        }
+        self.AlertTimers = self.AlertTimers or {}
+        local dur = 12
+        local Boom = self:CreateDefaultAlert("Explosion", "Bar", 1233819, dur, 1, encID)
+        Boom.TTSTimer = 4
+        Boom.Ticks = {6}
+        self:AddRemindersFromTable(Boom, timers[id])
+
+        Boom.phase = 3
+        timers = {
+            [15] = {39, 59, 81, 101, 123, 143, 165, 185, 207, 227},
+            [16] = {37, 62, 89, 114},
+        }
+        self:AddRemindersFromTable(Boom, timers[id])
+
+        Boom.phase = 5 -- Mythic only
+        timers = {
+            [16] = {54, 114, 174},
+        }
+        self:AddRemindersFromTable(Boom, timers[id])
+
+        Alert.phase = 2
+        Alert.text = "Immune"
+        Alert.TTS = false
+        Alert.time = 25
+        Alert.dur = 10
+        self:AddToReminder(Alert) -- P2 Immune timer
+
+        Alert = self:CreateDefaultAlert("Tether", "Text", nil, 6, 5, encID) -- Tether
+        timers = {
+            [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
 
         if self:IsMelee("player") then return end -- Bait is only for ranged
 
-        local Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 1, encID) -- Void Expulsion Bait
-        local timers = {
-            [15] = {15, 63, 102}, -- don't care about normal, adding mythic later
+        Alert = self:CreateDefaultAlert("Bait", "Text", nil, 5, 1, encID) -- Baits
+        timers = {
+            [15] = {15, 63, 102},
+            [16] = {13, 53, 85.6, 112.6}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
+
         Alert.phase = 3
         timers = {
-            [15] = {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}, -- don't care about normal, adding mythic later
+            [15] = {19, 39, 61, 81, 103, 123, 145, 165, 187, 207},
+            [16] = {23, 48, 75, 100, 127},
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
+        Alert.phase = 5 -- Mythic only
+        timers = {
+            [16] = {40, 100, 160},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
     end
 end
 
