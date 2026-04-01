@@ -43,6 +43,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 
         local Alert = self:CreateDefaultAlert("Immune", "Text", nil, 10, 2, encID) -- Arrows
         Alert.time = 25
+        Alert.TTS = false
         self:AddToReminder(Alert) -- P2 Immune timer
 
         local Alert = self:CreateDefaultAlert("Tether", "Text", nil, 6, 5, encID) -- Tether
