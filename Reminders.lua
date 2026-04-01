@@ -123,6 +123,7 @@ function NSI:AddToReminder(info)
         dur = info.dur or 8,
         skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
         IsAlert = info.IsAlert,
+        Ticks = info.Ticks,
     })
 end
 
