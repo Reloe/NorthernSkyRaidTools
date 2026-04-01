@@ -9,34 +9,34 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         id = id or self:DifficultyCheck(14) or 0
 
-        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 5, 1, encID)
+        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 6, 1, encID)
         local timers = {
             [15] = {10, 80, 150}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Glaives", "Text", nil, 5, 1, encID)
+        local Alert = self:CreateDefaultAlert("Glaives", "Text", nil, 6, 1, encID)
         timers = {
-            [15] = {37.3, 107, 177.3}
+            [15] = {38, 108, 178}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Interrupts", "Text", nil, 5, 1, encID)
+        local Alert = self:CreateDefaultAlert("Interrupts", "Text", nil, 6, 1, encID)
         timers = {
-            [15] = {58, 129}
+            [15] = {59, 129}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 3, encID)
+        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 7, 3, encID)
         Alert.TTS = false
         timers = {
-            [15] = {21, 50.5, 81}
+            [15] = {20, 50, 80}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Orbs", "Text", nil, 5, 3, encID)
+        local Alert = self:CreateDefaultAlert("Orbs", "Text", nil, 7, 3, encID)
         timers = {
-            [15] = {36.5, 66, 96.5}
+            [15] = {35.5, 65.5, 95.5}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
@@ -49,7 +49,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
         Alert.text = "Soaks"
         timers = {
-            [15] = {30.5, 68.5, 106.5}
+            [15] = {31, 69, 107}
         }
         self:AddRemindersFromTable(Alert, timers[id])
     end
