@@ -52,8 +52,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
                         plateref[u] = i
-                        self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
-                        if issecretvalue(interruptible) then self.platetexts[i].bgFrame:SetAlphaFromBoolean(interruptible, 0, 1) end
+                        if issecretvalue(interruptible) then
+                            self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
+                            self.platetexts[i].bgFrame:SetAlphaFromBoolean(interruptible, 0, 1)
+                        end
                         return
                     elseif not self.platetexts[i] then
 
@@ -74,8 +76,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
                         plateref[u] = i
-                        self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
-                        self.platetexts[i].bgFrame:SetAlphaFromBoolean(interruptible, 0, 1)
+                        if issecretvalue(interruptible) then
+                            self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
+                            self.platetexts[i].bgFrame:SetAlphaFromBoolean(interruptible, 0, 1)
+                        end
                         return
                     end
                 end
