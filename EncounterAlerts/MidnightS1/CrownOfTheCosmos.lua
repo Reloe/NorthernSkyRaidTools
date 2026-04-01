@@ -26,8 +26,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self:AddRemindersFromTable(Boom, timers[id])
 
         local Boom = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 12, 3, encID)
+        Boom.TTSTimer = 4
+        Boom.Ticks = {6}
         local timers = {
-            [15] = {39, 59, 81, 101, 123, 143, 165, 185, 207, 227},
+            [15] = {33, 53, 75, 95, 117, 137, 159, 179, 201, 221},
             [16] = {37, 62, 89, 114},
         }
         self:AddRemindersFromTable(Boom, timers[id])
