@@ -44,22 +44,18 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local function DisplayNameplateText(aura1, aura2, u)
             local plate = C_NamePlate.GetNamePlateForUnit(u)
             if plate then
+                local interruptible = select(8, UnitCastingInfo(u))
                 for i=1, #self.platetexts+1 do
                     if self.platetexts[i] and not self.platetexts[i]:IsShown() then
-                        if aura2 then
-                            self.platetexts[i]:SetText("WAIT")
-                            self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
-                        else
-                            self.platetexts[i]:SetText("CC")
-                            self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
-                        end
+                        self.platetexts[i]:SetText("CC")
+                        self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         self.platetexts[i]:ClearAllPoints()
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
-
                         self.platetexts[i]:Show()
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
                         plateref[u] = i
+                        self.platetexts[i]:SetAlphaFromBool(interruptible, 0, 1)
                         return
                     elseif not self.platetexts[i] then
 
@@ -68,27 +64,19 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
                         self.platetexts[i]:SetShadowColor(0, 0, 0, 1)
                         self.platetexts[i]:SetTextColor(1, 1, 1, 1)
-
                         self.platetexts[i].bgFrame = CreateFrame("Frame", nil, self.plateframe)
                         self.platetexts[i].bgFrame:SetFrameStrata("BACKGROUND")
                         self.platetexts[i].bgTexture = self.platetexts[i].bgFrame:CreateTexture(nil, "BACKGROUND")
-                        self.platetexts[i].bgTexture:SetColorTexture(1, 1, 1, 0.8)
+                        self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
                         self.platetexts[i].bgTexture:SetAllPoints(self.platetexts[i].bgFrame)
                         self.platetexts[i].bgFrame:SetSize(25, 25)
                         self.platetexts[i].bgFrame:SetPoint("CENTER", self.platetexts[i], "CENTER", 0, 0)
-
-                        if aura2 then
-                            self.platetexts[i]:SetText("WAIT")
-                            self.platetexts[i].bgTexture:SetColorTexture(1, 0, 0, 0.8)
-                        else
-                            self.platetexts[i]:SetText("CC")
-                            self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
-                        end
-
+                        self.platetexts[i]:SetText("CC")
                         self.platetexts[i]:Show()
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
                         plateref[u] = i
+                        self.platetexts[i]:SetAlphaFromBool(interruptible, 0, 1)
                         return
                     end
                 end
