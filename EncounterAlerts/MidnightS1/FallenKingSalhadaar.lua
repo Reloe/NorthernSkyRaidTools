@@ -73,7 +73,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         self.platetexts[i].bgFrame:Show()
                         self.platetexts[i].unit = u
                         plateref[u] = i
-                        self.platetexts[i]:SetAlphaFromBool(interruptible, 0, 1)
+                        self.platetexts[i]:SetAlphaFromBoolean(interruptible, 0, 1)
                         return
                     end
                 end
