@@ -19,7 +19,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         if UnitGroupRolesAssigned("player") == "TANK" then
             local Alert = self:CreateDefaultAlert("Peace Aura", "Text", nil, 8, 1, encID)
             Alert.TTS = false
-            timers = {
+            local timers = {
                 [0] = {},
                 [16] = {132, 291, 450},
             }
@@ -50,7 +50,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local dur = id == 16 and 20 or 15
         local Alert = self:CreateDefaultAlert("", "Bar", 1248721, dur, 1, encID) -- text, Type, spellID, dur, phase, encID, isAssignment
         Alert.TTS = false
-        Alert.colors = {0, 1, 0, 1}
+        Alert.colors = "0 1 0 1"
         Alert.Ticks = id == 16 and {5, 10, 15} or {5, 10}
         self:AddRemindersFromTable(Alert, timers[id])
     end
