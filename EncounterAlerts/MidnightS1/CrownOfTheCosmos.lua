@@ -20,21 +20,19 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [0] = {},
             [16] = {27, 67, 99.5, 126.6},
         }
-        self.AlertTimers = self.AlertTimers or {}
-        local dur = 12
-        local Boom = self:CreateDefaultAlert("Explosion", "Bar", 1233819, dur, 1, encID)
+        local Boom = self:CreateDefaultAlert("Explosion", "Bar", 1233819, 12, 1, encID)
         Boom.TTSTimer = 4
         Boom.Ticks = {6}
         self:AddRemindersFromTable(Boom, timers[id])
 
-        Boom.phase = 3
+        Alert.phase = 3
         timers = {
             [15] = {39, 59, 81, 101, 123, 143, 165, 185, 207, 227},
             [16] = {37, 62, 89, 114},
         }
         self:AddRemindersFromTable(Boom, timers[id])
 
-        Boom.phase = 5 -- Mythic only
+        Alert.phase = 5
         timers = {
             [16] = {54, 114, 174},
         }
@@ -69,7 +67,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [16] = {23, 48, 75, 100, 127},
         }
         self:AddRemindersFromTable(Alert, timers[id])
-        Alert.phase = 5 -- Mythic only
+
+        Alert.phase = 5
         timers = {
             [16] = {40, 100, 160},
         }

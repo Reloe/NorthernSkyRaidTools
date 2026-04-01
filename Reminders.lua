@@ -769,6 +769,12 @@ function NSI:DisplayReminder(info)
         F:Show()
         self:ArrangeStates("Texts")
     end
+    if info.Ticks then
+        for _, tick in ipairs(info.Ticks) do
+            local perc = tick / info.dur
+            self:AddTickToBar(F, perc)
+        end
+    end
     if info.glowunit then
         for i, name in ipairs(info.glowunit) do
             self:GlowFrame(name, "p"..info.phase.."id"..info.id)
@@ -1456,4 +1462,12 @@ function NSAPI:GetAlerts(encounterID, id)
     if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
     if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI) end
     return NSI.TLAlerts
+end
+
+function NSI:AddRemindersFromTable(Alert, timers)
+    if (not timers) or (not Alert) then return end
+    for _, time in ipairs(timers or {}) do
+        Alert.time = time
+        self:AddToReminder(Alert)
+     end
 end

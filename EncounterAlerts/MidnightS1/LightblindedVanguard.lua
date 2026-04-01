@@ -14,43 +14,31 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [0] = {},
             [16] = {22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382},
         }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         if UnitGroupRolesAssigned("player") == "TANK" then
             Alert.TTS = false
             Alert.dur = 8
             Alert.text = "Peace Aura"
-            local timers = {
+            timers = {
                 [0] = {},
                 [16] = {132, 291, 450},
             }
-            for _, time in ipairs(timers[id] or {}) do
-                Alert.time = time
-                self:AddToReminder(Alert)
-            end
+            self:AddRemindersFromTable(Alert, timers[id])
 
             Alert.text = "Devotion Aura"
-            local timers = {
+            timers = {
                 [0] = {},
                 [16] = {26, 184.7, 343.5},
             }
-            for _, time in ipairs(timers[id] or {}) do
-                Alert.time = time
-                self:AddToReminder(Alert)
-            end
+            self:AddRemindersFromTable(Alert, timers[id])
 
             Alert.text = "Aura of Wrath"
-            local timers = {
+            timers = {
                 [0] = {},
                 [16] = {78.5, 237.5, 396.5},
             }
-            for _, time in ipairs(timers[id] or {}) do
-                Alert.time = time
-                self:AddToReminder(Alert)
-            end
+            self:AddRemindersFromTable(Alert, timers[id])
         end
     end
     if NSRT.EncounterAlerts[encID].HealAbsorbTicks then
@@ -65,28 +53,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         Alert.TTS = false
         Alert.colors = {0, 1, 0, 1}
         Alert.Ticks = id == 16 and {5, 10, 15} or {5, 10}
-        if self:IsUsingTLAlerts() then
-            for _, time in ipairs(timers[id] or {}) do
-                Alert.time = time+dur
-                self:AddToReminder(Alert)
-            end
-        else
-            for i, v in ipairs(timers[id] or {}) do
-                self.AlertTimers[i] = C_Timer.NewTimer(v, function()
-                    local F = self:DisplayReminder(Alert)
-                    if F then
-                        if id == 16 then
-                            self:AddTickToBar(F, 0.25)
-                            self:AddTickToBar(F, 0.5)
-                            self:AddTickToBar(F, 0.75)
-                        else
-                            self:AddTickToBar(F, 0.333)
-                            self:AddTickToBar(F, 0.666)
-                        end
-                    end
-                end)
-            end
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
     end
     if NSRT.EncounterAlerts[encID].TauntAlerts and UnitGroupRolesAssigned("player") == "TANK" then
         self.TauntFrame = self.TauntFrame or CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
@@ -223,11 +190,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     Alert.TTS, Alert.text = TTS, text
 
     local timers = {90.5, 145.9, 249.4, 305.4}
-
-    for i, time in ipairs(timers) do
-        Alert.time = time
-        self:AddToReminder(Alert)
-    end
+    self:AddRemindersFromTable(Alert, timers)
 
     if NSRT.AssignmentSettings.OnPull then
         local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""

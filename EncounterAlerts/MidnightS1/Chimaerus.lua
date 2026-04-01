@@ -24,10 +24,7 @@ local function RiftMadnessTimers(id)
             Alert.isConditional = true
             for i=1, 2 do
                 Alert.phase = i
-                for _, time in ipairs(timers or {}) do
-                    Alert.time = time
-                    NSI:AddToReminder(Alert)
-                end
+                NSI:AddRemindersFromTable(Alert, timers)
             end
         else
             for i, v in ipairs(timers or {}) do

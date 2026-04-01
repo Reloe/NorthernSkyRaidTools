@@ -17,10 +17,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [15] = {12, 132, 252},
             [16] = {12, 132, 252},
         }
-        for i, v in ipairs(timers[id] or {}) do -- Primordial Roar
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         Alert.text, Alert.TTS = "Breath", "Breath"
         timers = {
@@ -29,9 +26,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [15] = {102, 223, 343},
             [16] = {102, 223, 343},
         }
-        for i, v in ipairs(timers[id] or {}) do -- Void Breath
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
     end
 end

@@ -13,77 +13,53 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local timers = {
             [15] = {10, 80, 150}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         Alert.text = "Glaives"
         timers = {
             [15] = {37.3, 107, 177.3}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         Alert.text = "Beams"
         timers = {
             [15] = {41, 111.5}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         Alert.text = "Interrupts"
         timers = {
             [15] = {58, 129}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         Alert.phase = 3
+        Alert.TTS = false
         Alert.text = "Soaks"
         timers = {
             [15] = {21, 50.5, 81}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
+        Alert.TTS = nil
         Alert.text = "Orbs"
         timers = {
             [15] = {36.5, 66, 96.5}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
-        -- Phase start at 329.5
         Alert.phase = 4
-
         Alert.text = "Crystal"
         timers = {
             [15] = {22, 60, 98}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
 
         Alert.text = "Soaks"
         timers = {
             [15] = {30.5, 68.5, 106.5}
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
     end
 end
 

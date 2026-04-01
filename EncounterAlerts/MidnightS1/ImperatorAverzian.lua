@@ -16,9 +16,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [15] = {25.5, 33, 97.5, 105, 176.5, 184, 248.5, 256, 325.5, 333}, -- Mythic only for now
             [16] = {37.5, 45, 117.5, 125, 223.5, 231, 303.5, 311, 407.5, 415}, -- Mythic only for now
         }
-        for i, v in ipairs(timers[id] or {}) do
-            Alert.time = v
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
     end
 end

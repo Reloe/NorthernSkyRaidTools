@@ -14,29 +14,20 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [0] = {},
             [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
         }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
         Alert.text = "Tether"
         Alert.TTS = nil
         timers = {
             [0] = {},
             [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7},
         }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
         Alert.text = "Breath"
         timers = {
             [0] = {},
             [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
         }
-        for _, time in ipairs(timers[id] or {}) do
-            Alert.time = time
-            self:AddToReminder(Alert)
-        end
+        self:AddRemindersFromTable(Alert, timers[id])
     end
     if NSRT.EncounterAlerts[encID].HealthDisplay then
         if not self.VaelgorEzzorakFrame then
