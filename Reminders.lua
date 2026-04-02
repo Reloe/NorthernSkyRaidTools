@@ -466,7 +466,7 @@ end
 function NSI:SetProperties(F, info, skipsound, s)
     F:SetScript("OnUpdate", function(self, elapsed)
         self.elapsed = (self.elapsed or 0) + elapsed
-        if self.elapsed < 0.05 then return end
+        if self.elapsed < 0.025 then return end
         self.elapsed = 0
         NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
