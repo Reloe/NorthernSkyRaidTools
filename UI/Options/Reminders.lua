@@ -631,6 +631,19 @@ local function BuildReminderOptions()
         },
 
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Ignore 'everyone' tags",
+            desc = "Ignores All Reminders that use the 'everyone' tag. For example if there are a lot of reminders shared from your raidlead that you don't want to see, you can filter out these 'everyone' reminders while still getting your personal assigned spells.",
+            get = function() return NSRT.ReminderSettings.IgnoreEveryone end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IgnoreEveryone = value
+                NSI:ProcessReminder()
+            end,
+            nocombat = true,
+        },
+
+        {
             type = "select",
             name = "Sound",
             desc = "Sound",
