@@ -10,7 +10,16 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         id = id or self:DifficultyCheck(14) or 0
 
-        local Alert = self:CreateDefaultAlert("Arrows", "Text", nil, 5, 1, encID) -- Arrows
+        local role = UnitGroupRolesAssigned("player")
+        if (role == "HEALER" or not self:IsMelee("player")) and select(3, UnitClass("player") ~= 3) then
+            local Alert = self:CreateDefaultAlert("Stop Cast", "Text", nil, 5, 1, encID)
+            local timers = {
+                [16] = {9.6, 30.4}
+            }
+            self:AddRemindersFromTable(Alert, timers[id])
+        end
+
+        local Alert = self:CreateDefaultAlert("Arrows", "Text", nil, 5, 1, encID)
         local timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6}
         }
