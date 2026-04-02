@@ -14,9 +14,17 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [16] = 6.6,
         }
         for phase=2, 4 do
-            local Alert = self:CreateDefaultAlert("Gateway", "Bar", 311699, timer[id], phase, encID) -- Group Soaks
+            local Alert = self:CreateDefaultAlert("Gateway", "Bar", 311699, timer[id], phase, encID)
             Alert.time = 6.6
             self:AddToReminder(Alert)
+
+            local timers = {
+                [15] = {12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2},
+                [16] = {12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2},
+            }
+            local Alert = self:CreateDefaultAlert("Next Hit", "Text", 1242792, 4, phase, encID) -- Death Drop
+            Alert.TTS = false
+            self:AddRemindersFromTable(Alert, timers[id])
         end
     end
 end
