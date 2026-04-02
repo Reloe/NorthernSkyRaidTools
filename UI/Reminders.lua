@@ -167,6 +167,7 @@ local function BuildRemindersEditUI()
     ImportButton:SetTemplate(options_button_template)
 
     local ClearButton = DF:CreateButton(reminders_edit_frame, function()
+        NSRT.StoredSharedReminder = nil
         NSI:SetReminder(nil)
         NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         reminders_edit_frame.scrollbox:MasterRefresh()
