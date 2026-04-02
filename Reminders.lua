@@ -27,6 +27,13 @@ function NSI:AddToReminder(info)
     info = CopyTable(info)
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
+    if info.colors and type(info.colors) == "string" then
+        local colors = {}
+        for color in info.colors:gmatch("([^%s:]+)") do
+            table.insert(colors, tonumber(color))
+        end
+        info.colors = colors
+    end
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
         table.insert(self.TLAlerts, info)
         return
@@ -89,13 +96,6 @@ function NSI:AddToReminder(info)
             end
         end
         info.glowunit = glowtable
-    end
-    if info.colors then
-        local colors = {}
-        for color in info.colors:gmatch("([^%s:]+)") do
-            table.insert(colors, tonumber(color))
-        end
-        info.colors = colors
     end
     -- play default sound if enabled and no TTS/Sound was specified
     if NSRT.ReminderSettings.PlayDefaultSound and (type(info.TTS) == "boolean" or not info.TTS) and (not info.sound) and (not (info.IsAlert or info.IsAssignment)) then
