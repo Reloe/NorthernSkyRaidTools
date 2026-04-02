@@ -107,22 +107,23 @@ local function MythicPhaseDetect(self, e, info)
     local addedcount = 0
     local removedcount = 0
     for k, v in ipairs(self.Timelines) do
-        if now < v+0.1 then
+        if now < v+0.3 then
             addedcount = addedcount+1
         end
     end
     if self.Phase == 3 and e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
         for k, v in ipairs(self.RemovedTimelines) do
-            if now < v+0.1 then
+            if now < v+0.3 then
                 removedcount = removedcount+1
             end
         end
-        if removedcount >= 2 and addedcount < 4 then
+        if removedcount >= 4 and addedcount < 4 then
             self.Phase = 4
             self:StartReminders(self.Phase)
             self.Timelines = {}
             self.RemovedTimelines = {}
             self.PhaseSwapTime = now
+            return
         end
     elseif RequiredTimers[self.Phase] and addedcount >= RequiredTimers[self.Phase] then
         self.Phase = self.Phase+1
@@ -130,6 +131,15 @@ local function MythicPhaseDetect(self, e, info)
         self.Timelines = {}
         self.RemovedTimelines = {}
         self.PhaseSwapTime = now
+        return
+    end
+    if self.Phase == 3 and (addedcount >= 8 or (e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and info.duration == 60)) then -- fallback if p4 failed
+        self.Phase = 5
+        self:StartReminders(self.Phase)
+        self.Timelines = {}
+        self.RemovedTimelines = {}
+        self.PhaseSwapTime = now
+        return
     end
 end
 

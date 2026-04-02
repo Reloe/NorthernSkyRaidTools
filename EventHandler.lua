@@ -9,6 +9,7 @@ f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
+f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("ENCOUNTER_WARNING")
 f:RegisterEvent("RAID_BOSS_WHISPER")
@@ -529,6 +530,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             return
         end
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
+    elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" and wowevent then
+        local eventID = ...
+        if not self:DifficultyCheck(14) then return end
+        if self.CustomEvents and self.CustomEvents[eventID] then
+            return
+        end
+        local state = C_EncounterTimeline.GetEventState(eventID)
+        if state.Canceled then
+            self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
+        end
     elseif e == "ENCOUNTER_WARNING" and wowevent then
         local info = ...
         if not self:DifficultyCheck(14) then return end
