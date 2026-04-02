@@ -345,7 +345,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                         end
                         break
                     end
-                elseif indexgoal and indexlink[index].subgroup and indexlink[indexgoal].subgroup and indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and UnitExists("raid"..indexgoal) and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
+                elseif indexgoal and indexlink[index] and indexlink[index].subgroup and indexlink[indexgoal] and indexlink[indexgoal].subgroup and indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and UnitExists("raid"..indexgoal) and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
                     SwapRaidSubgroup(indexgoal, index)
                     v.processed = true
                     self.Groups.Processed = self.Groups.Processed+1
@@ -545,6 +545,7 @@ function NSI:ArrangeFromReminder(str)
     if self:Restricted() then print("You are currently in combat, cannot sort groups right now.") return end
     if not list then print("No invite list found.") return end
     for i, name in ipairs(list) do
+        local name, realm = strsplit("-", name)
         local pos = UnitInRaid(name)
         local unit = pos and "raid"..pos
         local role = unit and UnitGroupRolesAssigned(unit)
