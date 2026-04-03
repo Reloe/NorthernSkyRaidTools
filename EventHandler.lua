@@ -537,7 +537,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             return
         end
         local state = C_EncounterTimeline.GetEventState(eventID)
-        if state.Canceled then
+        if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
     elseif e == "ENCOUNTER_WARNING" and wowevent then
