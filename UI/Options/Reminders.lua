@@ -639,6 +639,7 @@ local function BuildReminderOptions()
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IgnoreEveryone = value
                 NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(true)
             end,
             nocombat = true,
         },
