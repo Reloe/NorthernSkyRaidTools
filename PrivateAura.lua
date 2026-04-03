@@ -28,6 +28,7 @@ local SoundListRaid = {
     [1248721] = "HealAbsorb", -- Tyr's Wrath
 
     [1232470] = "Obelisk", -- Grasp of Emptiness
+    [1260027] = "Obelisk", -- Grasp of Emptiness Mythic
     [1239111] = "Break", -- Aspect of the End
     [1233602] = "Targeted", -- Silverstrike Arrow
     [1237623] = "Targeted", -- Ranger Captain's Mark
