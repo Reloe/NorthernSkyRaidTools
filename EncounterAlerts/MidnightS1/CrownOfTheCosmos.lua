@@ -11,7 +11,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         id = id or self:DifficultyCheck(14) or 0
 
         local role = UnitGroupRolesAssigned("player")
-        if (role == "HEALER" or not self:IsMelee("player")) and select(3, UnitClass("player") ~= 3) then
+        if (role == "HEALER" or not self:IsMelee("player")) and select(3, UnitClass("player")) ~= 3 then
             local Alert = self:CreateDefaultAlert("Stop Cast", "Text", nil, 5, 1, encID)
             local timers = {
                 [16] = {9.6, 30.4}
