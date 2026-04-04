@@ -255,6 +255,20 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Clickable Runes",
+            desc = "Enables Clickable Runes for Midnight Falls.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].ClickableRunes end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].ClickableRunes = value
+            end,
+            nocombat = true,
+            icontexture = 7448204,
+            iconsize = {16, 16},
+        },
+        {
             type = "breakline"
         },
         {
