@@ -26,6 +26,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddRemindersFromTable(Alert, timers[id])
 
             local Alert = self:CreateDefaultAlert("Devotion Aura", "Text", nil, 8, 1, encID)
+            Alert.TTS = false
             local timers = {
                 [0] = {},
                 [16] = {26, 184.7, 343.5},
@@ -33,6 +34,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self:AddRemindersFromTable(Alert, timers[id])
 
             local Alert = self:CreateDefaultAlert("Aura of Wrath", "Text", nil, 8, 1, encID)
+            Alert.TTS = false
             local timers = {
                 [0] = {},
                 [16] = {78.5, 237.5, 396.5},
