@@ -68,6 +68,15 @@ local function BuildWAImportsOptions()
             end,
             nocombat = true
         },
+        {
+            type = "button",
+            name = "Belo'ren Feather Color",
+            desc = "Displays your Feather-Color on Belo'ren.",
+            func = function(self)
+                WAButton("Belo'ren Feather Color", "BelorenFeatherColor", "https://wago.io/dHBF7wW34")
+            end,
+            nocombat = true
+        },
     }
 end
 
