@@ -1,5 +1,23 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local function build_raidframeicon_options(Anchor)
+    local list = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
+    local t = {}
+    for i, v in ipairs(list) do
+        tinsert(t, {
+            label = v,
+            value = i,
+            onclick = function(_, _, value)
+                if Anchor then
+                    NSRT.Settings.LuraAnchor = list[value]
+                else
+                    NSRT.Settings.LuraRelativePoint = list[value]
+                end
+            end
+        })
+    end
+    return t
+end
 
 local function BuildEncounterAlertsOptions()
     return {
@@ -257,8 +275,22 @@ local function BuildEncounterAlertsOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = "Runes Display",
+            desc = "Enables the Map-Display for where each rune should be going. This requires other people to input the correct numbers into chat either via a macro or the click-option below. It also requires no one else to type anything else in raidchat during the encounter.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].RunesDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].RunesDisplay = value
+            end,
+            nocombat = true,
+            icontexture = 7448204,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Clickable Runes",
-            desc = "Enables Clickable Runes for Midnight Falls.",
+            desc = "Enables Clickable Runes for Midnight Falls. To receive this information players will need to get the WeakAura from the WA-tab",
             get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].ClickableRunes end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
@@ -267,6 +299,46 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 7448204,
             iconsize = {16, 16},
+        },
+        {
+            type = "select",
+            name = "Anchor of Clickable Runes",
+            desc = "Defines the Anchor of the Clickable Runes. They will grow right from there.",
+            get = function() return NSRT.Settings.LuraAnchor or "LEFT" end,
+            values = function() return build_raidframeicon_options() end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Relative Point of Clickable Runes",
+            desc = "Defines the Relative Point of the Clickable Runes. They will grow right from there.",
+            get = function() return NSRT.Settings.LuraRelativePoint or "LEFT" end,
+            values = function() return build_raidframeicon_options() end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "X-Offset of Clickable Runes",
+            desc = "X-Offset of the Clickable Runes",
+            get = function() return NSRT.Settings.LuraOffsetX or 300 end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.LuraOffsetX = value
+            end,
+            min = -2000,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Y-Offset of Clickable Runes",
+            desc = "Y-Offset of the Clickable Runes",
+            get = function() return NSRT.Settings.LuraOffsetY or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.LuraOffsetY = value
+            end,
+            min = -2000,
+            max = 2000,
+            nocombat = true,
         },
         {
             type = "breakline"
