@@ -88,6 +88,13 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [6] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\T.blp]],
             [7] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Cross.blp]],
         }
+        local chatmsgs = {
+            [2] = "27:107:299:374",
+            [3] = "22:98:377:507",
+            [4] = "18:112:3:86",
+            [6] = "23:105:86:201",
+            [7] = "11:123:210:291",
+        }
         for _, num in ipairs(numbers) do
             if not self.LuraBackground[num] then
                 self.LuraBackground[num] = CreateFrame("Frame", nil, self.NSRTFrame, "BackdropTemplate")
@@ -112,7 +119,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             self.LuraBackground[num]:SetPoint(NSRT.Settings.LuraAnchor or "LEFT", self.NSRTFrame, NSRT.Settings.LuraRelativePoint or "LEFT", xOffset+offset, yOffset)
             self.LuraClicks[num]:SetAllPoints(self.LuraBackground[num])
             self.LuraClicks[num]:SetAttribute("type1", "macro")
-            self.LuraClicks[num]:SetAttribute("macrotext1", "/raid "..num)
+            self.LuraClicks[num]:SetAttribute("macrotext1", "/raid "..chatmsgs[num])
             self.LuraClicks[num]:SetAttribute("useOnKeyDown", false)
             self.LuraClicks[num]:RegisterForClicks("AnyUp", "AnyDown")
             self.LuraClicks[num]:SetScript("OnEnter", onButtonEnter)
@@ -125,7 +132,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.LuraRunesFrame:ClearAllPoints()
         self.LuraRunesFrame:SetPoint(NSRT.Settings.LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT", NSRT.Settings.LuraDisplayOffsetX or 300, NSRT.Settings.LuraDisplayOffsetY or -300)
         self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
-        self.LuraRunesFrame:SetBackdropColor(0.5, 0.5, 0.5, 1)
+        self.LuraRunesFrame:SetBackdropColor(0.5, 0.5, 0.5, 0.5)
         self.LuraRunesFrame:SetBackdropBorderColor(0, 0, 0, 0.5)
         self.LuraRunesFrame:SetWidth(200)
         self.LuraRunesFrame:SetHeight(200)
@@ -141,11 +148,12 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         local function DisplayRune(pos, text)
             if not self.LuraRunesDisplay[pos] then
                 self.LuraRunesDisplay[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
-                self.LuraRunesDisplay[pos]:SetFont("Fonts\\FRIZQT__.TTF", 40)
+                self.LuraRunesDisplay[pos]:SetFont("Fonts\\FRIZQT__.TTF", 15)
                 self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos])
                 self.LuraRunesDisplay[pos]:SetSize(200, 200)
+                self.LuraRunesDisplay[pos]:SetTextColor(1, 1, 1)
             end
-            self.LuraRunesDisplay[pos]:SetFormattedText("%s%s%s", "\124TInterface\\TargetingFrame\\UI-RaidTargetingIcon_", text, ":12\124t")
+            self.LuraRunesDisplay[pos]:SetFormattedText("%s%s%s", "|T7412681:48:48:0:0:512:512:", text, "|t")
             self.LuraRunesDisplay[pos]:Show()
         end
         local function HideAllRunes()
