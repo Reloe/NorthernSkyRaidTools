@@ -1,6 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
-local function build_raidframeicon_options(Anchor)
+local function build_anchor_options(SettingsName)
     local list = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
     local t = {}
     for i, v in ipairs(list) do
@@ -8,11 +8,7 @@ local function build_raidframeicon_options(Anchor)
             label = v,
             value = i,
             onclick = function(_, _, value)
-                if Anchor then
-                    NSRT.Settings.LuraAnchor = list[value]
-                else
-                    NSRT.Settings.LuraRelativePoint = list[value]
-                end
+                NSRT.Settings[SettingsName] = list[value]
             end
         })
     end
@@ -287,10 +283,50 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "select",
+            name = "Anchor of Runes-Display",
+            desc = "Defines the Anchor of the Runes-Display. They will grow right from there.",
+            get = function() return NSRT.Settings.LuraDisplayAnchor or "TOPLEFT" end,
+            values = function() return build_anchor_options("LuraDisplayAnchor") end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Relative Point of Runes-Display",
+            desc = "Defines the Relative Point of the Runes-Display. They will grow right from there.",
+            get = function() return NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT" end,
+            values = function() return build_anchor_options("LuraDisplayRelativePoint") end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "X-Offset of Runes-Display",
+            desc = "X-Offset of the Runes-Display",
+            get = function() return NSRT.Settings.LuraDisplayOffsetX or 300 end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.LuraDisplayOffsetX = value
+            end,
+            min = -2000,
+            max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Y-Offset of Runes-Display",
+            desc = "Y-Offset of the Runes-Display",
+            get = function() return NSRT.Settings.LuraDisplayOffsetY or -300 end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.LuraDisplayOffsetY = value
+            end,
+            min = -2000,
+            max = 2000,
+            nocombat = true,
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Clickable Runes",
-            desc = "Enables Clickable Runes for Midnight Falls. To receive this information players will need to get the WeakAura from the WA-tab",
+            desc = "Enables Clickable Runes for Midnight Falls. Your tank should be the raidleader for this to function properly.",
             get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].ClickableRunes end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
@@ -305,7 +341,7 @@ local function BuildEncounterAlertsOptions()
             name = "Anchor of Clickable Runes",
             desc = "Defines the Anchor of the Clickable Runes. They will grow right from there.",
             get = function() return NSRT.Settings.LuraAnchor or "LEFT" end,
-            values = function() return build_raidframeicon_options() end,
+            values = function() return build_anchor_options("LuraAnchor") end,
             nocombat = true,
         },
         {
@@ -313,7 +349,7 @@ local function BuildEncounterAlertsOptions()
             name = "Relative Point of Clickable Runes",
             desc = "Defines the Relative Point of the Clickable Runes. They will grow right from there.",
             get = function() return NSRT.Settings.LuraRelativePoint or "LEFT" end,
-            values = function() return build_raidframeicon_options() end,
+            values = function() return build_anchor_options("LuraRelativePoint") end,
             nocombat = true,
         },
         {
@@ -339,6 +375,11 @@ local function BuildEncounterAlertsOptions()
             min = -2000,
             max = 2000,
             nocombat = true,
+        },
+        {
+            type = "label",
+            get = function() return "If you really need to test the position of these: /ns debug and then /run NSAPI:DebugEncounter(3183)" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
             type = "breakline"
