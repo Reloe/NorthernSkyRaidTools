@@ -77,6 +77,15 @@ local function BuildWAImportsOptions()
             end,
             nocombat = true
         },
+        {
+            type = "button",
+            name = "Lura Interrupts",
+            desc = "Interrupt WA for Lura P1.",
+            func = function(self)
+                WAButton("Lura Interrupts", "LuraInterrupts", "https://wago.io/ymoJBMQF0")
+            end,
+            nocombat = true
+        },
     }
 end
 
