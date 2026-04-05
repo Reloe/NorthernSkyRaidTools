@@ -1,5 +1,209 @@
 Changes since tag v12.0.1.679
 
+commit 9131a30dcd6d8ae28501f446186c09ab49a8e6a4
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sat Apr 4 00:47:01 2026 -0300
+
+    Add groups to BuildMenu()
+
+commit 67bd41d6ea4c7a0b5106e62c39f95ece50d7ccee
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Apr 1 00:04:49 2026 -0300
+
+    More documentation
+
+commit 4d1e85c65d4ed2e9167cb94d3059ea1d8bc7f031
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Apr 1 00:01:00 2026 +0200
+
+    - small adjustment
+
+commit 8ddc61d02d3cdef49069c59b08bfa11dda9e3fb8
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Mar 31 09:05:02 2026 +0200
+
+    - update doc
+
+commit c36c50a75270b226c4662b982a5e0ba20ce8045f
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Mar 30 23:04:30 2026 -0300
+
+    Fix wrong specIcon for Devourer
+
+commit c5c7a0c9b986bfb73a48a66a5a9ccad19d950090
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Mar 30 19:21:46 2026 -0300
+
+    BuildMenu documentation
+
+commit 2d2353b695e2ab73d48d34217fee2beb71861bf7
+Author: Riku <rx66cnp9w72@protonmail.ch>
+Date:   Wed Mar 25 11:18:41 2026 +0100
+
+    Updated encounter IDs for Midnight season 1 (#26)
+
+commit 24dafe51f42a0cbb939b8c77562bdb64e5185d7f
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Mar 24 16:13:39 2026 -0300
+
+    Ptr
+
+commit e7e428527ddb8e2b1f998129f5149245f202857b
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Mar 24 12:19:03 2026 +0100
+
+    - fixing load conditions
+
+commit b599b67b03c67cc172bae132171ebfc5eefd756f
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun Mar 22 20:41:37 2026 -0300
+
+    Implementing detailsFramework:ClampToScreen(frame, offsetX, offsetY)
+
+commit 84fe13dd7ca30f5eb8b68c0649d4834fc6f08fde
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Mar 20 20:12:19 2026 -0300
+
+    Add container resize grips
+
+commit 3541f730e974958e1c089bd9af85d9e88bc1b42c
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Mar 20 20:11:53 2026 -0300
+
+    Fix headers alignment
+
+commit bf7e33f6fe9d61bf86f1d9076b03601d97b593fe
+Author: cont1nuity <continuity@gmx.net>
+Date:   Fri Mar 20 18:36:04 2026 +0100
+
+    - this is needed as well
+
+commit d26e74cf3a52eb00db2d26f3743af044b4af2b93
+Author: cont1nuity <continuity@gmx.net>
+Date:   Fri Mar 20 17:01:37 2026 +0100
+
+    - fix cascading disable/enable
+
+commit e8f20866591ce880be5c2b8ad695013b3813a311
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Mar 19 21:42:32 2026 +0100
+
+    - smoothe out
+
+commit dcf8cf50499e375d8a7bd5508b552f719300d805
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Thu Mar 19 13:32:59 2026 -0300
+
+    Back compat
+
+commit dcf8cf50499e375d8a7bd5508b552f719300d805
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Thu Mar 19 13:32:59 2026 -0300
+
+    Back compat
+
+commit bbe1353bf1b1dcabc8d96a5f643af5a5d8ecb06c
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Mar 19 16:37:24 2026 +0100
+
+    - fix health display
+
+commit 6901c9a79141b02b542ac5b30c91709ec3f52d63
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Thu Mar 19 10:58:42 2026 -0300
+
+    Containers cleanup
+
+commit 14d717fddba4a8e79403fa51716f9a27a21ee176
+Author: cont1nuity <continuity@gmx.net>
+Date:   Sun Mar 15 21:55:38 2026 +0100
+
+    - correct max health values
+
+commit 9b93e2129ae3fbd6e1426f5da4c1183249345364
+Author: cont1nuity <continuity@gmx.net>
+Date:   Fri Mar 13 15:25:45 2026 +0100
+
+    - fix absorb
+
+commit 24e5bf5ae9ef2a77aa24d1e6bfaafb8e1d248881
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Mar 11 23:01:52 2026 +0100
+
+    - update to cast behavior
+
+commit 29aeb511a97f5b08e00853b17580a7ab0a214d9c
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Mar 11 10:11:13 2026 +0100
+
+    - cast cleanup
+
+commit b5c4f8cbec4483f8fe891038362b02311b457ee7
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Mar 10 19:16:31 2026 -0300
+
+    Bump Version
+
+commit 003c552515a024c8bea1a3c53e5c2c67d55e1f29
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Mar 10 19:15:53 2026 -0300
+
+    Add wheel menus
+
+commit cd97eca34f912e21affe6171a81059b654c2e051
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Mar 10 15:32:32 2026 +0100
+
+    - animate power bar
+
+commit 70e7cd2879b4c6f03ab638f1cb0804caace9e06a
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Mar 10 00:48:21 2026 +0100
+
+    - make cast colors more consistent
+
+commit af32459728f90b67f60ce73f3c280e496f2eb42e
+Author: cont1nuity <continuity@gmx.net>
+Date:   Sat Mar 7 21:22:39 2026 +0100
+
+    - fix an issue with updating widgets
+
+commit a84811dae414d89d12065648c99ab6aabe45f8a7
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Mar 5 10:37:32 2026 +0100
+
+    - fixing shield indicator
+
+commit c76f8e46767803ed3856991f156cbcee300f972f
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Mar 4 19:04:49 2026 -0300
+
+    Fix editor
+
+commit e0f70d708a0d7544465ebbc6550e159f237bb350
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Mar 3 22:01:20 2026 +0100
+
+    - absorb and heal inc adjustments
+
+commit 9ccbf97c34ec213d5ed7b30344d5025d55ee0bdf
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun Mar 1 16:06:52 2026 -0300
+
+    Bump framework version.
+
+commit e606f5040b478a0506fa405e703335a41531e94c
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Sun Mar 1 16:02:20 2026 -0300
+
+    Fix containers bugs, add keybind example file
+
+commit 657c06803f06d03297075e3fb9cb57378f7f6069
+Author: cont1nuity <continuity@gmx.net>
+Date:   Sun Mar 1 12:58:53 2026 +0100
+
+    - absorb bar clamped. weird but sligthtly better
+
 commit f0395c1705d59f7d69c73e00c7b0bff270b2070b
 Author: Tercio Jose <terciob19@hotmail.com>
 Date:   Sat Feb 28 12:39:56 2026 -0300
