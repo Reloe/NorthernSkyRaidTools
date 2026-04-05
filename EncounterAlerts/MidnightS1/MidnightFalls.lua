@@ -10,32 +10,84 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         id = id or self:DifficultyCheck(14) or 0
         local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 6, 1, encID)
         local timers = {
-            [15] = {10, 80, 150}
+            [15] = {10, 80, 150},
+            [16] = {33, 95, 157},
         }
+        if id == 16 then Alert.dur = 4 end -- bit shorter duration to not overlap with glaives
         self:AddRemindersFromTable(Alert, timers[id])
 
         local Alert = self:CreateDefaultAlert("Glaives", "Text", nil, 6, 1, encID)
         local timers = {
-            [15] = {38, 108, 178}
+            [15] = {38, 108, 178},
+            [16] = {29, 91, 153}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
         local Alert = self:CreateDefaultAlert("Interrupts", "Text", nil, 6, 1, encID)
         local timers = {
-            [15] = {59, 129}
+            [15] = {59, 129},
+            [16] = {6.4, 68.4, 130.4}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+
+        local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 5, 1, encID)
+        local timers = {
+            [16] = {57, 119}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        if UnitGroupRolesAssigned("player") == "TANK" then
+            local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 1, encID)
+            Alert.TTS = false
+            local timers = {
+                [16] = {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5}
+            }
+            self:AddRemindersFromTable(Alert, timers[id])
+
+            local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 3, encID)
+            Alert.TTS = false
+            local timers = {
+                [16] = {21.5, 41.5, 61.5}
+            }
+            self:AddRemindersFromTable(Alert, timers[id])
+        end
+
+        local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 3, 2, encID) -- Transiton Beams
+        Alert.TTS = false
+        local timers = {
+            [16] = {10.7, 15.7, 20.7, 25.7, 30.7}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Full Blaze", "Text", nil, 3, 2, encID) -- Everyone Debuff
+        Alert.TTS = false
+        Alert.colors = {1, 0, 0, 1}
+        local timers = {
+            [16] = {37.7}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
         local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 7, 3, encID)
         Alert.TTS = false
+        if id == 16 then Alert.dur = 6 end
         local timers = {
-            [15] = {20, 50, 80}
+            [15] = {20, 50, 80},
+            [16] = {19, 49, 79}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID)
+        local timers = {
+            [16] = {26.8, 56.8, 86.8}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
         local Alert = self:CreateDefaultAlert("Orbs", "Text", nil, 7, 3, encID)
+        if id == 16 then Alert.dur = 5 end
         local timers = {
-            [15] = {35.5, 65.5, 95.5}
+            [15] = {35.5, 65.5, 95.5},
+            [16] = {35.5, 65.5, 95.5}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
