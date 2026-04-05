@@ -32,6 +32,7 @@ local SoundListRaid = {
     [1239111] = "Break", -- Aspect of the End
     [1233602] = "Targeted", -- Silverstrike Arrow
     [1237623] = "Targeted", -- Ranger Captain's Mark
+    [1259861] = "Targeted", -- Ranger Captain's Mark Mythic
     [1283236] = "DropPool", --Void Expulsion
     [1238708] = "Feather", -- Feather
 
