@@ -122,21 +122,7 @@ local function MythicPhaseDetect(self, e, info)
             addedcount = addedcount+1
         end
     end
-    if self.Phase == 3 and e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" then
-        for k, v in ipairs(self.RemovedTimelines) do
-            if now < v+0.3 then
-                removedcount = removedcount+1
-            end
-        end
-        if removedcount >= 4 and addedcount < 4 then
-            self.Phase = 4
-            self:StartReminders(self.Phase)
-            self.Timelines = {}
-            self.RemovedTimelines = {}
-            self.PhaseSwapTime = now
-            return
-        end
-    elseif RequiredTimers[self.Phase] and addedcount >= RequiredTimers[self.Phase] then
+    if self.Phase ~= 3 and RequiredTimers[self.Phase] and addedcount >= RequiredTimers[self.Phase] then
         self.Phase = self.Phase+1
         self:StartReminders(self.Phase)
         self.Timelines = {}
