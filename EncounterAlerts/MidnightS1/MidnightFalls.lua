@@ -159,6 +159,13 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             end
             if not self.LuraClicks[num] then
                 self.LuraClicks[num] = CreateFrame("Button", "LuraRuneButton"..num, self.NSRTFrame, "SecureActionButtonTemplate,BackdropTemplate")
+                self.LuraClicks[num]:SetAllPoints(self.LuraBackground[num])
+                self.LuraClicks[num]:SetAttribute("type1", "macro")
+                self.LuraClicks[num]:SetAttribute("macrotext1", "/raid "..chatmsgs[num])
+                self.LuraClicks[num]:SetAttribute("useOnKeyDown", false)
+                self.LuraClicks[num]:RegisterForClicks("AnyUp", "AnyDown")
+                self.LuraClicks[num]:SetScript("OnEnter", onButtonEnter)
+                self.LuraClicks[num]:SetScript("OnLeave", onButtonLeave)
             end
             self.LuraBackground[num]:SetWidth(100)
             self.LuraBackground[num]:SetHeight(100)
@@ -169,13 +176,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             count = count+1
             self.LuraBackground[num]:ClearAllPoints()
             self.LuraBackground[num]:SetPoint(NSRT.Settings.LuraAnchor or "LEFT", self.NSRTFrame, NSRT.Settings.LuraRelativePoint or "LEFT", xOffset+offset, yOffset)
-            self.LuraClicks[num]:SetAllPoints(self.LuraBackground[num])
-            self.LuraClicks[num]:SetAttribute("type1", "macro")
-            self.LuraClicks[num]:SetAttribute("macrotext1", "/raid "..chatmsgs[num])
-            self.LuraClicks[num]:SetAttribute("useOnKeyDown", false)
-            self.LuraClicks[num]:RegisterForClicks("AnyUp", "AnyDown")
-            self.LuraClicks[num]:SetScript("OnEnter", onButtonEnter)
-            self.LuraClicks[num]:SetScript("OnLeave", onButtonLeave)
             self.LuraClicks[num]:Show()
         end
     end
@@ -250,11 +250,13 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.LuraRunesFrame:Hide()
 
         self.AlertTimers[1] = C_Timer.NewTimer(60, function()
+            if not self.AlertTimers then return end
             if id == 16 then self.LuraRunesInverted = true end
             self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(120, function()
+            if not self.AlertTimers then return end
             if id == 16 then self.LuraRunesInverted = true end
             self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
