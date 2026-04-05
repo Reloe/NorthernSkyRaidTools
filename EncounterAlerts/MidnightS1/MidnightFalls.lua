@@ -186,8 +186,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
         self.LuraRunesFrame:SetBackdropColor(0.5, 0.5, 0.5, 0.5)
         self.LuraRunesFrame:SetBackdropBorderColor(0, 0, 0, 0.5)
-        self.LuraRunesFrame:SetWidth(200)
-        self.LuraRunesFrame:SetHeight(200)
         self.LuraRunesCompleted = {}
         self.LuraRunesInverted = false
 
