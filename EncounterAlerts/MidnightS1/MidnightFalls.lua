@@ -252,12 +252,12 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.LuraRunesFrame:Hide()
 
         self.AlertTimers[1] = C_Timer.NewTimer(60, function()
-            self.LuraRunesInverted = true
+            if id == 16 then self.LuraRunesInverted = true end
             self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(120, function()
-            self.LuraRunesInverted = false
+            if id == 16 then self.LuraRunesInverted = true end
             self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
         end)
