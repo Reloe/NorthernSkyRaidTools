@@ -288,7 +288,7 @@ local function BuildRemindersEditUI()
                 NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, nil, true)
                 parent:MasterRefresh()
             end
-        end, 40, 20, "Load")
+        end, 40, 20, "Send")
         line.LoadButton:SetPoint("RIGHT", line.deleteButton, "LEFT", 0, 0)
         line.LoadButton:SetTemplate(options_button_template)
 

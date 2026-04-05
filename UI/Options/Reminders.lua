@@ -852,7 +852,7 @@ local function BuildReminderOptions()
             type = "toggle",
             boxfirst = true,
             name = "Share on Ready Check",
-            desc = "Automatically share the current active reminder on ready check if you are the raidleader.",
+            desc = "Automatically share the current active reminder on ready check if you are the raidleader. If you want to share a note as assist you can do so in the Shared Reminders-list",
             get = function() return NSRT.ReminderSettings.AutoShare end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.AutoShare = value
