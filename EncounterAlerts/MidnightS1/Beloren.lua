@@ -13,7 +13,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             [15] = 6.6,
             [16] = 6.6,
         }
-        for phase=2, 4 do
+        for phase=2, 3 do
             local Alert = self:CreateDefaultAlert("Gateway", "Bar", 311699, timers[id], phase, encID)
             Alert.time = 6.6
             Alert.TTSTimer = 4
@@ -28,28 +28,26 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             Alert.TTS = false
             self:AddRemindersFromTable(Alert, timers[id])
         end
-        local timers = {
-            [16] ={
-                {18.8, 68.8},
-                {60.6, 110.6, 160.6},
-            }
-        }
         for phase = 1, 2 do
+            local timers = {
+                [16] ={
+                    {18.8, 68.8},
+                    {60.6, 110.6, 160.6},
+                }
+            }
             local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 8, phase, encID)
             Alert.TTS = false
-            self:AddRemindersFromTable(Alert, timers[id][phase])
-        end
+            self:AddRemindersFromTable(Alert, timers[id] and timers[id][phase])
 
-        local timers = {
-            [16] = {
-                {27.4, 37.4, 47.4, 77.4, 87.4, 97.4},
-                {69.2, 79.2, 89.2, 119.2, 129.2, 139.2, 169.2},
+            local timers = {
+                [16] = {
+                    {27.4, 37.4, 47.4, 77.4, 87.4, 97.4},
+                    {69.2, 79.2, 89.2, 119.2, 129.2, 139.2, 169.2},
+                }
             }
-        }
-        for phase = 1, 2 do
             local Alert = self:CreateDefaultAlert("Quills", "Text", nil, 6, phase, encID)
             Alert.TTS = false
-            self:AddRemindersFromTable(Alert, timers[id][phase])
+            self:AddRemindersFromTable(Alert, timers[id] and timers[id][phase])
         end
     end
 end
