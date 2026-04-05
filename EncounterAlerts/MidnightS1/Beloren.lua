@@ -9,23 +9,47 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
     if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
         id = id or self:DifficultyCheck(14) or 0
-        local timer = {
+        local timers = {
             [15] = 6.6,
             [16] = 6.6,
         }
         for phase=2, 4 do
-            local Alert = self:CreateDefaultAlert("Gateway", "Bar", 311699, timer[id], phase, encID)
+            local Alert = self:CreateDefaultAlert("Gateway", "Bar", 311699, timers[id], phase, encID)
             Alert.time = 6.6
             Alert.TTSTimer = 4
             self:AddToReminder(Alert)
 
             local timers = {
                 [15] = {12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2, 40.2},
-                [16] = {12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2, 40.2},
+                [16] = {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7},
             }
+            if id == 16 then Alert.dur = 3.5 end
             local Alert = self:CreateDefaultAlert("Next Hit", "Bar", 1242792, 4, phase, encID)
             Alert.TTS = false
             self:AddRemindersFromTable(Alert, timers[id])
+        end
+        local timers = {
+            [16] ={
+                {18.8, 68.8},
+                {60.6, 110.6, 160.6},
+            }
+        }
+        for phase = 1, 2 do
+            local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 8, phase, encID)
+            Alert.TTS = false
+            self:AddRemindersFromTable(Alert, timers[id][phase])
+        end
+
+        local timers = {
+            [16] = {
+                {27.4, 37.4, 47.4, 77.4, 87.4, 97.4},
+                {69.2, 79.2, 89.2, 119.2, 129.2, 139.2, 169.2},
+            }
+        }
+        for phase = 1, 2 do
+            local Alert = self:CreateDefaultAlert("Quills", "Text", nil, 6, phase, encID)
+            Alert.TTS = false
+            self:AddRemindersFromTable(Alert, timers[id][phase])
         end
     end
 end
