@@ -149,6 +149,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             [7] = "236903", -- Cross
         }
         for _, num in ipairs(numbers) do
+            count = count+1
             if not self.LuraBackground[num] then
                 self.LuraBackground[num] = CreateFrame("Frame", nil, self.NSRTFrame, "BackdropTemplate")
                 self.LuraBackground[num]:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
@@ -163,7 +164,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 local offset = count*(spacing+5)
                 local xOffset = NSRT.Settings.LuraOffsetX or 200
                 local yOffset = NSRT.Settings.LuraOffsetY or -100
-                count = count+1
                 self.LuraBackground[num]:ClearAllPoints()
                 self.LuraBackground[num]:SetPoint(NSRT.Settings.LuraAnchor or "LEFT", self.NSRTFrame, NSRT.Settings.LuraRelativePoint or "LEFT", xOffset+offset, yOffset)
             end
@@ -176,6 +176,16 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraClicks[num]:RegisterForClicks("AnyUp", "AnyDown")
                 self.LuraClicks[num]:SetScript("OnEnter", onButtonEnter)
                 self.LuraClicks[num]:SetScript("OnLeave", onButtonLeave)
+            end
+            if preview then
+                self.LuraBackground[num]:SetWidth(NSRT.Settings.LuraSize or 75)
+                self.LuraBackground[num]:SetHeight(NSRT.Settings.LuraSize or 75)
+                local spacing = NSRT.Settings.LuraSize or 75
+                local offset = count*(spacing+5)
+                local xOffset = NSRT.Settings.LuraOffsetX or 200
+                local yOffset = NSRT.Settings.LuraOffsetY or -100
+                self.LuraBackground[num]:ClearAllPoints()
+                self.LuraBackground[num]:SetPoint(NSRT.Settings.LuraAnchor or "LEFT", self.NSRTFrame, NSRT.Settings.LuraRelativePoint or "LEFT", xOffset+offset, yOffset)
             end
             if NSRT.EncounterAlerts[encID].ClickableRunes then
                 self.LuraBackground[num]:Show()

@@ -477,7 +477,7 @@ local function BuildEncounterAlertsOptions()
         },
         {
             type = "label",
-            get = function() return "Settings-changes here only go into effect after a UI reload." end,
+            get = function() return "Settings changes will take into effect when you toggle the preview off & on again." end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
