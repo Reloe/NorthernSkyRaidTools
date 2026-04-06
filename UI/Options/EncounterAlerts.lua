@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
 local function build_anchor_options(SettingsName)
     local list = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
     local t = {}
@@ -13,6 +14,35 @@ local function build_anchor_options(SettingsName)
         })
     end
     return t
+end
+
+local ShowLinkPopup
+local function ShowLink(Text, Name, URL)
+    if not ShowLinkPopup then
+        ShowLinkPopup = DF:CreateSimplePanel(UIParent, 300, 60, "", "NSRTWAImportPopup")
+        ShowLinkPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        ShowLinkPopup:SetFrameLevel(100)
+
+        ShowLinkPopup.text_entry = DF:CreateTextEntry(ShowLinkPopup, function() end, 280, 20)
+        ShowLinkPopup.text_entry:SetTemplate(options_button_template)
+        ShowLinkPopup.text_entry:SetPoint("TOP", ShowLinkPopup, "TOP", 0, -30)
+        ShowLinkPopup.text_entry.editbox:SetJustifyH("CENTER")
+
+        ShowLinkPopup.text_entry:SetScript("OnEditFocusGained", function(self)
+            ShowLinkPopup.text_entry.editbox:HighlightText()
+        end)
+    end
+
+    ShowLinkPopup:SetTitle(Text)
+    local currentURL = URL
+    ShowLinkPopup.text_entry:SetText(currentURL)
+    ShowLinkPopup.text_entry:SetScript("OnTextChanged", function(self)
+        ShowLinkPopup.text_entry:SetText(currentURL)
+        ShowLinkPopup.text_entry.editbox:HighlightText()
+    end)
+
+    ShowLinkPopup:Show()
+    ShowLinkPopup.text_entry:SetFocus()
 end
 
 local function BuildEncounterAlertsOptions()
@@ -269,6 +299,20 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "label",
+            get = function() return "You NEED to get the icon-replacement files from the Github link below in order to use this." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "button",
+            name = "Github Link",
+            desc = "Link to Icon Replacement Files for the Lura Runes Display",
+            func = function(self)
+                ShowLink("Icon Replacement Files", "LuraRunesIcons", "https://github.com/Reloe/LuraMemoryFiles")
+            end,
+            nocombat = true
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Runes Display",
@@ -337,6 +381,20 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "P3 Clickable Runes",
+            desc = "Enables Clickable Runes for Midnight Falls Phase 3.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].P3ClickableRunes end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].P3ClickableRunes = value
+            end,
+            nocombat = true,
+            icontexture = 7448204,
+            iconsize = {16, 16},
+        },
+        {
             type = "select",
             name = "Anchor of Clickable Runes",
             desc = "Defines the Anchor of the Clickable Runes. They will grow right from there.",
@@ -377,8 +435,34 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
         },
         {
+            type = "range",
+            name = "Width & Height of the Clickable Runes",
+            desc = "Width & Height of the Clickable Runes",
+            get = function() return NSRT.Settings.LuraSize or 100 end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.LuraSize = value
+            end,
+            min = 30,
+            max = 200,
+            nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Preview Lura Runes",
+            desc = "This will display a preview of the Lura Runes. You cannot move them around and any settings change you make will unfortunately require a UI reload.",
+            func = function(self)
+                NSI.IsLuraPreview = not NSI.IsLuraPreview
+                if NSI.IsLuraPreview then
+                    NSI.EncounterAlertStart[3183](NSI, 15, true)
+                else
+                    NSI.EncounterAlertStop[3183](NSI)
+                end
+            end,
+            nocombat = true
+        },
+        {
             type = "label",
-            get = function() return "If you really need to test the position of these: /ns debug and then /run NSAPI:DebugEncounter(3183)" end,
+            get = function() return "Settings-changes here only go into effect after a UI reload." end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
