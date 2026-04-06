@@ -227,7 +227,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesNumbers[pos]:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 25, "OUTLINE")
                 self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
                 self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
-              --  self.LuraRunesNumbers[pos]:SetSize(200, 200)
             end
             self.LuraRunesDisplay[pos]:ClearAllPoints()
             self.LuraRunesNumbers[pos]:ClearAllPoints()
@@ -241,6 +240,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
             self.LuraRunesDisplay[pos]:Show()
 
+            if self.LuraRunesInverted then pos = 6-pos end
             self.LuraRunesNumbers[pos]:SetText(pos)
             self.LuraRunesNumbers[pos]:Show()
         end
