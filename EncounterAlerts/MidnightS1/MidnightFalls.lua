@@ -262,7 +262,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 if self.HideTimer then
                     self.HideTimer:Cancel()
                 end
-                self.HideTimer = C_Timer.NewTimer(20, function()
+                self.HideTimer = C_Timer.NewTimer(15, function()
                     HideAllRunes()
                 end)
 
@@ -278,7 +278,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 if self.HideTimer then
                     self.HideTimer:Cancel()
                 end
-                self.HideTimer = C_Timer.NewTimer(20, function()
+                self.HideTimer = C_Timer.NewTimer(15, function()
                     HideAllRunes()
                 end)
 
