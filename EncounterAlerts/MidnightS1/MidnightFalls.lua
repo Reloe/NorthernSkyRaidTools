@@ -240,8 +240,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
             self.LuraRunesDisplay[pos]:Show()
 
-            if self.LuraRunesInverted then pos = 6-pos end
-            self.LuraRunesNumbers[pos]:SetText(pos)
+            local number = pos
+            if self.LuraRunesInverted then number = 6-pos end
+            self.LuraRunesNumbers[pos]:SetText(number)
             self.LuraRunesNumbers[pos]:Show()
         end
         local function HideAllRunes()
