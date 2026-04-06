@@ -23,8 +23,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                 [15] = {12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2, 40.2},
                 [16] = {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7},
             }
-            if id == 16 then Alert.dur = 3.5 end
             local Alert = self:CreateDefaultAlert("Next Hit", "Bar", 1242792, 4, phase, encID)
+            if id == 16 then Alert.dur = 3.5 end
             Alert.TTS = false
             self:AddRemindersFromTable(Alert, timers[id])
         end
