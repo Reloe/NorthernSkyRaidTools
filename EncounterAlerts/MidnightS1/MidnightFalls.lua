@@ -142,11 +142,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             [7] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Cross.blp]],
         }
         local chatmsgs = {
-            [2] = "134635",
-            [3] = "340528",
-            [4] = "351033",
-            [6] = "7242384",
-            [7] = "236903",
+            [2] = "134635", -- Circle
+            [3] = "340528", -- Diamond
+            [4] = "351033", -- Triangle
+            [6] = "7242384", -- T
+            [7] = "236903", -- Cross
         }
         for _, num in ipairs(numbers) do
             if not self.LuraBackground[num] then
@@ -305,7 +305,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(120, function()
             if not self.AlertTimers then return end
-            if id == 16 then self.LuraRunesInverted = true end
+            if id == 16 then self.LuraRunesInverted = false end
             self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
         end)
