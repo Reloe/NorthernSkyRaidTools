@@ -279,6 +279,15 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "breakline"
+        },
+        {
+            type = "label",
+            get = function() return "" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
+        },
+        {
             type = "label",
             get = function() return "Midnight Falls" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -365,6 +374,12 @@ local function BuildEncounterAlertsOptions()
             min = -2000,
             max = 2000,
             nocombat = true,
+        },
+        {
+            type = "label",
+            get = function() return "In Mythic you will want your Tank to be raidlead and click for Runes 1&4.\nHealers need to dynamically decide who is clicking, their presses will be registered for Runes 2, 3 & 5" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
         },
         {
             type = "toggle",
