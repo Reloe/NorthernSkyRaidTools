@@ -164,6 +164,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesNumbers[pos]:SetText(number)
             self.LuraRunesNumbers[pos]:Show()
         end
+        if preview then
+            local iconIDs = {"134635", "340528", "351033", "7242384", "236903"}
+            for i=1, 5 do
+                DisplayRune(i, iconIDs[i], false)
+            end
+        end
         local function HideAllRunes()
             for i=1, 5 do
                 if self.LuraRunesDisplay[i] then
