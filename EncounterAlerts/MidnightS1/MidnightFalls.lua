@@ -277,7 +277,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                     HideAllRunes()
                 end)
 
-                if id ~= 16 then DisplayRune(pos, msg, false) return end
+                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
                 local pos = 2
                 if self.LuraRunesCompleted[pos] then pos = 3 end
                 if self.LuraRunesCompleted[pos] then pos = 5 end
@@ -293,7 +293,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                     HideAllRunes()
                 end)
 
-                if id ~= 16 then DisplayRune(pos, msg, false) return end
+                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
                 local pos = 1
                 if self.LuraRunesCompleted[pos] then pos = 4 end
                 self.LuraRunesCompleted[pos] = true
