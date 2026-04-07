@@ -377,75 +377,8 @@ local function BuildEncounterAlertsOptions()
         },
         {
             type = "label",
-            get = function() return "In Mythic you will want your Tank to be raidlead and click for Runes 1&4.\nHealers need to dynamically decide who is clicking, their presses will be registered for Runes 2, 3 & 5" end,
+            get = function() return "Settings changes will take into effect when you toggle the preview off & on again." end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-            spacement = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Clickable Runes",
-            desc = "Enables Clickable Runes for Midnight Falls. In Mythic, your tank should be the raidleader for this to function properly.",
-            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].ClickableRunes end,
-            set = function(self, fixedparam, value)
-                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
-                NSRT.EncounterAlerts[3183].ClickableRunes = value
-            end,
-            nocombat = true,
-            icontexture = 7448204,
-            iconsize = {16, 16},
-        },
-        {
-            type = "select",
-            name = "Anchor of Clickable Runes",
-            desc = "Defines the Anchor of the Clickable Runes. They will grow right from there.",
-            get = function() return NSRT.Settings.LuraAnchor or "LEFT" end,
-            values = function() return build_anchor_options("LuraAnchor") end,
-            nocombat = true,
-        },
-        {
-            type = "select",
-            name = "Relative Point of Clickable Runes",
-            desc = "Defines the Relative Point of the Clickable Runes. They will grow right from there.",
-            get = function() return NSRT.Settings.LuraRelativePoint or "LEFT" end,
-            values = function() return build_anchor_options("LuraRelativePoint") end,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "X-Offset of Clickable Runes",
-            desc = "X-Offset of the Clickable Runes",
-            get = function() return NSRT.Settings.LuraOffsetX or 300 end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings.LuraOffsetX = value
-            end,
-            min = -2000,
-            max = 2000,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Y-Offset of Clickable Runes",
-            desc = "Y-Offset of the Clickable Runes",
-            get = function() return NSRT.Settings.LuraOffsetY or 0 end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings.LuraOffsetY = value
-            end,
-            min = -2000,
-            max = 2000,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Width & Height of the Clickable Runes",
-            desc = "Width & Height of the Clickable Runes",
-            get = function() return NSRT.Settings.LuraSize or 100 end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings.LuraSize = value
-            end,
-            min = 30,
-            max = 200,
-            nocombat = true,
         },
         {
             type = "button",
@@ -462,9 +395,25 @@ local function BuildEncounterAlertsOptions()
             nocombat = true
         },
         {
+            type = "button",
+            name = "Create Rune-Macros",
+            desc = "This will create the macros you need for the 5 different runes, automatically using the correct icons as well. Clickable Buttons have been removed as they caused too many issues.",
+            func = function(self)
+                local iconIDs = {"134635", "340528", "351033", "7242384", "236903"}
+                for i=1, 5 do
+                    local macroName = "NSRT_LURA_RUNE_"..i
+                    if not GetMacroInfo(macroName) then
+                        CreateMacro(macroName, iconIDs[i], "/raid "..iconIDs[i])
+                    end
+                end
+            end,
+            nocombat = true
+        },
+        {
             type = "label",
-            get = function() return "Settings changes will take into effect when you toggle the preview off & on again." end,
+            get = function() return "In Mythic you will want your Tank to be raidlead and click for Runes 1&4.\nHealers need to dynamically decide who is clicking, their presses will be registered for Runes 2, 3 & 5" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+            spacement = true,
         },
         {
             type = "breakline"
