@@ -105,6 +105,27 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         }
         self:AddRemindersFromTable(Alert, timers[id])
     end
+    local path = {
+        [2] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Circle.blp]],
+        [3] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Diamond.blp]],
+        [4] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Triangle.blp]],
+        [6] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\T.blp]],
+        [7] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Cross.blp]],
+    }
+    local chatmsgs = {
+        [2] = "134635", -- Circle
+        [3] = "340528", -- Diamond
+        [4] = "351033", -- Triangle
+        [6] = "7242384", -- T
+        [7] = "236903", -- Cross
+    }
+    local chatToPath = {
+        [chatmsgs[2]] = path[2],
+        [chatmsgs[3]] = path[3],
+        [chatmsgs[4]] = path[4],
+        [chatmsgs[6]] = path[6],
+        [chatmsgs[7]] = path[7],
+    }
     if NSRT.EncounterAlerts[encID] and (NSRT.EncounterAlerts[encID].ClickableRunes or NSRT.EncounterAlerts[encID].P3ClickableRunes) and (realpull or preview) then
         self.LuraClicks = self.LuraClicks or {}
         self.LuraBackground = self.LuraBackground or {}
@@ -134,20 +155,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self:SetBackdropBorderColor(0, 0, 0)
         end
         local count = 0
-        local path = {
-            [2] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Circle.blp]],
-            [3] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Diamond.blp]],
-            [4] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Triangle.blp]],
-            [6] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\T.blp]],
-            [7] = [[Interface\AddOns\NorthernSkyRaidTools\Media\EncounterPics\Cross.blp]],
-        }
-        local chatmsgs = {
-            [2] = "134635", -- Circle
-            [3] = "340528", -- Diamond
-            [4] = "351033", -- Triangle
-            [6] = "7242384", -- T
-            [7] = "236903", -- Cross
-        }
         for _, num in ipairs(numbers) do
             count = count+1
             if not self.LuraBackground[num] then
@@ -247,7 +254,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos])
                 self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos]+30)
             end
-            self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
+            local iconPath = chatToPath[text] or text
+            self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", iconPath)
             self.LuraRunesDisplay[pos]:Show()
 
             local number = pos
