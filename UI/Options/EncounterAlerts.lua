@@ -385,25 +385,11 @@ local function BuildEncounterAlertsOptions()
             type = "toggle",
             boxfirst = true,
             name = "Clickable Runes",
-            desc = "Enables Clickable Runes for Midnight Falls. Your tank should be the raidleader for this to function properly.",
+            desc = "Enables Clickable Runes for Midnight Falls. In Mythic, your tank should be the raidleader for this to function properly.",
             get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].ClickableRunes end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
                 NSRT.EncounterAlerts[3183].ClickableRunes = value
-            end,
-            nocombat = true,
-            icontexture = 7448204,
-            iconsize = {16, 16},
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "P3 Clickable Runes",
-            desc = "Enables Clickable Runes for Midnight Falls Phase 3.",
-            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].P3ClickableRunes end,
-            set = function(self, fixedparam, value)
-                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
-                NSRT.EncounterAlerts[3183].P3ClickableRunes = value
             end,
             nocombat = true,
             icontexture = 7448204,

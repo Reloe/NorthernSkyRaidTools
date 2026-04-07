@@ -105,7 +105,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         }
         self:AddRemindersFromTable(Alert, timers[id])
     end
-    if NSRT.EncounterAlerts[encID] and (NSRT.EncounterAlerts[encID].ClickableRunes or NSRT.EncounterAlerts[encID].P3ClickableRunes) and (realpull or preview) then
+    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].ClickableRunes and (realpull or preview) then
         self.LuraClicks = self.LuraClicks or {}
         self.LuraBackground = self.LuraBackground or {}
         local numbers = {2, 3, 4, 6, 7}
@@ -187,13 +187,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraBackground[num]:ClearAllPoints()
                 self.LuraBackground[num]:SetPoint(NSRT.Settings.LuraAnchor or "LEFT", self.NSRTFrame, NSRT.Settings.LuraRelativePoint or "LEFT", xOffset+offset, yOffset)
             end
-            if NSRT.EncounterAlerts[encID].ClickableRunes then
-                self.LuraBackground[num]:Show()
-                self.LuraClicks[num]:Show()
-            else
-                self.LuraBackground[num]:Hide()
-                self.LuraClicks[num]:Hide()
-            end
+            self.LuraBackground[num]:Show()
+            self.LuraClicks[num]:Show()
         end
     end
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
@@ -383,27 +378,9 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
                     self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
                     self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
                 end
-                local numbers = {2, 3, 4, 6, 7}
-                for _, num in ipairs(numbers) do
-                    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].P3ClickableRunes and self.LuraClicks and self.LuraClicks[num] then
-                        self.LuraClicks[num]:Show()
-                    end
-                    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].P3ClickableRunes and self.LuraBackground and self.LuraBackground[num] then
-                        self.LuraBackground[num]:Show()
-                    end
-                end
                 return
             end
             if self.Phase ~= 2 and self.Phase ~= 5 then return end
-            local numbers = {2, 3, 4, 6, 7}
-            for _, num in ipairs(numbers) do
-                if self.LuraClicks and self.LuraClicks[num] then
-                    self.LuraClicks[num]:Hide()
-                end
-                if self.LuraBackground and self.LuraBackground[num] then
-                    self.LuraBackground[num]:Hide()
-                end
-            end
             if self.LuraRunesFrame then
                 self.LuraRunesFrame:UnregisterAllEvents()
                 self.LuraRunesFrame:Hide()
