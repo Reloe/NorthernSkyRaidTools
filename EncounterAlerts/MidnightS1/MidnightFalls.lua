@@ -254,12 +254,12 @@ end
 
 local detectedDurations = {
     [15] = {
-        {time = 45, phase = function(num, diff) return 2 end},
+        {time = 45, phase = function(num) return 2 end},
         {time = 97, phase = function(num) return 3 end},
         {time = 180, phase = function(num) return 4 end},
     },
     [16] = {
-        {time = 45, phase = function(num, diff) return 2 end},
+        {time = 45, phase = function(num) return 2 end},
         {time = 97, phase = function(num) return 3 end},
         {time = 180, phase = function(num) return 4 end},
     },
@@ -272,9 +272,8 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     local difficultyID = select(3, GetInstanceInfo()) or 0
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
-    local diff = now -self.PhaseSwapTime
     if phaseinfo and info.duration == phaseinfo.time then
-        local newphase = phaseinfo.phase(self.Phase, diff)
+        local newphase = phaseinfo.phase(self.Phase)
         if newphase > self.Phase then
             self.Phase = newphase
             self:StartReminders(self.Phase)
