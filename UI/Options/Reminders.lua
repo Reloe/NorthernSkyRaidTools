@@ -978,7 +978,6 @@ local function BuildReminderNoteOptions()
             max = 2000,
             nocombat = true,
         },
-
         {
             type = "color",
             name = "Background-Color",

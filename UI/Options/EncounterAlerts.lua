@@ -314,6 +314,15 @@ local function BuildEncounterAlertsOptions()
         },
         {
             type = "button",
+            name = "Youtube Guide",
+            desc = "Link to Youtube Guide for the Lura Runes Display",
+            func = function(self)
+                ShowLink("Youtube Guide", "LuraRunesGuide", "https://www.youtube.com/watch?v=yXNASNKxasQ")
+            end,
+            nocombat = true
+        },
+        {
+            type = "button",
             name = "Github Link",
             desc = "Link to Icon Replacement Files for the Lura Runes Display",
             func = function(self)
@@ -373,6 +382,18 @@ local function BuildEncounterAlertsOptions()
             end,
             min = -2000,
             max = 2000,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = "Background-Color",
+            desc = "Color of the Background of the Rune Display",
+            get = function() return NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9} end,
+            set = function(self, r, g, b, a)
+                NSRT.Settings.LuraDisplayColor = {r, g, b, a}
+                NSI:UpdateReminderFrame(false, true)
+            end,
+            hasAlpha = true,
             nocombat = true,
         },
         {

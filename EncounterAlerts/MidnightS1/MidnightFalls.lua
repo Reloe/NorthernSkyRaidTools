@@ -110,8 +110,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self.LuraRunesFrame:ClearAllPoints()
         self.LuraRunesFrame:SetPoint(NSRT.Settings.LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT", NSRT.Settings.LuraDisplayOffsetX or 500, NSRT.Settings.LuraDisplayOffsetY or -300)
         self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
-        self.LuraRunesFrame:SetBackdropColor(0.5, 0.5, 0.5, 0.9)
-        self.LuraRunesFrame:SetBackdropBorderColor(0, 0, 0, 0.9)
+        self.LuraRunesFrame:SetBackdropColor(unpack(NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}))
+        self.LuraRunesFrame:SetBackdropBorderColor(0, 0, 0, 1)
         self.LuraRunesFrame:SetWidth(200)
         self.LuraRunesFrame:SetHeight(200)
 
