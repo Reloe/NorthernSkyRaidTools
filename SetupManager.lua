@@ -544,14 +544,19 @@ function NSI:ArrangeFromReminder(str)
     self.Groups.total = 0
     if self:Restricted() then print("You are currently in combat, cannot sort groups right now.") return end
     if not list then print("No invite list found.") return end
+    local count = 0
     for i, name in ipairs(list) do
         local name, realm = strsplit("-", name)
         local pos = UnitInRaid(name)
         local unit = pos and "raid"..pos
         local role = unit and UnitGroupRolesAssigned(unit)
-        self.Groups.units[i] = {name = name, unitid = unit, role = role}
-        self.Groups.total = self.Groups.total + 1
+        count = count + 1
+        if name and unit and role then
+            self.Groups.units[i] = {name = name, unitid = unit, role = role}
+            self.Groups.total = self.Groups.total + 1
+        end
     end
+    if self.Groups.total ~= count then print("Not all players in the invite-list are currently in the raid, cannot sort groups.") return end
     self.Groups.units = self:ShiftLeader(self.Groups.units)
     self:ArrangeGroups(true)
 end
