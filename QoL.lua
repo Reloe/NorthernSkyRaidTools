@@ -284,18 +284,21 @@ function NSI:VantusRuneCheck()
     for i=1, 40 do
         local name, _, subgroup = GetRaidRosterInfo(i)
         if name and subgroup and subgroup <= maxgroup then
-            local unitid = UnitTokenFromGUID(UnitGUID(name))
-            local found = false
-            for j=1, 100 do
-                local buff = C_UnitAuras.GetAuraDataByIndex(unitid, j, "HELPFUL")
-                if not buff then break end
-                if (not issecretvalue(buff.name)) and buff.name:find(prefix) then
-                    found = true
-                    break
+            local index = UnitInRaid(name)
+            local unitid = index and "raid"..index
+            if unitid then
+                local found = false
+                for j=1, 100 do
+                    local buff = C_UnitAuras.GetAuraDataByIndex(unitid, j, "HELPFUL")
+                    if not buff then break end
+                    if (not issecretvalue(buff.name)) and buff.name:find(prefix) then
+                        found = true
+                        break
+                    end
                 end
-            end
-            if not found then
-                if text == "" then text = name else text = text..", "..name end
+                if not found then
+                    if text == "" then text = name else text = text..", "..name end
+                end
             end
         end
     end
