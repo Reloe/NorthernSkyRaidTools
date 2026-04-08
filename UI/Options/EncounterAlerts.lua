@@ -10,6 +10,9 @@ local function build_anchor_options(SettingsName)
             value = i,
             onclick = function(_, _, value)
                 NSRT.Settings[SettingsName] = list[value]
+                if NSI.IsLuraPreview then
+                    NSI.EncounterAlertStart[3183](NSI, 15, true)
+                end
             end
         })
     end
@@ -367,6 +370,9 @@ local function BuildEncounterAlertsOptions()
             get = function() return NSRT.Settings.LuraDisplayOffsetX or 300 end,
             set = function(self, fixedparam, value)
                 NSRT.Settings.LuraDisplayOffsetX = value
+                if NSI.IsLuraPreview then
+                    NSI.EncounterAlertStart[3183](NSI, 15, true)
+                end
             end,
             min = -2000,
             max = 2000,
@@ -379,6 +385,9 @@ local function BuildEncounterAlertsOptions()
             get = function() return NSRT.Settings.LuraDisplayOffsetY or -300 end,
             set = function(self, fixedparam, value)
                 NSRT.Settings.LuraDisplayOffsetY = value
+                if NSI.IsLuraPreview then
+                    NSI.EncounterAlertStart[3183](NSI, 15, true)
+                end
             end,
             min = -2000,
             max = 2000,
@@ -391,7 +400,9 @@ local function BuildEncounterAlertsOptions()
             get = function() return NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9} end,
             set = function(self, r, g, b, a)
                 NSRT.Settings.LuraDisplayColor = {r, g, b, a}
-                NSI:UpdateReminderFrame(false, true)
+                if NSI.IsLuraPreview then
+                    NSI.EncounterAlertStart[3183](NSI, 15, true)
+                end
             end,
             hasAlpha = true,
             nocombat = true,
