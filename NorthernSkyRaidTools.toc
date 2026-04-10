@@ -47,6 +47,9 @@ EncounterAlerts/ManaforgeOmega/Dimensius.lua
 # UI - Core (must load first to create NSUI panel and shared utilities)
 UI/Core.lua
 
+# UI - Style components (depend on Core, must load before any UI module that uses them)
+UI/Components.lua
+
 # UI - Components (depend on Core)
 UI/VersionCheck.lua
 UI/Nicknames.lua
