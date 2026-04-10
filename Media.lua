@@ -4,6 +4,8 @@ NSMedia = {}
 --Icons
 NSI.LSM:Register("statusbar", "play_icon", [[Interface\Addons\NorthernSkyRaidTools\Media\Icons\play_icon]])
 NSI.LSM:Register("statusbar", "stop_icon", [[Interface\Addons\NorthernSkyRaidTools\Media\Icons\stop_icon]])
+NSI.LSM:Register("statusbar", "user_icon", [[Interface\Addons\NorthernSkyRaidTools\Media\Icons\user-round]])
+NSI.LSM:Register("statusbar", "users_icon", [[Interface\Addons\NorthernSkyRaidTools\Media\Icons\users-round]])
 --Sounds
 NSI.LSM:Register("sound","|cFF4BAAC8Macro|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\macro.mp3]])
 NSI.LSM:Register("sound","|cFF4BAAC801|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\1.ogg]])

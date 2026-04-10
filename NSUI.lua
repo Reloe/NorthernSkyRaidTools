@@ -51,6 +51,7 @@ local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
 local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
 local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
+local BuildNotesUI                 = NSI.UI.Notes.BuildNotesUI
 
 -- ============================================================
 -- Vertical tab sidebar layout
@@ -98,6 +99,8 @@ function NSUI:Init()
     local scale = math.max(NSRT.NSUI.scale, 0.6)
     NSUI:SetScale(scale)
 
+    -- Forward declaration – buttons below need to call SelectTab before it is defined
+    local SelectTab
     -- --------------------------------------------------------
     -- Build the tab system object
     -- (mimics the df_tabcontainer interface for backward compat)
@@ -113,9 +116,6 @@ function NSUI:Init()
     function tabSystem:GetTabFrameByName(name)
         return self.AllFramesByName[name]
     end
-
-    -- Forward declaration so SelectTab can reference tabSystem closures
-    local SelectTab
 
     function tabSystem:SelectTabByName(name)
         SelectTab(name)
@@ -188,6 +188,52 @@ function NSUI:Init()
         end
     end
 
+    -- --------------------------------------------------------
+    -- Notes tabs – content frames registered in tabSystem but
+    -- opened exclusively via the persistent header buttons below,
+    -- so no sidebar button is created for them.
+    -- --------------------------------------------------------
+    local NOTES_HEADER_BTN_W = 190
+    local NOTES_HEADER_BTN_H = 26
+    -- Vertically centred in the 55 px header strip (NSUI y=-25 to y=-80)
+    local NOTES_HEADER_BTN_Y = -38
+
+    local notesTabs = {
+        { name = "SharedNotes",   text = "Shared Notes",   icon = "users_icon" },
+        { name = "PersonalNotes", text = "Personal Notes", icon = "user_icon" },
+    }
+
+    for i, nt in ipairs(notesTabs) do
+        -- Content frame (same geometry as every other tab)
+        local notesFrame = CreateFrame("frame", "NSUI_TabFrame_" .. nt.name, NSUI, "BackdropTemplate")
+        notesFrame:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 162, tab_content_y)
+        notesFrame:SetSize(content_width, tab_content_height)
+        notesFrame:Hide()
+        notesFrame:EnableMouse(false)
+
+        tabSystem.AllFramesByName[nt.name] = notesFrame
+        tabSystem.AllFramesByName[nt.text] = notesFrame
+        table.insert(tabSystem.AllFrames, notesFrame)
+
+        -- Persistent header button (lives on NSUI, always visible)
+        local hdrBtn = CreateButton(
+            NSUI,
+            nt.text,
+            function() SelectTab(nt.name) end,
+            NOTES_HEADER_BTN_W, NOTES_HEADER_BTN_H,
+            "NSUIHeaderBtn_" .. nt.name,
+            nt.icon
+        )
+        hdrBtn:SetPoint(
+            "TOPLEFT", NSUI, "TOPLEFT",
+            162 + 10 + (i - 1) * (NOTES_HEADER_BTN_W + 6),
+            NOTES_HEADER_BTN_Y
+        )
+
+        tabSystem.AllButtonsByName[nt.name] = hdrBtn
+        tabSystem.AllButtonsByName[nt.text] = hdrBtn
+        table.insert(tabSystem.AllButtons, hdrBtn)
+    end
     -- --------------------------------------------------------
     -- Tab selection logic (matches Details' SelectOptionsSection)
     -- --------------------------------------------------------
@@ -343,6 +389,10 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Build custom UI components
     -- --------------------------------------------------------
+    BuildNotesUI(
+        tabSystem:GetTabFrameByName("SharedNotes"),
+        tabSystem:GetTabFrameByName("PersonalNotes")
+    )
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()

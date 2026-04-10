@@ -10,7 +10,7 @@ local DF = _G["DetailsFramework"]
 
 local STYLE = {
     -- Normal state
-    bg_color        = {0.06, 0.06, 0.06, 0.92},
+    bg_color       = { 0.06, 0.06, 0.06, 0.8 },
 
     -- Hover overlay (fades in/out on mouse enter/leave)
     hover_color     = {0,    1,    1,    0.13},
@@ -41,9 +41,10 @@ local STYLE = {
 --    parent  – WoW frame
 --    text    – display string
 --    onClick – function(buttonObj) called on click; may be nil
---    width   – number (default 148)
+--    width   – number (nil: text pixel width + 20px padding, icon included in content)
 --    height  – number (default 26)
 --    name    – optional global frame name string
+--     icon    – optional lib icon name
 --
 --  Returned object fields & methods
 --    .frame           WoW Button frame (anchor, reparent, etc.)
@@ -75,10 +76,12 @@ local function RefreshFonts()
     end
 end
 
-local function CreateButton(parent, text, onClick, width, height, name)
+local function CreateButton(parent, text, onClick, width, height, name, icon)
     -- ---- base frame -------------------------------------------
+    -- Width is resolved after measuring the label; start with a stub size.
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
-    btn:SetSize(width or 148, height or 26)
+    local btnHeight = height or 26
+    btn:SetSize(1, btnHeight)
     btn:EnableMouse(true)
     btn:SetFrameLevel(parent:GetFrameLevel() + 1)
 
@@ -114,20 +117,54 @@ local function CreateButton(parent, text, onClick, width, height, name)
     -- Lives on its own frame above hoverBg/selectedBg (N+2) so the cyan
     -- overlay never dims the text — it stays pure white at all times.
     local labelFrame = CreateFrame("Frame", nil, btn)
-    labelFrame:SetAllPoints(btn)
     labelFrame:SetFrameLevel(btn:GetFrameLevel() + 2)
     labelFrame:EnableMouse(false)
 
     local label = labelFrame:CreateFontString(nil, "overlay")
     label:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), STYLE.text_size, "")
     label:SetTextColor(unpack(STYLE.text_color))
-    label:SetPoint("LEFT",  labelFrame, "LEFT",  STYLE.text_left_pad, 0)
-    label:SetPoint("RIGHT", labelFrame, "RIGHT", -4, 0)
-    label:SetJustifyH("LEFT")
-    label:SetJustifyV("MIDDLE")
     label:SetText(text or "")
+    label:SetJustifyV("MIDDLE")
+    label:SetJustifyH("CENTER")
+    label:SetAllPoints(labelFrame)
     labelRegistry[#labelRegistry + 1] = {label = label, size = STYLE.text_size}
 
+    -- ---- compute final button width & lay out content ---------
+    local iconSize  = 14
+    local iconGap   = 6   -- gap between icon and text
+    local padH      = 10  -- padding on each side
+
+    local textWidth = math.max(label:GetStringWidth(), 1)
+    local contentW  = icon and (iconSize + iconGap + textWidth) or textWidth
+    local btnWidth  = width or (contentW + padH * 2)
+    btn:SetSize(btnWidth, btnHeight)
+
+    if icon then
+        -- Icon lives on a frame at N+2 so it renders above the hover/selected
+        -- overlays (which sit at N+1) and is never obscured by them.
+        local iconFrame = CreateFrame("Frame", nil, btn)
+        iconFrame:SetSize(iconSize, iconSize)
+        iconFrame:SetFrameLevel(btn:GetFrameLevel() + 2)
+        iconFrame:EnableMouse(false)
+
+        local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
+        iconTex:SetAllPoints()
+        local texture_info = NSI.LSM:Fetch("statusbar", icon)
+        iconTex:SetTexture(texture_info .. ".png")
+        iconTex:SetTexCoord(0.1, 0.9, 0.09, 0.91)
+        iconTex:SetVertexColor(1, 1, 1)
+        btn.icon = iconTex
+
+        -- Centre [icon  gap  text] as a group inside the button.
+        local groupLeft = (btnWidth - contentW) / 2
+        iconFrame:SetPoint("LEFT", btn, "LEFT", groupLeft, 0)
+
+        labelFrame:SetSize(textWidth, btnHeight)
+        labelFrame:SetPoint("LEFT", iconFrame, "RIGHT", iconGap, 0)
+    else
+        labelFrame:SetSize(textWidth, btnHeight)
+        labelFrame:SetPoint("CENTER", btn, "CENTER", 0, 0)
+    end
     -- ---- mouse scripts ----------------------------------------
     btn:SetScript("OnEnter", function()
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)

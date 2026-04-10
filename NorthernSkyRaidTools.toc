@@ -51,6 +51,7 @@ UI/Core.lua
 UI/Components.lua
 
 # UI - Components (depend on Core)
+UI/Notes.lua
 UI/VersionCheck.lua
 UI/Nicknames.lua
 UI/Reminders.lua
