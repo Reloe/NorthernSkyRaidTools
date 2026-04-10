@@ -9,7 +9,7 @@ local options_dropdown_template = Core.options_dropdown_template
 local options_button_template = Core.options_button_template
 
 -- ============================================================================
--- Import Popups (unchanged except refresh method)
+-- Import Popups
 -- ============================================================================
 
 local ImportReminderStringFrame
@@ -41,17 +41,30 @@ local function ImportReminderString(name, IsUpdate)
     if not popup.import_confirm_button then
         popup.import_confirm_button = DF:CreateButton(popup, function()
             local import_string = popup.test_string_text_box:GetText()
+            local before = {}
+            for k in pairs(NSRT.Reminders) do before[k] = true end
             if popup._isUpdate then
                 NSI:ImportReminder(popup._name, import_string, false, false, true)
             else
                 NSI:ImportFullReminderString(import_string, false, false, popup._name)
             end
             if popup._isUpdate and NSRT.ActiveReminder then
-                NSI:SetReminder(NSRT.ActiveReminder) -- refresh active reminder
+                NSI:SetReminder(NSRT.ActiveReminder)
             end
             popup.test_string_text_box:SetText("")
-            if NSUI.reminders_frame and NSUI.reminders_frame.scrollbox then
-                NSUI.reminders_frame.scrollbox:MasterRefresh()
+            if NSUI.reminders_frame then
+                if NSUI.reminders_frame.scrollbox then
+                    NSUI.reminders_frame.scrollbox:MasterRefresh()
+                end
+                local newName = popup._isUpdate and popup._name or nil
+                if not newName then
+                    for k in pairs(NSRT.Reminders) do
+                        if not before[k] then newName = k; break end
+                    end
+                end
+                if newName and NSUI.reminders_frame.SelectReminder then
+                    NSUI.reminders_frame.SelectReminder(newName)
+                end
             end
             popup:Hide()
         end, 280, 20, importtext)
@@ -94,6 +107,8 @@ local function ImportPersonalReminderString(name, IsUpdate)
     if not popup.import_confirm_button then
         popup.import_confirm_button = DF:CreateButton(popup, function()
             local import_string = popup.test_string_text_box:GetText()
+            local before = {}
+            for k in pairs(NSRT.PersonalReminders) do before[k] = true end
             if popup._isUpdate then
                 NSI:ImportReminder(popup._name, import_string, false, true, true)
             else
@@ -103,8 +118,19 @@ local function ImportPersonalReminderString(name, IsUpdate)
                 NSI:SetReminder(NSRT.ActivePersonalReminder, true)
             end
             popup.test_string_text_box:SetText("")
-            if NSUI.personal_reminders_frame and NSUI.personal_reminders_frame.scrollbox then
-                NSUI.personal_reminders_frame.scrollbox:MasterRefresh()
+            if NSUI.personal_reminders_frame then
+                if NSUI.personal_reminders_frame.scrollbox then
+                    NSUI.personal_reminders_frame.scrollbox:MasterRefresh()
+                end
+                local newName = popup._isUpdate and popup._name or nil
+                if not newName then
+                    for k in pairs(NSRT.PersonalReminders) do
+                        if not before[k] then newName = k; break end
+                    end
+                end
+                if newName and NSUI.personal_reminders_frame.SelectReminder then
+                    NSUI.personal_reminders_frame.SelectReminder(newName)
+                end
             end
             popup:Hide()
         end, 280, 20, importtext)
@@ -139,6 +165,7 @@ local function BuildReminderScreen(personal)
     screen:Hide()
 
     screen.selectedName = nil
+    screen.filterEncID = nil
 
     -- Layout
     local leftWidth = 300
@@ -329,6 +356,73 @@ local function BuildReminderScreen(personal)
     DeleteAllButton:SetPoint("LEFT", ClearButton, "RIGHT", 3, 0)
     DeleteAllButton:SetTemplate(options_button_template)
 
+    -- Boss filter dropdown with encounter icons
+    local encounterIcons = {
+        [3176] = 7448209, -- Imperator Averzian
+        [3177] = 7448210, -- Vorasius
+        [3179] = 7448212, -- Fallen King Salhadaar
+        [3178] = 7448207, -- Vaelgor & Ezzorak
+        [3180] = 7448211, -- Lightblinded Vanguard
+        [3181] = 5764904, -- Crown of the Cosmos
+        [3306] = 7448205, -- Chimaerus
+        [3182] = 7448202, -- Belo'ren
+        [3183] = 7448204, -- Midnight Falls
+    }
+
+    local function ApplyBossFilter()
+        if not screen.scrollbox then return end
+        local allData = NSI:GetAllReminderNames(personal)
+        if screen.filterEncID then
+            local filtered = {}
+            for _, entry in ipairs(allData) do
+                if entry.hasencID == screen.filterEncID then
+                    table.insert(filtered, entry)
+                end
+            end
+            title:SetText(titleText .. " |cFFAAAAAA(" .. #filtered .. " notes)|r")
+            screen.scrollbox:SetData(filtered)
+        else
+            title:SetText(titleText)
+            screen.scrollbox:SetData(allData)
+        end
+        screen.scrollbox:Refresh()
+    end
+
+    local function BuildBossFilterOptions()
+        local options = {
+            { label = "All Bosses", value = 1, onclick = function()
+                screen.filterEncID = nil
+                ApplyBossFilter()
+            end }
+        }
+        local seen = {}
+        for _, reminderData in ipairs(NSI:GetAllReminderNames(personal)) do
+            if reminderData.hasencID and not seen[reminderData.hasencID] then
+                seen[reminderData.hasencID] = true
+                local encIDStr = reminderData.hasencID
+                local encID = tonumber(encIDStr)
+                local bossName = NSI.BossTimelineNames[encID] or ("Encounter " .. encIDStr)
+                table.insert(options, {
+                    label = bossName,
+                    value = encID,
+                    icon = encounterIcons[encID],
+                    iconsize = {16, 16},
+                    texcoord = {0.05, 0.95, 0.05, 0.95},
+                    onclick = function()
+                        screen.filterEncID = encIDStr
+                        ApplyBossFilter()
+                    end
+                })
+            end
+        end
+        return options
+    end
+
+    local bossFilter = DF:CreateDropDown(screen, BuildBossFilterOptions, nil, leftWidth - (pad * 2))
+    bossFilter:SetTemplate(options_dropdown_template)
+    bossFilter:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 46)
+    screen.bossFilter = bossFilter
+
     -- Selection handler
     local function SelectReminder(name)
         screen.selectedName = name
@@ -338,17 +432,27 @@ local function BuildReminderScreen(personal)
         else
             editor:SetText("")
         end
-        screen.scrollbox:Refresh()
+        if screen.scrollbox then screen.scrollbox:Refresh() end
     end
+    screen.SelectReminder = SelectReminder
 
     -- ScrollBox
-    local listTop = topY - 48
+    local listTop = topY - 70
     local scrollHeight = contentHeight - math.abs(listTop) - 35
     local lineHeight = 22
     local scrollLines = math.floor(scrollHeight / lineHeight)
 
     local function MasterRefresh(self)
-        local data = NSI:GetAllReminderNames(personal)
+        local allData = NSI:GetAllReminderNames(personal)
+        local data = allData
+        if screen.filterEncID then
+            data = {}
+            for _, entry in ipairs(allData) do
+                if entry.hasencID == screen.filterEncID then
+                    table.insert(data, entry)
+                end
+            end
+        end
         self:SetData(data)
         self:Refresh()
         UpdateActiveText()
@@ -357,61 +461,74 @@ local function BuildReminderScreen(personal)
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
-            local line = self:GetLine(i)
             local reminderData = data[index]
-            if reminderData then
-                line:Show()
-                line.name = reminderData.name
-                line.nameTextEntry.text = reminderData.hasencID and reminderData.name or (reminderData.name .. " (No Enc)")
+            if not reminderData then break end
+            local line = self:GetLine(i)
+            line.name = reminderData.name
+            line.nameLabel:SetText(reminderData.hasencID and reminderData.name or (reminderData.name .. " (No Enc)"))
 
-                local activeName = NSRT[activeKey]
-                if line.name == activeName then
-                    local colors = reminderData.hasencID and {0, 1, 0, 1} or {1, 0, 0, 1}
-                    line.nameTextEntry:SetBackdropBorderColor(unpack(colors))
-                    line.nameTextEntry.BorderColorR = colors[1]
-                    line.nameTextEntry.BorderColorG = colors[2]
-                    line.nameTextEntry.BorderColorB = 0
-                elseif line.name == screen.selectedName then
-                    line.nameTextEntry:SetBackdropBorderColor(0.3, 0.5, 1, 1)
-                    line.nameTextEntry.BorderColorR = 0.3
-                    line.nameTextEntry.BorderColorG = 0.5
-                    line.nameTextEntry.BorderColorB = 1
-                else
-                    line.nameTextEntry:SetBackdropBorderColor(0, 0, 0, 1)
-                    line.nameTextEntry.BorderColorR = 0
-                    line.nameTextEntry.BorderColorG = 0
-                    line.nameTextEntry.BorderColorB = 0
-                end
-                line.nameTextEntry.BorderColorA = 1
+            local activeName = NSRT[activeKey]
+            if line.name == activeName then
+                local color = reminderData.hasencID and {0, 1, 0} or {1, 0, 0}
+                line:SetBackdropBorderColor(color[1], color[2], 0, 1)
+                line.nameLabel:SetTextColor(1, 1, 1)
+            elseif line.name == screen.selectedName then
+                line:SetBackdropBorderColor(0.3, 0.5, 1, 1)
+                line.nameLabel:SetTextColor(1, 1, 1)
             else
-                line:Hide()
+                line:SetBackdropBorderColor(0, 0, 0, 1)
+                line.nameLabel:SetTextColor(0.85, 0.85, 0.85)
             end
         end
     end
 
     local function createLineFunc(self, index)
         local parent = self
-        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        local line = CreateFrame("Button", "$parentLine" .. index, self, "BackdropTemplate")
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * self.LineHeight) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
 
-        line.nameTextEntry = DF:CreateTextEntry(line, function() end, line:GetWidth() - 2, line:GetHeight())
-        line.nameTextEntry:SetTemplate(options_dropdown_template)
-        line.nameTextEntry:SetPoint("LEFT", line, "LEFT", 0, 0)
+        -- Name label (click line to select)
+        line.nameLabel = line:CreateFontString(nil, "OVERLAY")
+        line.nameLabel:SetFont(STANDARD_TEXT_FONT, 10, "")
+        line.nameLabel:SetPoint("LEFT", line, "LEFT", 4, 0)
+        line.nameLabel:SetPoint("RIGHT", line, "RIGHT", -20, 0)
+        line.nameLabel:SetJustifyH("LEFT")
+        line.nameLabel:SetWordWrap(false)
 
-        -- Click to select and show content
-        line.nameTextEntry:SetScript("OnMouseDown", function(self)
+        line:SetScript("OnClick", function()
             SelectReminder(line.name)
-            self:SetFocus()
         end)
 
-        -- Rename on enter/focus lost
-        local saveNewName = function(self)
+        -- Edit button (pencil icon, click to rename)
+        line.editButton = CreateFrame("Button", nil, line)
+        line.editButton:SetSize(14, 14)
+        line.editButton:SetPoint("RIGHT", line, "RIGHT", -3, 0)
+        line.editButton:SetNormalTexture([[Interface\Buttons\UI-GuildButton-PublicNote-Up]])
+        line.editButton:SetHighlightTexture([[Interface\Buttons\UI-GuildButton-PublicNote-Up]])
+        line.editButton:GetNormalTexture():SetDesaturated(true)
+
+        -- Hidden text entry for renaming
+        line.renameEntry = DF:CreateTextEntry(line, function() end, line:GetWidth() - 2, line:GetHeight())
+        line.renameEntry:SetTemplate(options_dropdown_template)
+        line.renameEntry:SetPoint("TOPLEFT", line, "TOPLEFT", 0, 0)
+        line.renameEntry:SetPoint("BOTTOMRIGHT", line, "BOTTOMRIGHT", 0, 0)
+        line.renameEntry:Hide()
+
+        local function ExitRename()
+            line.renameEntry:ClearFocus()
+            line.renameEntry:Hide()
+            line.nameLabel:Show()
+            line.editButton:Show()
+            line:Enable()
+        end
+
+        local function SaveNewName(editBox)
             local oldname = line.name
-            if not oldname then return end
-            local newname = self:GetText()
-            if oldname == newname then return end
+            local newname = editBox:GetText()
+            ExitRename()
+            if not oldname or oldname == newname then return end
             local store = NSRT[storeKey]
             if store[newname] then return end
             store[newname] = store[oldname]
@@ -430,18 +547,21 @@ local function BuildReminderScreen(personal)
             line.name = newname
             parent:MasterRefresh()
         end
-        line.nameTextEntry:SetScript("OnEnterPressed", saveNewName)
-        line.nameTextEntry:SetScript("OnEditFocusLost", saveNewName)
 
-        line.nameTextEntry:SetScript("OnEnter", function(self)
-            if self.BorderColorR then
-                self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
-            end
+        line.renameEntry:SetScript("OnEnterPressed", SaveNewName)
+        line.renameEntry:SetScript("OnEditFocusLost", SaveNewName)
+        line.renameEntry:SetScript("OnEscapePressed", function(self)
+            self:SetText(line.name or "")
+            ExitRename()
         end)
-        line.nameTextEntry:SetScript("OnLeave", function(self)
-            if self.BorderColorR then
-                self:SetBackdropBorderColor(self.BorderColorR, self.BorderColorG, self.BorderColorB, self.BorderColorA)
-            end
+
+        line.editButton:SetScript("OnClick", function()
+            line.nameLabel:Hide()
+            line.editButton:Hide()
+            line:Disable()
+            line.renameEntry:SetText(line.name or "")
+            line.renameEntry:Show()
+            line.renameEntry:SetFocus()
         end)
 
         return line
@@ -461,8 +581,9 @@ local function BuildReminderScreen(personal)
         scrollbox:CreateLine(createLineFunc)
     end
 
-    -- OnShow: refresh list, select active reminder, update editor font
+    -- OnShow: reset filter, select active reminder, refresh
     screen:SetScript("OnShow", function(self)
+        self.filterEncID = nil
         UpdateActiveText()
         UpdateEditorFont()
         local activeName = NSRT[activeKey]
