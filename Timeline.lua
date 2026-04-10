@@ -11,36 +11,41 @@ function NSI:SetupTimelineHooks(timeline)
     local scaleSlider = timeline.scaleSlider
     local elapsedTimeFrame = timeline.elapsedTimeFrame
 
-    -- Hook mousewheel for zoom-to-cursor behavior
-    -- We need to capture state BEFORE the zoom, then adjust AFTER
+    -- Override mousewheel: scroll = zoom-to-cursor, shift+scroll = vertical pan
     if scaleSlider and horizontalSlider then
         -- Storage for pre-zoom state
         timeline.preZoomState = {}
 
-        timeline:HookScript("OnMouseWheel", function(self, delta)
+        timeline:SetScript("OnMouseWheel", function(self, delta)
             if IsControlKeyDown() then
-                -- Capture state before zoom
-                local pixelPerSecond = timeline.options.pixels_per_second or 15
-                local currentScale = timeline.currentScale or 1
-
-                -- Get mouse X position relative to the visible timeline frame
-                local cursorX = GetCursorPosition()
-                local uiScale = 1 / UIParent:GetEffectiveScale()
-                cursorX = cursorX * uiScale
-                local frameLeft = timeline:GetLeft() or 0
-                local mouseXInFrame = cursorX - frameLeft
-
-                -- Get current scroll position
-                local scrollPosition = horizontalSlider:GetValue()
-
-                -- Calculate time under mouse
-                local timeUnderMouse = (scrollPosition + mouseXInFrame) / (pixelPerSecond * currentScale)
-
-                -- Store for post-zoom adjustment
-                timeline.preZoomState.timeUnderMouse = timeUnderMouse
-                timeline.preZoomState.mouseXInFrame = mouseXInFrame
-                timeline.preZoomState.pixelPerSecond = pixelPerSecond
+                -- Vertical scroll
+                if timeline.verticalSlider then
+                    local cur = timeline.verticalSlider:GetValue()
+                    local vMin, vMax = timeline.verticalSlider:GetMinMaxValues()
+                    timeline.verticalSlider:SetValue(math.max(vMin, math.min(vMax, cur - delta * 3)))
+                end
+                return
             end
+
+            -- Zoom to cursor (always, no modifier needed)
+            local pixelPerSecond = timeline.options.pixels_per_second or 15
+            local currentScale = timeline.currentScale or 1
+
+            local cursorX = GetCursorPosition()
+            local uiScale = 1 / UIParent:GetEffectiveScale()
+            cursorX = cursorX * uiScale
+            local frameLeft = timeline:GetLeft() or 0
+            local mouseXInFrame = cursorX - frameLeft
+            local scrollPosition = horizontalSlider:GetValue()
+            local timeUnderMouse = (scrollPosition + mouseXInFrame) / (pixelPerSecond * currentScale)
+
+            timeline.preZoomState.timeUnderMouse = timeUnderMouse
+            timeline.preZoomState.mouseXInFrame = mouseXInFrame
+            timeline.preZoomState.pixelPerSecond = pixelPerSecond
+
+            local sMin, sMax = scaleSlider:GetMinMaxValues()
+            local newScale = math.max(sMin, math.min(sMax, currentScale * (delta > 0 and 1.15 or (1 / 1.15))))
+            scaleSlider:SetValue(newScale)
         end)
 
         -- Hook scale slider to adjust scroll after zoom
@@ -898,6 +903,7 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.mode = value
                     timelineWindow.reminderLabel:Hide()
                     timelineWindow.reminderDropdown:Hide()
+                    if timelineWindow.playButton then timelineWindow.playButton:Show() end
                     self:RefreshTimelineForMode()
                 end
             },
@@ -908,6 +914,20 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.mode = value
                     timelineWindow.reminderLabel:Show()
                     timelineWindow.reminderDropdown:Show()
+                    if timelineWindow.playButton then
+                            -- Stop preview and hide play button in "All Reminders" mode
+                        if timelineWindow.previewActive then
+                            timelineWindow.previewActive = false
+                            timelineWindow.previewStartTime = nil
+                            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
+                                timelineWindow.timeline.previewLine:Hide()
+                            end
+                            NSI:HideAllReminders()
+                            timelineWindow.playButton.text = "Play Preview"
+                            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                        end
+                        timelineWindow.playButton:Hide()
+                    end
                     self:RefreshTimelineForMode()
                 end
             },
@@ -972,6 +992,37 @@ function NSI:CreateTimelineWindow()
     reminderDropdown:SetPoint("LEFT", reminderLabel, "RIGHT", 10, 0)
     timelineWindow.reminderDropdown = reminderDropdown
     reminderDropdown:Hide() -- Hidden by default (My Reminders mode)
+
+    local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
+    local playColor = { 20 / 255, 245 / 255, 87 / 255, 1 } -- {r,g,b,a}
+    local stopColor = { 247 / 255, 32 / 255, 61 / 255, 1 } -- {r,g,b,a}
+    local playButton = DF:CreateButton(timelineWindow, function()
+        if timelineWindow.previewActive then
+            timelineWindow.previewActive = false
+            timelineWindow.previewStartTime = nil
+            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
+                timelineWindow.timeline.previewLine:Hide()
+            end
+            NSI:HideAllReminders()
+            timelineWindow.playButton.text = "Play Preview"
+            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
+                14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
+        else
+            if not NSI.ProcessedReminder then NSI:ProcessReminder() end
+            if not NSI.ProcessedReminder then return end
+            timelineWindow.previewActive = true
+            timelineWindow.previewStartTime = GetTime()
+            NSI:StartReminders(1, true)
+            timelineWindow.playButton.text = "Stop Preview"
+            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\stop_icon.png", 14,
+                14, "OVERLAY", { 0.12, 0.88, 0.12, 0.88 }, stopColor)
+        end
+    end, 32, 22, "Play Preview")
+    playButton:SetTemplate(options_button_template)
+    playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
+        14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
+    playButton:SetPoint("LEFT", modeDropdown, "RIGHT", 15, 0)
+    timelineWindow.playButton = playButton
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
@@ -1601,14 +1652,103 @@ function NSI:CreateTimelineWindow()
         cursorLine:Hide()
     end)
 
-    -- Use OnUpdate for smooth cursor tracking
+    -- Preview line (green, animated during play preview)
+    local previewLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    previewLine:SetWidth(2)
+    previewLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 200)
+    previewLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+    previewLine:SetBackdropColor(0, 0.85, 0, 0.9)
+    previewLine:Hide()
+    timelineFrame.previewLine = previewLine
+
+    local previewTimeLabel = previewLine:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    previewTimeLabel:SetPoint("TOP", previewLine, "BOTTOM", 0, -2)
+    previewTimeLabel:SetTextColor(0.3, 1, 0.3, 1)
+
+    local previewTimeBg = previewLine:CreateTexture(nil, "BACKGROUND")
+    previewTimeBg:SetColorTexture(0, 0, 0, 0.7)
+    previewTimeBg:SetPoint("TOPLEFT", previewTimeLabel, "TOPLEFT", -3, 2)
+    previewTimeBg:SetPoint("BOTTOMRIGHT", previewTimeLabel, "BOTTOMRIGHT", 3, -1)
+
+    -- Right-click drag panning state
+    local isDraggingTimeline = false
+    local dragStartMouseX = 0
+    local dragStartScroll = 0
+
+    local function startRightDrag()
+        isDraggingTimeline = true
+        local uiScale = 1 / UIParent:GetEffectiveScale()
+        dragStartMouseX = GetCursorPosition() * uiScale
+        dragStartScroll = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+    end
+
+    local function stopRightDrag()
+        isDraggingTimeline = false
+    end
+
+    timelineFrame:EnableMouse(true)
+    timelineFrame:HookScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then startRightDrag() end
+    end)
+    timelineFrame:HookScript("OnMouseUp", function(self, button)
+        if button == "RightButton" then stopRightDrag() end
+    end)
+
+    timelineFrame.body:HookScript("OnMouseDown", function(self, button)
+        if button == "RightButton" then startRightDrag() end
+    end)
+    timelineFrame.body:HookScript("OnMouseUp", function(self, button)
+        if button == "RightButton" then stopRightDrag() end
+    end)
+
+    -- Use OnUpdate for smooth cursor tracking and preview line animation
     local updateThrottle = 0
     timelineFrame.body:SetScript("OnUpdate", function(self, elapsed)
         updateThrottle = updateThrottle + elapsed
         if updateThrottle >= 0.016 then  -- ~60fps
             updateThrottle = 0
+            if isDraggingTimeline and timelineFrame.horizontalSlider then
+                local uiScale = 1 / UIParent:GetEffectiveScale()
+                local currentMouseX = GetCursorPosition() * uiScale
+                local delta = dragStartMouseX - currentMouseX
+                local hMin, hMax = timelineFrame.horizontalSlider:GetMinMaxValues()
+                timelineFrame.horizontalSlider:SetValue(math.max(hMin, math.min(hMax, dragStartScroll + delta)))
+            end
             if self:IsMouseOver() then
                 updateCursorLine()
+            end
+            if timelineWindow.previewActive and timelineWindow.previewStartTime then
+                local previewElapsed = GetTime() - timelineWindow.previewStartTime
+                local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
+                local currentScale = timelineFrame.currentScale or 1
+                local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+                local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
+                local previewX = previewElapsed * pixelsPerSecond * currentScale - scrollX
+                local bodyWidth = timelineFrame.body:GetWidth() or 0
+
+                if previewX >= 0 and previewX <= bodyWidth then
+                    previewLine:ClearAllPoints()
+                    previewLine:SetPoint("TOP", timelineFrame.body, "TOPLEFT", previewX, -elapsedHeight)
+                    previewLine:SetPoint("BOTTOM", timelineFrame.body, "BOTTOMLEFT", previewX, 0)
+                    local minutes = math.floor(previewElapsed / 60)
+                    local seconds = math.floor(previewElapsed % 60)
+                    previewTimeLabel:SetText(string.format("%d:%02d", minutes, seconds))
+                    previewLine:Show()
+                else
+                    previewLine:Hide()
+                end
+
+                local timelineLength = (timelineFrame.data and timelineFrame.data.length) or 300
+                if previewElapsed >= timelineLength then
+                    timelineWindow.previewActive = false
+                    timelineWindow.previewStartTime = nil
+                    previewLine:Hide()
+                    NSI:HideAllReminders()
+                    if timelineWindow.playButton then
+                        timelineWindow.playButton.text = "Play Preview"
+                        timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                    end
+                end
             end
         end
     end)
@@ -1633,7 +1773,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Help text (positioned at bottom, below the sliders)
-    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Navigate | Ctrl+Scroll: Zoom | Shift+Scroll: Vertical", 10, "gray")
+    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical", 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
     -- Handle window resize to update timeline dimensions
@@ -1694,8 +1834,11 @@ function NSI:ToggleTimelineWindow()
         self.TimelineWindow:Hide()
     else
         self.TimelineWindow:Show()
-        -- Default to "My Reminders" mode
-        self:RefreshTimelineForMode()
+        if not self.ProcessedReminder then
+            self:ProcessReminder() -- also calls RefreshTimelineForMode at its end
+        else
+            self:RefreshTimelineForMode()
+        end
     end
 end
 
