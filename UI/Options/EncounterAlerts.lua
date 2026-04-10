@@ -19,6 +19,22 @@ local function build_anchor_options(SettingsName)
     return t
 end
 
+local function build_P3Side_options(SettingsName)
+    local list = {"OFF", "LEFT", "RIGHT", "BOTH"}
+    local t = {}
+    for i, v in ipairs(list) do
+        tinsert(t, {
+            label = v,
+            value = i,
+            onclick = function(_, _, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].P3Side = list[value]
+            end
+        })
+    end
+    return t
+end
+
 local ShowLinkPopup
 local function ShowLink(Text, Name, URL)
     if not ShowLinkPopup then
@@ -309,6 +325,14 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
             icontexture = 7448204,
             iconsize = {16, 16},
+        },
+        {
+            type = "select",
+            name = "P3 Side",
+            desc = "Choose which side you are playing P3 to get the correct generic alerts.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].P3Side or "OFF" end,
+            values = function() return build_P3Side_options() end,
+            nocombat = true,
         },
         {
             type = "label",

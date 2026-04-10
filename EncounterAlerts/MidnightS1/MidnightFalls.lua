@@ -105,6 +105,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         }
         self:AddRemindersFromTable(Alert, timers[id])
     end
+    local side = NSRT.EncounterAlerts[encID].P3Side
+    if side and (side == "LEFT" or side == "BOTH") then
+
+    end
+    if side and (side == "RIGHT" or side == "BOTH") then
+
+    end
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
         self.LuraRunesFrame = self.LuraRunesFrame or CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
         self.LuraRunesFrame:ClearAllPoints()
