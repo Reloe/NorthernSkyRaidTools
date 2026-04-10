@@ -41,11 +41,11 @@ local defaultFramePriorities = {
   "^AshToAshUnit%d+Unit%d+", -- AshToAsh
   "^Cell", -- Cell
   "^XPerl_Raid_Grp", -- xperl
-  "^DandersRaidGroup%dHeader$", -- Danders (New format?
-  "^DandersRaidGroup%dHeaderUnitButton%d+$", -- Danders (New format?)
+  "^DandersRaidGroup%dHeader$", -- Danders
+  "^DandersRaidGroup%dHeaderUnitButton%d+$", -- Danders
   "^DandersFlatRaidHeader$", -- Danders (alternative style name)
   "^DandersFlatRaidHeaderUnitButton%d+$", -- Danders (alternative style name)
-  "^DandersRaidFrame", -- Danders (depricated?)
+  "^DandersRaidFrame", -- Danders
   -- party frames
   "^AleaUI_GroupHeader", -- Alea
   "^SUFHeaderparty", --suf
@@ -56,8 +56,8 @@ local defaultFramePriorities = {
   "^XPerl_party%d", -- xperl
   "^DandersPartyHeader$", -- Danders
   "^DandersPartyHeaderUnitButton%d$", -- Danders
-  "^DandersFrames_Party", -- Danders (depricated?)
-  "^DandersFrames_Player$", -- Danders (used for party frames) (depricated?)
+  "^DandersFrames_Party", -- Danders
+  "^DandersFrames_Player$", -- Danders (used for party frames)
   "^CompactRaid", -- blizz
   "^CompactParty", -- blizz
   "^PartyFrame",
@@ -190,11 +190,11 @@ local defaultRaidFrames = {
   "^SUFHeaderraid",
   "^LUFHeaderraid",
   "^XPerl_Raid_Grp",
-  "^DandersRaidGroup%dHeader$", -- New Danders format?
-  "^DandersRaidGroup%dHeaderUnitButton%d+$", -- New Danders format?
+  "^DandersRaidGroup%dHeader$", -- New Danders format
+  "^DandersRaidGroup%dHeaderUnitButton%d+$", -- New Danders format
   "^DandersFlatRaidHeader$", -- alternative style name
   "^DandersFlatRaidHeaderUnitButton%d+$", -- alternative style name
-  "^DandersRaidFrame", -- depricated?
+  "^DandersRaidFrame", -- depricated
   "^CompactRaid",
 }
 local getDefaultRaidFrames = function()
