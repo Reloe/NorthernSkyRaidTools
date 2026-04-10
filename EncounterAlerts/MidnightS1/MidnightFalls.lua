@@ -238,7 +238,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRuneTimers[i] = C_Timer.NewTimer(time-2, function()
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
-                self.LuraRunesFrame:Show()
             end)
         end
         self.LuraRunesFrame:Hide()
@@ -246,12 +245,14 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self.AlertTimers[1] = C_Timer.NewTimer(60, function()
             if not self.AlertTimers then return end
             if id == 16 then self.LuraRunesInverted = true end
+            HideAllRunes()
             self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(120, function()
             if not self.AlertTimers then return end
             if id == 16 then self.LuraRunesInverted = false end
+            HideAllRunes()
             self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
         end)
@@ -296,7 +297,9 @@ local detectedDurations = {
 }
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
+    local now = GetTime()
     if e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" and self.Phase == 4 then
+        if (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+20)) then return end
         if not UnitExists("boss2") then
             self.Phase = 5
             self:StartReminders(self.Phase)
@@ -304,7 +307,6 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         end
         return
     end
-    local now = GetTime()
     -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
