@@ -462,7 +462,7 @@ local function BuildEncounterAlertsOptions()
         },
         {
             type = "label",
-            get = function() return "In Mythic you will want your Tank to be raidlead and click for Runes 1&4.\nHealers need to dynamically decide who is clicking, their presses will be registered for Runes 2, 3 & 5" end,
+            get = function() return "In Mythic you will want your Tank to be raidlead and click for Runes 1&4.\nThe Healer in the red-phase has to press for Runes 2&5. The Healer in the blue-phase for Rune #3" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             spacement = true,
         },
