@@ -6,13 +6,10 @@ f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
-f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
-f:RegisterEvent("ENCOUNTER_WARNING")
-f:RegisterEvent("RAID_BOSS_WHISPER")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 
@@ -451,15 +448,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
         if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
         self:NewNickName(unit, nickname, name, realm, channel)
-
-    elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
-        C_Timer.After(1, function()
-            if self:Restricted() then return end
-            if self.SyncNickNamesStore then
-                self:EventHandler("NSI_NICKNAMES_SYNC", false, true, self.SyncNickNamesStore.unit, self.SyncNickNamesStore.nicknametable, self.SyncNickNamesStore.channel)
-                self.SyncNickNamesStore = nil
-            end
-        end)
     elseif e == "NSI_NICKNAMES_SYNC" and internal then
         local unit, nicknametable, channel = ...
         local setting = NSRT.Settings["NickNamesSyncAccept"]
@@ -536,14 +524,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
-    elseif e == "ENCOUNTER_WARNING" and wowevent then
-        local info = ...
-        if not self:DifficultyCheck(14) then return end
-        if self.ShowWarningAlert[self.EncounterID] then self.ShowWarningAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, info) end
-    elseif e == "RAID_BOSS_WHISPER" and wowevent then
-        local text, name, dur = ...
-        if not self:DifficultyCheck(14) then return end
-        if self.ShowBossWhisperAlert[self.EncounterID] then self.ShowBossWhisperAlert[self.EncounterID](self, self.EncounterID, self.Phase, self.PhaseSwapTime, text, name, dur) end
     elseif e == "QoL_Comms" and internal then
         self:QoLEvents(e, ...)
     end
