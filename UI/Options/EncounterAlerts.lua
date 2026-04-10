@@ -408,11 +408,6 @@ local function BuildEncounterAlertsOptions()
             nocombat = true,
         },
         {
-            type = "label",
-            get = function() return "Settings changes will take into effect when you toggle the preview off & on again." end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-        {
             type = "button",
             name = "Preview Lura Runes",
             desc = "This will display a preview of the Lura Runes. You cannot move them around and any settings change you make will unfortunately require a UI reload.",
