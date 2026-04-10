@@ -56,7 +56,16 @@ function NSUI:Init()
     local scale = math.max(NSRT.NSUI.scale, 0.6) -- prevent negative numbers
     NSUI:SetScale(scale)
 
-    -- Create the tab container
+    -- Safe content area between title bar and status bar (single source of truth)
+    local contentArea = CreateFrame("Frame", nil, NSUI)
+    contentArea:SetPoint("TOPLEFT", NSUI.TitleBar, "BOTTOMLEFT", 0, 0)
+    contentArea:SetPoint("BOTTOMRIGHT", NSUI.StatusBar, "TOPRIGHT", 0, 0)
+    NSUI.ContentArea = contentArea
+
+    -- Sidebar width
+    local sidebarWidth = 140
+
+    -- Create the tab container (full width, sidebar overlays on left)
     local tabContainer = DF:CreateTabContainer(NSUI, "Northern Sky", "NSUI_TabsTemplate", TABS_LIST, {
         width = window_width,
         height = window_height - 5,
@@ -80,6 +89,98 @@ function NSUI:Init()
     local privateaura_tab = tabContainer:GetTabFrameByName("PrivateAura")
     local QoL_tab = tabContainer:GetTabFrameByName("QoL")
     local WAImports_tab = tabContainer:GetTabFrameByName("WAImports")
+
+    -- Sidebar (outside panel, left edge, aligned to content area)
+    local sidebar = CreateFrame("Frame", "NSUISidebar", NSUI, "BackdropTemplate")
+    sidebar:SetPoint("TOPRIGHT", contentArea, "TOPLEFT", -2, 0)
+    sidebar:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMLEFT", -2, 0)
+    sidebar:SetWidth(sidebarWidth)
+    DF:ApplyStandardBackdrop(sidebar)
+    NSUI.Sidebar = sidebar
+
+    local sidebarItems = {}
+    local activeSidebarItem = nil
+
+    local function CreateSidebarItem(parent, yOffset, iconPath, labelText)
+        local btn = CreateFrame("Button", nil, parent)
+        btn:SetSize(parent:GetWidth(), 24)
+        btn:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, yOffset)
+
+        btn.highlight = btn:CreateTexture(nil, "HIGHLIGHT")
+        btn.highlight:SetAllPoints()
+        btn.highlight:SetColorTexture(1, 1, 1, 0.08)
+
+        btn.selectedBg = btn:CreateTexture(nil, "BACKGROUND")
+        btn.selectedBg:SetAllPoints()
+        btn.selectedBg:SetColorTexture(0.2, 0.4, 0.7, 0.4)
+        btn.selectedBg:Hide()
+
+        btn.icon = btn:CreateTexture(nil, "ARTWORK")
+        btn.icon:SetSize(14, 14)
+        btn.icon:SetPoint("LEFT", btn, "LEFT", 8, 0)
+        btn.icon:SetTexture(iconPath)
+        btn.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        btn.label = btn:CreateFontString(nil, "OVERLAY")
+        btn.label:SetFont(STANDARD_TEXT_FONT, 10, "")
+        btn.label:SetPoint("LEFT", btn.icon, "RIGHT", 6, 0)
+        btn.label:SetPoint("RIGHT", btn, "RIGHT", -4, 0)
+        btn.label:SetJustifyH("LEFT")
+        btn.label:SetText(labelText)
+        btn.label:SetTextColor(0.85, 0.85, 0.85)
+
+        btn:SetScript("OnEnter", function(self)
+            self.label:SetTextColor(1, 1, 1)
+        end)
+        btn:SetScript("OnLeave", function(self)
+            if activeSidebarItem ~= self then
+                self.label:SetTextColor(0.85, 0.85, 0.85)
+            end
+        end)
+
+        table.insert(sidebarItems, btn)
+        return btn
+    end
+
+    local function SelectSidebarItem(btn)
+        for _, item in ipairs(sidebarItems) do
+            item.selectedBg:Hide()
+            item.label:SetTextColor(0.85, 0.85, 0.85)
+        end
+        activeSidebarItem = btn
+        if btn then
+            btn.selectedBg:Show()
+            btn.label:SetTextColor(1, 0.82, 0)
+        end
+    end
+
+    local homeItem = CreateSidebarItem(sidebar, -8, [[Interface\Icons\INV_Misc_Gear_01]], "Settings")
+    local sharedItem = CreateSidebarItem(sidebar, -34, [[Interface\Icons\Achievement_GuildPerk_EverybodysFriend]], "Shared Reminders")
+    local personalItem = CreateSidebarItem(sidebar, -60, [[Interface\Icons\Achievement_Character_Human_Male]], "Personal Reminders")
+    SelectSidebarItem(homeItem)
+
+    homeItem:SetScript("OnClick", function()
+        SelectSidebarItem(homeItem)
+        if NSUI.reminders_frame then NSUI.reminders_frame:Hide() end
+        if NSUI.personal_reminders_frame then NSUI.personal_reminders_frame:Hide() end
+        tabContainer:Show()
+    end)
+    sharedItem:SetScript("OnClick", function()
+        SelectSidebarItem(sharedItem)
+        if NSUI.personal_reminders_frame then NSUI.personal_reminders_frame:Hide() end
+        tabContainer:Hide()
+        NSUI.reminders_frame:Show()
+    end)
+    personalItem:SetScript("OnClick", function()
+        SelectSidebarItem(personalItem)
+        if NSUI.reminders_frame then NSUI.reminders_frame:Hide() end
+        tabContainer:Hide()
+        NSUI.personal_reminders_frame:Show()
+    end)
+
+    sidebar.sharedButton = sharedItem
+    sidebar.personalButton = personalItem
+    function sidebar:UpdateIcons() end
 
     -- Generic text display
     NSI.NSRTFrame.generic_display = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")

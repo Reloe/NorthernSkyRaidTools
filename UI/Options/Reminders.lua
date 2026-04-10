@@ -820,35 +820,6 @@ local function BuildReminderOptions()
         },
 
         {
-            type = "button",
-            name = "Shared Reminders",
-            desc = "Shows a list of all Reminders",
-            func = function(self)
-                if not NSUI.reminders_frame:IsShown() then
-                    NSUI.reminders_frame:Show()
-                else
-                    NSUI.reminders_frame:Hide()
-                end
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "button",
-            name = "Personal Reminders",
-            desc = "Shows a list of all Personal Reminders",
-            func = function(self)
-                if not NSUI.personal_reminders_frame:IsShown() then
-                    NSUI.personal_reminders_frame:Show()
-                else
-                    NSUI.personal_reminders_frame:Hide()
-                end
-            end,
-            nocombat = true,
-            spacement = true
-        },
-
-        {
             type = "toggle",
             boxfirst = true,
             name = "Share on Ready Check",
