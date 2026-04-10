@@ -190,7 +190,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 end
             end
             self.LuraRunesCompleted = {}
-            self.LuraRunesFrame:UnregisterAllEvents()
+            if self.Phase ~= 4 then
+                self.LuraRunesFrame:UnregisterEvent("CHAT_MSG_RAID")
+                self.LuraRunesFrame:UnregisterEvent("CHAT_MSG_RAID_LEADER")
+            end
             self.LuraRunesFrame:Hide()
         end
         self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
@@ -234,7 +237,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         }
         self.LuraRuneTimers = {}
         if preview then return end
-        for i, time in ipairs(timers[id] or {}) do -- enable event register 5s before each memory game. then disable it again later
+        for i, time in ipairs(timers[id] or {}) do -- enable event register 2s before each memory game. then disable it again later
             self.LuraRuneTimers[i] = C_Timer.NewTimer(time-2, function()
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
@@ -242,14 +245,14 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         end
         self.LuraRunesFrame:Hide()
 
-        self.AlertTimers[1] = C_Timer.NewTimer(60, function()
+        self.AlertTimers[1] = C_Timer.NewTimer(70, function()
             if not self.AlertTimers then return end
             if id == 16 then self.LuraRunesInverted = true end
             HideAllRunes()
             self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
-        self.AlertTimers[2] = C_Timer.NewTimer(120, function()
+        self.AlertTimers[2] = C_Timer.NewTimer(140, function()
             if not self.AlertTimers then return end
             if id == 16 then self.LuraRunesInverted = false end
             HideAllRunes()
