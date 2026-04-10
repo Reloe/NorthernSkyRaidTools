@@ -526,5 +526,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "QoL_Comms" and internal then
         self:QoLEvents(e, ...)
+    elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end
     end
 end

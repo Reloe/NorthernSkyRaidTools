@@ -8,6 +8,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     end
     local realpull = not id
     id = id or self:DifficultyCheck(14) or 0
+    if realpull and id == 16 then
+        NSI.NSRTFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+    end
     if NSRT.EncounterAlerts[encID].enabled and not preview then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 6, 1, encID)
         local timers = {
@@ -276,6 +279,7 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
         end
         self.LuraRuneTimers = nil
     end
+    NSI.NSRTFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 end
 
 local detectedDurations = {
@@ -292,6 +296,14 @@ local detectedDurations = {
 }
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
+    if e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" and self.Phase == 4 then
+        if not UnitExists("boss2") then
+            self.Phase = 5
+            self:StartReminders(self.Phase)
+            self.PhaseSwapTime = GetTime()
+        end
+        return
+    end
     local now = GetTime()
     -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
