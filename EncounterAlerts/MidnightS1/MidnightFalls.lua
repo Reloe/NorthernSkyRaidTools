@@ -107,13 +107,93 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             [15] = {31, 69, 107}
         }
         self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Blazes", "Text", nil, 5, 5, encID) -- Last Phase Blazes
+        local timers = {
+            [16] = {12.7, 32.7, 52.7, 72.7}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Move", "Text", nil, 5, 5, encID) -- Heaven & Hell
+        Alert.TTSTimer = 0
+        local timers = {
+            [16] = {19.8, 39.8, 59.8}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
     end
     local side = NSRT.EncounterAlerts[encID].P3Side
     if side and (side == "LEFT" or side == "BOTH") then
+        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 5, 4, encID)
+        local timers = {
+            [16] = {40, 75, 150},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
 
+        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
+        Alert.TTSTimer = 2
+        local timers = {
+            [16] = {18.2, 90.2, 128.2},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", nil, 20, 4, encID)
+        Alert.TTS = false
+        local timers = {
+            [16] = {38.7, 110.7, 148.7},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+
+        local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 5, 4, encID)
+        Alert.TTS = false
+        local timers = {
+            [16] = {20.4, 28.4, 36.4, 44.4, 52.4, 79.4, 87.4, 95.4, 103.4},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
     end
     if side and (side == "RIGHT" or side == "BOTH") then
+        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 5, 4, encID)
+        local timers = {
+            [16] = {20, 95, 130},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
 
+        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
+        Alert.TTSTimer = 2
+        local timers = {
+            [16] = {38, 73, 148},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", nil, 20, 4, encID)
+        Alert.TTS = false
+        local timers = {
+            [16] = {58.5, 93.5, 168.5},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+
+        local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 5, 4, encID)
+        Alert.TTS = false
+        local timers = {
+            [16] = {24.2, 32.2, 40.2, 48.2, 75.2, 83.2, 91.2, 99.2, 107.2},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+    end
+    if side == "LEFT" or side == "RIGHT" or side == "BOTH" then -- Alerts for Both sides
+        local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 4, 4, encID) -- final set of stars
+        Alert.TTS = false
+        local timers = {
+            [16] = {130.4, 137.2, 144.4, 150.2, 157.4, 164.2},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+
+        local Alert = self:CreateDefaultAlert("Move", "Text", nil, 5, 4, encID) -- Move is same for both
+        Alert.TTSTimer = 0
+        local timers = {
+            [16] = {65, 120},
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
     end
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
         self.LuraRunesFrame = self.LuraRunesFrame or CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
