@@ -315,6 +315,9 @@ local defaults = {
 }
 
 function NSI:AddMissingDefaults()
+    if not NSRT then
+        NSRT = {}
+    end
     for k, v in pairs(defaults) do
         if NSRT[k] == nil then
             NSRT[k] = v
