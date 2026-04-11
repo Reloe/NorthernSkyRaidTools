@@ -51,8 +51,6 @@ local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
 local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
 local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
-local BuildNotesUI                 = NSI.UI.Notes.BuildNotesUI
-
 -- ============================================================
 -- Vertical tab sidebar layout
 -- ============================================================
@@ -389,16 +387,12 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Build custom UI components
     -- --------------------------------------------------------
-    BuildNotesUI(
-        tabSystem:GetTabFrameByName("SharedNotes"),
-        tabSystem:GetTabFrameByName("PersonalNotes")
-    )
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
-    NSUI.reminders_frame          = BuildRemindersEditUI()
+    NSUI.reminders_frame          = BuildRemindersEditUI(tabSystem:GetTabFrameByName("SharedNotes"))
     NSUI.pasound_frame            = BuildPASoundEditUI()
-    NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI()
+    NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()
 
