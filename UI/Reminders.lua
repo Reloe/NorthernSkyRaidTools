@@ -273,9 +273,9 @@ local function BuildReminderScreen(personal, parentFrame)
         [3179] = 7448212, -- Fallen King Salhadaar
         [3178] = 7448207, -- Vaelgor & Ezzorak
         [3180] = 7448211, -- Lightblinded Vanguard
-        [3181] = 5764904, -- Crown of the Cosmos
-        [3306] = 7448205, -- Chimaerus
-        [3182] = 7448202, -- Belo'ren
+        [3181] = 7448205, -- Crown of the Cosmos
+        [3306] = 7448202, -- Chimaerus
+        [3182] = 7448203, -- Belo'ren
         [3183] = 7448204, -- Midnight Falls
     }
 
