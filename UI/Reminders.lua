@@ -441,7 +441,7 @@ local function BuildReminderScreen(personal, parentFrame)
         if NSUI.Sidebar then NSUI.Sidebar:UpdateIcons() end
     end
 
-    local activateLabel = personal and "Load" or "Activate & Send"
+    local activateLabel = personal and "Load" or "Load & Send"
     local ActivateButton = CreateButton(screen, activateLabel, function()
         if not screen.selectedName then return end
         if not personal then SaveCurrentNote() end
