@@ -177,6 +177,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon)
     local buttonObj = {
         frame      = btn,
         label      = label,
+        labelFrame = labelFrame,
         hoverBg    = hoverBg,
         selectedBg = selectedBg,
         _selected  = false,

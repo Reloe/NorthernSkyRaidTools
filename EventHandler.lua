@@ -376,6 +376,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
                 self.Reminder = reminderstring
+                self.ReminderReceivedTime = GetTime()
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
             self:ProcessReminder()
@@ -433,6 +434,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "GROUP_FORMED" and wowevent then
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.NSUI and NSRT.NSUI.reminders_frame then NSUI.reminders_frame.UpdateButtonAccess() end
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
         local unit, ver, ignoreCheck = ...
@@ -498,7 +500,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
-
+        
         if not self:DifficultyCheck(14) then return end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck(14) then return end
