@@ -450,7 +450,7 @@ local function BuildEncounterAlertsOptions()
             name = "Create Rune-Macros",
             desc = "This will create the macros you need for the 5 different runes, automatically using the correct icons as well. Clickable Buttons have been removed as they caused too many issues.",
             func = function(self)
-                local iconIDs = {"134635", "340528", "351033", "7242384", "236903"}
+                local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
                 for i=1, 5 do
                     local macroName = "NSRT_LURA_RUNE_"..i
                     if not GetMacroInfo(macroName) then
