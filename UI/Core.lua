@@ -38,6 +38,27 @@ NSUI:SetFrameStrata("HIGH")
 DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "x |cFF00FFFFbird|r")
 NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 
+-- Title bar icons
+local northernSkyIconFrame = CreateFrame("Frame", "NSUINorthernSkyTitleIconFrame", NSUI)
+northernSkyIconFrame:SetSize(20, 20)
+northernSkyIconFrame:SetPoint("RIGHT", _G["NSUITitle"], "LEFT", -4, 0)
+northernSkyIconFrame:SetFrameLevel(3)
+
+local velocityIconFrame = CreateFrame("Frame", "NSUIVelocityTitleIconFrame", NSUI)
+velocityIconFrame:SetSize(16, 16)
+velocityIconFrame:SetPoint("LEFT", _G["NSUITitle"], "RIGHT", 4, 0)
+velocityIconFrame:SetFrameLevel(3)
+
+local northernSkyIcon = northernSkyIconFrame:CreateTexture(nil, "OVERLAY")
+northernSkyIcon:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo]])
+northernSkyIcon:SetSize(20, 20)
+northernSkyIcon:SetPoint("CENTER")
+
+local velocityIcon = velocityIconFrame:CreateTexture(nil, "OVERLAY")
+velocityIcon:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\VelocityLogo.png]])
+velocityIcon:SetSize(16, 16)
+velocityIcon:SetPoint("CENTER")
+
 NSUI.OptionsChanged = {
     ["general"] = {},
     ["nicknames"] = {},
