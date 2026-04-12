@@ -56,7 +56,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
         if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
-        self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
+        if NSRT.StoredSharedReminder then
+            self.Reminder = NSRT.StoredSharedReminder
+        else
+            self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
+        end
         self:SetReminder(NSRT.ActivePersonalReminder, true, true) -- loading active personal reminder from last session
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
@@ -218,6 +222,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
                 self.Reminder = reminderstring
+                NSRT.StoredSharedReminder = reminderstring
                 self.ReminderReceivedTime = GetTime()
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end

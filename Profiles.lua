@@ -17,6 +17,7 @@ local defaults = {
     -- Active reminder persistence
     ActiveReminder = nil,
     ActivePersonalReminder = nil,
+    StoredSharedReminder = nil,
 
     -- NSUI / timeline window
     NSUI = {
