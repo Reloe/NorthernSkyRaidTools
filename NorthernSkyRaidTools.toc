@@ -28,6 +28,7 @@ CooldownCheck.lua
 ReadyCheck.lua
 PrivateAura.lua
 QoL.lua
+Profiles.lua
 
 # Encounter Alerts
 EncounterAlerts/MidnightS1/ImperatorAverzian.lua
