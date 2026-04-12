@@ -875,7 +875,19 @@ local function BuildReminderScreen(personal, parentFrame)
         line.nameLabel:SetWordWrap(false)
 
         line:SetScript("OnClick", function()
-            SelectReminder(line.name)
+            local now = GetTime()
+            if personal and line._lastClick and (now - line._lastClick) < 0.4 then
+                -- Double-click: select and load the note
+                line._lastClick = nil
+                SelectReminder(line.name)
+                SaveCurrentNote()
+                NSI:SetReminder(line.name, true)
+                screen.scrollbox:MasterRefresh()
+                if NSUI.Sidebar then NSUI.Sidebar:UpdateIcons() end
+            else
+                line._lastClick = now
+                SelectReminder(line.name)
+            end
         end)
 
         -- Delete button (trash icon, rightmost)
