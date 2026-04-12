@@ -325,7 +325,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             [16] = {33, 95, 157},
         }
         self.LuraRuneTimers = {}
-        if preview then return end
+        if preview then self.LuraRunesFrame:Show() return end
         for i, time in ipairs(timers[id] or {}) do -- enable event register 2s before each memory game. then disable it again later
             self.LuraRuneTimers[i] = C_Timer.NewTimer(time-2, function()
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
