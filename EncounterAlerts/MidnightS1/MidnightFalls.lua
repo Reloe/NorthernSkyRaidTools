@@ -282,7 +282,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 if self.HideTimer then
                     self.HideTimer:Cancel()
                 end
-                self.HideTimer = C_Timer.NewTimer(15, function()
+                local hideduration = self.Phase == 4 and 10 or 15
+                self.HideTimer = C_Timer.NewTimer(hideduration, function()
                     HideAllRunes()
                 end)
 
@@ -298,7 +299,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 if self.HideTimer then
                     self.HideTimer:Cancel()
                 end
-                self.HideTimer = C_Timer.NewTimer(15, function()
+                local hideduration = self.Phase == 4 and 10 or 15
+                self.HideTimer = C_Timer.NewTimer(hideduration, function()
                     HideAllRunes()
                 end)
 
@@ -403,11 +405,33 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
             self.PhaseSwapTime = now
             if self.Phase == 4 and difficultyID == 16 then
                 if self.LuraRunesFrame then
-                    self.LuraRunesFrame:Show()
                     self.LuraRunesFrame:SetWidth(300)
                     self.LuraRunesFrame:SetHeight(60)
                     self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
                     self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
+                end
+                local timers = {20, 40, 75, 95, 130, 150}
+                if self.LuraRuneTimers then
+                    for i, v in ipairs(self.LuraRuneTimers) do
+                        if v and v.Cancel then
+                            v:Cancel()
+                        end
+                    end
+                end
+                self.LuraRuneTimers = {}
+                for i, time in ipairs(timers) do -- remove previous display 2s before memory game
+                    self.LuraRuneTimers[i] = C_Timer.NewTimer(time-2, function()
+                        for num=1, 5 do
+                            if self.LuraRunesDisplay[num] then
+                                self.LuraRunesDisplay[num]:Hide()
+                            end
+                            if self.LuraRunesNumbers[num] then
+                                self.LuraRunesNumbers[num]:Hide()
+                            end
+                        end
+                        self.LuraRunesCompleted = {}
+                        self.LuraRunesFrame:Hide()
+                    end)
                 end
                 return
             end
