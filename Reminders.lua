@@ -1032,9 +1032,11 @@ function NSI:SetReminder(name, personal, skipupdate)
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
+        NSRT.StoredSharedReminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
     else
         self.Reminder = ""
+        NSRT.StoredSharedReminder = ""
         NSRT.ActiveReminder = nil
     end
     if not skipupdate then
