@@ -308,6 +308,9 @@ local function BuildReminderScreen(personal, parentFrame)
     screen._metaBossEncID = nil
     screen._metaDiff      = nil
 
+    -- Forward-declared so dropdown onclick closures can reference it before it is defined below
+    local SaveCurrentNote
+
     local metaGap         = 4
     local bossDropW       = 180
     local diffDropW       = 110
@@ -315,7 +318,10 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local function BuildBossMetaOptions()
         local options = {
-            { label = "No Boss", value = 0, onclick = function(_, _, _) screen._metaBossEncID = nil end },
+            { label = "No Boss", value = 0, onclick = function(_, _, _)
+                screen._metaBossEncID = nil
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+            end },
         }
         local sorted = {}
         for encID, order in pairs(NSI.EncounterOrder) do
@@ -330,7 +336,10 @@ local function BuildReminderScreen(personal, parentFrame)
                 icon = encounterIcons[encID],
                 iconsize = { 16, 16 },
                 texcoord = { 0.05, 0.95, 0.05, 0.95 },
-                onclick = function(_, _, v) screen._metaBossEncID = v end,
+                onclick = function(_, _, v)
+                    screen._metaBossEncID = v
+                    if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+                end,
             })
         end
         return options
@@ -343,9 +352,18 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local function BuildDifficultyOptions()
         return {
-            { label = "Normal", value = "Normal", onclick = function(_, _, v) screen._metaDiff = v end },
-            { label = "Heroic", value = "Heroic", onclick = function(_, _, v) screen._metaDiff = v end },
-            { label = "Mythic", value = "Mythic", onclick = function(_, _, v) screen._metaDiff = v end },
+            { label = "Normal", value = "Normal", onclick = function(_, _, v)
+                screen._metaDiff = v
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+            end },
+            { label = "Heroic", value = "Heroic", onclick = function(_, _, v)
+                screen._metaDiff = v
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+            end },
+            { label = "Mythic", value = "Mythic", onclick = function(_, _, v)
+                screen._metaDiff = v
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+            end },
         }
     end
 
@@ -363,24 +381,34 @@ local function BuildReminderScreen(personal, parentFrame)
     local function SaveNameEntryRename(editBox)
         local oldname = screen.selectedName
         local newname = editBox:GetText()
-        editBox:ClearFocus()
         if not oldname or newname == "" or newname == oldname then
+            editBox:ClearFocus()
             nameEntry:SetText(oldname or "")
             return
         end
         local store = NSRT[storeKey]
         if store[newname] then
+            editBox:ClearFocus()
             nameEntry:SetText(oldname)
             return
         end
-        store[newname] = store[oldname]
+        local oldContent = store[oldname] or ""
+        local encID, _, diff = ParseFirstLine(oldContent)
+        local newFirstLine = BuildFirstLine(encID, newname, diff)
+        local newContent = newFirstLine and (newFirstLine .. "\n" .. StripFirstLine(oldContent)) or oldContent
+        store[newname] = newContent
         store[oldname] = nil
+        if screen.editor then screen.editor:SetText(newContent) end
         if not personal and NSRT.InviteList then
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             NSRT.InviteList[oldname] = nil
         end
         if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
         screen.selectedName = newname
+        -- ClearFocus is intentionally called after selectedName is updated. Calling it
+        -- earlier would trigger OnEditFocusLost synchronously, re-entering this function
+        -- before the rename is done and causing it to treat the new name as a conflict.
+        editBox:ClearFocus()
         screen.scrollbox:MasterRefresh()
     end
     nameEntry.editbox:SetScript("OnEnterPressed", SaveNameEntryRename)
@@ -408,13 +436,16 @@ local function BuildReminderScreen(personal, parentFrame)
     -- Action Buttons (below editor)
     -- ====================================================================
 
-    local function SaveCurrentNote()
+    SaveCurrentNote = function()
         if not screen.selectedName then return end
-        local editorText = editor:GetText()
+        -- Strip any existing metadata first line from the editor, then rebuild from controls
+        local bodyText = StripFirstLine(editor:GetText())
         local newName = screen.nameEntry and screen.nameEntry:GetText()
         if not newName or newName == "" then newName = screen.selectedName end
         local firstLine = BuildFirstLine(screen._metaBossEncID, newName, screen._metaDiff)
-        local fullText = firstLine and (firstLine .. "\n" .. editorText) or editorText
+        local fullText = firstLine and (firstLine .. "\n" .. bodyText) or bodyText
+        -- Update the editor so the new first line is visible
+        editor:SetText(fullText)
         local oldName = screen.selectedName
         if newName ~= oldName then
             local store = NSRT[storeKey]
@@ -444,7 +475,7 @@ local function BuildReminderScreen(personal, parentFrame)
     local activateLabel = personal and "Load" or "Load & Send"
     local ActivateButton = CreateButton(screen, activateLabel, function()
         if not screen.selectedName then return end
-        if not personal then SaveCurrentNote() end
+        SaveCurrentNote()
         NSI:SetReminder(screen.selectedName, personal)
         if not personal then
             NSI:Broadcast("NSI_REM_SHARE", "RAID", NSI.Reminder, nil, true)
@@ -685,8 +716,8 @@ local function BuildReminderScreen(personal, parentFrame)
         if screen.diffDropdown and diff then screen.diffDropdown:Select(diff) end
         if screen.bossDropdown then screen.bossDropdown:Select(encID or 0) end
 
-        -- Strip the hidden first line before showing in the editor
-        editor:SetText(StripFirstLine(rawContent))
+        -- Show full content including the metadata first line
+        editor:SetText(rawContent)
         if screen.scrollbox then screen.scrollbox:Refresh() end
     end
     screen.SelectReminder = SelectReminder
