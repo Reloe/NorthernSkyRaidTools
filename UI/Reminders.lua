@@ -565,7 +565,7 @@ local function BuildReminderScreen(personal, parentFrame)
     ActivateButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", editorLeft, 10)
     table.insert(roleGatedButtons, ActivateButton)
 
-    local UpdateButton = CreateButton(screen, "Update", function()
+    local UpdateButton = CreateButton(screen, "Save", function()
         if screen.viewingReceivedNote then
             SaveReceivedNote()
             return
