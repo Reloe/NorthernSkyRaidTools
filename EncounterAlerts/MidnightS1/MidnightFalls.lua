@@ -90,7 +90,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         local Alert = self:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID)
         local timers = {
-            [16] = {26.8, 56.8, 86.8}
+            [16] = {26.8, 56.8, 86.8, 105}
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
