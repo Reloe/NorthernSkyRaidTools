@@ -158,7 +158,7 @@ Press 'Enter' to hear the TTS]],
                 NSRT.Settings["GlobalFontSize"] = value
                 NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
             end,
-            min = 0,
+            min = 10,
             max = 100,
         },
     }
