@@ -143,7 +143,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", nil, 20, 4, encID)
+        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", 1266897, 20, 4, encID)
         Alert.TTS = false
         local timers = {
             [16] = {38.7, 110.7, 148.7},
@@ -172,7 +172,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         }
         self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", nil, 20, 4, encID)
+        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", 1266897, 20, 4, encID)
         Alert.TTS = false
         local timers = {
             [16] = {58.5, 93.5, 168.5},
