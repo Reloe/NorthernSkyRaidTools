@@ -203,7 +203,45 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self:AddRemindersFromTable(Alert, timers[id])
     end
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
-        self.LuraRunesFrame = self.LuraRunesFrame or CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
+        if not self.LuraRunesFrame then
+            self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
+            self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
+                if e == "CHAT_MSG_RAID" then
+                    self.LuraRunesFrame:Show()
+                    if self.HideTimer then
+                        self.HideTimer:Cancel()
+                    end
+                    local hideduration = self.Phase == 4 and 13 or 15
+                    self.HideTimer = C_Timer.NewTimer(hideduration, function()
+                        HideAllRunes()
+                    end)
+
+                    if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
+                    local pos = 2
+                    if self.LuraRunesCompleted[pos] then pos = 3 end
+                    if self.LuraRunesCompleted[pos] then pos = 5 end
+                    self.LuraRunesCompleted[pos] = true
+                    if self.LuraRunesInverted then pos = 6-pos end
+                    DisplayRune(pos, msg, true)
+                elseif e == "CHAT_MSG_RAID_LEADER" then
+                    self.LuraRunesFrame:Show()
+                    if self.HideTimer then
+                        self.HideTimer:Cancel()
+                    end
+                    local hideduration = self.Phase == 4 and 13 or 15
+                    self.HideTimer = C_Timer.NewTimer(hideduration, function()
+                        HideAllRunes()
+                    end)
+
+                    if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
+                    local pos = 1
+                    if self.LuraRunesCompleted[pos] then pos = 4 end
+                    self.LuraRunesCompleted[pos] = true
+                    if self.LuraRunesInverted then pos = 6-pos end
+                    DisplayRune(pos, msg, true)
+                end
+            end)
+        end
         self.LuraRunesFrame:ClearAllPoints()
         self.LuraRunesFrame:SetPoint(NSRT.Settings.LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT", NSRT.Settings.LuraDisplayOffsetX or 500, NSRT.Settings.LuraDisplayOffsetY or -300)
         self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
@@ -221,6 +259,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         local XOffset = {50, 60, 0, -60, -50}
         local YOffset = {50, -25, -70, -25, 50}
         self.AlertTimers = self.AlertTimers or {}
+        local isTank = UnitGroupRolesAssigned("player") == "TANK"
 
         local function DisplayRune(pos, text, isMythic)
             if not isMythic then
@@ -250,8 +289,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60, 0)
                 self.LuraRunesNumbers[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60+22, 30)
             else
-                self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos])
-                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos]+30)
+                local posX = isTank and XOffset[pos]*-1 or XOffset[pos]
+                local posY = isTank and YOffset[pos]*-1 or YOffset[pos]
+                self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY)
+                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY+30)
             end
             self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
             self.LuraRunesDisplay[pos]:Show()
@@ -283,42 +324,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
             self.LuraRunesFrame:Hide()
         end
-        self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
-            if e == "CHAT_MSG_RAID" then
-                self.LuraRunesFrame:Show()
-                if self.HideTimer then
-                    self.HideTimer:Cancel()
-                end
-                local hideduration = self.Phase == 4 and 10 or 15
-                self.HideTimer = C_Timer.NewTimer(hideduration, function()
-                    HideAllRunes()
-                end)
-
-                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
-                local pos = 2
-                if self.LuraRunesCompleted[pos] then pos = 3 end
-                if self.LuraRunesCompleted[pos] then pos = 5 end
-                self.LuraRunesCompleted[pos] = true
-                if self.LuraRunesInverted then pos = 6-pos end
-                DisplayRune(pos, msg, true)
-            elseif e == "CHAT_MSG_RAID_LEADER" then
-                self.LuraRunesFrame:Show()
-                if self.HideTimer then
-                    self.HideTimer:Cancel()
-                end
-                local hideduration = self.Phase == 4 and 10 or 15
-                self.HideTimer = C_Timer.NewTimer(hideduration, function()
-                    HideAllRunes()
-                end)
-
-                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
-                local pos = 1
-                if self.LuraRunesCompleted[pos] then pos = 4 end
-                self.LuraRunesCompleted[pos] = true
-                if self.LuraRunesInverted then pos = 6-pos end
-                DisplayRune(pos, msg, true)
-            end
-        end)
         local timers = {
             [14] = {10, 80, 150},
             [15] = {10, 80, 150},
