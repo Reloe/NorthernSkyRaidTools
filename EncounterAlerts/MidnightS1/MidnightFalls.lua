@@ -245,7 +245,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesDisplay[pos]:Show()
 
             local number = pos
-            if self.LuraRunesInverted then number = 6-pos end
             self.LuraRunesNumbers[pos]:SetText(number)
             self.LuraRunesNumbers[pos]:Show()
         end
@@ -285,7 +284,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                     if self.LuraRunesCompleted[pos] then pos = 3 end
                     if self.LuraRunesCompleted[pos] then pos = 5 end
                     self.LuraRunesCompleted[pos] = true
-                    if self.LuraRunesInverted then pos = 6-pos end
                     DisplayRune(pos, msg, true)
                 elseif e == "CHAT_MSG_RAID_LEADER" then
                     self.LuraRunesFrame:Show()
@@ -301,7 +299,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                     local pos = 1
                     if self.LuraRunesCompleted[pos] then pos = 4 end
                     self.LuraRunesCompleted[pos] = true
-                    if self.LuraRunesInverted then pos = 6-pos end
                     DisplayRune(pos, msg, true)
                 end
             end)
@@ -315,7 +312,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self.LuraRunesFrame:SetHeight(200)
 
         self.LuraRunesCompleted = {}
-        self.LuraRunesInverted = false
 
         self.LuraRunesDisplay = self.LuraRunesDisplay or {}
         self.LuraRunesNumbers = self.LuraRunesNumbers or {}
@@ -343,14 +339,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         self.AlertTimers[1] = C_Timer.NewTimer(70, function()
             if not self.AlertTimers then return end
-            if id == 16 then self.LuraRunesInverted = true end
             HideAllRunes()
             self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(140, function()
             if not self.AlertTimers then return end
-            if id == 16 then self.LuraRunesInverted = false end
             HideAllRunes()
             self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
