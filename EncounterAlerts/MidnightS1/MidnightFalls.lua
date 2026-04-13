@@ -203,6 +203,70 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self:AddRemindersFromTable(Alert, timers[id])
     end
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
+
+        local isTank = UnitGroupRolesAssigned("player") == "TANK"
+        local XOffset = {50, 60, 0, -60, -50}
+        local YOffset = {50, -25, -70, -25, 50}
+        local function DisplayRune(pos, text, isMythic)
+            if not isMythic then
+                pos = 1
+                for i=2, 5 do
+                    if self.LuraRunesCompleted[i-1] then
+                        pos = i
+                    else
+                        break
+                    end
+                end
+                self.LuraRunesCompleted[pos] = true
+            end
+
+            if not self.LuraRunesDisplay[pos] then
+                self.LuraRunesDisplay[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
+                self.LuraRunesDisplay[pos]:SetFont("Fonts\\FRIZQT__.TTF", 15)
+                self.LuraRunesDisplay[pos]:SetTextColor(1, 1, 1)
+
+                self.LuraRunesNumbers[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
+                self.LuraRunesNumbers[pos]:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 25, "OUTLINE")
+                self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
+                self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
+            end
+            self.LuraRunesDisplay[pos]:ClearAllPoints()
+            self.LuraRunesNumbers[pos]:ClearAllPoints()
+            if self.Phase == 4 then
+                self.LuraRunesDisplay[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60, 0)
+                self.LuraRunesNumbers[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60+22, 30)
+            else
+                local posX = isTank and XOffset[pos]*-1 or XOffset[pos]
+                local posY = isTank and YOffset[pos]*-1 or YOffset[pos]
+                self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY)
+                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY+30)
+            end
+            self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
+            self.LuraRunesDisplay[pos]:Show()
+
+            local number = pos
+            if self.LuraRunesInverted then number = 6-pos end
+            self.LuraRunesNumbers[pos]:SetText(number)
+            self.LuraRunesNumbers[pos]:Show()
+        end
+
+        local function HideAllRunes()
+            for i=1, 5 do
+                if self.LuraRunesDisplay[i] then
+                    self.LuraRunesDisplay[i]:Hide()
+                end
+                if self.LuraRunesNumbers[i] then
+                    self.LuraRunesNumbers[i]:Hide()
+                end
+            end
+            self.LuraRunesCompleted = {}
+            if self.Phase ~= 4 then
+                self.LuraRunesFrame:UnregisterEvent("CHAT_MSG_RAID")
+                self.LuraRunesFrame:UnregisterEvent("CHAT_MSG_RAID_LEADER")
+            end
+            self.LuraRunesFrame:Hide()
+        end
+
         if not self.LuraRunesFrame then
             self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
             self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
@@ -255,74 +319,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         self.LuraRunesDisplay = self.LuraRunesDisplay or {}
         self.LuraRunesNumbers = self.LuraRunesNumbers or {}
-
-        local XOffset = {50, 60, 0, -60, -50}
-        local YOffset = {50, -25, -70, -25, 50}
         self.AlertTimers = self.AlertTimers or {}
-        local isTank = UnitGroupRolesAssigned("player") == "TANK"
-
-        local function DisplayRune(pos, text, isMythic)
-            if not isMythic then
-                pos = 1
-                for i=2, 5 do
-                    if self.LuraRunesCompleted[i-1] then
-                        pos = i
-                    else
-                        break
-                    end
-                end
-                self.LuraRunesCompleted[pos] = true
-            end
-            if not self.LuraRunesDisplay[pos] then
-                self.LuraRunesDisplay[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
-                self.LuraRunesDisplay[pos]:SetFont("Fonts\\FRIZQT__.TTF", 15)
-                self.LuraRunesDisplay[pos]:SetTextColor(1, 1, 1)
-
-                self.LuraRunesNumbers[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
-                self.LuraRunesNumbers[pos]:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 25, "OUTLINE")
-                self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
-                self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
-            end
-            self.LuraRunesDisplay[pos]:ClearAllPoints()
-            self.LuraRunesNumbers[pos]:ClearAllPoints()
-            if self.Phase == 4 then
-                self.LuraRunesDisplay[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60, 0)
-                self.LuraRunesNumbers[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60+22, 30)
-            else
-                local posX = isTank and XOffset[pos]*-1 or XOffset[pos]
-                local posY = isTank and YOffset[pos]*-1 or YOffset[pos]
-                self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY)
-                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY+30)
-            end
-            self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
-            self.LuraRunesDisplay[pos]:Show()
-
-            local number = pos
-            if self.LuraRunesInverted then number = 6-pos end
-            self.LuraRunesNumbers[pos]:SetText(number)
-            self.LuraRunesNumbers[pos]:Show()
-        end
         if preview then
             local iconIDs = {"134635", "340528", "351033", "7242384", "236903"}
             for i=1, 5 do
                 DisplayRune(i, iconIDs[i], false)
             end
-        end
-        local function HideAllRunes()
-            for i=1, 5 do
-                if self.LuraRunesDisplay[i] then
-                    self.LuraRunesDisplay[i]:Hide()
-                end
-                if self.LuraRunesNumbers[i] then
-                    self.LuraRunesNumbers[i]:Hide()
-                end
-            end
-            self.LuraRunesCompleted = {}
-            if self.Phase ~= 4 then
-                self.LuraRunesFrame:UnregisterEvent("CHAT_MSG_RAID")
-                self.LuraRunesFrame:UnregisterEvent("CHAT_MSG_RAID_LEADER")
-            end
-            self.LuraRunesFrame:Hide()
         end
         local timers = {
             [14] = {10, 80, 150},
@@ -356,8 +358,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     end
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    if self.LuraRunesFrame then
+NSI.EncounterAlertStop[encID] = function(self, Alertcall) -- on ENCOUNTER_END
+    if self.LuraRunesFrame and not Alertcall then
         self.LuraRunesFrame:UnregisterAllEvents()
         self.LuraRunesFrame:Hide()
     end

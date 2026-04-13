@@ -1461,7 +1461,7 @@ function NSAPI:GetAlerts(encounterID, id)
     NSI.TLAlerts = {}
     if NSI.EncounterAlertStart[encounterID] and NSI:IsUsingTLAlerts() then NSI.EncounterAlertStart[encounterID](NSI, id) end
     if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
-    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI) end
+    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI, true) end
     return NSI.TLAlerts
 end
 
