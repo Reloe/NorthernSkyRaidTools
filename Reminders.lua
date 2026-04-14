@@ -25,6 +25,28 @@ local symbols = {
 
 function NSI:AddToReminder(info)
     info = CopyTable(info)
+    -- Apply per-boss display/sound overrides set via the Encounters UI (hardcoded alerts only)
+    if not info._noEncOverride and info.encID then
+        local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[info.encID]
+        if enc then
+            if enc.overrideType and enc.overrideType ~= "" then
+                info.BarOverwrite  = (enc.overrideType == "Bar")
+                info.IconOverwrite = (enc.overrideType == "Icon")
+            end
+            if enc.overrideText and enc.overrideText ~= ""     then info.text    = enc.overrideText                  end
+            if enc.overrideSpellID ~= nil                      then info.spellID = enc.overrideSpellID               end
+            if enc.overrideDur     ~= nil                      then info.dur     = enc.overrideDur                   end
+            if enc.overrideTTSEnabled ~= nil then
+                if enc.overrideTTSEnabled then
+                    info.TTS = (enc.overrideTTSText and enc.overrideTTSText ~= "") and enc.overrideTTSText or true
+                else
+                    info.TTS = false
+                end
+            end
+            if enc.overrideTTSTimer ~= nil then info.TTSTimer  = enc.overrideTTSTimer end
+            if enc.overrideCountdown ~= nil then info.countdown = enc.overrideCountdown end
+        end
+    end
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
     if info.colors and type(info.colors) == "string" then
@@ -1473,4 +1495,43 @@ function NSI:AddRemindersFromTable(Alert, timers)
         Alert.time = time
         self:AddToReminder(Alert)
      end
+end
+
+-- Iterates NSRT.CustomBossAlerts and registers any alerts that match the
+-- current encounter and pass the player's load conditions.
+-- Called on ENCOUNTER_START after the hardcoded EncounterAlertStart handlers.
+function NSI:LoadCustomBossAlerts(encID)
+    if not NSRT.CustomBossAlerts or #NSRT.CustomBossAlerts == 0 then return end
+    local playerName  = UnitName("player")
+    local playerClass = select(2, UnitClass("player"))
+    local playerSpec  = GetSpecialization()
+    for _, alert in ipairs(NSRT.CustomBossAlerts) do
+        if alert.enabled and (alert.encID == 0 or alert.encID == encID) then
+            local classOk = not alert.loadClass or alert.loadClass == "" or alert.loadClass == playerClass
+            local specOk  = not alert.loadSpec  or alert.loadSpec  == 0  or alert.loadSpec  == playerSpec
+            local charOk  = not alert.loadCharacter or alert.loadCharacter == "" or alert.loadCharacter == playerName
+            if classOk and specOk and charOk then
+                local ttsText = (alert.TTSEnabled and alert.TTSText ~= "" and alert.TTSText) or
+                                (alert.TTSEnabled and alert.text) or false
+                for _, t in ipairs(alert.times or {}) do
+                    self:AddToReminder({
+                        text          = alert.text,
+                        spellID       = alert.spellID,
+                        dur           = alert.dur or 8,
+                        phase         = alert.phase or 1,
+                        encID         = encID,
+                        time          = t,
+                        TTS           = ttsText,
+                        TTSTimer      = alert.TTSTimer,
+                        countdown     = alert.countdown or false,
+                        notsticky     = true,
+                        IsAlert       = true,
+                        BarOverwrite  = alert.Type == "Bar",
+                        IconOverwrite = alert.Type == "Icon",
+                        _noEncOverride = true,
+                    })
+                end
+            end
+        end
+    end
 end

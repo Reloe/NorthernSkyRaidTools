@@ -52,10 +52,12 @@ UI/Core.lua
 UI/Components.lua
 
 # UI - Components (depend on Core)
+UI/BossData.lua
 UI/Notes.lua
 UI/VersionCheck.lua
 UI/Nicknames.lua
 UI/Reminders.lua
+UI/BossReminders.lua
 UI/Cooldowns.lua
 UI/PrivateAuras.lua
 UI/General.lua

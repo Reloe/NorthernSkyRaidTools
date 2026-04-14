@@ -8,6 +8,7 @@ local defaults = {
     InviteList = {},
     AssignmentSettings = {},
     CooldownList = {},
+    CustomBossAlerts = {},
     PASounds = {
         UseDefaultPASounds = false,
         UseDefaultMPlusPASounds = false,

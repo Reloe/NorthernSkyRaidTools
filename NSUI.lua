@@ -18,6 +18,7 @@ local options_slider_template      = Core.options_slider_template
 local options_button_template      = Core.options_button_template
 
 -- Get UI builder functions from modules
+local BuildBossRemindersUI         = NSI.UI.BossReminders.BuildBossRemindersUI
 local BuildVersionCheckUI          = NSI.UI.VersionCheck.BuildVersionCheckUI
 local BuildNicknameEditUI          = NSI.UI.Nicknames.BuildNicknameEditUI
 local BuildRemindersEditUI         = NSI.UI.Reminders.BuildRemindersEditUI
@@ -71,6 +72,7 @@ local TABS_GROUPS                  = {
         { name = "Reminders",       text = "Reminders" },
         { name = "Reminders-Note",  text = "Reminder Strings" },
         { name = "Assignments",     text = "Assignments" },
+        { name = "Encounters",      text = "Encounters" },
         { name = "EncounterAlerts", text = "Encounter Alerts" },
     },
     {
@@ -280,6 +282,7 @@ function NSUI:Init()
     local reminder_tab            = tabSystem:GetTabFrameByName("Reminders")
     local reminder_note_tab       = tabSystem:GetTabFrameByName("Reminders-Note")
     local assignments_tab         = tabSystem:GetTabFrameByName("Assignments")
+    local encounters_tab          = tabSystem:GetTabFrameByName("Encounters")
     local encounteralerts_tab     = tabSystem:GetTabFrameByName("EncounterAlerts")
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
     local privateaura_tab         = tabSystem:GetTabFrameByName("PrivateAura")
@@ -387,6 +390,7 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Build custom UI components
     -- --------------------------------------------------------
+    NSUI.encounters_frame         = BuildBossRemindersUI(encounters_tab)
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()

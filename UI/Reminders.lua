@@ -293,18 +293,6 @@ local function BuildReminderScreen(personal, parentFrame)
     -- Metadata bar: Boss, Difficulty, Name — replaces the "Reminder Content" label
     -- ====================================================================
 
-    local encounterIcons = {
-        [3176] = 7448209, -- Imperator Averzian
-        [3177] = 7448210, -- Vorasius
-        [3179] = 7448212, -- Fallen King Salhadaar
-        [3178] = 7448207, -- Vaelgor & Ezzorak
-        [3180] = 7448211, -- Lightblinded Vanguard
-        [3181] = 7448205, -- Crown of the Cosmos
-        [3306] = 7448202, -- Chimaerus
-        [3182] = 7448203, -- Belo'ren
-        [3183] = 7448204, -- Midnight Falls
-    }
-
     ParseFirstLine = function(text)
         local firstLine = text:match("^([^\n]+)")
         if not firstLine or not firstLine:find("Name:") then return nil, nil, nil end
@@ -344,34 +332,11 @@ local function BuildReminderScreen(personal, parentFrame)
     local nameEntryW      = 396
 
     local function BuildBossMetaOptions()
-        local options = {
-            { label = "No Boss", value = 0, onclick = function(_, _, _)
-                screen._metaBossEncID = nil
-                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
-            end },
-        }
-        local sorted = {}
-        for encID, order in pairs(NSI.EncounterOrder) do
-            table.insert(sorted, { encID = encID, order = order })
-        end
-        table.sort(sorted, function(a, b) return a.order < b.order end)
-        for _, entry in ipairs(sorted) do
-            local encID = entry.encID
-            table.insert(options, {
-                label = NSI.BossTimelineNames[encID] or ("Encounter " .. encID),
-                value = encID,
-                icon = encounterIcons[encID],
-                iconsize = { 16, 16 },
-                texcoord = { 0.05, 0.95, 0.05, 0.95 },
-                onclick = function(_, _, v)
-                    screen._metaBossEncID = v
-                    if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
-                end,
-            })
-        end
-        return options
+        return NSI.UI.BossData.BuildBossDropdownOptions(function(v)
+            screen._metaBossEncID = (v ~= 0) and v or nil
+            if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+            if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+        end, "No Boss")
     end
 
     local bossDropdown = DF:CreateDropDown(screen, BuildBossMetaOptions, nil, bossDropW, 22, nil,
@@ -758,7 +723,7 @@ local function BuildReminderScreen(personal, parentFrame)
                 table.insert(options, {
                     label = bossName,
                     value = encID,
-                    icon = encounterIcons[encID],
+                    icon = NSI.UI.BossData.BossIcons[encID],
                     iconsize = { 16, 16 },
                     texcoord = { 0.05, 0.95, 0.05, 0.95 },
                     onclick = function()

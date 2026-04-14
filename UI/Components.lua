@@ -76,7 +76,7 @@ local function RefreshFonts()
     end
 end
 
-local function CreateButton(parent, text, onClick, width, height, name, icon)
+local function CreateButton(parent, text, onClick, width, height, name, icon, textSize)
     -- ---- base frame -------------------------------------------
     -- Width is resolved after measuring the label; start with a stub size.
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
@@ -120,14 +120,15 @@ local function CreateButton(parent, text, onClick, width, height, name, icon)
     labelFrame:SetFrameLevel(btn:GetFrameLevel() + 2)
     labelFrame:EnableMouse(false)
 
+    local fontSize = textSize or STYLE.text_size
     local label = labelFrame:CreateFontString(nil, "overlay")
-    label:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), STYLE.text_size, "")
+    label:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), fontSize, "")
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")
     label:SetJustifyH("CENTER")
     label:SetAllPoints(labelFrame)
-    labelRegistry[#labelRegistry + 1] = {label = label, size = STYLE.text_size}
+    labelRegistry[#labelRegistry + 1] = {label = label, size = fontSize}
 
     -- ---- compute final button width & lay out content ---------
     local iconSize  = 14
@@ -248,11 +249,23 @@ local function CreateButton(parent, text, onClick, width, height, name, icon)
 end
 
 -- ============================================================
+--  CreateSubButton
+--
+--  Lighter-weight variant of CreateButton for secondary UI
+--  controls (inner tab bars, type selectors, etc.).
+--  Defaults: height=18, font size=12, no icon support.
+-- ============================================================
+local function CreateSubButton(parent, text, onClick, width, name)
+    return CreateButton(parent, text, onClick, width, 18, name, nil, 12)
+end
+
+-- ============================================================
 --  Export
 -- ============================================================
 NSI.UI = NSI.UI or {}
 NSI.UI.Components = {
-    CreateButton  = CreateButton,
-    RefreshFonts  = RefreshFonts,
-    STYLE         = STYLE,
+    CreateButton    = CreateButton,
+    CreateSubButton = CreateSubButton,
+    RefreshFonts    = RefreshFonts,
+    STYLE           = STYLE,
 }

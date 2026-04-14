@@ -123,6 +123,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
+        self:LoadCustomBossAlerts(self.EncounterID)
         self:StartReminders(self.Phase)
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
