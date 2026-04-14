@@ -134,6 +134,20 @@ local function GetOptionsTable(settingsName)
 end
 
 -- ---------------------------------------------------------------
+--  Positions the settings window above or below the mover
+--  depending on the current GrowDirection for that anchor type
+-- ---------------------------------------------------------------
+local function PositionSettingsWindow(win, moverFrame, settingsName)
+    local gd = NSRT.ReminderSettings[settingsName] and NSRT.ReminderSettings[settingsName].GrowDirection
+    win:ClearAllPoints()
+    if gd == "Down" then
+        win:SetPoint("BOTTOMLEFT", moverFrame, "TOPLEFT",    0,  3)
+    else
+        win:SetPoint("TOPLEFT",    moverFrame, "BOTTOMLEFT", 0, -3)
+    end
+end
+
+-- ---------------------------------------------------------------
 --  Creates (or shows) the settings popup for a given mover frame
 -- ---------------------------------------------------------------
 function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
@@ -141,6 +155,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
         if moverFrame.SettingsWindow:IsShown() then
             moverFrame.SettingsWindow:Hide()
         else
+            PositionSettingsWindow(moverFrame.SettingsWindow, moverFrame, settingsName)
             moverFrame.SettingsWindow:Show()
         end
         return
@@ -148,7 +163,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
 
     local optTable  = GetOptionsTable(settingsName)
     local winHeight = 400
-    local winWidth  = 320
+    local winWidth  = moverFrame:GetWidth()
 
     local win = CreateFrame("Frame", "NSRTAnchorWin_" .. settingsName, moverFrame, "BackdropTemplate")
     win:SetSize(winWidth, winHeight)
@@ -162,8 +177,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     win:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     win:SetBackdropBorderColor(0, 1, 1, 0.9)
 
-    -- Position below the mover frame
-    win:SetPoint("TOPLEFT", moverFrame, "BOTTOMLEFT", 0, -3)
+    PositionSettingsWindow(win, moverFrame, settingsName)
 
     -- Close button
     local closeBtn = CreateFrame("Button", nil, win)

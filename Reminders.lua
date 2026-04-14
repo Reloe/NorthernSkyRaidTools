@@ -464,6 +464,7 @@ function NSI:ArrangeStates(Type)
         local Spacing = s.Spacing or 0
         v.Frame:ClearAllPoints()
         if Type == "Texts" then
+            -- Texts stretch to anchor width, so double-point from anchor edges = centered
             local h = v.Frame.Text and v.Frame.Text:GetStringHeight() or s.FontSize or 14
             if s.GrowDirection == "Up" then
                 v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "TOPLEFT",  0, ANCHOR_PAD + (i-1)*(h+Spacing))
@@ -476,34 +477,33 @@ function NSI:ArrangeStates(Type)
             local w, h = s.Width, s.Height
             v.Frame:SetSize(w, h)
             if s.GrowDirection == "Up" then
-                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "TOPLEFT",   0,           ANCHOR_PAD + (i-1)*(h+Spacing))
+                v.Frame:SetPoint("BOTTOM", "NSUIReminderIconMover", "TOP",    0,                           ANCHOR_PAD + (i-1)*(h+Spacing))
             elseif s.GrowDirection == "Down" then
-                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderIconMover", "BOTTOMLEFT", 0,          -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+                v.Frame:SetPoint("TOP",    "NSUIReminderIconMover", "BOTTOM", 0,                          -(ANCHOR_PAD + (i-1)*(h+Spacing)))
             elseif s.GrowDirection == "Right" then
-                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderIconMover", "TOPRIGHT",  ANCHOR_PAD + (i-1)*(w+Spacing), 0)
+                v.Frame:SetPoint("LEFT",   "NSUIReminderIconMover", "RIGHT",  ANCHOR_PAD + (i-1)*(w+Spacing), 0)
             elseif s.GrowDirection == "Left" then
-                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderIconMover", "TOPLEFT",  -(ANCHOR_PAD + (i-1)*(w+Spacing)), 0)
+                v.Frame:SetPoint("RIGHT",  "NSUIReminderIconMover", "LEFT",  -(ANCHOR_PAD + (i-1)*(w+Spacing)), 0)
             end
         elseif Type == "Bars" then
-            local h = s.Height
+            local w, h = s.Width, s.Height
+            v.Frame:SetSize(w, h)
             if s.GrowDirection == "Up" then
-                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "TOPLEFT",  0, ANCHOR_PAD + (i-1)*(h+Spacing))
-                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderBarMover", "TOPRIGHT", 0, ANCHOR_PAD + (i-1)*(h+Spacing) + h)
+                v.Frame:SetPoint("BOTTOM", "NSUIReminderBarMover", "TOP",    0,  ANCHOR_PAD + (i-1)*(h+Spacing))
             else -- Down
-                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT",  0, -(ANCHOR_PAD + (i-1)*(h+Spacing) + h))
-                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderBarMover", "BOTTOMRIGHT", 0, -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+                v.Frame:SetPoint("TOP",    "NSUIReminderBarMover", "BOTTOM", 0, -(ANCHOR_PAD + (i-1)*(h+Spacing)))
             end
         elseif Type == "Circles" then
             local sz = s.Size or 80
             v.Frame:SetSize(sz, sz)
             if s.GrowDirection == "Up" then
-                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "TOPLEFT",   0,           ANCHOR_PAD + (i-1)*(sz+Spacing))
+                v.Frame:SetPoint("BOTTOM", "NSUIReminderCircleMover", "TOP",    0,                            ANCHOR_PAD + (i-1)*(sz+Spacing))
             elseif s.GrowDirection == "Down" then
-                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderCircleMover", "BOTTOMLEFT", 0,          -(ANCHOR_PAD + (i-1)*(sz+Spacing)))
+                v.Frame:SetPoint("TOP",    "NSUIReminderCircleMover", "BOTTOM", 0,                           -(ANCHOR_PAD + (i-1)*(sz+Spacing)))
             elseif s.GrowDirection == "Right" then
-                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderCircleMover", "TOPRIGHT",  ANCHOR_PAD + (i-1)*(sz+Spacing), 0)
+                v.Frame:SetPoint("LEFT",   "NSUIReminderCircleMover", "RIGHT",  ANCHOR_PAD + (i-1)*(sz+Spacing), 0)
             elseif s.GrowDirection == "Left" then
-                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderCircleMover", "TOPLEFT",  -(ANCHOR_PAD + (i-1)*(sz+Spacing)), 0)
+                v.Frame:SetPoint("RIGHT",  "NSUIReminderCircleMover", "LEFT",  -(ANCHOR_PAD + (i-1)*(sz+Spacing)), 0)
             end
         else
             print("NSRT: Reminder anchoring issue @ NSI:ArrangeStates (unknown type: "..tostring(Type)..")")
@@ -1479,8 +1479,8 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
 end
 
 function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
-    local Width  = (IsText and F.Text:GetStringWidth())  or s.Width  or s.Size or 80
-    local Height = isAnchor and 20 or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
+    local Width  = isAnchor and 300 or ((IsText and F.Text:GetStringWidth()) or s.Width or s.Size or 80)
+    local Height = isAnchor and 20  or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
     if IsText then
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         F.Text:SetText("Personals - (10)")
