@@ -830,6 +830,25 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Import Reloe's Certified Reminders",
+            desc =
+            "Automatically import all of Reloe's custom created reminders for the current tier's bosses. Display settings of these reminders can be edited.",
+            get = function() return NSRT.Alerts.ReloeReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.Alerts.ReloeReminders = value
+                if NSRT.Alerts.ReloeReminders then
+                    for key, encID in ipairs(NSI.CurrentEncounterIDs) do
+                        if self.InitializeAlerts[encID] then
+                            self.InitializeAlerts[encID](self)
+                        end
+                    end
+                end
+            end,
+            nocombat = true,
+        },
 
         {
             type = "button",

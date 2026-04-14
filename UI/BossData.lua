@@ -18,6 +18,9 @@ local BossIcons = {
     [3183] = 7448204, -- Midnight Falls
 }
 
+NSI.CurrentEncounterIDs = {
+    3176, 3177, 3179, 3178, 3180, 3181, 3306, 3182, 3183
+}
 -- Builds a DF dropdown options table sorted by encounter order.
 --
 -- onSelect(encID)  – called when an option is chosen; may be nil.

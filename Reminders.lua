@@ -25,28 +25,6 @@ local symbols = {
 
 function NSI:AddToReminder(info)
     info = CopyTable(info)
-    -- Apply per-boss display/sound overrides set via the Encounters UI (hardcoded alerts only)
-    if not info._noEncOverride and info.encID then
-        local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[info.encID]
-        if enc then
-            if enc.overrideType and enc.overrideType ~= "" then
-                info.BarOverwrite  = (enc.overrideType == "Bar")
-                info.IconOverwrite = (enc.overrideType == "Icon")
-            end
-            if enc.overrideText and enc.overrideText ~= ""     then info.text    = enc.overrideText                  end
-            if enc.overrideSpellID ~= nil                      then info.spellID = enc.overrideSpellID               end
-            if enc.overrideDur     ~= nil                      then info.dur     = enc.overrideDur                   end
-            if enc.overrideTTSEnabled ~= nil then
-                if enc.overrideTTSEnabled then
-                    info.TTS = (enc.overrideTTSText and enc.overrideTTSText ~= "") and enc.overrideTTSText or true
-                else
-                    info.TTS = false
-                end
-            end
-            if enc.overrideTTSTimer ~= nil then info.TTSTimer  = enc.overrideTTSTimer end
-            if enc.overrideCountdown ~= nil then info.countdown = enc.overrideCountdown end
-        end
-    end
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
     if info.colors and type(info.colors) == "string" then
@@ -1314,11 +1292,29 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssign
         IsAssignment = IsAssignment,
         IsAlert = not IsAssignment,
         countdown = false,
+        role = nil,     -- "TANK", "HEALER", "DPS", "MELEE", "RANGED", or nil for all roles
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
     end
     return info
+end
+
+-- Iterates NSRT.EncounterAlerts[encID] and fires all enabled reloeCreated alerts.
+-- Role filtering (alert.role) is handled at display time, not here.
+-- Applies optional per-difficulty duration overrides (entry.durOverrides).
+function NSI:FireEncounterAlerts(encID, id)
+    if not NSRT.EncounterAlerts or not NSRT.EncounterAlerts[encID] then return end
+    for _, entry in pairs(NSRT.EncounterAlerts[encID]) do
+        if type(entry) == "table" and entry.reloeCreated and entry.enabled and entry.alert then
+            local alert = entry.alert
+            alert.startTime = GetTime()
+            if entry.durOverrides and entry.durOverrides[id] then
+                alert.dur = entry.durOverrides[id]
+            end
+            self:AddRemindersFromTable(alert, entry.timers and entry.timers[id] or {})
+        end
+    end
 end
 
 function NSI:UpdateReminderFrame(all, shared, personal, extra)

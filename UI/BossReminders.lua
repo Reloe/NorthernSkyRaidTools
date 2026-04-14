@@ -44,12 +44,13 @@ local function BuildBossRemindersUI(parentFrame)
     local rightW     = content_width - rightX - pad  -- ~766
 
     -- ── Mutable state ───────────────────────────────────────────────────────
-    local selectedIndex  = nil   -- index into NSRT.CustomBossAlerts (custom mode)
-    local selectedEncID  = nil   -- encID of selected hardcoded boss (hardcoded mode)
-    local filterEncID    = nil
+    local selectedIndex      = nil   -- index into NSRT.CustomBossAlerts (custom mode)
+    local selectedReloeEncID = nil   -- encID of selected reloeCreated alert
+    local selectedReloeKey   = nil   -- key of selected reloeCreated alert
+    local filterEncID        = nil
 
     -- forward declarations
-    local rightPanel, SelectAlert, SelectHardcodedAlert
+    local rightPanel, SelectAlert, SelectReloeCreatedAlert, PreviewAlert
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -141,13 +142,21 @@ local function BuildBossRemindersUI(parentFrame)
         listRows[i] = row
     end
 
+    -- Returns a display name for a reloeCreated alert entry.
+    local function ReloeAlertName(entry, alertKey)
+        local text  = entry.alert and entry.alert.text
+        local phase = entry.alert and entry.alert.phase
+        local base  = (text and text ~= "") and text or alertKey
+        return (phase and phase > 1) and (base .. " (P" .. phase .. ")") or base
+    end
+
     -- RebuildList ─────────────────────────────────────────────────────────────
     local function RebuildScrollData()
         local t = {}
 
-        -- Hardcoded boss entries first (sorted by encounter order)
+        -- One row per reloeCreated alert, grouped by boss (sorted by encounter order)
         local sortedEnc = {}
-        for encID in pairs(NSI.EncounterAlertStart) do
+        for encID in pairs(NSRT.EncounterAlerts or {}) do
             if not filterEncID or filterEncID == encID then
                 table.insert(sortedEnc, encID)
             end
@@ -156,7 +165,29 @@ local function BuildBossRemindersUI(parentFrame)
             return (NSI.EncounterOrder[a] or 99) < (NSI.EncounterOrder[b] or 99)
         end)
         for _, encID in ipairs(sortedEnc) do
-            table.insert(t, { encID = encID, _isHardcoded = true })
+            local encTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+            if encTable then
+                -- collect and sort alerts by phase then key
+                local alerts = {}
+                for key, entry in pairs(encTable) do
+                    if type(entry) == "table" and entry.reloeCreated then
+                        local phase = entry.alert and entry.alert.phase or 1
+                        table.insert(alerts, { key = key, entry = entry, phase = phase })
+                    end
+                end
+                table.sort(alerts, function(a, b)
+                    if a.phase ~= b.phase then return a.phase < b.phase end
+                    return a.key < b.key
+                end)
+                for _, item in ipairs(alerts) do
+                    table.insert(t, {
+                        encID         = encID,
+                        alertKey      = item.key,
+                        entry         = item.entry,
+                        _isReloeCreated = true,
+                    })
+                end
+            end
         end
 
         -- Custom alerts below
@@ -178,20 +209,15 @@ local function BuildBossRemindersUI(parentFrame)
             if not entry then
                 row:Hide()
             else
-                row._isHardcoded = entry._isHardcoded
-                row._encID       = entry.encID
-                row._realIndex   = entry.realIndex
                 row:Show()
 
-                local isHard    = entry._isHardcoded
+                local isReloe   = entry._isReloeCreated
                 local isEnabled, icon, name
 
-                if isHard then
-                    local enc   = NSRT.EncounterAlerts and NSRT.EncounterAlerts[entry.encID]
-                    isEnabled   = enc and enc.enabled
-                    icon        = BossData.BossIcons[entry.encID]
-                    name        = (NSI.BossTimelineNames and NSI.BossTimelineNames[entry.encID])
-                                  or ("Boss " .. entry.encID)
+                if isReloe then
+                    isEnabled = entry.entry.enabled
+                    icon      = BossData.BossIcons[entry.encID]
+                    name      = ReloeAlertName(entry.entry, entry.alertKey)
                 else
                     local alert = entry.alert
                     isEnabled   = alert.enabled
@@ -200,9 +226,9 @@ local function BuildBossRemindersUI(parentFrame)
                 end
 
                 -- Selected highlight
-                local isSelected = isHard
-                    and (selectedEncID == entry.encID)
-                    or  (not isHard and selectedIndex == entry.realIndex)
+                local isSelected = isReloe
+                    and (selectedReloeEncID == entry.encID and selectedReloeKey == entry.alertKey)
+                    or  (not isReloe and selectedIndex == entry.realIndex)
                 if isSelected then
                     row.__background:SetVertexColor(0, 1, 1)
                     row.__background:SetAlpha(1)
@@ -211,8 +237,8 @@ local function BuildBossRemindersUI(parentFrame)
                     row.__background:SetAlpha(0.5)
                 end
 
-                -- Boss icon / lock icon
-                if isHard then
+                -- Lock icon for reloe rows; boss icon for custom rows
+                if isReloe then
                     row.bossIcon:Hide()
                     row.lockIcon:Show()
                     row.nameLabel:SetPoint("LEFT", row.lockIcon, "RIGHT", 4, 0)
@@ -231,8 +257,8 @@ local function BuildBossRemindersUI(parentFrame)
                 row.nameLabel:SetText(name)
                 row.nameLabel:SetTextColor(1, 1, 1, isEnabled and 1 or 0.45)
 
-                -- Delete button: hidden for hardcoded rows
-                if isHard then
+                -- Delete button: hidden for reloeCreated rows
+                if isReloe then
                     row.deleteBtn:Hide()
                     row.deleteBtn:SetScript("OnClick", nil)
                 else
@@ -251,10 +277,10 @@ local function BuildBossRemindersUI(parentFrame)
                 end
 
                 -- Click to select
-                if isHard then
-                    local enc = entry.encID
+                if isReloe then
+                    local eid, akey = entry.encID, entry.alertKey
                     row:SetScript("OnMouseDown", function()
-                        SelectHardcodedAlert(enc)
+                        SelectReloeCreatedAlert(eid, akey)
                     end)
                 else
                     local ri = entry.realIndex
@@ -360,6 +386,12 @@ local function BuildBossRemindersUI(parentFrame)
         innerTabBtns[tabName] = btn
     end
 
+    -- ── Preview button — right-aligned on the tab row ────────────────────────
+    -- (PreviewAlert body defined below, after dispF / sndF are in scope)
+    local previewBtn = CreateButton(rightPanel, "Preview", function() PreviewAlert() end, 80, 18,
+        "NSUIEncAlertPreview")
+    previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY)
+
     -- Separator below tabs
     local tabSep = rightPanel:CreateTexture(nil, "ARTWORK")
     tabSep:SetColorTexture(0, 1, 1, 0.20)
@@ -404,12 +436,8 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     local dispF = innerTabFrames["Display"]
 
-    -- Hint label shown only in hardcoded mode
+    -- (dispHint kept as a local so SetCustomMode/SetReloeCreatedMode can reference it)
     local dispHint = dispF:CreateFontString(nil, "OVERLAY")
-    dispHint:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
-    dispHint:SetTextColor(0.45, 0.7, 1, 1)
-    dispHint:SetText("Overrides for this boss — leave blank to use code defaults.")
-    dispHint:SetPoint("BOTTOMLEFT", dispF, "BOTTOMLEFT", 0, 6)
     dispHint:Hide()
 
     local typeLbl = dispF:CreateFontString(nil, "OVERLAY")
@@ -432,12 +460,7 @@ local function BuildBossRemindersUI(parentFrame)
     for i, tn in ipairs(TYPES) do
         local tb = CreateSubButton(dispF, tn, function()
             SetDisplayType(tn)
-            if dispF._alert then
-                dispF._alert.Type = tn
-            elseif dispF._hardcodedEncID then
-                local enc = NSRT.EncounterAlerts[dispF._hardcodedEncID]
-                if enc then enc.overrideType = tn end
-            end
+            if dispF._alert then dispF._alert.Type = tn end
         end, typeBtnW, "NSUIEncAlertType_" .. tn)
         tb:SetPoint("TOPLEFT", dispF, "TOPLEFT", (i - 1) * (typeBtnW + 3), -18)
         typeBtns[tn] = tb
@@ -454,12 +477,7 @@ local function BuildBossRemindersUI(parentFrame)
     textEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -62)
     local function SaveDispText(self)
         local v = self:GetText()
-        if dispF._alert then
-            dispF._alert.text = v
-        elseif dispF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[dispF._hardcodedEncID]
-            if enc then enc.overrideText = (v ~= "") and v or nil end
-        end
+        if dispF._alert then dispF._alert.text = v end
     end
     textEntry.editbox:SetScript("OnEnterPressed", function(self) SaveDispText(self); self:ClearFocus() end)
     textEntry.editbox:SetScript("OnEditFocusLost", SaveDispText)
@@ -476,12 +494,7 @@ local function BuildBossRemindersUI(parentFrame)
     spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -110)
     local function SaveSpellID(self)
         local v = tonumber(self:GetText()) or nil
-        if dispF._alert then
-            dispF._alert.spellID = v
-        elseif dispF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[dispF._hardcodedEncID]
-            if enc then enc.overrideSpellID = v end
-        end
+        if dispF._alert then dispF._alert.spellID = v end
     end
     spellEntry.editbox:SetScript("OnEnterPressed", function(self) SaveSpellID(self); self:ClearFocus() end)
     spellEntry.editbox:SetScript("OnEditFocusLost", SaveSpellID)
@@ -498,12 +511,7 @@ local function BuildBossRemindersUI(parentFrame)
     durEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -158)
     local function SaveDur(self)
         local v = tonumber(self:GetText())
-        if dispF._alert then
-            dispF._alert.dur = v or 8
-        elseif dispF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[dispF._hardcodedEncID]
-            if enc then enc.overrideDur = v or nil end
-        end
+        if dispF._alert then dispF._alert.dur = v or 8 end
     end
     durEntry.editbox:SetScript("OnEnterPressed", function(self) SaveDur(self); self:ClearFocus() end)
     durEntry.editbox:SetScript("OnEditFocusLost", SaveDur)
@@ -678,24 +686,15 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     local sndF = innerTabFrames["Sound"]
 
-    -- Hint label for hardcoded mode
+    -- (sndHint kept as a local so SetCustomMode/SetReloeCreatedMode can reference it)
     local sndHint = sndF:CreateFontString(nil, "OVERLAY")
-    sndHint:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
-    sndHint:SetTextColor(0.45, 0.7, 1, 1)
-    sndHint:SetText("Overrides for this boss — leave blank/unchecked to use code defaults.")
-    sndHint:SetPoint("BOTTOMLEFT", sndF, "BOTTOMLEFT", 0, 6)
     sndHint:Hide()
 
     local ttsCB = CreateFrame("CheckButton", "NSUIEncAlertTTSCB", sndF, "UICheckButtonTemplate")
     ttsCB:SetSize(22, 22)
     ttsCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -4)
     ttsCB:SetScript("OnClick", function(self)
-        if sndF._alert then
-            sndF._alert.TTSEnabled = self:GetChecked()
-        elseif sndF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[sndF._hardcodedEncID]
-            if enc then enc.overrideTTSEnabled = self:GetChecked() or nil end
-        end
+        if sndF._alert then sndF._alert.TTSEnabled = self:GetChecked() end
     end)
     sndF.ttsCB = ttsCB
 
@@ -716,12 +715,7 @@ local function BuildBossRemindersUI(parentFrame)
     ttsTextEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -50)
     local function SaveTTSText(self)
         local v = self:GetText()
-        if sndF._alert then
-            sndF._alert.TTSText = v
-        elseif sndF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[sndF._hardcodedEncID]
-            if enc then enc.overrideTTSText = (v ~= "") and v or nil end
-        end
+        if sndF._alert then sndF._alert.TTSText = v end
     end
     ttsTextEntry.editbox:SetScript("OnEnterPressed", function(self) SaveTTSText(self); self:ClearFocus() end)
     ttsTextEntry.editbox:SetScript("OnEditFocusLost", SaveTTSText)
@@ -738,12 +732,7 @@ local function BuildBossRemindersUI(parentFrame)
     ttsTimerEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -98)
     local function SaveTTSTimer(self)
         local v = tonumber(self:GetText())
-        if sndF._alert then
-            sndF._alert.TTSTimer = v or 8
-        elseif sndF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[sndF._hardcodedEncID]
-            if enc then enc.overrideTTSTimer = v or nil end
-        end
+        if sndF._alert then sndF._alert.TTSTimer = v or 8 end
     end
     ttsTimerEntry.editbox:SetScript("OnEnterPressed", function(self) SaveTTSTimer(self); self:ClearFocus() end)
     ttsTimerEntry.editbox:SetScript("OnEditFocusLost", SaveTTSTimer)
@@ -766,12 +755,7 @@ local function BuildBossRemindersUI(parentFrame)
     cdEntry:SetPoint("TOP",  cdCB, "TOP", 0, 0)
     local function SaveCountdown(self)
         local v = tonumber(self:GetText())
-        if sndF._alert then
-            sndF._alert.countdown = (v and v > 0) and v or false
-        elseif sndF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[sndF._hardcodedEncID]
-            if enc then enc.overrideCountdown = (v and v > 0) and v or nil end
-        end
+        if sndF._alert then sndF._alert.countdown = (v and v > 0) and v or false end
     end
     cdEntry.editbox:SetScript("OnEnterPressed", function(self) SaveCountdown(self); self:ClearFocus() end)
     cdEntry.editbox:SetScript("OnEditFocusLost", SaveCountdown)
@@ -785,16 +769,7 @@ local function BuildBossRemindersUI(parentFrame)
 
     cdCB:SetScript("OnClick", function(self)
         if sndF._alert then
-            if self:GetChecked() then
-                sndF._alert.countdown = tonumber(cdEntry:GetText()) or 5
-            else
-                sndF._alert.countdown = false
-            end
-        elseif sndF._hardcodedEncID then
-            local enc = NSRT.EncounterAlerts[sndF._hardcodedEncID]
-            if enc then
-                enc.overrideCountdown = self:GetChecked() and (tonumber(cdEntry:GetText()) or 5) or nil
-            end
+            sndF._alert.countdown = self:GetChecked() and (tonumber(cdEntry:GetText()) or 5) or false
         end
     end)
 
@@ -883,28 +858,72 @@ local function BuildBossRemindersUI(parentFrame)
     end)
     loadF.charEntry = charEntry
 
-    -- Lock overlay for Load tab (hardcoded alerts don't support class/spec filters)
+    -- Lock overlay for Load tab (reloeCreated alerts use built-in role field)
     loadF.lockOverlay = MakeLockOverlay(loadF,
-        "Class / spec filters do not apply\nto hardcoded boss alerts.")
+        "Class / spec filters do not apply\nto addon-created alerts.")
+
+    -- Lock overlay for Sound tab (reloeCreated alerts — sound is managed by the addon)
+    sndF.lockOverlay = MakeLockOverlay(sndF,
+        "Sound settings are fixed\nfor addon-created alerts.")
 
     -- ================================================================
-    -- Helper: set panel into custom-alert mode vs hardcoded-boss mode
+    -- Helper: set panel into custom-alert mode vs reloeCreated mode
     -- ================================================================
-    local function SetHardcodedMode(isHard)
-        trigF.lockOverlay:SetShown(isHard)
-        loadF.lockOverlay:SetShown(isHard)
-        dispHint:SetShown(isHard)
-        sndHint:SetShown(isHard)
-        nameEntry.editbox:SetEnabled(not isHard)
-        nameEntry.editbox:SetAlpha(isHard and 0.45 or 1)
+    local function SetCustomMode()
+        trigF.lockOverlay:Hide()
+        loadF.lockOverlay:Hide()
+        sndF.lockOverlay:Hide()
+        dispHint:Hide()
+        sndHint:Hide()
+        nameEntry.editbox:SetEnabled(true)
+        nameEntry.editbox:SetAlpha(1)
+    end
+
+    local function SetReloeCreatedMode()
+        trigF.lockOverlay:Show()
+        loadF.lockOverlay:Show()
+        sndF.lockOverlay:Show()
+        dispHint:Hide()
+        sndHint:Hide()
+        nameEntry.editbox:SetEnabled(false)
+        nameEntry.editbox:SetAlpha(0.45)
+    end
+
+    -- ================================================================
+    -- PreviewAlert ── fire the current alert visually without a trigger
+    -- ================================================================
+    PreviewAlert = function()
+        local text, spellID, dur, Type, ttsEnabled, ttsText, ttsTimer, countdown
+
+        if not dispF._alert then return end
+        local a    = dispF._alert
+        text       = a.text or ""
+        spellID    = a.spellID
+        dur        = a.dur or 8
+        Type       = a.Type or "Text"
+        ttsEnabled = a.TTSEnabled
+        ttsText    = a.TTSText
+        ttsTimer   = a.TTSTimer
+        countdown  = a.countdown
+
+        -- These tables are normally created by HideAllReminders; ensure they exist
+        NSI.PlayedSound      = NSI.PlayedSound      or {}
+        NSI.StartedCountdown = NSI.StartedCountdown or {}
+
+        local info     = NSI:CreateDefaultAlert(text, Type, spellID, dur, 99, 0)
+        info.TTS       = ttsEnabled and ((ttsText and ttsText ~= "") and ttsText or text) or false
+        info.TTSTimer  = ttsTimer or dur
+        info.countdown = countdown or false
+        NSI:DisplayReminder(info)
     end
 
     -- ================================================================
     -- SelectAlert ── load a custom alert into all right-panel controls
     -- ================================================================
     SelectAlert = function(index)
-        selectedIndex = index
-        selectedEncID = nil
+        selectedIndex        = index
+        selectedReloeEncID   = nil
+        selectedReloeKey     = nil
         local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[index]
         if not alert then
             rightPanel:Hide()
@@ -913,7 +932,7 @@ local function BuildBossRemindersUI(parentFrame)
         end
 
         rightPanel:Show()
-        SetHardcodedMode(false)
+        SetCustomMode()
 
         dispF._alert = alert; dispF._hardcodedEncID = nil
         trigF._alert = alert; trigF._hardcodedEncID = nil
@@ -967,58 +986,57 @@ local function BuildBossRemindersUI(parentFrame)
     end
 
     -- ================================================================
-    -- SelectHardcodedAlert ── load a code-defined boss into the panel
+    -- SelectReloeCreatedAlert ── load an addon-created alert into the panel
     -- ================================================================
-    SelectHardcodedAlert = function(encID)
-        selectedEncID = encID
-        selectedIndex = nil
+    SelectReloeCreatedAlert = function(encID, alertKey)
+        selectedReloeEncID = encID
+        selectedReloeKey   = alertKey
+        selectedIndex      = nil
 
-        -- Ensure the saved entry exists
-        if not NSRT.EncounterAlerts then NSRT.EncounterAlerts = {} end
-        if not NSRT.EncounterAlerts[encID] then
-            NSRT.EncounterAlerts[encID] = { enabled = false }
+        local entry = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][alertKey]
+        if not entry then
+            rightPanel:Hide()
+            RebuildList()
+            return
         end
-        local enc = NSRT.EncounterAlerts[encID]
 
         rightPanel:Show()
-        SetHardcodedMode(true)
+        SetReloeCreatedMode()
 
-        dispF._alert = nil; dispF._hardcodedEncID = encID
-        trigF._alert = nil; trigF._hardcodedEncID = encID
-        sndF._alert  = nil; sndF._hardcodedEncID  = encID
-        loadF._alert = nil; loadF._hardcodedEncID = encID
+        -- Trigger, load, and sound tabs are locked; point display at the stored alert
+        -- so that any future edits (if lock is removed) save directly to the entry.
+        dispF._alert = entry.alert; dispF._hardcodedEncID = nil
+        trigF._alert = nil;         trigF._hardcodedEncID = nil
+        sndF._alert  = nil;         sndF._hardcodedEncID  = nil
+        loadF._alert = nil;         loadF._hardcodedEncID = nil
 
-        -- Header: boss name (read-only)
-        local bossName = (NSI.BossTimelineNames and NSI.BossTimelineNames[encID])
-                         or ("Boss " .. encID)
-        nameEntry:SetText(bossName)
+        -- Header: alert name (read-only)
+        nameEntry:SetText(ReloeAlertName(entry, alertKey))
         nameEntry.editbox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
         nameEntry.editbox:SetScript("OnEditFocusLost", function() end)
 
-        enabledCB:SetChecked(enc.enabled and true or false)
+        enabledCB:SetChecked(entry.enabled and true or false)
         enabledCB:SetScript("OnClick", function(self)
-            enc.enabled = self:GetChecked()
+            entry.enabled = self:GetChecked()
             RebuildList()
         end)
 
-        -- Display tab: load overrides (blank = no override)
-        dispF.SetDisplayType(enc.overrideType or "Text")
-        dispF.textEntry:SetText(enc.overrideText or "")
-        dispF.spellEntry:SetText(enc.overrideSpellID and tostring(enc.overrideSpellID) or "")
-        dispF.durEntry:SetText(enc.overrideDur and tostring(enc.overrideDur) or "")
+        -- Display tab: show stored values (editing locked by lock overlay)
+        local alert = entry.alert
+        dispF.SetDisplayType(alert and alert.Type or "Text")
+        dispF.textEntry:SetText(alert and alert.text or "")
+        dispF.spellEntry:SetText(alert and alert.spellID and tostring(alert.spellID) or "")
+        dispF.durEntry:SetText(tostring(alert and alert.dur or 8))
 
-        -- Sound tab: load overrides
-        sndF.ttsCB:SetChecked(enc.overrideTTSEnabled and true or false)
-        sndF.ttsTextEntry:SetText(enc.overrideTTSText or "")
-        sndF.ttsTimerEntry:SetText(enc.overrideTTSTimer and tostring(enc.overrideTTSTimer) or "")
-        local hasCD = enc.overrideCountdown and enc.overrideCountdown ~= false
-        sndF.cdCB:SetChecked(hasCD)
-        sndF.cdEntry:SetText(hasCD and tostring(enc.overrideCountdown) or "")
-
-        -- Trigger tab: clear _alert so it's inert, then the lock overlay covers it
+        -- Trigger tab: inert (lock overlay shown)
         trigF.RebuildTimeRows()
 
-        -- Load tab has lockOverlay; nothing to populate
+        -- Sound tab: inert (lock overlay shown)
+        sndF.ttsCB:SetChecked(false)
+        sndF.ttsTextEntry:SetText("")
+        sndF.ttsTimerEntry:SetText("")
+        sndF.cdCB:SetChecked(false)
+        sndF.cdEntry:SetText("")
 
         RebuildList()
         SelectInnerTab(activeInnerTab)
@@ -1028,8 +1046,8 @@ local function BuildBossRemindersUI(parentFrame)
 
     screen:SetScript("OnShow", function()
         RebuildList()
-        if selectedEncID then
-            SelectHardcodedAlert(selectedEncID)
+        if selectedReloeEncID and selectedReloeKey then
+            SelectReloeCreatedAlert(selectedReloeEncID, selectedReloeKey)
         elseif selectedIndex then
             SelectAlert(selectedIndex)
         end

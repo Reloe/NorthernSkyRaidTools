@@ -302,6 +302,10 @@ local defaults = {
         },
     },
 
+    Alerts = {
+        ReloeReminders = false
+    },
+
     -- Encounter Alerts
     EncounterAlerts = {
         [3176] = {enabled = false},

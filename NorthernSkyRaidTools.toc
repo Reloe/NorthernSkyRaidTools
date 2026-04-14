@@ -31,6 +31,7 @@ QoL.lua
 Profiles.lua
 
 # Encounter Alerts
+EncounterAlerts/Alerts.lua
 EncounterAlerts/MidnightS1/ImperatorAverzian.lua
 EncounterAlerts/MidnightS1/Vorasius.lua
 EncounterAlerts/MidnightS1/FallenKingSalhadaar.lua

@@ -35,6 +35,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.GlowStarted = {}
             self:CreateMoveFrames()
             self:InitNickNames()
+            
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         self.NSUI:Init()
@@ -76,6 +77,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
+            end
+        end
+        if NSRT.Alerts.ReloeReminders then
+            for key, encID in ipairs(NSI.CurrentEncounterIDs) do
+                if self.InitializeAlerts[encID] then
+                    self.InitializeAlerts[encID](self)
+                end
             end
         end
     elseif e == "PLAYER_ENTERING_WORLD" then

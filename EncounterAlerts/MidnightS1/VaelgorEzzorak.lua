@@ -2,35 +2,45 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3178
 -- /run NSAPI:DebugEncounter(3178)
+
+NSI.InitializeAlerts[encID] = function(self)
+    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+    local enc = NSRT.EncounterAlerts[encID]
+
+    local function Add(key, alert, timers, durOverrides)
+        NSI:AddEncounterAlert(encID, key, alert, timers, durOverrides, true, true)
+    end
+
+    Add("Spread1", NSI:CreateDefaultAlert("Spread", "Text", nil, 5, 1, encID), {
+        [0]  = {},
+        [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
+    })
+
+    Add("Tether1", NSI:CreateDefaultAlert("Tether", "Text", nil, 5, 1, encID), {
+        [0]  = {},
+        [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7},
+    })
+
+    Add("Breath1", NSI:CreateDefaultAlert("Breath", "Text", nil, 5, 1, encID), {
+        [0]  = {},
+        [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
+    })
+
+    -- HealthDisplay: boss HP overlay — special feature, off by default
+    local healthDisplay = NSI:CreateDefaultAlert("Health Display", "Text", nil, 0, 1, encID)
+    if not enc["HealthDisplay1"] then
+        enc["HealthDisplay1"] = { alert = healthDisplay, timers = {}, reloeCreated = true, enabled = false }
+    end
+end
+
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    if not NSRT.EncounterAlerts[encID] then
-        NSRT.EncounterAlerts[encID] = {enabled = false}
-    end
     local id = id or self:DifficultyCheck(14) or 0
-    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Spread", "Text", nil, 5, 1, encID)
+    self:FireEncounterAlerts(encID, id)
 
-        local timers = {
-            [0] = {},
-            [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Tether", "Text", nil, 5, 1, encID)
-        timers = {
-            [0] = {},
-            [16] = {39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7},
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Breath", "Text", nil, 5, 1, encID)
-        timers = {
-            [0] = {},
-            [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-    end
-    if NSRT.EncounterAlerts[encID].HealthDisplay then
+    if NSRT.EncounterAlerts[encID]
+    and NSRT.EncounterAlerts[encID]["HealthDisplay1"]
+    and NSRT.EncounterAlerts[encID]["HealthDisplay1"].enabled then
         if not self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)
@@ -53,11 +63,12 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    if NSRT.EncounterAlerts[encID].HealthDisplay then
+    local hdEntry = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID]["HealthDisplay1"]
+    if hdEntry and hdEntry.enabled then
         if self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH")
             self.VaelgorEzzorakFrame:Hide()
-         end
+        end
         self:DisplaySecretText(false, true)
     end
     if self.VaelgorPhaseTimer then
@@ -94,24 +105,19 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 local detectedDurations = {
-    [14] = {
-        {time = 8, phase = function(num) return 2 end},
-    },
-    [15] = {
-        {time = 8, phase = function(num) return 2 end},
-    },
+    [14] = { {time = 8, phase = function(num) return 2 end} },
+    [15] = { {time = 8, phase = function(num) return 2 end} },
 }
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    -- not checking REMOVED event by default but may be needed for some encounters
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
     local phaseinfo = detectedDurations[difficultyID] and detectedDurations[difficultyID][self.Phase]
     if phaseinfo and info.duration == phaseinfo.time then
         self.VaelgorPhaseTimer = nil
         self.VaelgorPhaseTimer = C_Timer.NewTimer(8, function()
-            if not self.EncounterID then return end -- if wipe happened during these 8s
+            if not self.EncounterID then return end
             local newphase = phaseinfo.phase(self.Phase)
             if newphase > self.Phase then
                 self.Phase = newphase
