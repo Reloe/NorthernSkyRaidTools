@@ -75,6 +75,7 @@ UI/Options/ReadyCheck.lua
 UI/Options/PrivateAuras.lua
 UI/Options/QoL.lua
 UI/Options/WAImports.lua
+UI/AnchorWindow.lua
 
 # UI - Entry Point (loads all UI modules and initializes)
 NSUI.lua

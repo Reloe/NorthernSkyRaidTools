@@ -110,7 +110,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self.TestingReminder = false
         self.IsInPreview = false
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
             self:ToggleMoveFrames(self[v], false)
         end
         self.EncounterID = ...

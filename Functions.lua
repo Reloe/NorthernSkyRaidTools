@@ -312,13 +312,17 @@ function NSI:ToggleMoveFrames(F, Unlock)
         F:EnableMouse(true)
         F:RegisterForDrag("LeftButton")
         F:SetClampedToScreen(true)
-        F.Border:Show()
         F:Show()
-        if F.Border then F.Border:Show() end
-        if F.Text then F.Text:Show() end
+        if F.Border      then F.Border:Show()      end
+        if F.Text        then F.Text:Show()        end
+        if F.TitleLabel  then F.TitleLabel:Show()  end
+        if F.GearButton  then F.GearButton:Show()  end
     else
-        if F.Border then F.Border:Hide() end
-        if F.Text then F.Text:Hide() end
+        if F.Border         then F.Border:Hide()         end
+        if F.Text           then F.Text:Hide()           end
+        if F.TitleLabel     then F.TitleLabel:Hide()     end
+        if F.GearButton     then F.GearButton:Hide()     end
+        if F.SettingsWindow then F.SettingsWindow:Hide() end
         F:SetMovable(false)
         F:EnableMouse(false)
     end

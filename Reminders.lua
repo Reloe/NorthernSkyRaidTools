@@ -108,6 +108,7 @@ function NSI:AddToReminder(info)
         notsticky = info.notsticky,
         BarOverwrite = info.BarOverwrite or info.Type == "Bar",
         IconOverwrite = info.IconOverwrite or info.Type == "Icon",
+        CircleOverwrite = info.CircleOverwrite or info.Type == "Circle",
         TTSTimer = info.TTSTimer,
         rawtext = info.rawtext,
         phase = info.phase,
@@ -367,7 +368,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         end
     end
     self:ArrangeStates("Texts")
-    self:MoveFrameSettings(self.TextMover, NSRT.ReminderSettings.TextSettings, true)
+    self:MoveFrameSettings(self.TextMover, NSRT.ReminderSettings.TextSettings, true, true)
     parent = self.ReminderIcon or {}
     for i=1, #parent do
         local F = parent[i]
@@ -391,7 +392,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         end
     end
     self:ArrangeStates("Icons")
-    self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
+    self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings, nil, true)
     parent = self.UnitIcon or {}
     for i=1, #parent do
         local F = parent[i]
@@ -423,12 +424,32 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     end
     self:ArrangeStates("Bars")
     self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings, false, true)
+    parent = self.ReminderCircle or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F and F:IsShown() then
+            local s = NSRT.ReminderSettings.CircleSettings
+            F:SetSize(s.Size, s.Size)
+            F.mask:SetSize(s.Size - 2 * s.Thickness, s.Size - 2 * s.Thickness)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+        end
+    end
+    self:ArrangeStates("Circles")
+    if self.CircleMover then
+        self:MoveFrameSettings(self.CircleMover, NSRT.ReminderSettings.CircleSettings, nil, true)
+    end
 end
 
 function NSI:ArrangeStates(Type)
-    local F = (Type == "Texts" and self.ReminderText) or (Type == "Icons" and self.ReminderIcon) or (Type == "Bars" and self.ReminderBar)
+    local F = (Type == "Texts"   and self.ReminderText)
+           or (Type == "Icons"   and self.ReminderIcon)
+           or (Type == "Bars"    and self.ReminderBar)
+           or (Type == "Circles" and self.ReminderCircle)
     if not F then return end
-    local s = (Type == "Texts" and NSRT.ReminderSettings.TextSettings) or (Type == "Icons" and NSRT.ReminderSettings.IconSettings) or (Type == "Bars" and NSRT.ReminderSettings.BarSettings)
+    local s = (Type == "Texts"   and NSRT.ReminderSettings.TextSettings)
+           or (Type == "Icons"   and NSRT.ReminderSettings.IconSettings)
+           or (Type == "Bars"    and NSRT.ReminderSettings.BarSettings)
+           or (Type == "Circles" and NSRT.ReminderSettings.CircleSettings)
     local pos = {}
     for i=1, #F do
         if F[i] and F[i]:IsShown() then
@@ -436,29 +457,56 @@ function NSI:ArrangeStates(Type)
         end
     end
     table.sort(pos, function(a, b)
-        if a.expires == b.expires then
-            return a.id < b.id
-        else
-            return a.expires < b.expires
-        end
+        if a.expires == b.expires then return a.id < b.id else return a.expires < b.expires end
     end)
+    local ANCHOR_PAD = 8
     for i, v in ipairs(pos) do
-        local diff = Type == "Texts" and v.Frame.Text and v.Frame.Text:GetStringHeight() or s.Height or 0
         local Spacing = s.Spacing or 0
-        local yoffset = (s.GrowDirection == "Up" and (i-1) * (diff+Spacing) or (s.GrowDirection == "Down" and -(i-1) * (diff+Spacing))) or 0
-        local xoffset = Type == "Icons" and ((s.GrowDirection == "Right" and (i-1) * (s.Width+Spacing)) or (s.GrowDirection == "Left" and -(i-1) * (s.Width+Spacing))) or 0
         v.Frame:ClearAllPoints()
         if Type == "Texts" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + yoffset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + yoffset)
+            local h = v.Frame.Text and v.Frame.Text:GetStringHeight() or s.FontSize or 14
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "TOPLEFT",  0, ANCHOR_PAD + (i-1)*(h+Spacing))
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderTextMover", "TOPRIGHT", 0, ANCHOR_PAD + (i-1)*(h+Spacing) + h)
+            else -- Down
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT",  0, -(ANCHOR_PAD + (i-1)*(h+Spacing) + h))
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderTextMover", "BOTTOMRIGHT", 0, -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+            end
         elseif Type == "Icons" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
+            local w, h = s.Width, s.Height
+            v.Frame:SetSize(w, h)
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "TOPLEFT",   0,           ANCHOR_PAD + (i-1)*(h+Spacing))
+            elseif s.GrowDirection == "Down" then
+                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderIconMover", "BOTTOMLEFT", 0,          -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+            elseif s.GrowDirection == "Right" then
+                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderIconMover", "TOPRIGHT",  ANCHOR_PAD + (i-1)*(w+Spacing), 0)
+            elseif s.GrowDirection == "Left" then
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderIconMover", "TOPLEFT",  -(ANCHOR_PAD + (i-1)*(w+Spacing)), 0)
+            end
         elseif Type == "Bars" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + yoffset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + yoffset)
+            local h = s.Height
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "TOPLEFT",  0, ANCHOR_PAD + (i-1)*(h+Spacing))
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderBarMover", "TOPRIGHT", 0, ANCHOR_PAD + (i-1)*(h+Spacing) + h)
+            else -- Down
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT",  0, -(ANCHOR_PAD + (i-1)*(h+Spacing) + h))
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderBarMover", "BOTTOMRIGHT", 0, -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+            end
+        elseif Type == "Circles" then
+            local sz = s.Size or 80
+            v.Frame:SetSize(sz, sz)
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "TOPLEFT",   0,           ANCHOR_PAD + (i-1)*(sz+Spacing))
+            elseif s.GrowDirection == "Down" then
+                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderCircleMover", "BOTTOMLEFT", 0,          -(ANCHOR_PAD + (i-1)*(sz+Spacing)))
+            elseif s.GrowDirection == "Right" then
+                v.Frame:SetPoint("TOPLEFT",    "NSUIReminderCircleMover", "TOPRIGHT",  ANCHOR_PAD + (i-1)*(sz+Spacing), 0)
+            elseif s.GrowDirection == "Left" then
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderCircleMover", "TOPLEFT",  -(ANCHOR_PAD + (i-1)*(sz+Spacing)), 0)
+            end
         else
-            print("RELOE PLS FIX (Reminder anchoring issue @ NSI:ArrangeStates)")
+            print("NSRT: Reminder anchoring issue @ NSI:ArrangeStates (unknown type: "..tostring(Type)..")")
         end
     end
 end
@@ -486,6 +534,23 @@ function NSI:SetProperties(F, info, skipsound, s)
         end
     end)
     F.info = info
+    if F.IsCircle then
+        local s_c = NSRT.ReminderSettings.CircleSettings
+        local r, g, b = unpack(info.colors or s_c.colors)
+        for i = 1, 4 do F.foregroundTextures[i]:SetVertexColor(r, g, b) end
+        if info.spellID then
+            local spellInfo = C_Spell.GetSpellInfo(info.spellID)
+            if spellInfo then
+                F.circleText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "..(info.text or spellInfo.name)
+            else
+                F.circleText = info.text or ""
+            end
+        else
+            F.circleText = info.text or ""
+        end
+        F.TimerText:SetText(F.circleText)
+        return
+    end
     if not info.spellID then
         F.Text:SetTextColor(unpack(info.colors or s.colors))
         return
@@ -699,6 +764,149 @@ function NSI:CreateBar(info)
     end
 end
 
+local CIRCLE_TEX  = "Interface\\AddOns\\TimelineReminders\\Media\\Textures\\circle_white.png"
+local CIRCLE_MASK = "Interface\\AddOns\\TimelineReminders\\Media\\Textures\\circle_inner_mask.png"
+
+local function HorizontallyMirrorCircle(texture, width)
+    local ULx, ULy = texture:GetVertexOffset(UPPER_LEFT_VERTEX)
+    local URx, URy = texture:GetVertexOffset(UPPER_RIGHT_VERTEX)
+    local LLx, LLy = texture:GetVertexOffset(LOWER_LEFT_VERTEX)
+    local LRx, LRy = texture:GetVertexOffset(LOWER_RIGHT_VERTEX)
+    texture:SetVertexOffset(UPPER_LEFT_VERTEX,  width - ULx,  ULy)
+    texture:SetVertexOffset(UPPER_RIGHT_VERTEX, -width - URx, URy)
+    texture:SetVertexOffset(LOWER_LEFT_VERTEX,  width - LLx,  LLy)
+    texture:SetVertexOffset(LOWER_RIGHT_VERTEX, -width - LRx, LRy)
+end
+
+function NSI:CreateCircle(info)
+    self.ReminderCircle = self.ReminderCircle or {}
+    local s = NSRT.ReminderSettings.CircleSettings
+    for i = 1, #self.ReminderCircle + 1 do
+        if self.ReminderCircle[i] and not self.ReminderCircle[i]:IsShown() then
+            self:SetProperties(self.ReminderCircle[i], info, false, s)
+            return self.ReminderCircle[i]
+        end
+        if not self.ReminderCircle[i] then
+            local F = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            F.IsCircle = true
+            F:SetSize(s.Size, s.Size)
+            F:SetFrameStrata("HIGH")
+
+            -- Mask for ring thickness
+            F.mask = F:CreateMaskTexture()
+            F.mask:SetPoint("CENTER")
+            F.mask:SetTexture(CIRCLE_MASK, "CLAMPTOWHITE", "CLAMPTOWHITE", "NEAREST")
+            F.mask:SetSnapToPixelGrid(false)
+            F.mask:SetTexelSnappingBias(0)
+            F.mask:SetSize(s.Size - 2 * s.Thickness, s.Size - 2 * s.Thickness)
+
+            -- 4 background + 4 foreground quadrant textures
+            F.backgroundTextures = {}
+            F.foregroundTextures = {}
+            local quadCoords = {
+                {0.5,0, 0.5,0.5, 1,0, 1,0.5},     -- upper-right   anchors: BL=CENTER, TR=TOPRIGHT
+                {0.5,0.5, 0.5,1, 1,0.5, 1,1},      -- lower-right   anchors: TL=CENTER, BR=BOTTOMRIGHT
+                {0,0.5, 0,1, 0.5,0.5, 0.5,1},      -- lower-left    anchors: TR=CENTER, BL=BOTTOMLEFT
+                {0,0, 0,0.5, 0.5,0, 0.5,0.5},      -- upper-left    anchors: BR=CENTER, TL=TOPLEFT
+            }
+            local quadAnchors = {
+                {"BOTTOMLEFT","CENTER","TOPRIGHT","TOPRIGHT"},
+                {"TOPLEFT","CENTER","BOTTOMRIGHT","BOTTOMRIGHT"},
+                {"TOPRIGHT","CENTER","BOTTOMLEFT","BOTTOMLEFT"},
+                {"BOTTOMRIGHT","CENTER","TOPLEFT","TOPLEFT"},
+            }
+            for q = 1, 4 do
+                local bg = F:CreateTexture(nil, "BACKGROUND")
+                bg:SetTexture(CIRCLE_TEX)
+                bg:SetVertexColor(0, 0, 0, 0.5)
+                bg:AddMaskTexture(F.mask)
+                bg:SetSnapToPixelGrid(false) bg:SetTexelSnappingBias(0)
+                bg:SetPoint(quadAnchors[q][1], F, quadAnchors[q][2])
+                bg:SetPoint(quadAnchors[q][3], F, quadAnchors[q][4])
+                local c = quadCoords[q]
+                bg:SetTexCoord(c[1],c[2], c[3],c[4], c[5],c[6], c[7],c[8])
+                F.backgroundTextures[q] = bg
+
+                local fg = F:CreateTexture(nil, "BACKGROUND")
+                fg:SetTexture(CIRCLE_TEX)
+                fg:AddMaskTexture(F.mask)
+                fg:SetSnapToPixelGrid(false) fg:SetTexelSnappingBias(0)
+                fg:SetPoint(quadAnchors[q][1], F, quadAnchors[q][2])
+                fg:SetPoint(quadAnchors[q][3], F, quadAnchors[q][4])
+                F.foregroundTextures[q] = fg
+            end
+
+            -- Resets all foreground quads to full visibility
+            function F:SetFull()
+                local coords = {
+                    {0.5,0, 0.5,0.5, 1,0, 1,0.5},
+                    {0.5,0.5, 0.5,1, 1,0.5, 1,1},
+                    {0,0.5, 0,1, 0.5,0.5, 0.5,1},
+                    {0,0, 0,0.5, 0.5,0, 0.5,0.5},
+                }
+                for q = 1, 4 do
+                    F.foregroundTextures[q]:ClearVertexOffsets()
+                    local c = coords[q]
+                    F.foregroundTextures[q]:SetTexCoord(c[1],c[2], c[3],c[4], c[5],c[6], c[7],c[8])
+                    F.foregroundTextures[q]:Show()
+                end
+            end
+
+            -- Drives the countdown drain animation (degrees = elapsed/total * 360)
+            function F.SetDegrees(degrees)
+                degrees = Clamp(degrees, 0, 360)
+                local radius = 0.5 * s.Size
+                local rad = math.rad(90 - degrees)
+                local u, v = math.cos(rad), math.sin(rad)
+                F:SetFull()
+                -- upper-right (0–90)
+                F.foregroundTextures[1]:SetShown(degrees < 90)
+                if degrees == 0 or (degrees > 0 and degrees < 90) then
+                    F.foregroundTextures[1]:SetVertexOffset(UPPER_RIGHT_VERTEX, -u*radius, (v-1)*radius)
+                    F.foregroundTextures[1]:SetTexCoord(0,0, 0,0.5, 0.5*(1-u),0.5*(1-v), 0.5,0.5)
+                    HorizontallyMirrorCircle(F.foregroundTextures[1], radius)
+                end
+                -- lower-right (90–180)
+                F.foregroundTextures[2]:SetShown(degrees < 180)
+                if degrees == 90 or (degrees > 90 and degrees < 180) then
+                    F.foregroundTextures[2]:SetVertexOffset(UPPER_RIGHT_VERTEX, (u-1)*radius, v*radius)
+                    F.foregroundTextures[2]:SetTexCoord(0.5,0.5, 0.5,1, 0.5*(1+u),0.5*(1-v), 1,1)
+                end
+                -- lower-left (180–270)
+                F.foregroundTextures[3]:SetShown(degrees < 270)
+                if degrees == 180 or (degrees > 180 and degrees < 270) then
+                    F.foregroundTextures[3]:SetVertexOffset(LOWER_LEFT_VERTEX, -u*radius, (v+1)*radius)
+                    F.foregroundTextures[3]:SetTexCoord(0.5,0.5, 0.5*(1-u),0.5*(1-v), 1,0.5, 1,1)
+                    HorizontallyMirrorCircle(F.foregroundTextures[3], radius)
+                end
+                -- upper-left (270–360)
+                F.foregroundTextures[4]:SetShown(degrees < 360)
+                if degrees == 270 or (degrees > 270 and degrees < 360) then
+                    F.foregroundTextures[4]:SetVertexOffset(LOWER_LEFT_VERTEX, (u+1)*radius, v*radius)
+                    F.foregroundTextures[4]:SetTexCoord(0,0, 0.5*(1+u),0.5*(1-v), 0.5,0, 0.5,0.5)
+                end
+            end
+
+            -- Timer/text label above the circle
+            F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("BOTTOM", F, "TOP", 0, 4)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.TimerText:SetShadowColor(0, 0, 0, 1)
+            F.TimerText:SetShadowOffset(1, -1)
+
+            F:SetFull()
+            -- initial position
+            local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
+            local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "BOTTOMLEFT", xoff, yoff)
+            F:SetPoint("TOPRIGHT",   "NSUIReminderCircleMover", "TOPRIGHT",   xoff, yoff)
+            self.ReminderCircle[i] = F
+            self:SetProperties(F, info, false, s)
+            return F
+        end
+    end
+end
+
 function NSI:AddTickToBar(F, percent)
     if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
     local s = NSRT.ReminderSettings.BarSettings
@@ -747,7 +955,12 @@ function NSI:DisplayReminder(info)
     local remString = (rem % 1 == 0) and string.format("%.1f", rem) or rem
     local text = info.text ~= "" and info.text or ""
     local F
-    if info.spellID then -- display icon if we have a spellID
+    if info.CircleOverwrite then
+        F = self:CreateCircle(info)
+        F:Show()
+        self:ArrangeStates("Circles")
+        F.Type = "Circles"
+    elseif info.spellID then -- display icon if we have a spellID
         if (NSRT.ReminderSettings.Bars or info.BarOverwrite) and not info.IconOverwrite then
             F = self:CreateBar(info)
             F:SetMinMaxValues(0, info.dur)
@@ -816,6 +1029,14 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         remString = tostring(math.ceil(rem))
     end
     local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+    if F.IsCircle then
+        local elapsed = GetTime() - info.startTime
+        local degrees = math.min((elapsed / info.dur) * 360, 360)
+        F.SetDegrees(degrees)
+        local circleRemStr = rem < 3 and string.format("%.1f", math.max(rem, 0)) or tostring(math.ceil(rem))
+        F.TimerText:SetText((F.circleText or "").." ("..circleRemStr..")")
+        return
+    end
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
@@ -930,7 +1151,7 @@ function NSI:DelayAllReminders(delay)
     if not self.ProcessedReminder[self.EncounterID][phase] then return end
     local timediff = GetTime() - self.PhaseSwapTime -- time since phase change
 
-    local parents = {"ReminderText", "ReminderIcon", "ReminderBar", "UnitIcon"}
+    local parents = {"ReminderText", "ReminderIcon", "ReminderBar", "ReminderCircle", "UnitIcon"}
     for _, parentname in ipairs(parents) do
         if self[parentname] then
             for i=1, #self[parentname] do
@@ -990,6 +1211,11 @@ function NSI:HideAllReminders(FullReset)
     for i=1, #parent do
         local F = parent[i]
         if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
+    end
+    parent = self.ReminderCircle or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F then F:Hide() end
     end
     if not FullReset then return end
     self.ReminderTimer = nil
@@ -1170,13 +1396,16 @@ function NSI:HideGlows(units, id, F)
 end
 
 function NSI:CreateMoveFrames()
-    self:CreateReminderMoverFrame("IconMover", NSRT.ReminderSettings.IconSettings, "IconSettings")
-    self:CreateReminderMoverFrame("BarMover", NSRT.ReminderSettings.BarSettings, "BarSettings")
-    self:CreateReminderMoverFrame("TextMover", NSRT.ReminderSettings.TextSettings, "TextSettings", true)
+    self:CreateReminderMoverFrame("IconMover",   NSRT.ReminderSettings.IconSettings,   "IconSettings")
+    self:CreateReminderMoverFrame("BarMover",    NSRT.ReminderSettings.BarSettings,    "BarSettings")
+    self:CreateReminderMoverFrame("TextMover",   NSRT.ReminderSettings.TextSettings,   "TextSettings", true)
+    self:CreateReminderMoverFrame("CircleMover", NSRT.ReminderSettings.CircleSettings, "CircleSettings")
     self:CreateNoteMoverFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, true, false, false)
     self:CreateNoteMoverFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, false, true, false)
     self:CreateNoteMoverFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, false, false, true)
 end
+
+local ANCHOR_TITLES = {IconMover="Icons", BarMover="Bars", TextMover="Texts", CircleMover="Circles"}
 
 function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
     if not self[Name] then
@@ -1189,9 +1418,44 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
         self:MoveFrameInit(self[Name], SettingsName)
-        self:MoveFrameSettings(self[Name], SettingsTable, IsText)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText, true)
+
+        -- Title label (shown when unlocked)
+        local title = ANCHOR_TITLES[Name] or Name
+        local titleFrame = CreateFrame("Frame", 'NSUIReminderMoverTitle'..Name, self[Name])
+        titleFrame:SetAllPoints(self[Name])
+        titleFrame:SetFrameLevel(self[Name]:GetFrameLevel() + 1)
+        local titleLabel = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleLabel:SetText(title)
+        titleLabel:SetPoint("CENTER", titleFrame, "CENTER", 0, 0)
+        titleLabel:SetTextColor(0, 1, 1, 1)
+        titleLabel:Hide()
+        self[Name].TitleLabel = titleLabel
+
+        -- Gear button
+        local gear = CreateFrame("Button", nil, self[Name])
+        gear:SetSize(18, 18)
+        gear:SetPoint("TOPRIGHT", self[Name], "TOPRIGHT", -2, -2)
+        gear:SetNormalFontObject("GameFontNormalSmall")
+        gear:SetText("⚙")
+        gear:GetFontString():SetTextColor(0.8, 0.8, 0.8)
+        gear:Hide()
+        gear:SetScript("OnEnter", function(self) self:GetFontString():SetTextColor(0, 1, 1) end)
+        gear:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(0.8, 0.8, 0.8) end)
+        gear:SetScript("OnClick", function()
+            -- Close any other open windows first
+            for _, n in ipairs({"IconMover","BarMover","TextMover","CircleMover"}) do
+                if NSI[n] and NSI[n].SettingsWindow and NSI[n] ~= self[Name] then
+                    NSI[n].SettingsWindow:Hide()
+                end
+            end
+            if NSI.CreateAnchorSettingsWindow then
+                NSI:CreateAnchorSettingsWindow(self[Name], SettingsName)
+            end
+        end)
+        self[Name].GearButton = gear
     else
-        self:MoveFrameSettings(self[Name], SettingsTable, IsText)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText, true)
     end
     self[Name]:Show()
 end
@@ -1214,9 +1478,9 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
     self[Name.."Mover"]:Show()
 end
 
-function NSI:MoveFrameSettings(F, s, IsText)
-    local Width = (IsText and F.Text:GetStringWidth()) or s.Width
-    local Height = (IsText and F.Text:GetStringHeight()) or s.Height
+function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
+    local Width  = (IsText and F.Text:GetStringWidth())  or s.Width  or s.Size or 80
+    local Height = isAnchor and 20 or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
     if IsText then
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         F.Text:SetText("Personals - (10)")
@@ -1238,8 +1502,8 @@ function NSI:MoveFrameInit(F, s, ReminderColor)
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 2,
             })
-        if ReminderColor then F.Border:SetBackdropBorderColor(1, 1, 1, 0) else F.Border:SetBackdropBorderColor(1, 1, 1, 1) end
-        if ReminderColor then F.Border:SetBackdropColor(unpack(ReminderColor)) else F.Border:SetBackdropColor(0, 0, 0, 0) end
+        if ReminderColor then F.Border:SetBackdropBorderColor(1, 1, 1, 0) else F.Border:SetBackdropBorderColor(0, 0.8, 0.8, 1) end
+        if ReminderColor then F.Border:SetBackdropColor(unpack(ReminderColor)) else F.Border:SetBackdropColor(0.05, 0.05, 0.1, 0.85) end
         F.Border:Hide()
         F:SetFrameStrata(ReminderColor and "BACKGROUND" or "DIALOG")
         F.Border:SetFrameStrata(ReminderColor and "BACKGROUND" or "DIALOG")
@@ -1296,6 +1560,7 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssign
     }
     if Type == "Bar" then info.BarOverwrite = true
     elseif Type == "Icon" then info.IconOverwrite = true
+    elseif Type == "Circle" then info.CircleOverwrite = true
     end
     return info
 end

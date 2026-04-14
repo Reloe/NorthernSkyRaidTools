@@ -667,113 +667,146 @@ local function BuildReminderOptions()
             name = "Preview Alerts",
             desc = "Preview Reminders and unlock their anchors to move them around",
             func = function(self)
-                if NSI.PreviewTimer then
-                    NSI.PreviewTimer:Cancel()
-                    NSI.PreviewTimer = nil
+                if NSI.IsInPreview then return end
+
+                local allMovers = {"IconMover", "BarMover", "TextMover", "CircleMover"}
+
+                -- Shared spawn function so the ticker can loop it
+                local function SpawnPreviewReminders()
+                    NSI.AllGlows = NSI.AllGlows or {}
+                    NSI.PlayedSound = {}
+                    NSI.StartedCountdown = {}
+                    NSI.GlowStarted = {}
+                    NSI.LGF.GetUnitFrame("player")
+                    local info1 = {
+                        text = "Personals",
+                        phase = 1, id = 1,
+                        TTS = NSRT.ReminderSettings.TextTTS and "Personals",
+                        TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
+                        countdown = NSRT.ReminderSettings.TextCountdown,
+                        dur = NSRT.ReminderSettings.TextDuration,
+                    }
+                    NSI:DisplayReminder(info1)
+                    local info2 = {
+                        text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
+                        phase = 1, id = 2,
+                        TTS = false, TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
+                        countdown = false, dur = NSRT.ReminderSettings.TextDuration,
+                    }
+                    NSI:DisplayReminder(info2)
+                    local info3 = {
+                        text = "Give Ironbark", IconOverwrite = true, spellID = 102342,
+                        phase = 1, id = 3,
+                        TTS = NSRT.ReminderSettings.SpellTTS and "Give Ironbark",
+                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
+                        countdown = NSRT.ReminderSettings.SpellCountdown,
+                        dur = NSRT.ReminderSettings.SpellDuration, glowunit = {"player"},
+                    }
+                    NSI:DisplayReminder(info3)
+                    local info4 = {
+                        text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
+                        IconOverwrite = true, spellID = 115203,
+                        phase = 1, id = 4, TTS = false,
+                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
+                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                    }
+                    NSI:DisplayReminder(info4)
+                    local info5 = {
+                        text = "Breath", BarOverwrite = true, spellID = 1256855,
+                        phase = 1, id = 5, TTS = false,
+                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
+                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                        glowunit = {"player"},
+                    }
+                    NSI:DisplayReminder(info5)
+                    local info6 = {
+                        text = "Dodge", BarOverwrite = true, spellID = 193171,
+                        phase = 1, id = 6, TTS = false,
+                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
+                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                    }
+                    NSI:DisplayReminder(info6)
+                    local info7 = {
+                        text = "Dispel", CircleOverwrite = true, spellID = 528,
+                        phase = 1, id = 7, TTS = false,
+                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
+                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                    }
+                    NSI:DisplayReminder(info7)
+                    NSI:UpdateExistingFrames()
                 end
-                if NSI.IsInPreview then
+
+                -- Stop function used by Exit button
+                local function StopPreview()
+                    if NSI.PreviewTicker then
+                        NSI.PreviewTicker:Cancel()
+                        NSI.PreviewTicker = nil
+                    end
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
-                    for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
-                        if NSI[v] then
-                            NSI[v]:StopMovingOrSizing()
-                        end
+                    for _, v in ipairs(allMovers) do
+                        if NSI[v] then NSI[v]:StopMovingOrSizing() end
                         NSI:ToggleMoveFrames(NSI[v], false)
                     end
-                    return
+                    if NSI.PreviewBar then NSI.PreviewBar:Hide() end
+                    NSUI:Show()
                 end
-                NSI.PreviewTimer = C_Timer.NewTimer(12, function()
-                    if NSI.IsInPreview then
-                        NSI.IsInPreview = false
-                        NSI:HideAllReminders()
-                        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
-                            if NSI[v] then
-                                NSI[v]:StopMovingOrSizing()
-                            end
-                            NSI:ToggleMoveFrames(NSI[v], false)
-                        end
-                    end
-                end)
+
+                -- Build the floating preview bar once
+                if not NSI.PreviewBar then
+                    local bar = CreateFrame("Frame", "NSRTPreviewBar", UIParent, "BackdropTemplate")
+                    bar:SetSize(230, 30)
+                    bar:SetPoint("TOP", UIParent, "TOP", 0, -150)
+                    bar:SetFrameStrata("DIALOG")
+                    bar:SetFrameLevel(100)
+                    bar:SetBackdrop({
+                        bgFile = "Interface\\Buttons\\WHITE8x8",
+                        edgeFile = "Interface\\Buttons\\WHITE8x8",
+                        edgeSize = 1,
+                    })
+                    bar:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+                    bar:SetBackdropBorderColor(1, 0.55, 0, 1)
+
+                    local lbl = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    lbl:SetPoint("LEFT", bar, "LEFT", 10, 0)
+                    lbl:SetText("Preview Mode")
+                    lbl:SetTextColor(1, 0.75, 0.2, 1)
+
+                    local exitBtn = CreateFrame("Button", nil, bar)
+                    exitBtn:SetSize(70, 22)
+                    exitBtn:SetPoint("RIGHT", bar, "RIGHT", -10, 0)
+                    exitBtn:SetNormalFontObject("GameFontNormalSmall")
+                    exitBtn:SetText("Exit Preview")
+                    exitBtn:GetFontString():SetTextColor(0.9, 0.3, 0.3)
+                    exitBtn:SetScript("OnEnter", function(b) b:GetFontString():SetTextColor(1, 0.1, 0.1) end)
+                    exitBtn:SetScript("OnLeave", function(b) b:GetFontString():SetTextColor(0.9, 0.3, 0.3) end)
+                    exitBtn:SetScript("OnClick", StopPreview)
+
+                    bar:Hide()
+                    NSI.PreviewBar = bar
+                end
+
+                -- Start preview
                 NSI.IsInPreview = true
-                for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                for _, v in ipairs(allMovers) do
                     NSI:ToggleMoveFrames(NSI[v], true)
                 end
-                NSI.AllGlows = NSI.AllGlows or {}
-                local MyFrame = NSI.LGF.GetUnitFrame("player")
-                NSI.PlayedSound = {}
-                NSI.StartedCountdown = {}
-                NSI.GlowStarted = {}
-                local info1 = {
-                    text = "Personals",
-                    phase = 1,
-                    id = 1,
-                    TTS = NSRT.ReminderSettings.TextTTS and "Personals",
-                    TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
-                    countdown = NSRT.ReminderSettings.TextCountdown,
-                    dur = NSRT.ReminderSettings.TextDuration,
-                }
-                NSI:DisplayReminder(info1)
-                local info2 = {
-                    text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
-                    phase = 1,
-                    id = 2,
-                    TTS = false,
-                    TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
-                    countdown = false,
-                    dur = NSRT.ReminderSettings.TextDuration,
-                }
-                NSI:DisplayReminder(info2)
-                local info3 = {
-                    text = "Give Ironbark",
-                    IconOverwrite = true,
-                    spellID = 102342,
-                    phase = 1,
-                    id = 3,
-                    TTS = NSRT.ReminderSettings.SpellTTS and "Give Ironbark",
-                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                    countdown = NSRT.ReminderSettings.SpellCountdown,
-                    dur = NSRT.ReminderSettings.SpellDuration,
-                    glowunit = {"player"},
-                }
-                NSI:DisplayReminder(info3)
-                local info4 = {
-                    text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
-                    IconOverwrite = true,
-                    spellID = 115203,
-                    phase = 1,
-                    id = 4,
-                    TTS = false,
-                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                    countdown = false,
-                    dur = NSRT.ReminderSettings.SpellDuration,
-                }
-                NSI:DisplayReminder(info4)
-                local info5 = {
-                    text = "Breath",
-                    BarOverwrite = true,
-                    spellID = 1256855,
-                    phase = 1,
-                    id = 5,
-                    TTS = false,
-                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                    countdown = false,
-                    dur = NSRT.ReminderSettings.SpellDuration,
-                    glowunit = {"player"},
-                }
-                NSI:DisplayReminder(info5)
-                local info6 = {
-                    text = "Dodge",
-                    BarOverwrite = true,
-                    spellID = 193171,
-                    phase = 1,
-                    id = 6,
-                    TTS = false,
-                    TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                    countdown = false,
-                    dur = NSRT.ReminderSettings.SpellDuration,
-                }
-                NSI:DisplayReminder(info6)
-                NSI:UpdateExistingFrames()
+
+                SpawnPreviewReminders()
+
+                local loopInterval = math.max(
+                    NSRT.ReminderSettings.SpellDuration or 12,
+                    NSRT.ReminderSettings.TextDuration  or 8
+                )
+                NSI.PreviewTicker = C_Timer.NewTicker(loopInterval, function()
+                    if NSI.IsInPreview then
+                        NSI:HideAllReminders()
+                        SpawnPreviewReminders()
+                    end
+                end)
+
+                NSI.PreviewBar:Show()
+                NSUI:Hide()
             end,
             nocombat = true,
             spacement = true
