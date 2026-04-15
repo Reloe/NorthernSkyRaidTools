@@ -117,8 +117,9 @@ local function ImportPersonalReminderString(name, IsUpdate)
             else
                 NSI:ImportFullReminderString(import_string, true, false, popup._name)
             end
-            if popup._isUpdate and NSRT.ActivePersonalReminder then
-                NSI:SetReminder(NSRT.ActivePersonalReminder, true)
+            local encID = NSI:EncIDFromReminder(popup._name, true)
+            if popup._isUpdate and NSRT.ActivePersonalReminder[encID] then
+                NSI:SetReminder(NSRT.ActivePersonalReminder[encID], true)
             end
             popup.test_string_text_box:SetText("")
             if NSUI.personal_reminders_frame then
@@ -521,8 +522,14 @@ local function BuildReminderScreen(personal, parentFrame)
         else
             NSI:ImportReminder(oldName, fullText, false, personal, true)
         end
-        local currentActive = NSRT[activeKey]
-        if currentActive == screen.selectedName then
+        local isCurrentlyActive
+        if personal then
+            local encID = NSI:EncIDFromReminder(screen.selectedName, true)
+            isCurrentlyActive = encID and NSRT.ActivePersonalReminder[encID] == screen.selectedName
+        else
+            isCurrentlyActive = NSRT[activeKey] == screen.selectedName
+        end
+        if isCurrentlyActive then
             NSI:SetReminder(screen.selectedName, personal)
         end
         screen.scrollbox:MasterRefresh()
@@ -674,7 +681,8 @@ local function BuildReminderScreen(personal, parentFrame)
             NSI:SetReminder(nil)
             NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         else
-            NSI:SetReminder(nil, true)
+            local encID = screen.selectedName and NSI:EncIDFromReminder(screen.selectedName, true)
+            NSI:SetReminder(nil, true, nil, encID)
         end
         screen.selectedName = nil
         editor:SetText("")
@@ -795,7 +803,7 @@ local function BuildReminderScreen(personal, parentFrame)
         screen._metaBossEncID = encID
         screen._metaDiff = diff
 
-        if screen.nameEntry then screen.nameEntry:SetText(name or "") end
+        if screen.nameEntry then screen.nameEntry:SetText(type(name) == "string" and name or "") end
         if screen.diffDropdown and diff then screen.diffDropdown:Select(diff) end
         if screen.bossDropdown then screen.bossDropdown:Select(encID or 0) end
 
@@ -837,8 +845,22 @@ local function BuildReminderScreen(personal, parentFrame)
             line.name = reminderData.name
             line.nameLabel:SetText(reminderData.hasencID and reminderData.name or (reminderData.name .. " (No Enc)"))
 
-            local activeName = NSRT[activeKey]
-            if line.name == activeName then
+            local isActive = false
+            if personal then
+                local activeTable = NSRT.ActivePersonalReminder
+                if activeTable then
+                    for _, activeName in pairs(activeTable) do
+                        if activeName == line.name then
+                            isActive = true
+                            break
+                        end
+                    end
+                end
+            else
+                isActive = (line.name == NSRT.ActiveReminder)
+            end
+
+            if isActive then
                 line:SetBackdropBorderColor(0, 1, 0, 1)
                 line.__background:SetVertexColor(0, 1, 0)
                 line.__background:SetAlpha(1)
@@ -1009,7 +1031,11 @@ local function BuildReminderScreen(personal, parentFrame)
         if self.UpdateReceivedBar then self.UpdateReceivedBar() end
         if not personal and self.UpdateButtonAccess then self.UpdateButtonAccess() end
         local activeName = NSRT[activeKey]
-        if activeName and activeName ~= "" then
+        if personal and type(activeName) == "table" then
+            -- Pick the first active personal reminder to show in the editor
+            activeName = next(activeName) and (select(2, next(activeName))) or nil
+        end
+        if activeName and type(activeName) == "string" and activeName ~= "" then
             SelectReminder(activeName)
         end
         if self.scrollbox then

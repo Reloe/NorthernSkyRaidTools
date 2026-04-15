@@ -61,7 +61,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         end
-        self:SetReminder(NSRT.ActivePersonalReminder, true, true) -- loading active personal reminder from last session
+        self:SetReminder(NSRT.StoredPersonalReminder, true, true) -- loading active personal reminder from last session
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
@@ -97,6 +97,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
+        self.EncounterID = ...
+        self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -105,7 +107,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
             self:ToggleMoveFrames(self[v], false)
         end
-        self.EncounterID = ...
         self.Phase = 1
         self.PhaseSwapTime = GetTime()
         self.ReminderText = self.ReminderText or {}
@@ -347,7 +348,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
-        
         if not self:DifficultyCheck(14) then return end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck(14) then return end
