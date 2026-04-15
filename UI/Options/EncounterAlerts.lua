@@ -327,6 +327,21 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "P2 Seed-Drop Bar",
+            desc = "Enables Alerts for the Seed-Drop Bar in Midnight Falls.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].SeedDrop end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].SeedDrop = value
+                NSI:FireCallback("NSRT_ALERT_TOGGLE", 3183)
+            end,
+            nocombat = true,
+            icontexture = 7448204,
+            iconsize = {16, 16},
+        },
+        {
             type = "select",
             name = "P3 Side",
             desc = "Choose which side you are playing P3 to get the correct generic alerts.",

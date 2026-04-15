@@ -11,6 +11,15 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     if realpull and id == 16 then
         NSI.NSRTFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
+    if NSRT.EncounterAlerts[encID].SeedDrop then
+        local Alert = self:CreateDefaultAlert("Seed-Drop", "Bar", 1253031, 5, 3, encID)
+        Alert.countdown = 3
+        Alert.TTS = false
+        local timers = {
+            [16] = {17.5, 25, 47.5, 55, 77.5, 85}
+        }
+        self:AddRemindersFromTable(Alert, timers[id])
+    end
     if NSRT.EncounterAlerts[encID].enabled and not preview then -- text, Type, spellID, dur, phase, encID
         local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 6, 1, encID)
         local timers = {
