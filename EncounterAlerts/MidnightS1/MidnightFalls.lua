@@ -356,6 +356,15 @@ NSI.EncounterAlertStop[encID] = function(self, Alertcall) -- on ENCOUNTER_END
     if self.LuraRunesFrame and not Alertcall then
         self.LuraRunesFrame:UnregisterAllEvents()
         self.LuraRunesFrame:Hide()
+        for i=1, 5 do
+            if self.LuraRunesDisplay[i] then
+                self.LuraRunesDisplay[i]:Hide()
+            end
+            if self.LuraRunesNumbers[i] then
+                self.LuraRunesNumbers[i]:Hide()
+            end
+        end
+        self.LuraRunesCompleted = {}
     end
     if self.AlertTimers then
         for i, v in ipairs(self.AlertTimers) do
