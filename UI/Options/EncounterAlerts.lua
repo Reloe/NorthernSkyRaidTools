@@ -35,6 +35,102 @@ local function build_P3Side_options(SettingsName)
     return t
 end
 
+local LURA_DEFAULTS = {
+    Anchor = "TOPLEFT",
+    RelativePoint = "TOPLEFT",
+    OffsetX = 300,
+    OffsetY = -300,
+}
+
+local function GetEncounterAlertsTab()
+    return NSI.NSUI
+        and NSI.NSUI.MenuFrame
+        and NSI.NSUI.MenuFrame:GetTabFrameByName("EncounterAlerts")
+end
+
+local function EnsureLuraPreview()
+    if not NSI.EncounterAlertStart or not NSI.EncounterAlertStart[3183] then return end
+    NSI.IsLuraPreview = true
+    NSI.EncounterAlertStart[3183](NSI, 15, true)
+end
+
+local function StopLuraPreview()
+    if not NSI.EncounterAlertStop or not NSI.EncounterAlertStop[3183] then return end
+    NSI.IsLuraPreview = false
+    NSI.EncounterAlertStop[3183](NSI)
+end
+
+local function SetOptionsHidden(hidden)
+    if not NSI.NSUI then return end
+    if hidden then NSI.NSUI:Hide() else NSI.NSUI:Show() end
+end
+
+local function ReopenEncounterAlertsOptions()
+    if not NSI.NSUI then return end
+    NSI.NSUI:Show()
+    if NSI.NSUI.MenuFrame then
+        NSI.NSUI.MenuFrame:SelectTabByName("EncounterAlerts")
+    end
+    local encounterTab = GetEncounterAlertsTab()
+    if encounterTab and encounterTab.RefreshOptions then
+        encounterTab:RefreshOptions()
+    end
+end
+
+local function LuraUnlockedVisual(frame)
+    frame:SetBackdropBorderColor(1, 1, 0, 1)
+end
+
+local function LuraLockedVisual(frame)
+    local c = NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}
+    frame:SetBackdropBorderColor(unpack(c))
+    frame:SetBackdropColor(unpack(c))
+end
+
+local function BuildLuraMoveConfig()
+    return {
+        id = "LuraRunes",
+        title = "Position Rune-Display",
+        popupAnchorFrame = UIParent,
+        popupPoint = "TOP",
+        popupRelativePoint = "TOP",
+        popupX = 0,
+        popupY = -100,
+        ensurePreview = EnsureLuraPreview,
+        setOptionsHidden = SetOptionsHidden,
+        getFrame = function()
+            return NSI.LuraRunesFrame
+        end,
+        settingsTable = NSRT.Settings,
+        keys = {
+            anchor = "LuraDisplayAnchor",
+            relativePoint = "LuraDisplayRelativePoint",
+            offsetX = "LuraDisplayOffsetX",
+            offsetY = "LuraDisplayOffsetY",
+        },
+        defaults = LURA_DEFAULTS,
+        onUnlockVisual = LuraUnlockedVisual,
+        onLockVisual = LuraLockedVisual,
+        onSettingsChanged = function()
+            EnsureLuraPreview()
+        end,
+        onLock = function()
+            StopLuraPreview()
+            ReopenEncounterAlertsOptions()
+        end,
+        onCancel = function()
+            StopLuraPreview()
+            ReopenEncounterAlertsOptions()
+        end,
+    }
+end
+
+local function StartLuraFrameMoveSession()
+    local config = BuildLuraMoveConfig()
+    if not NSI.StartFrameMoveWorkflow then return end
+    NSI:StartFrameMoveWorkflow(config)
+end
+
 local ShowLinkPopup
 local function ShowLink(Text, Name, URL)
     if not ShowLinkPopup then
@@ -401,6 +497,15 @@ local function BuildEncounterAlertsOptions()
             get = function() return NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT" end,
             values = function() return build_anchor_options("LuraDisplayRelativePoint") end,
             nocombat = true,
+        },
+        {
+            type = "button",
+            name = "Position Rune-Display",
+            desc = "Unlocks the rune display for dragging. Use the popup buttons to lock/save or reset to defaults",
+            func = function(self)
+                StartLuraFrameMoveSession()
+            end,
+            nocombat = true
         },
         {
             type = "range",

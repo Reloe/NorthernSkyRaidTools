@@ -324,6 +324,206 @@ function NSI:ToggleMoveFrames(F, Unlock)
     end
 end
 
+local function getFrameMoveSnapshot(config)
+    local settings = config.settingsTable
+    local keys = config.keys
+    local defaults = config.defaults or {}
+
+    return {
+        Anchor = settings[keys.anchor] or defaults.Anchor,
+        RelativePoint = settings[keys.relativePoint] or defaults.RelativePoint,
+        OffsetX = settings[keys.offsetX] or defaults.OffsetX or 0,
+        OffsetY = settings[keys.offsetY] or defaults.OffsetY or 0,
+    }
+end
+
+local function applyFrameMoveSnapshot(config, snapshot)
+    local settings = config.settingsTable
+    local keys = config.keys
+    settings[keys.anchor] = snapshot.Anchor
+    settings[keys.relativePoint] = snapshot.RelativePoint
+    settings[keys.offsetX] = snapshot.OffsetX
+    settings[keys.offsetY] = snapshot.OffsetY
+end
+
+local function setFrameDragState(frame, unlocked, config)
+    if not frame then return end
+
+    if unlocked then
+        frame:SetMovable(true)
+        frame:EnableMouse(true)
+        frame:SetClampedToScreen(true)
+        frame:RegisterForDrag("LeftButton")
+        frame:SetScript("OnDragStart", function(self)
+            self:StartMoving()
+        end)
+        frame:SetScript("OnDragStop", function(self)
+            self:StopMovingOrSizing()
+        end)
+        if config.onUnlockVisual then
+            config.onUnlockVisual(frame)
+        end
+    else
+        frame:SetMovable(false)
+        frame:EnableMouse(false)
+        if frame.UnregisterForDrag then frame:UnregisterForDrag() end
+        frame:SetScript("OnDragStart", nil)
+        frame:SetScript("OnDragStop", nil)
+        if config.onLockVisual then
+            config.onLockVisual(frame)
+        end
+    end
+end
+
+function NSI:StartFrameMoveWorkflow(config)
+    if not config or not config.id then return end
+    if not config.getFrame or not config.settingsTable or not config.keys then return end
+
+    self.FrameMoveWorkflows = self.FrameMoveWorkflows or {}
+    self.FrameMoveWorkflows[config.id] = {
+        original = getFrameMoveSnapshot(config),
+    }
+
+    if config.ensurePreview then
+        config.ensurePreview()
+    end
+
+    local frame = config.getFrame()
+    if not frame then return end
+
+    if config.setOptionsHidden then
+        config.setOptionsHidden(true)
+    end
+
+    setFrameDragState(frame, true, config)
+    self:ShowFrameMoveWorkflowPopup(config)
+end
+
+function NSI:ShowFrameMoveWorkflowPopup(config)
+    if not config or not config.id then return end
+    local DF = _G["DetailsFramework"]
+    if not DF then return end
+
+    self.FrameMovePopups = self.FrameMovePopups or {}
+    local popup = self.FrameMovePopups[config.id]
+    local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
+
+    if not popup then
+        popup = DF:CreateSimplePanel(UIParent, 420, 100, config.title or "Frame Position", "NSRTFrameMovePopup"..config.id, {
+            DontRightClickClose = true
+        })
+        popup:SetFrameLevel(200)
+
+        popup.stateLabel = DF:CreateLabel(popup, "", 11)
+        popup.stateLabel:SetPoint("TOP", popup, "TOP", 0, -12)
+        popup.stateLabel:SetJustifyH("CENTER")
+
+        popup.lockButton = DF:CreateButton(popup, function()
+            local frame = config.getFrame()
+            if not frame then return end
+
+            local point, _, relativePoint, xOffset, yOffset = frame:GetPoint()
+            if point and relativePoint then
+                applyFrameMoveSnapshot(config, {
+                    Anchor = point,
+                    RelativePoint = relativePoint,
+                    OffsetX = Round(xOffset),
+                    OffsetY = Round(yOffset),
+                })
+            end
+
+            if config.onSettingsChanged then
+                config.onSettingsChanged()
+            end
+            setFrameDragState(frame, false, config)
+            if config.onLock then
+                config.onLock()
+            elseif config.setOptionsHidden then
+                config.setOptionsHidden(false)
+            end
+            popup._suppressOnHideCancel = true
+            popup:Hide()
+        end, 140, 20, "Lock & Save")
+        popup.lockButton:SetTemplate(options_button_template)
+
+        popup.resetButton = DF:CreateButton(popup, function()
+            local frame = config.getFrame()
+            if not frame then return end
+            if config.ensurePreview then config.ensurePreview() end
+
+            applyFrameMoveSnapshot(config, config.defaults)
+            if config.onSettingsChanged then
+                config.onSettingsChanged()
+            end
+            if config.setOptionsHidden then config.setOptionsHidden(true) end
+            setFrameDragState(frame, true, config)
+            if popup.stateLabel then popup.stateLabel:SetText("Drag unlocked - reset defaults") end
+        end, 140, 20, "Reset Default")
+        popup.resetButton:SetTemplate(options_button_template)
+
+        popup.cancelButton = DF:CreateButton(popup, function()
+            local frame = config.getFrame()
+            if not frame then return end
+            if config.ensurePreview then config.ensurePreview() end
+
+            local session = self.FrameMoveWorkflows and self.FrameMoveWorkflows[config.id]
+            if session and session.original then
+                applyFrameMoveSnapshot(config, session.original)
+            end
+            if config.onSettingsChanged then
+                config.onSettingsChanged()
+            end
+            setFrameDragState(frame, false, config)
+            if config.onCancel then
+                config.onCancel()
+            elseif config.setOptionsHidden then
+                config.setOptionsHidden(false)
+            end
+            popup._suppressOnHideCancel = true
+            popup:Hide()
+        end, 100, 20, "Cancel")
+        popup.cancelButton:SetTemplate(options_button_template)
+
+        popup.lockButton:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+        popup.resetButton:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -10, -30)
+        popup.cancelButton:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+
+        popup:SetScript("OnHide", function()
+            if popup._suppressOnHideCancel then
+                popup._suppressOnHideCancel = nil
+                return
+            end
+            local frame = config.getFrame and config.getFrame()
+            if frame then
+                setFrameDragState(frame, false, config)
+            end
+            if config.onCancel then
+                config.onCancel()
+            elseif config.setOptionsHidden then
+                config.setOptionsHidden(false)
+            end
+        end)
+
+        self.FrameMovePopups[config.id] = popup
+    end
+
+    popup:SetTitle(config.title or "Frame Position")
+    popup:ClearAllPoints()
+    local point = config.popupPoint or "TOP"
+    local relativePoint = config.popupRelativePoint or "TOP"
+    local xOffset = config.popupX or 0
+    local yOffset = config.popupY or -100
+    local anchorFrame = config.popupAnchorFrame
+    if not anchorFrame or anchorFrame == popup then
+        anchorFrame = UIParent
+        point = "TOP"
+        relativePoint = "TOP"
+    end
+    popup:SetPoint(point, anchorFrame, relativePoint, xOffset, yOffset)
+    if popup.stateLabel then popup.stateLabel:SetText("Drag unlocked") end
+    popup:Show()
+end
+
 function NSI:IsMelee(unit)
     local role = UnitGroupRolesAssigned(unit)
     if unit == "player" then
