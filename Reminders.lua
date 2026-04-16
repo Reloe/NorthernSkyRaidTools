@@ -525,7 +525,8 @@ function NSI:SetProperties(F, info, skipsound, s)
         local _, _, spellID = ...
         if (not issecretvalue(info.spellID)) and spellID == info.spellID and self:IsShown() then
             local rem = info.dur - (GetTime() - info.startTime)
-            if rem and rem <= 5 then
+            local hideThreshold = NSRT.ReminderSettings.HideThreshold or 5
+            if rem and rem <= hideThreshold then
                 F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
                 F:Hide()
             end

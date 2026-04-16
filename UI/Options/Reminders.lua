@@ -643,6 +643,18 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
+        {
+            type = "range",
+            name = "Hide Reminder Treshold",
+            desc = "Treshold above which spells will not be hidden if pressed during the reminder. Some long ramp classes have multiple reminders up at the same time and thus don't want them hidden early",
+            get = function() return NSRT.ReminderSettings.HideThreshold or 5 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.HideThreshold = value
+            end,
+            min = 0,
+            max = 30,
+            nocombat = true,
+        },
 
         {
             type = "select",
