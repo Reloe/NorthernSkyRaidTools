@@ -277,41 +277,41 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         if not self.LuraRunesFrame then
             self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
-            self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
-                if e == "CHAT_MSG_RAID" then
-                    self.LuraRunesFrame:Show()
-                    if self.HideTimer then
-                        self.HideTimer:Cancel()
-                    end
-                    local hideduration = self.Phase == 4 and 13 or 15
-                    self.HideTimer = C_Timer.NewTimer(hideduration, function()
-                        HideAllRunes()
-                    end)
-
-                    if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
-                    local pos = 2
-                    if self.LuraRunesCompleted[pos] then pos = 3 end
-                    if self.LuraRunesCompleted[pos] then pos = 5 end
-                    self.LuraRunesCompleted[pos] = true
-                    DisplayRune(pos, msg, true)
-                elseif e == "CHAT_MSG_RAID_LEADER" then
-                    self.LuraRunesFrame:Show()
-                    if self.HideTimer then
-                        self.HideTimer:Cancel()
-                    end
-                    local hideduration = self.Phase == 4 and 13 or 15
-                    self.HideTimer = C_Timer.NewTimer(hideduration, function()
-                        HideAllRunes()
-                    end)
-
-                    if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
-                    local pos = 1
-                    if self.LuraRunesCompleted[pos] then pos = 4 end
-                    self.LuraRunesCompleted[pos] = true
-                    DisplayRune(pos, msg, true)
-                end
-            end)
         end
+        self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
+            if e == "CHAT_MSG_RAID" then
+                self.LuraRunesFrame:Show()
+                if self.HideTimer then
+                    self.HideTimer:Cancel()
+                end
+                local hideduration = self.Phase == 4 and 13 or 15
+                self.HideTimer = C_Timer.NewTimer(hideduration, function()
+                    HideAllRunes()
+                end)
+
+                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
+                local pos = 2
+                if self.LuraRunesCompleted[pos] then pos = 3 end
+                if self.LuraRunesCompleted[pos] then pos = 5 end
+                self.LuraRunesCompleted[pos] = true
+                DisplayRune(pos, msg, true)
+            elseif e == "CHAT_MSG_RAID_LEADER" then
+                self.LuraRunesFrame:Show()
+                if self.HideTimer then
+                    self.HideTimer:Cancel()
+                end
+                local hideduration = self.Phase == 4 and 13 or 15
+                self.HideTimer = C_Timer.NewTimer(hideduration, function()
+                    HideAllRunes()
+                end)
+
+                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
+                local pos = 1
+                if self.LuraRunesCompleted[pos] then pos = 4 end
+                self.LuraRunesCompleted[pos] = true
+                DisplayRune(pos, msg, true)
+            end
+        end)
         self.LuraRunesFrame:ClearAllPoints()
         self.LuraRunesFrame:SetPoint(NSRT.Settings.LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT", NSRT.Settings.LuraDisplayOffsetX or 500, NSRT.Settings.LuraDisplayOffsetY or -300)
         self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
@@ -374,24 +374,24 @@ NSI.EncounterAlertStop[encID] = function(self, Alertcall) -- on ENCOUNTER_END
             end
         end
         self.LuraRunesCompleted = {}
-    end
-    if self.AlertTimers then
-        for i, v in ipairs(self.AlertTimers) do
-            if v and v.Cancel then
-                v:Cancel()
+        if self.AlertTimers then
+            for i, v in ipairs(self.AlertTimers) do
+                if v and v.Cancel then
+                    v:Cancel()
+                end
             end
+            self.AlertTimers = nil
         end
-        self.AlertTimers = nil
-    end
-    if self.LuraRuneTimers then
-        for i, v in ipairs(self.LuraRuneTimers) do
-            if v and v.Cancel then
-                v:Cancel()
+        if self.LuraRuneTimers then
+            for i, v in ipairs(self.LuraRuneTimers) do
+                if v and v.Cancel then
+                    v:Cancel()
+                end
             end
+            self.LuraRuneTimers = nil
         end
-        self.LuraRuneTimers = nil
+        NSI.NSRTFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
-    NSI.NSRTFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 end
 
 local detectedDurations = {
