@@ -42,11 +42,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitQoL()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
-        if NSRT.PASettings.enabled then self:InitPA() end
-        self:InitTextPA()
-        if NSRT.PARaidSettings.enabled then
-            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
+        self:InitPrivateAuras()
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
         for spellID, info in pairs(NSRT.PASounds) do
@@ -87,16 +83,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
             self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
             self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
-            if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
-                if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
-                self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-            end
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
-        if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
         self.EncounterID = ...
         self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
@@ -181,6 +172,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
+        self:InitPrivateAuras()
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
         local diff= select(3, GetInstanceInfo()) or 0
@@ -239,9 +231,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateReminderFrame(true)
         end
         local diff = select(3, GetInstanceInfo()) or 0
-        if NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
-            self:InitTankPA()
-        end
+        self:InitPrivateAuras()
         local text = ""
         if UnitLevel("player") < 90 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
@@ -329,12 +319,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         self:ArrangeGroups()
-        if NSRT.PARaidSettings.enabled then
-            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
-            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
-
-        self:UpdateRaidBuffFrame()
+        if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
+        self.GroupUpdateTimer = C_Timer.After(2, function()
+            self.GroupUpdateTimer = nil
+            self:InitPrivateAuras()
+            self:UpdateRaidBuffFrame()
+        end)
         if self:Restricted() then return end
 
         if self.InviteInProgress then
