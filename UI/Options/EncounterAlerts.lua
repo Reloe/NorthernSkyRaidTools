@@ -223,6 +223,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3180] = NSRT.EncounterAlerts[3180] or {}
                 NSRT.EncounterAlerts[3180].HealAbsorbTicks = value
+                NSI:FireCallback("NSRT_ALERT_TOGGLE", 3180)
             end,
             nocombat = true,
             icontexture = 5764904,
