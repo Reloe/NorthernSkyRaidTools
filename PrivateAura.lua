@@ -49,6 +49,8 @@ local SoundListRaid = {
     [1249609] = "Rune", -- Dark Rune
     [1285510] = "Targeted", -- Starsplinter
     [1279512] = "Targeted", -- Starsplinter
+    [1286294] = "Red", -- Blue Memory Game
+    [1284984] = "Blue", -- Red Memory Game
 }
 
 local SoundListMPlus = {
