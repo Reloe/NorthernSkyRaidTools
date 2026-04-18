@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
 -- Get references from Core module
 local Core = NSI.UI.Core
@@ -56,23 +57,23 @@ local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 -- Tab groups – blank strings become visual spacers between groups
 local TABS_GROUPS                  = {
     {
-        { name = "General",    text = "General" },
-        { name = "QoL",        text = "Quality of Life" },
-        { name = "ReadyCheck", text = "Ready Check" },
+        { name = "General",    text = L["General"] },
+        { name = "QoL",        text = L["Quality of Life"] },
+        { name = "ReadyCheck", text = L["Ready Check"] },
     },
     {
-        { name = "Reminders",       text = "Reminders" },
-        { name = "Reminders-Note",  text = "Reminder Strings" },
-        { name = "EncounterAlerts", text = "Encounter Alerts" },
-        { name = "Assignments",     text = "Assignments" },
+        { name = "Reminders",       text = L["Reminders"] },
+        { name = "Reminders-Note",  text = L["Reminder Strings"] },
+        { name = "EncounterAlerts", text = L["Encounter Alerts"] },
+        { name = "Assignments",     text = L["Assignments"] },
     },
     {
-        { name = "PrivateAura", text = "Private Auras" },
-        { name = "WAImports",   text = "WA Imports" },
+        { name = "PrivateAura", text = L["Private Auras"] },
+        { name = "WAImports",   text = L["WA Imports"] },
     },
     {
-        { name = "Nicknames", text = "Nicknames" },
-        { name = "Versions",  text = "Version Check" },
+        { name = "Nicknames", text = L["Nicknames"] },
+        { name = "Versions",  text = L["Version Check"] },
     },
 }
 
@@ -194,8 +195,8 @@ function NSUI:Init()
     local NOTES_HEADER_BTN_Y = -38
 
     local notesTabs = {
-        { name = "SharedNotes",   text = "Shared Notes",   icon = "users_icon" },
-        { name = "PersonalNotes", text = "Personal Notes", icon = "user_icon" },
+        { name = "SharedNotes",   text = L["Shared Notes"],   icon = "users_icon" },
+        { name = "PersonalNotes", text = L["Personal Notes"], icon = "user_icon" },
     }
 
     for i, nt in ipairs(notesTabs) do
@@ -415,25 +416,25 @@ function NSUI:ToggleOptions()
 end
 
 function NSI:NickNamesSyncPopup(unit, nicknametable)
-    local popup = DF:CreateSimplePanel(UIParent, 300, 120, "Sync Nicknames", "SyncNicknamesPopup", {
+    local popup = DF:CreateSimplePanel(UIParent, 300, 120, L["Sync Nicknames"], "SyncNicknamesPopup", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    local label = DF:CreateLabel(popup, NSAPI:Shorten(unit) .. " is attempting to sync their nicknames with you.", 11)
+    local label = DF:CreateLabel(popup, format(L["%s is attempting to sync their nicknames with you."], NSAPI:Shorten(unit)), 11)
 
     label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
     label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
     label:SetJustifyH("CENTER")
 
-    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, "Cancel")
+    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, L["Cancel"])
     cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
     cancel_button:SetTemplate(options_button_template)
 
     local accept_button = DF:CreateButton(popup, function()
         NSI:SyncNickNamesAccept(nicknametable)
         popup:Hide()
-    end, 130, 20, "Accept")
+    end, 130, 20, L["Accept"])
     accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
     accept_button:SetTemplate(options_button_template)
 

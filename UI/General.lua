@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -8,7 +9,7 @@ local options_button_template = Core.options_button_template
 
 
 local function BuildExportStringUI()
-    local popup = DF:CreateSimplePanel(NSUI, 800, 400, "Export Profile", "NSUIExportString", {
+    local popup = DF:CreateSimplePanel(NSUI, 800, 400, L["Export Profile"], "NSUIExportString", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -29,12 +30,12 @@ local function BuildExportStringUI()
 
     popup.export_confirm_button = DF:CreateButton(popup, function()
         popup:Hide()
-    end, 280, 20, "Done")
+    end, 280, 20, L["Done"])
     popup.export_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.export_confirm_button:SetTemplate(options_button_template)
 
     popup:HookScript("OnShow", function()
-        profileLabel:SetText("Exporting profile: |cFF00FFFF" .. (NSRT.CurrentProfile or "default") .. "|r")
+        profileLabel:SetText(format(L["Exporting profile: |cFF00FFFF%s|r"], NSRT.CurrentProfile or "default"))
         local exportString = NSI:ExportProfileString()
         popup.test_string_text_box:SetText(exportString or "")
         popup.test_string_text_box:SetFocus()
@@ -45,13 +46,13 @@ local function BuildExportStringUI()
 end
 
 local function BuildImportStringUI()
-    local popup = DF:CreateSimplePanel(NSUI, 800, 400, "Import Profile", "NSUIImportString", {
+    local popup = DF:CreateSimplePanel(NSUI, 800, 400, L["Import Profile"], "NSUIImportString", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     popup:SetFrameLevel(100)
 
-    local statusLabel = DF:CreateLabel(popup, "Paste a profile string below and click Import.", DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+    local statusLabel = DF:CreateLabel(popup, L["Paste a profile string below and click Import."], DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
     statusLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
 
     popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ImportStringTextEdit", true, false, true)
@@ -72,14 +73,14 @@ local function BuildImportStringUI()
             popup:Hide()
             NSUI.MenuFrame:SelectTabByName("General")
         else
-            statusLabel:SetText("|cFFFF0000Invalid import string. Please check and try again.|r")
+            statusLabel:SetText("|cFFFF0000" .. L["Invalid import string. Please check and try again."] .. "|r")
         end
-    end, 280, 20, "Import")
+    end, 280, 20, L["Import"])
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
     popup.import_confirm_button:SetTemplate(options_button_template)
 
     popup:HookScript("OnShow", function()
-        statusLabel:SetText("Paste a profile string below and click Import.")
+        statusLabel:SetText(L["Paste a profile string below and click Import."])
         popup.test_string_text_box:SetText("")
         popup.test_string_text_box:SetFocus()
     end)
