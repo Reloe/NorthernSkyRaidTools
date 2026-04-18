@@ -700,7 +700,7 @@ function NSI:CreateBar(info)
     end
 end
 
-function NSI:AddTickToBar(F, percent)
+function NSI:AddTickToBar(F, percent, HideTimer)
     if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
     local s = NSRT.ReminderSettings.BarSettings
     local width = s.Width * (percent)
@@ -711,6 +711,7 @@ function NSI:AddTickToBar(F, percent)
             F.Ticks[i]:ClearAllPoints()
             F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
             F.Ticks[i]:Show()
+            F.Ticks[i].HideTimer = HideTimer
             return
         end
         if not F.Ticks[i] then
@@ -719,6 +720,7 @@ function NSI:AddTickToBar(F, percent)
             F.Ticks[i]:SetSize(2, height)
             F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
             F.Ticks[i]:Show()
+            F.Ticks[i].HideTimer = HideTimer
             return
         end
     end
@@ -774,7 +776,7 @@ function NSI:DisplayReminder(info)
     if info.Ticks then
         for _, tick in ipairs(info.Ticks) do
             local perc = tick / info.dur
-            self:AddTickToBar(F, perc)
+            self:AddTickToBar(F, perc, info.dur-tick)
         end
     end
     if info.glowunit then
@@ -820,6 +822,14 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
+            if F.Ticks then
+                for _, tick in ipairs(F.Ticks) do
+                    if tick.HideTimer and rem <= tick.HideTimer then
+                        tick:Hide()
+                        tick.HideTimer = nil
+                    end
+                end
+            end
         else
             if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
