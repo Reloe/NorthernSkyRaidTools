@@ -56,23 +56,23 @@ local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 -- Tab groups – blank strings become visual spacers between groups
 local TABS_GROUPS                  = {
     {
-        { name = "General",  text = "General" },
-        { name = "Versions", text = "Version Check" },
-        { name = "QoL",      text = "Quality of Life" },
-    },
-    {
-        { name = "Nicknames",    text = "Nicknames" },
-        { name = "ReadyCheck",   text = "Ready Check" },
+        { name = "General",    text = "General" },
+        { name = "QoL",        text = "Quality of Life" },
+        { name = "ReadyCheck", text = "Ready Check" },
     },
     {
         { name = "Reminders",       text = "Reminders" },
         { name = "Reminders-Note",  text = "Reminder Strings" },
-        { name = "Assignments",     text = "Assignments" },
         { name = "EncounterAlerts", text = "Encounter Alerts" },
+        { name = "Assignments",     text = "Assignments" },
     },
     {
         { name = "PrivateAura", text = "Private Auras" },
         { name = "WAImports",   text = "WA Imports" },
+    },
+    {
+        { name = "Nicknames", text = "Nicknames" },
+        { name = "Versions",  text = "Version Check" },
     },
 }
 
