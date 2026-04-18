@@ -12,6 +12,7 @@ f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_LOGOUT")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -21,7 +22,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     if e == "ADDON_LOADED" and wowevent then
         local name = ...
         if name == "NorthernSkyRaidTools" then
-            self:AddMissingDefaults()
             self.Reminder = ""
             self.PersonalReminder = ""
             self.DisplayedReminder = ""
@@ -33,10 +33,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.PlayedSound = {}
             self.StartedCountdown = {}
             self.GlowStarted = {}
-            self:CreateMoveFrames()
-            self:InitNickNames()
+        self:CreateMoveFrames()
+        self:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
+        self:LoadMyProfile()
         self.NSUI:Init()
         self:InitLDB()
         self:InitQoL()
@@ -369,5 +370,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end
+    elseif e == "PLAYER_LOGOUT" and wowevent then
+        self:SaveProfile()
     end
 end

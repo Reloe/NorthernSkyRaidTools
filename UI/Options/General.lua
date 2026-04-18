@@ -37,6 +37,42 @@ local function BuildGeneralOptions()
         },
 
         {
+            type = "select",
+            name = "Global Font",
+            desc = "This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility.",
+            get = function() return NSRT.Settings.GlobalFont end,
+            values = function() return build_media_options(false, false, false, false, false, true) end,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = "Global Font-Size",
+            desc = "Size of the global font",
+            get = function() return NSRT.Settings["GlobalFontSize"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["GlobalFontSize"] = value
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
+            end,
+            min = 10,
+            max = 100,
+        },
+        {
+            type = "button",
+            name = "Move Text Display",
+            desc = "This lets you move the generic text display used for example the ready check module or the assignments on pull.",
+            func = function(self)
+                if NSI.NSRTFrame.generic_display:IsMovable() then
+                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, false)
+                else
+                    NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
+                    NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
+                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, true)
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
             type = "breakline"
         },
         { type = "label", get = function() return "TTS Options" end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
@@ -95,8 +131,8 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Export Settings",
-            desc = "Exports your current settings to a string that can be shared with others.",
+            name = "Export Profile",
+            desc = "Exports your currently active profile to a string that can be shared with others.",
             func = function(self)
                 if NSUI.export_string_popup:IsShown() then
                     NSUI.export_string_popup:Hide()
@@ -109,8 +145,8 @@ Press 'Enter' to hear the TTS]],
         },
         {
             type = "button",
-            name = "Import Settings",
-            desc = "Imports settings from a string shared by others. Confirming the Import will force reload your UI for the changes to take effect.",
+            name = "Import Profile",
+            desc = "Imports a profile from a string shared by another player. It will be saved as a new profile you can then load.",
             func = function(self)
                 if NSUI.import_string_popup:IsShown() then
                     NSUI.import_string_popup:Hide()
@@ -121,45 +157,133 @@ Press 'Enter' to hear the TTS]],
             nocombat = true,
             spacement = true
         },
-        {
-            type = "breakline",
-        },
+        { type = "label", get = function() return "Profile Management" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return "Current Profile: |cFF00FFFF" .. (NSRT.CurrentProfile or "default") .. "|r" end },
 
         {
-            type = "button",
-            name = "Move Text Display",
-            desc = "This lets you move the generic text display used for example the ready check module or the assignments on pull.",
-            func = function(self)
-                if NSI.NSRTFrame.generic_display:IsMovable() then
-                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, false)
-                else
-                    NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
-                    NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
-                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, true)
-                end
-            end,
-            nocombat = true,
-            spacement = true
+            type = "textentry",
+            name = "New Profile Name",
+            desc = "Enter a name and press Enter to create a new profile.",
+            get = function() return "" end,
+            set = function(self, fixedparam, value) end,
+            hooks = {
+                OnEnterPressed = function(self)
+                    local name = self:GetText()
+                    if name and name ~= "" then
+                        NSI:CreateProfile(name)
+                        print("|cFF00FFFFNSRT:|r Created and switched to profile '|cFFFFFFFF" .. name .. "|r'.")
+                    end
+                end,
+            },
         },
         {
             type = "select",
-            name = "Global Font",
-            desc = "This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility.",
-            get = function() return NSRT.Settings.GlobalFont end,
-            values = function() return build_media_options(false, false, false, false, false, true) end,
+            name = "Load Profile",
+            desc = "Select a profile to load.",
+            get = function() return NSRT.CurrentProfile or "default" end,
+            values = function()
+                local t = {}
+                for name, _ in pairs(NSRT.Profiles or {}) do
+                    tinsert(t, {
+                        label = name,
+                        value = name,
+                        onclick = function()
+                            NSI:LoadProfile(name)
+                            print("|cFF00FFFFNSRT:|r Loaded profile '|cFFFFFFFF" .. name .. "|r'.")
+                        end,
+                    })
+                end
+                return t
+            end,
             nocombat = true,
         },
         {
-            type = "range",
-            name = "Global Font-Size",
-            desc = "Size of the global font",
-            get = function() return NSRT.Settings["GlobalFontSize"] end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings["GlobalFontSize"] = value
-                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
+            type = "select",
+            name = "Copy Profile Into Current",
+            desc = "Select a profile to copy its settings into your current profile.",
+            get = function() return "Select..." end,
+            values = function()
+                local t = {}
+                for name, _ in pairs(NSRT.Profiles or {}) do
+                    if name ~= NSRT.CurrentProfile then
+                        tinsert(t, {
+                            label = name,
+                            value = name,
+                            onclick = function()
+                                NSI:CopyFromProfile(name)
+                                print("|cFF00FFFFNSRT:|r Copied profile '|cFFFFFFFF" .. name .. "|r' into '|cFFFFFFFF" .. NSRT.CurrentProfile .. "|r'.")
+                            end,
+                        })
+                    end
+                end
+                return t
             end,
-            min = 10,
-            max = 100,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Reset Profile",
+            desc = "Select a profile to reset to defaults.",
+            get = function() return "Select..." end,
+            values = function()
+                local t = {}
+                for name, _ in pairs(NSRT.Profiles or {}) do
+                    tinsert(t, {
+                        label = name,
+                        value = name,
+                        onclick = function()
+                            NSI:ResetProfile(name)
+                            print("|cFF00FFFFNSRT:|r Reset profile '|cFFFFFFFF" .. name .. "|r'.")
+                        end,
+                    })
+                end
+                return t
+            end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Delete Profile",
+            desc = "Select a profile to delete. Cannot delete the currently active profile if it is the only one.",
+            get = function() return "Select..." end,
+            values = function()
+                local t = {}
+                for name, _ in pairs(NSRT.Profiles or {}) do
+                    if name ~= "default" then
+                        tinsert(t, {
+                            label = name,
+                            value = name,
+                            onclick = function()
+                                NSI:DeleteProfile(name)
+                                print("|cFF00FFFFNSRT:|r Deleted profile '|cFFFFFFFF" .. name .. "|r'.")
+                            end,
+                        })
+                    end
+                end
+                return t
+            end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Main Profile",
+            desc = "Set the main profile. This profile will automatically be loaded on any new character you log into.",
+            get = function() return NSRT.MainProfile or "default" end,
+            values = function()
+                local t = {}
+                for name, _ in pairs(NSRT.Profiles or {}) do
+                    tinsert(t, {
+                        label = name,
+                        value = name,
+                        onclick = function()
+                            NSI:SetMainProfile(name)
+                            print("|cFF00FFFFNSRT:|r Main profile set to '|cFFFFFFFF" .. name .. "|r'.")
+                        end,
+                    })
+                end
+                return t
+            end,
+            nocombat = true,
         },
     }
 end

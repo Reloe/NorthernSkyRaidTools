@@ -325,14 +325,19 @@ function NSI:AddMissingDefaults()
                 enabled = false,
                 P3Side = "OFF",
                 RunesDisplay = false,
-                LuraDisplayAnchor = NSRT.Settings.LuraDisplayAnchor or "TOPLEFT",
-                LuraDisplayRelativePoint = NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT",
-                LuraDisplayOffsetX = NSRT.Settings.LuraDisplayOffsetX or 300,
-                LuraDisplayOffsetY = NSRT.Settings.LuraDisplayOffsetY or -300,
-                LuraDisplayColor = NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9},
+                LuraDisplayAnchor = NSRT.Settings and NSRT.Settings.LuraDisplayAnchor or "TOPLEFT",
+                LuraDisplayRelativePoint = NSRT.Settings and NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT",
+                LuraDisplayOffsetX = NSRT.Settings and NSRT.Settings.LuraDisplayOffsetX or 300,
+                LuraDisplayOffsetY = NSRT.Settings and NSRT.Settings.LuraDisplayOffsetY or -300,
+                LuraDisplayColor = NSRT.Settings and NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9},
             },
             [3306] = {enabled = false},
         },
+
+        Profiles = {},
+        ProfileKeys = {},
+        CurrentProfile = "default",
+        MainProfile = "default",
     }
     if not NSRT then
         NSRT = {}
@@ -361,5 +366,165 @@ function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
                 NSRTTable[k] = v
             end
         end
+    end
+end
+
+local ignored = {
+    ["Profiles"] = true,
+    ["ProfileKeys"] = true,
+    ["CurrentProfile"] = true,
+    ["MainProfile"] = true,
+}
+
+function NSI:GetProfileKey()
+    local CharName, Realm = UnitFullName("player")
+    if not Realm then
+        Realm = GetNormalizedRealmName()
+    end
+    return CharName.."-"..Realm
+end
+
+function NSI:SetMainProfile(name)
+    if NSRT.Profiles[name] then
+        NSRT.MainProfile = name
+    end
+end
+
+function NSI:CreateProfile(name)
+    if not name then
+        name = "default"
+    end
+    NSRT.Profiles = NSRT.Profiles or {}
+    NSRT.ProfileKeys = NSRT.ProfileKeys or {}
+    if NSRT.Profiles[name] then
+        self:LoadProfile(name)
+        return
+    end
+    NSRT.Profiles[name] = {}
+    self:SaveProfile()
+    for k, v in pairs(NSRT) do
+        if not ignored[k] then
+            NSRT[k] = nil
+        end
+    end
+    self:AddMissingDefaults()
+    local ProfileKey = self:GetProfileKey()
+    NSRT.ProfileKeys[ProfileKey] = name
+    NSRT.CurrentProfile = name
+    self:SetReminder(NSRT.StoredPersonalReminder, true)
+    self:SaveProfile()
+end
+
+function NSI:LoadProfile(name, skipsave)
+    if not skipsave then self:SaveProfile() end
+    if NSRT.Profiles[name] then
+        for k, v in pairs(NSRT.Profiles[name]) do
+            if not ignored[k] then
+                NSRT[k] = type(v) == "table" and CopyTable(v) or v
+            end
+        end
+    end
+    local ProfileKey = self:GetProfileKey()
+    NSRT.ProfileKeys[ProfileKey] = name
+    NSRT.CurrentProfile = name
+    self:SetReminder(NSRT.StoredPersonalReminder, true)
+    self:AddMissingDefaults()
+    self:SaveProfile()
+end
+
+function NSI:SaveProfile()
+    if NSRT.CurrentProfile then
+        NSRT.Profiles[NSRT.CurrentProfile] = {}
+        for k, v in pairs(NSRT) do
+            if not ignored[k] then
+                NSRT.Profiles[NSRT.CurrentProfile][k] = type(v) == "table" and CopyTable(v) or v
+            end
+        end
+    end
+end
+
+function NSI:DeleteProfile(name, allowdefault)
+    if name == "default" and not allowdefault then return end
+    if NSRT.Profiles[name] then
+        print("|cFF00FFFFNSRT:|r deleting profile", name)
+        NSRT.Profiles[name] = nil
+    end
+    for k, profileName in pairs(NSRT.ProfileKeys) do
+        if profileName == name then
+            NSRT.ProfileKeys[k] = nil
+        end
+    end
+    if name == NSRT.CurrentProfile then
+        NSRT.CurrentProfile = nil
+        self:LoadMyProfile()
+    end
+end
+
+function NSI:ResetProfile(name)
+    self:DeleteProfile(name, true)
+    self:CreateProfile(name)
+end
+
+function NSI:CopyFromProfile(name)
+    if not NSRT.CurrentProfile then return end
+    if NSRT.Profiles[name] then
+        NSRT.Profiles[NSRT.CurrentProfile] = CopyTable(NSRT.Profiles[name])
+        self:LoadProfile(NSRT.CurrentProfile, true)
+    end
+end
+
+function NSI:ExportProfileString()
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    local profileData = NSRT.Profiles[NSRT.CurrentProfile]
+    if not profileData then return nil end
+    local exportTable = {
+        profileName = NSRT.CurrentProfile,
+        data = profileData,
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    local encoded = LibDeflate:EncodeForPrint(compressed)
+    return encoded
+end
+
+function NSI:ImportProfileString(importString)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    if not importString or importString == "" then return nil end
+    local decoded = LibDeflate:DecodeForPrint(importString)
+    if not decoded then return nil end
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return nil end
+    local success, exportTable = LibSerialize:Deserialize(decompressed)
+    if not success or type(exportTable) ~= "table" then return nil end
+    local name = exportTable.profileName or "Imported"
+    local function EnsureUniqueName(name)
+        if NSRT.Profiles[name] then
+            name = name.." 2"
+            return EnsureUniqueName(name)
+        end
+        return name
+    end
+    name = EnsureUniqueName(name)
+    NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
+    self:LoadProfile(name)
+    return name
+end
+
+function NSI:LoadMyProfile()
+    local ProfileKey = self:GetProfileKey()
+    local ProfileToLoad = "default"
+    if NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
+        ProfileToLoad = NSRT.ProfileKeys[ProfileKey]
+    elseif NSRT.MainProfile then
+        ProfileToLoad = NSRT.MainProfile
+    elseif NSRT.CurrentProfile then
+        ProfileToLoad = NSRT.CurrentProfile
+    end
+    if NSRT.Profiles and NSRT.Profiles[ProfileToLoad] then
+        self:LoadProfile(ProfileToLoad, true)
+    else
+        self:CreateProfile("default")
     end
 end
