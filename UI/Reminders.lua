@@ -845,6 +845,16 @@ local function BuildReminderScreen(personal, parentFrame)
             line.name = reminderData.name
             line.nameLabel:SetText(reminderData.hasencID and reminderData.name or (reminderData.name .. " (No Enc)"))
 
+            local encID = tonumber(reminderData.hasencID)
+            if not screen.filterEncID and encID and encounterIcons[encID] then
+                line.bossIcon:SetTexture(encounterIcons[encID])
+                line.bossIcon:Show()
+                line.nameLabel:SetPoint("LEFT", line, "LEFT", 24, 0)
+            else
+                line.bossIcon:Hide()
+                line.nameLabel:SetPoint("LEFT", line, "LEFT", 4, 0)
+            end
+
             local isActive = false
             if personal then
                 local activeTable = NSI:GetActivePersonalReminders()
@@ -887,6 +897,13 @@ local function BuildReminderScreen(personal, parentFrame)
         DF:ApplyStandardBackdrop(line)
         line.__background:SetVertexColor(100/255, 100/255, 100/255)
         line.__background:SetAlpha(0.60)
+
+        -- Boss icon (shown only when "All Bosses" filter is active)
+        line.bossIcon = line:CreateTexture(nil, "OVERLAY")
+        line.bossIcon:SetSize(16, 16)
+        line.bossIcon:SetPoint("LEFT", line, "LEFT", 4, 0)
+        line.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+        line.bossIcon:Hide()
 
         -- Name label (click line to select)
         line.nameLabel = line:CreateFontString(nil, "OVERLAY")
