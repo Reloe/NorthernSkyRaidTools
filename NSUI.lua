@@ -32,8 +32,6 @@ local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
 local BuildGeneralCallback         = NSI.UI.Options.General.BuildCallback
 local BuildNicknamesOptions        = NSI.UI.Options.Nicknames.BuildOptions
 local BuildNicknamesCallback       = NSI.UI.Options.Nicknames.BuildCallback
-local BuildSetupManagerOptions     = NSI.UI.Options.SetupManager.BuildOptions
-local BuildSetupManagerCallback    = NSI.UI.Options.SetupManager.BuildCallback
 local BuildReminderOptions         = NSI.UI.Options.Reminders.BuildOptions
 local BuildReminderNoteOptions     = NSI.UI.Options.Reminders.BuildNoteOptions
 local BuildReminderCallback        = NSI.UI.Options.Reminders.BuildCallback
@@ -64,7 +62,6 @@ local TABS_GROUPS                  = {
     },
     {
         { name = "Nicknames",    text = "Nicknames" },
-        { name = "SetupManager", text = "Setup Manager" },
         { name = "ReadyCheck",   text = "Ready Check" },
     },
     {
@@ -276,7 +273,6 @@ function NSUI:Init()
     local general_tab             = tabSystem:GetTabFrameByName("General")
     local nicknames_tab           = tabSystem:GetTabFrameByName("Nicknames")
     local versions_tab            = tabSystem:GetTabFrameByName("Versions")
-    local setupmanager_tab        = tabSystem:GetTabFrameByName("SetupManager")
     local reminder_tab            = tabSystem:GetTabFrameByName("Reminders")
     local reminder_note_tab       = tabSystem:GetTabFrameByName("Reminders-Note")
     local assignments_tab         = tabSystem:GetTabFrameByName("Assignments")
@@ -315,7 +311,6 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local general_options1_table         = BuildGeneralOptions()
     local nicknames_options1_table       = BuildNicknamesOptions()
-    local setupmanager_options1_table    = BuildSetupManagerOptions()
     local reminder_options1_table        = BuildReminderOptions()
     local reminder_note_options1_table   = BuildReminderNoteOptions()
     local assignments_options1_table     = BuildAssignmentsOptions()
@@ -331,7 +326,6 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local general_callback               = BuildGeneralCallback()
     local nicknames_callback             = BuildNicknamesCallback()
-    local setupmanager_callback          = BuildSetupManagerCallback()
     local reminder_callback              = BuildReminderCallback()
     local reminder_note_callback         = BuildReminderNoteCallback()
     local assignments_callback           = BuildAssignmentsCallback()
@@ -352,9 +346,6 @@ function NSUI:Init()
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nicknames_callback)
-    DF:BuildMenu(setupmanager_tab, setupmanager_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        setupmanager_callback)
     DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         reminder_callback)

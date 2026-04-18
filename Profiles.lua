@@ -55,7 +55,6 @@ function NSI:AddMissingDefaults()
             CheckCooldowns = false,
             UnreadyOnCooldown = false,
             Debug = false,
-            DebugLogs = false,
             GenericDisplay = {
                 Anchor = "CENTER",
                 relativeTo = "CENTER",

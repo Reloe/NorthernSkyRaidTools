@@ -67,7 +67,6 @@ UI/QoL.lua
 # UI - Options (depend on Core)
 UI/Options/General.lua
 UI/Options/Nicknames.lua
-UI/Options/SetupManager.lua
 UI/Options/Reminders.lua
 UI/Options/Assignments.lua
 UI/Options/EncounterAlerts.lua

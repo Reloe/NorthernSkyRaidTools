@@ -21,20 +21,6 @@ function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
 
-function NSI:Print(...)
-    if NSRT.Settings["DebugLogs"] then
-        if DevTool then
-            local t = {...}
-            local name = t[1]
-            print("added", name, "to DevTool Logs")
-            table.remove(t, 1)
-            DevTool:AddData(t, name)
-        else
-            print(...)
-        end
-    end
-end
-
 function NSI:SortTable(t, reversed)
     table.sort(t,
         function(a, b)
