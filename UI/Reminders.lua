@@ -118,8 +118,8 @@ local function ImportPersonalReminderString(name, IsUpdate)
                 NSI:ImportFullReminderString(import_string, true, false, popup._name)
             end
             local encID = NSI:EncIDFromReminder(popup._name, true)
-            if popup._isUpdate and NSRT.ActivePersonalReminder[encID] then
-                NSI:SetReminder(NSRT.ActivePersonalReminder[encID], true)
+            if popup._isUpdate and NSI:GetActivePersonalReminders()[encID] then
+                NSI:SetReminder(NSI:GetActivePersonalReminders()[encID], true)
             end
             popup.test_string_text_box:SetText("")
             if NSUI.personal_reminders_frame then
@@ -525,7 +525,7 @@ local function BuildReminderScreen(personal, parentFrame)
         local isCurrentlyActive
         if personal then
             local encID = NSI:EncIDFromReminder(screen.selectedName, true)
-            isCurrentlyActive = encID and NSRT.ActivePersonalReminder[encID] == screen.selectedName
+            isCurrentlyActive = encID and NSI:GetActivePersonalReminders()[encID] == screen.selectedName
         else
             isCurrentlyActive = NSRT[activeKey] == screen.selectedName
         end
@@ -847,7 +847,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
             local isActive = false
             if personal then
-                local activeTable = NSRT.ActivePersonalReminder
+                local activeTable = NSI:GetActivePersonalReminders()
                 if activeTable then
                     for _, activeName in pairs(activeTable) do
                         if activeName == line.name then

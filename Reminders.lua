@@ -1029,9 +1029,15 @@ function NSI:EncIDFromReminder(name, personal)
     return encID and tonumber(encID)
 end
 
+function NSI:GetActivePersonalReminders()
+    local charKey = self:GetProfileKey()
+    NSRT.ActivePersonalReminder[charKey] = NSRT.ActivePersonalReminder[charKey] or {}
+    return NSRT.ActivePersonalReminder[charKey]
+end
+
 function NSI:LoadPersReminder(encID)
     if not encID then return end
-    local name = NSRT.ActivePersonalReminder[encID]
+    local name = self:GetActivePersonalReminders()[encID]
     if not name then return end
     -- Skip if the note for this encounter is already the active personal reminder
     if self.PersonalReminder ~= NSRT.PersonalReminders[name] then
@@ -1046,12 +1052,12 @@ function NSI:SetReminder(name, personal, skipupdate, encIDHint)
             self.PersonalReminder = NSRT.PersonalReminders[name]
             self.LoadedPersonalReminder = name
             NSRT.StoredPersonalReminder = name
-            if encID then NSRT.ActivePersonalReminder[encID] = name end
+            if encID then self:GetActivePersonalReminders()[encID] = name end
         else
             self.PersonalReminder = ""
             self.LoadedPersonalReminder = nil
             NSRT.StoredPersonalReminder = nil
-            if encID then NSRT.ActivePersonalReminder[encID] = nil end
+            if encID then self:GetActivePersonalReminders()[encID] = nil end
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
@@ -1073,13 +1079,14 @@ function NSI:RemoveReminder(name, personal)
     if personal then
         if name and NSRT.PersonalReminders[name] then
             local encID = self:EncIDFromReminder(name, true)
-            local activePersNote = NSRT.ActivePersonalReminder[encID]
+            local charReminders = self:GetActivePersonalReminders()
+            local activePersNote = charReminders[encID]
             if activePersNote and activePersNote == name then
                 if self.PersonalReminder == NSRT.PersonalReminders[name] then
                     self:SetReminder(nil, true, nil, encID)
                 else
                     -- Note is active in the table but not currently displayed; just clear the slot
-                    if encID then NSRT.ActivePersonalReminder[encID] = nil end
+                    if encID then charReminders[encID] = nil end
                 end
             end
             NSRT.PersonalReminders[name] = nil
