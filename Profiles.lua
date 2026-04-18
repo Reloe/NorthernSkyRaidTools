@@ -337,6 +337,8 @@ function NSI:AddMissingDefaults()
         ProfileKeys = {},
         CurrentProfile = "default",
         MainProfile = "default",
+
+        AutoLoadNote = {},
     }
     if not NSRT then
         NSRT = {}

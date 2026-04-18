@@ -1107,6 +1107,15 @@ function NSI:RemoveReminder(name, personal)
         if NSRT.ActiveReminder == name then
             self:SetReminder(nil, false)
         end
+        self:CleanUpAutoLoad(name)
+    end
+end
+
+function NSI:CleanUpAutoLoad(name)
+    for encID, NoteName in pairs(NSRT.AutoLoad) do
+        if name == NoteName then
+            NSRT.AutoLoad[encID] = nil
+        end
     end
 end
 

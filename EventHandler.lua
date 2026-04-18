@@ -135,7 +135,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
-        local encID, encounterName = ...
+        local encID, encounterName, _, _, kill = ...
         local diff = select(3, GetInstanceInfo()) or 0
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
@@ -158,6 +158,17 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     self[name].UpdateTimer:Cancel()
                     self[name].UpdateTimer = nil
                 end
+            end
+        end
+        if kill then
+            local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
+            if NoteName and NSRT.Reminders[NoteName] then
+                C_Timer.After(2, function()
+                    if self:Restricted() then return end
+                    if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then
+                        self:Broadcast("NSI_REM_SHARE", "RAID", NSRT.Reminders[NoteName], nil, true)
+                    end
+                end)
             end
         end
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
