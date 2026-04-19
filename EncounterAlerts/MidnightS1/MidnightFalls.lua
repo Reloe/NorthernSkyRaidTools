@@ -52,6 +52,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         if UnitGroupRolesAssigned("player") == "TANK" then
             local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 1, encID)
+            Alert.colors = {1, 0, 0, 1}
             Alert.TTS = false
             local timers = {
                 [16] = {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5}
@@ -59,6 +60,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self:AddRemindersFromTable(Alert, timers[id])
 
             local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 3, encID)
+            Alert.colors = {1, 0, 0, 1}
             Alert.TTS = false
             local timers = {
                 [16] = {21.5, 41.5, 61.5, 81.5}
@@ -98,6 +100,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self:AddRemindersFromTable(Alert, timers[id])
 
         local Alert = self:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID)
+        Alert.TTS = false
         local timers = {
             [16] = {26.8, 56.8, 86.8, 105}
         }
