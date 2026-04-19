@@ -158,37 +158,6 @@ local function BuildGeneralOptions()
         {
             type = "breakline",
         },
-        {
-            type = "button",
-            name = L["Export Profile"],
-            desc = L["Exports your currently active profile to a string that can be shared with others."],
-            func = function(self)
-                if NSUI.export_string_popup:IsShown() then
-                    NSUI.export_string_popup:Hide()
-                else
-                    NSUI.export_string_popup:Show()
-                end
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "button",
-            name = L["Import Profile"],
-            desc = L["Imports a profile from a string shared by another player. It will be saved as a new profile you can then load."],
-            func = function(self)
-                if NSUI.import_string_popup:IsShown() then
-                    NSUI.import_string_popup:Hide()
-                else
-                    NSUI.import_string_popup:Show()
-                end
-            end,
-            nocombat = true,
-            spacement = true
-        },
-        {
-            type = "breakline",
-        },
         { type = "label", get = function() return L["Profile Management"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         { type = "label", get = function() return format(L["Current Profile: |cFF00FFFF%s|r"], NSRT.CurrentProfile or "default") end },
 
@@ -316,6 +285,34 @@ local function BuildGeneralOptions()
                 return t
             end,
             nocombat = true,
+        },
+        {
+            type = "button",
+            name = L["Export Profile"],
+            desc = L["Exports your currently active profile to a string that can be shared with others."],
+            func = function(self)
+                if NSUI.export_string_popup:IsShown() then
+                    NSUI.export_string_popup:Hide()
+                else
+                    NSUI.export_string_popup:Show()
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = L["Import Profile"],
+            desc = L["Imports a profile from a string shared by another player. It will be saved as a new profile you can then load."],
+            func = function(self)
+                if NSUI.import_string_popup:IsShown() then
+                    NSUI.import_string_popup:Hide()
+                else
+                    NSUI.import_string_popup:Show()
+                end
+            end,
+            nocombat = true,
+            spacement = true
         },
     }
 end

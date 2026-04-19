@@ -1112,9 +1112,9 @@ function NSI:RemoveReminder(name, personal)
 end
 
 function NSI:CleanUpAutoLoad(name)
-    for encID, NoteName in pairs(NSRT.AutoLoad) do
+    for encID, NoteName in pairs(NSRT.AutoLoadNote) do
         if name == NoteName then
-            NSRT.AutoLoad[encID] = nil
+            NSRT.AutoLoadNote[encID] = nil
         end
     end
 end

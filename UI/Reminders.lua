@@ -444,6 +444,10 @@ local function BuildReminderScreen(personal, parentFrame)
             NSRT.InviteList[oldname] = nil
         end
         if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
+        local renameEncID = ParseFirstLine(oldContent)
+        if renameEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[renameEncID] == oldname then
+            NSRT.AutoLoadNote[renameEncID] = newname
+        end
         screen.selectedName = newname
         -- ClearFocus is intentionally called after selectedName is updated. Calling it
         -- earlier would trigger OnEditFocusLost synchronously, re-entering this function
@@ -516,6 +520,10 @@ local function BuildReminderScreen(personal, parentFrame)
                     NSRT.InviteList[oldName] = nil
                 end
                 if NSRT[activeKey] == oldName then NSRT[activeKey] = newName end
+                local saveEncID = screen._metaBossEncID
+                if saveEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[saveEncID] == oldName then
+                    NSRT.AutoLoadNote[saveEncID] = newName
+                end
                 screen.selectedName = newName
             else
                 NSI:ImportReminder(oldName, fullText, false, personal, true)
@@ -980,6 +988,10 @@ local function BuildReminderScreen(personal, parentFrame)
             end
             if NSRT[activeKey] == oldname then
                 NSRT[activeKey] = newname
+            end
+            local encID = ParseFirstLine(store[oldname] or "")
+            if encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID] == oldname then
+                NSRT.AutoLoadNote[encID] = newname
             end
             store[oldname] = nil
             if screen.selectedName == oldname then
