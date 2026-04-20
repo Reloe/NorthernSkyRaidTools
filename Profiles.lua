@@ -64,6 +64,10 @@ function NSI:AddMissingDefaults()
             },
         },
 
+        Alerts = {
+            ReloeReminders = false
+        },
+
         -- Reminder Settings
         ReminderSettings = {
             enabled = true,

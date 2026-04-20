@@ -351,7 +351,7 @@ local function BuildReminderScreen(personal, parentFrame)
             table.insert(options, {
                 label = NSI.BossTimelineNames[encID] or ("Encounter " .. encID),
                 value = encID,
-                icon = encounterIcons[encID],
+                icon = NSI.UI.BossData.BossIcons[encID],
                 iconsize = { 16, 16 },
                 texcoord = { 0.05, 0.95, 0.05, 0.95 },
                 onclick = function(_, _, v)
