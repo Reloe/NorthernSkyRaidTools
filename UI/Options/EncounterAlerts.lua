@@ -223,6 +223,7 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3180] = NSRT.EncounterAlerts[3180] or {}
                 NSRT.EncounterAlerts[3180].HealAbsorbTicks = value
+                NSI:FireCallback("NSRT_ALERT_TOGGLE", 3180)
             end,
             nocombat = true,
             icontexture = 5764904,
@@ -320,6 +321,21 @@ local function BuildEncounterAlertsOptions()
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
                 NSRT.EncounterAlerts[3183].enabled = value
+                NSI:FireCallback("NSRT_ALERT_TOGGLE", 3183)
+            end,
+            nocombat = true,
+            icontexture = 7448204,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "P2 Seed-Drop Bar",
+            desc = "Enables Alerts for the Seed-Drop Bar in Midnight Falls.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].SeedDrop end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].SeedDrop = value
                 NSI:FireCallback("NSRT_ALERT_TOGGLE", 3183)
             end,
             nocombat = true,
@@ -450,7 +466,7 @@ local function BuildEncounterAlertsOptions()
             name = "Create Rune-Macros",
             desc = "This will create the macros you need for the 5 different runes, automatically using the correct icons as well. Clickable Buttons have been removed as they caused too many issues.",
             func = function(self)
-                local iconIDs = {"134635", "340528", "351033", "7242384", "236903"}
+                local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
                 for i=1, 5 do
                     local macroName = "NSRT_LURA_RUNE_"..i
                     if not GetMacroInfo(macroName) then

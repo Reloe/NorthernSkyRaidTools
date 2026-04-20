@@ -590,7 +590,8 @@ function NSI:SetProperties(F, info, skipsound, s)
         local _, _, spellID = ...
         if (not issecretvalue(info.spellID)) and spellID == info.spellID and self:IsShown() then
             local rem = info.dur - (GetTime() - info.startTime)
-            if rem and rem <= 5 then
+            local hideThreshold = NSRT.ReminderSettings.HideThreshold or 5
+            if rem and rem <= hideThreshold then
                 F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
                 F:Hide()
             end
@@ -907,7 +908,150 @@ function NSI:CreateCircle(info)
     end
 end
 
-function NSI:AddTickToBar(F, percent)
+local CIRCLE_TEX  = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_white.png"
+local CIRCLE_MASK = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_inner_mask.png"
+
+local function HorizontallyMirrorCircle(texture, width)
+    local ULx, ULy = texture:GetVertexOffset(UPPER_LEFT_VERTEX)
+    local URx, URy = texture:GetVertexOffset(UPPER_RIGHT_VERTEX)
+    local LLx, LLy = texture:GetVertexOffset(LOWER_LEFT_VERTEX)
+    local LRx, LRy = texture:GetVertexOffset(LOWER_RIGHT_VERTEX)
+    texture:SetVertexOffset(UPPER_LEFT_VERTEX,  width - ULx,  ULy)
+    texture:SetVertexOffset(UPPER_RIGHT_VERTEX, -width - URx, URy)
+    texture:SetVertexOffset(LOWER_LEFT_VERTEX,  width - LLx,  LLy)
+    texture:SetVertexOffset(LOWER_RIGHT_VERTEX, -width - LRx, LRy)
+end
+
+function NSI:CreateCircle(info)
+    self.ReminderCircle = self.ReminderCircle or {}
+    local s = NSRT.ReminderSettings.CircleSettings
+    for i = 1, #self.ReminderCircle + 1 do
+        if self.ReminderCircle[i] and not self.ReminderCircle[i]:IsShown() then
+            self:SetProperties(self.ReminderCircle[i], info, false, s)
+            return self.ReminderCircle[i]
+        end
+        if not self.ReminderCircle[i] then
+            local F = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            F.IsCircle = true
+            F:SetSize(s.Size, s.Size)
+            F:SetFrameStrata("HIGH")
+
+            -- Mask for ring thickness
+            F.mask = F:CreateMaskTexture()
+            F.mask:SetPoint("CENTER")
+            F.mask:SetTexture(CIRCLE_MASK, "CLAMPTOWHITE", "CLAMPTOWHITE", "NEAREST")
+            F.mask:SetSnapToPixelGrid(false)
+            F.mask:SetTexelSnappingBias(0)
+            F.mask:SetSize(s.Size - 2 * s.Thickness, s.Size - 2 * s.Thickness)
+
+            -- 4 background + 4 foreground quadrant textures
+            F.backgroundTextures = {}
+            F.foregroundTextures = {}
+            local quadCoords = {
+                {0.5,0, 0.5,0.5, 1,0, 1,0.5},     -- upper-right   anchors: BL=CENTER, TR=TOPRIGHT
+                {0.5,0.5, 0.5,1, 1,0.5, 1,1},      -- lower-right   anchors: TL=CENTER, BR=BOTTOMRIGHT
+                {0,0.5, 0,1, 0.5,0.5, 0.5,1},      -- lower-left    anchors: TR=CENTER, BL=BOTTOMLEFT
+                {0,0, 0,0.5, 0.5,0, 0.5,0.5},      -- upper-left    anchors: BR=CENTER, TL=TOPLEFT
+            }
+            local quadAnchors = {
+                {"BOTTOMLEFT","CENTER","TOPRIGHT","TOPRIGHT"},
+                {"TOPLEFT","CENTER","BOTTOMRIGHT","BOTTOMRIGHT"},
+                {"TOPRIGHT","CENTER","BOTTOMLEFT","BOTTOMLEFT"},
+                {"BOTTOMRIGHT","CENTER","TOPLEFT","TOPLEFT"},
+            }
+            for q = 1, 4 do
+                local bg = F:CreateTexture(nil, "BACKGROUND")
+                bg:SetTexture(CIRCLE_TEX)
+                bg:SetVertexColor(0, 0, 0, 0.5)
+                bg:AddMaskTexture(F.mask)
+                bg:SetSnapToPixelGrid(false) bg:SetTexelSnappingBias(0)
+                bg:SetPoint(quadAnchors[q][1], F, quadAnchors[q][2])
+                bg:SetPoint(quadAnchors[q][3], F, quadAnchors[q][4])
+                local c = quadCoords[q]
+                bg:SetTexCoord(c[1],c[2], c[3],c[4], c[5],c[6], c[7],c[8])
+                F.backgroundTextures[q] = bg
+
+                local fg = F:CreateTexture(nil, "BACKGROUND")
+                fg:SetTexture(CIRCLE_TEX)
+                fg:AddMaskTexture(F.mask)
+                fg:SetSnapToPixelGrid(false) fg:SetTexelSnappingBias(0)
+                fg:SetPoint(quadAnchors[q][1], F, quadAnchors[q][2])
+                fg:SetPoint(quadAnchors[q][3], F, quadAnchors[q][4])
+                F.foregroundTextures[q] = fg
+            end
+
+            -- Resets all foreground quads to full visibility
+            function F:SetFull()
+                local coords = {
+                    {0.5,0, 0.5,0.5, 1,0, 1,0.5},
+                    {0.5,0.5, 0.5,1, 1,0.5, 1,1},
+                    {0,0.5, 0,1, 0.5,0.5, 0.5,1},
+                    {0,0, 0,0.5, 0.5,0, 0.5,0.5},
+                }
+                for q = 1, 4 do
+                    F.foregroundTextures[q]:ClearVertexOffsets()
+                    local c = coords[q]
+                    F.foregroundTextures[q]:SetTexCoord(c[1],c[2], c[3],c[4], c[5],c[6], c[7],c[8])
+                    F.foregroundTextures[q]:Show()
+                end
+            end
+
+            -- Drives the countdown drain animation (degrees = elapsed/total * 360)
+            function F.SetDegrees(degrees)
+                degrees = Clamp(degrees, 0, 360)
+                local radius = 0.5 * s.Size
+                local rad = math.rad(90 - degrees)
+                local u, v = math.cos(rad), math.sin(rad)
+                F:SetFull()
+                -- upper-right (0–90)
+                F.foregroundTextures[1]:SetShown(degrees < 90)
+                if degrees == 0 or (degrees > 0 and degrees < 90) then
+                    F.foregroundTextures[1]:SetVertexOffset(UPPER_RIGHT_VERTEX, -u*radius, (v-1)*radius)
+                    F.foregroundTextures[1]:SetTexCoord(0,0, 0,0.5, 0.5*(1-u),0.5*(1-v), 0.5,0.5)
+                    HorizontallyMirrorCircle(F.foregroundTextures[1], radius)
+                end
+                -- lower-right (90–180)
+                F.foregroundTextures[2]:SetShown(degrees < 180)
+                if degrees == 90 or (degrees > 90 and degrees < 180) then
+                    F.foregroundTextures[2]:SetVertexOffset(UPPER_RIGHT_VERTEX, (u-1)*radius, v*radius)
+                    F.foregroundTextures[2]:SetTexCoord(0.5,0.5, 0.5,1, 0.5*(1+u),0.5*(1-v), 1,1)
+                end
+                -- lower-left (180–270)
+                F.foregroundTextures[3]:SetShown(degrees < 270)
+                if degrees == 180 or (degrees > 180 and degrees < 270) then
+                    F.foregroundTextures[3]:SetVertexOffset(LOWER_LEFT_VERTEX, -u*radius, (v+1)*radius)
+                    F.foregroundTextures[3]:SetTexCoord(0.5,0.5, 0.5*(1-u),0.5*(1-v), 1,0.5, 1,1)
+                    HorizontallyMirrorCircle(F.foregroundTextures[3], radius)
+                end
+                -- upper-left (270–360)
+                F.foregroundTextures[4]:SetShown(degrees < 360)
+                if degrees == 270 or (degrees > 270 and degrees < 360) then
+                    F.foregroundTextures[4]:SetVertexOffset(LOWER_LEFT_VERTEX, (u+1)*radius, v*radius)
+                    F.foregroundTextures[4]:SetTexCoord(0,0, 0.5*(1+u),0.5*(1-v), 0.5,0, 0.5,0.5)
+                end
+            end
+
+            -- Timer/text label above the circle
+            F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("BOTTOM", F, "TOP", 0, 4)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.TimerText:SetShadowColor(0, 0, 0, 1)
+            F.TimerText:SetShadowOffset(1, -1)
+
+            F:SetFull()
+            -- initial position
+            local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
+            local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "BOTTOMLEFT", xoff, yoff)
+            F:SetPoint("TOPRIGHT",   "NSUIReminderCircleMover", "TOPRIGHT",   xoff, yoff)
+            self.ReminderCircle[i] = F
+            self:SetProperties(F, info, false, s)
+            return F
+        end
+    end
+end
+
+function NSI:AddTickToBar(F, percent, HideTimer)
     if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
     local s = NSRT.ReminderSettings.BarSettings
     local width = s.Width * (percent)
@@ -918,6 +1062,7 @@ function NSI:AddTickToBar(F, percent)
             F.Ticks[i]:ClearAllPoints()
             F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
             F.Ticks[i]:Show()
+            F.Ticks[i].HideTimer = HideTimer
             return
         end
         if not F.Ticks[i] then
@@ -926,6 +1071,7 @@ function NSI:AddTickToBar(F, percent)
             F.Ticks[i]:SetSize(2, height)
             F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
             F.Ticks[i]:Show()
+            F.Ticks[i].HideTimer = HideTimer
             return
         end
     end
@@ -986,7 +1132,7 @@ function NSI:DisplayReminder(info)
     if info.Ticks then
         for _, tick in ipairs(info.Ticks) do
             local perc = tick / info.dur
-            self:AddTickToBar(F, perc)
+            self:AddTickToBar(F, perc, info.dur-tick)
         end
     end
     if info.glowunit then
@@ -1040,6 +1186,14 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
+            if F.Ticks then
+                for _, tick in ipairs(F.Ticks) do
+                    if tick.HideTimer and rem <= tick.HideTimer then
+                        tick:Hide()
+                        tick.HideTimer = nil
+                    end
+                end
+            end
         else
             if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
@@ -1247,14 +1401,42 @@ function NSI:GetAllReminderNames(personal)
     return list
 end
 
-function NSI:SetReminder(name, personal, skipupdate)
+function NSI:EncIDFromReminder(name, personal)
+    local str = personal and NSRT.PersonalReminders[name] or NSRT.Reminders[name]
+    if not str then return end
+    local encID = str:match("EncounterID:(%d+)")
+    return encID and tonumber(encID)
+end
+
+function NSI:GetActivePersonalReminders()
+    local charKey = self:GetProfileKey()
+    NSRT.ActivePersonalReminder[charKey] = NSRT.ActivePersonalReminder[charKey] or {}
+    return NSRT.ActivePersonalReminder[charKey]
+end
+
+function NSI:LoadPersReminder(encID)
+    if not encID then return end
+    local name = self:GetActivePersonalReminders()[encID]
+    if not name then return end
+    -- Skip if the note for this encounter is already the active personal reminder
+    if self.PersonalReminder ~= NSRT.PersonalReminders[name] then
+        self:SetReminder(name, true)
+    end
+end
+
+function NSI:SetReminder(name, personal, skipupdate, encIDHint)
     if personal then
+        local encID = self:EncIDFromReminder(name, true) or encIDHint
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
-            NSRT.ActivePersonalReminder = name
+            self.LoadedPersonalReminder = name
+            NSRT.StoredPersonalReminder = name
+            if encID then self:GetActivePersonalReminders()[encID] = name end
         else
             self.PersonalReminder = ""
-            NSRT.ActivePersonalReminder = nil
+            self.LoadedPersonalReminder = nil
+            NSRT.StoredPersonalReminder = nil
+            if encID then self:GetActivePersonalReminders()[encID] = nil end
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
@@ -1275,16 +1457,33 @@ end
 function NSI:RemoveReminder(name, personal)
     if personal then
         if name and NSRT.PersonalReminders[name] then
-            NSRT.PersonalReminders[name] = nil
-            if NSRT.ActivePersonalReminder == name then
-                self:SetReminder(nil, true)
+            local encID = self:EncIDFromReminder(name, true)
+            local charReminders = self:GetActivePersonalReminders()
+            local activePersNote = charReminders[encID]
+            if activePersNote and activePersNote == name then
+                if self.PersonalReminder == NSRT.PersonalReminders[name] then
+                    self:SetReminder(nil, true, nil, encID)
+                else
+                    -- Note is active in the table but not currently displayed; just clear the slot
+                    if encID then charReminders[encID] = nil end
+                end
             end
+            NSRT.PersonalReminders[name] = nil
         end
     elseif name and NSRT.Reminders[name] then
         NSRT.Reminders[name] = nil
         NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
             self:SetReminder(nil, false)
+        end
+        self:CleanUpAutoLoad(name)
+    end
+end
+
+function NSI:CleanUpAutoLoad(name)
+    for encID, NoteName in pairs(NSRT.AutoLoadNote) do
+        if name == NoteName then
+            NSRT.AutoLoadNote[encID] = nil
         end
     end
 end
@@ -1746,7 +1945,7 @@ function NSAPI:GetAlerts(encounterID, id)
     NSI.TLAlerts = {}
     if NSI.EncounterAlertStart[encounterID] and NSI:IsUsingTLAlerts() then NSI.EncounterAlertStart[encounterID](NSI, id) end
     if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
-    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI) end
+    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI, true) end
     return NSI.TLAlerts
 end
 

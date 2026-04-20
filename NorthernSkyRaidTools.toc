@@ -1,4 +1,4 @@
-## Interface: 120000, 120001
+## Interface: 120001, 120005
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
@@ -11,6 +11,9 @@
 
 # Libraries
 Libs\libs.xml
+
+# Locales
+Locales\enUS.lua
 
 # Main Files
 NorthernSkyRaidTools.lua
@@ -67,7 +70,6 @@ UI/QoL.lua
 # UI - Options (depend on Core)
 UI/Options/General.lua
 UI/Options/Nicknames.lua
-UI/Options/SetupManager.lua
 UI/Options/Reminders.lua
 UI/Options/Assignments.lua
 UI/Options/EncounterAlerts.lua
