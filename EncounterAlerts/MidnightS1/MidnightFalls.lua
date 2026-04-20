@@ -14,79 +14,71 @@ NSI.InitializeAlerts[encID] = function(self)
 
     -- Phase 1
     Add("Memory Game1", NSI:CreateDefaultAlert("Memory Game", "Text", nil, 6, 1, encID), {
-        [15] = { 10, 80, 150 },
-        [16] = { 33, 95, 157 },
+        [15] = {10, 80, 150},
+        [16] = {33, 95, 157},
     }, { [16] = 4 })
 
     Add("Glaives1", NSI:CreateDefaultAlert("Glaives", "Text", nil, 6, 1, encID), {
-        [15] = { 38, 108, 178 },
-        [16] = { 29, 91, 153 },
+        [15] = {38, 108, 178},
+        [16] = {29, 91, 153},
     })
 
     Add("Interrupts1", NSI:CreateDefaultAlert("Interrupts", "Text", nil, 6, 1, encID), {
-        [15] = { 59, 129 },
-        [16] = { 6.4, 68.4, 130.4 },
+        [15] = {59, 129},
+        [16] = {6.4, 68.4, 130.4},
     })
 
     Add("Beams1", NSI:CreateDefaultAlert("Beams", "Text", nil, 5, 1, encID), {
-        [16] = { 57, 119 },
+        [16] = {57, 119},
     })
 
     local tankHit1 = NSI:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 1, encID)
     tankHit1.TTS, tankHit1.role = false, "TANK"
     Add("Tank-Hit1", tankHit1, {
-        [16] = { 21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5 },
+        [16] = {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5},
     })
 
     -- Phase 2 (transition)
     local beams2 = NSI:CreateDefaultAlert("Beams", "Text", nil, 3, 2, encID)
     beams2.TTS = false
-    Add("Beams2", beams2, { [16] = { 10.7, 15.7, 20.7, 25.7, 30.7 } })
+    Add("Beams2", beams2, { [16] = {10.7, 15.7, 20.7, 25.7, 30.7} })
 
     local fullBlaze2 = NSI:CreateDefaultAlert("Full Blaze", "Text", nil, 3, 2, encID)
-    fullBlaze2.TTS, fullBlaze2.colors = false, { 1, 0, 0, 1 }
-    Add("Full Blaze2", fullBlaze2, { [16] = { 37.7 } })
-
-    -- Phase 2
-    local seedDrop2 = NSI:CreateDefaultAlert("Seed-Drop", "Bar", 1253031, 5, 3, encID)
-    seedDrop2.countdown = 3
-    seedDrop2.TTS = false
-    Add("Seed Drops2", seedDrop2, {
-        [16] = { 17.5, 25, 47.5, 55, 77.5, 85 }
-    })
+    fullBlaze2.TTS, fullBlaze2.colors = false, {1, 0, 0, 1}
+    Add("Full Blaze2", fullBlaze2, { [16] = {37.7} })
 
     -- Phase 3
     local soaks3 = NSI:CreateDefaultAlert("Soaks", "Text", nil, 7, 3, encID)
     soaks3.TTS = false
     Add("Soaks3", soaks3, {
-        [15] = { 20, 50, 80 },
-        [16] = { 19, 49, 79 },
+        [15] = {20, 50, 80},
+        [16] = {19, 49, 79},
     }, { [16] = 6 })
 
     Add("Spread3", NSI:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID), {
-        [16] = { 26.8, 56.8, 86.8 },
+        [16] = {26.8, 56.8, 86.8},
     })
 
     Add("Orbs3", NSI:CreateDefaultAlert("Orbs", "Text", nil, 7, 3, encID), {
-        [15] = { 35.5, 65.5, 95.5 },
-        [16] = { 35.5, 65.5, 95.5 },
+        [15] = {35.5, 65.5, 95.5},
+        [16] = {35.5, 65.5, 95.5},
     }, { [16] = 5 })
 
     local tankHit3 = NSI:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 3, encID)
     tankHit3.TTS, tankHit3.role = false, "TANK"
     Add("Tank-Hit3", tankHit3, {
-        [16] = { 21.5, 41.5, 61.5 },
+        [16] = {21.5, 41.5, 61.5},
     })
 
     -- Phase 4
     Add("Crystal4", NSI:CreateDefaultAlert("Crystal", "Text", nil, 5, 4, encID), {
-        [15] = { 22, 60, 98 },
+        [15] = {22, 60, 98},
     })
 
     local soaks4 = NSI:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
     soaks4.text = "Soaks"
     Add("Soaks4", soaks4, {
-        [15] = { 31, 69, 107 },
+        [15] = {31, 69, 107},
     })
 end
 
@@ -103,55 +95,41 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
     local side = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].P3Side
     if side and (side == "LEFT" or side == "BOTH") then
-        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 5, 4, encID)
-        local timers = {
-            [16] = { 40, 75, 150 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
 
-        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
-        Alert.TTSTimer = 2
-        local timers = {
-            [16] = { 18.2, 90.2, 128.2 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", 1266897, 20, 4, encID)
-        Alert.TTS = false
-        local timers = {
-            [16] = { 38.7, 110.7, 148.7 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-
-        local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 5, 4, encID)
-        Alert.TTS = false
-        local timers = {
-            [16] = { 20.4, 28.4, 36.4, 44.4, 52.4, 79.4, 87.4, 95.4, 103.4 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
     end
     if side and (side == "RIGHT" or side == "BOTH") then
 
     end
 
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
-        local isTank = UnitGroupRolesAssigned("player") == "TANK"
-        local XOffset = { 50, 60, 0, -60, -50 }
-        local YOffset = { 50, -25, -70, -25, 50 }
+        self.LuraRunesFrame = self.LuraRunesFrame or CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
+        self.LuraRunesFrame:ClearAllPoints()
+        self.LuraRunesFrame:SetPoint(NSRT.Settings.LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT", NSRT.Settings.LuraDisplayOffsetX or 500, NSRT.Settings.LuraDisplayOffsetY or -300)
+        self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
+        self.LuraRunesFrame:SetBackdropColor(unpack(NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}))
+        self.LuraRunesFrame:SetBackdropBorderColor(0, 0, 0, 1)
+        self.LuraRunesFrame:SetWidth(200)
+        self.LuraRunesFrame:SetHeight(200)
+
+        self.LuraRunesCompleted = {}
+        self.LuraRunesInverted = false
+
+        self.LuraRunesDisplay = self.LuraRunesDisplay or {}
+        self.LuraRunesNumbers = self.LuraRunesNumbers or {}
+
+        local XOffset = {50, 60, 0, -60, -50}
+        local YOffset = {50, -25, -70, -25, 50}
+        self.AlertTimers = self.AlertTimers or {}
+
         local function DisplayRune(pos, text, isMythic)
             if not isMythic then
                 pos = 1
-                for i = 2, 5 do
-                    if self.LuraRunesCompleted[i - 1] then
-                        pos = i
-                    else
-                        break
-                    end
+                for i=2, 5 do
+                    if self.LuraRunesCompleted[i-1] then pos = i
+                    else break end
                 end
                 self.LuraRunesCompleted[pos] = true
             end
-
             if not self.LuraRunesDisplay[pos] then
                 self.LuraRunesDisplay[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
                 self.LuraRunesDisplay[pos]:SetFont("Fonts\\FRIZQT__.TTF", 15)
@@ -165,29 +143,26 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesDisplay[pos]:ClearAllPoints()
             self.LuraRunesNumbers[pos]:ClearAllPoints()
             if self.Phase == 4 then
-                self.LuraRunesDisplay[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos - 1) * 60, 0)
-                self.LuraRunesNumbers[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos - 1) * 60 + 22, 30)
+                self.LuraRunesDisplay[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60, 0)
+                self.LuraRunesNumbers[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos-1)*60+22, 30)
             else
-                local posX = isTank and XOffset[pos] * -1 or XOffset[pos]
-                local posY = isTank and YOffset[pos] * -1 or YOffset[pos]
-                self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY)
-                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY + 30)
+                self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos])
+                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", XOffset[pos], YOffset[pos]+30)
             end
             self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
             self.LuraRunesDisplay[pos]:Show()
 
             local number = pos
+            if self.LuraRunesInverted then number = 6-pos end
             self.LuraRunesNumbers[pos]:SetText(number)
             self.LuraRunesNumbers[pos]:Show()
         end
         if preview then
-            local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
-            for i = 1, 5 do
-                DisplayRune(i, iconIDs[i], false)
-            end
+            local iconIDs = {"134635", "340528", "351033", "7242384", "236903"}
+            for i=1, 5 do DisplayRune(i, iconIDs[i], false) end
         end
         local function HideAllRunes()
-            for i = 1, 5 do
+            for i=1, 5 do
                 if self.LuraRunesDisplay[i] then self.LuraRunesDisplay[i]:Hide() end
                 if self.LuraRunesNumbers[i] then self.LuraRunesNumbers[i]:Hide() end
             end
@@ -198,82 +173,41 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
             self.LuraRunesFrame:Hide()
         end
-
-        if not self.LuraRunesFrame then
-            self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
-        end
         self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
             if e == "CHAT_MSG_RAID" then
                 self.LuraRunesFrame:Show()
-                if self.HideTimer then
-                    self.HideTimer:Cancel()
-                end
-                local hideduration = self.Phase == 4 and 13 or 15
-                self.HideTimer = C_Timer.NewTimer(hideduration, function()
-                    HideAllRunes()
-                end)
+                if self.HideTimer then self.HideTimer:Cancel() end
+                self.HideTimer = C_Timer.NewTimer(15, function() HideAllRunes() end)
 
-                if id ~= 16 or self.Phase == 4 then
-                    DisplayRune(pos, msg, false)
-                    return
-                end
+                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
                 local pos = 2
                 if self.LuraRunesCompleted[pos] then pos = 3 end
                 if self.LuraRunesCompleted[pos] then pos = 5 end
                 self.LuraRunesCompleted[pos] = true
+                if self.LuraRunesInverted then pos = 6-pos end
                 DisplayRune(pos, msg, true)
             elseif e == "CHAT_MSG_RAID_LEADER" then
                 self.LuraRunesFrame:Show()
-                if self.HideTimer then
-                    self.HideTimer:Cancel()
-                end
-                local hideduration = self.Phase == 4 and 13 or 15
-                self.HideTimer = C_Timer.NewTimer(hideduration, function()
-                    HideAllRunes()
-                end)
+                if self.HideTimer then self.HideTimer:Cancel() end
+                self.HideTimer = C_Timer.NewTimer(15, function() HideAllRunes() end)
 
-                if id ~= 16 or self.Phase == 4 then
-                    DisplayRune(pos, msg, false)
-                    return
-                end
+                if id ~= 16 or self.Phase == 4 then DisplayRune(pos, msg, false) return end
                 local pos = 1
                 if self.LuraRunesCompleted[pos] then pos = 4 end
                 self.LuraRunesCompleted[pos] = true
+                if self.LuraRunesInverted then pos = 6-pos end
                 DisplayRune(pos, msg, true)
             end
         end)
-        self.LuraRunesFrame:ClearAllPoints()
-        self.LuraRunesFrame:SetPoint(NSRT.EncounterAlerts[encID].LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame,
-            NSRT.EncounterAlerts[encID].LuraDisplayRelativePoint or "TOPLEFT",
-            NSRT.EncounterAlerts[encID].LuraDisplayOffsetX or 500, NSRT.EncounterAlerts[encID].LuraDisplayOffsetY or -300)
-        self.LuraRunesFrame:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile =
-        [[Interface\Buttons\WHITE8X8]], edgeSize = 1 })
-        self.LuraRunesFrame:SetBackdropColor(unpack(NSRT.EncounterAlerts[encID].LuraDisplayColor or { 0.5, 0.5, 0.5, 0.9 }))
-        self.LuraRunesFrame:SetBackdropBorderColor(unpack(NSRT.EncounterAlerts[encID].LuraDisplayColor or
-        { 0.5, 0.5, 0.5, 0.9 }))
-        self.LuraRunesFrame:SetWidth(200)
-        self.LuraRunesFrame:SetHeight(200)
-
-        self.LuraRunesCompleted = {}
-
-        self.LuraRunesDisplay = self.LuraRunesDisplay or {}
-        self.LuraRunesNumbers = self.LuraRunesNumbers or {}
-        self.AlertTimers = self.AlertTimers or {}
-        if preview then
-            local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
-            for i = 1, 5 do
-                DisplayRune(i, iconIDs[i], false)
-            end
-        end
         local timers = {
-            [14] = { 10, 80, 150 },
-            [15] = { 10, 80, 150 },
-            [16] = { 33, 95, 157 },
+            [14] = {10, 80, 150},
+            [15] = {10, 80, 150},
+            [16] = {33, 95, 157},
         }
         self.LuraRuneTimers = {}
         if preview then return end
-        for i, time in ipairs(timers[id] or {}) do -- enable event register 2s before each memory game. then disable it again later
-            self.LuraRuneTimers[i] = C_Timer.NewTimer(time - 2, function()
+        for i, time in ipairs(timers[id] or {}) do
+            self.LuraRuneTimers[i] = C_Timer.NewTimer(time-2, function()
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
                 self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
             end)
@@ -282,12 +216,14 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         self.AlertTimers[1] = C_Timer.NewTimer(70, function()
             if not self.AlertTimers then return end
+            if id == 16 then self.LuraRunesInverted = true end
             HideAllRunes()
             self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(140, function()
             if not self.AlertTimers then return end
+            if id == 16 then self.LuraRunesInverted = false end
             HideAllRunes()
             self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
@@ -295,56 +231,43 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     end
 end
 
-NSI.EncounterAlertStop[encID] = function(self, Alertcall) -- on ENCOUNTER_END
-    if self.LuraRunesFrame and not Alertcall then
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
+    if self.LuraRunesFrame then
         self.LuraRunesFrame:UnregisterAllEvents()
         self.LuraRunesFrame:Hide()
-        for i=1, 5 do
-            if self.LuraRunesDisplay[i] then
-                self.LuraRunesDisplay[i]:Hide()
-            end
-            if self.LuraRunesNumbers[i] then
-                self.LuraRunesNumbers[i]:Hide()
-            end
-        end
-        self.LuraRunesCompleted = {}
-        if self.AlertTimers then
-            for i, v in ipairs(self.AlertTimers) do
-                if v and v.Cancel then
-                    v:Cancel()
-                end
-            end
-            self.AlertTimers = nil
-        end
-        if self.LuraRuneTimers then
-            for i, v in ipairs(self.LuraRuneTimers) do
-                if v and v.Cancel then
-                    v:Cancel()
-                end
-            end
-            self.LuraRuneTimers = nil
-        end
-        NSI.NSRTFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
+    if self.AlertTimers then
+        for i, v in ipairs(self.AlertTimers) do
+            if v and v.Cancel then v:Cancel() end
+        end
+        self.AlertTimers = nil
+    end
+    if self.LuraRuneTimers then
+        for i, v in ipairs(self.LuraRuneTimers) do
+            if v and v.Cancel then v:Cancel() end
+        end
+        self.LuraRuneTimers = nil
+    end
+    NSI.NSRTFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
 end
 
 local detectedDurations = {
     [15] = {
-        { time = 45,  phase = function(num) return 2 end },
-        { time = 97,  phase = function(num) return 3 end },
-        { time = 180, phase = function(num) return 4 end },
+        {time = 45, phase = function(num) return 2 end},
+        {time = 97, phase = function(num) return 3 end},
+        {time = 180, phase = function(num) return 4 end},
     },
     [16] = {
-        { time = 45,  phase = function(num) return 2 end },
-        { time = 97,  phase = function(num) return 3 end },
-        { time = 180, phase = function(num) return 4 end },
+        {time = 45, phase = function(num) return 2 end},
+        {time = 97, phase = function(num) return 3 end},
+        {time = 180, phase = function(num) return 4 end},
     },
 }
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" and self.Phase == 4 then
-        if (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 20)) then return end
+        if (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+20)) then return end
         if not UnitExists("boss2") then
             self.Phase = 5
             self:StartReminders(self.Phase)
@@ -352,7 +275,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         end
         return
     end
-    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
@@ -364,33 +287,11 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
             self.PhaseSwapTime = now
             if self.Phase == 4 and difficultyID == 16 then
                 if self.LuraRunesFrame then
+                    self.LuraRunesFrame:Show()
                     self.LuraRunesFrame:SetWidth(300)
                     self.LuraRunesFrame:SetHeight(60)
                     self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID")
                     self.LuraRunesFrame:RegisterEvent("CHAT_MSG_RAID_LEADER")
-                end
-                local timers = { 20, 40, 75, 95, 130, 150 }
-                if self.LuraRuneTimers then
-                    for i, v in ipairs(self.LuraRuneTimers) do
-                        if v and v.Cancel then
-                            v:Cancel()
-                        end
-                    end
-                end
-                self.LuraRuneTimers = {}
-                for i, time in ipairs(timers) do -- remove previous display 2s before memory game
-                    self.LuraRuneTimers[i] = C_Timer.NewTimer(time - 2, function()
-                        for num = 1, 5 do
-                            if self.LuraRunesDisplay[num] then
-                                self.LuraRunesDisplay[num]:Hide()
-                            end
-                            if self.LuraRunesNumbers[num] then
-                                self.LuraRunesNumbers[num]:Hide()
-                            end
-                        end
-                        self.LuraRunesCompleted = {}
-                        self.LuraRunesFrame:Hide()
-                    end)
                 end
                 return
             end

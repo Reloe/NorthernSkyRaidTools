@@ -12,7 +12,6 @@ f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
-f:RegisterEvent("PLAYER_LOGOUT")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -22,6 +21,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     if e == "ADDON_LOADED" and wowevent then
         local name = ...
         if name == "NorthernSkyRaidTools" then
+            self:AddMissingDefaults()
             self.Reminder = ""
             self.PersonalReminder = ""
             self.DisplayedReminder = ""
@@ -33,17 +33,21 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.PlayedSound = {}
             self.StartedCountdown = {}
             self.GlowStarted = {}
-        self:CreateMoveFrames()
-        self:InitNickNames()
+            self:CreateMoveFrames()
+            self:InitNickNames()
+            
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
-        self:LoadMyProfile()
         self.NSUI:Init()
         self:InitLDB()
         self:InitQoL()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
-        self:InitPrivateAuras()
+        if NSRT.PASettings.enabled then self:InitPA() end
+        self:InitTextPA()
+        if NSRT.PARaidSettings.enabled then
+            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
+        end
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
         for spellID, info in pairs(NSRT.PASounds) do
@@ -58,7 +62,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         end
-        self:SetReminder(NSRT.StoredPersonalReminder, true, true) -- loading active personal reminder from last session
+        self:SetReminder(NSRT.ActivePersonalReminder, true, true) -- loading active personal reminder from last session
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
@@ -91,13 +95,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
             self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
             self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
+                if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+                self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
+            end
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
-        self.EncounterID = ...
-        self:LoadPersReminder(self.EncounterID)
+        if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -106,6 +113,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
             self:ToggleMoveFrames(self[v], false)
         end
+        self.EncounterID = ...
         self.Phase = 1
         self.PhaseSwapTime = GetTime()
         self.ReminderText = self.ReminderText or {}
@@ -143,7 +151,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
-        local encID, encounterName, _, _, kill = ...
+        local encID, encounterName = ...
         local diff = select(3, GetInstanceInfo()) or 0
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
@@ -168,17 +176,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        if kill then
-            local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
-            if NoteName and NSRT.Reminders[NoteName] then
-                C_Timer.After(2, function()
-                    if self:Restricted() then return end
-                    if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then
-                        self:Broadcast("NSI_REM_SHARE", "RAID", NSRT.Reminders[NoteName], nil, true)
-                    end
-                end)
-            end
-        end
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
@@ -192,7 +189,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
-        self:InitPrivateAuras()
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
         local diff= select(3, GetInstanceInfo()) or 0
@@ -251,7 +247,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateReminderFrame(true)
         end
         local diff = select(3, GetInstanceInfo()) or 0
-        self:InitPrivateAuras()
+        if NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
+            self:InitTankPA()
+        end
         local text = ""
         if UnitLevel("player") < 90 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
@@ -339,12 +337,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         self:ArrangeGroups()
-        if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
-        self.GroupUpdateTimer = C_Timer.After(2, function()
-            self.GroupUpdateTimer = nil
-            self:InitPrivateAuras()
-            self:UpdateRaidBuffFrame()
-        end)
+        if NSRT.PARaidSettings.enabled then
+            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
+            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
+        end
+
+        self:UpdateRaidBuffFrame()
         if self:Restricted() then return end
 
         if self.InviteInProgress then
@@ -358,6 +356,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
+        
         if not self:DifficultyCheck(14) then return end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck(14) then return end
@@ -389,7 +388,5 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end
-    elseif e == "PLAYER_LOGOUT" and wowevent then
-        self:SaveProfile()
     end
 end

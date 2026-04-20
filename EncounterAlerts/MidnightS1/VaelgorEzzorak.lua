@@ -83,14 +83,14 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     local subgroup = self:GetSubGroup("player")
     if not subgroup then return end
     local Soak = self:CreateDefaultAlert("", "Text", nil, 8, 1, encID)
-    local timers = {14.2, 114.2, 213, 314.6, 409.7}
+    local timers = {14.2, 114.2, 262, 359.6, 479.2}
     for i, v in ipairs(timers) do
         Soak.time = v
         Soak.text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
         Soak.TTS = subgroup <= 2 and "Soak" or "Don't soak"
         self:AddToReminder(Soak)
     end
-    timers = {64.2, 262, 359.6, 479.2}
+    timers = {64.2, 213, 314.6, 409.7}
     for i, v in ipairs(timers) do
         Soak.time = v
         Soak.text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"

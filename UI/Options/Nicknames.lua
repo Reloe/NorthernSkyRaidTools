@@ -1,12 +1,11 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
 local function BuildNicknamesOptions()
-    local nickname_share_options = { L["Raid"], L["Guild"], L["Both"], L["None"] }
+    local nickname_share_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_share_options = function()
         local t = {}
         for i = 1, #nickname_share_options do
@@ -21,7 +20,7 @@ local function BuildNicknamesOptions()
         return t
     end
 
-    local nickname_accept_options = { L["Raid"], L["Guild"], L["Both"], L["None"] }
+    local nickname_accept_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_accept_options = function()
         local t = {}
         for i = 1, #nickname_accept_options do
@@ -36,7 +35,7 @@ local function BuildNicknamesOptions()
         return t
     end
 
-    local nickname_syncaccept_options = { L["Raid"], L["Guild"], L["Both"], L["None"] }
+    local nickname_syncaccept_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_syncaccept_options = function()
         local t = {}
         for i = 1, #nickname_syncaccept_options do
@@ -51,7 +50,7 @@ local function BuildNicknamesOptions()
         return t
     end
 
-    local nickname_syncsend_options = { L["Raid"], L["Guild"], L["None"]}
+    local nickname_syncsend_options = { "Raid", "Guild", "None"}
     local build_nickname_syncsend_options = function()
         local t = {}
         for i = 1, #nickname_syncsend_options do
@@ -67,12 +66,12 @@ local function BuildNicknamesOptions()
     end
 
     local function WipeNickNames()
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["Confirm Wipe Nicknames"], "NSRTWipeNicknamesPopup")
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Wipe Nicknames", "NSRTWipeNicknamesPopup")
         popup:SetFrameStrata("DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
         local text = DF:CreateLabel(popup,
-            L["Are you sure you want to wipe all nicknames?"], 12, "orange")
+            "Are you sure you want to wipe all nicknames?", 12, "orange")
         text:SetPoint("TOP", popup, "TOP", 0, -30)
         text:SetJustifyH("CENTER")
 
@@ -80,24 +79,24 @@ local function BuildNicknamesOptions()
             NSI:WipeNickNames()
             NSUI.nickname_frame.scrollbox:MasterRefresh()
             popup:Hide()
-        end, 100, 30, L["Confirm"])
+        end, 100, 30, "Confirm")
         confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
         confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
 
         local cancelButton = DF:CreateButton(popup, function()
             popup:Hide()
-        end, 100, 30, L["Cancel"])
+        end, 100, 30, "Cancel")
         cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
         popup:Show()
     end
 
     return {
-        { type = "label", get = function() return L["Nicknames Options"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return "Nicknames Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "textentry",
-            name = L["Nickname"],
-            desc = L["Set your nickname to be seen by others and used in assignments"],
+            name = "Nickname",
+            desc = "Set your nickname to be seen by others and used in assignments",
             get = function() return NSRT.Settings["MyNickName"] or "" end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
@@ -114,8 +113,8 @@ local function BuildNicknamesOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Enable Nicknames"],
-            desc = L["Globaly enable nicknames."],
+            name = "Enable Nicknames",
+            desc = "Globaly enable nicknames.",
             get = function() return NSRT.Settings["GlobalNickNames"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["GLOBAL_NICKNAMES"] = true
@@ -127,8 +126,8 @@ local function BuildNicknamesOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Translit Names"],
-            desc = L["Translit Russian Names"],
+            name = "Translit Names",
+            desc = "Translit Russian Names",
             get = function() return NSRT.Settings["Translit"] end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["TRANSLIT"] = true
@@ -137,32 +136,32 @@ local function BuildNicknamesOptions()
             nocombat = true
         },
 
-        { type = "label", get = function() return L["Automated Nickname Share Options"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return "Automated Nickname Share Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
             type = "select",
             get = function() return NSRT.Settings["ShareNickNames"] end,
             values = function() return build_nickname_share_options() end,
-            name = L["Nickname Sharing"],
-            desc = L["Choose who you share your nickname with."],
+            name = "Nickname Sharing",
+            desc = "Choose who you share your nickname with.",
             nocombat = true
         },
         {
             type = "select",
             get = function() return NSRT.Settings["AcceptNickNames"] end,
             values = function() return build_nickname_accept_options() end,
-            name = L["Nickname Accept"],
-            desc = L["Choose who you are accepting Nicknames from"],
+            name = "Nickname Accept",
+            desc = "Choose who you are accepting Nicknames from",
             nocombat = true
         },
 
-        { type = "label", get = function() return L["Manual Nickname Sync Options"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        { type = "label", get = function() return "Manual Nickname Sync Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
 
         {
             type = "select",
             get = function() return NSRT.Settings["NickNamesSyncSend"] end,
             values = function() return build_nickname_syncsend_options() end,
-            name = L["Nickname Sync Send"],
-            desc = L["Choose who you are synching nicknames to when pressing on the sync button"],
+            name = "Nickname Sync Send",
+            desc = "Choose who you are synching nicknames to when pressing on the sync button",
             nocombat = true
         },
 
@@ -170,8 +169,8 @@ local function BuildNicknamesOptions()
             type = "select",
             get = function() return NSRT.Settings["NickNamesSyncAccept"] end,
             values = function() return build_nickname_syncaccept_options() end,
-            name = L["Nickname Sync Accept"],
-            desc = L["Choose who you are accepting Nicknames sync requests to come from"],
+            name = "Nickname Sync Accept",
+            desc = "Choose who you are accepting Nicknames sync requests to come from",
             nocombat = true
         },
 
@@ -180,7 +179,7 @@ local function BuildNicknamesOptions()
         },
         {
             type = "label",
-            get = function() return L["Unit Frame compatibility"] end,
+            get = function() return "Unit Frame compatibility" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {
@@ -191,8 +190,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["BLIZZARD_NICKNAMES"] = true
                 NSRT.Settings["Blizzard"] = value
             end,
-            name = L["Enable Blizzard/Reskin Addons Nicknames"],
-            desc = L["Enable Nicknames to be used with Blizzard unit frames. This should automatically work for any Addon that reskins Blizzard Frames instead of creating their own frames. This for example includes RaidFrameSettings."],
+            name = "Enable Blizzard/Reskin Addons Nicknames",
+            desc = "Enable Nicknames to be used with Blizzard unit frames. This should automatically work for any Addon that reskins Blizzard Frames instead of creating their own frames. This for example includes RaidFrameSettings.",
             nocombat = true
         },
         {
@@ -203,8 +202,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["CELL_NICKNAMES"] = true
                 NSRT.Settings["Cell"] = value
             end,
-            name = L["Enable Cell Nicknames"],
-            desc = L["Enable Nicknames to be used with Cell unit frames. This requires enabling nicknames within Cell."],
+            name = "Enable Cell Nicknames",
+            desc = "Enable Nicknames to be used with Cell unit frames. This requires enabling nicknames within Cell.",
             nocombat = true
         },
         {
@@ -215,8 +214,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["GRID2_NICKNAMES"] = true
                 NSRT.Settings["Grid2"] = value
             end,
-            name = L["Enable Grid2 Nicknames"],
-            desc = L["Enable Nicknames to be used with Grid2 unit frames. This requires selecting the 'NSNickName' indicator within Grid2."],
+            name = "Enable Grid2 Nicknames",
+            desc = "Enable Nicknames to be used with Grid2 unit frames. This requires selecting the 'NSNickName' indicator within Grid2.",
             nocombat = true
         },
         {
@@ -227,8 +226,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["DANDERS_FRAMES_NICKNAMES"] = true
                 NSRT.Settings["DandersFrames"] = value
             end,
-            name = L["Enable DandersFrames Nicknames"],
-            desc = L["Enable Nicknames to be used with DandersFrames unit frames."],
+            name = "Enable DandersFrames Nicknames",
+            desc = "Enable Nicknames to be used with DandersFrames unit frames.",
             nocombat = true
         },
         {
@@ -239,8 +238,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["ELVUI_NICKNAMES"] = true
                 NSRT.Settings["ElvUI"] = value
             end,
-            name = L["Enable ElvUI Nicknames"],
-            desc = L["Enable Nicknames to be used with ElvUI unit frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]"],
+            name = "Enable ElvUI Nicknames",
+            desc = "Enable Nicknames to be used with ElvUI unit frames. This requires editing your Tags. Available options are [NSNickName] and [NSNickName:1-12]",
             nocombat = true
         },
         {
@@ -251,8 +250,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["VUHDO_NICKNAMES"] = true
                 NSRT.Settings["VuhDo"] = value
             end,
-            name = L["Enable VuhDo Nicknames"],
-            desc = L["Enable Nicknames to be used with VuhDo unit frames."],
+            name = "Enable VuhDo Nicknames",
+            desc = "Enable Nicknames to be used with VuhDo unit frames.",
             nocombat = true
         },
         {
@@ -263,8 +262,8 @@ local function BuildNicknamesOptions()
                 NSUI.OptionsChanged.nicknames["UNHALTED_NICKNAMES"] = true
                 NSRT.Settings["Unhalted"] = value
             end,
-            name = L["Enable Unhalted UF Nicknames"],
-            desc = L["Enable Nicknames to be used with Unhalted Unit Frames. You can choose 'NSNickName' as a tag within UUF."],
+            name = "Enable Unhalted UF Nicknames",
+            desc = "Enable Nicknames to be used with Unhalted Unit Frames. You can choose 'NSNickName' as a tag within UUF.",
             nocombat = true
         },
 
@@ -273,8 +272,8 @@ local function BuildNicknamesOptions()
         },
         {
             type = "button",
-            name = L["Wipe Nicknames"],
-            desc = L["Wipe all nicknames from the database."],
+            name = "Wipe Nicknames",
+            desc = "Wipe all nicknames from the database.",
             func = function(self)
                 WipeNickNames()
             end,
@@ -282,8 +281,8 @@ local function BuildNicknamesOptions()
         },
         {
             type = "button",
-            name = L["Edit Nicknames"],
-            desc = L["Edit the nicknames database stored locally."],
+            name = "Edit Nicknames",
+            desc = "Edit the nicknames database stored locally.",
             func = function(self)
                 if not NSUI.nickname_frame:IsShown() then
                     NSUI.nickname_frame:Show()

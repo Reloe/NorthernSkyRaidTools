@@ -1,6 +1,5 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -9,13 +8,13 @@ local function BuildQoLOptions()
     return {
         {
             type = "label",
-            get = function() return L["Text Display Settings"] end,
+            get = function() return "Text Display Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "button",
-            name = L["Preview/Unlock"],
-            desc = L["Preview and Move the Text Display."],
+            name = "Preview/Unlock",
+            desc = "Preview and Move the Text Display.",
             func = function(self)
                 NSI.IsQoLTextPreview = not NSI.IsQoLTextPreview
                 NSI:ToggleQoLTextPreview()
@@ -24,8 +23,8 @@ local function BuildQoLOptions()
         },
         {
             type = "range",
-            name = L["Font Size"],
-            desc = L["Font Size for Text Display. The Font itself is controlled by the Global Font found in General Settings."],
+            name = "Font Size",
+            desc = "Font Size for Text Display. The Font itself is controlled by the Global Font found in General Settings.",
             get = function() return NSRT.QoL.TextDisplay.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.TextDisplay.FontSize = value
@@ -37,8 +36,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Gateway Useable Display"],
-            desc = L["Whether you want to see a display when you are able to use the gateway."],
+            name = "Gateway Useable Display",
+            desc = "Whether you want to see a display when you are able to use the gateway.",
             get = function() return NSRT.QoL.GatewayUseableDisplay end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.GatewayUseableDisplay = value
@@ -51,8 +50,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Reset Boss Display"],
-            desc = L["Shows a Text while out of combat when you have the lust debuff to remind you that the boss needs to be reset."],
+            name = "Reset Boss Display",
+            desc = "Shows a Text while out of combat when you have the lust debuff to remind you that the boss needs to be reset.",
             get = function() return NSRT.QoL.ResetBossDisplay end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.ResetBossDisplay = value
@@ -70,8 +69,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Loot Boss Reminder"],
-            desc = L["Shows a Text after killing a Raid-Boss to remind you to loot the boss for your crests."],
+            name = "Loot Boss Reminder",
+            desc = "Shows a Text after killing a Raid-Boss to remind you to loot the boss for your crests.",
             get = function() return NSRT.QoL.LootBossReminder end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.LootBossReminder = value
@@ -87,15 +86,15 @@ local function BuildQoLOptions()
         },
         {
             type = "label",
-            get = function() return L["Consumable Notifications\nrequires others to have NSRT"] end,
+            get = function() return "Consumable Notifications\nrequires others to have NSRT" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             spacement = true,
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Soulwell"],
-            desc = L["Shows a Text when a Soulwell has been dropped and you have less than 3 Healthstones."],
+            name = "Soulwell",
+            desc = "Shows a Text when a Soulwell has been dropped and you have less than 3 Healthstones.",
             get = function() return NSRT.QoL.SoulwellDropped end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.SoulwellDropped = value
@@ -106,8 +105,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Feast"],
-            desc = L["Shows a Text when a Feast has been dropped and your Well Fed buff is missing or has less than 10 minutes left."],
+            name = "Feast",
+            desc = "Shows a Text when a Feast has been dropped and your Well Fed buff is missing or has less than 10 minutes left.",
             get = function() return NSRT.QoL.FeastDropped end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.FeastDropped = value
@@ -118,8 +117,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Cauldron"],
-            desc = L["Shows a Text when a Cauldron has been dropped."],
+            name = "Cauldron",
+            desc = "Shows a Text when a Cauldron has been dropped.",
             get = function() return NSRT.QoL.CauldronDropped end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.CauldronDropped = value
@@ -130,8 +129,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Repair"],
-            desc = L["Shows a Text when a Repair Bot/Anvil has been dropped and your durability is less than 90%."],
+            name = "Repair",
+            desc = "Shows a Text when a Repair Bot/Anvil has been dropped and your durability is less than 90%.",
             get = function() return NSRT.QoL.RepairDropped end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.RepairDropped = value
@@ -141,8 +140,8 @@ local function BuildQoLOptions()
         },
         {
             type = "range",
-            name = L["Duration Seconds"],
-            desc = L["Show dropped consumable notifications for the selected number of seconds."],
+            name = "Duration Seconds",
+            desc = "Show dropped consumable notifications for the selected number of seconds.",
             get = function() return NSRT.QoL.ConsumableNotificationDurationSeconds or 5 end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.ConsumableNotificationDurationSeconds = value
@@ -155,13 +154,13 @@ local function BuildQoLOptions()
         },
         {
             type = "label",
-            get = function() return L["Other QoL Things"] end,
+            get = function() return "Other QoL Things" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "button",
-            name = L["Check Vantus-Rune"],
-            desc = L["Check the Vantus Rune status for all raid members."],
+            name = "Check Vantus-Rune",
+            desc = "Check the Vantus Rune status for all raid members.",
             func = function(self)
                 NSI:VantusRuneCheck()
             end,
@@ -170,8 +169,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Auto-Repair"],
-            desc = L["Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs)."],
+            name = "Auto-Repair",
+            desc = "Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs).",
             get = function() return NSRT.QoL.AutoRepair end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.AutoRepair = value
@@ -183,8 +182,8 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Auto-Invite on Whisper"],
-            desc = L["Whether you want to automatically invite Guild-Members when they whisper you with 'inv' or 'invite'."],
+            name = "Auto-Invite on Whisper",
+            desc = "Whether you want to automatically invite Guild-Members when they whisper you with 'inv' or 'invite'.",
             get = function() return NSRT.QoL.AutoInvite end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.AutoInvite = value

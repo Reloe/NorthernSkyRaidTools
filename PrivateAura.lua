@@ -49,8 +49,6 @@ local SoundListRaid = {
     [1249609] = "Rune", -- Dark Rune
     [1285510] = "Targeted", -- Starsplinter
     [1279512] = "Targeted", -- Starsplinter
-    [1286294] = "Red", -- Blue Memory Game
-    [1284984] = "Blue", -- Red Memory Game
 }
 
 local SoundListMPlus = {
@@ -576,7 +574,7 @@ function NSI:InitTankPA()
                             iconHeight = 0.001,
                         },
                     }
-                    if NSRT.PATankSettings.UpscaleDuration then
+                    if NSRT.PATankSettings.UpscaleDurations then
                         durationArgs.durationAnchor = {
                             point = "CENTER",
                             relativeTo = self.PATankFrames[i][auraIndex],
@@ -815,21 +813,5 @@ function NSI:PreviewRaidPA(Show, Init)
             self.PARaidPreviewIcons[i]:Hide()
             self.PARaidPreviewIcons[i].Text:Hide()
         end
-    end
-end
-
-function NSI:InitPrivateAuras()
-    if self:Restricted() then return end
-    if self.IsBuilding then return end
-    self:InitTextPA()
-    if NSRT.PASettings.enabled then
-        self:InitPA()
-    end
-    local diff = select(3, GetInstanceInfo()) or 0
-    if NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
-        self:InitTankPA()
-    end
-    if NSRT.PARaidSettings.enabled then
-        self:InitRaidPA(not UnitInRaid("player"))
     end
 end
