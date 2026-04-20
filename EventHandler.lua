@@ -33,18 +33,17 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.PlayedSound = {}
             self.StartedCountdown = {}
             self.GlowStarted = {}
-            if NSRT and self:GetProfileKey() then
+            self:InitNickNames()
+            if self:GetProfileKey() then
                 self.LoadedProfile = true
                 self:LoadMyProfile()
                 self:CreateMoveFrames()
-                self:InitNickNames()
             end
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         if not self.LoadedProfile then
             self:LoadMyProfile()
             self:CreateMoveFrames()
-            self:InitNickNames()
         end
         self.NSUI:Init()
         self:InitLDB()
