@@ -5,18 +5,18 @@ local encID = 3177
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local enc = NSRT.EncounterAlerts[encID]
 
-    local function Add(key, alert, timers, durOverrides)
-        NSI:AddEncounterAlert(encID, key, alert, timers, durOverrides, true, true)
+    local function Add(diffID, name, alertDef)
+        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
     end
 
-    -- Boss appears to have same timers on all difficulties
-    local knockTimers = { [14] = { 12, 132, 252 }, [15] = { 12, 132, 252 }, [16] = { 12, 132, 252 } }
-    Add("Knock1", NSI:CreateDefaultAlert("Knock", "Text", nil, 5, 1, encID), knockTimers)
-
-    local breathTimers = { [14] = { 102, 223, 343 }, [15] = { 102, 223, 343 }, [16] = { 102, 223, 343 } }
-    Add("Breath1", NSI:CreateDefaultAlert("Breath", "Text", nil, 5, 1, encID), breathTimers)
+    -- Boss has the same timers on all difficulties
+    local knockTimers  = { [1] = { 12, 132, 252 } }
+    local breathTimers = { [1] = { 102, 223, 343 } }
+    for _, diff in ipairs({ 14, 15, 16 }) do
+        Add(diff, "Knock",  NSI:MakeEncounterAlert("Knock",  nil, 5, "Text", knockTimers))
+        Add(diff, "Breath", NSI:MakeEncounterAlert("Breath", nil, 5, "Text", breathTimers))
+    end
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START

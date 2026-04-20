@@ -45,8 +45,9 @@ local function BuildBossRemindersUI(parentFrame)
 
     -- ── Mutable state ───────────────────────────────────────────────────────
     local selectedIndex      = nil   -- index into NSRT.CustomBossAlerts (custom mode)
-    local selectedReloeEncID = nil   -- encID of selected reloeCreated alert
-    local selectedReloeKey   = nil   -- key of selected reloeCreated alert
+    local selectedReloeEncID = nil   -- encID of selected reloeReminder alert
+    local selectedReloeDiffID = nil  -- diffID of selected reloeReminder alert
+    local selectedReloeKey   = nil   -- key of selected reloeReminder alert
     local filterEncID        = nil
 
     -- forward declarations
@@ -142,19 +143,24 @@ local function BuildBossRemindersUI(parentFrame)
         listRows[i] = row
     end
 
-    -- Returns a display name for a reloeCreated alert entry.
-    local function ReloeAlertName(entry, alertKey)
-        local text  = entry.alert and entry.alert.text
-        local phase = entry.alert and entry.alert.phase
-        local base  = (text and text ~= "") and text or alertKey
-        return (phase and phase > 1) and (base .. " (P" .. phase .. ")") or base
+    -- Returns a display name for a reloeReminder alert entry.
+    local function ReloeAlertName(entry)
+        local base = (entry.name and entry.name ~= "") and entry.name
+                  or (entry.text and entry.text ~= "") and entry.text
+                  or "?"
+        local minPhase = math.huge
+        for phase in pairs(entry.timers or {}) do
+            if phase < minPhase then minPhase = phase end
+        end
+        local phase = minPhase == math.huge and 1 or minPhase
+        return (phase > 1) and (base .. " (P" .. phase .. ")") or base
     end
 
     -- RebuildList ─────────────────────────────────────────────────────────────
     local function RebuildScrollData()
         local t = {}
 
-        -- One row per reloeCreated alert, grouped by boss (sorted by encounter order)
+        -- One row per reloeReminder alert (deduplicated by alertKey, prefer higher diffID)
         local sortedEnc = {}
         for encID in pairs(NSRT.EncounterAlerts or {}) do
             if not filterEncID or filterEncID == encID then
@@ -167,23 +173,50 @@ local function BuildBossRemindersUI(parentFrame)
         for _, encID in ipairs(sortedEnc) do
             local encTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
             if encTable then
-                -- collect and sort alerts by phase then key
+                -- Sort diffIDs descending so we prefer mythic as representative
+                local diffIDs = {}
+                for diffID in pairs(encTable) do
+                    if type(diffID) == "number" then
+                        table.insert(diffIDs, diffID)
+                    end
+                end
+                table.sort(diffIDs, function(a, b) return a > b end)
+
+                local seenNames = {}
                 local alerts = {}
-                for key, entry in pairs(encTable) do
-                    if type(entry) == "table" and entry.reloeCreated then
-                        local phase = entry.alert and entry.alert.phase or 1
-                        table.insert(alerts, { key = key, entry = entry, phase = phase })
+                for _, diffID in ipairs(diffIDs) do
+                    local diffTable = encTable[diffID]
+                    if type(diffTable) == "table" then
+                        for key, entry in pairs(diffTable) do
+                            local entryName = entry.name or entry.text or key
+                            if type(entry) == "table" and entry.reloeReminder and not seenNames[entryName] then
+                                seenNames[entryName] = true
+                                local minPhase = math.huge
+                                for phase in pairs(entry.timers or {}) do
+                                    if phase < minPhase then minPhase = phase end
+                                end
+                                table.insert(alerts, {
+                                    key    = key,
+                                    entry  = entry,
+                                    diffID = diffID,
+                                    phase  = minPhase == math.huge and 1 or minPhase,
+                                })
+                            end
+                        end
                     end
                 end
                 table.sort(alerts, function(a, b)
                     if a.phase ~= b.phase then return a.phase < b.phase end
-                    return a.key < b.key
+                    local an = a.entry.name or a.entry.text or a.key
+                    local bn = b.entry.name or b.entry.text or b.key
+                    return an < bn
                 end)
                 for _, item in ipairs(alerts) do
                     table.insert(t, {
-                        encID         = encID,
-                        alertKey      = item.key,
-                        entry         = item.entry,
+                        encID           = encID,
+                        diffID          = item.diffID,
+                        alertKey        = item.key,
+                        entry           = item.entry,
                         _isReloeCreated = true,
                     })
                 end
@@ -217,7 +250,7 @@ local function BuildBossRemindersUI(parentFrame)
                 if isReloe then
                     isEnabled = entry.entry.enabled
                     icon      = BossData.BossIcons[entry.encID]
-                    name      = ReloeAlertName(entry.entry, entry.alertKey)
+                    name      = ReloeAlertName(entry.entry)
                 else
                     local alert = entry.alert
                     isEnabled   = alert.enabled
@@ -227,7 +260,7 @@ local function BuildBossRemindersUI(parentFrame)
 
                 -- Selected highlight
                 local isSelected = isReloe
-                    and (selectedReloeEncID == entry.encID and selectedReloeKey == entry.alertKey)
+                    and (selectedReloeEncID == entry.encID and selectedReloeDiffID == entry.diffID and selectedReloeKey == entry.alertKey)
                     or  (not isReloe and selectedIndex == entry.realIndex)
                 if isSelected then
                     row.__background:SetVertexColor(0, 1, 1)
@@ -278,9 +311,9 @@ local function BuildBossRemindersUI(parentFrame)
 
                 -- Click to select
                 if isReloe then
-                    local eid, akey = entry.encID, entry.alertKey
+                    local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
                     row:SetScript("OnMouseDown", function()
-                        SelectReloeCreatedAlert(eid, akey)
+                        SelectReloeCreatedAlert(eid, did, akey)
                     end)
                 else
                     local ri = entry.realIndex
@@ -694,7 +727,13 @@ local function BuildBossRemindersUI(parentFrame)
     ttsCB:SetSize(22, 22)
     ttsCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -4)
     ttsCB:SetScript("OnClick", function(self)
-        if sndF._alert then sndF._alert.TTSEnabled = self:GetChecked() end
+        if not sndF._alert then return end
+        if sndF._reloeMode then
+            local v = sndF.ttsTextEntry:GetText()
+            sndF._alert.TTS = self:GetChecked() and ((v ~= "") and v or true) or false
+        else
+            sndF._alert.TTSEnabled = self:GetChecked()
+        end
     end)
     sndF.ttsCB = ttsCB
 
@@ -715,7 +754,14 @@ local function BuildBossRemindersUI(parentFrame)
     ttsTextEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -50)
     local function SaveTTSText(self)
         local v = self:GetText()
-        if sndF._alert then sndF._alert.TTSText = v end
+        if not sndF._alert then return end
+        if sndF._reloeMode then
+            if sndF._alert.TTS ~= false then
+                sndF._alert.TTS = (v ~= "") and v or true
+            end
+        else
+            sndF._alert.TTSText = v
+        end
     end
     ttsTextEntry.editbox:SetScript("OnEnterPressed", function(self) SaveTTSText(self); self:ClearFocus() end)
     ttsTextEntry.editbox:SetScript("OnEditFocusLost", SaveTTSText)
@@ -875,16 +921,18 @@ local function BuildBossRemindersUI(parentFrame)
         sndF.lockOverlay:Hide()
         dispHint:Hide()
         sndHint:Hide()
+        sndF._reloeMode = false
         nameEntry.editbox:SetEnabled(true)
         nameEntry.editbox:SetAlpha(1)
     end
 
     local function SetReloeCreatedMode()
         trigF.lockOverlay:Show()
-        loadF.lockOverlay:Show()
-        sndF.lockOverlay:Show()
+        loadF.lockOverlay:Hide()
+        sndF.lockOverlay:Hide()
         dispHint:Hide()
         sndHint:Hide()
+        sndF._reloeMode = true
         nameEntry.editbox:SetEnabled(false)
         nameEntry.editbox:SetAlpha(0.45)
     end
@@ -988,12 +1036,15 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     -- SelectReloeCreatedAlert ── load an addon-created alert into the panel
     -- ================================================================
-    SelectReloeCreatedAlert = function(encID, alertKey)
-        selectedReloeEncID = encID
-        selectedReloeKey   = alertKey
-        selectedIndex      = nil
+    SelectReloeCreatedAlert = function(encID, diffID, alertKey)
+        selectedReloeEncID  = encID
+        selectedReloeDiffID = diffID
+        selectedReloeKey    = alertKey
+        selectedIndex       = nil
 
-        local entry = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][alertKey]
+        local entry = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+                      and NSRT.EncounterAlerts[encID][diffID]
+                      and NSRT.EncounterAlerts[encID][diffID][alertKey]
         if not entry then
             rightPanel:Hide()
             RebuildList()
@@ -1003,40 +1054,51 @@ local function BuildBossRemindersUI(parentFrame)
         rightPanel:Show()
         SetReloeCreatedMode()
 
-        -- Trigger, load, and sound tabs are locked; point display at the stored alert
-        -- so that any future edits (if lock is removed) save directly to the entry.
-        dispF._alert = entry.alert; dispF._hardcodedEncID = nil
-        trigF._alert = nil;         trigF._hardcodedEncID = nil
-        sndF._alert  = nil;         sndF._hardcodedEncID  = nil
-        loadF._alert = nil;         loadF._hardcodedEncID = nil
+        dispF._alert = nil;   dispF._hardcodedEncID = nil
+        trigF._alert = nil;   trigF._hardcodedEncID = nil
+        sndF._alert  = entry; sndF._hardcodedEncID  = nil
+        loadF._alert = nil;   loadF._hardcodedEncID = nil
 
         -- Header: alert name (read-only)
-        nameEntry:SetText(ReloeAlertName(entry, alertKey))
+        nameEntry:SetText(ReloeAlertName(entry))
         nameEntry.editbox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
         nameEntry.editbox:SetScript("OnEditFocusLost", function() end)
 
+        local alertName = entry.name or entry.text
         enabledCB:SetChecked(entry.enabled and true or false)
         enabledCB:SetScript("OnClick", function(self)
-            entry.enabled = self:GetChecked()
+            local val = self:GetChecked()
+            -- Toggle all diffID entries with matching name
+            for did, diffTable in pairs(NSRT.EncounterAlerts[encID] or {}) do
+                if type(did) == "number" and type(diffTable) == "table" then
+                    for _, e in pairs(diffTable) do
+                        if type(e) == "table" and (e.name == alertName or e.text == alertName) then
+                            e.enabled = val
+                        end
+                    end
+                end
+            end
             RebuildList()
         end)
 
         -- Display tab: show stored values (editing locked by lock overlay)
-        local alert = entry.alert
-        dispF.SetDisplayType(alert and alert.Type or "Text")
-        dispF.textEntry:SetText(alert and alert.text or "")
-        dispF.spellEntry:SetText(alert and alert.spellID and tostring(alert.spellID) or "")
-        dispF.durEntry:SetText(tostring(alert and alert.dur or 8))
+        local dispType = (entry.BarOverwrite and "Bar") or (entry.IconOverwrite and "Icon") or (entry.CircleOverwrite and "Circle") or "Text"
+        dispF.SetDisplayType(dispType)
+        dispF.textEntry:SetText(entry.text or "")
+        dispF.spellEntry:SetText(entry.spellID and tostring(entry.spellID) or "")
+        dispF.durEntry:SetText(tostring(entry.dur or 8))
 
         -- Trigger tab: inert (lock overlay shown)
         trigF.RebuildTimeRows()
 
-        -- Sound tab: inert (lock overlay shown)
-        sndF.ttsCB:SetChecked(false)
-        sndF.ttsTextEntry:SetText("")
-        sndF.ttsTimerEntry:SetText("")
-        sndF.cdCB:SetChecked(false)
-        sndF.cdEntry:SetText("")
+        -- Sound tab
+        local ttsActive = entry.TTS ~= false and entry.TTS ~= nil
+        sndF.ttsCB:SetChecked(ttsActive)
+        sndF.ttsTextEntry:SetText(type(entry.TTS) == "string" and entry.TTS or "")
+        sndF.ttsTimerEntry:SetText(tostring(entry.TTSTimer or entry.dur or 8))
+        local hasCD = entry.countdown and entry.countdown ~= false
+        sndF.cdCB:SetChecked(hasCD and true or false)
+        sndF.cdEntry:SetText(hasCD and tostring(entry.countdown) or "")
 
         RebuildList()
         SelectInnerTab(activeInnerTab)
@@ -1046,8 +1108,8 @@ local function BuildBossRemindersUI(parentFrame)
 
     screen:SetScript("OnShow", function()
         RebuildList()
-        if selectedReloeEncID and selectedReloeKey then
-            SelectReloeCreatedAlert(selectedReloeEncID, selectedReloeKey)
+        if selectedReloeEncID and selectedReloeDiffID and selectedReloeKey then
+            SelectReloeCreatedAlert(selectedReloeEncID, selectedReloeDiffID, selectedReloeKey)
         elseif selectedIndex then
             SelectAlert(selectedIndex)
         end

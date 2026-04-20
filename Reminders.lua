@@ -1678,6 +1678,7 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
 end
 
 function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
+    if not F or not s then return end
     local Width  = isAnchor and 300 or ((IsText and F.Text:GetStringWidth()) or s.Width or s.Size or 80)
     local Height = isAnchor and 20  or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
     if IsText then
@@ -1764,19 +1765,38 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssign
     return info
 end
 
--- Iterates NSRT.EncounterAlerts[encID] and fires all enabled reloeCreated alerts.
--- Role filtering (alert.role) is handled at display time, not here.
--- Applies optional per-difficulty duration overrides (entry.durOverrides).
+-- Iterates NSRT.EncounterAlerts[encID][id] and fires all enabled reloeReminder alerts.
+-- loadConditions role filtering is handled at display time, not here.
 function NSI:FireEncounterAlerts(encID, id)
     if not NSRT.EncounterAlerts or not NSRT.EncounterAlerts[encID] then return end
-    for _, entry in pairs(NSRT.EncounterAlerts[encID]) do
-        if type(entry) == "table" and entry.reloeCreated and entry.enabled and entry.alert then
-            local alert = entry.alert
-            alert.startTime = GetTime()
-            if entry.durOverrides and entry.durOverrides[id] then
-                alert.dur = entry.durOverrides[id]
+    local diffTable = NSRT.EncounterAlerts[encID][id]
+    if not diffTable then return end
+    for _, entry in pairs(diffTable) do
+        if type(entry) == "table" and entry.reloeReminder and entry.enabled then
+            local alert = {
+                text            = entry.text,
+                spellID         = entry.spellID,
+                dur             = entry.dur,
+                encID           = encID,
+                notsticky       = entry.notsticky,
+                IsAlert         = entry.IsAlert,
+                countdown       = entry.countdown,
+                TTSTimer        = entry.TTSTimer,
+                TTS             = entry.TTS,
+                sound           = entry.sound,
+                skipdur         = entry.skipdur,
+                glowunit        = entry.glowunit,
+                colors          = entry.colors,
+                Ticks           = entry.Ticks,
+                IconOverwrite   = entry.IconOverwrite,
+                BarOverwrite    = entry.BarOverwrite,
+                CircleOverwrite = entry.CircleOverwrite,
+                startTime       = GetTime(),
+            }
+            for phase, times in pairs(entry.timers or {}) do
+                alert.phase = phase
+                self:AddRemindersFromTable(alert, times)
             end
-            self:AddRemindersFromTable(alert, entry.timers and entry.timers[id] or {})
         end
     end
 end

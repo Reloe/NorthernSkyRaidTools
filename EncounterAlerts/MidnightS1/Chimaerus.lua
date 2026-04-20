@@ -6,27 +6,19 @@ local encID = 3306
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local enc = NSRT.EncounterAlerts[encID]
-
-    local function Add(key, alert, timers, durOverrides)
-        NSI:AddEncounterAlert(encID, key, alert, timers, durOverrides, true, true)
-    end
 
     -- Debuffs: mythic only, non-tank (role check handled at display time)
-    local debuffs = NSI:CreateDefaultAlert("Debuffs", "Text", nil, 6, 1, encID)
-    debuffs.TTS = false
-    debuffs.isConditional = true
-
-    Add("Debuffs1", debuffs, { [16] = {39, 112} })
+    NSI:AddEncounterAlert(encID, 16, "Debuffs", NSI:MakeEncounterAlert("Debuffs", nil, 6, "Text", {
+        [1] = { 39, 112 },
+    }, { TTS = false, isConditional = true }))
 end
 
 local function RiftMadnessTimers(self, id)
     local diff = id or select(3, GetInstanceInfo()) or 0
-    local entry = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID]["Debuffs1"]
+    local entry = NSI:GetEncounterAlertByName(encID, diff, "Debuffs")
     if diff ~= 16 or not entry or not entry.enabled then return end
     if UnitGroupRolesAssigned("player") == "TANK" then return end
 
-    local alert = entry.alert
     if NSI.AlertTimers then
         for i, v in ipairs(NSI.AlertTimers) do
             if v and v.Cancel then v:Cancel() end
@@ -36,18 +28,28 @@ local function RiftMadnessTimers(self, id)
     NSI.AlertTimers = {}
 
     if NSI:IsUsingTLAlerts() then
-        alert.isConditional = true
-        for i = 1, 2 do
-            alert.phase = i
-            NSI:AddRemindersFromTable(alert, entry.timers[16])
+        entry.isConditional = true
+        local alert = {
+            text        = entry.text,
+            spellID     = entry.spellID,
+            dur         = entry.dur,
+            encID       = encID,
+            notsticky   = entry.notsticky,
+            IsAlert     = entry.IsAlert,
+            isConditional = true,
+        }
+        local timers = entry.timers[1] or {}
+        for phase = 1, 2 do
+            alert.phase = phase
+            NSI:AddRemindersFromTable(alert, timers)
         end
     else
-        for i, v in ipairs(entry.timers[16] or {}) do
-            NSI.AlertTimers[i] = C_Timer.NewTimer(v - alert.dur, function()
+        for i, v in ipairs(entry.timers[1] or {}) do
+            NSI.AlertTimers[i] = C_Timer.NewTimer(v - entry.dur, function()
                 for j = 1, 40 do
-                    local u = "nameplate"..j
+                    local u = "nameplate" .. j
                     if UnitExists(u) and UnitLevel(u) == 92 then
-                        NSI:DisplayReminder(alert)
+                        NSI:DisplayReminder(entry)
                         break
                     end
                 end
@@ -92,7 +94,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         end
         if NSRT.AssignmentSettings.OnPull then
             local group = subgroup <= 2 and "First" or "Second"
-            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00" .. group .. "|r Group", 5)
         end
     elseif self.Assignments[encID].SplitSoaks and diff ~= 16 then
         if UnitGroupRolesAssigned("player") == "TANK" then return end
@@ -114,20 +116,20 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         end
         if NSRT.AssignmentSettings.OnPull then
             local group = group <= 1 and "First" or "Second"
-            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00"..group.."|r Group", 5)
+            self:DisplayText("You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00" .. group .. "|r Group", 5)
         end
     end
 end
 
 local detectedDurations = {
-    [14] = { {time = 164.5, phase = function(num) return num+1 end} },
-    [15] = { {time = 151.36, phase = function(num) return num+1 end} },
-    [16] = { {time = 120, phase = function(num) return num+1 end} },
+    [14] = { { time = 164.5, phase = function(num) return num + 1 end } },
+    [15] = { { time = 151.36, phase = function(num) return num + 1 end } },
+    [16] = { { time = 120, phase = function(num) return num + 1 end } },
 }
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime+5)) or (not self.EncounterID) or (not self.Phase) then return end
+    if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = select(3, GetInstanceInfo()) or 0
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][1]

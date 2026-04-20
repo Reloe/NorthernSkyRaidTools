@@ -6,88 +6,77 @@ local encID = 3183
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local enc = NSRT.EncounterAlerts[encID]
 
-    local function Add(key, alert, timers, durOverrides)
-        NSI:AddEncounterAlert(encID, key, alert, timers, durOverrides, true, true)
+    local function Add(diffID, name, alertDef)
+        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
+    end
+
+    local function TankOnly()
+        local lc = NSI.DefaultLoadConditions()
+        lc.Roles.TANK = true
+        return lc
     end
 
     -- Phase 1
-    Add("Memory Game1", NSI:CreateDefaultAlert("Memory Game", "Text", nil, 6, 1, encID), {
-        [15] = { 10, 80, 150 },
-        [16] = { 33, 95, 157 },
-    }, { [16] = 4 })
+    Add(15, "Memory Game", NSI:MakeEncounterAlert("Memory Game", nil, 6, "Text", {
+        [1] = { 10, 80, 150 },
+    }))
+    Add(16, "Memory Game", NSI:MakeEncounterAlert("Memory Game", nil, 4, "Text", {
+        [1] = { 33, 95, 157 },
+    }))
 
-    Add("Glaives1", NSI:CreateDefaultAlert("Glaives", "Text", nil, 6, 1, encID), {
-        [15] = { 38, 108, 178 },
-        [16] = { 29, 91, 153 },
-    })
+    for _, diff in ipairs({ 15, 16 }) do
+        Add(diff, "Glaives", NSI:MakeEncounterAlert("Glaives", nil, 6, "Text", {
+            [1] = diff == 15 and { 38, 108, 178 } or { 29, 91, 153 },
+        }))
+        Add(diff, "Interrupts", NSI:MakeEncounterAlert("Interrupts", nil, 6, "Text", {
+            [1] = diff == 15 and { 59, 129 } or { 6.4, 68.4, 130.4 },
+        }))
+    end
 
-    Add("Interrupts1", NSI:CreateDefaultAlert("Interrupts", "Text", nil, 6, 1, encID), {
-        [15] = { 59, 129 },
-        [16] = { 6.4, 68.4, 130.4 },
-    })
+    Add(16, "Beams", NSI:MakeEncounterAlert("Beams", nil, 5, "Text", {
+        [1] = { 57, 119 },
+        [2] = { 10.7, 15.7, 20.7, 25.7, 30.7 },
+    }, { countdown = 3 }))
 
-    Add("Beams1", NSI:CreateDefaultAlert("Beams", "Text", nil, 5, 1, encID), {
-        [16] = { 57, 119 },
-    })
-
-    local tankHit1 = NSI:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 1, encID)
-    tankHit1.TTS, tankHit1.role = false, "TANK"
-    Add("Tank-Hit1", tankHit1, {
-        [16] = { 21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5 },
-    })
+    Add(16, "Tank-Hit", NSI:MakeEncounterAlert("Tank-Hit", nil, 6, "Text", {
+        [1] = { 21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5 },
+        [3] = { 21.5, 41.5, 61.5 },
+    }, { TTS = false, loadConditions = TankOnly() }))
 
     -- Phase 2 (transition)
-    local beams2 = NSI:CreateDefaultAlert("Beams", "Text", nil, 3, 2, encID)
-    beams2.TTS = false
-    Add("Beams2", beams2, { [16] = { 10.7, 15.7, 20.7, 25.7, 30.7 } })
-
-    local fullBlaze2 = NSI:CreateDefaultAlert("Full Blaze", "Text", nil, 3, 2, encID)
-    fullBlaze2.TTS, fullBlaze2.colors = false, { 1, 0, 0, 1 }
-    Add("Full Blaze2", fullBlaze2, { [16] = { 37.7 } })
-
-    -- Phase 2
-    local seedDrop2 = NSI:CreateDefaultAlert("Seed-Drop", "Bar", 1253031, 5, 3, encID)
-    seedDrop2.countdown = 3
-    seedDrop2.TTS = false
-    Add("Seed Drops2", seedDrop2, {
-        [16] = { 17.5, 25, 47.5, 55, 77.5, 85 }
-    })
+    Add(16, "Full Blaze", NSI:MakeEncounterAlert("Full Blaze", nil, 3, "Text", {
+        [2] = { 37.7 },
+    }, { TTS = false, colors = { 1, 0, 0, 1 } }))
 
     -- Phase 3
-    local soaks3 = NSI:CreateDefaultAlert("Soaks", "Text", nil, 7, 3, encID)
-    soaks3.TTS = false
-    Add("Soaks3", soaks3, {
-        [15] = { 20, 50, 80 },
-        [16] = { 19, 49, 79 },
-    }, { [16] = 6 })
+    Add(16, "Seed-Drop", NSI:MakeEncounterAlert("Seed-Drop", 1253031, 5, "Bar", {
+        [3] = { 17.5, 25, 47.5, 55, 77.5, 85 },
+    }, { countdown = 3, TTS = false }))
 
-    Add("Spread3", NSI:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID), {
-        [16] = { 26.8, 56.8, 86.8 },
-    })
+    Add(15, "Soaks", NSI:MakeEncounterAlert("Soaks", nil, 7, "Text", {
+        [3] = { 20, 50, 80 },
+        [4] = { 31, 69, 107 },
+    }, { TTS = false }))
+    Add(16, "Soaks", NSI:MakeEncounterAlert("Soaks", nil, 6, "Text", {
+        [3] = { 19, 49, 79 },
+    }, { TTS = false }))
 
-    Add("Orbs3", NSI:CreateDefaultAlert("Orbs", "Text", nil, 7, 3, encID), {
-        [15] = { 35.5, 65.5, 95.5 },
-        [16] = { 35.5, 65.5, 95.5 },
-    }, { [16] = 5 })
+    Add(16, "Spread", NSI:MakeEncounterAlert("Spread", nil, 5, "Text", {
+        [3] = { 26.8, 56.8, 86.8 },
+    }))
 
-    local tankHit3 = NSI:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 3, encID)
-    tankHit3.TTS, tankHit3.role = false, "TANK"
-    Add("Tank-Hit3", tankHit3, {
-        [16] = { 21.5, 41.5, 61.5 },
-    })
+    Add(15, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 7, "Text", {
+        [3] = { 35.5, 65.5, 95.5 },
+    }))
+    Add(16, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 5, "Text", {
+        [3] = { 35.5, 65.5, 95.5 },
+    }))
 
     -- Phase 4
-    Add("Crystal4", NSI:CreateDefaultAlert("Crystal", "Text", nil, 5, 4, encID), {
-        [15] = { 22, 60, 98 },
-    })
-
-    local soaks4 = NSI:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
-    soaks4.text = "Soaks"
-    Add("Soaks4", soaks4, {
-        [15] = { 31, 69, 107 },
-    })
+    Add(15, "Crystal", NSI:MakeEncounterAlert("Crystal", nil, 5, "Text", {
+        [4] = { 22, 60, 98 },
+    }))
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
@@ -122,7 +111,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             [16] = { 38.7, 110.7, 148.7 },
         }
         self:AddRemindersFromTable(Alert, timers[id])
-
 
         local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 5, 4, encID)
         Alert.TTS = false
@@ -299,7 +287,7 @@ NSI.EncounterAlertStop[encID] = function(self, Alertcall) -- on ENCOUNTER_END
     if self.LuraRunesFrame and not Alertcall then
         self.LuraRunesFrame:UnregisterAllEvents()
         self.LuraRunesFrame:Hide()
-        for i=1, 5 do
+        for i = 1, 5 do
             if self.LuraRunesDisplay[i] then
                 self.LuraRunesDisplay[i]:Hide()
             end

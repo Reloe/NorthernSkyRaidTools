@@ -6,60 +6,48 @@ local encID = 3180
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local enc = NSRT.EncounterAlerts[encID]
 
-    local function Add(key, alert, timers, durOverrides)
-        NSI:AddEncounterAlert(encID, key, alert, timers, durOverrides, true, true)
+    local function Add(diffID, name, alertDef)
+        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
     end
 
-    Add("Sacred Toll1", NSI:CreateDefaultAlert("Sacred Toll", "Text", nil, 5, 1, encID), {
-        [0]  = {},
-        [16] = {22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382},
-    })
+    local function TankOnly()
+        local lc = NSI.DefaultLoadConditions()
+        lc.Roles.TANK = true
+        return lc
+    end
 
-    local peaceAura = NSI:CreateDefaultAlert("Peace Aura", "Text", nil, 8, 1, encID)
-    peaceAura.TTS, peaceAura.role = false, "TANK"
-    Add("Peace Aura1", peaceAura, { [0]={}, [16] = {132, 291, 450} })
+    Add(16, "Sacred Toll", NSI:MakeEncounterAlert("Sacred Toll", nil, 5, "Text", {
+        [1] = { 22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382 },
+    }))
 
-    local devotionAura = NSI:CreateDefaultAlert("Devotion Aura", "Text", nil, 8, 1, encID)
-    devotionAura.TTS, devotionAura.role = false, "TANK"
-    Add("Devotion Aura1", devotionAura, { [0]={}, [16] = {26, 184.7, 343.5} })
+    Add(16, "Peace Aura", NSI:MakeEncounterAlert("Peace Aura", nil, 8, "Text", {
+        [1] = { 132, 291, 450 },
+    }, { TTS = false, loadConditions = TankOnly() }))
 
-    local auraOfWrath = NSI:CreateDefaultAlert("Aura of Wrath", "Text", nil, 8, 1, encID)
-    auraOfWrath.TTS, auraOfWrath.role = false, "TANK"
-    Add("Aura of Wrath1", auraOfWrath, { [0]={}, [16] = {78.5, 237.5, 396.5} })
+    Add(16, "Devotion Aura", NSI:MakeEncounterAlert("Devotion Aura", nil, 8, "Text", {
+        [1] = { 26, 184.7, 343.5 },
+    }, { TTS = false, loadConditions = TankOnly() }))
+
+    Add(16, "Aura of Wrath", NSI:MakeEncounterAlert("Aura of Wrath", nil, 8, "Text", {
+        [1] = { 78.5, 237.5, 396.5 },
+    }, { TTS = false, loadConditions = TankOnly() }))
 
     -- HealAbsorbTicks: bar alert, off by default
-    local healAbsorb = NSI:CreateDefaultAlert("", "Bar", 1248721, 20, 1, encID)
-    healAbsorb.TTS    = false
-    healAbsorb.colors = {0, 1, 0, 1}
-    healAbsorb.Ticks  = {5, 10, 15}
-    if not enc["HealAbsorbTicks1"] then
-        enc["HealAbsorbTicks1"] = {
-            alert      = healAbsorb,
-            timers     = {
-                [15] = {147.3, 324.4},
-                [16] = {54.4, 162.6, 212.5, 322, 372, 481.5},
-            },
-            durOverrides = { [15] = 15 },  -- heroic: 15s, mythic: 20s (default)
-            reloeCreated = true,
-            enabled      = false,
-        }
-    end
+    Add(15, "HealAbsorbTicks", NSI:MakeEncounterAlert("", 1248721, 15, "Bar", {
+        [1] = { 147.3, 324.4 },
+    }, { TTS = false, colors = { 0, 1, 0, 1 }, Ticks = { 5, 10, 15 }, enabled = false }))
+    Add(16, "HealAbsorbTicks", NSI:MakeEncounterAlert("", 1248721, 20, "Bar", {
+        [1] = { 54.4, 162.6, 212.5, 322, 372, 481.5 },
+    }, { TTS = false, colors = { 0, 1, 0, 1 }, Ticks = { 5, 10, 15 }, enabled = false }))
 
     -- TauntAlerts: special frame/event feature, off by default
-    local tauntAlert = NSI:CreateDefaultAlert("Taunt Alerts", "Text", nil, 0, 1, encID)
-    if not enc["TauntAlerts1"] then
-        enc["TauntAlerts1"] = {
-            alert        = tauntAlert,
-            timers       = {
-                [15] = {29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350},
-                [16] = {61, 65, 115, 119, 151, 155, 169, 173, 223, 227, 277, 281, 313, 317, 331, 335, 385, 389, 439, 443},
-            },
-            reloeCreated = true,
-            enabled      = false,
-        }
-    end
+    Add(15, "TauntAlerts", NSI:MakeEncounterAlert("Taunt Alerts", nil, 0, "Text", {
+        [1] = { 29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350 },
+    }, { enabled = false }))
+    Add(16, "TauntAlerts", NSI:MakeEncounterAlert("Taunt Alerts", nil, 0, "Text", {
+        [1] = { 61, 65, 115, 119, 151, 155, 169, 173, 223, 227, 277, 281, 313, 317, 331, 335, 385, 389, 439, 443 },
+    }, { enabled = false }))
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
@@ -68,10 +56,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 
     self:FireEncounterAlerts(encID, id)
 
-    -- HealAbsorbTicks: bar alert (handled by FireEncounterAlerts above)
-
-    -- TauntAlerts: special nameplate/event feature (tank-only)
-    local tauntEntry = NSRT.EncounterAlerts[encID]["TauntAlerts1"]
+    local diffTable = NSRT.EncounterAlerts[encID][id]
+    local tauntEntry = diffTable and diffTable["TauntAlerts"]
     if tauntEntry and tauntEntry.enabled and UnitGroupRolesAssigned("player") == "TANK" then
         self.TauntFrame = self.TauntFrame or CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
         self.TauntFrame:SetSize(100, 30)
@@ -82,7 +68,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.TauntFrame.Text:Hide()
         local Taunts = {
             [115546] = true, [56222] = true, [185245] = true, [2649] = true,
-            [6795] = true,   [355]   = true, [62124]  = true, [49576] = true,
+            [6795]   = true, [355]   = true, [62124]  = true, [49576] = true,
         }
         local blacklist = {}
         self.TauntFrame:SetScript("OnEvent", function(_, e, u, _, spellID)
@@ -113,7 +99,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             end
         end)
         self.TauntFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-        for i, time in ipairs(tauntEntry.timers[id] or {}) do
+        for i, time in ipairs(tauntEntry.timers[1] or {}) do
             time = time - 3.2
             self.TauntTimers = self.TauntTimers or {}
             self.TauntTimers[i] = C_Timer.NewTimer(time, function()
@@ -159,9 +145,9 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         local prio = self.spectable[specID]
         local G = self.GUIDS and self.GUIDS[unit] or ""
         if UnitGroupRolesAssigned(unit) == "HEALER" then
-            table.insert(healer, {unit = unit, prio = prio, GUID = G})
+            table.insert(healer, { unit = unit, prio = prio, GUID = G })
         else
-            table.insert(group, {unit = unit, prio = prio, GUID = G})
+            table.insert(group, { unit = unit, prio = prio, GUID = G })
         end
     end
     self:SortTable(group)
@@ -178,7 +164,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     else
         for i, v in ipairs(group) do
             if UnitIsUnit("player", v.unit) then
-                mygroup = math.ceil(i/4)
+                mygroup = math.ceil(i / 4)
                 mygroup = math.min(4, mygroup)
                 break
             end
@@ -186,15 +172,15 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     end
     if not mygroup then return end
     local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or "Flex Spot"
-    local text = (IsHealer and "Go to {rt"..mygroup.."}") or "Soak {rt"..mygroup.."}"
-    local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
+    local text = (IsHealer and "Go to {rt" .. mygroup .. "}") or "Soak {rt" .. mygroup .. "}"
+    local TTS = (IsHealer and "Go to " .. pos) or "Soak " .. pos
     Alert.TTS, Alert.text = TTS, text
 
-    local timers = {90.5, 145.9, 249.4, 305.4}
+    local timers = { 90.5, 145.9, 249.4, 305.4 }
     self:AddRemindersFromTable(Alert, timers)
 
     if NSRT.AssignmentSettings.OnPull then
         local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""
-        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the "..text.." Group", 5)
+        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the " .. text .. " Group", 5)
     end
 end
