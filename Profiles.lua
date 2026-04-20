@@ -324,11 +324,11 @@ function NSI:AddMissingDefaults()
                 enabled = false,
                 P3Side = "OFF",
                 RunesDisplay = false,
-                LuraDisplayAnchor = NSRT.Settings and NSRT.Settings.LuraDisplayAnchor or "TOPLEFT",
-                LuraDisplayRelativePoint = NSRT.Settings and NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT",
-                LuraDisplayOffsetX = NSRT.Settings and NSRT.Settings.LuraDisplayOffsetX or 300,
-                LuraDisplayOffsetY = NSRT.Settings and NSRT.Settings.LuraDisplayOffsetY or -300,
-                LuraDisplayColor = NSRT.Settings and NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9},
+                LuraDisplayAnchor = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayAnchor or "TOPLEFT",
+                LuraDisplayRelativePoint = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT",
+                LuraDisplayOffsetX = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayOffsetX or 300,
+                LuraDisplayOffsetY = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayOffsetY or -300,
+                LuraDisplayColor = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9},
             },
             [3306] = {enabled = false},
         },
@@ -382,7 +382,7 @@ function NSI:GetProfileKey()
     if not Realm then
         Realm = GetNormalizedRealmName()
     end
-    return CharName.."-"..Realm
+    return Realm and CharName.."-"..Realm
 end
 
 function NSI:SetMainProfile(name)
@@ -391,7 +391,7 @@ function NSI:SetMainProfile(name)
     end
 end
 
-function NSI:CreateProfile(name)
+function NSI:CreateProfile(name, init)
     if not name then
         name = "default"
     end
@@ -414,11 +414,11 @@ function NSI:CreateProfile(name)
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
-    self:SetReminder(NSRT.StoredPersonalReminder, true)
+    if not init then self:SetReminder(NSRT.StoredPersonalReminder, true) end
     self:SaveProfile()
 end
 
-function NSI:LoadProfile(name, skipsave)
+function NSI:LoadProfile(name, skipsave, init)
     if not skipsave then self:SaveProfile() end
     if NSRT.Profiles[name] then
         for k, v in pairs(NSRT.Profiles[name]) do
@@ -430,7 +430,7 @@ function NSI:LoadProfile(name, skipsave)
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
-    self:SetReminder(NSRT.StoredPersonalReminder, true)
+    if not init then self:SetReminder(NSRT.StoredPersonalReminder, true) end
     self:AddMissingDefaults()
     self:SaveProfile()
 end
@@ -518,6 +518,7 @@ end
 function NSI:LoadMyProfile()
     local ProfileKey = self:GetProfileKey()
     local ProfileToLoad = "default"
+    self:AddMissingDefaults()
     if NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
         ProfileToLoad = NSRT.ProfileKeys[ProfileKey]
     elseif NSRT.MainProfile then
@@ -526,8 +527,8 @@ function NSI:LoadMyProfile()
         ProfileToLoad = NSRT.CurrentProfile
     end
     if NSRT.Profiles and NSRT.Profiles[ProfileToLoad] then
-        self:LoadProfile(ProfileToLoad, true)
+        self:LoadProfile(ProfileToLoad, true, true)
     else
-        self:CreateProfile("default")
+        self:CreateProfile("default", true)
     end
 end
