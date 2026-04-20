@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
 -- Get references from Core module
 local Core = NSI.UI.Core
@@ -33,8 +34,6 @@ local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
 local BuildGeneralCallback         = NSI.UI.Options.General.BuildCallback
 local BuildNicknamesOptions        = NSI.UI.Options.Nicknames.BuildOptions
 local BuildNicknamesCallback       = NSI.UI.Options.Nicknames.BuildCallback
-local BuildSetupManagerOptions     = NSI.UI.Options.SetupManager.BuildOptions
-local BuildSetupManagerCallback    = NSI.UI.Options.SetupManager.BuildCallback
 local BuildReminderOptions         = NSI.UI.Options.Reminders.BuildOptions
 local BuildReminderNoteOptions     = NSI.UI.Options.Reminders.BuildNoteOptions
 local BuildReminderCallback        = NSI.UI.Options.Reminders.BuildCallback
@@ -59,14 +58,9 @@ local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 -- Tab groups – blank strings become visual spacers between groups
 local TABS_GROUPS                  = {
     {
-        { name = "General",  text = "General" },
-        { name = "Versions", text = "Version Check" },
-        { name = "QoL",      text = "Quality of Life" },
-    },
-    {
-        { name = "Nicknames",    text = "Nicknames" },
-        { name = "SetupManager", text = "Setup Manager" },
-        { name = "ReadyCheck",   text = "Ready Check" },
+        { name = "General",    text = L["General"] },
+        { name = "QoL",        text = L["Quality of Life"] },
+        { name = "ReadyCheck", text = L["Ready Check"] },
     },
     {
         { name = "Reminders",       text = "Reminders" },
@@ -76,8 +70,12 @@ local TABS_GROUPS                  = {
         { name = "EncounterAlerts", text = "Encounter Alerts" },
     },
     {
-        { name = "PrivateAura", text = "Private Auras" },
-        { name = "WAImports",   text = "WA Imports" },
+        { name = "PrivateAura", text = L["Private Auras"] },
+        { name = "WAImports",   text = L["WA Imports"] },
+    },
+    {
+        { name = "Nicknames", text = L["Nicknames"] },
+        { name = "Versions",  text = L["Version Check"] },
     },
 }
 
@@ -199,8 +197,8 @@ function NSUI:Init()
     local NOTES_HEADER_BTN_Y = -38
 
     local notesTabs = {
-        { name = "SharedNotes",   text = "Shared Notes",   icon = "users_icon" },
-        { name = "PersonalNotes", text = "Personal Notes", icon = "user_icon" },
+        { name = "SharedNotes",   text = L["Shared Notes"],   icon = "users_icon" },
+        { name = "PersonalNotes", text = L["Personal Notes"], icon = "user_icon" },
     }
 
     for i, nt in ipairs(notesTabs) do
@@ -278,7 +276,6 @@ function NSUI:Init()
     local general_tab             = tabSystem:GetTabFrameByName("General")
     local nicknames_tab           = tabSystem:GetTabFrameByName("Nicknames")
     local versions_tab            = tabSystem:GetTabFrameByName("Versions")
-    local setupmanager_tab        = tabSystem:GetTabFrameByName("SetupManager")
     local reminder_tab            = tabSystem:GetTabFrameByName("Reminders")
     local reminder_note_tab       = tabSystem:GetTabFrameByName("Reminders-Note")
     local assignments_tab         = tabSystem:GetTabFrameByName("Assignments")
@@ -318,7 +315,6 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local general_options1_table         = BuildGeneralOptions()
     local nicknames_options1_table       = BuildNicknamesOptions()
-    local setupmanager_options1_table    = BuildSetupManagerOptions()
     local reminder_options1_table        = BuildReminderOptions()
     local reminder_note_options1_table   = BuildReminderNoteOptions()
     local assignments_options1_table     = BuildAssignmentsOptions()
@@ -334,7 +330,6 @@ function NSUI:Init()
     -- --------------------------------------------------------
     local general_callback               = BuildGeneralCallback()
     local nicknames_callback             = BuildNicknamesCallback()
-    local setupmanager_callback          = BuildSetupManagerCallback()
     local reminder_callback              = BuildReminderCallback()
     local reminder_note_callback         = BuildReminderNoteCallback()
     local assignments_callback           = BuildAssignmentsCallback()
@@ -355,9 +350,6 @@ function NSUI:Init()
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nicknames_callback)
-    DF:BuildMenu(setupmanager_tab, setupmanager_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        setupmanager_callback)
     DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         reminder_callback)
@@ -428,25 +420,25 @@ function NSUI:ToggleOptions()
 end
 
 function NSI:NickNamesSyncPopup(unit, nicknametable)
-    local popup = DF:CreateSimplePanel(UIParent, 300, 120, "Sync Nicknames", "SyncNicknamesPopup", {
+    local popup = DF:CreateSimplePanel(UIParent, 300, 120, L["Sync Nicknames"], "SyncNicknamesPopup", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    local label = DF:CreateLabel(popup, NSAPI:Shorten(unit) .. " is attempting to sync their nicknames with you.", 11)
+    local label = DF:CreateLabel(popup, format(L["%s is attempting to sync their nicknames with you."], NSAPI:Shorten(unit)), 11)
 
     label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
     label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
     label:SetJustifyH("CENTER")
 
-    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, "Cancel")
+    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, L["Cancel"])
     cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
     cancel_button:SetTemplate(options_button_template)
 
     local accept_button = DF:CreateButton(popup, function()
         NSI:SyncNickNamesAccept(nicknametable)
         popup:Hide()
-    end, 130, 20, "Accept")
+    end, 130, 20, L["Accept"])
     accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
     accept_button:SetTemplate(options_button_template)
 

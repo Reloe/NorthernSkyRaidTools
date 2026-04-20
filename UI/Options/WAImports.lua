@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
 
 local wa_popup
@@ -37,14 +38,14 @@ local function BuildWAImportsOptions()
     return {
         {
             type = "label",
-            get = function() return "You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras." end,
+            get = function() return L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             spacement = true
         },
         {
             type = "button",
-            name = "Heal Absorb WA",
-            desc = "Link to a WA that shows the Heal Absorb on Raidframes.",
+            name = L["Heal Absorb WA"],
+            desc = L["Link to a WA that shows the Heal Absorb on Raidframes."],
             func = function(self)
                 WAButton("Heal Absorb WA", "PaladinsHealAbsorb", "https://wago.io/lylBMpoMB")
             end,
@@ -52,8 +53,8 @@ local function BuildWAImportsOptions()
         },
         {
             type = "button",
-            name = "Paladins Dispel Assign",
-            desc = "Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available.",
+            name = L["Paladins Dispel Assign"],
+            desc = L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."],
             func = function(self)
                 WAButton("Paladins Dispel Assign", "PaladinsDispelAssign", "https://wago.io/NspRXIk6n")
             end,
@@ -61,8 +62,8 @@ local function BuildWAImportsOptions()
         },
         {
             type = "button",
-            name = "Alleria P1 Dmg Amp",
-            desc = "Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing.",
+            name = L["Alleria P1 Dmg Amp"],
+            desc = L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."],
             func = function(self)
                 WAButton("Alleria P1 Dmg Amp", "AlleriaP1DmgAmp", "https://wago.io/yh2rnY4_8")
             end,
@@ -70,8 +71,8 @@ local function BuildWAImportsOptions()
         },
         {
             type = "button",
-            name = "Belo'ren Feather Color",
-            desc = "Displays your Feather-Color on Belo'ren.",
+            name = L["Belo'ren Feather Color"],
+            desc = L["Displays your Feather-Color on Belo'ren."],
             func = function(self)
                 WAButton("Belo'ren Feather Color", "BelorenFeatherColor", "https://wago.io/dHBF7wW34")
             end,
@@ -79,8 +80,8 @@ local function BuildWAImportsOptions()
         },
         {
             type = "button",
-            name = "Lura Interrupts",
-            desc = "Interrupt WA for Lura P1.",
+            name = L["Lura Interrupts"],
+            desc = L["Interrupt WA for Lura P1."],
             func = function(self)
                 WAButton("Lura Interrupts", "LuraInterrupts", "https://wago.io/ymoJBMQF0")
             end,

@@ -1,5 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -17,7 +18,7 @@ local ImportReminderStringFrame
 local function ImportReminderString(name, IsUpdate)
     local popup = ImportReminderStringFrame
     if not popup then
-        popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Reminder String", "NSUIReminderImport", {
+        popup = DF:CreateSimplePanel(NSUI, 800, 800, L["Import Reminder String"], "NSUIReminderImport", {
             DontRightClickClose = true
         })
         popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -85,7 +86,7 @@ local ImportPersonalReminderStringFrame
 local function ImportPersonalReminderString(name, IsUpdate)
     local popup = ImportPersonalReminderStringFrame
     if not popup then
-        popup = DF:CreateSimplePanel(NSUI, 800, 800, "Import Personal Reminder String", "NSUIPersonalReminderImport", {
+        popup = DF:CreateSimplePanel(NSUI, 800, 800, L["Import Personal Reminder String"], "NSUIPersonalReminderImport", {
             DontRightClickClose = true
         })
         popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
@@ -106,7 +107,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
     popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
     popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
     popup.test_string_text_box:SetFocus()
-    local importtext = IsUpdate and "Update" or "Import"
+    local importtext = IsUpdate and L["Update"] or L["Import"]
     if not popup.import_confirm_button then
         popup.import_confirm_button = DF:CreateButton(popup, function()
             local import_string = popup.test_string_text_box:GetText()
@@ -117,8 +118,9 @@ local function ImportPersonalReminderString(name, IsUpdate)
             else
                 NSI:ImportFullReminderString(import_string, true, false, popup._name)
             end
-            if popup._isUpdate and NSRT.ActivePersonalReminder then
-                NSI:SetReminder(NSRT.ActivePersonalReminder, true)
+            local encID = NSI:EncIDFromReminder(popup._name, true)
+            if popup._isUpdate and NSI:GetActivePersonalReminders()[encID] then
+                NSI:SetReminder(NSI:GetActivePersonalReminders()[encID], true)
             end
             popup.test_string_text_box:SetText("")
             if NSUI.personal_reminders_frame then
@@ -157,7 +159,7 @@ local function BuildReminderScreen(personal, parentFrame)
     local activeKey = personal and "ActivePersonalReminder" or "ActiveReminder"
     local storeKey = personal and "PersonalReminders" or "Reminders"
     local screenName = personal and "NSUIPersonalReminderScreen" or "NSUISharedReminderScreen"
-    local titleText = personal and "|cFF00FFFFPersonal|r Reminders" or "|cFF00FFFFShared|r Reminders"
+    local titleText = personal and L["|cFF00FFFFPersonal|r Reminders"] or L["|cFF00FFFFShared|r Reminders"]
 
     -- Main container: use the provided tab frame, or create a standalone floating frame
     local screen
@@ -258,9 +260,9 @@ local function BuildReminderScreen(personal, parentFrame)
             if hasNote then
                 local name = NSRT.ActiveReminder
                 if name and name ~= "" then
-                    recvBtn:SetText("|cFF00FFFFReceived:|r |cFFFFFFFF" .. name .. "|r")
+                    recvBtn:SetText("|cFF00FFFF" .. L["Received:"] .. "|r |cFFFFFFFF" .. name .. "|r")
                 else
-                    recvBtn:SetText("|cFF00FFFFReceived:|r |cFFFFFFFFActive Note|r")
+                    recvBtn:SetText("|cFF00FFFF" .. L["Received:"] .. "|r |cFFFFFFFF" .. L["Active Note"] .. "|r")
                 end
                 -- Green border always when a note is loaded; fill only when viewing
                 recvBtn.frame:SetBackdropBorderColor(0, 1, 0, 1)
@@ -268,7 +270,7 @@ local function BuildReminderScreen(personal, parentFrame)
                     recvBtn.frame:SetBackdropColor(0.06, 0.06, 0.06, 0.8)
                 end
             else
-                recvBtn:SetText("|cFF00FFFFReceived:|r |cFF888888None|r")
+                recvBtn:SetText("|cFF00FFFF" .. L["Received:"] .. "|r |cFF888888" .. L["None"] .. "|r")
                 screen.viewingReceivedNote = false
                 recvBtn.frame:SetBackdropColor(0.06, 0.06, 0.06, 0.8)
                 recvBtn.frame:SetBackdropBorderColor(0, 0, 0, 0)
@@ -332,11 +334,34 @@ local function BuildReminderScreen(personal, parentFrame)
     local nameEntryW      = 396
 
     local function BuildBossMetaOptions()
-        return NSI.UI.BossData.BuildBossDropdownOptions(function(v)
-            screen._metaBossEncID = (v ~= 0) and v or nil
-            if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-            if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
-        end, "No Boss")
+        local options = {
+            { label = L["No Boss"], value = 0, onclick = function(_, _, _)
+                screen._metaBossEncID = nil
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+            end },
+        }
+        local sorted = {}
+        for encID, order in pairs(NSI.EncounterOrder) do
+            table.insert(sorted, { encID = encID, order = order })
+        end
+        table.sort(sorted, function(a, b) return a.order < b.order end)
+        for _, entry in ipairs(sorted) do
+            local encID = entry.encID
+            table.insert(options, {
+                label = NSI.BossTimelineNames[encID] or ("Encounter " .. encID),
+                value = encID,
+                icon = encounterIcons[encID],
+                iconsize = { 16, 16 },
+                texcoord = { 0.05, 0.95, 0.05, 0.95 },
+                onclick = function(_, _, v)
+                    screen._metaBossEncID = v
+                    if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+                end,
+            })
+        end
+        return options
     end
 
     local bossDropdown = DF:CreateDropDown(screen, BuildBossMetaOptions, nil, bossDropW, 22, nil,
@@ -346,17 +371,17 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local function BuildDifficultyOptions()
         return {
-            { label = "Normal", value = "Normal", onclick = function(_, _, v)
+            { label = L["Normal"], value = "Normal", onclick = function(_, _, v)
                 screen._metaDiff = v
                 if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
                     if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
             end },
-            { label = "Heroic", value = "Heroic", onclick = function(_, _, v)
+            { label = L["Heroic"], value = "Heroic", onclick = function(_, _, v)
                 screen._metaDiff = v
                 if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
                     if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
             end },
-            { label = "Mythic", value = "Mythic", onclick = function(_, _, v)
+            { label = L["Mythic"], value = "Mythic", onclick = function(_, _, v)
                 screen._metaDiff = v
                 if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
                     if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
@@ -407,6 +432,10 @@ local function BuildReminderScreen(personal, parentFrame)
             NSRT.InviteList[oldname] = nil
         end
         if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
+        local renameEncID = ParseFirstLine(oldContent)
+        if renameEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[renameEncID] == oldname then
+            NSRT.AutoLoadNote[renameEncID] = newname
+        end
         screen.selectedName = newname
         -- ClearFocus is intentionally called after selectedName is updated. Calling it
         -- earlier would trigger OnEditFocusLost synchronously, re-entering this function
@@ -479,6 +508,10 @@ local function BuildReminderScreen(personal, parentFrame)
                     NSRT.InviteList[oldName] = nil
                 end
                 if NSRT[activeKey] == oldName then NSRT[activeKey] = newName end
+                local saveEncID = screen._metaBossEncID
+                if saveEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[saveEncID] == oldName then
+                    NSRT.AutoLoadNote[saveEncID] = newName
+                end
                 screen.selectedName = newName
             else
                 NSI:ImportReminder(oldName, fullText, false, personal, true)
@@ -486,8 +519,14 @@ local function BuildReminderScreen(personal, parentFrame)
         else
             NSI:ImportReminder(oldName, fullText, false, personal, true)
         end
-        local currentActive = NSRT[activeKey]
-        if currentActive == screen.selectedName then
+        local isCurrentlyActive
+        if personal then
+            local encID = NSI:EncIDFromReminder(screen.selectedName, true)
+            isCurrentlyActive = encID and NSI:GetActivePersonalReminders()[encID] == screen.selectedName
+        else
+            isCurrentlyActive = NSRT[activeKey] == screen.selectedName
+        end
+        if isCurrentlyActive then
             NSI:SetReminder(screen.selectedName, personal)
         end
         screen.scrollbox:MasterRefresh()
@@ -509,7 +548,7 @@ local function BuildReminderScreen(personal, parentFrame)
         NSI.Reminder = fullText
         editor:SetText(fullText)
     end
-    local activateLabel = personal and "Load" or "Load & Send"
+    local activateLabel = personal and L["Load"] or L["Load & Send"]
     local ActivateButton = CreateButton(screen, activateLabel, function()
         if screen.viewingReceivedNote and not personal then
             SaveReceivedNote()
@@ -530,7 +569,7 @@ local function BuildReminderScreen(personal, parentFrame)
     ActivateButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", editorLeft, 10)
     table.insert(roleGatedButtons, ActivateButton)
 
-    local UpdateButton = CreateButton(screen, "Save", function()
+    local UpdateButton = CreateButton(screen, L["Save"], function()
         if screen.viewingReceivedNote then
             SaveReceivedNote()
             return
@@ -542,13 +581,13 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local function ShowDeleteConfirm(toDelete)
         if not toDelete then return end
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Deletion", "NSRTDeleteReminderConfirm")
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["Confirm Deletion"], "NSRTDeleteReminderConfirm")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER")
         local label = DF:CreateLabel(popup, "Delete \"" .. toDelete .. "\"?", 12, "orange")
         label:SetPoint("TOP", popup, "TOP", 0, -40)
         label:SetJustifyH("CENTER")
-        local confirmBtn = CreateButton(popup, "Confirm", function()
+        local confirmBtn = CreateButton(popup, L["Confirm"], function()
             NSI:RemoveReminder(toDelete, personal)
             if screen.selectedName == toDelete then
                 screen.selectedName = nil
@@ -559,19 +598,19 @@ local function BuildReminderScreen(personal, parentFrame)
             popup:Hide()
         end, 100, 30)
         confirmBtn:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
-        local cancelBtn = CreateButton(popup, "Cancel", function() popup:Hide() end, 100, 30)
+        local cancelBtn = CreateButton(popup, L["Cancel"], function() popup:Hide() end, 100, 30)
         cancelBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         popup:Show()
     end
 
-    local DeleteButton = CreateButton(screen, "Delete", function()
+    local DeleteButton = CreateButton(screen, L["Delete"], function()
         ShowDeleteConfirm(screen.selectedName)
     end, 80, 24)
     DeleteButton:SetPoint("LEFT", UpdateButton.frame, "RIGHT", 5, 0)
     table.insert(roleGatedButtons, DeleteButton)
 
     if not personal then
-        local InviteButton = CreateButton(screen, "Invite", function()
+        local InviteButton = CreateButton(screen, L["Invite"], function()
             if screen.selectedName and NSRT.InviteList and NSRT.InviteList[screen.selectedName] then
                 NSI:InviteFromReminder(screen.selectedName, true)
             end
@@ -579,7 +618,7 @@ local function BuildReminderScreen(personal, parentFrame)
         InviteButton:SetPoint("LEFT", DeleteButton.frame, "RIGHT", 5, 0)
         table.insert(roleGatedButtons, InviteButton)
 
-        local ArrangeButton = CreateButton(screen, "Arrange", function()
+        local ArrangeButton = CreateButton(screen, L["Arrange"], function()
             if screen.selectedName and NSRT.InviteList and NSRT.InviteList[screen.selectedName] then
                 NSI:ArrangeFromReminder(screen.selectedName)
             end
@@ -624,7 +663,7 @@ local function BuildReminderScreen(personal, parentFrame)
     -- Left Panel: Reminder List
     -- ====================================================================
 
-    local ImportButton = CreateButton(screen, "Import", function()
+    local ImportButton = CreateButton(screen, L["Import"], function()
         if personal then
             ImportPersonalReminderString(nil, false)
         else
@@ -633,13 +672,14 @@ local function BuildReminderScreen(personal, parentFrame)
     end, 80, 22)
     ImportButton:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 22)
 
-    local ClearButton = CreateButton(screen, "Unload", function()
+    local ClearButton = CreateButton(screen, L["Unload"], function()
         if not personal then
             NSRT.StoredSharedReminder = nil
             NSI:SetReminder(nil)
             NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         else
-            NSI:SetReminder(nil, true)
+            local encID = screen.selectedName and NSI:EncIDFromReminder(screen.selectedName, true)
+            NSI:SetReminder(nil, true, nil, encID)
         end
         screen.selectedName = nil
         editor:SetText("")
@@ -648,14 +688,14 @@ local function BuildReminderScreen(personal, parentFrame)
     end, 60, 22)
     ClearButton:SetPoint("LEFT", ImportButton.frame, "RIGHT", 3, 0)
 
-    local DeleteAllButton = CreateButton(screen, "Delete All", function()
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, "Confirm Clear All", "NSRTClearAllConfirm")
+    local DeleteAllButton = CreateButton(screen, L["Delete All"], function()
+        local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["Confirm Clear All"], "NSRTClearAllConfirm")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER")
         local label = DF:CreateLabel(popup, "Delete ALL reminders?", 12, "orange")
         label:SetPoint("TOP", popup, "TOP", 0, -40)
         label:SetJustifyH("CENTER")
-        local confirmBtn = CreateButton(popup, "Confirm", function()
+        local confirmBtn = CreateButton(popup, L["Confirm"], function()
             for _, reminder in ipairs(NSI:GetAllReminderNames(personal)) do
                 NSI:RemoveReminder(reminder.name, personal)
             end
@@ -667,7 +707,7 @@ local function BuildReminderScreen(personal, parentFrame)
             popup:Hide()
         end, 100, 30)
         confirmBtn:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
-        local cancelBtn = CreateButton(popup, "Cancel", function() popup:Hide() end, 100, 30)
+        local cancelBtn = CreateButton(popup, L["Cancel"], function() popup:Hide() end, 100, 30)
         cancelBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         popup:Show()
     end, 80, 22)
@@ -705,7 +745,7 @@ local function BuildReminderScreen(personal, parentFrame)
     local function BuildBossFilterOptions()
         local options = {
             {
-                label = "All Bosses",
+                label = L["All Bosses"],
                 value = 1,
                 onclick = function()
                     screen.filterEncID = nil
@@ -760,7 +800,7 @@ local function BuildReminderScreen(personal, parentFrame)
         screen._metaBossEncID = encID
         screen._metaDiff = diff
 
-        if screen.nameEntry then screen.nameEntry:SetText(name or "") end
+        if screen.nameEntry then screen.nameEntry:SetText(type(name) == "string" and name or "") end
         if screen.diffDropdown and diff then screen.diffDropdown:Select(diff) end
         if screen.bossDropdown then screen.bossDropdown:Select(encID or 0) end
 
@@ -800,10 +840,34 @@ local function BuildReminderScreen(personal, parentFrame)
             if not reminderData then break end
             local line = self:GetLine(i)
             line.name = reminderData.name
-            line.nameLabel:SetText(reminderData.hasencID and reminderData.name or (reminderData.name .. " (No Enc)"))
+            line.nameLabel:SetText(reminderData.hasencID and reminderData.name or (reminderData.name .. " " .. L["(No Enc)"]))
 
-            local activeName = NSRT[activeKey]
-            if line.name == activeName then
+            local encID = tonumber(reminderData.hasencID)
+            if not screen.filterEncID and encID and encounterIcons[encID] then
+                line.bossIcon:SetTexture(encounterIcons[encID])
+                line.bossIcon:Show()
+                line.nameLabel:SetPoint("LEFT", line, "LEFT", 24, 0)
+            else
+                line.bossIcon:Hide()
+                line.nameLabel:SetPoint("LEFT", line, "LEFT", 4, 0)
+            end
+
+            local isActive = false
+            if personal then
+                local activeTable = NSI:GetActivePersonalReminders()
+                if activeTable then
+                    for _, activeName in pairs(activeTable) do
+                        if activeName == line.name then
+                            isActive = true
+                            break
+                        end
+                    end
+                end
+            else
+                isActive = (line.name == NSRT.ActiveReminder)
+            end
+
+            if isActive then
                 line:SetBackdropBorderColor(0, 1, 0, 1)
                 line.__background:SetVertexColor(0, 1, 0)
                 line.__background:SetAlpha(1)
@@ -830,6 +894,13 @@ local function BuildReminderScreen(personal, parentFrame)
         DF:ApplyStandardBackdrop(line)
         line.__background:SetVertexColor(100/255, 100/255, 100/255)
         line.__background:SetAlpha(0.60)
+
+        -- Boss icon (shown only when "All Bosses" filter is active)
+        line.bossIcon = line:CreateTexture(nil, "OVERLAY")
+        line.bossIcon:SetSize(16, 16)
+        line.bossIcon:SetPoint("LEFT", line, "LEFT", 4, 0)
+        line.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+        line.bossIcon:Hide()
 
         -- Name label (click line to select)
         line.nameLabel = line:CreateFontString(nil, "OVERLAY")
@@ -906,6 +977,10 @@ local function BuildReminderScreen(personal, parentFrame)
             if NSRT[activeKey] == oldname then
                 NSRT[activeKey] = newname
             end
+            local encID = ParseFirstLine(store[oldname] or "")
+            if encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID] == oldname then
+                NSRT.AutoLoadNote[encID] = newname
+            end
             store[oldname] = nil
             if screen.selectedName == oldname then
                 screen.selectedName = newname
@@ -974,7 +1049,11 @@ local function BuildReminderScreen(personal, parentFrame)
         if self.UpdateReceivedBar then self.UpdateReceivedBar() end
         if not personal and self.UpdateButtonAccess then self.UpdateButtonAccess() end
         local activeName = NSRT[activeKey]
-        if activeName and activeName ~= "" then
+        if personal and type(activeName) == "table" then
+            -- Pick the first active personal reminder to show in the editor
+            activeName = next(activeName) and (select(2, next(activeName))) or nil
+        end
+        if activeName and type(activeName) == "string" and activeName ~= "" then
             SelectReminder(activeName)
         end
         if self.scrollbox then
