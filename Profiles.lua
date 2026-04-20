@@ -403,9 +403,11 @@ function NSI:CreateProfile(name)
     end
     NSRT.Profiles[name] = {}
     self:SaveProfile()
-    for k, v in pairs(NSRT) do
-        if not ignored[k] then
-            NSRT[k] = nil
+    if not name == "default" then
+        for k, v in pairs(NSRT) do
+            if not ignored[k] then
+                NSRT[k] = nil
+            end
         end
     end
     self:AddMissingDefaults()
