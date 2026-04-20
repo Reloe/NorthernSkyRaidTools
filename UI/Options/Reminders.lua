@@ -887,8 +887,8 @@ local function BuildReminderOptions()
                 NSRT.Alerts.ReloeReminders = value
                 if NSRT.Alerts.ReloeReminders then
                     for key, encID in ipairs(NSI.CurrentEncounterIDs) do
-                        if self.InitializeAlerts[encID] then
-                            self.InitializeAlerts[encID](self)
+                        if NSI.InitializeAlerts[encID] then
+                            NSI.InitializeAlerts[encID](NSI)
                         end
                     end
                 end
