@@ -68,6 +68,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self:AddRemindersFromTable(Alert, timers[id])
 
             local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 4, encID)
+            Alert.colors = {1, 0, 0, 1}
             Alert.TTS = false
             local timers = {
                 [16] = {41.5, 71.5, 101.5, 131.5, 161.5}
