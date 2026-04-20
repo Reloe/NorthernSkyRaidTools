@@ -427,7 +427,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     local difficultyID = select(3, GetInstanceInfo()) or 0
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
-    if phaseinfo and info.duration == phaseinfo.time then
+    if phaseinfo and ApproximatelyEqual(info.duration, phaseinfo.time, 0.2) then
         local newphase = phaseinfo.phase(self.Phase)
         if newphase > self.Phase then
             self.Phase = newphase
