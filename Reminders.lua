@@ -188,6 +188,24 @@ function NSI:ProcessReminder()
             local TTSTimer = line:match("TTSTimer:(%d+)")
             local countdown = line:match("countdown:(%d+)")
             local sound = line:match("sound:([^;]+)")
+            local rawSound = sound
+             --FIX Remove color codes
+            if sound then
+                local cleanSound = sound:gsub("|c%x%x%x%x%x%x%x%x", "")
+                                        :gsub("|r", "")
+                                        :match("^[%s|]*(.-)[%s|]*$")
+                local soundPath = self.LSM:Fetch("sound", rawSound)
+                if (not soundPath or soundPath == 1) then
+                    local cleanPath = self.LSM:Fetch("sound", cleanSound)
+                    if cleanPath and cleanPath ~= 1 then
+                        sound = cleanSound
+                    else
+                        sound = cleanSound
+                    end
+                else
+                    sound = rawSound
+                end
+            end
             local glowunit = line:match("glowunit:([^;]+)")
             local bossSpellID = line:match("bossSpell:(%d+)")
             local colors = line:match("colors:([^;]+)")
@@ -243,7 +261,7 @@ function NSI:ProcessReminder()
                         displayLine = displayLine:gsub("TTSTimer:"..TTSTimer, "")
                     end
                     if sound then
-                        displayLine = displayLine:gsub("sound:"..sound, "")
+                        displayLine = displayLine:gsub("sound:"..rawSound, "")
                     end
                     if dur then
                         displayLine = displayLine:gsub("dur:"..dur, "")
@@ -850,13 +868,42 @@ function NSI:PlayReminderSound(info, default)
     if default then -- so I can use this function outside of reminders basically
         info = {sound = default, TTS = default, rawtext = default}
     end
-    local sound = info.sound and self.LSM:Fetch("sound", info.sound)
-    if sound and sound ~= 1 then
-        PlaySoundFile(sound, "Master")
+    --FIX
+    -- Try to play info.sound
+    if info.sound then
+        local sound = info.sound
+        local soundPath = self.LSM:Fetch("sound", sound)
+        if soundPath and soundPath ~= 1 then
+            PlaySoundFile(soundPath, "Master")
         return
-    elseif info.TTS then
+        end
+        
+        -- If direct fetch failed, search for the sound by name (ignoring color codes)
+        local sounds = self.LSM:List("sound")
+        if sounds then
+            for _, lsmKey in ipairs(sounds) do
+                if type(lsmKey) == "string" then
+                    local keyName = lsmKey:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^|", ""):gsub("|$", "")
+                    if keyName == sound then
+                        soundPath = self.LSM:Fetch("sound", lsmKey)
+                        if soundPath and soundPath ~= 1 then
+                            PlaySoundFile(soundPath, "Master")
+                            return
+                        end
+                    end
+                end
+            end
+        end
+        
+        -- No LSM match found, try to play it directly as a path
+        local success = PlaySoundFile(sound, "Master")
+        if success then return end
+    end
+    
+    -- Fallback to TTS
+    if info.TTS then
         local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext and info.rawtext ~= "" and info.rawtext) or ""
-        sound = self.LSM:Fetch("sound", TTS)
+        local sound = self.LSM:Fetch("sound", TTS)
         if sound and sound ~= 1 then
             PlaySoundFile(sound, "Master")
             return
