@@ -42,6 +42,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         if not self.LoadedProfile then
+            self.LoadedProfile = true
             self:LoadMyProfile()
             self:CreateMoveFrames()
         end
@@ -89,9 +90,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local diff = select(3, GetInstanceInfo()) or 0
             local ForceHide = diff > 17 or diff < 14
             if ForceHide then self:HideAllReminders(true) end
-            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
-            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
-            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            if self.LoadedProfile then
+                self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
+                self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
+                self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            end
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
