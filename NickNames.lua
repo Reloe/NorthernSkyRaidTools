@@ -171,7 +171,7 @@ function NSI:WipeCellDB()
 end
 
 function NSI:VuhDoNickNameUpdated()
-    if C_AddOns.IsAddOnLoaded("VuhDo") and NSRT.Settings["VuhDo"] and not self.VuhDoNickNamesHook then
+    if C_AddOns.IsAddOnLoaded("VuhDo") and NSRT and NSRT.Settings["VuhDo"] and not self.VuhDoNickNamesHook then
         self.VuhDoNickNamesHook = true
         local hookedFrames = {}
         hooksecurefunc('VUHDO_getBarText', function(aBar)
@@ -354,7 +354,7 @@ end
 
 function NSI:InitNickNames()
 
-    for fullname, nickname in pairs(NSRT.NickNames) do
+    for fullname, nickname in pairs(NSRT and NSRT.NickNames or {}) do
         local name, realm = strsplit("-", fullname)
         fullCharList[fullname] = nickname
         fullNameList[name] = nickname
@@ -368,7 +368,7 @@ function NSI:InitNickNames()
         CharList[nickname][name] = true
     end
 
-    if NSRT.Settings["GlobalNickNames"] and NSRT.Settings["Blizzard"] then
+    if NSRT and NSRT.Settings["GlobalNickNames"] and NSRT.Settings["Blizzard"] then
     	self:BlizzardNickNameUpdated()
     end
 
@@ -420,7 +420,7 @@ function NSI:InitNickNames()
         end
     end
 
-    if CellDB and NSRT.Settings["Cell"] then
+    if CellDB and NSRT and NSRT.Settings["Cell"] then
         for name, nickname in pairs(NSRT.NickNames) do
             if tInsertUnique(CellDB.nicknames.list, name..":"..nickname) then
                 Cell.Fire("UpdateNicknames", "list-update", name, nickname)
@@ -428,7 +428,7 @@ function NSI:InitNickNames()
         end
     end
 
-    if DandersFrames and NSRT.Settings["DandersFrames"] then
+    if DandersFrames and NSRT and NSRT.Settings["DandersFrames"] then
         function DandersFrames:GetUnitName(unit)
             local name = UnitName(unit)
             return name and NSAPI:GetName(name, "DandersFrames") or name
