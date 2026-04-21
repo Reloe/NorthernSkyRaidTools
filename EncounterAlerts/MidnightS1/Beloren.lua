@@ -71,6 +71,13 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     local difficultyID = select(3, GetInstanceInfo()) or 0
     if not difficultyID or not detectedDurations[difficultyID] then return end
     table.insert(self.Timelines, now)
+    if self.Phase >= 2 and ApproximatelyEqual(info.duration, 30, 0.2) then
+        local diff = now - self.PhaseSwapTime
+        local offset = diff - 7.1
+        if diff <= 20 and offset > 0.3 then -- bird has delayed his landing so we extend all timers
+            self:DelayAllReminders(offset)
+        end
+    end
     for _, phaseinfo in ipairs(detectedDurations[difficultyID]) do
         if info.duration == phaseinfo.time then
             local count = 0
