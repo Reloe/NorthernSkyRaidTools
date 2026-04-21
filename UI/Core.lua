@@ -4,24 +4,19 @@ local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
 
 -- Window dimensions
-local window_width = 1050
+local window_width  = 1200
 local window_height = 640
 
--- Tabs configuration
-local TABS_LIST = {
-    { name = "General",   text = "General" },
-    { name = "Nicknames", text = "Nicknames" },
-    { name = "Versions",  text = "Versions" },
-    { name = "SetupManager", text = "Setup Manager"},
-    { name = "ReadyCheck", text = "Ready Check"},
-    { name = "Reminders", text = "Reminders"},
-    { name = "Reminders-Note", text = "Reminders-Note"},
-    { name = "Assignments", text = "Assignments"},
-    { name = "EncounterAlerts", text = "Encounter Alerts"},
-    { name = "PrivateAura", text = "Private Auras"},
-    { name = "QoL", text = "Quality of Life"},
-    { name = "WAImports", text = "WA Imports"},
-}
+-- Vertical tab sidebar layout constants
+local sidebar_width    = 160
+local content_x        = 162   -- sidebar + 2px separator gap
+local content_width    = window_width - content_x - 2   -- 1036
+local content_height   = window_height - 45              -- 595 (25 titlebar + 20 statusbar)
+
+-- Height of the shared header strip above each tab content frame
+-- (tab frames start at y = -(25 + TAB_HEADER_HEIGHT) from NSUI TOPLEFT)
+local TAB_HEADER_HEIGHT = 55
+local tab_content_height = content_height - TAB_HEADER_HEIGHT  -- 540
 
 local authorsString = "By Reloe & Rav"
 
@@ -43,6 +38,27 @@ NSUI:SetFrameStrata("HIGH")
 DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "x |cFF00FFFFbird|r")
 NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 
+-- Title bar icons
+local northernSkyIconFrame = CreateFrame("Frame", "NSUINorthernSkyTitleIconFrame", NSUI)
+northernSkyIconFrame:SetSize(20, 20)
+northernSkyIconFrame:SetPoint("RIGHT", _G["NSUITitle"], "LEFT", -4, 0)
+northernSkyIconFrame:SetFrameLevel(3)
+
+local velocityIconFrame = CreateFrame("Frame", "NSUIVelocityTitleIconFrame", NSUI)
+velocityIconFrame:SetSize(16, 16)
+velocityIconFrame:SetPoint("LEFT", _G["NSUITitle"], "RIGHT", 4, 0)
+velocityIconFrame:SetFrameLevel(3)
+
+local northernSkyIcon = northernSkyIconFrame:CreateTexture(nil, "OVERLAY")
+northernSkyIcon:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo]])
+northernSkyIcon:SetSize(20, 20)
+northernSkyIcon:SetPoint("CENTER")
+
+local velocityIcon = velocityIconFrame:CreateTexture(nil, "OVERLAY")
+velocityIcon:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\VelocityLogo.png]])
+velocityIcon:SetSize(16, 16)
+velocityIcon:SetPoint("CENTER")
+
 NSUI.OptionsChanged = {
     ["general"] = {},
     ["nicknames"] = {},
@@ -60,6 +76,7 @@ local function build_media_options(typename, settingname, isTexture, isReminder,
             onclick = function(_, _, value)
                 if GlobalFont then
                     NSRT.Settings.GlobalFont = list[value]
+                    NSI.UI.Components.RefreshFonts()
                     return
                 end
                 NSRT.ReminderSettings[typename][settingname] = list[value]
@@ -161,9 +178,14 @@ end
 NSI.UI = NSI.UI or {}
 NSI.UI.Core = {
     NSUI = NSUI,
-    window_width = window_width,
-    window_height = window_height,
-    TABS_LIST = TABS_LIST,
+    window_width        = window_width,
+    window_height       = window_height,
+    sidebar_width       = sidebar_width,
+    content_x           = content_x,
+    content_width       = content_width,
+    content_height      = content_height,
+    TAB_HEADER_HEIGHT   = TAB_HEADER_HEIGHT,
+    tab_content_height  = tab_content_height,
     authorsString = authorsString,
     options_text_template = options_text_template,
     options_dropdown_template = options_dropdown_template,

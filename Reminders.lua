@@ -700,7 +700,7 @@ function NSI:CreateBar(info)
     end
 end
 
-function NSI:AddTickToBar(F, percent)
+function NSI:AddTickToBar(F, percent, HideTimer)
     if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
     local s = NSRT.ReminderSettings.BarSettings
     local width = s.Width * (percent)
@@ -711,6 +711,7 @@ function NSI:AddTickToBar(F, percent)
             F.Ticks[i]:ClearAllPoints()
             F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
             F.Ticks[i]:Show()
+            F.Ticks[i].HideTimer = HideTimer
             return
         end
         if not F.Ticks[i] then
@@ -719,6 +720,7 @@ function NSI:AddTickToBar(F, percent)
             F.Ticks[i]:SetSize(2, height)
             F.Ticks[i]:SetPoint("LEFT", F, "LEFT", width, 0)
             F.Ticks[i]:Show()
+            F.Ticks[i].HideTimer = HideTimer
             return
         end
     end
@@ -774,7 +776,7 @@ function NSI:DisplayReminder(info)
     if info.Ticks then
         for _, tick in ipairs(info.Ticks) do
             local perc = tick / info.dur
-            self:AddTickToBar(F, perc)
+            self:AddTickToBar(F, perc, info.dur-tick)
         end
     end
     if info.glowunit then
@@ -820,6 +822,14 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
+            if F.Ticks then
+                for _, tick in ipairs(F.Ticks) do
+                    if tick.HideTimer and rem <= tick.HideTimer then
+                        tick:Hide()
+                        tick.HideTimer = nil
+                    end
+                end
+            end
         else
             if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
@@ -1022,20 +1032,50 @@ function NSI:GetAllReminderNames(personal)
     return list
 end
 
-function NSI:SetReminder(name, personal, skipupdate)
+function NSI:EncIDFromReminder(name, personal)
+    local str = personal and NSRT.PersonalReminders[name] or NSRT.Reminders[name]
+    if not str then return end
+    local encID = str:match("EncounterID:(%d+)")
+    return encID and tonumber(encID)
+end
+
+function NSI:GetActivePersonalReminders()
+    local charKey = self:GetProfileKey()
+    NSRT.ActivePersonalReminder[charKey] = NSRT.ActivePersonalReminder[charKey] or {}
+    return NSRT.ActivePersonalReminder[charKey]
+end
+
+function NSI:LoadPersReminder(encID)
+    if not encID then return end
+    local name = self:GetActivePersonalReminders()[encID]
+    if not name then return end
+    -- Skip if the note for this encounter is already the active personal reminder
+    if self.PersonalReminder ~= NSRT.PersonalReminders[name] then
+        self:SetReminder(name, true)
+    end
+end
+
+function NSI:SetReminder(name, personal, skipupdate, encIDHint)
     if personal then
+        local encID = self:EncIDFromReminder(name, true) or encIDHint
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
-            NSRT.ActivePersonalReminder = name
+            self.LoadedPersonalReminder = name
+            NSRT.StoredPersonalReminder = name
+            if encID then self:GetActivePersonalReminders()[encID] = name end
         else
             self.PersonalReminder = ""
-            NSRT.ActivePersonalReminder = nil
+            self.LoadedPersonalReminder = nil
+            NSRT.StoredPersonalReminder = nil
+            if encID then self:GetActivePersonalReminders()[encID] = nil end
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
+        NSRT.StoredSharedReminder = NSRT.Reminders[name]
         NSRT.ActiveReminder = name
     else
         self.Reminder = ""
+        NSRT.StoredSharedReminder = ""
         NSRT.ActiveReminder = nil
     end
     if not skipupdate then
@@ -1048,16 +1088,33 @@ end
 function NSI:RemoveReminder(name, personal)
     if personal then
         if name and NSRT.PersonalReminders[name] then
-            NSRT.PersonalReminders[name] = nil
-            if NSRT.ActivePersonalReminder == name then
-                self:SetReminder(nil, true)
+            local encID = self:EncIDFromReminder(name, true)
+            local charReminders = self:GetActivePersonalReminders()
+            local activePersNote = charReminders[encID]
+            if activePersNote and activePersNote == name then
+                if self.PersonalReminder == NSRT.PersonalReminders[name] then
+                    self:SetReminder(nil, true, nil, encID)
+                else
+                    -- Note is active in the table but not currently displayed; just clear the slot
+                    if encID then charReminders[encID] = nil end
+                end
             end
+            NSRT.PersonalReminders[name] = nil
         end
     elseif name and NSRT.Reminders[name] then
         NSRT.Reminders[name] = nil
         NSRT.InviteList[name] = nil
         if NSRT.ActiveReminder == name then
             self:SetReminder(nil, false)
+        end
+        self:CleanUpAutoLoad(name)
+    end
+end
+
+function NSI:CleanUpAutoLoad(name)
+    for encID, NoteName in pairs(NSRT.AutoLoadNote) do
+        if name == NoteName then
+            NSRT.AutoLoadNote[encID] = nil
         end
     end
 end

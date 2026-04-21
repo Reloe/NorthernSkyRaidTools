@@ -52,6 +52,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         if UnitGroupRolesAssigned("player") == "TANK" then
             local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 1, encID)
+            Alert.colors = {1, 0, 0, 1}
             Alert.TTS = false
             local timers = {
                 [16] = {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5}
@@ -59,6 +60,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self:AddRemindersFromTable(Alert, timers[id])
 
             local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 3, encID)
+            Alert.colors = {1, 0, 0, 1}
             Alert.TTS = false
             local timers = {
                 [16] = {21.5, 41.5, 61.5, 81.5}
@@ -66,6 +68,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self:AddRemindersFromTable(Alert, timers[id])
 
             local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 4, encID)
+            Alert.colors = {1, 0, 0, 1}
             Alert.TTS = false
             local timers = {
                 [16] = {41.5, 71.5, 101.5, 131.5, 161.5}
@@ -98,6 +101,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self:AddRemindersFromTable(Alert, timers[id])
 
         local Alert = self:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID)
+        Alert.TTS = false
         local timers = {
             [16] = {26.8, 56.8, 86.8, 105}
         }
@@ -313,10 +317,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
         end)
         self.LuraRunesFrame:ClearAllPoints()
-        self.LuraRunesFrame:SetPoint(NSRT.Settings.LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT", NSRT.Settings.LuraDisplayOffsetX or 500, NSRT.Settings.LuraDisplayOffsetY or -300)
+        self.LuraRunesFrame:SetPoint(NSRT.EncounterAlerts[encID].LuraDisplayAnchor or "TOPLEFT", self.NSRTFrame, NSRT.EncounterAlerts[encID].LuraDisplayRelativePoint or "TOPLEFT", NSRT.EncounterAlerts[encID].LuraDisplayOffsetX or 500, NSRT.EncounterAlerts[encID].LuraDisplayOffsetY or -300)
         self.LuraRunesFrame:SetBackdrop({bgFile = [[Interface\Buttons\WHITE8X8]], edgeFile = [[Interface\Buttons\WHITE8X8]], edgeSize = 1})
-        self.LuraRunesFrame:SetBackdropColor(unpack(NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}))
-        self.LuraRunesFrame:SetBackdropBorderColor(unpack(NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}))
+        self.LuraRunesFrame:SetBackdropColor(unpack(NSRT.EncounterAlerts[encID].LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}))
+        self.LuraRunesFrame:SetBackdropBorderColor(unpack(NSRT.EncounterAlerts[encID].LuraDisplayColor or {0.5, 0.5, 0.5, 0.9}))
         self.LuraRunesFrame:SetWidth(200)
         self.LuraRunesFrame:SetHeight(200)
 
@@ -423,7 +427,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     local difficultyID = select(3, GetInstanceInfo()) or 0
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
-    if phaseinfo and info.duration == phaseinfo.time then
+    if phaseinfo and ApproximatelyEqual(info.duration, phaseinfo.time, 0.2) then
         local newphase = phaseinfo.phase(self.Phase)
         if newphase > self.Phase then
             self.Phase = newphase

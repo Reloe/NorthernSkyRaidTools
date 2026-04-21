@@ -3,12 +3,14 @@ local DF = _G["DetailsFramework"]
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
-local window_width = Core.window_width
-local window_height = Core.window_height
-local options_text_template = Core.options_text_template
+local window_height        = Core.window_height
+local content_width        = Core.content_width
+local content_height       = Core.content_height
+local tab_content_height   = Core.tab_content_height
+local options_text_template     = Core.options_text_template
 local options_dropdown_template = Core.options_dropdown_template
-local options_switch_template = Core.options_switch_template
-local options_button_template = Core.options_button_template
+local options_switch_template   = Core.options_switch_template
+local options_button_template   = Core.options_button_template
 
 -- Version check state
 local component_type = "Addon"
@@ -36,7 +38,7 @@ local function BuildVersionCheckUI(parent)
         function(self, _, value) NSRT.Settings["VersionCheckRemoveResponse"] = value end,
         NSRT.Settings["VersionCheckRemoveResponse"], 20, 20, nil, nil, nil, "VersionCheckResponseToggle", nil, nil, nil,
         "Hide Version Check Responses", options_switch_template, options_text_template)
-    hide_version_response_button:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -100)
+    hide_version_response_button:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
     hide_version_response_button:SetAsCheckBox()
     hide_version_response_button:SetTooltip(
         "Hides Version Check Responses of Users that are on the correct version")
@@ -45,7 +47,7 @@ local function BuildVersionCheckUI(parent)
     hide_version_response_label:SetTemplate(options_text_template)
     hide_version_response_label:SetPoint("LEFT", hide_version_response_button, "RIGHT", 2, 0)
     local component_type_label = DF:CreateLabel(parent, "Component Type", 9.5, "white")
-    component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -130)
+    component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -40)
 
     local component_type_dropdown = DF:CreateDropDown(parent, function() return build_checkable_components_options() end, checkable_components[1])
     component_type_dropdown:SetTemplate(options_dropdown_template)
@@ -68,7 +70,7 @@ local function BuildVersionCheckUI(parent)
     local version_check_button = DF:CreateButton(parent, function()
     end, 120, 18, "Check Versions")
     version_check_button:SetTemplate(options_button_template)
-    version_check_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -130)
+    version_check_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -40)
     version_check_button:SetHook("OnShow", function(self)
         if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"]) then
             self:Enable()
@@ -200,11 +202,11 @@ local function BuildVersionCheckUI(parent)
         { name = "Player20", version = "0.9.9" }
     }
     local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {},
-        window_width - 40,
-        window_height - 200, scrollLines, 20, createLineFunc)
+        content_width - 36,
+        tab_content_height - 90, scrollLines, 20, createLineFunc)
     DF:ReskinSlider(version_check_scrollbox)
     version_check_scrollbox.ReajustNumFrames = true
-    version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -170)
+    version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -80)
     for i = 1, scrollLines do
         version_check_scrollbox:CreateLine(createLineFunc)
     end
@@ -304,7 +306,7 @@ local function BuildVersionCheckUI(parent)
             version_presets_edit_frame:Show()
         end
     end, 120, 18, "Edit Version Presets")
-    version_presets_edit_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -100)
+    version_presets_edit_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -10)
     version_presets_edit_button:SetTemplate(options_button_template)
     version_check_preset_dropdown:SetPoint("RIGHT", version_presets_edit_button, "LEFT", -10, 0)
     preset_label:SetPoint("RIGHT", version_check_preset_dropdown, "LEFT", -5, 0)

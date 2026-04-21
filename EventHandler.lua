@@ -12,6 +12,7 @@ f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_LOGOUT")
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
@@ -21,188 +22,35 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     if e == "ADDON_LOADED" and wowevent then
         local name = ...
         if name == "NorthernSkyRaidTools" then
-            if not NSRT then NSRT = {} end
-            if not NSRT.NSUI then NSRT.NSUI = {scale = 1} end
-            if not NSRT.NSUI.timeline_window then NSRT.NSUI.timeline_window = { scale = 1 } end
-            -- if not NSRT.NSUI.main_frame then NSRT.NSUI.main_frame = {} end
-            -- if not NSRT.NSUI.external_frame then NSRT.NSUI.external_frame = {} end
-            if not NSRT.NickNames then NSRT.NickNames = {} end
-            if not NSRT.Settings then NSRT.Settings = {} end
-            NSRT.Reminders = NSRT.Reminders or {}
-            NSRT.PersonalReminders = NSRT.PersonalReminders or {}
-            NSRT.InviteList = NSRT.InviteList or {}
-            NSRT.ActiveReminder = NSRT.ActiveReminder or nil
-            NSRT.ActivePersonalReminder = NSRT.ActivePersonalReminder or nil
-            if not NSRT.Settings.GlobalFont then NSRT.Settings.GlobalFont = "Expressway" end
             self.Reminder = ""
             self.PersonalReminder = ""
             self.DisplayedReminder = ""
             self.DisplayedPersonalReminder = ""
             self.DisplayedExtraReminder = ""
-            NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-            NSRT.AssignmentSettings = NSRT.AssignmentSettings or {}
-            NSRT.ReminderSettings = NSRT.ReminderSettings or {}
-            if NSRT.ReminderSettings.enabled == nil then NSRT.ReminderSettings.enabled = true end -- enable for note from raidleader
-            if NSRT.ReminderSettings.PersNote == nil then NSRT.ReminderSettings.PersNote = true end
-            NSRT.ReminderSettings.Sticky = NSRT.ReminderSettings.Sticky or 5
-            if NSRT.ReminderSettings.SpellTTS == nil then NSRT.ReminderSettings.SpellTTS = true end
-            if NSRT.ReminderSettings.TextTTS == nil then NSRT.ReminderSettings.TextTTS = true end
-            NSRT.ReminderSettings.SpellDuration = NSRT.ReminderSettings.SpellDuration or 10
-            NSRT.ReminderSettings.TextDuration = NSRT.ReminderSettings.TextDuration or 10
-            NSRT.ReminderSettings.SpellCountdown = NSRT.ReminderSettings.SpellCountdown or 0
-            NSRT.ReminderSettings.TextCountdown = NSRT.ReminderSettings.TextCountdown or 0
-            if NSRT.ReminderSettings.SpellName == nil then NSRT.ReminderSettings.SpellName = true end -- Keep SpellName enable on first installation, then load from config
-            NSRT.ReminderSettings.SpellTTSTimer = NSRT.ReminderSettings.SpellTTSTimer or 5
-            NSRT.ReminderSettings.TextTTSTimer = NSRT.ReminderSettings.TextTTSTimer or 5
-            if NSRT.ReminderSettings.AutoShare == nil then NSRT.ReminderSettings.AutoShare = true end
-            if not NSRT.ReminderSettings.PersonalReminderFrame then
-                NSRT.ReminderSettings.PersonalReminderFrame = {enabled = true, Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 500, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
-            end
-            if not NSRT.ReminderSettings.ReminderFrame then
-                NSRT.ReminderSettings.ReminderFrame = {enabled = false, Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
-            end
-            if not NSRT.ReminderSettings.ExtraReminderFrame then
-                NSRT.ReminderSettings.ExtraReminderFrame = {enabled = false, Width = 500, Height = 600, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 0, yOffset = 0, Font = "Expressway", FontSize = 14, BGcolor = {0, 0, 0, 0.3},}
-            end
-            if (not NSRT.ReminderSettings.IconSettings) or (not NSRT.ReminderSettings.IconSettings.GrowDirection) then
-                NSRT.ReminderSettings.IconSettings = {GrowDirection = "Down", Anchor = "CENTER", relativeTo = "CENTER", colors = {1, 1, 1, 1}, xOffset = -500, yOffset = 400, xTextOffset = 0, yTextOffset = 0, xTimer = 0, yTimer = 0, Font = "Expressway", FontSize = 30, TimerFontSize = 40, Width = 80, Height = 80, Spacing = -1}
-            end
-            if not NSRT.ReminderSettings.IconSettings.colors then NSRT.ReminderSettings.IconSettings.colors = {1, 1, 1, 1} end
-            if not NSRT.ReminderSettings.IconSettings.Glow then NSRT.ReminderSettings.IconSettings.Glow = 0 end
-            if (not NSRT.ReminderSettings.BarSettings) or (not NSRT.ReminderSettings.BarSettings.GrowDirection) then
-                NSRT.ReminderSettings.BarSettings = {GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", Width = 300, Height = 40, xIcon = 0, yIcon = 0, colors = {1, 0, 0, 1}, Texture = "Atrocity", xOffset = -400, yOffset = 0, xTextOffset = 2, yTextOffset = 0, xTimer = -2, yTimer = 0, Font = "Expressway", FontSize = 22, TimerFontSize = 22, Spacing = -1}
-            end
-            if (not NSRT.ReminderSettings.TextSettings) or (not NSRT.ReminderSettings.TextSettings.GrowDirection) then
-                NSRT.ReminderSettings.TextSettings =  {colors = {1, 1, 1, 1}, GrowDirection = "Up", Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 200, Font = "Expressway", FontSize = 50, Spacing = 1}
-            end
-            if not NSRT.ReminderSettings.TextSettings.colors then NSRT.ReminderSettings.TextSettings.colors = {1, 1, 1, 1} end
-            if (not NSRT.ReminderSettings.UnitIconSettings) or (not NSRT.ReminderSettings.UnitIconSettings.Position) then
-                NSRT.ReminderSettings.UnitIconSettings = {Position = "CENTER", xOffset = 0, yOffset = 0, Width = 25, Height = 25}
-            end
-            if not NSRT.ReminderSettings.GlowSettings then
-                NSRT.ReminderSettings.GlowSettings = {colors = {0, 1, 0, 1}, Lines = 10, Frequency = 0.2, Length = 10, Thickness = 4, xOffset = 0, yOffset = 0}
-            end
-            if not NSRT.PASettings then
-                NSRT.PASettings = {Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -450, yOffset = -100}
-            end
-            NSRT.PASettings.Spacing = NSRT.PASettings.Spacing or -1
-            NSRT.PASettings.Limit = NSRT.PASettings.Limit or 5
-            if not NSRT.PATankSettings then
-                NSRT.PATankSettings = {Spacing = -1, Limit = 5, MultiTankGrowDirection = "UP", GrowDirection = "LEFT", enabled = false, Width = 100, Height = 100, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -549, yOffset = -199}
-            end
-            NSRT.PATankSettings.Spacing = NSRT.PATankSettings.Spacing or -1
-            NSRT.PATankSettings.Limit = NSRT.PATankSettings.Limit or 5
-            if not NSRT.PARaidSettings then
-                NSRT.PARaidSettings = {PerRow = 3, RowGrowDirection = "UP", Spacing = -1, Limit = 5, GrowDirection = "RIGHT", enabled = false, Width = 25, Height = 25, Anchor = "BOTTOMLEFT", relativeTo = "BOTTOMLEFT", xOffset = 0, yOffset = 0}
-            end
-            if not NSRT.PARaidSettings.PerRow then
-                NSRT.PARaidSettings.PerRow = 3
-                NSRT.PARaidSettings.RowGrowDirection = "UP"
-                NSRT.PASettings.PerRow = 10
-                NSRT.PASettings.RowGrowDirection = "UP"
-            end
-            if not NSRT.PATextSettings then
-                NSRT.PATextSettings = {Scale = 2.5, xOffset = 0, yOffset = -200, enabled = false, Anchor = "TOP", relativeTo = "TOP"}
-            end
-            NSRT.PARaidSettings.Spacing = NSRT.PARaidSettings.Spacing or -1
-            NSRT.PARaidSettings.Limit = NSRT.PARaidSettings.Limit or 5
-            if not NSRT.PASounds then NSRT.PASounds = {} end
-            NSRT.Settings["MyNickName"] = NSRT.Settings["MyNickName"] or nil
-            NSRT.Settings["ShareNickNames"] = NSRT.Settings["ShareNickNames"] or 4 -- none default
-            NSRT.Settings["AcceptNickNames"] = NSRT.Settings["AcceptNickNames"] or 4 -- none default
-            NSRT.Settings["NickNamesSyncAccept"] = NSRT.Settings["NickNamesSyncAccept"] or 2 -- guild default
-            NSRT.Settings["NickNamesSyncSend"] = NSRT.Settings["NickNamesSyncSend"] or 3 -- guild default
-            if NSRT.Settings["TTS"] == nil then NSRT.Settings["TTS"] = true end
-            NSRT.Settings["TTSVolume"] = NSRT.Settings["TTSVolume"] or 50
-            NSRT.Settings["TTSVoice"] = NSRT.Settings["TTSVoice"] or 1
-            NSRT.Settings["Minimap"] = NSRT.Settings["Minimap"] or {hide = false}
-            NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or {}
-            NSRT.Settings["CooldownThreshold"] = NSRT.Settings["CooldownThreshold"] or 20
-            if NSRT.Settings["MissingRaidBuffs"] == nil then NSRT.Settings["MissingRaidBuffs"] = true end
-            if not NSRT.ReadyCheckSettings then NSRT.ReadyCheckSettings = {} end
-            NSRT.CooldownList = NSRT.CooldownList or {}
-            NSRT.NSUI.AutoComplete = NSRT.NSUI.AutoComplete or {}
-            NSRT.NSUI.AutoComplete["Addon"] = NSRT.NSUI.AutoComplete["Addon"] or {}
-
-            if NSRT.ReminderSettings.ReminderFrame.enabled == nil then -- convert to different format
-                NSRT.ReminderSettings.ReminderFrame.enabled = NSRT.ReminderSettings.ShowReminderFrame or false
-                NSRT.ReminderSettings.PersonalReminderFrame.enabled = NSRT.ReminderSettings.ShowPersonalReminderFrame or false
-                NSRT.ReminderSettings.ExtraReminderFrame.enabled = NSRT.ReminderSettings.ShowExtraReminderFrame or false
-            end
-            if not NSRT.Settings.GenericDisplay then
-                NSRT.Settings.GenericDisplay = {Anchor = "CENTER", relativeTo = "CENTER", xOffset = -200, yOffset = 400}
-            end
-            if not NSRT.QoL then
-                NSRT.QoL = {
-                    TextDisplay = {
-                        Anchor = "CENTER",
-                        relativeTo = "CENTER",
-                        xOffset = 0,
-                        yOffset = 0,
-                        FontSize = 30,
-                    },
-                    IconDisplay = {
-                        Anchor = "TOP",
-                        relativeTo = "TOP",
-                        GrowDirection = "DOWN",
-                        Scpaing = 5,
-                        xOffset = 0,
-                        yOffset = -350,
-                        Width = 40,
-                        Height = 40,
-                    },
-                    TradeableItems = {
-                        Anchor = "TOP",
-                        relativeTo = "TOP",
-                        GrowDirection = "DOWN",
-                        Spacing = 5,
-                        xOffset = 0,
-                        yOffset = -400,
-                        FontSize = 18,
-                        Width = 30,
-                        Height = 30,
-                    },
-                }
-            end
-
-            if NSRT.EncounterAlerts[3179] then -- automatically enable CC Add display if user had previously enabled alerts for the first time loging in after adding the option.
-                if NSRT.EncounterAlerts[3179].CCAddsDisplay == nil then
-                    if NSRT.EncounterAlerts[3179] and NSRT.EncounterAlerts[3179].enabled then
-                        NSRT.EncounterAlerts[3179].CCAddsDisplay = true
-                    else
-                        NSRT.EncounterAlerts[3179].CCAddsDisplay = false
-                    end
-                end
-            else
-                NSRT.EncounterAlerts[3179] = {enabled = false, CCAddsDisplay = false}
-            end
-
-            if not NSRT.Settings["GlobalFontSize"] then NSRT.Settings["GlobalFontSize"] = 20 end
-            if not NSRT.Settings["GlobalEncounterFontSize"] then NSRT.Settings["GlobalEncounterFontSize"] = 20 end
-
-            if NSRT.PASounds.UseDefaultPASounds == nil then -- convert old setting
-                NSRT.PASounds.UseDefaultPASounds = NSRT.UseDefaultPASounds or false
-            end
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}
             self.PlayedSound = {}
             self.StartedCountdown = {}
             self.GlowStarted = {}
-            self:CreateMoveFrames()
             self:InitNickNames()
+            if self:GetProfileKey() then
+                self.LoadedProfile = true
+                self:LoadMyProfile()
+                self:CreateMoveFrames()
+            end
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
+        if not self.LoadedProfile then
+            self:LoadMyProfile()
+            self:CreateMoveFrames()
+        end
         self.NSUI:Init()
         self:InitLDB()
         self:InitQoL()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
-        if NSRT.PASettings.enabled then self:InitPA() end
-        self:InitTextPA()
-        if NSRT.PARaidSettings.enabled then
-            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
+        self:InitPrivateAuras()
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
         for spellID, info in pairs(NSRT.PASounds) do
@@ -212,8 +60,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
         if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
-        self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
-        self:SetReminder(NSRT.ActivePersonalReminder, true, true) -- loading active personal reminder from last session
+        if NSRT.StoredSharedReminder then
+            self.Reminder = NSRT.StoredSharedReminder
+        else
+            self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
+        end
+        self:SetReminder(NSRT.StoredPersonalReminder, true, true) -- loading active personal reminder from last session
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
@@ -239,16 +91,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
             self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
             self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
-            if NSRT.PARaidSettings.enabled and not (IsLogin or IsReload) then
-                if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
-                self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-            end
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
-        if NSRT.PARaidSettings.enabled then self:InitRaidPA(false) end
+        self.EncounterID = ...
+        self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
         end
@@ -257,7 +106,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
             self:ToggleMoveFrames(self[v], false)
         end
-        self.EncounterID = ...
         self.Phase = 1
         self.PhaseSwapTime = GetTime()
         self.ReminderText = self.ReminderText or {}
@@ -294,7 +142,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
-        local encID, encounterName = ...
+        local encID, encounterName, _, _, kill = ...
         local diff = select(3, GetInstanceInfo()) or 0
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
@@ -319,6 +167,17 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        if kill then
+            local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
+            if NoteName and NSRT.Reminders[NoteName] then
+                C_Timer.After(2, function()
+                    if self:Restricted() then return end
+                    if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then
+                        self:Broadcast("NSI_REM_SHARE", "RAID", NSRT.Reminders[NoteName], nil, true)
+                    end
+                end)
+            end
+        end
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
@@ -332,6 +191,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
+        self:InitPrivateAuras()
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
         local diff= select(3, GetInstanceInfo()) or 0
@@ -374,6 +234,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
             if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
                 self.Reminder = reminderstring
+                NSRT.StoredSharedReminder = reminderstring
+                self.ReminderReceivedTime = GetTime()
                 self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
             end
             self:ProcessReminder()
@@ -388,9 +250,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateReminderFrame(true)
         end
         local diff = select(3, GetInstanceInfo()) or 0
-        if NSRT.PATankSettings.enabled and diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
-            self:InitTankPA()
-        end
+        self:InitPrivateAuras()
         local text = ""
         if UnitLevel("player") < 90 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
@@ -431,6 +291,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "GROUP_FORMED" and wowevent then
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.NSUI and NSRT.NSUI.reminders_frame then NSUI.reminders_frame.UpdateButtonAccess() end
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
         local unit, ver, ignoreCheck = ...
@@ -477,12 +338,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         self:ArrangeGroups()
-        if NSRT.PARaidSettings.enabled then
-            if self.InitRaidPATimer then self.InitRaidPATimer:Cancel() end
-            self.InitRaidPATimer = C_Timer.After(5, function() self.InitRaidPATimer = nil; self:InitRaidPA(not UnitInRaid("player"), true) end)
-        end
-
-        self:UpdateRaidBuffFrame()
+        if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
+        self.GroupUpdateTimer = C_Timer.After(2, function()
+            self.GroupUpdateTimer = nil
+            self:InitPrivateAuras()
+            self:UpdateRaidBuffFrame()
+        end)
         if self:Restricted() then return end
 
         if self.InviteInProgress then
@@ -496,7 +357,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
-
         if not self:DifficultyCheck(14) then return end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck(14) then return end
@@ -528,5 +388,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end
+    elseif e == "PLAYER_LOGOUT" and wowevent then
+        self:SaveProfile()
     end
 end
