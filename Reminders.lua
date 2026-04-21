@@ -1497,9 +1497,11 @@ function NSAPI:ToggleTLReminders()
     NSRT.ReminderSettings.UseTLReminders = LiquidRemindersSaved.settings.timeline.nsrtNote
     NSRT.ReminderSettings.UseTLAssignments = LiquidRemindersSaved.settings.timeline.nsrtAssignments
     NSRT.ReminderSettings.UseTLAlerts = LiquidRemindersSaved.settings.timeline.nsrtAlerts
-    NSI:ProcessReminder()
-    NSI:UpdateReminderFrame(true)
-    NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
+    if self.LoadedProfile then
+        NSI:ProcessReminder()
+        NSI:UpdateReminderFrame(true)
+        NSI:FireCallback("NSRT_REMINDER_CHANGED", NSI.PersonalReminder, NSI.Reminder)
+    end
 end
 
 function NSI:IsUsingTLReminders()
