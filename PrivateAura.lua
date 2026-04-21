@@ -271,6 +271,7 @@ function NSI:InitPA()
                 unitToken = "player",
                 auraIndex = auraIndex,
                 parent = frame,
+                isContainer = false,
                 showCountdownFrame = true,
                 showCountdownNumbers = not NSRT.PASettings.UpscaleDuration,
                 iconInfo = {
@@ -295,6 +296,7 @@ function NSI:InitPA()
                     unitToken = "player",
                     auraIndex = auraIndex,
                     parent = self.PADurFrames[auraIndex],
+                    isContainer = false,
                     showCountdownFrame = true,
                     showCountdownNumbers = false,
                     iconInfo = {
@@ -397,6 +399,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                         unitToken = u,
                         auraIndex = auraIndex,
                         parent = self.PARaidFrames[i],
+                        isContainer = false,
                         showCountdownFrame = true,
                         showCountdownNumbers = not NSRT.PARaidSettings.HideDurationText,
                         iconInfo = {
@@ -418,6 +421,7 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
                             unitToken = u,
                             auraIndex = auraIndex,
                             parent = self.PAStackFrames[i],
+                            isContainer = false,
                             showCountdownFrame = false,
                             showCountdownNumbers = false,
                             iconInfo = {
@@ -537,6 +541,7 @@ function NSI:InitTankPA()
                     unitToken = unit,
                     auraIndex = auraIndex,
                     parent = self.PATankFrames[i][auraIndex],
+                    isContainer = false,
                     showCountdownFrame = true,
                     showCountdownNumbers = not NSRT.PATankSettings.UpscaleDuration,
                     iconInfo = {
@@ -561,6 +566,7 @@ function NSI:InitTankPA()
                         unitToken = unit,
                         auraIndex = auraIndex,
                         parent = self.PATankDurFrames[i][auraIndex],
+                        isContainer = false,
                         showCountdownFrame = false,
                         showCountdownNumbers = false,
                         iconInfo = {
