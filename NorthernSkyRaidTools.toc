@@ -14,6 +14,7 @@ Libs\libs.xml
 
 # Locales
 Locales\enUS.lua
+Locales\ruRU.lua
 
 # Main Files
 NorthernSkyRaidTools.lua
