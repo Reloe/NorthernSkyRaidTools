@@ -48,6 +48,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.NSUI:Init()
         self:InitLDB()
         self:InitQoL()
+        self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitPrivateAuras()
