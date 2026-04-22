@@ -309,16 +309,12 @@ function NSI:ProcessReminder()
                         local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
                         if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
                     end)
-                    if NSRT.Settings["GlobalNickNames"] and false then
-                        local words = {}
-                        for word in line:gmatch("[^%s]+") do
-                            local shortened = NSAPI:Shorten(NSAPI:GetChar(word, true), 12, false, "GlobalNickNames")
-                            table.insert(words, shortened)
-                        end
-                        extranote = extranote..table.concat(words, " ").."\n"
-                    else
-                        extranote = extranote..line.."\n"
+                    local words = {}
+                    for word in line:gmatch("[^%s]+") do
+                        local shortened = NSAPI:Shorten(NSAPI:GetChar(word, true), 12, false, "GlobalNickNames")
+                        table.insert(words, shortened)
                     end
+                    extranote = extranote..table.concat(words, " ").."\n"
                 end
             end
         end
