@@ -1,5 +1,80 @@
 Changes since tag v12.0.1.679
 
+commit 89f8ded358838fb2430ad8fcbc295e0b394fb8ac
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Apr 22 09:24:06 2026 +0200
+
+    - more 12.0.5 fixes
+
+commit 1f150a978eaf8f2cc0f07caf25311c6b7471957a
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Apr 22 02:21:25 2026 +0200
+
+    - fix for real
+
+commit c928a5fb51e84d66e3aea6956c7e3ae33e4c6a64
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Apr 22 01:10:11 2026 +0200
+
+    - font fix
+    
+    12.0.5: FontString:SetFont(): Invalid font file asset (asset not found)
+    Just fail silently, as before...
+
+commit c8e71c356ba533dd8336c51dc3c4323c12a2f5a4
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Apr 21 19:50:15 2026 -0300
+
+    Documentation
+
+commit 06aecd444053ed16c66aeaf23f35c75478499bea
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Apr 21 15:25:23 2026 -0300
+
+    Ensure profile table exists in case the table was already created.
+
+commit 452c24ddbae8aae15ce53d50e7362c4742f5efb6
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Apr 20 10:44:17 2026 -0300
+
+    Add documentation files; Rename documentation files.
+
+commit b975d2d86366569cc1aabfd16483b6d3e1ab3119
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Mon Apr 20 10:43:53 2026 -0300
+
+    Add AnchorSystem; Move scroll logic from panel.lua to scrollbox.lua
+
+commit 33a4f3af4ff5b5a45f4121a5fd82df9ae262b4ce
+Author: cont1nuity <continuity@gmx.net>
+Date:   Tue Apr 14 21:31:31 2026 +0200
+
+    - fixing issue with hiding CD timer
+
+commit b1fd6536e61ee36f520e82327c5010df9735d2d6
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Fri Apr 10 16:25:36 2026 -0300
+
+    Helper functions to remove |c |r |T |t
+
+commit 49edbf2174e676d144280ed1bc1736efa92a5475
+Author: cont1nuity <continuity@gmx.net>
+Date:   Thu Apr 9 09:50:19 2026 +0200
+
+    - power needs to show again here
+
+commit 8d765c436c3b89632483ecacb082a24871f0158a
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Apr 8 14:51:57 2026 -0300
+
+    Rounded corners documentation
+
+commit 888a01e84c44d6e3d135dd9a47bb1e2a729906c5
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Apr 8 13:59:32 2026 -0300
+
+    Fix split_bar, add SetFontOptions to elapsedtime
+
 commit 9131a30dcd6d8ae28501f446186c09ab49a8e6a4
 Author: Tercio Jose <terciob19@hotmail.com>
 Date:   Sat Apr 4 00:47:01 2026 -0300

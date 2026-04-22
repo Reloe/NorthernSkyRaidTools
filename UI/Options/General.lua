@@ -29,6 +29,10 @@ local function BuildGeneralOptions()
             name = L["Global Font"],
             desc = L["This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility."],
             get = function() return NSRT.Settings.GlobalFont end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.GlobalFont = value
+                NSI.UI.Components.RefreshFonts()
+            end,
             values = function() return build_media_options(false, false, false, false, false, true) end,
             nocombat = true,
         },
