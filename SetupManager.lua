@@ -272,7 +272,6 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
     if not firstcall and not self.Groups.Processing then return end
     local now = GetTime()
     if firstcall then
-        self:Print("Split Table Data:", self.Groups.units)
         self.Groups.Processing = true
         self.Groups.Processed = 0
         self.Groups.ProcessStart = now
