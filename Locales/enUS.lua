@@ -213,6 +213,8 @@ L["Ignores All Reminders that use the 'everyone' tag. For example if there are a
 L["Hide Reminder Treshold"] = true
 L["Treshold above which spells will not be hidden if pressed during the reminder. Some long ramp classes have multiple reminders up at the same time and thus don't want them hidden early"] = true
 L["Sound"] = true
+L["Show ALL Reminders"] = true
+L["This will show you ALL reminders from your notes, regardless of whether the tag matches you or not."] = true
 
 -- UI/Options/Reminders.lua — Manage Reminders
 L["Manage Reminders"] = true

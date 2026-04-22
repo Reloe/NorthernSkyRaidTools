@@ -284,7 +284,8 @@ function NSI:ProcessReminder()
                     tags[strtrim(name)] = true
                 end
                 specid = specid and tostring(specid)
-                if (tag == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
+                if NSRT.ReminderSettings.ShowAllReminders or
+                (tag == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
                 tags[myname] or
                 tags[mynickname] or
                 tags[myrole] or

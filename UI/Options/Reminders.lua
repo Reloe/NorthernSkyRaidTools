@@ -604,7 +604,6 @@ local function BuildReminderOptions()
             get = function() return L["Universal Settings"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
-
         {
             type = "toggle",
             boxfirst = true,
@@ -617,7 +616,6 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
-
         {
             type = "toggle",
             boxfirst = true,
@@ -630,7 +628,6 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
-
         {
             type = "toggle",
             boxfirst = true,
@@ -639,6 +636,19 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings.IgnoreEveryone end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IgnoreEveryone = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Show ALL Reminders"],
+            desc = L["This will show you ALL reminders from your notes, regardless of whether the tag matches you or not."],
+            get = function() return NSRT.ReminderSettings.ShowAllReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowAllReminders = value
                 NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(true)
             end,
