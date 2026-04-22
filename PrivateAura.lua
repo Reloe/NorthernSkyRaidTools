@@ -158,7 +158,6 @@ function NSI:SavePASound(spellID, sound)
 end
 
 function NSI:InitTextPA()
-    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.PATextMoverFrame then
         self.PATextMoverFrame = CreateFrame("Frame", nil, self.NSRTFrame)
@@ -214,7 +213,6 @@ function NSI:InitTextPA()
 end
 
 function NSI:InitPA()
-    if self:Restricted() then return end
     if self.IsBuilding then return end
 
     if not self.PAFrames then self.PAFrames = {} end
@@ -328,7 +326,6 @@ function NSI:InitPA()
 end
 
 function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled to clean up old anchors
-    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.PARaidFrames then self.PARaidFrames = {} end
     if not self.PAStackFrames then self.PAStackFrames = {} end
@@ -446,7 +443,6 @@ function NSI:InitRaidPA(party, firstcall) -- still run this function if disabled
 end
 
 function NSI:RemoveTankPA()
-    if self:Restricted() then return end
     if self.IsBuilding then return end
     if not self.AddedTankPA then return end
     for i, anchortable in ipairs(self.AddedTankPA) do
@@ -466,7 +462,6 @@ function NSI:RemoveTankPA()
 end
 
 function NSI:InitTankPA()
-    if self:Restricted() then return end
     if self.IsBuilding then return end
     -- initiated on ENCOUNTER_START for tank players
     if not self.PATankFrames then self.PATankFrames = {} end
@@ -824,8 +819,8 @@ function NSI:PreviewRaidPA(Show, Init)
     end
 end
 
-function NSI:InitPrivateAuras()
-    if self:Restricted() then return end
+function NSI:InitPrivateAuras(bypass)
+    if self:Restricted() and not bypass then return end
     if self.IsBuilding then return end
     self:InitTextPA()
     if NSRT.PASettings.enabled then
