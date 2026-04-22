@@ -1171,7 +1171,7 @@ function NSI:ImportFullReminderString(str, personal, IsUpdate, name)
     for line in str:gmatch('([^\n]*)\n') do
         if line:find("EncounterID:") then
             if values ~= "" then -- meaning we reached a new boss line as the previous one has values already
-                self:ImportReminder(name, values, false, personal, IsUpdate)
+                self:ImportReminder(name, values, false, personal, IsUpdate, diff)
                 values = ""
                 name = ""
                 diff = ""
