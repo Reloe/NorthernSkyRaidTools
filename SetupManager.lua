@@ -523,7 +523,7 @@ function NSI:InviteList(list)
         else
             fullname = name.."-"..realm
         end
-        if (not UnitIsUnit("player", fullname)) and (not UnitInRaid(fullname)) then
+        if (not UnitIsUnit("player", name)) and (not UnitInRaid(name)) then
             C_PartyInfo.InviteUnit(fullname)
         end
     end
