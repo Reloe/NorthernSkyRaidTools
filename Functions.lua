@@ -332,3 +332,15 @@ function NSI:IsMelee(unit)
         end
     end
 end
+
+function NSI:MuteSFX(mute)
+    if mute then
+        for i=1, 10000000 do
+            MuteSoundFile(i)
+        end
+    else
+        for i=1, 10000000 do
+            UnmuteSoundFile(i)
+        end
+    end
+end
