@@ -9,7 +9,6 @@ local build_media_options = Core.build_media_options
 
 local function BuildGeneralOptions()
     local tts_text_preview = ""
-    local client = IsWindowsClient()
 
     return {
         { type = "label", get = function() return L["General Options"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
@@ -146,16 +145,27 @@ local function BuildGeneralOptions()
         },
         { type = "label", get = function() return L["TTS Options"] end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
-            type = "range",
+            type = "select",
             name = L["TTS Voice"],
             desc = L["Voice to use for TTS. Most users will only have ~2 different voices. These voices depend on your installed language packs."],
             get = function() return NSRT.Settings["TTSVoice"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["TTS_VOICE"] = true
-                NSRT.Settings["TTSVoice"] = value
+            values = function()
+                local t = {}
+                local voices = C_VoiceChat.GetTtsVoices()
+                if voices then
+                    for _, v in ipairs(voices) do
+                        tinsert(t, {
+                            label = v.name,
+                            value = v.voiceID,
+                            onclick = function()
+                                NSUI.OptionsChanged.general["TTS_VOICE"] = true
+                                NSRT.Settings["TTSVoice"] = v.voiceID
+                            end,
+                        })
+                    end
+                end
+                return t
             end,
-            min = 1,
-            max = client and 20 or 100,
         },
         {
             type = "range",
