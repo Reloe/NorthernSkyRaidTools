@@ -127,7 +127,7 @@ function NSAPI:TTSCountdown(num)
 end
 
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
-function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
+function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
         local secret = issecretvalue(sound)
         local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
@@ -152,7 +152,7 @@ function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
                 sound,
                 C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
                 NSRT.Settings["TTSVolume"],
-                overlap
+                true,
             )
         end
     end
