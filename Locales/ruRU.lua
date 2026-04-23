@@ -82,6 +82,9 @@ L["Global Font"] = "Глобальный шрифт"
 L["This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility."] = "Меняет шрифт для всего, у чего нет отдельной настройки. В основном полезно для совместимости с языками."
 L["Global Font-Size"] = "Глобальный размер шрифта"
 L["Size of the global font"] = "Размер глобального шрифта"
+L["Global Font Outline"] = "Контур глобального шрифта"
+L["Font outline flags applied to all addon text."] = "Флаги контура шрифта, применяемые ко всему тексту аддона."
+L["None"] = "Нет"
 L["Move Text Display"] = "Переместить текстовое окно"
 L["This lets you move the generic text display used for example the ready check module or the assignments on pull."] = "Позволяет перемещать общее текстовое окно, используемое, например, для модуля проверки готовности или назначений на пуллах."
 L["Setup Manager"] = "Менеджер настройки"
@@ -213,6 +216,8 @@ L["Ignores All Reminders that use the 'everyone' tag. For example if there are a
 L["Hide Reminder Treshold"] = "Порог скрытия напоминания"
 L["Treshold above which spells will not be hidden if pressed during the reminder. Some long ramp classes have multiple reminders up at the same time and thus don't want them hidden early"] = "Порог, выше которого заклинания не будут скрываться, если они были использованы во время напоминания. Некоторые классы с долгой раскачкой имеют несколько активных напоминаний одновременно и не хотят, чтобы они скрывались рано"
 L["Sound"] = "Звук"
+L["Show ALL Reminders"] = "Показывать ВСЕ напоминания"
+L["This will show you ALL reminders from your notes, regardless of whether the tag matches you or not."] = "Здесь отобразятся ВСЕ напоминания из Ваших заметок, независимо от того, соответствует ли метка Вам или нет."
 
 -- UI/Options/Reminders.lua — Manage Reminders
 L["Manage Reminders"] = "Управление напоминаниями"
