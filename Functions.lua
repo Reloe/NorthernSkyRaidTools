@@ -152,7 +152,7 @@ function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
                 sound,
                 C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
                 NSRT.Settings["TTSVolume"],
-                true,
+                true
             )
         end
     end
