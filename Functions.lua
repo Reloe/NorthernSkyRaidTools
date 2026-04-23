@@ -333,14 +333,27 @@ function NSI:IsMelee(unit)
     end
 end
 
+local pingids = {
+    [5339002] = true,
+    [5340601] = true,
+    [5339006] = true,
+    [5350036] = true,
+    [5340605] = true,
+    [5342387] = true,
+}
+
 function NSI:MuteSFX(mute)
     if mute then
         for i=1, 10000000 do
-            MuteSoundFile(i)
+            if not pingids[i] then
+                MuteSoundFile(i)
+            end
         end
     else
         for i=1, 10000000 do
-            UnmuteSoundFile(i)
+            if not pingids[i] then
+                UnmuteSoundFile(i)
+            end
         end
     end
 end

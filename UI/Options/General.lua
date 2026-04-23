@@ -212,16 +212,6 @@ local function BuildGeneralOptions()
             set = function(self, fixedparam, value)
                 NSRT.Settings.SFXMuted = value
                 NSI:MuteSFX(value)
-                if not NSRT.Settings.SFXMuted then
-                    for i = 1, 9999999 do
-                        UnmuteSoundFile(i)
-                    end
-                else
-                    NSRT.Settings.SFXMuted = true
-                    for i = 1, 9999999 do
-                        MuteSoundFile(i)
-                    end
-                end
             end,
         },
         {
