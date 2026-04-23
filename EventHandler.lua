@@ -22,6 +22,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     if e == "ADDON_LOADED" and wowevent then
         local name = ...
         if name == "NorthernSkyRaidTools" then
+            if not NSRTTimelineData then NSRTTimelineData = {} end
             self.Reminder = ""
             self.PersonalReminder = ""
             self.DisplayedReminder = ""
@@ -101,6 +102,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
+        self:LogTimeline(e, ...)
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         self.EncounterID = ...
@@ -149,6 +151,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
+        self:LogTimeline(e, ...)
         local encID, encounterName, _, _, kill = ...
         local diff = select(3, GetInstanceInfo()) or 0
         self.CustomEvents = {}
@@ -373,6 +376,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.CustomEvents[info.id] = true
             return
         end
+        self:LogTimeline(e, ...)
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" and wowevent then
         if not self:DifficultyCheck(14) then return end
@@ -380,6 +384,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.CustomEvents and self.CustomEvents[eventID] then
             return
         end
+        self:LogTimeline(e, ...)
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" and wowevent then
         local eventID = ...
@@ -387,6 +392,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.CustomEvents and self.CustomEvents[eventID] then
             return
         end
+        self:LogTimeline(e, ...)
         local state = C_EncounterTimeline.GetEventState(eventID)
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)

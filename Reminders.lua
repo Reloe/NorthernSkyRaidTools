@@ -906,6 +906,7 @@ function NSI:PlayReminderSound(info, default)
 end
 
 function NSI:StartReminders(phase, testrun)
+    if not testrun then self:LogTimeline("NSRT_PHASE", phase) end
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}

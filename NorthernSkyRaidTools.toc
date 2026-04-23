@@ -4,7 +4,7 @@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe, Rav
 ## DefaultState: Enable
-## SavedVariables: NSRT
+## SavedVariables: NSRT, NSRTTimelineData
 ## Category: Northern Sky
 ## X-Curse-Project-ID: 954018
 ## X-Wago-ID: rN4VDdKD

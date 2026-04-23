@@ -344,3 +344,66 @@ function NSI:MuteSFX(mute)
         end
     end
 end
+
+function NSI:LogTimeline(e, ...)
+    if not NSRT.Settings.DebugLogs then return end
+    local id = select(3, GetInstanceInfo())
+    if id > 16 or id < 14 then return end
+    if e == "ENCOUNTER_START" then
+        local encID, encName, difficultyID, groupSize = ...
+        local now = GetTime()
+        local date = C_DateAndTime.GetCurrentCalendarTime()
+        self.CurrentEncounterData = {
+            Name = encName,
+            encID = encID,
+            difficulty = difficultyID == 16 and "Mythic" or difficultyID == 15 and "Heroic" or difficultyID == 14 and "Normal",
+            pullTime = now,
+            startTime = string.format("%02d:%02d", date.hour, date.minute),
+            success = false,
+            length = 0,
+            events = {},
+        }
+    elseif e == "ENCOUNTER_END" then
+        local success = select(5, ...)
+        local now = GetTime()
+        if self.CurrentEncounterData then
+            self.CurrentEncounterData.success = success == 1
+            local elapsed = now - self.CurrentEncounterData.pullTime
+            self.CurrentEncounterData.pullTime = nil
+            self.CurrentEncounterData.length = string.format("%02d:%02d", math.floor(elapsed / 60), math.floor(elapsed % 60))
+            table.insert(NSRTTimelineData, self.CurrentEncounterData)
+        end
+        self.CurrentEncounterData = nil
+    elseif e == "NSRT_PHASE" then
+        local phase = ...
+        if self.CurrentEncounterData then
+            local now = GetTime()
+            tinsert(self.CurrentEncounterData.events, string.format("[%7.2f]  Phase Detected: %s", now - self.CurrentEncounterData.pullTime, phase))
+        end
+    elseif self.CurrentEncounterData then
+        local info = ...
+        local data = {}
+        local now = GetTime()
+        local stateNames = { [0] = "Active", [1] = "Paused", [2] = "Finished", [3] = "Canceled" }
+        if e == "ENCOUNTER_TIMELINE_EVENT_ADDED" then
+            data.dur = info.time
+            data.id = info.id
+            data.Queue = info.maxQueueDuration
+        elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" then
+            data.id = info
+            local stateVal = C_EncounterTimeline.GetEventState(info)
+            data.state = stateNames[stateVal] or tostring(stateVal)
+        else
+            data.id = info
+        end
+        data.time = now - self.CurrentEncounterData.pullTime
+        tinsert(self.CurrentEncounterData.events, string.format("[%7.2f]  %-45s  id: %-10s%s%s%s",
+            data.time,
+            e,
+            tostring(data.id or "nil"),
+            data.dur and string.format("  dur: %-10.4f", data.dur) or "",
+            data.Queue and string.format("  queue: %.4f", data.Queue) or "",
+            data.state and string.format("  state: %s", data.state) or ""
+        ))
+    end
+end
