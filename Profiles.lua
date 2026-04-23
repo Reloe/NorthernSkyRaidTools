@@ -39,6 +39,7 @@ function NSI:AddMissingDefaults()
             GlobalFont = "Expressway",
             GlobalFontSize = 20,
             GlobalEncounterFontSize = 20,
+            GlobalFontFlags = "OUTLINE",
             MyNickName = nil,
             ShareNickNames = 4,
             AcceptNickNames = 4,

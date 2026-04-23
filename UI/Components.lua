@@ -71,8 +71,9 @@ local labelRegistry = {}
 
 local function RefreshFonts()
     local fontPath = NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)
+    local flags    = NSRT.Settings.GlobalFontFlags or ""
     for _, entry in ipairs(labelRegistry) do
-        entry.label:SetFont(fontPath, entry.size, "")
+        entry.label:SetFont(fontPath, entry.size, flags)
     end
 end
 
@@ -121,7 +122,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon)
     labelFrame:EnableMouse(false)
 
     local label = labelFrame:CreateFontString(nil, "overlay")
-    label:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), STYLE.text_size, "")
+    label:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), STYLE.text_size, NSRT.Settings.GlobalFontFlags or "")
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")

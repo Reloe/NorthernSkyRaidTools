@@ -43,10 +43,44 @@ local function BuildGeneralOptions()
             get = function() return NSRT.Settings["GlobalFontSize"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["GlobalFontSize"] = value
-                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
             end,
             min = 10,
             max = 100,
+        },
+        {
+            type = "select",
+            name = L["Global Font Outline"],
+            desc = L["Font outline flags applied to all addon text."],
+            get = function() return NSRT.Settings.GlobalFontFlags end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.GlobalFontFlags = value
+                NSI.UI.Components.RefreshFonts()
+            end,
+            values = function()
+                local flags = {
+                    "",
+                    "OUTLINE",
+                    "THICKOUTLINE",
+                    "MONOCHROME",
+                    "OUTLINE, MONOCHROME",
+                    "THICKOUTLINE, MONOCHROME",
+                }
+                local t = {}
+                for _, v in ipairs(flags) do
+                    local label = v == "" and L["None"] or v
+                    tinsert(t, {
+                        label = label,
+                        value = v,
+                        onclick = function()
+                            NSRT.Settings.GlobalFontFlags = v
+                            NSI.UI.Components.RefreshFonts()
+                        end,
+                    })
+                end
+                return t
+            end,
+            nocombat = true,
         },
         {
             type = "button",
