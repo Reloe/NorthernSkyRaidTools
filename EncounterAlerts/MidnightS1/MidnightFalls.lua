@@ -433,9 +433,6 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
             self.Phase = newphase
             self:StartReminders(self.Phase)
             self.PhaseSwapTime = now
-            if self.Phase == 3 then
-                self:InitPrivateAuras(true)
-            end
             if self.Phase == 4 and difficultyID == 16 then
                 if self.LuraRunesFrame then
                     self.LuraRunesFrame:SetWidth(300)
