@@ -127,8 +127,6 @@ L["Copied profile '|cFFFFFFFF%s|r' into '|cFFFFFFFF%s|r'."] = true
 L["Reset profile '|cFFFFFFFF%s|r'."] = true
 L["Deleted profile '|cFFFFFFFF%s|r'."] = true
 L["Main profile set to '|cFFFFFFFF%s|r'."] = true
-L["Mute All Sound Effects"] = true
-L["Mutes all Sound Effects played by the game. This way you can use the sound effect channel for TTS without hearing the default sound effects. Pressing the button again unmutes them.\nYou will still hear sound effects on starting the game and some very specific sound effects cannot be muted(like Fyrakk mount)"] = true
 
 -- ============================================================================
 -- UI/Options/Reminders.lua — Spell Settings

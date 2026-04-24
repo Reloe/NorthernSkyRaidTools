@@ -51,9 +51,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitLDB()
         self:InitQoL()
         self:CacheSounds()
-        if NSRT.Settings.SFXMuted then
-            self:MuteSFX(true)
-        end
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitPrivateAuras()

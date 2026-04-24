@@ -129,8 +129,6 @@ L["Copied profile '|cFFFFFFFF%s|r' into '|cFFFFFFFF%s|r'."] = "'|cFFFFFFFF%s|r' 
 L["Reset profile '|cFFFFFFFF%s|r'."] = "'|cFFFFFFFF%s|r' 프로필을 초기화했습니다."
 L["Deleted profile '|cFFFFFFFF%s|r'."] = "'|cFFFFFFFF%s|r' 프로필을 삭제했습니다."
 L["Main profile set to '|cFFFFFFFF%s|r'."] = "메인 프로필을 '|cFFFFFFFF%s|r'|1으로;로; 설정했습니다."
-L["Mute All Sound Effects"] = "모든 효과음 음소거"
-L["Mutes all Sound Effects played by the game. This way you can use the sound effect channel for TTS without hearing the default sound effects. Pressing the button again unmutes them.\nYou will still hear sound effects on starting the game and some very specific sound effects cannot be muted(like Fyrakk mount)"] = "게임 내 모든 효과음을 음소거 처리합니다. 이 방법으로 기본 효과음을 죽이고 TTS를 효과음 채널로 출력하도록 할 수 있습니다. 버튼을 한번 더 누르면 음소거가 해제됩니다.\n음소거 처리를 했어도 게임 시작시 및 음소거 불가능한 특정 효과음(피락 탈것 같은)은 여전히 재생될 것입니다."
 
 -- ============================================================================
 -- UI/Options/Reminders.lua — Spell Settings

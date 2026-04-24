@@ -204,17 +204,6 @@ local function BuildGeneralOptions()
             end,
         },
         {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Mute All Sound Effects"],
-            desc = L["Mutes all Sound Effects played by the game. This way you can use the sound effect channel for TTS without hearing the default sound effects. Pressing the button again unmutes them.\nYou will still hear sound effects on starting the game and some very specific sound effects cannot be muted(like Fyrakk mount)"],
-            get = function() return NSRT.Settings.SFXMuted end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings.SFXMuted = value
-                NSI:MuteSFX(value)
-            end,
-        },
-        {
             type = "breakline",
         },
         { type = "label", get = function() return L["Profile Management"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },

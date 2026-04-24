@@ -62,7 +62,6 @@ function NSI:AddMissingDefaults()
                 xOffset = -200,
                 yOffset = 400,
             },
-            SFXMuted = false,
         },
 
         -- Reminder Settings
