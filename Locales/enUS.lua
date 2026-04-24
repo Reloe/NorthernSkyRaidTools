@@ -209,6 +209,7 @@ L["Color of Raidframe Glows"] = true
 L["Universal Settings"] = true
 L["Hide Timer Text"] = true
 L["Hides the Timer Text shown on either the Icon or the Bar"] = true
+L["Hides the Timer Text shown for Text-Reminders"] = true
 L["Play Sound instead of TTS"] = true
 L["This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work."] = true
 L["Ignore 'everyone' tags"] = true

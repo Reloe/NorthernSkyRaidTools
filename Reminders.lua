@@ -124,6 +124,7 @@ function NSI:AddToReminder(info)
         skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
         IsAlert = info.IsAlert,
         Ticks = info.Ticks,
+        skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
     })
 end
 
@@ -389,7 +390,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            if NSRT.ReminderSettings.HideTimerText then
+            if F.info and F.info.skiptime then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -420,7 +421,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            if NSRT.ReminderSettings.HideTimerText then
+            if F.info and F.info.skiptime then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -508,7 +509,7 @@ function NSI:SetProperties(F, info, skipsound, s)
             F.Swipe:SetCooldown(GetTime(), info.dur)
             if F.TimerText then
                 F.TimerText:SetTextColor(1, 1, 0, 1)
-                if NSRT.ReminderSettings.HideTimerText then
+                if info.skiptime then
                     F.TimerText:Hide()
                 else
                     F.TimerText:Show()
@@ -520,7 +521,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         F:SetStatusBarColor(unpack(info.colors or s.colors))
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
-            if NSRT.ReminderSettings.HideTimerText then
+            if info.skiptime then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -777,7 +778,8 @@ function NSI:DisplayReminder(info)
     else
         F = self:CreateText(info)
         F.Type = "Texts"
-        F.Text:SetText(text.." - ("..remString..")" or remString)
+        text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+        F.Text:SetText(text)
         F:Show()
         self:ArrangeStates("Texts")
     end
@@ -826,7 +828,6 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     else
         remString = tostring(math.ceil(rem))
     end
-    local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
     if info.spellID and type(info.spellID) == "number" then
         if F:GetObjectType() == "StatusBar" then
             F:SetValue((GetTime()-info.startTime))
@@ -849,6 +850,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         end
         if F.TimerText then F.TimerText:SetText(remString) end
     else
+        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
         F.Text:SetText(text)
     end
 end

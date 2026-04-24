@@ -81,6 +81,8 @@ function NSI:AddMissingDefaults()
             TextTTSTimer = 5,
             AutoShare = true,
             NoteCountdown = false,
+            HideTimerText = false,
+            HideTextTimerText = false,
             PersonalReminderFrame = {
                 enabled = true,
                 Width = 500,

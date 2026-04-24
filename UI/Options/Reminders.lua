@@ -130,6 +130,18 @@ local function BuildReminderOptions()
             max = 10,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Hide Timer Text"],
+            desc = L["Hides the Timer Text shown on either the Icon or the Bar"],
+            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTimerText"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
+        },
+        {
             type = "label",
             get = function() return L["Text Settings"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -263,6 +275,19 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings.TextSettings.CenterAligned end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextSettings.CenterAligned = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Hide Timer Text"],
+            desc = L["Hides the Timer Text shown for Text-Reminders"],
+            get = function() return NSRT.ReminderSettings["HideTextTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTextTimerText"] = value
                 NSI:UpdateExistingFrames()
             end,
             nocombat = true,
@@ -607,18 +632,6 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Timer Text"],
-            desc = L["Hides the Timer Text shown on either the Icon or the Bar"],
-            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings["HideTimerText"] = value
-                NSI:UpdateExistingFrames()
-            end,
-            nocombat = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
             name = L["Play Sound instead of TTS"],
             desc = L["This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work."],
             get = function() return NSRT.ReminderSettings["PlayDefaultSound"] end,
@@ -734,6 +747,7 @@ local function BuildReminderOptions()
                     TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
                     countdown = NSRT.ReminderSettings.TextCountdown,
                     dur = NSRT.ReminderSettings.TextDuration,
+                    skiptime = NSRT.ReminderSettings.HideTextTimerText,
                 }
                 NSI:DisplayReminder(info1)
                 local info2 = {
@@ -744,6 +758,7 @@ local function BuildReminderOptions()
                     TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
                     countdown = false,
                     dur = NSRT.ReminderSettings.TextDuration,
+                    skiptime = NSRT.ReminderSettings.HideTextTimerText,
                 }
                 NSI:DisplayReminder(info2)
                 local info3 = {
@@ -756,6 +771,7 @@ local function BuildReminderOptions()
                     TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                     countdown = NSRT.ReminderSettings.SpellCountdown,
                     dur = NSRT.ReminderSettings.SpellDuration,
+                    skiptime = NSRT.ReminderSettings.HideTimerText,
                     glowunit = {"player"},
                 }
                 NSI:DisplayReminder(info3)
@@ -769,6 +785,7 @@ local function BuildReminderOptions()
                     TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                     countdown = false,
                     dur = NSRT.ReminderSettings.SpellDuration,
+                    skiptime = NSRT.ReminderSettings.HideTimerText,
                 }
                 NSI:DisplayReminder(info4)
                 local info5 = {
@@ -781,6 +798,7 @@ local function BuildReminderOptions()
                     TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                     countdown = false,
                     dur = NSRT.ReminderSettings.SpellDuration,
+                    skiptime = NSRT.ReminderSettings.HideTimerText,
                     glowunit = {"player"},
                 }
                 NSI:DisplayReminder(info5)
@@ -794,6 +812,7 @@ local function BuildReminderOptions()
                     TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                     countdown = false,
                     dur = NSRT.ReminderSettings.SpellDuration,
+                    skiptime = NSRT.ReminderSettings.HideTimerText,
                 }
                 NSI:DisplayReminder(info6)
                 NSI:UpdateExistingFrames()
