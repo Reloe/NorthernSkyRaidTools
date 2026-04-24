@@ -830,6 +830,7 @@ local function BuildReminderOptions()
                     NSI.LoadedPersonalReminder = nil
                     NSRT.StoredPersonalReminder = nil
                 end
+            end,
             nocombat = true,
         },
         {
