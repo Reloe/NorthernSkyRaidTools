@@ -1102,6 +1102,7 @@ function NSI:SetReminder(name, personal, skipupdate, encIDHint)
             self.PersonalReminder = NSRT.PersonalReminders[name]
             self.LoadedPersonalReminder = name
             NSRT.StoredPersonalReminder = name
+            NSRT.ReminderSettings.PersNote = true
             if encID then self:GetActivePersonalReminders()[encID] = name end
         else
             self.PersonalReminder = ""
