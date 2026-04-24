@@ -49,6 +49,7 @@ function NSI:AddMissingDefaults()
             TTS = true,
             TTSVolume = 50,
             TTSVoice = 1,
+            TTSOverlap = true,
             Minimap = {hide = false},
             VersionCheckPresets = {},
             CooldownThreshold = 20,

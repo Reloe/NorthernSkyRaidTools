@@ -204,6 +204,17 @@ local function BuildGeneralOptions()
             end,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Overlap TTS-Sounds"],
+            desc = L["Allow TTS sounds to overlap each other."],
+            get = function() return NSRT.Settings.TTSOverlap end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.TTSOverlap = value
+            end,
+            nocombat = true,
+        },
+        {
             type = "breakline",
         },
         { type = "label", get = function() return L["Profile Management"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
