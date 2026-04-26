@@ -804,13 +804,13 @@ end
 function NSI:UpdateReminderDisplay(info, F, skipsound)
     local rem = info.dur - (GetTime() - info.startTime)
     local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
-    if rem <= SoundTimer and (not self.PlayedSound["ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if rem <= SoundTimer and (not self.PlayedSound["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id]) and (not skipsound) then
         self:PlayReminderSound(info)
-        self.PlayedSound["ph"..info.phase.."id"..info.id] = true
+        self.PlayedSound["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
     end
-    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id]) and (not skipsound) then
         NSAPI:TTSCountdown(info.countdown)
-        self.StartedCountdown["ph"..info.phase.."id"..info.id] = true
+        self.StartedCountdown["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
     end
     if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
@@ -843,8 +843,8 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
             if rem <= 3 and F.TimerText then
                 F.TimerText:SetTextColor(1, 0, 0, 1)
             end
-            if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["ph"..info.phase.."id"..info.id] then
-                self.GlowStarted["ph"..info.phase.."id"..info.id] = true
+            if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] then
+                self.GlowStarted["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
                 self:GlowFrame(nil, nil, F)
             end
         end
@@ -918,6 +918,7 @@ function NSI:StartReminders(phase, testrun)
         for encID, encData in pairs(self.ProcessedReminder) do
             for i, info in ipairs(encData[phase] or {}) do
                 local time = math.max(info.time-info.dur, 0)
+                info.encID = encID
                 self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
                     self:DisplayReminder(info)
                 end)
