@@ -519,6 +519,30 @@ function NSI:ImportProfileString(importString)
     return name
 end
 
+function NSAPI:ImportProfileString(importString, name) -- name is optional
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    if not importString or importString == "" then return nil end
+    local decoded = LibDeflate:DecodeForPrint(importString)
+    if not decoded then return nil end
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return nil end
+    local success, exportTable = LibSerialize:Deserialize(decompressed)
+    if not success or type(exportTable) ~= "table" then return nil end
+    local name = name or exportTable.profileName or "Imported"
+    local function EnsureUniqueName(name)
+        if NSRT.Profiles[name] then
+            name = name.." 2"
+            return EnsureUniqueName(name)
+        end
+        return name
+    end
+    name = EnsureUniqueName(name)
+    NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
+    self:LoadProfile(name)
+    return name
+end
+
 function NSI:LoadMyProfile()
     local ProfileKey = self:GetProfileKey()
     local ProfileToLoad = "default"
