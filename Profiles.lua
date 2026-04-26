@@ -515,7 +515,7 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
     end
     name = EnsureUniqueName(name)
     NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
-    self:LoadProfile(name)
+    NSI:LoadProfile(name)
     return name
 end
 
