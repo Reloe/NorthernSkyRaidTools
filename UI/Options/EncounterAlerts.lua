@@ -9,7 +9,8 @@ local function build_anchor_options(SettingsName)
             label = v,
             value = i,
             onclick = function(_, _, value)
-                NSRT.Settings[SettingsName] = list[value]
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183][SettingsName] = list[value]
                 if NSI.IsLuraPreview then
                     NSI.EncounterAlertStart[3183](NSI, 15, true)
                 end
