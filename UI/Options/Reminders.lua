@@ -736,7 +736,7 @@ local function BuildReminderOptions()
                     local info1 = {
                         text = "Personals",
                         phase = 1, id = 1,
-                        TTS = NSRT.ReminderSettings.TextTTS and "Personals",
+                        TTS = false,
                         TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
                         countdown = NSRT.ReminderSettings.TextCountdown,
                         dur = NSRT.ReminderSettings.TextDuration,
@@ -752,7 +752,7 @@ local function BuildReminderOptions()
                     local info3 = {
                         text = "Give Ironbark", IconOverwrite = true, spellID = 102342,
                         phase = 1, id = 3,
-                        TTS = NSRT.ReminderSettings.SpellTTS and "Give Ironbark",
+                        TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = NSRT.ReminderSettings.SpellCountdown,
                         dur = NSRT.ReminderSettings.SpellDuration, glowunit = {"player"},
