@@ -9,10 +9,32 @@ local build_media_options = Core.build_media_options
 
 local function BuildGeneralOptions()
     local tts_text_preview = ""
-    local client = IsWindowsClient()
 
     return {
         { type = "label", get = function() return L["General Options"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        {
+            type = "select",
+            name = L["Addon Language"],
+            desc = L["Choose the language used by the addon UI. You will have to reload your UI for all changes to take effect. Automatic will take your client language."],
+            get = function() return NSRT.Settings.Language or "Auto" end,
+            values = function()
+                local langs = {
+                    { label = L["Automatic"],      value = "Auto" },
+                    { label = L["English (enUS)"], value = "enUS" },
+                    { label = L["Korean (koKR)"],  value = "koKR" },
+                    { label = L["Russian (ruRU)"], value = "ruRU" },
+                }
+                for _, entry in ipairs(langs) do
+                    local v = entry.value
+                    entry.onclick = function()
+                        NSRT.Settings.Language = v
+                        NSI:ApplyLocaleOverride()
+                    end
+                end
+                return langs
+            end,
+            nocombat = true,
+        },
         {
             type = "toggle",
             boxfirst = true,
@@ -29,6 +51,10 @@ local function BuildGeneralOptions()
             name = L["Global Font"],
             desc = L["This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility."],
             get = function() return NSRT.Settings.GlobalFont end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.GlobalFont = value
+                NSI.UI.Components.RefreshFonts()
+            end,
             values = function() return build_media_options(false, false, false, false, false, true) end,
             nocombat = true,
         },
@@ -39,10 +65,44 @@ local function BuildGeneralOptions()
             get = function() return NSRT.Settings["GlobalFontSize"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["GlobalFontSize"] = value
-                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, "OUTLINE")
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
             end,
             min = 10,
             max = 100,
+        },
+        {
+            type = "select",
+            name = L["Global Font Outline"],
+            desc = L["Font outline flags applied to all addon text."],
+            get = function() return NSRT.Settings.GlobalFontFlags end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.GlobalFontFlags = value
+                NSI.UI.Components.RefreshFonts()
+            end,
+            values = function()
+                local flags = {
+                    "",
+                    "OUTLINE",
+                    "THICKOUTLINE",
+                    "MONOCHROME",
+                    "OUTLINE, MONOCHROME",
+                    "THICKOUTLINE, MONOCHROME",
+                }
+                local t = {}
+                for _, v in ipairs(flags) do
+                    local label = v == "" and L["None"] or v
+                    tinsert(t, {
+                        label = label,
+                        value = v,
+                        onclick = function()
+                            NSRT.Settings.GlobalFontFlags = v
+                            NSI.UI.Components.RefreshFonts()
+                        end,
+                    })
+                end
+                return t
+            end,
+            nocombat = true,
         },
         {
             type = "button",
@@ -50,11 +110,11 @@ local function BuildGeneralOptions()
             desc = L["This lets you move the generic text display used for example the ready check module or the assignments on pull."],
             func = function(self)
                 if NSI.NSRTFrame.generic_display:IsMovable() then
-                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, false)
+                    NSI:MakeDraggable(NSI.NSRTFrame.generic_display, NSRT.Settings.GenericDisplay, false)
                 else
                     NSI.NSRTFrame.generic_display.Text:SetText("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n")
                     NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
-                    NSI:ToggleMoveFrames(NSI.NSRTFrame.generic_display, true)
+                    NSI:MakeDraggable(NSI.NSRTFrame.generic_display, NSRT.Settings.GenericDisplay, true)
                 end
             end,
             nocombat = true,
@@ -108,16 +168,27 @@ local function BuildGeneralOptions()
         },
         { type = "label", get = function() return L["TTS Options"] end,     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
         {
-            type = "range",
+            type = "select",
             name = L["TTS Voice"],
             desc = L["Voice to use for TTS. Most users will only have ~2 different voices. These voices depend on your installed language packs."],
             get = function() return NSRT.Settings["TTSVoice"] end,
-            set = function(self, fixedparam, value)
-                NSUI.OptionsChanged.general["TTS_VOICE"] = true
-                NSRT.Settings["TTSVoice"] = value
+            values = function()
+                local t = {}
+                local voices = C_VoiceChat.GetTtsVoices()
+                if voices then
+                    for _, v in ipairs(voices) do
+                        tinsert(t, {
+                            label = v.name,
+                            value = v.voiceID,
+                            onclick = function()
+                                NSUI.OptionsChanged.general["TTS_VOICE"] = true
+                                NSRT.Settings["TTSVoice"] = v.voiceID
+                            end,
+                        })
+                    end
+                end
+                return t
             end,
-            min = 1,
-            max = client and 20 or 100,
         },
         {
             type = "range",
@@ -154,6 +225,17 @@ local function BuildGeneralOptions()
                 NSUI.OptionsChanged.general["TTS_ENABLED"] = true
                 NSRT.Settings["TTS"] = value
             end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Overlap TTS-Sounds"],
+            desc = L["Allow TTS sounds to overlap each other."],
+            get = function() return NSRT.Settings.TTSOverlap end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings.TTSOverlap = value
+            end,
+            nocombat = true,
         },
         {
             type = "breakline",

@@ -69,10 +69,21 @@ local STYLE = {
 -- never destroyed mid-session so no weak table needed.
 local labelRegistry = {}
 
+local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
+
+local function ValidateFont(path)
+    if not path or path == "" then return FALLBACK_FONT end
+    NSI.TestString = NSI.TestString or UIParent:CreateFontString(nil, "ARTWORK")
+    local ok = NSI.TestString:SetFont(path, 12, "")
+    NSI.TestString:Hide()
+    return ok and path or FALLBACK_FONT
+end
+
 local function RefreshFonts()
-    local fontPath = NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)
+    local rawPath = NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)
+    local fontPath = ValidateFont(rawPath)
     for _, entry in ipairs(labelRegistry) do
-        entry.label:SetFont(fontPath, entry.size, "")
+        entry.label:SetFont(fontPath, entry.size, NSRT.Settings.GlobalFontFlags)
     end
 end
 
@@ -120,9 +131,8 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     labelFrame:SetFrameLevel(btn:GetFrameLevel() + 2)
     labelFrame:EnableMouse(false)
 
-    local fontSize = textSize or STYLE.text_size
-    local label = labelFrame:CreateFontString(nil, "overlay")
-    label:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), fontSize, "")
+    local label = labelFrame:CreateFontString(nil, "OVERLAY")
+    label:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), STYLE.text_size, NSRT.Settings.GlobalFontFlags)
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")

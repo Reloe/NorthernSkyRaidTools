@@ -67,7 +67,7 @@ local function BuildImportStringUI()
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local importString = popup.test_string_text_box:GetText()
-        local importedName = NSI:ImportProfileString(importString)
+        local importedName = NSAPI:ImportProfileString(importString)
         if importedName then
             print("|cFF00FFFFNSRT:|r Imported profile '|cFFFFFFFF" .. importedName .. "|r'.")
             popup:Hide()

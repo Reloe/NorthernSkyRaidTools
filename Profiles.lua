@@ -37,9 +37,11 @@ function NSI:AddMissingDefaults()
 
         -- General Settings
         Settings = {
+            Language = "Auto",
             GlobalFont = "Expressway",
             GlobalFontSize = 20,
             GlobalEncounterFontSize = 20,
+            GlobalFontFlags = "OUTLINE",
             MyNickName = nil,
             ShareNickNames = 4,
             AcceptNickNames = 4,
@@ -49,7 +51,8 @@ function NSI:AddMissingDefaults()
             TTS = true,
             TTSVolume = 50,
             TTSVoice = 1,
-            Minimap = { hide = false },
+            TTSOverlap = true,
+            Minimap = {hide = false},
             VersionCheckPresets = {},
             CooldownThreshold = 20,
             MissingRaidBuffs = true,
@@ -84,6 +87,8 @@ function NSI:AddMissingDefaults()
             TextTTSTimer = 5,
             AutoShare = true,
             NoteCountdown = false,
+            HideTimerText = false,
+            HideTextTimerText = false,
             PersonalReminderFrame = {
                 enabled = true,
                 Width = 500,
@@ -138,6 +143,7 @@ function NSI:AddMissingDefaults()
                 Height = 80,
                 Spacing = -1,
                 Glow = 0,
+                Zoom = 0,
             },
             BarSettings = {
                 GrowDirection = "Up",
@@ -227,8 +233,7 @@ function NSI:AddMissingDefaults()
             RowGrowDirection = "UP",
             DebuffTypeBorder = false,
             HideBorder = false,
-            StackScale = 4,
-            AlternateDisplay = false,
+            StackScale = 2,
             HideTooltip = false,
             UpscaleDuration = false,
         },
@@ -245,8 +250,7 @@ function NSI:AddMissingDefaults()
             xOffset = -549,
             yOffset = -199,
             HideBorder = false,
-            StackScale = 4,
-            AlternateDisplay = false,
+            StackScale = 2,
             HideTooltip = false,
             UpscaleDuration = false,
         },
@@ -290,6 +294,8 @@ function NSI:AddMissingDefaults()
             GatewayShardCheck = false,
             SkipGatewayKeybindCheck = false,
             SourceOfMagicCheck = false,
+            BlisteringScalesCheck = false,
+            SymbioticRelationshipCheck = false,
         },
 
         -- QoL Settings
@@ -317,17 +323,6 @@ function NSI:AddMissingDefaults()
                 Width = 40,
                 Height = 40,
             },
-            TradeableItems = {
-                Anchor = "TOP",
-                relativeTo = "TOP",
-                GrowDirection = "DOWN",
-                Spacing = 5,
-                xOffset = 0,
-                yOffset = -400,
-                FontSize = 18,
-                Width = 30,
-                Height = 30,
-            },
         },
 
         -- Encounter Alerts
@@ -343,13 +338,42 @@ function NSI:AddMissingDefaults()
                 enabled = false,
                 P3Side = "OFF",
                 RunesDisplay = false,
-                LuraDisplayAnchor = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayAnchor or "TOPLEFT",
-                LuraDisplayRelativePoint = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT",
-                LuraDisplayOffsetX = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayOffsetX or 300,
-                LuraDisplayOffsetY = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayOffsetY or -300,
-                LuraDisplayColor = NSRT and NSRT.Settings and NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9},
+                LuraDisplay = {
+                    Anchor = "TOPLEFT",
+                    relativeTo = "TOPLEFT",
+                    xOffset = 300,
+                    yOffset = -300,
+                    Color = {0.2, 0.2, 0.2, 0.9},
+                    Scale = 1,
+                },
+                InterruptDisplay = false,
             },
             [3306] = { enabled = false },
+        },
+
+        -- Interrupt Display
+        InterruptSettings = {
+            Anchor = "CENTER",
+            relativeTo = "CENTER",
+            xOffset = -600,
+            yOffset = 400,
+            Width = 100,
+            Height = 100,
+            NumberxOffset = 0,
+            NumberyOffset = 0,
+            NumberAnchor = "CENTER",
+            NumberRelativeTo = "CENTER",
+            NamexOffset = 0,
+            NameyOffset = 10,
+            NameAnchor = "BOTTOM",
+            NameRelativeTo = "TOP",
+            NumberFont = "Expressway",
+            NumberFontFlags = "OUTLINE",
+            NumberFontSize = 60,
+            NameFont = "Expressway",
+            NameFontFlags = "OUTLINE",
+            NameFontSize = 30,
+            InterruptSound = "|cFF4BAAC8Interrupt|r",
         },
 
         Profiles = {},
@@ -510,7 +534,7 @@ function NSI:ExportProfileString()
     return encoded
 end
 
-function NSI:ImportProfileString(importString)
+function NSAPI:ImportProfileString(importString, name) -- name is optional
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate = LibStub("LibDeflate")
     if not importString or importString == "" then return nil end
@@ -520,7 +544,7 @@ function NSI:ImportProfileString(importString)
     if not decompressed then return nil end
     local success, exportTable = LibSerialize:Deserialize(decompressed)
     if not success or type(exportTable) ~= "table" then return nil end
-    local name = exportTable.profileName or "Imported"
+    local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
         if NSRT.Profiles[name] then
             name = name .. " 2"
@@ -530,7 +554,7 @@ function NSI:ImportProfileString(importString)
     end
     name = EnsureUniqueName(name)
     NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
-    self:LoadProfile(name)
+    NSI:LoadProfile(name)
     return name
 end
 

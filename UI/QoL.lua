@@ -86,9 +86,9 @@ function NSI:ToggleQoLTextPreview()
         F.text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
         F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
         F:Show()
-        self:ToggleMoveFrames(F, true)
+        self:MakeDraggable(F, NSRT.QoL.TextDisplay, true)
     else
-        self:ToggleMoveFrames(self.NSRTFrame.QoLText)
+        self:MakeDraggable(self.NSRTFrame.QoLText, NSRT.QoL.TextDisplay, false)
         self:UpdateQoLTextDisplay()
     end
 end

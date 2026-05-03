@@ -12,6 +12,7 @@
 	<Include file="Libs\AceLocale-3.0\AceLocale-3.0.xml"/>
 	<Script file="Libs\LibDataBroker-1.1\LibDataBroker-1.1.lua"/>
 	<Script file="Libs\LibDBIcon-1.0\LibDBIcon-1.0.lua"/>
+	<Script file="Libs\LibSpecialization\LibSpecialization.lua"/>
 
     <Include file="Libs\LibDFramework-1.0\load.xml"/>
 </Ui>

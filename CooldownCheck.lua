@@ -95,7 +95,7 @@ end
 
 function NSI:CheckCooldowns()
     if self:Restricted() then return end
-    local spec = GetSpecializationInfo(GetSpecialization())
+    local spec = self:GetMySpecID()
     if NSRT.CooldownList then
         local now = GetTime()
         local highest = {text = "", time = 0}

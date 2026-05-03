@@ -22,6 +22,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     if e == "ADDON_LOADED" and wowevent then
         local name = ...
         if name == "NorthernSkyRaidTools" then
+            if not NSRTTimelineData then NSRTTimelineData = {} end
             self.Reminder = ""
             self.PersonalReminder = ""
             self.DisplayedReminder = ""
@@ -37,20 +38,25 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self:GetProfileKey() then
                 self.LoadedProfile = true
                 self:LoadMyProfile()
+                self:ApplyLocaleOverride()
                 self:CreateMoveFrames()
             end
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         if not self.LoadedProfile then
+            self.LoadedProfile = true
             self:LoadMyProfile()
+            self:ApplyLocaleOverride()
             self:CreateMoveFrames()
         end
         self.NSUI:Init()
         self:InitLDB()
         self:InitQoL()
+        self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
-        self:InitPrivateAuras()
+        self:InitPrivateAuras(true)
+        self:UpdateLibSpecRegistration()
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
         for spellID, info in pairs(NSRT.PASounds) do
@@ -95,12 +101,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             local diff = select(3, GetInstanceInfo()) or 0
             local ForceHide = diff > 17 or diff < 14
             if ForceHide then self:HideAllReminders(true) end
-            self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
-            self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
-            self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            if self.LoadedProfile then
+                self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
+                self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
+                self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            end
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
+        self:LogTimeline(e, ...)
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         self.EncounterID = ...
@@ -110,8 +119,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self.TestingReminder = false
         self.IsInPreview = false
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
-            self:ToggleMoveFrames(self[v], false)
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+            self:MakeDraggable(self[v], nil, false)
         end
         self.Phase = 1
         self.PhaseSwapTime = GetTime()
@@ -132,6 +141,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:LoadCustomBossAlerts(self.EncounterID)
         self:StartReminders(self.Phase)
+        self:InitPrivateAuras()
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
             for i, name in ipairs(frames) do
@@ -150,13 +160,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
+        self:LogTimeline(e, ...)
         local encID, encounterName, _, _, kill = ...
         local diff = select(3, GetInstanceInfo()) or 0
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
-        if NSRT.PATankSettings.enabled and UnitGroupRolesAssigned("player") == "TANK" then
-            self:RemoveTankPA()
-        end
+        self:InitPrivateAuras()
         self:HideAllReminders(true)
         C_Timer.After(1, function()
             if self:Restricted() then return end
@@ -189,8 +198,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
-        local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
-        self:Broadcast("NSI_SPEC", "RAID", specid)
         if UnitIsGroupLeader("player") and UnitInRaid("player") then
             local tosend = false
             if NSRT.ReminderSettings.AutoShare then
@@ -199,7 +206,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
-        self:InitPrivateAuras()
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
         local diff= select(3, GetInstanceInfo()) or 0
@@ -217,22 +223,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
             self.Assignments = NSRT.AssignmentSettings
         end
-        -- broadcast spec info
-        local specid = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
-        self:Broadcast("NSI_SPEC", "RAID", specid)
         if C_ChatInfo.InChatMessagingLockdown() then return end
         self.LastBroadcast = GetTime()
-        self.specs = {}
-        self.GUIDS = {}
-        self.HasNSRT = {}
-        for u in self:IterateGroupMembers() do
-            if UnitIsVisible(u) then
-                self.HasNSRT[u] = false
-                self.specs[u] = false
-                local G = UnitGUID(u)
-                self.GUIDS[u] = issecretvalue(G) and "" or G
-            end
-        end
         if self:Restricted() then return end
         if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck(15) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
             self:CheckCooldowns()
@@ -258,7 +250,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:UpdateReminderFrame(true)
         end
         local diff = select(3, GetInstanceInfo()) or 0
-        self:InitPrivateAuras()
         local text = ""
         if UnitLevel("player") < 90 then return end
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
@@ -285,6 +276,26 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        if NSRT.ReadyCheckSettings.BlisteringScalesCheck and not self:Restricted() then
+            local BlisteringScales = self:BlisteringScalesCheck()
+            if BlisteringScales and BlisteringScales ~= "" then
+                if text == "" then
+                    text = BlisteringScales
+                else
+                    text = text.."\n"..BlisteringScales
+                end
+            end
+        end
+        if NSRT.ReadyCheckSettings.SymbioticRelationshipCheck and not self:Restricted() then
+            local SymbioticRelationship = self:SymbioticRelationshipCheck()
+            if SymbioticRelationship and SymbioticRelationship ~= "" then
+                if text == "" then
+                    text = SymbioticRelationship
+                else
+                    text = text.."\n"..SymbioticRelationship
+                end
+            end
+        end
         local Gear = self:GearCheck()
         if Gear and Gear ~= "" then
             if text == "" then
@@ -302,6 +313,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.NSUI and NSRT.NSUI.reminders_frame then NSUI.reminders_frame.UpdateButtonAccess() end
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
+        if not self.VersionCheckData then return end -- ignore stale responses from a previous check
         local unit, ver, ignoreCheck = ...
         self:VersionResponse({name = UnitName(unit), version = ver, ignoreCheck = ignoreCheck})
     elseif e == "NSI_VERSION_REQUEST" and internal then
@@ -328,22 +340,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:NickNamesSyncPopup(unit, nicknametable)
             end
         end
-
-    elseif e == "NSI_SPEC" and internal then -- renamed for Midnight
-        local unit, spec = ...
-        self.specs = self.specs or {}
-        local G = UnitGUID(unit)
-        G = issecretvalue(G) and "" or G
-        self.specs[unit] = tonumber(spec)
-        self.HasNSRT = self.HasNSRT or {}
-        self.HasNSRT[unit] = true
-        if G ~= "" then
-            self.GUIDS = self.GUIDS or {}
-            self.GUIDS[unit] = G
-        end
-    elseif e == "NSI_SPEC_REQUEST" then
-        local specid = GetSpecializationInfo(GetSpecialization())
-        self:Broadcast("NSI_SPEC", "RAID", specid)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         self:ArrangeGroups()
         if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
@@ -374,6 +370,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.CustomEvents[info.id] = true
             return
         end
+        self:LogTimeline(e, ...)
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" and wowevent then
         if not self:DifficultyCheck(14) then return end
@@ -381,6 +378,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.CustomEvents and self.CustomEvents[eventID] then
             return
         end
+        self:LogTimeline(e, ...)
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" and wowevent then
         local eventID = ...
@@ -388,6 +386,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.CustomEvents and self.CustomEvents[eventID] then
             return
         end
+        self:LogTimeline(e, ...)
         local state = C_EncounterTimeline.GetEventState(eventID)
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)

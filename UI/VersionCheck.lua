@@ -217,9 +217,11 @@ local function BuildVersionCheckUI(parent)
         local currentData = self:GetData()
         if self.name_map[data.name] then
             if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.ignoreCheck) then
-                table.remove(currentData, self.name_map[data.name])
+                local removedIndex = self.name_map[data.name]
+                self.name_map[data.name] = nil
+                table.remove(currentData, removedIndex)
                 for k, v in pairs(self.name_map) do
-                    if v > self.name_map[data.name] then
+                    if v > removedIndex then
                         self.name_map[k] = v - 1
                     end
                 end

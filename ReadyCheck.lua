@@ -33,7 +33,7 @@ function NSI:SoulstoneCheck()
                 local source = aura.sourceUnit
                 if UnitExists(source) and UnitIsUnit("player", source) then
                     local expires = aura.expirationTime
-                    if expires - GetTime() > 300 then
+                    if expires - GetTime() > 600 then
                         buffed = true
                         return false
                     else
@@ -62,7 +62,7 @@ function NSI:SourceOfMagicCheck()
                 local source = aura.sourceUnit
                 if UnitExists(source) and UnitIsUnit("player", source) then
                     local expires = aura.expirationTime
-                    if expires and expires - GetTime() > 300 then
+                    if expires and expires - GetTime() > 600 then
                         return false
                     else
                         refresh = true
@@ -73,6 +73,62 @@ function NSI:SourceOfMagicCheck()
     end
     NSAPI:TTS("Source of Magic")
     return refresh and "Refresh Source of Magic" or "|cFFFF0000Source of Magic Missing|r"
+end
+
+function NSI:BlisteringScalesCheck()
+    if self:Restricted() then return end
+    local spec = self:GetMySpecID()
+    if spec ~= 1473 then return end
+    local spellID = 360827
+    local ScalesTalented = C_SpellBook.IsSpellKnownOrInSpellBook(spellID, nil, true)
+    if not ScalesTalented then return end
+    local refresh = false
+    for unit in self:IterateGroupMembers() do
+        if UnitIsVisible(unit) and not UnitIsUnit(unit, "player") then
+            local aura = self:UnitAura(unit, spellID)
+            if aura then
+                local source = aura.sourceUnit
+                if UnitExists(source) and UnitIsUnit("player", source) then
+                    local expires = aura.expirationTime
+                    if expires and expires - GetTime() > 600 then
+                        return false
+                    else
+                        refresh = true
+                    end
+                end
+            end
+        end
+    end
+    NSAPI:TTS("Blistering Scales")
+    return refresh and "Refresh Blistering Scales" or "|cFFFF0000Blistering Scales Missing|r"
+end
+
+function NSI:SymbioticRelationshipCheck()
+    if self:Restricted() then return end
+    local class = select(3, UnitClass("player"))
+    if class ~= 11 then return end
+    local spellID = 474750
+    local SymbioticTalented = C_SpellBook.IsSpellKnownOrInSpellBook(spellID, nil, true)
+    if not SymbioticTalented then return end
+    local refresh = false
+    for unit in self:IterateGroupMembers() do
+        if UnitIsVisible(unit) and not UnitIsUnit(unit, "player") then
+            local aura = self:UnitAura(unit, spellID)
+            if aura then
+                local source = aura.sourceUnit
+                if UnitExists(source) and UnitIsUnit("player", source) then
+                    local expires = aura.expirationTime
+                    if expires and expires - GetTime() > 600 then
+                        return false
+                    else
+                        refresh = true
+                    end
+                end
+            end
+        end
+    end
+    NSAPI:TTS("Symbiotic Relationship")
+    return refresh and "Refresh Symbiotic Relationship" or "|cFFFF0000Symbiotic Relationship Missing|r"
 end
 
 function NSI:BuffCheck()
@@ -196,7 +252,7 @@ function NSI:GearCheck()
     local crafted = 0
     local tier = 0
     local repair = false
-    local spec = GetSpecializationInfo(GetSpecialization())
+    local spec = self:GetMySpecID()
     local ilvl = minlvl
     self.MainstatGem = false
     local MyArmorType = ArmorTypes[select(3, UnitClass("player"))]
@@ -342,21 +398,6 @@ function NSI:CheckGateWayKeybind(Slot)
 end
 
 local validsets = {
-    -- Manaforge Sets
-    [1921] = true, -- Druid
-    [1923] = true, -- Hunter
-    [1924] = true, -- Mage
-    [1926] = true, -- Paladin
-    [1927] = true, -- Priest
-    [1928] = true, -- Rogue
-    [1929] = true, -- Shaman
-    [1930] = true, -- Warlock
-    [1931] = true, -- Warrior
-    [1919] = true, -- Death Knight
-    [1920] = true, -- Demon Hunter
-    [1925] = true, -- Monk
-    [1922] = true, -- Evoker
-
     -- Midnight S1
     [1980] = true, -- Druid
     [1982] = true, -- Hunter

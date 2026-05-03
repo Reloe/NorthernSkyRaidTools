@@ -431,8 +431,17 @@ local function BuildReminderScreen(personal, parentFrame)
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             NSRT.InviteList[oldname] = nil
         end
-        if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
-        local renameEncID = ParseFirstLine(oldContent)
+        if personal then
+            for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
+                for encID, name in pairs(charTable) do
+                    if name == oldname then charTable[encID] = newname end
+                end
+            end
+            if NSI.LoadedPersonalReminder == oldname then NSI.LoadedPersonalReminder = newname end
+        else
+            if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
+        end
+        local renameEncID = encID  -- encID was already parsed from oldContent above
         if renameEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[renameEncID] == oldname then
             NSRT.AutoLoadNote[renameEncID] = newname
         end
@@ -493,6 +502,9 @@ local function BuildReminderScreen(personal, parentFrame)
         local bodyText = StripFirstLine(editor:GetText())
         local newName = screen.nameEntry and screen.nameEntry:GetText()
         if not newName or newName == "" then newName = screen.selectedName end
+        -- Capture the old encID before we overwrite the stored note, so we can clear
+        -- the ActivePersonalReminder slot if the boss assignment changes.
+        local oldEncID = personal and NSI:EncIDFromReminder(screen.selectedName, true) or nil
         local firstLine = BuildFirstLine(screen._metaBossEncID, newName, screen._metaDiff)
         local fullText = firstLine and (firstLine .. "\n" .. bodyText) or bodyText
         -- Update the editor so the new first line is visible
@@ -507,7 +519,16 @@ local function BuildReminderScreen(personal, parentFrame)
                     NSRT.InviteList[newName] = NSI:InviteListFromReminder(fullText)
                     NSRT.InviteList[oldName] = nil
                 end
-                if NSRT[activeKey] == oldName then NSRT[activeKey] = newName end
+                if personal then
+                    for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
+                        for encID, name in pairs(charTable) do
+                            if name == oldName then charTable[encID] = newName end
+                        end
+                    end
+                    if NSI.LoadedPersonalReminder == oldName then NSI.LoadedPersonalReminder = newName end
+                else
+                    if NSRT[activeKey] == oldName then NSRT[activeKey] = newName end
+                end
                 local saveEncID = screen._metaBossEncID
                 if saveEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[saveEncID] == oldName then
                     NSRT.AutoLoadNote[saveEncID] = newName
@@ -521,8 +542,17 @@ local function BuildReminderScreen(personal, parentFrame)
         end
         local isCurrentlyActive
         if personal then
-            local encID = NSI:EncIDFromReminder(screen.selectedName, true)
-            isCurrentlyActive = encID and NSI:GetActivePersonalReminders()[encID] == screen.selectedName
+            local newEncID = NSI:EncIDFromReminder(screen.selectedName, true)
+            local activeTable = NSI:GetActivePersonalReminders()
+            -- If the boss changed and this note was active under the old encID, migrate it
+            -- to the new encID (unless the new encID already has a different active note).
+            if oldEncID and oldEncID ~= newEncID and activeTable[oldEncID] == screen.selectedName then
+                activeTable[oldEncID] = nil
+                if newEncID and not activeTable[newEncID] then
+                    activeTable[newEncID] = screen.selectedName
+                end
+            end
+            isCurrentlyActive = newEncID and activeTable[newEncID] == screen.selectedName
         else
             isCurrentlyActive = NSRT[activeKey] == screen.selectedName
         end
@@ -853,6 +883,7 @@ local function BuildReminderScreen(personal, parentFrame)
             end
 
             local isActive = false
+            local isLoaded = false
             if personal then
                 local activeTable = NSI:GetActivePersonalReminders()
                 if activeTable then
@@ -863,13 +894,19 @@ local function BuildReminderScreen(personal, parentFrame)
                         end
                     end
                 end
+                isLoaded = (line.name == NSI.LoadedPersonalReminder)
             else
                 isActive = (line.name == NSRT.ActiveReminder)
             end
 
-            if isActive then
+            if isLoaded then
                 line:SetBackdropBorderColor(0, 1, 0, 1)
                 line.__background:SetVertexColor(0, 1, 0)
+                line.__background:SetAlpha(1)
+                line.nameLabel:SetTextColor(1, 1, 1)
+            elseif isActive then
+                line:SetBackdropBorderColor(1, 0.8, 0, 1)
+                line.__background:SetVertexColor(1, 0.8, 0)
                 line.__background:SetAlpha(1)
                 line.nameLabel:SetTextColor(1, 1, 1)
             elseif line.name == screen.selectedName then
@@ -974,10 +1011,17 @@ local function BuildReminderScreen(personal, parentFrame)
                 NSRT.InviteList[newname] = NSRT.InviteList[oldname]
                 NSRT.InviteList[oldname] = nil
             end
-            if NSRT[activeKey] == oldname then
-                NSRT[activeKey] = newname
+            if personal then
+                for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
+                    for eid, name in pairs(charTable) do
+                        if name == oldname then charTable[eid] = newname end
+                    end
+                end
+                if NSI.LoadedPersonalReminder == oldname then NSI.LoadedPersonalReminder = newname end
+            else
+                if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
             end
-            local encID = ParseFirstLine(store[oldname] or "")
+            local encID = ParseFirstLine(store[oldname] or "")  -- read before nil-ing
             if encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID] == oldname then
                 NSRT.AutoLoadNote[encID] = newname
             end

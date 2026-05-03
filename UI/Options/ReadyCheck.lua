@@ -158,7 +158,7 @@ local function BuildReadyCheckOptions()
             type = "toggle",
             boxfirst = true,
             name = L["Healer Soulstone Check"],
-            desc = L["Checks for Warlocks whether they have soulstoned a healer and it has at least 5m duration left. It will only check this if Soulstone is ready or has less than 30s CD left."],
+            desc = L["Checks for Warlocks whether they have soulstoned a healer and it has at least 10m duration left. It will only check this if Soulstone is ready or has less than 30s CD left."],
             get = function() return NSRT.ReadyCheckSettings.SoulstoneCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.SoulstoneCheck = value
@@ -172,13 +172,40 @@ local function BuildReadyCheckOptions()
             type = "toggle",
             boxfirst = true,
             name = L["Source of Magic Check"],
-            desc = L["Checks for Evokers whether they have Source of Magic on a healer and it has at least 5m duration left."],
+            desc = L["Checks for Evokers whether they have Source of Magic on a healer and it has at least 10m duration left."],
             get = function() return NSRT.ReadyCheckSettings.SourceOfMagicCheck end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.SourceOfMagicCheck = value
             end,
             nocombat = true,
             icontexture = 4630412,
+            iconsize = {16, 16},
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Blistering Scales Check"],
+            desc = L["Checks for Evokers whether they have Blistering Scales on a player and it has at least 10m duration left."],
+            get = function() return NSRT.ReadyCheckSettings.BlisteringScalesCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.BlisteringScalesCheck = value
+            end,
+            nocombat = true,
+            icontexture = 5199621,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Symbiotic Relationship Check"],
+            desc = L["Checks for Druids whether they have Symbiotic Relationship on a player and it has at least 10m duration left."],
+            get = function() return NSRT.ReadyCheckSettings.SymbioticRelationshipCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.SymbioticRelationshipCheck = value
+            end,
+            nocombat = true,
+            icontexture = 1408837,
             iconsize = {16, 16},
         },
 

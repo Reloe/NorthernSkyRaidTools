@@ -272,7 +272,6 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
     if not firstcall and not self.Groups.Processing then return end
     local now = GetTime()
     if firstcall then
-        self:Print("Split Table Data:", self.Groups.units)
         self.Groups.Processing = true
         self.Groups.Processed = 0
         self.Groups.ProcessStart = now
@@ -396,8 +395,6 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
-            self.specs = {}
-            self:Broadcast("NSI_SPEC_REQUEST", "RAID", "nilcheck")
             local difficultyID = select(3, GetInstanceInfo()) or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
@@ -523,7 +520,7 @@ function NSI:InviteList(list)
         else
             fullname = name.."-"..realm
         end
-        if (not UnitIsUnit("player", fullname)) and (not UnitInRaid(fullname)) then
+        if (not UnitIsUnit("player", name)) and (not UnitInRaid(name)) then
             C_PartyInfo.InviteUnit(fullname)
         end
     end

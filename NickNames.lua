@@ -12,9 +12,9 @@ function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickna
         return
     end
     if not sortedCharList[str] then
-        return CharList[str] and CopyTable(CharList[str])
+        return CharList[str]
     else
-        return sortedCharList[str] and CopyTable(sortedCharList[str])
+        return sortedCharList[str]
     end
 end
 

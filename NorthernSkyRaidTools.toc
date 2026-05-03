@@ -4,7 +4,7 @@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe, Rav
 ## DefaultState: Enable
-## SavedVariables: NSRT
+## SavedVariables: NSRT, NSRTTimelineData
 ## Category: Northern Sky
 ## X-Curse-Project-ID: 954018
 ## X-Wago-ID: rN4VDdKD
@@ -14,6 +14,8 @@ Libs\libs.xml
 
 # Locales
 Locales\enUS.lua
+Locales\koKR.lua
+Locales\ruRU.lua
 
 # Main Files
 NorthernSkyRaidTools.lua
@@ -32,6 +34,7 @@ ReadyCheck.lua
 PrivateAura.lua
 QoL.lua
 Profiles.lua
+InterruptDisplay.lua
 
 # Encounter Alerts
 EncounterAlerts/Alerts.lua
@@ -73,6 +76,7 @@ UI/Options/Nicknames.lua
 UI/Options/Reminders.lua
 UI/Options/Assignments.lua
 UI/Options/EncounterAlerts.lua
+UI/Options/InterruptDisplay.lua
 UI/Options/ReadyCheck.lua
 UI/Options/PrivateAuras.lua
 UI/Options/QoL.lua

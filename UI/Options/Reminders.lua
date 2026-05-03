@@ -130,6 +130,18 @@ local function BuildReminderOptions()
             max = 10,
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Hide Timer Text"],
+            desc = L["Hides the Timer Text shown on either the Icon or the Bar"],
+            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTimerText"] = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
+        },
+        {
             type = "label",
             get = function() return L["Text Settings"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
@@ -263,6 +275,19 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings.TextSettings.CenterAligned end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.TextSettings.CenterAligned = value
+                NSI:UpdateExistingFrames()
+            end,
+            nocombat = true,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Hide Timer Text"],
+            desc = L["Hides the Timer Text shown for Text-Reminders"],
+            get = function() return NSRT.ReminderSettings["HideTextTimerText"] end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings["HideTextTimerText"] = value
                 NSI:UpdateExistingFrames()
             end,
             nocombat = true,
@@ -408,6 +433,19 @@ local function BuildReminderOptions()
             end,
             min = 0,
             max = 30,
+            nocombat = true,
+        },
+        {
+            type = "range",
+            name = L["Icon-Zoom"],
+            desc = L["Zoom level of the Icons"],
+            get = function() return NSRT.ReminderSettings.IconSettings.Zoom or 0 end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.IconSettings.Zoom = value
+                NSI:UpdateExistingFrames()
+            end,
+            min = 0,
+            max = 100,
             nocombat = true,
         },
 
@@ -604,20 +642,6 @@ local function BuildReminderOptions()
             get = function() return L["Universal Settings"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
-
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Hide Timer Text"],
-            desc = L["Hides the Timer Text shown on either the Icon or the Bar"],
-            get = function() return NSRT.ReminderSettings["HideTimerText"] end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings["HideTimerText"] = value
-                NSI:UpdateExistingFrames()
-            end,
-            nocombat = true,
-        },
-
         {
             type = "toggle",
             boxfirst = true,
@@ -630,7 +654,6 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
-
         {
             type = "toggle",
             boxfirst = true,
@@ -639,6 +662,19 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings.IgnoreEveryone end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.IgnoreEveryone = value
+                NSI:ProcessReminder()
+                NSI:UpdateReminderFrame(true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Show ALL Reminders"],
+            desc = L["This will show you ALL reminders from your notes, regardless of whether the tag matches you or not."],
+            get = function() return NSRT.ReminderSettings.ShowAllReminders end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ShowAllReminders = value
                 NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(true)
             end,
@@ -683,6 +719,12 @@ local function BuildReminderOptions()
                 if NSI.IsInPreview then return end
 
                 local allMovers = {"IconMover", "BarMover", "TextMover", "CircleMover"}
+                local allSettings = {
+                    IconMover = NSRT.ReminderSettings.IconSettings,
+                    BarMover = NSRT.ReminderSettings.BarSettings,
+                    TextMover = NSRT.ReminderSettings.TextSettings,
+                    CircleMover = NSRT.ReminderSettings.CircleSettings,
+                }
 
                 -- Shared spawn function so the ticker can loop it
                 local function SpawnPreviewReminders()
@@ -757,9 +799,12 @@ local function BuildReminderOptions()
                     end
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
-                    for _, v in ipairs(allMovers) do
-                        if NSI[v] then NSI[v]:StopMovingOrSizing() end
-                        NSI:ToggleMoveFrames(NSI[v], false)
+                    for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+                        local settings = v == "IconMover" and NSRT.ReminderSettings.IconSettings or v == "BarMover" and NSRT.ReminderSettings.BarSettings or NSRT.ReminderSettings.TextSettings
+                        if NSI[v] then
+                            NSI[v]:StopMovingOrSizing()
+                        end
+                        NSI:MakeDraggable(NSI[v], settings, false)
                     end
                     if NSI.PreviewBar then NSI.PreviewBar:Hide() end
                     NSUI:Show()
@@ -802,7 +847,7 @@ local function BuildReminderOptions()
                 -- Start preview
                 NSI.IsInPreview = true
                 for _, v in ipairs(allMovers) do
-                    NSI:ToggleMoveFrames(NSI[v], true)
+                    NSI:MakeDraggable(NSI[v], allSettings[v], true)
                 end
 
                 SpawnPreviewReminders()
@@ -848,6 +893,12 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.PersNote = value
                 NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(true)
+                if not value then
+                    NSI.PersonalReminder = ""
+                    NSI.LoadedPersonalReminder = nil
+                    NSRT.StoredPersonalReminder = nil
+                    NSRT.ActivePersonalReminder = {}
+                end
             end,
             nocombat = true,
         },
@@ -931,18 +982,18 @@ local function BuildReminderNoteOptions()
 
         {
             type = "button",
-            name = L["Toggle All Reminders"],
+            name = L["Unlock All Reminders"],
             desc = L["Locks/Unlocks the All Reminders Note to be moved around"],
             func = function(self)
                 if NSI.ReminderFrameMover and NSI.ReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(false, true)
-                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, false)
+                    NSI:MakeDraggable(NSI.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame, false, true)
                     NSI.ReminderFrameMover.Resizer:Hide()
                     NSI.ReminderFrameMover:SetResizable(false)
                     NSRT.ReminderSettings.ReminderFrame.Moveable = false
                 else
                     NSI:UpdateReminderFrame(false, true)
-                    NSI:ToggleMoveFrames(NSI.ReminderFrameMover, true)
+                    NSI:MakeDraggable(NSI.ReminderFrameMover, NSRT.ReminderSettings.ReminderFrame, true, true)
                     NSI.ReminderFrameMover.Resizer:Show()
                     NSI.ReminderFrameMover:SetResizable(true)
                     NSI.ReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
@@ -1106,18 +1157,18 @@ local function BuildReminderNoteOptions()
 
         {
             type = "button",
-            name = L["Toggle Pers Reminder"],
+            name = L["Unlock Pers Reminder"],
             desc = L["Locks/Unlocks the Personal Reminders Note to be moved around"],
             func = function(self)
                 if NSI.PersonalReminderFrameMover and NSI.PersonalReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(false, false, true)
-                    NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, false)
+                    NSI:MakeDraggable(NSI.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame, false, true)
                     NSI.PersonalReminderFrameMover.Resizer:Hide()
                     NSI.PersonalReminderFrameMover:SetResizable(false)
                     NSRT.ReminderSettings.PersonalReminderFrame.Moveable = false
                 else
                     NSI:UpdateReminderFrame(false, false, true)
-                    NSI:ToggleMoveFrames(NSI.PersonalReminderFrameMover, true)
+                    NSI:MakeDraggable(NSI.PersonalReminderFrameMover, NSRT.ReminderSettings.PersonalReminderFrame, true, true)
                     NSI.PersonalReminderFrameMover.Resizer:Show()
                     NSI.PersonalReminderFrameMover:SetResizable(true)
                     NSI.PersonalReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)
@@ -1233,18 +1284,18 @@ local function BuildReminderNoteOptions()
 
         {
             type = "button",
-            name = L["Toggle Text Note"],
+            name = L["Unlock Text Note"],
             desc = L["Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed."],
             func = function(self)
                 if NSI.ExtraReminderFrameMover and NSI.ExtraReminderFrameMover:IsMovable() then
                     NSI:UpdateReminderFrame(false, false, false, true)
-                    NSI:ToggleMoveFrames(NSI.ExtraReminderFrameMover, false)
+                    NSI:MakeDraggable(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame, false, true)
                     NSI.ExtraReminderFrameMover.Resizer:Hide()
                     NSI.ExtraReminderFrameMover:SetResizable(false)
                     NSRT.ReminderSettings.ExtraReminderFrame.Moveable = false
                 else
                     NSI:UpdateReminderFrame(false, false, false, true)
-                    NSI:ToggleMoveFrames(NSI.ExtraReminderFrameMover, true)
+                    NSI:MakeDraggable(NSI.ExtraReminderFrameMover, NSRT.ReminderSettings.ExtraReminderFrame, true, true)
                     NSI.ExtraReminderFrameMover.Resizer:Show()
                     NSI.ExtraReminderFrameMover:SetResizable(true)
                     NSI.ExtraReminderFrameMover:SetResizeBounds(100, 100, 2000, 2000)

@@ -21,17 +21,11 @@ SlashCmdList["NSUI"] = function(msg)
             NSI.NSUI.cooldowns_frame:Show()
         end
     elseif msg == "reminders" or msg == "r" then
-        if not NSUI.reminders_frame:IsShown() then
-            NSUI.reminders_frame:Show()
-        else
-            NSUI.reminders_frame:Hide()
-        end
+        NSI.NSUI:Show()
+        NSI.NSUI.MenuFrame:SelectTabByName("SharedNotes")
     elseif msg == "preminders" or msg == "pr" then
-        if not NSUI.personal_reminders_frame:IsShown() then
-            NSUI.personal_reminders_frame:Show()
-        else
-            NSUI.personal_reminders_frame:Hide()
-        end
+        NSI.NSUI:Show()
+        NSI.NSUI.MenuFrame:SelectTabByName("PersonalNotes")
     elseif msg == "note" or msg == "n" then -- Toggle Showing/Hiding ALL Notes
         local ShouldShow = not (NSRT.ReminderSettings.ReminderFrame.enabled or NSRT.ReminderSettings.PersonalReminderFrame.enabled or NSRT.ReminderSettings.ExtraReminderFrame.enabled)
         NSRT.ReminderSettings.ReminderFrame.enabled = ShouldShow
@@ -53,7 +47,7 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:UpdateReminderFrame(false, false, false, true)
     elseif msg == "clear" or msg == "c" then -- Clear Active Reminder
         NSI:SetReminder(nil)
-        NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
+        if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true) end
     elseif msg == "pclear" or msg == "pc" then -- Clear Active Personal Reminder
         NSI:SetReminder(nil, true)
     elseif msg == "timeline" or msg == "tl" then
@@ -62,6 +56,16 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:InviteFromReminder(NSRT.ActiveReminder, true)
     elseif msg == "arrange" then
         NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
+    elseif msg == "debuglogs" then
+        NSRT.Settings.DebugLogs = not NSRT.Settings.DebugLogs
+        if NSRT.Settings.DebugLogs then
+            print("|cFF00FFFFNSRT|r Debug logs are now enabled")
+        else
+            print("|cFF00FFFFNSRT|r Debug logs are now disabled.")
+        end
+    elseif msg == "resetlogs" then
+        NSRTTimelineData = {}
+        print("|cFF00FFFFNSRT|r Timeline logs have been reset.")
     elseif msg == "help" then
         print("|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n")
         print("  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development")

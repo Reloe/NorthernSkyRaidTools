@@ -21,8 +21,10 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PASettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.enabled = value
-                NSI:InitPA()
+                NSI:InitPrivateAuras()
             end,
+            icontexture = 237555,
+            iconsize = {16, 16},
         },
         {
             type = "button",
@@ -117,27 +119,16 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Stack-Scale"],
-            desc = L["This will create a 2nd Stack-Size Text on top of the first one. If big enough you will barely notice the original one. Unfortunately that is the only viable workaround at the moment. You can disable this by setting the Scale to 1."],
+            name = L["Scale"],
+            desc = L["This will scale the size of Stacks and Duration text."],
             get = function() return NSRT.PASettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.StackScale = value
                 NSI:UpdatePADisplay(true)
             end,
             min = 1,
-            max = 10,
+            max = 3,
             step = 0.1,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Upscale Duration Text"],
-            desc = L["This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it. This can only be used together with the Stack-Size Scaling because it is not possible to hide the Stack-Size from a secondary display."],
-            get = function() return NSRT.PASettings.UpscaleDuration end,
-            set = function(self, fixedparam, value)
-                NSRT.PASettings.UpscaleDuration = value
-                NSI:UpdatePADisplay(true)
-            end,
         },
         {
             type = "toggle",
@@ -162,17 +153,6 @@ local function BuildPrivateAurasOptions()
             end,
         },
         {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Alternate Display"],
-            desc = L["Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5"],
-            get = function() return NSRT.PASettings.AlternateDisplay end,
-            set = function(self, fixedparam, value)
-                NSRT.PASettings.AlternateDisplay = value
-                NSI:UpdatePADisplay(true)
-            end,
-        },
-        {
             type = "label",
             get = function() return L["Personal Private Aura Text-Warning"] end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
@@ -185,7 +165,7 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PATextSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PATextSettings.enabled = value
-                NSI:InitTextPA()
+                NSI:InitPrivateAuras()
             end,
         },
         {
@@ -217,13 +197,10 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PARaidSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.enabled = value
-                if NSRT.PARaidSettings.enabled then
-                    NSI:InitRaidPA(not UnitInRaid("player"))
-                else
-                    NSI:InitRaidPA(true)
-                    NSI:InitRaidPA(false)
-                end
+                NSI:InitPrivateAuras()
             end,
+            icontexture = 7454100,
+            iconsize = {16, 16},
         },
         {
             type = "button",
@@ -337,15 +314,15 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Stack-Scale"],
-            desc = L["Same as the other Stack-Scales but for this I recommend to use this because the default display is in a rather bad spot. The default is 1.1 to have it enabled but not too big."],
+            name = L["Scale"],
+            desc = L["This will scale the size of Stacks and Duration text."],
             get = function() return NSRT.PARaidSettings.StackScale or 1.1 end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.StackScale = value
                 NSI:UpdatePADisplay(false)
             end,
             min = 1,
-            max = 5,
+            max = 3,
             step = 0.1,
         },
 
@@ -448,7 +425,10 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PATankSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.enabled = value
+                NSI:InitPrivateAuras()
             end,
+            icontexture = 236318,
+            iconsize = {16, 16},
         },
         {
             type = "button",
@@ -543,27 +523,16 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Stack-Scale"],
-            desc = L["This will create a 2nd Stack-Size Text on top of the first one. If big enough you will barely notice the original one. Unfortunately that is the only viable workaround at the moment. You can disable this by setting the Scale to 1."],
+            name = L["Scale"],
+            desc = L["This will scale the size of Stacks and Duration text."],
             get = function() return NSRT.PATankSettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.StackScale = value
                 NSI:UpdatePADisplay(false, true)
             end,
             min = 1,
-            max = 10,
+            max = 3,
             step = 0.1,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Upscale Duration Text"],
-            desc = L["This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it. This can only be used together with the Stack-Size Scaling because it is not possible to hide the Stack-Size from a secondary display."],
-            get = function() return NSRT.PATankSettings.UpscaleDuration end,
-            set = function(self, fixedparam, value)
-                NSRT.PATankSettings.UpscaleDuration = value
-                NSI:UpdatePADisplay(false, true)
-            end,
         },
         {
             type = "toggle",
@@ -586,24 +555,6 @@ local function BuildPrivateAurasOptions()
                 NSRT.PATankSettings.HideTooltip = value
                 NSI:UpdatePADisplay(false, true)
             end,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Alternate Display"],
-            desc = L["Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5"],
-            get = function() return NSRT.PATankSettings.AlternateDisplay end,
-            set = function(self, fixedparam, value)
-                NSRT.PATankSettings.AlternateDisplay = value
-                NSI:UpdatePADisplay(false, true)
-            end,
-        },
-        {
-            type = "select",
-            name = L["Grow Direction"],
-            desc = L["This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included."],
-            get = function() return NSRT.PATankSettings.GrowDirection end,
-            values = function() return build_PAgrowdirection_options("PATankSettings", "MultiTankGrowDirection") end,
         },
     }
 end

@@ -9,7 +9,8 @@ local function build_anchor_options(SettingsName)
             label = v,
             value = i,
             onclick = function(_, _, value)
-                NSRT.Settings[SettingsName] = list[value]
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183][SettingsName] = list[value]
                 if NSI.IsLuraPreview then
                     NSI.EncounterAlertStart[3183](NSI, 15, true)
                 end
@@ -339,7 +340,21 @@ local function BuildEncounterAlertsOptions()
                 NSI:FireCallback("NSRT_ALERT_TOGGLE", 3183)
             end,
             nocombat = true,
-            icontexture = 7448204,
+            icontexture = 133241,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Interrupt Display",
+            desc = "Enables the Box for Interrupts in P1. This works exactly like the WA does.",
+            get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].InterruptDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
+                NSRT.EncounterAlerts[3183].InterruptDisplay = value
+            end,
+            nocombat = true,
+            icontexture = 132938,
             iconsize = {16, 16},
         },
         {
@@ -377,7 +392,7 @@ local function BuildEncounterAlertsOptions()
             type = "toggle",
             boxfirst = true,
             name = "Runes Display",
-            desc = "Enables the Map-Display for where each rune should be going. This requires other people to input the correct numbers into chat either via a macro or the click-option below. It also requires no one else to type anything else in raidchat during the encounter.",
+            desc = "Enables the Map-Display for where each rune should be going. This requires other people to input the correct numbers into chat via a macro. It also requires no one else to type anything else in raidchat during the encounter.",
             get = function() return NSRT.EncounterAlerts[3183] and NSRT.EncounterAlerts[3183].RunesDisplay end,
             set = function(self, fixedparam, value)
                 NSRT.EncounterAlerts[3183] = NSRT.EncounterAlerts[3183] or {}
@@ -388,58 +403,28 @@ local function BuildEncounterAlertsOptions()
             iconsize = {16, 16},
         },
         {
-            type = "select",
-            name = "Anchor of Runes-Display",
-            desc = "Defines the Anchor of the Runes-Display. They will grow right from there.",
-            get = function() return NSRT.Settings.LuraDisplayAnchor or "TOPLEFT" end,
-            values = function() return build_anchor_options("LuraDisplayAnchor") end,
-            nocombat = true,
-        },
-        {
-            type = "select",
-            name = "Relative Point of Runes-Display",
-            desc = "Defines the Relative Point of the Runes-Display. They will grow right from there.",
-            get = function() return NSRT.Settings.LuraDisplayRelativePoint or "TOPLEFT" end,
-            values = function() return build_anchor_options("LuraDisplayRelativePoint") end,
-            nocombat = true,
-        },
-        {
             type = "range",
-            name = "X-Offset of Runes-Display",
-            desc = "X-Offset of the Runes-Display",
-            get = function() return NSRT.Settings.LuraDisplayOffsetX or 300 end,
+            name = "Scale",
+            desc = "Scale of the Runes-Display",
+            get = function() return NSRT.EncounterAlerts[3183].LuraDisplay.Scale or 1 end,
             set = function(self, fixedparam, value)
-                NSRT.Settings.LuraDisplayOffsetX = value
+                NSRT.EncounterAlerts[3183].LuraDisplay.Scale = value
                 if NSI.IsLuraPreview then
                     NSI.EncounterAlertStart[3183](NSI, 15, true)
                 end
             end,
-            min = -2000,
-            max = 2000,
-            nocombat = true,
-        },
-        {
-            type = "range",
-            name = "Y-Offset of Runes-Display",
-            desc = "Y-Offset of the Runes-Display",
-            get = function() return NSRT.Settings.LuraDisplayOffsetY or -300 end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings.LuraDisplayOffsetY = value
-                if NSI.IsLuraPreview then
-                    NSI.EncounterAlertStart[3183](NSI, 15, true)
-                end
-            end,
-            min = -2000,
-            max = 2000,
+            min = 0.3,
+            max = 2,
+            step = 0.1,
             nocombat = true,
         },
         {
             type = "color",
             name = "Background-Color",
             desc = "Color of the Background of the Rune Display",
-            get = function() return NSRT.Settings.LuraDisplayColor or {0.5, 0.5, 0.5, 0.9} end,
+            get = function() return NSRT.EncounterAlerts[3183].LuraDisplay.Color end,
             set = function(self, r, g, b, a)
-                NSRT.Settings.LuraDisplayColor = {r, g, b, a}
+                NSRT.EncounterAlerts[3183].LuraDisplay.Color = {r, g, b, a}
                 if NSI.IsLuraPreview then
                     NSI.EncounterAlertStart[3183](NSI, 15, true)
                 end
@@ -450,13 +435,15 @@ local function BuildEncounterAlertsOptions()
         {
             type = "button",
             name = "Preview Lura Runes",
-            desc = "This will display a preview of the Lura Runes. You cannot move them around and any settings change you make will unfortunately require a UI reload.",
+            desc = "This will display a preview of the Lura Runes.",
             func = function(self)
                 NSI.IsLuraPreview = not NSI.IsLuraPreview
                 if NSI.IsLuraPreview then
                     NSI.EncounterAlertStart[3183](NSI, 15, true)
+                    NSI:MakeDraggable(NSI.LuraRunesFrame, NSRT.EncounterAlerts[3183].LuraDisplay, true)
                 else
                     NSI.EncounterAlertStop[3183](NSI)
+                    NSI:MakeDraggable(NSI.LuraRunesFrame, NSRT.EncounterAlerts[3183].LuraDisplay, false)
                 end
             end,
             nocombat = true

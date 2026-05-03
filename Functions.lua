@@ -81,12 +81,43 @@ end
 
 function NSI:GetSpecs(unit)
     if unit then
-        return NSI.specs[unit] or false -- return false if no information available for that unit so it goes to the next fallback
+        return self.specs[unit] or false -- return false if no information available for that unit so it goes to the next fallback
     else
-        return NSI.specs -- if no unit is given then entire table is requested
+        return self.specs -- if no unit is given then entire table is requested
     end
 end
 
+-- Registers or unregisters the LibSpecialization group callback depending on
+-- whether the player is currently in a raid. Called on login and GROUP_ROSTER_UPDATE.
+function NSI:UpdateLibSpecRegistration()
+    self.LS = self.LS or LibStub("LibSpecialization", true)
+    if not self.LS then return end
+    if not self._libSpecRegistered then
+        self._libSpecRegistered = true
+        local _, myrealm = UnitFullName("player")
+        self.LS.RegisterGroup(self, function(specId, role, position, playerName)
+            self.specs = self.specs or {}
+            self.GUIDS = self.GUIDS or {}
+            local name, realm = strsplit("-", playerName)
+            if (not realm) or (realm == "") then realm = myrealm end
+            local u
+            for unit in self:IterateGroupMembers() do
+                local uname, urealm = UnitFullName(unit)
+                if not urealm then urealm = myrealm end
+                if uname and uname == name and urealm and urealm == realm then
+                    u = unit
+                    break
+                end
+            end
+            if u then
+                self.specs[u] = specId
+                NSAPI.specs = self.specs
+                local G = UnitGUID(u)
+                self.GUIDS[u] = issecretvalue(G) and "" or G
+            end
+        end)
+    end
+end
 
 function NSI:GetNote() -- simply for note comparison now
     if not C_AddOns.IsAddOnLoaded("MRT") then
@@ -127,7 +158,7 @@ function NSAPI:TTSCountdown(num)
 end
 
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
-function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
+function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
         local secret = issecretvalue(sound)
         local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
@@ -151,8 +182,8 @@ function NSAPI:TTS(sound, voice, overlap) -- NSAPI:TTS("Bait Frontal")
                 num,
                 sound,
                 C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
-                NSRT.Settings["TTSVolume"],
-                overlap
+                NSRT.Settings.TTSVolume,
+                NSRT.Settings.TTSOverlap
             )
         end
     end
@@ -242,6 +273,54 @@ end
 local Serialize = LibStub("AceSerializer-3.0")
 local Compress = LibStub("LibDeflate")
 
+-- Snapshot of the original locale strings before any override is applied.
+local _localeSnapshot = nil
+
+-- Applies a user-selected language override by mutating the AceLocale table in-place.
+-- Must be called after NSRT is loaded (ADDON_LOADED). The UI reads L lazily so
+-- all strings will reflect the override the next time the options panel is opened.
+function NSI:ApplyLocaleOverride()
+    local lang = NSRT and NSRT.Settings and NSRT.Settings.Language
+    local aceL = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+
+    -- Build a snapshot of the original (client) locale the first time we run.
+    if not _localeSnapshot then
+        _localeSnapshot = {}
+        for _, rawTable in pairs(NSI.RawLocales or {}) do
+            for k in pairs(rawTable) do
+                if _localeSnapshot[k] == nil then
+                    local v = rawget(aceL, k)
+                    _localeSnapshot[k] = (v == nil or v == true) and k or v
+                end
+            end
+        end
+    end
+
+    if not lang or lang == "Auto" then
+        -- Restore the original client locale strings.
+        for k, v in pairs(_localeSnapshot) do
+            rawset(aceL, k, v)
+        end
+        return
+    end
+
+    if lang == "enUS" then
+        -- Reset all known translated keys back to their English form (key == value in AceLocale)
+        for _, rawTable in pairs(NSI.RawLocales or {}) do
+            for k in pairs(rawTable) do
+                rawset(aceL, k, k)
+            end
+        end
+    else
+        local rawTable = NSI.RawLocales and NSI.RawLocales[lang]
+        if rawTable then
+            for k, v in pairs(rawTable) do
+                rawset(aceL, k, v)
+            end
+        end
+    end
+end
+
 function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettings", ...}
     local str = ""
     local ExportTable = {}
@@ -291,33 +370,55 @@ function NSI:StopFrameMove(F, SettingsTable)
     SettingsTable.relativeTo = relativeTo
 end
 
-function NSI:ToggleMoveFrames(F, Unlock)
+function NSI:MakeDraggable(F, settingsTable, enable, isNote)
     if not F then return end
-    if Unlock then
+
+    if enable then
+        if (not F.dragBorder) and (not isNote) then
+            F.dragBorder = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.dragBorder:SetPoint("TOPLEFT",     F, "TOPLEFT",     -8,  8)
+            F.dragBorder:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT",  8, -8)
+            F.dragBorder:SetBackdrop({
+                bgFile   = "Interface\\Buttons\\WHITE8x8", tileSize = 0,
+                edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 4,
+            })
+            F.dragBorder:SetBackdropColor(0, 0, 0, 0)
+            F.dragBorder:SetBackdropBorderColor(0.3, 0.67, 0.78, 1)
+        end
         F:SetMovable(true)
         F:EnableMouse(true)
         F:RegisterForDrag("LeftButton")
         F:SetClampedToScreen(true)
         F:Show()
-        if F.Border      then F.Border:Show()      end
-        if F.Text        then F.Text:Show()        end
-        if F.TitleLabel  then F.TitleLabel:Show()  end
-        if F.GearButton  then F.GearButton:Show()  end
+        if F.Border and isNote then F.Border:Show() end
+        if F.dragBorder then F.dragBorder:Show() end
+        if F.Text then F.Text:Show() end
+        if F.TitleLabel then F.TitleLabel:Show() end
+        if F.GearButton then F.GearButton:Show() end
     else
-        if F.Border         then F.Border:Hide()         end
-        if F.Text           then F.Text:Hide()           end
-        if F.TitleLabel     then F.TitleLabel:Hide()     end
-        if F.GearButton     then F.GearButton:Hide()     end
+        if F.Border and isNote then F.Border:Hide() end
+        if F.dragBorder then F.dragBorder:Hide() end
+        if F.Text then F.Text:Hide() end
+        if F.TitleLabel then F.TitleLabel:Hide() end
+        if F.GearButton then F.GearButton:Hide() end
         if F.SettingsWindow then F.SettingsWindow:Hide() end
+        if not isNote then F:SetFrameStrata("DIALOG") end
+
+        F:SetScript("OnDragStart", function(f) f:StartMoving() end)
+        F:SetScript("OnDragStop", function(f)
+            self:StopFrameMove(f, settingsTable)
+        end)
         F:SetMovable(false)
         F:EnableMouse(false)
+        F:SetScript("OnDragStart", nil)
+        F:SetScript("OnDragStop",  nil)
     end
 end
 
 function NSI:IsMelee(unit)
     local role = UnitGroupRolesAssigned(unit)
     if unit == "player" then
-        local spec = GetSpecializationInfo(GetSpecialization())
+        local spec = self:GetMySpecID()
         local melee = false
         if self.meleetable[spec] or role == "TANK" then
             melee = true
@@ -334,5 +435,93 @@ function NSI:IsMelee(unit)
         else
             return role == "TANK"
         end
+    end
+end
+
+function NSI:LogTimeline(e, ...)
+    if not NSRT.Settings.DebugLogs then return end
+    local id = select(3, GetInstanceInfo())
+    if id > 16 or id < 14 then return end
+    if e == "ENCOUNTER_START" then
+        local encID, encName, difficultyID, groupSize = ...
+        local now = GetTime()
+        local date = C_DateAndTime.GetCurrentCalendarTime()
+        self.CurrentEncounterData = {
+            Name = encName,
+            encID = encID,
+            difficulty = difficultyID == 16 and "Mythic" or difficultyID == 15 and "Heroic" or difficultyID == 14 and "Normal",
+            pullTime = now,
+            startTime = string.format("%02d:%02d", date.hour, date.minute),
+            success = false,
+            length = 0,
+            events = {},
+        }
+    elseif e == "ENCOUNTER_END" then
+        local success = select(5, ...)
+        local now = GetTime()
+        if self.CurrentEncounterData then
+            self.CurrentEncounterData.success = success == 1
+            local elapsed = now - self.CurrentEncounterData.pullTime
+            if elapsed >= 30 then
+                self.CurrentEncounterData.pullTime = nil
+                self.CurrentEncounterData.length = string.format("%02d:%02d", math.floor(elapsed / 60), math.floor(elapsed % 60))
+                table.insert(NSRTTimelineData, self.CurrentEncounterData)
+            end
+        end
+        self.CurrentEncounterData = nil
+    elseif e == "NSRT_PHASE" then
+        local phase = ...
+        if self.CurrentEncounterData then
+            local now = GetTime()
+            tinsert(self.CurrentEncounterData.events, string.format("[%7.2f]  Phase Detected: %s", now - self.CurrentEncounterData.pullTime, phase))
+        end
+    elseif self.CurrentEncounterData then
+        local info = ...
+        local data = {}
+        local now = GetTime()
+        local stateNames = { [0] = "Active", [1] = "Paused", [2] = "Finished", [3] = "Canceled" }
+        if e == "ENCOUNTER_TIMELINE_EVENT_ADDED" then
+            data.dur = info.duration
+            data.id = info.id
+            data.Queue = info.maxQueueDuration
+        elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" then
+            data.id = info
+            local stateVal = C_EncounterTimeline.GetEventState(info)
+            data.state = stateNames[stateVal] or tostring(stateVal)
+        else
+            data.id = info
+        end
+        data.time = now - self.CurrentEncounterData.pullTime
+        tinsert(self.CurrentEncounterData.events, string.format("[%6.2f]  %-45s  id: %-10s%s%s%s",
+            data.time,
+            e,
+            tostring(data.id or "nil"),
+            data.dur and string.format("  dur: %-10.4f", data.dur) or "",
+            data.Queue and string.format("  queue: %.4f", data.Queue) or "",
+            data.state and string.format("  state: %s", data.state) or ""
+        ))
+    end
+end
+
+function NSI:GetMySpecID()
+    return C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()) or 0
+end
+
+function NSI:EncounterRegister(event, enable, units, all)
+    if not self.EncounterFrame then
+        self.EncounterFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+    end
+    if all then
+        self.EncounterFrame:UnregisterAllEvents()
+        return
+    end
+    if enable then
+        if units then
+            self.EncounterFrame:RegisterUnitEvent(event, unpack(units))
+        else
+            self.EncounterFrame:RegisterEvent(event)
+        end
+    else
+        self.EncounterFrame:UnregisterEvent(event)
     end
 end

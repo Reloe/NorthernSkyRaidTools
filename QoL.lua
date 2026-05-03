@@ -62,35 +62,37 @@ function NSI:QoLEvents(e, ...)
         end
         self:UpdateQoLTextDisplay()
     elseif e == "ADDON_RESTRICTION_STATE_CHANGED" then
-        if C_ChatInfo.InChatMessagingLockdown() then
-            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", false)
-        else
-            self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
-        end
-        if not NSRT.QoL.ResetBossDisplay then -- shouldn't be possible but another safety check
-            self.QoLTextDisplays.ResetBoss = nil
-            self:UpdateQoLTextDisplay()
-            self:ToggleQoLEvent("UNIT_AURA", false)
-            return
-        elseif self:Restricted() then
-            self.QoLTextDisplays.ResetBoss = nil
-            self:ToggleQoLEvent("UNIT_AURA", false)
-        else
-            local inRaid = self:DifficultyCheck(14)
-            if not inRaid then return end
-            self:ToggleQoLEvent("UNIT_AURA", inRaid, "player")
-            local debuffed = self:HasLustDebuff()
-            if debuffed then
-                self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+        C_Timer.After(0, function()
+            if C_ChatInfo.InChatMessagingLockdown() then
+                self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", false)
             else
-                self.QoLTextDisplays.ResetBoss = nil
+                self:ToggleQoLEvent("UNIT_SPELLCAST_SUCCEEDED", true, "player")
             end
-        end
-        self:UpdateQoLTextDisplay()
-    elseif e == "PLAYER_REGEN_DISABLED" and NSRT.QoLResetBossDisplay then
+            if not NSRT.QoL.ResetBossDisplay then -- shouldn't be possible but another safety check
+                self.QoLTextDisplays.ResetBoss = nil
+                self:UpdateQoLTextDisplay()
+                self:ToggleQoLEvent("UNIT_AURA", false)
+                return
+            elseif self:Restricted() then
+                self.QoLTextDisplays.ResetBoss = nil
+                self:ToggleQoLEvent("UNIT_AURA", false)
+            else
+                local inRaid = self:DifficultyCheck(14)
+                if not inRaid then return end
+                self:ToggleQoLEvent("UNIT_AURA", inRaid, "player")
+                local debuffed = self:HasLustDebuff()
+                if debuffed then
+                    self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
+                else
+                    self.QoLTextDisplays.ResetBoss = nil
+                end
+            end
+            self:UpdateQoLTextDisplay()
+        end)
+    elseif e == "PLAYER_REGEN_DISABLED" and NSRT.QoL.ResetBossDisplay then
         self.QoLTextDisplays.ResetBoss = nil
         self:UpdateQoLTextDisplay()
-    elseif e == "PLAYER_REGEN_ENABLED" and NSRT.QoLResetBossDisplay then
+    elseif e == "PLAYER_REGEN_ENABLED" and NSRT.QoL.ResetBossDisplay then
         if self:HasLustDebuff() then
             self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
         else
@@ -261,6 +263,8 @@ function NSI:QoLOnZoneSwap() -- only register events while player is in raid
 end
 
 function NSI:HasLustDebuff()
+    if self:Restricted() then return false end
+    if not self:DifficultyCheck(14) then return false end
     for _, spellID in ipairs(LustDebuffs) do
         local debuff = self:UnitAura("player", spellID)
         if (not issecretvalue(debuff)) and debuff then

@@ -9,8 +9,9 @@ L["General"] = true
 L["Quality of Life"] = true
 L["Ready Check"] = true
 L["Reminders"] = true
-L["Reminder Strings"] = true
+L["Note-Display"] = true
 L["Encounter Alerts"] = true
+L["Interrupt Display"] = true
 L["Assignments"] = true
 L["Private Auras"] = true
 L["WA Imports"] = true
@@ -75,6 +76,12 @@ L["%s (%d notes)"] = true
 -- ============================================================================
 -- UI/Options/General.lua
 -- ============================================================================
+L["Addon Language"] = true
+L["Choose the language used by the addon UI. You will have to reload your UI for all changes to take effect. Automatic will take your client language."] = true
+L["Automatic"] = true
+L["English (enUS)"] = true
+L["Korean (koKR)"] = true
+L["Russian (ruRU)"] = true
 L["General Options"] = true
 L["Disable Minimap Button"] = true
 L["Hide the minimap button."] = true
@@ -82,6 +89,9 @@ L["Global Font"] = true
 L["This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility."] = true
 L["Global Font-Size"] = true
 L["Size of the global font"] = true
+L["Global Font Outline"] = true
+L["Font outline flags applied to all addon text."] = true
+L["None"] = true
 L["Move Text Display"] = true
 L["This lets you move the generic text display used for example the ready check module or the assignments on pull."] = true
 L["Setup Manager"] = true
@@ -101,6 +111,8 @@ L["Volume of the TTS"] = true
 L["TTS Preview"] = true
 L["Enter any text to preview TTS\n\nPress 'Enter' to hear the TTS"] = true
 L["Enable TTS"] = true
+L["Overlap TTS-Sounds"] = true
+L["Allow TTS sounds to overlap each other."] = true
 L["Exports your currently active profile to a string that can be shared with others."] = true
 L["Imports a profile from a string shared by another player. It will be saved as a new profile you can then load."] = true
 L["Profile Management"] = true
@@ -152,7 +164,6 @@ L["Keep Reminders shown for X seconds if the spell hasn't been pressed yet"] = t
 L["Text Settings"] = true
 L["Grow Direction"] = true
 L["When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'Spread in 10'"] = true
-L["Font"] = true
 L["Font-Size"] = true
 L["Font Size"] = true
 L["Text-Color"] = true
@@ -179,6 +190,8 @@ L["Font Size of the Timer-Text"] = true
 L["Spacing between Icon reminders"] = true
 L["Icon-Glow"] = true
 L["At how many seconds you want the Icon to start glowing. 0 = disabled"] = true
+L["Icon-Zoom"] = true
+L["Zoom level of the Icons"] = true
 
 -- UI/Options/Reminders.lua — Bar Settings
 L["Bar Settings"] = true
@@ -204,6 +217,7 @@ L["Color of Raidframe Glows"] = true
 L["Universal Settings"] = true
 L["Hide Timer Text"] = true
 L["Hides the Timer Text shown on either the Icon or the Bar"] = true
+L["Hides the Timer Text shown for Text-Reminders"] = true
 L["Play Sound instead of TTS"] = true
 L["This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work."] = true
 L["Ignore 'everyone' tags"] = true
@@ -211,6 +225,8 @@ L["Ignores All Reminders that use the 'everyone' tag. For example if there are a
 L["Hide Reminder Treshold"] = true
 L["Treshold above which spells will not be hidden if pressed during the reminder. Some long ramp classes have multiple reminders up at the same time and thus don't want them hidden early"] = true
 L["Sound"] = true
+L["Show ALL Reminders"] = true
+L["This will show you ALL reminders from your notes, regardless of whether the tag matches you or not."] = true
 
 -- UI/Options/Reminders.lua — Manage Reminders
 L["Manage Reminders"] = true
@@ -230,7 +246,7 @@ L["Runs a test for the currently active reminder. This will only show phase 1 ti
 -- UI/Options/Reminders.lua — Reminder Note Options
 L["This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 3 types of displays. The first one shows all reminders, the second one shows only those that will activate for you. And the third shows all text that is not a reminder."] = true
 L["All Reminders Note"] = true
-L["Toggle All Reminders"] = true
+L["Unlock All Reminders"] = true
 L["Locks/Unlocks the All Reminders Note to be moved around"] = true
 L["Show All Reminders Note"] = true
 L["Whether you want to show the All Reminders Note on screen permanently"] = true
@@ -256,7 +272,7 @@ L["With this enabled the Notes will still show outside of raid instances."] = tr
 
 -- Reminder Note — Personal
 L["Personal Reminder-Note"] = true
-L["Toggle Pers Reminder"] = true
+L["Unlock Pers Reminder"] = true
 L["Locks/Unlocks the Personal Reminders Note to be moved around"] = true
 L["Show Personal Reminder Note"] = true
 L["Whether you want to display the Note for Reminders only relevant to you"] = true
@@ -270,7 +286,7 @@ L["Display the Text-Note inside the Personal Reminders Note."] = true
 
 -- Reminder Note — Text-Note
 L["Text-Note"] = true
-L["Toggle Text Note"] = true
+L["Unlock Text Note"] = true
 L["Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed."] = true
 L["Show Text Note"] = true
 L["Whether you want to display the Text-Note"] = true
@@ -362,9 +378,15 @@ L["Buff Checks"] = true
 L["Raid-Buff Check"] = true
 L["Checks if any relevant class needs your buff"] = true
 L["Healer Soulstone Check"] = true
-L["Checks for Warlocks whether they have soulstoned a healer and it has at least 5m duration left. It will only check this if Soulstone is ready or has less than 30s CD left."] = true
+L["Checks for Warlocks whether they have soulstoned a healer and it has at least 10m duration left. It will only check this if Soulstone is ready or has less than 30s CD left."] = true
 L["Source of Magic Check"] = true
-L["Checks for Evokers whether they have Source of Magic on a healer and it has at least 5m duration left."] = true
+L["Checks for Evokers whether they have Source of Magic on a healer and it has at least 10m duration left."] = true
+L["Blistering Scales Check"] = true
+L["Checks for Evokers whether they have Blistering Scales on a player and it has at least 10m duration left."] = true
+L["Symbiotic Relationship Check"] = true
+L["Checks for Druids whether they have Symbiotic Relationship on a player and it has at least 10m duration left."] = true
+
+
 L["Cooldowns Options"] = true
 L["Enable Cooldown Checking"] = true
 L["Enable cooldown checking for your cooldowns on ready check. This is only active in Heroic and Mythic Raids."] = true
@@ -444,16 +466,12 @@ L["Y-Offset"] = true
 L["Y-Offset of the Private Aura Display"] = true
 L["Max-Icons"] = true
 L["Maximum number of icons to display"] = true
-L["Stack-Scale"] = true
-L["This will create a 2nd Stack-Size Text on top of the first one. If big enough you will barely notice the original one. Unfortunately that is the only viable workaround at the moment. You can disable this by setting the Scale to 1."] = true
-L["Upscale Duration Text"] = true
-L["This will upscale the Duration Text(uses same scale as stack text). Unfortunately using this means you will see '6 s' instead of just '6' as this is how Blizzard displays it. This can only be used together with the Stack-Size Scaling because it is not possible to hide the Stack-Size from a secondary display."] = true
+L["Scale"] = true
+L["This will scale the size of Stacks and Duration text."] = true
 L["Hide Border"] = true
 L["Hide the Blizzard-border around the Player Private Auras. This includes stuff like the dispel icon."] = true
 L["Disable Tooltip"] = true
 L["Hide tooltips on mouseover. The frame will be clickthrough regardless."] = true
-L["Alternate Display"] = true
-L["Enable an alternate Display. This display does not duplicate the stack-text and will always upscale the duration without adding 's'. It is however very volatile with the position of the stack-text. I don't recommend using a stack-scale greater than 2.5"] = true
 L["Personal Private Aura Text-Warning"] = true
 L["Whether Private Aura Text-Warning is enabled"] = true
 L["Scale"] = true
@@ -467,7 +485,6 @@ L["Row-Grow Direction for a Grid-Style. If you select a conflicting grow directi
 L["Grow Direction. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change."] = true
 L["Icons per Row"] = true
 L["How many Icons will be displayed per Row."] = true
-L["Same as the other Stack-Scales but for this I recommend to use this because the default display is in a rather bad spot. The default is 1.1 to have it enabled but not too big."] = true
 L["Hide the Blizzard-border around the Raidframe Private Auras. This includes stuff like the dispel icon. (Tooltip is always disabled for Raidframes)"] = true
 L["Hide Duration Text"] = true
 L["Hide the duration text on the Raidframe Private Auras. Since it's not feasible to rescale the duration text this option exists instead if you think it is overlapping too much and you're fine with only having the swipe."] = true
@@ -498,8 +515,6 @@ L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
 L["Belo'ren Feather Color"] = true
 L["Displays your Feather-Color on Belo'ren."] = true
-L["Lura Interrupts"] = true
-L["Interrupt WA for Lura P1."] = true
 
 -- ============================================================================
 -- UI/Reminders.lua (Reminder List Screen)
@@ -548,7 +563,7 @@ L["General"] = true
 L["Quality of Life"] = true
 L["Ready Check"] = true
 L["Reminders"] = true
-L["Reminder Strings"] = true
+L["Note-Display"] = true
 L["Encounter Alerts"] = true
 L["Assignments"] = true
 L["Private Auras"] = true
@@ -559,4 +574,46 @@ L["Shared Notes"] = true
 L["Personal Notes"] = true
 L["Sync Nicknames"] = true
 L["%s is attempting to sync their nicknames with you."] = true
+L["Preview / Move"] = true
+L["Toggle a live preview of the Interrupt Display. While shown, drag it to reposition."] = true
+L["Size & Position"] = true
+L["Width"] = true
+L["Width of the interrupt display box"] = true
+L["Height"] = true
+L["Height of the interrupt display box"] = true
+L["X Offset"] = true
+L["Horizontal offset from anchor"] = true
+L["Y Offset"] = true
+L["Vertical offset from anchor"] = true
+L["Anchor Point"] = true
+L["Which corner/edge of the display to anchor from"] = true
+L["Relative Point"] = true
+L["Which corner/edge of the parent frame to anchor to"] = true
+L["Number Font Size"] = true
+L["Size of the interrupt count number"] = true
+L["Name Font Size"] = true
+L["Size of the player name text"] = true
+L["Number Settings"] = true
+L["Number X Offset"] = true
+L["Number Y Offset"] = true
+L["Number Anchor Point"] = true
+L["Which corner/edge of the box the number anchors from"] = true
+L["Number Relative Point"] = true
+L["Which corner/edge of the box the number anchors to"] = true
+L["Name Settings"] = true
+L["Name X Offset"] = true
+L["Name Y Offset"] = true
+L["Name Anchor Point"] = true
+L["Which corner/edge of the box the name anchors from"] = true
+L["Name Relative Point"] = true
+L["Which corner/edge of the box the name anchors to"] = true
+L["None"] = true
+L["Number Font"] = true
+L["Number Font Flags"] = true
+L["Outline style for the number"] = true
+L["Name Font"] = true
+L["Name Font Flags"] = true
+L["Outline style for the name"] = true
+L["Interrupt Sound"] = true
+L["Sound played when it is your turn to interrupt"] = true
 L["Accept"] = true
