@@ -389,12 +389,18 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         F:EnableMouse(true)
         F:RegisterForDrag("LeftButton")
         F:SetClampedToScreen(true)
+        if not isNote then F:SetFrameStrata("DIALOG") end
         F:Show()
         if F.Border and isNote then F.Border:Show() end
         if F.dragBorder then F.dragBorder:Show() end
         if F.Text then F.Text:Show() end
         if F.TitleLabel then F.TitleLabel:Show() end
         if F.GearButton then F.GearButton:Show() end
+
+        F:SetScript("OnDragStart", function(f) f:StartMoving() end)
+        F:SetScript("OnDragStop", function(f)
+            self:StopFrameMove(f, settingsTable)
+        end)
     else
         if F.Border and isNote then F.Border:Hide() end
         if F.dragBorder then F.dragBorder:Hide() end
@@ -402,12 +408,7 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         if F.TitleLabel then F.TitleLabel:Hide() end
         if F.GearButton then F.GearButton:Hide() end
         if F.SettingsWindow then F.SettingsWindow:Hide() end
-        if not isNote then F:SetFrameStrata("DIALOG") end
 
-        F:SetScript("OnDragStart", function(f) f:StartMoving() end)
-        F:SetScript("OnDragStop", function(f)
-            self:StopFrameMove(f, settingsTable)
-        end)
         F:SetMovable(false)
         F:EnableMouse(false)
         F:SetScript("OnDragStart", nil)

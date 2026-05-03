@@ -799,12 +799,12 @@ local function BuildReminderOptions()
                     end
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
-                    for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
-                        local settings = v == "IconMover" and NSRT.ReminderSettings.IconSettings or v == "BarMover" and NSRT.ReminderSettings.BarSettings or NSRT.ReminderSettings.TextSettings
+                    for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
+                        print(v, NSI[v])
                         if NSI[v] then
                             NSI[v]:StopMovingOrSizing()
                         end
-                        NSI:MakeDraggable(NSI[v], settings, false)
+                        NSI:MakeDraggable(NSI[v], nil, false)
                     end
                     if NSI.PreviewBar then NSI.PreviewBar:Hide() end
                     NSUI:Show()
