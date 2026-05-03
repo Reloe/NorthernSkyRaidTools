@@ -735,7 +735,7 @@ local function BuildReminderOptions()
                     NSI.LGF.GetUnitFrame("player")
                     local info1 = {
                         text = "Personals",
-                        phase = 1, id = 1,
+                        phase = 1, id = 1, DisplayType = "Text",
                         TTS = false,
                         TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
                         countdown = NSRT.ReminderSettings.TextCountdown,
@@ -744,13 +744,13 @@ local function BuildReminderOptions()
                     NSI:DisplayReminder(info1)
                     local info2 = {
                         text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
-                        phase = 1, id = 2,
+                        phase = 1, id = 2, DisplayType = "Text",
                         TTS = false, TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
                         countdown = false, dur = NSRT.ReminderSettings.TextDuration,
                     }
                     NSI:DisplayReminder(info2)
                     local info3 = {
-                        text = "Give Ironbark", IconOverwrite = true, spellID = 102342,
+                        text = "Give Ironbark", DisplayType = "Icon", spellID = 102342,
                         phase = 1, id = 3,
                         TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
@@ -760,14 +760,14 @@ local function BuildReminderOptions()
                     NSI:DisplayReminder(info3)
                     local info4 = {
                         text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
-                        IconOverwrite = true, spellID = 115203,
+                        DisplayType = "Icon", spellID = 115203,
                         phase = 1, id = 4, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
                     }
                     NSI:DisplayReminder(info4)
                     local info5 = {
-                        text = "Breath", BarOverwrite = true, spellID = 1256855,
+                        text = "Breath", DisplayType = "Bar", spellID = 1256855,
                         phase = 1, id = 5, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
@@ -775,14 +775,14 @@ local function BuildReminderOptions()
                     }
                     NSI:DisplayReminder(info5)
                     local info6 = {
-                        text = "Dodge", BarOverwrite = true, spellID = 193171,
+                        text = "Dodge", DisplayType = "Bar",
                         phase = 1, id = 6, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
                     }
                     NSI:DisplayReminder(info6)
                     local info7 = {
-                        text = "Dispel", CircleOverwrite = true, spellID = 528,
+                        text = "Dispel", DisplayType = "Circle", spellID = 528,
                         phase = 1, id = 7, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
@@ -800,7 +800,6 @@ local function BuildReminderOptions()
                     NSI.IsInPreview = false
                     NSI:HideAllReminders()
                     for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
-                        print(v, NSI[v])
                         if NSI[v] then
                             NSI[v]:StopMovingOrSizing()
                         end

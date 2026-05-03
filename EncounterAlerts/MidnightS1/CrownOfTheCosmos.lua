@@ -7,63 +7,55 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local function Add(diffID, name, alertDef)
-        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
-    end
+    local rangedConditions = self:DefaultLoadConditions()
+    rangedConditions.Roles.RANGED = true
+    local data = {name = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    overrides = {loadConditions = rangedConditions},
+    timers = {
+            [16] = {9.6, 30.4},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name, data.text = "Bait", "Bait"
+    data.timers = {
+        [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
+        [16] = {{9.6, 30.4}, {}, {23, 48, 75, 100, 127}, {}, {40, 100, 160}},
+    },
+    self:AddEncounterAlert(data)
 
-    local function RangedOnly()
-        local lc = NSI.DefaultLoadConditions()
-        lc.Roles.RANGED = true
-        return lc
-    end
+    local data = {name = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Stop Cast: ranged only, phase 1, mythic only
-    Add(16, "Stop Cast", NSI:MakeEncounterAlert("Stop Cast", nil, 5, "Text", {
-        [1] = { 9.6, 30.4 },
-    }, { loadConditions = RangedOnly() }))
+    local data = {name = "Explosion", text = "Explosion", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 12, spellID = 1233819,
+    overrides = {Ticks = {6}},
+    timers = {
+            [16] = {{27, 67, 99.5, 126.6}, {}, {37, 62, 89, 114}, {}, {54, 114, 174}},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Arrows: mythic only, phase 1
-    Add(16, "Arrows", NSI:MakeEncounterAlert("Arrows", nil, 5, "Text", {
-        [1] = { 20, 37.5, 56.8, 75.8, 93.5, 119.6 },
-    }))
+    local data = {name = "Boss-Immune", text = "Immune", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 10, spellID = nil,
+    overrides = {},
+    timers = {
+            [14] = {25},
+            [15] = {25},
+            [16] = {25},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Explosion: bar with ticks
-    Add(16, "Explosion", NSI:MakeEncounterAlert("Explosion", 1233819, 12, "Bar", {
-        [1] = { 27, 67, 99.5, 126.6 },
-        [3] = { 37, 62, 89, 114 },
-        [5] = { 54, 114, 174 },
-    }, { TTSTimer = 4, Ticks = { 6 } }))
-    Add(15, "Explosion", NSI:MakeEncounterAlert("Explosion", 1233819, 12, "Bar", {
-        [3] = { 33, 53, 75, 95, 117, 137, 159, 179, 201, 221 },
-    }, { TTSTimer = 4, Ticks = { 6 } }))
-
-    -- Immune: all difficulties, phase 2
-    for _, diff in ipairs({ 14, 15, 16 }) do
-        Add(diff, "Immune", NSI:MakeEncounterAlert("Immune", nil, 10, "Text", {
-            [2] = { 25 },
-        }, { TTS = false }))
-    end
-
-    -- Tether: mythic only, phase 5
-    Add(16, "Tether", NSI:MakeEncounterAlert("Tether", nil, 6, "Text", {
-        [5] = { 9.5, 50.5, 69.5, 110.5, 129.5, 170.5 },
-    }))
-
-    -- Bait: ranged only
-    Add(15, "Bait", NSI:MakeEncounterAlert("Bait", nil, 5, "Text", {
-        [1] = { 15, 63, 102 },
-        [3] = { 19, 39, 61, 81, 103, 123, 145, 165, 187, 207 },
-    }, { loadConditions = RangedOnly() }))
-    Add(16, "Bait", NSI:MakeEncounterAlert("Bait", nil, 5, "Text", {
-        [1] = { 13, 53, 85.6, 112.6 },
-        [3] = { 23, 48, 75, 100, 127 },
-        [5] = { 40, 100, 160 },
-    }, { loadConditions = RangedOnly() }))
-end
-
-NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck(14) or 0
-    self:FireEncounterAlerts(encID, id)
+    local data = {name = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
+        },
+    }
+    self:AddEncounterAlert(data)
 end
 
 local detectedDurations = {

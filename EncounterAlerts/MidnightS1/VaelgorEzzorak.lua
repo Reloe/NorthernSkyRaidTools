@@ -7,36 +7,36 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local function Add(diffID, name, alertDef)
-        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
-    end
-
-    Add(16, "Spread", NSI:MakeEncounterAlert("Spread", nil, 5, "Text", {
-        [1] = { 37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2 },
-    }))
-
-    Add(16, "Tether", NSI:MakeEncounterAlert("Tether", nil, 5, "Text", {
-        [1] = { 39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7 },
-    }))
-
-    Add(16, "Breath", NSI:MakeEncounterAlert("Breath", nil, 5, "Text", {
-        [1] = { 5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7 },
-    }))
-
-    -- HealthDisplay: boss HP overlay — special feature, off by default
-    for _, diff in ipairs({ 14, 15, 16 }) do
-        Add(diff, "HealthDisplay", NSI:MakeEncounterAlert("Health Display", nil, 0, "Text", {}, {
-            enabled = false,
-        }))
-    end
+    local data = {name = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name, data.text = "Tether", "Tether"
+    data.timers = {
+        [16] = { 39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7 },
+    }
+    self:AddEncounterAlert(data)
+    data.name, data.text = "Breath", "Breath"
+    data.timers = {
+        [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
+    }
+    self:AddEncounterAlert(data)
+    data.name = "Health Display"
+    data.text = nil
+    data.timers = nil
+    data.internalID = "Health Display"
+    data.difficulties = {14, 15, 16}
+    self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     local id = id or self:DifficultyCheck(14) or 0
-    self:FireEncounterAlerts(encID, id)
 
     local diffTable = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
-    if diffTable and diffTable["HealthDisplay"] and diffTable["HealthDisplay"].enabled then
+    if diffTable and diffTable["Health Display"] and diffTable["Health Display"].enabled then
         if not self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)
@@ -61,7 +61,7 @@ end
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
     local diffID = select(3, GetInstanceInfo()) or 0
     local diffTable = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID]
-    local hdEntry = diffTable and diffTable["HealthDisplay"]
+    local hdEntry = diffTable and diffTable["Health Display"]
     if hdEntry and hdEntry.enabled then
         if self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH")

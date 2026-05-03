@@ -7,76 +7,220 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local function Add(diffID, name, alertDef)
-        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
-    end
+    local tankConditions = self:DefaultLoadConditions()
+    tankConditions.Roles.TANK = true
 
-    local function TankOnly()
-        local lc = NSI.DefaultLoadConditions()
-        lc.Roles.TANK = true
-        return lc
-    end
+    local data = {name = "Memory Game", text = "Memory Game", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 4, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {10, 80, 150},
+            [16] = {33, 95, 157},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Phase 1
-    Add(15, "Memory Game", NSI:MakeEncounterAlert("Memory Game", nil, 6, "Text", {
-        [1] = { 10, 80, 150 },
-    }))
-    Add(16, "Memory Game", NSI:MakeEncounterAlert("Memory Game", nil, 4, "Text", {
-        [1] = { 33, 95, 157 },
-    }))
+    local data = {name = "Glaives", text = "Glaives", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {38, 108, 178},
+            [16] = {29, 91, 153},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    for _, diff in ipairs({ 15, 16 }) do
-        Add(diff, "Glaives", NSI:MakeEncounterAlert("Glaives", nil, 6, "Text", {
-            [1] = diff == 15 and { 38, 108, 178 } or { 29, 91, 153 },
-        }))
-        Add(diff, "Interrupts", NSI:MakeEncounterAlert("Interrupts", nil, 6, "Text", {
-            [1] = diff == 15 and { 59, 129 } or { 6.4, 68.4, 130.4 },
-        }))
-    end
+    local data = {name = "Interrupts", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {59, 129},
+            [16] = {6.4, 68.4, 130.4},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    Add(16, "Beams", NSI:MakeEncounterAlert("Beams", nil, 5, "Text", {
-        [1] = { 57, 119 },
-        [2] = { 10.7, 15.7, 20.7, 25.7, 30.7 },
-    }, { countdown = 3 }))
+    local data = {name = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {57, 119},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    Add(16, "Tank-Hit", NSI:MakeEncounterAlert("Tank-Hit", nil, 6, "Text", {
-        [1] = { 21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5 },
-        [3] = { 21.5, 41.5, 61.5 },
-    }, { TTS = false, loadConditions = TankOnly() }))
+    local data = {name = "Transition Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {10.7, 15.7, 20.7, 25.7, 30.7},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Phase 2 (transition)
-    Add(16, "Full Blaze", NSI:MakeEncounterAlert("Full Blaze", nil, 3, "Text", {
-        [2] = { 37.7 },
-    }, { TTS = false, colors = { 1, 0, 0, 1 } }))
+    local data = {name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    timers = {
+            [16] = {{21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5}, {21.5, 41.5, 61.5, 81.5}, {41.5, 71.5, 101.5, 131.5, 161.5}},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Phase 3
-    Add(16, "Seed-Drop", NSI:MakeEncounterAlert("Seed-Drop", 1253031, 5, "Bar", {
-        [3] = { 17.5, 25, 47.5, 55, 77.5, 85 },
-    }, { countdown = 3, TTS = false }))
+    local data = {name = "Full Blaze", text = "Full Blaze", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
+    overrides = {colors = {1, 0, 0, 1}},
+    timers = {
+            [16] = {37.7},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    Add(15, "Soaks", NSI:MakeEncounterAlert("Soaks", nil, 7, "Text", {
-        [3] = { 20, 50, 80 },
-        [4] = { 31, 69, 107 },
-    }, { TTS = false }))
-    Add(16, "Soaks", NSI:MakeEncounterAlert("Soaks", nil, 6, "Text", {
-        [3] = { 19, 49, 79 },
-    }, { TTS = false }))
+    local data = {name = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 2, TTS = false, dur = 5, spellID = 1253031,
+    overrides = {countdown = 3},
+    timers = {
+            [16] = {17.5, 25, 47.5, 55, 77.5, 85},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    Add(16, "Spread", NSI:MakeEncounterAlert("Spread", nil, 5, "Text", {
-        [3] = { 26.8, 56.8, 86.8 },
-    }))
+    local data = {name = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 7, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {20, 50, 80},
+            [16] = {19, 49, 79},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    Add(15, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 7, "Text", {
-        [3] = { 35.5, 65.5, 95.5 },
-    }))
-    Add(16, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 5, "Text", {
-        [3] = { 35.5, 65.5, 95.5 },
-    }))
+    local data = {name = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {26.8, 56.8, 86.8, 105},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Phase 4
-    Add(15, "Crystal", NSI:MakeEncounterAlert("Crystal", nil, 5, "Text", {
-        [4] = { 22, 60, 98 },
-    }))
+    local data = {name = "Orbs", text = "Orbs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {35.5, 65.5, 95.5},
+            [16] = {35.5, 65.5, 95.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Crystal Use", text = "Crystal", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {22, 60, 98},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "HC Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 4, TTS = true, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {31, 69, 107},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Move", text = "Move", DisplayType = "Text", encID = encID, phase = 4, TTS = true, TTSTimer = 0, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [15] = {65, 120},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Left Memory Game", text = "Memory Game", DisplayType = "Text", encID = encID, phase = 4, TTS = true, dur = 5, spellID = nil,
+    overrides = {enabled = false},
+    timers = {
+            [16] = {40, 75, 150},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name = "Right Memory Game"
+    data.timers = {
+        [16] = {20, 95, 130},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Left Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 4, TTS = true, TTSTimer = 2, dur = 5, spellID = nil,
+    overrides = {enabled = false},
+    timers = {
+            [16] = {18.2, 90.2, 128.2},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name = "Right Soaks"
+    data.timers = {
+        [16] = {38, 73, 148},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Left Stars", text = "Stars", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 4, spellID = nil,
+    overrides = {enabled = false},
+    timers = {
+            [16] = {20.4, 28.4, 36.4, 44.4, 52.4, 79.4, 87.4, 95.4, 103.4},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name = "Right Stars"
+    data.timers = {
+        [16] = {24.2, 32.2, 40.2, 48.2, 75.2, 83.2, 91.2, 99.2, 107.2},
+    }
+    self:AddEncounterAlert(data)
+    data.name = "Final Slice Stars"
+    data.overrides = {}
+    data.timers = {
+        [16] = {130.4, 137.2, 144.4, 150.2, 157.4, 164.2},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Left Soak-Time", text = "Soak-Time", DisplayType = "Bar", encID = encID, phase = 4, TTS = false, dur = 20, spellID = 1266897,
+    overrides = {enabled = false},
+    timers = {
+            [16] = {38.7, 110.7, 148.7},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name = "Right Soak-Time"
+    data.timers = {
+        [16] = {58.5, 93.5, 168.5},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Blazes", text = "Blazes", DisplayType = "Text", encID = encID, phase = 5, TTS = true, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {12.7, 32.7, 52.7, 72.7},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {name = "Move", text = "Move", DisplayType = "Text", encID = encID, phase = 5, TTS = true, TTSTimer = 0, dur = 5, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {19.8, 39.8, 59.8},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    data.name = "Runes Display"
+    data.phase = 1
+    data.text = nil
+    data.timers = nil
+    data.internalID = "RunesDisplay"
+    data.id = 0
+    data.TTS = false
+    data.difficulties = {14, 15, 16}
+    self:AddEncounterAlert(data)
+
+    data.name = "Interrupt Display"
+    data.phase = 1
+    data.text = nil
+    data.timers = nil
+    data.internalID = "InterruptDisplay"
+    data.customIcon = 132938
+    data.id = 0.1
+    data.TTS = false
+    data.difficulties = {16}
+    self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
@@ -85,182 +229,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     if realpull and id == 16 then
         NSI.NSRTFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
-
-    if not preview then
-        self:FireEncounterAlerts(encID, id)
-    end
-
-    local Alert = self:CreateDefaultAlert("Glaives", "Text", nil, 6, 1, encID)
-    local timers = {
-        [15] = { 38, 108, 178 },
-        [16] = { 29, 91, 153 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Interrupts", "Text", nil, 6, 1, encID)
-    local timers = {
-        [15] = { 59, 129 },
-        [16] = { 6.4, 68.4, 130.4 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-
-    local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 5, 1, encID)
-    local timers = {
-        [16] = { 57, 119 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    if UnitGroupRolesAssigned("player") == "TANK" then
-        local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 1, encID)
-        Alert.colors = { 1, 0, 0, 1 }
-        Alert.TTS = false
-        local timers = {
-            [16] = { 21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5 }
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 3, encID)
-        Alert.colors = { 1, 0, 0, 1 }
-        Alert.TTS = false
-        local timers = {
-            [16] = { 21.5, 41.5, 61.5, 81.5 }
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Tank-Hit", "Text", nil, 6, 4, encID)
-        Alert.colors = { 1, 0, 0, 1 }
-        Alert.TTS = false
-        local timers = {
-            [16] = { 41.5, 71.5, 101.5, 131.5, 161.5 }
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-    end
-
-    local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 3, 2, encID) -- Transiton Beams
-    Alert.TTS = false
-    local timers = {
-        [16] = { 10.7, 15.7, 20.7, 25.7, 30.7 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Full Blaze", "Text", nil, 3, 2, encID) -- Everyone Debuff
-    Alert.TTS = false
-    Alert.colors = { 1, 0, 0, 1 }
-    local timers = {
-        [16] = { 37.7 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 7, 3, encID)
-    Alert.TTS = false
-    if id == 16 then Alert.dur = 6 end
-    local timers = {
-        [15] = { 20, 50, 80 },
-        [16] = { 19, 49, 79 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Spread", "Text", nil, 5, 3, encID)
-    Alert.TTS = false
-    local timers = {
-        [16] = { 26.8, 56.8, 86.8, 105 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Orbs", "Text", nil, 7, 3, encID)
-    if id == 16 then Alert.dur = 5 end
-    local timers = {
-        [15] = { 35.5, 65.5, 95.5 },
-        [16] = { 35.5, 65.5, 95.5 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Crystal", "Text", nil, 5, 4, encID)
-    local timers = {
-        [15] = { 22, 60, 98 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
-    Alert.text = "Soaks"
-    local timers = {
-        [15] = { 31, 69, 107 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Blazes", "Text", nil, 5, 5, encID) -- Last Phase Blazes
-    local timers = {
-        [16] = { 12.7, 32.7, 52.7, 72.7 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local Alert = self:CreateDefaultAlert("Move", "Text", nil, 5, 5, encID) -- Heaven & Hell
-    Alert.TTSTimer = 0
-    local timers = {
-        [16] = { 19.8, 39.8, 59.8 }
-    }
-    self:AddRemindersFromTable(Alert, timers[id])
-
-    local side = NSRT.EncounterAlerts[encID].P3Side
-    if side and (side == "LEFT" or side == "BOTH") then
-        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 5, 4, encID)
-        local timers = {
-            [16] = { 40, 75, 150 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
-        Alert.TTSTimer = 2
-        local timers = {
-            [16] = { 18.2, 90.2, 128.2 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", 1266897, 20, 4, encID)
-        Alert.TTS = false
-        local timers = {
-            [16] = { 38.7, 110.7, 148.7 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 5, 4, encID)
-        Alert.TTS = false
-        local timers = {
-            [16] = { 20.4, 28.4, 36.4, 44.4, 52.4, 79.4, 87.4, 95.4, 103.4 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-    end
-    if side and (side == "RIGHT" or side == "BOTH") then
-        local Alert = self:CreateDefaultAlert("Memory Game", "Text", nil, 5, 4, encID)
-        local timers = {
-            [16] = { 20, 95, 130 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Soaks", "Text", nil, 5, 4, encID)
-        Alert.TTSTimer = 2
-        local timers = {
-            [16] = { 38, 73, 148 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-        local Alert = self:CreateDefaultAlert("Soak-Time", "Bar", 1266897, 20, 4, encID)
-        Alert.TTS = false
-        local timers = {
-            [16] = { 58.5, 93.5, 168.5 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-
-
-        local Alert = self:CreateDefaultAlert("Stars", "Text", nil, 5, 4, encID)
-        Alert.TTS = false
-        local timers = {
-            [16] = { 24.2, 32.2, 40.2, 48.2, 75.2, 83.2, 91.2, 99.2, 107.2 },
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-    end
-    if NSRT.EncounterAlerts[encID].InterruptDisplay and realpull and id == 16 then
+    if NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay and realpull and id == 16 then
         self:EncounterRegister("UNIT_SPELLCAST_START", true, {"boss2", "boss3", "boss4"})
         self:EncounterRegister("UNIT_SPELLCAST_INTERRUPTED", true, {"boss2", "boss3", "boss4"})
         self:EncounterRegister("UNIT_SPELLCAST_STOP", true, {"boss2", "boss3", "boss4"})
@@ -308,7 +277,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
         end)
     end
-    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID].RunesDisplay and (realpull or preview) then
+    if NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].RunesDisplay and (realpull or preview) then
         local isTank = UnitGroupRolesAssigned("player") == "TANK"
         local XOffset = { 50, 60, 0, -60, -50 }
         local YOffset = { 50, -25, -70, -25, 50 }

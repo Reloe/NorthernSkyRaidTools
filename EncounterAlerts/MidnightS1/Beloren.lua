@@ -7,43 +7,38 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local function Add(diffID, name, alertDef)
-        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
-    end
+    local data = {name = "Gateway", text = "Gateway", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 6.6, spellID = 311699,
+    overrides = {},
+    timers = {
+            [15] = {{}, {6.6}, {6.6}},
+            [16] = {{}, {6.6}, {6.6}},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Gateway: single-fire bar alert, phases 2 and 3
-    for _, diff in ipairs({ 15, 16 }) do
-        Add(diff, "Gateway", NSI:MakeEncounterAlert("Gateway", 311699, 6.6, "Bar", {
-            [2] = { 6.6 }, [3] = { 6.6 },
-        }, { TTSTimer = 4 }))
-    end
+    local data = {name = "Next Hit", text = "Next Hit", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 4, spellID = 1242792,
+    overrides = {},
+    timers = {
+            [16] = {{}, {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7, 43.2, 46.7, 50.2}, {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7, 43.2, 46.7, 50.2}},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Next Hit: phases 2 and 3, heroic dur=4, mythic dur=3.5
-    Add(15, "Next Hit", NSI:MakeEncounterAlert("Next Hit", 1242792, 4, "Bar", {
-        [2] = { 12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2, 40.2 },
-        [3] = { 12.2, 16.2, 20.2, 24.2, 28.2, 32.2, 36.2, 40.2 },
-    }, { TTS = false }))
-    Add(16, "Next Hit", NSI:MakeEncounterAlert("Next Hit", 1242792, 3.5, "Bar", {
-        [2] = { 11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7 },
-        [3] = { 11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7 },
-    }, { TTS = false }))
+    local data = {name = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {{18.8, 68.8}, {70.6, 120.6, 170.6}},
+        },
+    }
+    self:AddEncounterAlert(data)
 
-    -- Soaks: mythic only, phases 1 and 2
-    Add(16, "Soaks", NSI:MakeEncounterAlert("Soaks", nil, 8, "Text", {
-        [1] = { 18.8, 68.8 },
-        [2] = { 60.6, 110.6, 160.6 },
-    }, { TTS = false }))
-
-    -- Quills: mythic only, phases 1 and 2
-    Add(16, "Quills", NSI:MakeEncounterAlert("Quills", nil, 6, "Text", {
-        [1] = { 27.4, 37.4, 47.4, 77.4, 87.4, 97.4 },
-        [2] = { 69.2, 79.2, 89.2, 119.2, 129.2, 139.2, 169.2 },
-    }, { TTS = false }))
-end
-
-NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck(14) or 0
-    self:FireEncounterAlerts(encID, id)
+    local data = {name = "Quills", text = "Quills", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    overrides = {},
+    timers = {
+            [16] = {{27.4, 37.4, 47.4, 77.4, 87.4, 97.4}, {79.2, 89.2, 99.2, 129.2, 139.2, 149.2, 179.2}},
+        },
+    }
+    self:AddEncounterAlert(data)
 end
 
 local detectedDurations = { -- Death Drop

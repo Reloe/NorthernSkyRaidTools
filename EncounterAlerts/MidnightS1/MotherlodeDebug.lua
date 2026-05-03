@@ -3,37 +3,12 @@ local _, NSI = ... -- Internal namespace
 local encID = 3463
 -- /run NSAPI:DebugEncounter(3463)
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    if not NSRT.EncounterAlerts[encID] then
-        NSRT.EncounterAlerts[encID] = {enabled = false}
-    end
-    if NSRT.EncounterAlerts[encID].enabled or encID == 3463 then -- text, Type, spellID, dur, phase, encID
-        --[[
-        local Soak = self:CreateDefaultAlert("Soak", "Bar", 1241291, 8, 1, encID)
-        Soak.time = 10
-        self:AddToReminder(Soak)
-        ]]
-    end
 end
 
 NSI.ShowWarningAlert[encID] = function(self, encID, phase, time, info) -- on ENCOUNTER_WARNING
-    if NSRT.EncounterAlerts[encID].enabled then
-        local severity, dur = info.severity, info.duration
-        if severity == 0 then
-        elseif severity == 1 then
-        elseif severity == 2 then
-        end
-        --[[ Example
-        local Fixate = self:CreateDefaultAlert("Fixate", "Icon", 210099, 15) -- text, type, spellID; dur
-        Fixate.skipdur = true
-        self:DisplayReminder(Fixate)
-        ]]
-    end
 end
 
 NSI.ShowBossWhisperAlert[encID] = function(self, encID, phase, time, text, name, dur) -- on RAID_BOSS_WHISPER
-    if NSRT.EncounterAlerts[encID].enabled then
-
-    end
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
@@ -74,6 +49,4 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    if NSRT.EncounterAlerts[encID].enabled then
-    end
 end

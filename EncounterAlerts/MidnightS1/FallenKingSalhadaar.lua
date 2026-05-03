@@ -7,46 +7,40 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local function Add(diffID, name, alertDef)
-        NSI:AddEncounterAlert(encID, diffID, name, alertDef)
-    end
-
-    for _, diff in ipairs({ 14, 15, 16 }) do
-        Add(diff, "Beams", NSI:MakeEncounterAlert("Beams", nil, 8, "Text", {
-            [1] = { 102.6, 224.2, 346 },
-        }))
-    end
-    Add(14, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 5, "Text", {
-        [1] = { 14.1, 59.1, 135, 180.7, 256.5, 301.6 },
-    }))
-    Add(15, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 5, "Text", {
-        [1] = { 14.1, 59.1, 135, 180.7, 256.5, 301.6 },
-    }))
-    Add(16, "Orbs", NSI:MakeEncounterAlert("Orbs", nil, 5, "Text", {
-        [1] = { 18.1, 63.1, 141, 186.7, 262.5, 307.6 },
-    }))
-
-    Add(14, "CC Adds", NSI:MakeEncounterAlert("CC Adds", nil, 5, "CC Adds", {
-        [1] = { 20, 65, 141, 187, 263, 308 },
-    }))
-    Add(15, "CC Adds", NSI:MakeEncounterAlert("CC Adds", nil, 5, "CC Adds", {
-        [1] = { 20, 65, 141, 187, 263, 308 },
-    }))
-    Add(16, "CC Adds", NSI:MakeEncounterAlert("CC Adds", nil, 5, "CC Adds", {
-        [1] = { 27.6, 73, 150.8, 196.9, 272.4, 317.5 },
-    }))
-
-    -- CC Display: nameplate CC indicator — special feature, off by default
-    for _, diff in ipairs({ 14, 15, 16 }) do
-        NSI:AddEncounterAlert(encID, diff, "CC Display", NSI:MakeEncounterAlert("CC Display", nil, 0, "Text", {}, {
-            enabled = false,
-        }))
-    end
+    local data = {name = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
+    overrides = {},
+    timers = {
+            [14] = {102.6, 224.2, 346},
+            [15] = {102.6, 224.2, 346},
+            [16] = {102.6, 224.2, 346},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.name, data.text = "Orbs", "Orbs"
+    data.timers = {
+        [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
+        [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
+        [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6},
+    }
+    self:AddEncounterAlert(data)
+    data.name, data.text = "CC Adds", "CC Adds"
+    data.timers = {
+        [14] = {20, 65, 141, 187, 263, 308},
+        [15] = {20, 65, 141, 187, 263, 308},
+        [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5},
+    }
+    self:AddEncounterAlert(data)
+    data.name = "CC Display"
+    data.text = nil
+    data.timers = nil
+    data.internalID = "CC Display"
+    data.TTS = false
+    data.difficulties = {16}
+    self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck(14) or 0
-    self:FireEncounterAlerts(encID, id)
 
     local ccEntry = id == 16 and NSI:GetEncounterAlertByName(encID, id, "CC Display")
     if ccEntry and ccEntry.enabled then

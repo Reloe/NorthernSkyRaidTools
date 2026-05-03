@@ -45,9 +45,9 @@ local function BuildBossRemindersUI(parentFrame)
 
     -- ── Mutable state ───────────────────────────────────────────────────────
     local selectedIndex      = nil   -- index into NSRT.CustomBossAlerts (custom mode)
-    local selectedReloeEncID = nil   -- encID of selected reloeReminder alert
-    local selectedReloeDiffID = nil  -- diffID of selected reloeReminder alert
-    local selectedReloeKey   = nil   -- key of selected reloeReminder alert
+    local selectedReloeEncID = nil   -- encID of selected ReloeReminder alert
+    local selectedReloeDiffID = nil  -- diffID of selected ReloeReminder alert
+    local selectedReloeKey   = nil   -- key of selected ReloeReminder alert
     local filterEncID        = nil
 
     -- forward declarations
@@ -143,24 +143,20 @@ local function BuildBossRemindersUI(parentFrame)
         listRows[i] = row
     end
 
-    -- Returns a display name for a reloeReminder alert entry.
+    -- Returns a display name for a ReloeReminder alert entry.
     local function ReloeAlertName(entry)
         local base = (entry.name and entry.name ~= "") and entry.name
                   or (entry.text and entry.text ~= "") and entry.text
                   or "?"
-        local minPhase = math.huge
-        for phase in pairs(entry.timers or {}) do
-            if phase < minPhase then minPhase = phase end
-        end
-        local phase = minPhase == math.huge and 1 or minPhase
-        return (phase > 1) and (base .. " (P" .. phase .. ")") or base
+        local phase = entry.phase
+        return phase and entry.name.." (P"..phase..")" or entry.name
     end
 
     -- RebuildList ─────────────────────────────────────────────────────────────
     local function RebuildScrollData()
         local t = {}
 
-        -- One row per reloeReminder alert (deduplicated by alertKey, prefer higher diffID)
+        -- One row per ReloeReminder alert (deduplicated by alertKey, prefer higher diffID)
         local sortedEnc = {}
         for encID in pairs(NSRT.EncounterAlerts or {}) do
             if not filterEncID or filterEncID == encID then
@@ -189,24 +185,31 @@ local function BuildBossRemindersUI(parentFrame)
                     if type(diffTable) == "table" then
                         for key, entry in pairs(diffTable) do
                             local entryName = entry.name or entry.text or key
-                            if type(entry) == "table" and entry.reloeReminder and not seenNames[entryName] then
-                                seenNames[entryName] = true
-                                local minPhase = math.huge
-                                for phase in pairs(entry.timers or {}) do
-                                    if phase < minPhase then minPhase = phase end
-                                end
+                            local phase = entry.phase
+                            local ReloeReminder = entry.ReloeReminder
+                            if type(entry) == "table" and ReloeReminder and not seenNames[entryName..phase] then
+                                seenNames[entryName..phase] = true
                                 table.insert(alerts, {
                                     key    = key,
                                     entry  = entry,
                                     diffID = diffID,
-                                    phase  = minPhase == math.huge and 1 or minPhase,
+                                    phase  = phase or 1,
+                                    enabled = entry.enabled,
+                                    ReloeReminder = ReloeReminder,
+                                    id = entry.id,
                                 })
                             end
                         end
                     end
                 end
                 table.sort(alerts, function(a, b)
+                    if a.enabled ~= b.enabled then return a.enabled end -- display disabled at the bottom
+                    if a.ReloeReminder ~= b.ReloeReminder then return b.ReloeReminder end -- display self-created reminders first
                     if a.phase ~= b.phase then return a.phase < b.phase end
+                    local aID = a.entry.id
+                    local bID = b.entry.id
+                    if aID and bID then return aID < bID end
+                    if aID or bID then return aID ~= nil end
                     local an = a.entry.name or a.entry.text or a.key
                     local bn = b.entry.name or b.entry.text or b.key
                     return an < bn
@@ -479,7 +482,7 @@ local function BuildBossRemindersUI(parentFrame)
     typeLbl:SetText("Type")
     typeLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -2)
 
-    local TYPES    = { "Text", "Bar", "Icon" }
+    local TYPES    = { "Text", "Bar", "Icon", "Circle" }
     local typeBtns = {}
     local typeBtnW = 70
 
@@ -493,7 +496,7 @@ local function BuildBossRemindersUI(parentFrame)
     for i, tn in ipairs(TYPES) do
         local tb = CreateSubButton(dispF, tn, function()
             SetDisplayType(tn)
-            if dispF._alert then dispF._alert.Type = tn end
+            if dispF._alert then dispF._alert.DisplayType = tn end
         end, typeBtnW, "NSUIEncAlertType_" .. tn)
         tb:SetPoint("TOPLEFT", dispF, "TOPLEFT", (i - 1) * (typeBtnW + 3), -18)
         typeBtns[tn] = tb
@@ -942,17 +945,25 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     PreviewAlert = function()
         local text, spellID, dur, Type, ttsEnabled, ttsText, ttsTimer, countdown
-
         if not dispF._alert then return end
         local a    = dispF._alert
         text       = a.text or ""
         spellID    = a.spellID
         dur        = a.dur or 8
-        Type       = a.Type or "Text"
-        ttsEnabled = a.TTSEnabled
-        ttsText    = a.TTSText
-        ttsTimer   = a.TTSTimer
         countdown  = a.countdown
+        -- Support both custom-alert TTS fields (TTSEnabled/TTSText/TTSTimer)
+        -- and reloe-created alert TTS fields (TTS string/false, TTSTimer)
+        if a.TTSEnabled ~= nil then
+            -- custom alert format
+            ttsEnabled = a.TTSEnabled
+            ttsText    = a.TTSText
+            ttsTimer   = a.TTSTimer
+        else
+            -- reloe-created format: TTS is the string itself (or false/nil)
+            ttsEnabled = a.TTS ~= false and a.TTS ~= nil
+            ttsText    = type(a.TTS) == "string" and a.TTS or nil
+            ttsTimer   = a.TTSTimer
+        end
 
         -- These tables are normally created by HideAllReminders; ensure they exist
         NSI.PlayedSound      = NSI.PlayedSound      or {}
@@ -962,6 +973,7 @@ local function BuildBossRemindersUI(parentFrame)
         info.TTS       = ttsEnabled and ((ttsText and ttsText ~= "") and ttsText or text) or false
         info.TTSTimer  = ttsTimer or dur
         info.countdown = countdown or false
+        info.DisplayType = a.DisplayType
         NSI:DisplayReminder(info)
     end
 
@@ -1006,7 +1018,7 @@ local function BuildBossRemindersUI(parentFrame)
         end)
 
         -- Display tab
-        dispF.SetDisplayType(alert.Type or "Text")
+        dispF.SetDisplayType(alert.DisplayType or "Text")
         dispF.textEntry:SetText(alert.text or "")
         dispF.spellEntry:SetText(alert.spellID and tostring(alert.spellID) or "")
         dispF.durEntry:SetText(tostring(alert.dur or 8))
@@ -1054,7 +1066,7 @@ local function BuildBossRemindersUI(parentFrame)
         rightPanel:Show()
         SetReloeCreatedMode()
 
-        dispF._alert = nil;   dispF._hardcodedEncID = nil
+        dispF._alert = entry; dispF._hardcodedEncID = nil
         trigF._alert = nil;   trigF._hardcodedEncID = nil
         sndF._alert  = entry; sndF._hardcodedEncID  = nil
         loadF._alert = nil;   loadF._hardcodedEncID = nil
@@ -1082,7 +1094,7 @@ local function BuildBossRemindersUI(parentFrame)
         end)
 
         -- Display tab: show stored values (editing locked by lock overlay)
-        local dispType = (entry.BarOverwrite and "Bar") or (entry.IconOverwrite and "Icon") or (entry.CircleOverwrite and "Circle") or "Text"
+        local dispType = entry.DisplayType
         dispF.SetDisplayType(dispType)
         dispF.textEntry:SetText(entry.text or "")
         dispF.spellEntry:SetText(entry.spellID and tostring(entry.spellID) or "")

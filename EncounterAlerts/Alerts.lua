@@ -10,24 +10,11 @@ local function GenerateAlertID()
     return id
 end
 
-NSI.DefaultLoadConditions = function()
+function NSI:DefaultLoadConditions()
     return {
-        Roles   = { TANK = false, HEALER = false, DAMAGER = false, MELEE = false, RANGED = false },
-        Classes = {
-            WARRIOR = false, PALADIN = false, HUNTER = false, ROGUE = false,
-            PRIEST = false, DEATHKNIGHT = false, SHAMAN = false, MAGE = false,
-            WARLOCK = false, MONK = false, DRUID = false, DEMONHUNTER = false, EVOKER = false,
-        },
-        SpecIDs = {
-            [250] = false, [251] = false, [252] = false,
-            [102] = false, [103] = false, [104] = false, [105] = false,
-            [62]  = false, [63]  = false, [64]  = false,
-            [253] = false, [254] = false, [255] = false,
-            [259] = false, [260] = false, [261] = false,
-            [256] = false, [257] = false, [258] = false,
-            [577] = false, [581] = false,
-            [1480] = false, [1467] = false, [1468] = false, [1473] = false,
-        },
+        Roles   = {},
+        Classes = {},
+        SpecIDs = {},
         Names = {},
     }
 end
@@ -36,62 +23,109 @@ end
 -- displayType: "Text", "Bar", "Icon", or "Circle"
 -- timers: { [phase] = {times...} }
 -- overrides: optional table of field overrides
-function NSI:MakeEncounterAlert(text, spellID, dur, displayType, timers, overrides)
+function NSI:MakeEncounterAlert(data)
     local a = {
-        name           = text,
-        text           = text,
-        spellID        = spellID,
-        dur            = dur,
-        timers         = timers or {},
+        internalID     = data.internalID,
+        internalName   = data.internalName or data.name, -- if the displayed name should ever be changed then internalname has to match the previous name to force the update.
+        name           = data.name,
+        text           = data.text,
+        spellID        = data.spellID,
+        TTS            = data.TTS,
+        TTSTimer       = data.TTSTimer or data.dur,
+        dur            = data.dur,
+        timers         = data.timers or {},
+        phase          = data.phase,
+        DisplayType    = data.DisplayType,
         notsticky      = true,
         IsAlert        = true,
-        reloeReminder  = true,
+        ReloeReminder  = true,
         enabled        = true,
         loadConditions = NSI.DefaultLoadConditions(),
     }
-    if displayType == "Bar" then
-        a.BarOverwrite = true
-    elseif displayType == "Icon" then
-        a.IconOverwrite = true
-    elseif displayType == "Circle" then
-        a.CircleOverwrite = true
-    end
-    if overrides then
-        for k, v in pairs(overrides) do a[k] = v end
+    if data.overrides then
+        for k, v in pairs(data.overrides) do a[k] = v end
     end
     return a
 end
 
-local function UniqueAlertID(diffTable)
+local function UniqueAlertID(diffTable, ReloeReminder, internalID)
     local id
-    repeat id = GenerateAlertID() until not diffTable[id]
-    return id
+    if ReloeReminder and internalID then
+        return internalID
+    else
+        repeat id = GenerateAlertID() until not diffTable[id]
+    end
+    return ReloeReminder and "Reloe "..id or id
+end
+
+function NSI:GetEncounterAlertID(encID)
+    self.EncounterAlertID = self.EncounterAlertID or {}
+    if not self.EncounterAlertID[encID] then
+        self.EncounterAlertID[encID] = 0
+    end
+    self.EncounterAlertID[encID] = self.EncounterAlertID[encID] + 1
+    return self.EncounterAlertID[encID]
+end
+
+function NSI:AddEncounterAlert(data)
+    self.EncounterAlertID = self.EncounterAlertID or {}
+    if data.difficulties and not data.timers then -- special case for alerts that don't use the actual reminder system but have their own display
+        local alertDef = self:MakeEncounterAlert(data)
+        for _, diff in ipairs(data.difficulties) do
+            alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
+            self:InsertEncounterAlert(data.encID, diff, alertDef, data.ReloeReminder)
+        end
+        return
+    end
+    for diffID, phaseData in pairs(data.timers) do
+        if phaseData[1] and type(phaseData[1]) == "table" then -- multiple phases were provided
+            for phase, timers in ipairs(phaseData) do
+                if next(timers) then
+                    local alertDef = self:MakeEncounterAlert(data)
+                    alertDef.phase = phase
+                    alertDef.timers = timers
+                    alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
+                    self:InsertEncounterAlert(data.encID, diffID, alertDef, data.ReloeReminder)
+                end
+            end
+        else
+            local timers = phaseData
+            local alertDef = self:MakeEncounterAlert(data)
+            alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
+            self:InsertEncounterAlert(data.encID, diffID, alertDef, data.ReloeReminder)
+        end
+    end
 end
 
 -- Adds or updates an alert entry keyed by a short unique ID at NSRT.EncounterAlerts[encId][diffID].
 -- `name` is the human-readable display name stored in alertDef.name and used for lookup.
--- If an existing reloeReminder with matching name is found, only its timers are updated
 -- to preserve user-modified settings (enabled, TTS overrides, etc.).
-function NSI:AddEncounterAlert(encId, diffID, name, alertDef)
+function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     NSRT.EncounterAlerts[encId]         = NSRT.EncounterAlerts[encId] or {}
     NSRT.EncounterAlerts[encId][diffID] = NSRT.EncounterAlerts[encId][diffID] or {}
-    alertDef.name = name
     local diffTable = NSRT.EncounterAlerts[encId][diffID]
     -- Migrate any legacy string-keyed entry with this name to a unique ID key
     if diffTable[name] and type(diffTable[name]) == "table" then
         local legacy = diffTable[name]
         legacy.name = name
-        diffTable[UniqueAlertID(diffTable)] = legacy
+        diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = legacy
         diffTable[name] = nil
     end
-    -- Search for an existing entry with matching name
-    for _, existing in pairs(diffTable) do
-        if type(existing) == "table" and existing.reloeReminder and existing.name == name then
-            existing.timers = alertDef.timers
-            return
+    if ReloeReminder then -- overwrite timers as they are defined by me
+        for _, existing in pairs(diffTable) do
+            if type(existing) == "table" and existing.ReloeReminder and existing.internalName == alertDef.internalName and existing.phase == alertDef.phase then
+                existing.timers = alertDef.timers
+                existing.id = alertDef.id
+                existing.customIcon = alertDef.customIcon
+                existing.internalID = alertDef.internalID
+                existing.difficulties = alertDef.difficulties
+                existing.isConditional = alertDef.isConditional
+                existing.name = alertDef.name
+                return
+            end
         end
     end
-    diffTable[UniqueAlertID(diffTable)] = alertDef
+    diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
 end
 
 -- Returns the alert entry for the given encId/diffID whose name matches, or nil.

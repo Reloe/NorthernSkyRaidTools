@@ -873,8 +873,8 @@ local function BuildReminderScreen(personal, parentFrame)
             line.nameLabel:SetText(reminderData.hasencID and reminderData.name or (reminderData.name .. " " .. L["(No Enc)"]))
 
             local encID = tonumber(reminderData.hasencID)
-            if not screen.filterEncID and encID and encounterIcons[encID] then
-                line.bossIcon:SetTexture(encounterIcons[encID])
+            if not screen.filterEncID and encID and NSI.UI.BossData.BossIcons[encID] then
+                line.bossIcon:SetTexture(NSI.UI.BossData.BossIcons[encID])
                 line.bossIcon:Show()
                 line.nameLabel:SetPoint("LEFT", line, "LEFT", 24, 0)
             else
@@ -1092,9 +1092,27 @@ local function BuildReminderScreen(personal, parentFrame)
         UpdateEditorFont()
         if self.UpdateReceivedBar then self.UpdateReceivedBar() end
         if not personal and self.UpdateButtonAccess then self.UpdateButtonAccess() end
+        -- Auto-select the received note on the shared screen if one is loaded
+        if not personal then
+            local content = NSI.Reminder
+            if content and content ~= "" and content ~= " " then
+                self.viewingReceivedNote = true
+                self.selectedName = nil
+                if self.editor then self.editor:SetText(content) end
+                if self._recvBtn then self._recvBtn.frame:SetBackdropColor(0, 1, 0, 1) end
+                local encID, name, diff = ParseFirstLine(content)
+                self._metaBossEncID = encID
+                self._metaDiff = diff
+                if self.nameEntry then self.nameEntry:SetText(name or "") end
+                if self.diffDropdown and diff then self.diffDropdown:Select(diff) end
+                if self.bossDropdown then self.bossDropdown:Select(encID or 0) end
+                if SetMetaReadOnly then SetMetaReadOnly(true) end
+                if self.scrollbox then self.scrollbox:MasterRefresh() end
+                return
+            end
+        end
         local activeName = NSRT[activeKey]
         if personal and type(activeName) == "table" then
-            -- Pick the first active personal reminder to show in the editor
             activeName = next(activeName) and (select(2, next(activeName))) or nil
         end
         if activeName and type(activeName) == "string" and activeName ~= "" then

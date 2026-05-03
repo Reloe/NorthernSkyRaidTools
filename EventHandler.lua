@@ -119,7 +119,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self.TestingReminder = false
         self.IsInPreview = false
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
             self:MakeDraggable(self[v], nil, false)
         end
         self.Phase = 1
@@ -139,6 +139,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
+        self:FireEncounterAlerts(self.EncounterID, diff)
         self:LoadCustomBossAlerts(self.EncounterID)
         self:StartReminders(self.Phase)
         self:InitPrivateAuras()

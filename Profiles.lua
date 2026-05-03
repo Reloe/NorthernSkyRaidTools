@@ -327,28 +327,15 @@ function NSI:AddMissingDefaults()
 
         -- Encounter Alerts
         EncounterAlerts = {
-            [3176] = { enabled = false },
-            [3177] = { enabled = false },
-            [3178] = { enabled = false, HealthDisplay = false },
-            [3179] = { enabled = false, CCAddsDisplay = false },
-            [3180] = { enabled = false, TauntAlerts = false, HealAbsorbTicks = false },
-            [3181] = { enabled = false },
-            [3182] = { enabled = false },
-            [3183] = {
-                enabled = false,
-                P3Side = "OFF",
-                RunesDisplay = false,
-                LuraDisplay = {
-                    Anchor = "TOPLEFT",
-                    relativeTo = "TOPLEFT",
-                    xOffset = 300,
-                    yOffset = -300,
-                    Color = {0.2, 0.2, 0.2, 0.9},
-                    Scale = 1,
-                },
-                InterruptDisplay = false,
-            },
-            [3306] = { enabled = false },
+            [3176] = {},
+            [3177] = {},
+            [3178] = {},
+            [3179] = {},
+            [3180] = {},
+            [3181] = {},
+            [3182] = {},
+            [3183] = {},
+            [3306] = {},
         },
 
         -- Interrupt Display

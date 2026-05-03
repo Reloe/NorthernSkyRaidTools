@@ -7,60 +7,30 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    -- Debuffs: mythic only, non-tank (role check handled at display time)
-    NSI:AddEncounterAlert(encID, 16, "Debuffs", NSI:MakeEncounterAlert("Debuffs", nil, 6, "Text", {
-        [1] = { 39, 112 },
-    }, { TTS = false, isConditional = true }))
+    local data = {name = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
+    overrides = {isConditional = true},
+    timers = {
+            [16] = {{39, 112}, {39, 112}},
+        },
+    }
+    self:AddEncounterAlert(data)
 end
 
-local function RiftMadnessTimers(self, id)
-    local diff = id or select(3, GetInstanceInfo()) or 0
-    local entry = NSI:GetEncounterAlertByName(encID, diff, "Debuffs")
-    if diff ~= 16 or not entry or not entry.enabled then return end
-    if UnitGroupRolesAssigned("player") == "TANK" then return end
-
-    if NSI.AlertTimers then
-        for i, v in ipairs(NSI.AlertTimers) do
-            if v and v.Cancel then v:Cancel() end
-        end
-        NSI.AlertTimers = {}
-    end
-    NSI.AlertTimers = {}
-
-    if NSI:IsUsingTLAlerts() then
-        entry.isConditional = true
-        local alert = {
-            text        = entry.text,
-            spellID     = entry.spellID,
-            dur         = entry.dur,
-            encID       = encID,
-            notsticky   = entry.notsticky,
-            IsAlert     = entry.IsAlert,
-            isConditional = true,
-        }
-        local timers = entry.timers[1] or {}
-        for phase = 1, 2 do
-            alert.phase = phase
-            NSI:AddRemindersFromTable(alert, timers)
-        end
-    else
-        for i, v in ipairs(entry.timers[1] or {}) do
-            NSI.AlertTimers[i] = C_Timer.NewTimer(v - entry.dur, function()
-                for j = 1, 40 do
-                    local u = "nameplate" .. j
-                    if UnitExists(u) and UnitLevel(u) == 92 then
-                        NSI:DisplayReminder(entry)
-                        break
-                    end
-                end
-            end)
-        end
-    end
+function NSAPI:TestChimaerus()
+    NSI.InitializeAlerts[encID](NSI)
 end
 
-NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck(14) or 0
-    RiftMadnessTimers(self, id)
+NSI.EncounterAlertHandle[encID] = function(self, e, info)
+    if UnitGroupRolesAssigned("player") == "TANK" then return false end
+    if info and info.name and info.name == "Debuffs" then
+        for j = 1, 40 do
+            local u = "nameplate" .. j
+            if UnitExists(u) and UnitLevel(u) == 92 then
+                return true
+            end
+        end
+    end
+    return false
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
