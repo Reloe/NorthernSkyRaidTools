@@ -8,7 +8,6 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {name = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
-    overrides = {},
     timers = {
             [14] = {102.6, 224.2, 346},
             [15] = {102.6, 224.2, 346},
@@ -33,6 +32,7 @@ NSI.InitializeAlerts[encID] = function(self)
     data.name = "CC Display"
     data.text = nil
     data.timers = nil
+    data.Preview = function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end
     data.internalID = "CC Display"
     data.TTS = false
     data.difficulties = {16}

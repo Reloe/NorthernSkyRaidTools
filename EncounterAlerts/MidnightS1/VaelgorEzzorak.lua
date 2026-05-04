@@ -8,7 +8,6 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {name = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
-    overrides = {},
     timers = {
             [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
         },
@@ -27,7 +26,8 @@ NSI.InitializeAlerts[encID] = function(self)
     data.name = "Health Display"
     data.text = nil
     data.timers = nil
-    data.internalID = "Health Display"
+    data.Preview = function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end
+    data.internalID = "HealthDisplay"
     data.difficulties = {14, 15, 16}
     self:AddEncounterAlert(data)
 end
@@ -35,8 +35,8 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     local id = id or self:DifficultyCheck(14) or 0
 
-    local diffTable = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
-    if diffTable and diffTable["Health Display"] and diffTable["Health Display"].enabled then
+    local hpDisplay = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].HealthDisplay and NSRT.EncounterAlerts[encID][id].HealthDisplay.enabled
+    if hpDisplay then
         if not self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)

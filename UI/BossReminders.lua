@@ -947,6 +947,7 @@ local function BuildBossRemindersUI(parentFrame)
         local text, spellID, dur, Type, ttsEnabled, ttsText, ttsTimer, countdown
         if not dispF._alert then return end
         local a    = dispF._alert
+        if a.Preview then a.Preview() return end -- allow custom preview functions
         text       = a.text or ""
         spellID    = a.spellID
         dur        = a.dur or 8

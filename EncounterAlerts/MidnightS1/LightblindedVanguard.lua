@@ -42,25 +42,36 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Taunt Alerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 20, spellID = 1248721,
-    overrides = {SpecialDisplay = true, loadConditions = tankConditions},
+    local data = {name = "Taunt Alerts", internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil,
+    overrides = {SpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0},
+    Preview = function()
+        print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")
+    end,
+    extraOptions ={
+        Font = {Type = "Dropdown", DropdownType = "Fonts"},
+        FontSize = {Type = "Scale", min = 10, max = 100},
+        Anchor = {Type = "Dropdown", DropdownType = "Anchors"},
+        relativeTo = {Type = "Dropdown", DropdownType = "Anchors"},
+        xOffset = {Type = "Scale", min = -100, max = 100},
+        yOffset = {Type = "Scale", min = -100, max = 100},
+    },
     timers = {
             [15] = {29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350},
             [16] = {61, 65, 115, 119, 151, 155, 169, 173, 223, 227, 277, 281, 313, 317, 331, 335, 385, 389, 439, 443},
         },
     }
-    data.internalID = "Taunt Alerts"
     self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertSpecialDisplay[encID] = function(self, info)
     if info.name == "Taunt Alerts" then
+        local s = NSRT.EncounterAlerts[encID][id].TauntAlerts
         if not self.TauntFrame then
             self.TauntFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.TauntFrame:SetSize(100, 30)
             self.TauntFrame.Text = self.TauntFrame.Text or self.TauntFrame:CreateFontString(nil, "OVERLAY")
-            self.TauntFrame.Text:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings["GlobalEncounterFontSize"] or 50, "OUTLINE")
-            self.TauntFrame.Text:SetText("Taunt")
+            self.TauntFrame.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            self.TauntFrame.Text:SetText(s.Text)
             self.TauntFrame.Text:SetPoint("CENTER")
             self.TauntFrame.Text:Hide()
         end
@@ -80,7 +91,7 @@ NSI.EncounterAlertSpecialDisplay[encID] = function(self, info)
                 local isTanking = threatLevel and threatLevel >= 2
                 if isTanking then return end
                 self.TauntFrame:ClearAllPoints()
-                self.TauntFrame:SetPoint("TOP", plate, "BOTTOM", 0, 0)
+                self.TauntFrame:SetPoint(s.Anchor, plate, s.relativeTo, s.xOffset, s.yOffset)
                 self.TauntFrame.Text:Show()
                 NSAPI:TTS("Taunt")
                 self.TauntTimersCancel = C_Timer.NewTimer(3, function()

@@ -41,6 +41,8 @@ function NSI:MakeEncounterAlert(data)
         ReloeReminder  = true,
         enabled        = true,
         loadConditions = NSI.DefaultLoadConditions(),
+        extraOptions   = data.extraOptions,
+        Preview        = data.Preview,
     }
     if data.overrides then
         for k, v in pairs(data.overrides) do a[k] = v end
@@ -73,7 +75,7 @@ function NSI:AddEncounterAlert(data)
         local alertDef = self:MakeEncounterAlert(data)
         for _, diff in ipairs(data.difficulties) do
             alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
-            self:InsertEncounterAlert(data.encID, diff, alertDef, data.ReloeReminder)
+            self:InsertEncounterAlert(data.encID, diff, alertDef, true)
         end
         return
     end
@@ -85,14 +87,14 @@ function NSI:AddEncounterAlert(data)
                     alertDef.phase = phase
                     alertDef.timers = timers
                     alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
-                    self:InsertEncounterAlert(data.encID, diffID, alertDef, data.ReloeReminder)
+                    self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
                 end
             end
         else
             local timers = phaseData
             local alertDef = self:MakeEncounterAlert(data)
             alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
-            self:InsertEncounterAlert(data.encID, diffID, alertDef, data.ReloeReminder)
+            self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
         end
     end
 end
@@ -111,16 +113,17 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = legacy
         diffTable[name] = nil
     end
-    if ReloeReminder then -- overwrite timers as they are defined by me
+    if ReloeReminder then -- overwrite timers and some other data as they are defined by me
         for _, existing in pairs(diffTable) do
             if type(existing) == "table" and existing.ReloeReminder and existing.internalName == alertDef.internalName and existing.phase == alertDef.phase then
                 existing.timers = alertDef.timers
                 existing.id = alertDef.id
                 existing.customIcon = alertDef.customIcon
                 existing.internalID = alertDef.internalID
-                existing.difficulties = alertDef.difficulties
                 existing.isConditional = alertDef.isConditional
                 existing.name = alertDef.name
+                existing.extraOptions = alertDef.extraOptions
+                existing.Preview = alertDef.Preview
                 return
             end
         end

@@ -24,7 +24,6 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {name = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
-    overrides = {},
     timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
         },
@@ -40,7 +39,6 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {name = "Boss-Immune", text = "Immune", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 10, spellID = nil,
-    overrides = {},
     timers = {
             [14] = {25},
             [15] = {25},
@@ -50,7 +48,6 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {name = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
-    overrides = {},
     timers = {
             [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
         },
