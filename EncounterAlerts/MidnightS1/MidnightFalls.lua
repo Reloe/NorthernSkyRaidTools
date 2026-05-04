@@ -191,12 +191,12 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {name = "Runes Display", text = nil, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
     overrides = {Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
     Preview = function()
-        if NSI.IsPreview then
+        if NSI.IsLuraPreview then
             NSI.EncounterAlertStop[encID](NSI, 16, true)
         else
             NSI.EncounterAlertStart[encID](NSI, 16, true)
         end
-        NSI.IsPreview = not NSI.IsPreview
+        NSI.IsLuraPreview = not NSI.IsLuraPreview
     end,
     difficulties = {14, 15, 16},
     extraOptions ={
