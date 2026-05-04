@@ -1,172 +1,169 @@
 local _, NSI = ...
-local DF = _G["DetailsFramework"]
 
 -- ============================================================
 --  Per-anchor-type settings windows
 --  Each mover frame (Icons/Bars/Texts/Circles) gets a gear
---  button that opens an inline popup built with DF:BuildMenu.
+--  button that opens a popup built with NSRT UI components.
 -- ============================================================
 
-local function MakeMediaOptions(settingsName, key, isTexture)
+local TYPE_MAP = {
+    IconSettings   = "Icons",
+    BarSettings    = "Bars",
+    TextSettings   = "Texts",
+    CircleSettings = "Circles",
+}
+
+local function GrowItems(settingsName, withLR)
+    local dirs = withLR and {"Up","Down","Left","Right"} or {"Up","Down"}
+    local t = {}
+    for i, v in ipairs(dirs) do
+        t[i] = {label=v, value=i, onclick=function(_,_,val)
+            NSRT.ReminderSettings[settingsName].GrowDirection = dirs[val]
+            NSI:UpdateExistingFrames()
+            NSI:ArrangeStates(TYPE_MAP[settingsName])
+        end}
+    end
+    return t
+end
+
+local function MediaItems(settingsName, key, isTexture)
     local list = NSI.LSM:List(isTexture and "statusbar" or "font")
     local t = {}
     for i, name in ipairs(list) do
-        tinsert(t, {
-            label = name, value = i,
-            onclick = function(_, _, value)
-                NSRT.ReminderSettings[settingsName][key] = list[value]
-                NSI:UpdateExistingFrames()
-            end,
-        })
-    end
-    return t
-end
-
-local function MakeGrowOptions(settingsName, withLR)
-    local list = withLR and {"Up","Down","Left","Right"} or {"Up","Down"}
-    local t = {}
-    for i, v in ipairs(list) do
-        tinsert(t, {
-            label = v, value = i,
-            onclick = function(_, _, value)
-                NSRT.ReminderSettings[settingsName].GrowDirection = list[value]
-                NSI:UpdateExistingFrames()
-                NSI:ArrangeStates(
-                    settingsName == "IconSettings"   and "Icons"   or
-                    settingsName == "BarSettings"    and "Bars"    or
-                    settingsName == "TextSettings"   and "Texts"   or
-                    settingsName == "CircleSettings" and "Circles" or nil
-                )
-            end,
-        })
+        t[i] = {label=name, value=i, onclick=function(_,_,val)
+            NSRT.ReminderSettings[settingsName][key] = list[val]
+            NSI:UpdateExistingFrames()
+        end}
     end
     return t
 end
 
 -- ---------------------------------------------------------------
---  Returns the DF:BuildMenu-compatible options table for each type
+--  Layout constants
 -- ---------------------------------------------------------------
-local function GetOptionsTable(settingsName)
+local PAD_X   = 8
+local PAD_TOP = 26   -- room for title + close button
+local ROW_H   = 22
+local ROW_GAP = 4
+
+-- Creates all controls inside win and returns the required window height.
+local function BuildControls(win, settingsName, rowW)
+    local C = NSI.UI.Components
     local function R(key) return NSRT.ReminderSettings[settingsName][key] end
-    local function W(key, v) NSRT.ReminderSettings[settingsName][key] = v NSI:UpdateExistingFrames() end
-    local function S(key, min, max, name, desc)
-        return {type="range", name=name or key, desc=desc or name or key,
-                get=function() return R(key) end,
-                set=function(_,_,v) W(key,v) end, min=min, max=max}
+    local function W(key, v) NSRT.ReminderSettings[settingsName][key] = v; NSI:UpdateExistingFrames() end
+
+    local y = -PAD_TOP
+
+    local function Place(ctrl)
+        ctrl:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, y)
+        y = y - (ROW_H + ROW_GAP)
     end
-    local function B(key, name)
-        return {type="toggle", boxfirst=true, name=name or key, desc=name or key,
-                get=function() return R(key) end,
-                set=function(_,_,v) W(key,v) end}
+
+    local function DD(label, key, getItems)
+        Place(C.CreateDropdown(win, label, getItems, function() return R(key) end, rowW, ROW_H))
+    end
+    local function Num(label, key, min, max)
+        Place(C.CreateTextEntry(win, label,
+            function() return R(key) end,
+            function(v) W(key, v) end,
+            rowW, ROW_H, true, min, max))
+    end
+    local function Chk(label, key)
+        Place(C.CreateCheckButton(win, label,
+            function() return R(key) end,
+            function(v) W(key, v) end,
+            rowW, ROW_H))
     end
 
     if settingsName == "IconSettings" then
-        return {
-            {type="select", name="Grow Direction", desc="Grow Direction",
-             get=function() return R("GrowDirection") end,
-             values=function() return MakeGrowOptions("IconSettings", true) end},
-            S("Width",  20, 200, "Width"),
-            S("Height", 20, 200, "Height"),
-            S("Spacing", -50, 100, "Spacing"),
-            {type="select", name="Font", desc="Font",
-             get=function() return R("Font") end,
-             values=function() return MakeMediaOptions("IconSettings","Font") end},
-            S("FontSize",      5, 150, "Font Size"),
-            S("TimerFontSize", 5, 150, "Timer Font Size"),
-            S("Glow", 0, 30, "Glow Threshold"),
-            S("xTextOffset", -500, 500, "Text X Offset"),
-            S("yTextOffset", -500, 500, "Text Y Offset"),
-            S("xTimer", -100, 100, "Timer X"),
-            S("yTimer", -100, 100, "Timer Y"),
-            B("RightAlignedText", "Right-Aligned Text"),
-        }
+        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("IconSettings", true) end)
+        Num("Width",             "Width",          20, 200)
+        Num("Height",            "Height",         20, 200)
+        Num("Spacing",           "Spacing",       -50, 100)
+        DD ("Font",              "Font",           function() return MediaItems("IconSettings", "Font") end)
+        Num("Font Size",         "FontSize",         5, 150)
+        Num("Timer Font Size",   "TimerFontSize",    5, 150)
+        Num("Glow Threshold",    "Glow",             0,  30)
+        Num("Text X Offset",     "xTextOffset",   -500, 500)
+        Num("Text Y Offset",     "yTextOffset",   -500, 500)
+        Num("Timer X",           "xTimer",        -100, 100)
+        Num("Timer Y",           "yTimer",        -100, 100)
+        Chk("Right-Aligned Text","RightAlignedText")
     elseif settingsName == "BarSettings" then
-        return {
-            {type="select", name="Grow Direction", desc="Grow Direction",
-             get=function() return R("GrowDirection") end,
-             values=function() return MakeGrowOptions("BarSettings", false) end},
-            S("Width",  100, 600, "Width"),
-            S("Height",  10, 100, "Height"),
-            S("Spacing", -50, 100, "Spacing"),
-            {type="select", name="Texture", desc="Bar Texture",
-             get=function() return R("Texture") end,
-             values=function() return MakeMediaOptions("BarSettings","Texture", true) end},
-            {type="select", name="Font", desc="Font",
-             get=function() return R("Font") end,
-             values=function() return MakeMediaOptions("BarSettings","Font") end},
-            S("FontSize",      5, 150, "Font Size"),
-            S("TimerFontSize", 5, 150, "Timer Font Size"),
-            S("xIcon", -100, 100, "Icon X Offset"),
-            S("yIcon", -100, 100, "Icon Y Offset"),
-            S("xTextOffset", -500, 500, "Text X Offset"),
-            S("yTextOffset", -500, 500, "Text Y Offset"),
-            S("xTimer", -100, 100, "Timer X"),
-            S("yTimer", -100, 100, "Timer Y"),
-        }
+        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("BarSettings", false) end)
+        Num("Width",             "Width",         100, 600)
+        Num("Height",            "Height",         10, 100)
+        Num("Spacing",           "Spacing",       -50, 100)
+        DD ("Texture",           "Texture",        function() return MediaItems("BarSettings", "Texture", true) end)
+        DD ("Font",              "Font",           function() return MediaItems("BarSettings", "Font") end)
+        Num("Font Size",         "FontSize",         5, 150)
+        Num("Timer Font Size",   "TimerFontSize",    5, 150)
+        Num("Icon X Offset",     "xIcon",         -100, 100)
+        Num("Icon Y Offset",     "yIcon",         -100, 100)
+        Num("Text X Offset",     "xTextOffset",   -500, 500)
+        Num("Text Y Offset",     "yTextOffset",   -500, 500)
+        Num("Timer X",           "xTimer",        -100, 100)
+        Num("Timer Y",           "yTimer",        -100, 100)
     elseif settingsName == "TextSettings" then
-        return {
-            {type="select", name="Grow Direction", desc="Grow Direction",
-             get=function() return R("GrowDirection") end,
-             values=function() return MakeGrowOptions("TextSettings", false) end},
-            {type="select", name="Font", desc="Font",
-             get=function() return R("Font") end,
-             values=function() return MakeMediaOptions("TextSettings","Font") end},
-            S("FontSize",  5, 150, "Font Size"),
-            S("Spacing", -50, 100, "Spacing"),
-            B("CenterAligned", "Center Aligned"),
-        }
+        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("TextSettings", false) end)
+        DD ("Font",              "Font",           function() return MediaItems("TextSettings", "Font") end)
+        Num("Font Size",         "FontSize",         5, 150)
+        Num("Spacing",           "Spacing",        -50, 100)
+        Chk("Center Aligned",    "CenterAligned")
     elseif settingsName == "CircleSettings" then
-        return {
-            {type="select", name="Grow Direction", desc="Grow Direction",
-             get=function() return R("GrowDirection") end,
-             values=function() return MakeGrowOptions("CircleSettings", true) end},
-            S("Size",      40, 200, "Size"),
-            S("Thickness",  2,  50, "Thickness"),
-            S("Spacing",  -50, 100, "Spacing"),
-            {type="select", name="Font", desc="Font",
-             get=function() return R("Font") end,
-             values=function() return MakeMediaOptions("CircleSettings","Font") end},
-            S("FontSize", 5, 80, "Font Size"),
-            B("showBackground", "Show Background Ring"),
-        }
+        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("CircleSettings", true) end)
+        Num("Size",              "Size",            40, 200)
+        Num("Thickness",         "Thickness",        2,  50)
+        Num("Spacing",           "Spacing",        -50, 100)
+        DD ("Font",              "Font",           function() return MediaItems("CircleSettings", "Font") end)
+        Num("Font Size",         "FontSize",         5,  80)
+        Chk("Show Background Ring", "showBackground")
     end
-    return {}
+
+    -- y is negative; subtract the trailing gap, add bottom padding
+    return math.abs(y) - ROW_GAP + 8
 end
 
 -- ---------------------------------------------------------------
---  Positions the settings window above or below the mover
---  depending on the current GrowDirection for that anchor type
+--  Window positioning
 -- ---------------------------------------------------------------
+local DRAG_BORDER_INSET = 8
+
 local function PositionSettingsWindow(win, moverFrame, settingsName)
     local gd = NSRT.ReminderSettings[settingsName] and NSRT.ReminderSettings[settingsName].GrowDirection
     win:ClearAllPoints()
     if gd == "Down" then
-        win:SetPoint("BOTTOMLEFT", moverFrame, "TOPLEFT",    0,  3)
+        win:SetPoint("BOTTOMLEFT", moverFrame, "TOPLEFT",    -DRAG_BORDER_INSET,  DRAG_BORDER_INSET + 3)
     else
-        win:SetPoint("TOPLEFT",    moverFrame, "BOTTOMLEFT", 0, -3)
+        win:SetPoint("TOPLEFT",    moverFrame, "BOTTOMLEFT", -DRAG_BORDER_INSET, -(DRAG_BORDER_INSET + 3))
     end
 end
 
+local function GetAnchorWindowWidth(moverFrame)
+    return moverFrame:GetWidth() + DRAG_BORDER_INSET * 2
+end
+
 -- ---------------------------------------------------------------
---  Creates (or shows) the settings popup for a given mover frame
+--  Creates (or shows/hides) the settings popup for a mover frame
 -- ---------------------------------------------------------------
 function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     if moverFrame.SettingsWindow then
         if moverFrame.SettingsWindow:IsShown() then
             moverFrame.SettingsWindow:Hide()
         else
-            PositionSettingsWindow(moverFrame.SettingsWindow, moverFrame, settingsName)
-            moverFrame.SettingsWindow:Show()
+            local win = moverFrame.SettingsWindow
+            win:SetWidth(GetAnchorWindowWidth(moverFrame))
+            PositionSettingsWindow(win, moverFrame, settingsName)
+            win:Show()
         end
         return
     end
 
-    local optTable  = GetOptionsTable(settingsName)
-    local winHeight = 400
-    local winWidth  = moverFrame:GetWidth()
+    local winWidth = GetAnchorWindowWidth(moverFrame)
+    local rowW     = winWidth - PAD_X * 2
 
     local win = CreateFrame("Frame", "NSRTAnchorWin_" .. settingsName, moverFrame, "BackdropTemplate")
-    win:SetSize(winWidth, winHeight)
+    win:SetSize(winWidth, 100)   -- height filled in below
     win:SetFrameStrata("DIALOG")
     win:SetFrameLevel(moverFrame:GetFrameLevel() + 10)
     win:SetBackdrop({
@@ -177,7 +174,12 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     win:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     win:SetBackdropBorderColor(0, 1, 1, 0.9)
 
-    PositionSettingsWindow(win, moverFrame, settingsName)
+    -- Title
+    local title = win:CreateFontString(nil, "OVERLAY")
+    title:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    title:SetTextColor(0, 1, 1, 0.85)
+    title:SetText(settingsName:gsub("Settings", " Settings"))
+    title:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -7)
 
     -- Close button
     local closeBtn = CreateFrame("Button", nil, win)
@@ -190,16 +192,9 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     closeBtn:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(0.7, 0.7, 0.7) end)
     closeBtn:SetScript("OnClick", function() win:Hide() end)
 
-    -- Build the options menu inside the window
-    local txt_tmpl = DF:GetTemplate("font",     "OPTIONS_FONT_TEMPLATE")
-    local dd_tmpl  = DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE")
-    local sw_tmpl  = DF:GetTemplate("switch",   "OPTIONS_CHECKBOX_TEMPLATE")
-    local sl_tmpl  = DF:GetTemplate("slider",   "OPTIONS_SLIDER_TEMPLATE")
-    local bt_tmpl  = DF:GetTemplate("button",   "OPTIONS_BUTTON_TEMPLATE")
+    win:SetHeight(BuildControls(win, settingsName, rowW))
 
-    DF:BuildMenu(win, optTable, 5, -5, winHeight - 10, false,
-        txt_tmpl, dd_tmpl, sw_tmpl, false, sl_tmpl, bt_tmpl, nil)
-
+    PositionSettingsWindow(win, moverFrame, settingsName)
     win:Show()
     moverFrame.SettingsWindow = win
 end
