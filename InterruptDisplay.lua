@@ -37,11 +37,14 @@ function NSI:DisplayInterrupt(isCastStart)
     if castCount == myKick then
         if isCastStart then -- player interrupts now
             self.InterruptDisplay.Box:SetColorTexture(0, 1, 0, 1)
+            self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
         else -- player interrupts next
             self.InterruptDisplay.Box:SetColorTexture(1, 1, 0, 1)
+            self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
         end
     elseif (castCount+1 == myKick) or (myKick == 1 and castCount == self.Interrupts.max) then
         self.InterruptDisplay.Box:SetColorTexture(1, 1, 0, 1)
+        self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
     else
         self.InterruptDisplay.Number:SetTextColor(1, 1, 1, 1)
         self.InterruptDisplay.Box:SetColorTexture(1, 0, 0, 1)
