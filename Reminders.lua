@@ -1718,11 +1718,9 @@ function NSI:FireEncounterAlerts(encID, id)
                 Ticks           = entry.Ticks,
                 DisplayType     = entry.DisplayType,
                 startTime       = now,
+                phase           = entry.phase,
             }
-            for phase, times in pairs(entry.timers or {}) do
-                alert.phase = phase
-                self:AddRemindersFromTable(alert, times)
-            end
+            self:AddRemindersFromTable(alert, entry.timers)
         end
     end
 end
