@@ -240,7 +240,7 @@ function NSI:InitPrivateAuraDisplay(unit, s)
                     parent = frame,
                     isContainer = false,
                     showCountdownFrame = true,
-                    showCountdownNumbers = not s.UpscaleDuration,
+                    showCountdownNumbers = not s.HideDurationText,
                     iconInfo = {
                         iconAnchor = {
                             point = "CENTER",

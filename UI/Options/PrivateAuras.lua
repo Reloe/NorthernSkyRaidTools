@@ -119,7 +119,7 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Scale"],
+            name = L["Text-Scale"],
             desc = L["This will scale the size of Stacks and Duration text."],
             get = function() return NSRT.PASettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
@@ -149,6 +149,17 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PASettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.HideTooltip = value
+                NSI:UpdatePADisplay(true)
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Hide Duration Text"],
+            desc = L["Hide the duration text on the Private Auras."],
+            get = function() return NSRT.PASettings.HideDurationText end,
+            set = function(self, fixedparam, value)
+                NSRT.PASettings.HideDurationText = value
                 NSI:UpdatePADisplay(true)
             end,
         },
@@ -314,7 +325,7 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Scale"],
+            name = L["Text-Scale"],
             desc = L["This will scale the size of Stacks and Duration text."],
             get = function() return NSRT.PARaidSettings.StackScale or 1.1 end,
             set = function(self, fixedparam, value)
@@ -341,7 +352,7 @@ local function BuildPrivateAurasOptions()
             type = "toggle",
             boxfirst = true,
             name = L["Hide Duration Text"],
-            desc = L["Hide the duration text on the Raidframe Private Auras. Since it's not feasible to rescale the duration text this option exists instead if you think it is overlapping too much and you're fine with only having the swipe."],
+            desc = L["Hide the duration text on the Private Auras."],
             get = function() return NSRT.PARaidSettings.HideDurationText end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.HideDurationText = value
@@ -523,7 +534,7 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Scale"],
+            name = L["Text-Scale"],
             desc = L["This will scale the size of Stacks and Duration text."],
             get = function() return NSRT.PATankSettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
@@ -553,6 +564,17 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PATankSettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideTooltip = value
+                NSI:UpdatePADisplay(false, true)
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Hide Duration Text"],
+            desc = L["Hide the duration text on the Private Auras."],
+            get = function() return NSRT.PATankSettings.HideDurationText end,
+            set = function(self, fixedparam, value)
+                NSRT.PATankSettings.HideDurationText = value
                 NSI:UpdatePADisplay(false, true)
             end,
         },
