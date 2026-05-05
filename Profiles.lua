@@ -375,7 +375,6 @@ function NSI:AddMissingDefaults()
         NSRT = {}
     end
     if not NSRT.HasNewAlertStructure then
-        print("in")
         NSRT.HasNewAlertStructure = true
         NSRT.EncounterAlerts = {}
     end
