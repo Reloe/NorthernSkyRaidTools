@@ -48,13 +48,78 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {internalID = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    local data = {internalID = "P1 Tank-Hit First", name = "TankHit - Starting Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
     overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
-            [16] = {{21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5}, {21.5, 41.5, 61.5, 81.5}, {41.5, 71.5, 101.5, 131.5, 161.5}},
+            [16] = {21.5, 61.5, 101.5, 141.5},
         },
     }
     self:AddEncounterAlert(data)
+
+    local data = {internalID = "P1 Tank-Hit Second", name = "TankHit - Second Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    timers = {
+            [16] = {41.5, 81.5, 121.5, 161.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P2 Tank-Hit First", name = "TankHit - Starting Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    timers = {
+            [16] =  {21.5, 61.5,},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P2 Tank-Hit Second", name = "TankHit - Second Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    timers = {
+            [16] = {24, 64, 104, 144},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P1 Taunt First", name = "Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    timers = {
+            [16] = {44, 84, 124, 164},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P1 Taunt Second", name = "Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    timers = {
+            [16] = {41.5, 81.5, 121.5, 161.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P2 Taunts First", name = "Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    timers = {
+            [16] = {44, 84},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P2 Taunts Second", name = "Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    timers = {
+            [16] =  {24, 64},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "P3 Tank-Hit", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = nil,
+    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    timers = {
+            [16] = {41.5, 71.5, 101.5, 131.5, 161.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
 
     local data = {internalID = "Full Blaze", text = "Full Blaze", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
     overrides = {colors = {1, 0, 0, 1}},
