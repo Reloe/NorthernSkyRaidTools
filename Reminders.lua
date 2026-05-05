@@ -961,8 +961,8 @@ end
 
 function NSI:CheckReminderLogic(info)
     if info.isConditional then
-        if self.EncounterAlertHandle[info.encID] then
-            return self.EncounterAlertHandle[info.encID](self)
+        if self.EncounterAlertHandle[self.EncounterID] then
+            return self.EncounterAlertHandle[self.EncounterID](self, info)
         else
             return true
         end

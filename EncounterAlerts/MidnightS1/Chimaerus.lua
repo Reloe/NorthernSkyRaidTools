@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {internalID = "Debuffs", text = "Debuff", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
+    local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {isConditional = true},
     timers = {
             [16] = {{39, 112}, {39, 112}},
@@ -20,7 +20,7 @@ function NSAPI:TestChimaerus()
     NSI.InitializeAlerts[encID](NSI)
 end
 
-NSI.EncounterAlertHandle[encID] = function(self, e, info)
+NSI.EncounterAlertHandle[encID] = function(self, info)
     if UnitGroupRolesAssigned("player") == "TANK" then return false end
     if info and info.name and info.name == "Debuffs" then
         for j = 1, 40 do
