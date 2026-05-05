@@ -464,7 +464,6 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
         self.NSRTFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
     self:HideInterrupt()
-    self:EncounterRegister(false, false, false, true)
 end
 
 local detectedDurations = {

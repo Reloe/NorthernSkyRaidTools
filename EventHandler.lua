@@ -166,6 +166,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if internal then diff = 16 end
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
+        self:EncounterRegister(nil, nil, nil, true)
         self:InitPrivateAuras()
         self:HideAllReminders(true)
         C_Timer.After(1, function()

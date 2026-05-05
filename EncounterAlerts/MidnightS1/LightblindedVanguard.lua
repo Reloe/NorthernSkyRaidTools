@@ -125,7 +125,9 @@ NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
             self.TauntTimers[i] = nil
         end
     end
-    self:EncounterRegister(nil, false, nil, true)
+    if self.TauntFrame then
+        self.TauntFrame:Hide()
+    end
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
