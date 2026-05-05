@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {name = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
+    local data = {internalID = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
     timers = {
             [14] = {102.6, 224.2, 346},
             [15] = {102.6, 224.2, 346},
@@ -15,25 +15,24 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Orbs", "Orbs"
+    data.internalID, data.text = "Orbs", "Orbs"
     data.timers = {
         [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
         [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
         [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6},
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "CC Adds", "CC Adds"
+    data.internalID, data.text = "CC Adds", "CC Adds"
     data.timers = {
         [14] = {20, 65, 141, 187, 263, 308},
         [15] = {20, 65, 141, 187, 263, 308},
         [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5},
     }
     self:AddEncounterAlert(data)
-    data.name = "CC Display"
+    data.internalID = "CC Display"
     data.text = nil
     data.timers = nil
     data.Preview = function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end
-    data.internalID = "CC Display"
     data.TTS = false
     data.difficulties = {16}
     self:AddEncounterAlert(data)
@@ -144,8 +143,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    local diffID = select(3, GetInstanceInfo()) or 0
+NSI.EncounterAlertStop[encID] = function(self, id) -- on ENCOUNTER_END
+    local diffID = id or select(3, GetInstanceInfo()) or 0
     local ccEntry = NSI:GetEncounterAlertByName(encID, diffID, "CC Display")
     if ccEntry and ccEntry.enabled then
         if self.plateframe then

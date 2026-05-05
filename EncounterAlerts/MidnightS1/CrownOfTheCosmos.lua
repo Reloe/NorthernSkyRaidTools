@@ -9,28 +9,28 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local rangedConditions = self:DefaultLoadConditions()
     rangedConditions.Roles.RANGED = true
-    local data = {name = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {internalID = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {loadConditions = rangedConditions},
     timers = {
             [16] = {9.6, 30.4},
         },
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Bait", "Bait"
+    data.internalID, data.text = "Bait", "Bait"
     data.timers = {
         [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
         [16] = {{9.6, 30.4}, {}, {23, 48, 75, 100, 127}, {}, {40, 100, 160}},
     },
     self:AddEncounterAlert(data)
 
-    local data = {name = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {internalID = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Explosion", text = "Explosion", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 12, spellID = 1233819,
+    local data = {internalID = "Explosion", text = "Explosion", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 12, spellID = 1233819,
     overrides = {Ticks = {6}},
     timers = {
             [16] = {{27, 67, 99.5, 126.6}, {}, {37, 62, 89, 114}, {}, {54, 114, 174}},
@@ -38,7 +38,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Boss-Immune", text = "Immune", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 10, spellID = nil,
+    local data = {internalID = "Boss-Immune", text = "Immune", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 10, spellID = nil,
     timers = {
             [14] = {25},
             [15] = {25},
@@ -47,7 +47,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
+    local data = {internalID = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
     timers = {
             [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
         },

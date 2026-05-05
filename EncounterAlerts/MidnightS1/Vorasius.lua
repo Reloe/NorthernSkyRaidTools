@@ -6,7 +6,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {name = "Knock", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {internalID = "Knock", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     timers = {
             [14] = {12, 132, 252},
             [15] = {12, 132, 252},
@@ -14,7 +14,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Breath", "Breath"
+    data.internalID, data.text = "Breath", "Breath"
     data.timers = {
         [14] = {102, 223, 343},
         [15] = {102, 223, 343},

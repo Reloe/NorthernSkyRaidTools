@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {name = "Gateway", text = "Gateway", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 6.6, spellID = 311699,
+    local data = {internalID = "Gateway", text = "Gateway", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 6.6, spellID = 311699,
     timers = {
             [15] = {{}, {6.6}, {6.6}},
             [16] = {{}, {6.6}, {6.6}},
@@ -15,21 +15,21 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Next Hit", text = "Next Hit", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 4, spellID = 1242792,
+    local data = {internalID = "Next Hit", text = "Next Hit", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 4, spellID = 1242792,
     timers = {
             [16] = {{}, {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7, 43.2, 46.7, 50.2}, {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7, 43.2, 46.7, 50.2}},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
+    local data = {internalID = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
     timers = {
             [16] = {{18.8, 68.8}, {70.6, 120.6, 170.6}},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Quills", text = "Quills", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    local data = {internalID = "Quills", text = "Quills", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
     timers = {
             [16] = {{27.4, 37.4, 47.4, 77.4, 87.4, 97.4}, {79.2, 89.2, 99.2, 129.2, 139.2, 149.2, 179.2}},
         },

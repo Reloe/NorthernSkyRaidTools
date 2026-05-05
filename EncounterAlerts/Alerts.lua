@@ -26,8 +26,7 @@ end
 function NSI:MakeEncounterAlert(data, timers)
     local a = {
         internalID     = data.internalID,
-        internalName   = data.internalName or data.name, -- if the displayed name should ever be changed then internalname has to match the previous name to force the update.
-        name           = data.name,
+        name           = data.name or data.internalID,
         text           = data.text,
         spellID        = data.spellID,
         TTS            = data.TTS,
@@ -51,13 +50,14 @@ function NSI:MakeEncounterAlert(data, timers)
 end
 
 local function UniqueAlertID(diffTable, ReloeReminder, internalID)
-    local id
-    if ReloeReminder and internalID then
-        return internalID
-    else
+    local id = internalID
+    if ReloeReminder and not id then
+        print("No internalID found for Reloe reminder alert. Aborting")
+        return
+    elseif not id then
         repeat id = GenerateAlertID() until not diffTable[id]
     end
-    return ReloeReminder and "Reloe "..id or id
+    return id
 end
 
 function NSI:GetEncounterAlertID(encID)
@@ -85,6 +85,7 @@ function NSI:AddEncounterAlert(data)
                 if next(timers) then
                     local alertDef = self:MakeEncounterAlert(data, timers)
                     alertDef.phase = phase
+                    alertDef.internalID = data.internalID.."_P"..phase
                     alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
                     self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
                 end
@@ -112,20 +113,16 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = legacy
         diffTable[name] = nil
     end
-    if ReloeReminder then -- overwrite timers and some other data as they are defined by me
-        for _, existing in pairs(diffTable) do
-            if type(existing) == "table" and existing.ReloeReminder and existing.internalName == alertDef.internalName and existing.phase == alertDef.phase then
-                existing.timers = alertDef.timers
-                existing.id = alertDef.id
-                existing.customIcon = alertDef.customIcon
-                existing.internalID = alertDef.internalID
-                existing.isConditional = alertDef.isConditional
-                existing.name = alertDef.name
-                existing.extraOptions = alertDef.extraOptions
-                existing.Preview = alertDef.Preview
-                return
-            end
-        end
+    if ReloeReminder and diffTable[alertDef.internalID] then -- overwrite timers and some other data as they are defined by me
+        local existing = diffTable[alertDef.internalID]
+        existing.timers = alertDef.timers
+        existing.id = alertDef.id
+        existing.customIcon = alertDef.customIcon
+        existing.isConditional = alertDef.isConditional
+        existing.name = alertDef.name
+        existing.extraOptions = alertDef.extraOptions
+        existing.Preview = alertDef.Preview
+        return
     end
     diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
 end

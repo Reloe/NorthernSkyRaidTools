@@ -7,27 +7,26 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {name = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {internalID = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     timers = {
             [16] = {37.7, 77.7, 170.5, 205.5, 245.5, 285.5, 307.1, 373.2, 418.2, 450.2},
         },
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Tether", "Tether"
+    data.internalID, data.text = "Tether", "Tether"
     data.timers = {
         [16] = { 39.8, 89.8, 149.4, 187.5, 237.5, 287.5, 441.7 },
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Breath", "Breath"
+    data.internalID, data.text = "Breath", "Breath"
     data.timers = {
         [16] = {5.3, 70.3, 133.8, 145.9, 191, 248, 316.6, 360.7, 420.7},
     }
     self:AddEncounterAlert(data)
-    data.name = "Health Display"
+    data.internalID = "HealthDisplay"
     data.text = nil
     data.timers = nil
     data.Preview = function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end
-    data.internalID = "HealthDisplay"
     data.difficulties = {14, 15, 16}
     self:AddEncounterAlert(data)
 end

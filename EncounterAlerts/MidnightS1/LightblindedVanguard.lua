@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {name = "Sacred Toll", text = "Sacred Toll", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {internalID = "Sacred Toll", text = "Sacred Toll", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {},
     timers = {
             [16] = {22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382},
@@ -15,7 +15,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Heal Absorb Ticks", text = "", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 20, spellID = 1248721,
+    local data = {internalID = "Heal Absorb Ticks", text = "", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 20, spellID = 1248721,
     overrides = {colors = {0,1,0,1}, Ticks = {5, 10, 15}},
     timers = {
             [16] = {54.4, 162.6, 212.5, 322, 372, 481.5},
@@ -24,25 +24,25 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
-    local data = {name = "Peace Aura", text = "Peace Aura", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
+    local data = {internalID = "Peace Aura", text = "Peace Aura", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
     overrides = {loadConditions = tankConditions},
     timers = {
             [16] = {22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382},
         },
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Devotion Aura", "Devotion Aura"
+    data.internalID, data.text = "Devotion Aura", "Devotion Aura"
     data.timers = {
         [16] = {26, 184.7, 343.5},
     }
     self:AddEncounterAlert(data)
-    data.name, data.text = "Aura of Wrath", "Aura of Wrath"
+    data.internalID, data.text = "Aura of Wrath", "Aura of Wrath"
     data.timers = {
         [16] = {78.5, 237.5, 396.5},
     }
     self:AddEncounterAlert(data)
 
-    local data = {name = "Taunt Alerts", internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil,
+    local data = {internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil,
     overrides = {SpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0},
     Preview = function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")
@@ -64,7 +64,7 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertSpecialDisplay[encID] = function(self, info)
-    if info.name == "Taunt Alerts" then
+    if info.name == "TauntAlerts" then
         local s = NSRT.EncounterAlerts[encID][id].TauntAlerts
         if not self.TauntFrame then
             self.TauntFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")

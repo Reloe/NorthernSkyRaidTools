@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {name = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
+    local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {isConditional = true},
     timers = {
             [16] = {{39, 112}, {39, 112}},

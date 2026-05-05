@@ -1653,8 +1653,13 @@ function NSAPI:DebugNextPhase(num)
     end
 end
 
-function NSAPI:DebugEncounter(EncounterID)
+function NSAPI:DebugEncounter(EncounterID, Stop)
     if not NSRT.Settings["Debug"] then return end
+    if Stop then
+        NSI.EncounterAlertStop[EncounterID](NSI, 16)
+        NSI:EventHandler("ENCOUNTER_END", true, true, EncounterID)
+        return
+    end
     NSI.ProcessedReminder = nil
     NSI.Assignments = NSRT.AssignmentSettings
     NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
