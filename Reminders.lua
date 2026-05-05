@@ -1720,6 +1720,7 @@ function NSI:FireEncounterAlerts(encID, id)
                 Ticks           = entry.Ticks,
                 DisplayType     = entry.DisplayType,
                 startTime       = now,
+                phase           = entry.phase,
             }
             alert.phase = entry.phase or 1
             self:AddRemindersFromTable(alert, entry.timers or {})

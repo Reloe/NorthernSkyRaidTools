@@ -23,7 +23,7 @@ end
 -- displayType: "Text", "Bar", "Icon", or "Circle"
 -- timers: { [phase] = {times...} }
 -- overrides: optional table of field overrides
-function NSI:MakeEncounterAlert(data)
+function NSI:MakeEncounterAlert(data, timers)
     local a = {
         internalID     = data.internalID,
         internalName   = data.internalName or data.name, -- if the displayed name should ever be changed then internalname has to match the previous name to force the update.
@@ -33,7 +33,7 @@ function NSI:MakeEncounterAlert(data)
         TTS            = data.TTS,
         TTSTimer       = data.TTSTimer or data.dur,
         dur            = data.dur,
-        timers         = data.timers or {},
+        timers         = timers or data.timers or {},
         phase          = data.phase,
         DisplayType    = data.DisplayType,
         notsticky      = true,
@@ -83,16 +83,15 @@ function NSI:AddEncounterAlert(data)
         if phaseData[1] and type(phaseData[1]) == "table" then -- multiple phases were provided
             for phase, timers in ipairs(phaseData) do
                 if next(timers) then
-                    local alertDef = self:MakeEncounterAlert(data)
+                    local alertDef = self:MakeEncounterAlert(data, timers)
                     alertDef.phase = phase
-                    alertDef.timers = timers
                     alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
                     self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
                 end
             end
         else
-            local alertDef = self:MakeEncounterAlert(data)
-            alertDef.timers = phaseData
+            local timers = phaseData
+            local alertDef = self:MakeEncounterAlert(data, timers)
             alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
             self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
         end
