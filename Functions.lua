@@ -374,17 +374,6 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
     if not F then return end
 
     if enable then
-        if (not F.dragBorder) and (not isNote) then
-            F.dragBorder = CreateFrame("Frame", nil, F, "BackdropTemplate")
-            F.dragBorder:SetPoint("TOPLEFT",     F, "TOPLEFT",     -8,  8)
-            F.dragBorder:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT",  8, -8)
-            F.dragBorder:SetBackdrop({
-                bgFile   = "Interface\\Buttons\\WHITE8x8", tileSize = 0,
-                edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 4,
-            })
-            F.dragBorder:SetBackdropColor(0, 0, 0, 0)
-            F.dragBorder:SetBackdropBorderColor(0.3, 0.67, 0.78, 1)
-        end
         F:SetMovable(true)
         F:EnableMouse(true)
         F:RegisterForDrag("LeftButton")
@@ -392,9 +381,8 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         if not isNote then F:SetFrameStrata("DIALOG") end
         F:Show()
         if F.Border and isNote then F.Border:Show() end
-        if F.dragBorder then F.dragBorder:Show() end
+        if F.TitleFrame then F.TitleFrame:Show() end
         if F.Text then F.Text:Show() end
-        if F.TitleLabel then F.TitleLabel:Show() end
         if F.GearButton then F.GearButton:Show() end
 
         F:SetScript("OnDragStart", function(f) f:StartMoving() end)
@@ -403,9 +391,8 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         end)
     else
         if F.Border and isNote then F.Border:Hide() end
-        if F.dragBorder then F.dragBorder:Hide() end
+        if F.TitleFrame then F.TitleFrame:Hide() end
         if F.Text then F.Text:Hide() end
-        if F.TitleLabel then F.TitleLabel:Hide() end
         if F.GearButton then F.GearButton:Hide() end
         if F.SettingsWindow then F.SettingsWindow:Hide() end
 
