@@ -65,10 +65,9 @@ local TABS_GROUPS                  = {
         { name = "ReadyCheck", text = L["Ready Check"] },
     },
     {
-        { name = "Reminders",       text = L["Reminders"] },
-        { name = "Reminders-Note",  text = L["Note-Display"] },
-        { name = "Encounters",      text = L["Encounters"] },
-        { name = "EncounterAlerts",   text = L["Encounter Alerts"] },
+        { name = "Reminders",        text = L["Reminders"] },
+        { name = "Reminders-Note",   text = L["Note-Display"] },
+        { name = "EncounterAlerts",  text = L["Encounter Alerts"] },
         { name = "InterruptDisplay", text = L["Interrupt Display"] },
         { name = "Assignments",      text = L["Assignments"] },
     },
@@ -282,7 +281,6 @@ function NSUI:Init()
     local reminder_tab            = tabSystem:GetTabFrameByName("Reminders")
     local reminder_note_tab       = tabSystem:GetTabFrameByName("Reminders-Note")
     local assignments_tab         = tabSystem:GetTabFrameByName("Assignments")
-    local encounters_tab          = tabSystem:GetTabFrameByName("Encounters")
     local encounteralerts_tab     = tabSystem:GetTabFrameByName("EncounterAlerts")
     local interruptdisplay_tab    = tabSystem:GetTabFrameByName("InterruptDisplay")
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
@@ -390,7 +388,7 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Build custom UI components
     -- --------------------------------------------------------
-    NSUI.encounters_frame         = BuildBossRemindersUI(encounters_tab)
+    NSUI.encounters_frame         = BuildBossRemindersUI(encounteralerts_tab)
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
