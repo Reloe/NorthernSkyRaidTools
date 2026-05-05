@@ -1898,15 +1898,6 @@ function NSI:IsUsingTLAssignments()
     return NSRT.ReminderSettings.UseTLAssignments and C_AddOns.IsAddOnLoaded("TimelineReminders")
 end
 
-function NSAPI:GetAlerts(encounterID, id)
-    if C_InstanceEncounter.IsEncounterInProgress() then return end
-    NSI.TLAlerts = {}
-    if NSI.EncounterAlertStart[encounterID] and NSI:IsUsingTLAlerts() then NSI.EncounterAlertStart[encounterID](NSI, id) end
-    if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
-    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI, true) end
-    return NSI.TLAlerts
-end
-
 function NSI:AddRemindersFromTable(Alert, timers)
     if (not timers) or (not Alert) then return end
     for _, time in ipairs(timers or {}) do
