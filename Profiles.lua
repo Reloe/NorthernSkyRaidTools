@@ -369,9 +369,15 @@ function NSI:AddMissingDefaults()
         MainProfile = "default",
 
         AutoLoadNote = {},
+        HasNewAlertStructure = true,
     }
     if not NSRT then
         NSRT = {}
+    end
+    if not NSRT.HasNewAlertStructure then
+        print("in")
+        NSRT.HasNewAlertStructure = true
+        NSRT.EncounterAlerts = {}
     end
     for k, v in pairs(defaults) do
         if NSRT[k] == nil then

@@ -106,13 +106,6 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     NSRT.EncounterAlerts[encId]         = NSRT.EncounterAlerts[encId] or {}
     NSRT.EncounterAlerts[encId][diffID] = NSRT.EncounterAlerts[encId][diffID] or {}
     local diffTable = NSRT.EncounterAlerts[encId][diffID]
-    -- Migrate any legacy string-keyed entry with this name to a unique ID key
-    if diffTable[name] and type(diffTable[name]) == "table" then
-        local legacy = diffTable[name]
-        legacy.name = name
-        diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = legacy
-        diffTable[name] = nil
-    end
     if ReloeReminder and diffTable[alertDef.internalID] then -- overwrite timers and some other data as they are defined by me
         local existing = diffTable[alertDef.internalID]
         existing.timers = alertDef.timers
