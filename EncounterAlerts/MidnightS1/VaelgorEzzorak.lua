@@ -60,8 +60,8 @@ end
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
     local diffID = select(3, GetInstanceInfo()) or 0
     local diffTable = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID]
-    local hdEntry = diffTable and diffTable["Health Display"]
-    if hdEntry and hdEntry.enabled then
+    local hpDisplay = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].HealthDisplay and NSRT.EncounterAlerts[encID][id].HealthDisplay.enabled
+    if hpDisplay then
         if self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame:UnregisterEvent("UNIT_HEALTH")
             self.VaelgorEzzorakFrame:Hide()
