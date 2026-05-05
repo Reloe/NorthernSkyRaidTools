@@ -27,7 +27,6 @@ function NSI:MakeEncounterAlert(data, timers)
     local a = {
         internalID     = data.internalID,
         name           = data.name or data.internalID,
-        isConditional  = data.isConditional,
         text           = data.text,
         spellID        = data.spellID,
         TTS            = data.TTS,
