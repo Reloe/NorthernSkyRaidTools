@@ -132,6 +132,7 @@ function NSI:AddToReminder(info)
         Ticks = info.Ticks,
         skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
         SpecialDisplay = info.SpecialDisplay,
+        isConditional = info.isConditional,
     })
 end
 
