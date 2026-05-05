@@ -578,10 +578,10 @@ function NSI:SetProperties(F, info, skipsound, s)
         if not spellInfo then spellInfo = { iconID = 134400 } end
         F.Icon:SetTexture(spellInfo.iconID)
         if info.skipdur then
-            F.Swipe:SetCooldown(0, 0)
-            F.TimerText:Hide()
+            if F.Swipe then F.Swipe:SetCooldown(0, 0) end
+            if F.TimerText then F.TimerText:Hide() end
         else
-            F.Swipe:SetCooldown(GetTime(), info.dur)
+            if F.Swipe then F.Swipe:SetCooldown(GetTime(), info.dur) end
             if F.TimerText then
                 F.TimerText:SetTextColor(1, 1, 0, 1)
                 if info.skiptime then
@@ -591,7 +591,7 @@ function NSI:SetProperties(F, info, skipsound, s)
                 end
             end
         end
-        F.Text:SetTextColor(unpack(info.colors or s.colors))
+        if F.Text then F.Text:SetTextColor(unpack(info.colors or s.colors)) end
     elseif info.DisplayType == "Bar" then
         if spellInfo then
             F.Icon:SetTexture(spellInfo.iconID)
@@ -599,7 +599,9 @@ function NSI:SetProperties(F, info, skipsound, s)
         else
             F.Icon:Hide()
         end
-        F:SetStatusBarColor(unpack(info.colors or s.colors))
+        if F.SetStatusBarColor then
+            F:SetStatusBarColor(unpack(info.colors or s.colors or {1,1,1,1}))
+        end
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
             if info.skiptime then
@@ -1088,7 +1090,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         F.Text:SetText(text)
         return
     elseif info.DisplayType == "Bar" then
-        F:SetValue((GetTime()-info.startTime))
+        if F.SetValue then F:SetValue((GetTime()-info.startTime)) end
         if F.Ticks then
             for _, tick in ipairs(F.Ticks) do
                 if tick.HideTimer and rem <= tick.HideTimer then
@@ -1719,10 +1721,8 @@ function NSI:FireEncounterAlerts(encID, id)
                 DisplayType     = entry.DisplayType,
                 startTime       = now,
             }
-            for phase, times in pairs(entry.timers or {}) do
-                alert.phase = phase
-                self:AddRemindersFromTable(alert, times)
-            end
+            alert.phase = entry.phase or 1
+            self:AddRemindersFromTable(alert, entry.timers or {})
         end
     end
 end

@@ -2,8 +2,8 @@ local _, NSI = ...
 
 -- ============================================================
 --  Per-anchor-type settings windows
---  Each mover frame (Icons/Bars/Texts/Circles) gets a gear
---  button that opens a popup built with NSRT UI components.
+--  Each mover frame gets a gear button that opens a popup
+--  built from a widget definition table via BuildWidgets.
 -- ============================================================
 
 local TYPE_MAP = {
@@ -13,124 +13,143 @@ local TYPE_MAP = {
     CircleSettings = "Circles",
 }
 
-local function GrowItems(settingsName, withLR)
+-- Returns {label, value} pairs for grow-direction dropdowns.
+-- value == label so BuildWidgets' lookup works with the stored string.
+local function GrowValues(withLR)
     local dirs = withLR and {"Up","Down","Left","Right"} or {"Up","Down"}
     local t = {}
-    for i, v in ipairs(dirs) do
-        t[i] = {label=v, value=i, onclick=function(_,_,val)
-            NSRT.ReminderSettings[settingsName].GrowDirection = dirs[val]
-            NSI:UpdateExistingFrames()
-            NSI:ArrangeStates(TYPE_MAP[settingsName])
-        end}
-    end
+    for _, v in ipairs(dirs) do t[#t+1] = {label=v, value=v} end
     return t
 end
 
-local function MediaItems(settingsName, key, isTexture)
-    local list = NSI.LSM:List(isTexture and "statusbar" or "font")
-    local t = {}
-    for i, name in ipairs(list) do
-        t[i] = {label=name, value=i, onclick=function(_,_,val)
-            NSRT.ReminderSettings[settingsName][key] = list[val]
-            NSI:UpdateExistingFrames()
-        end}
+-- Returns a lazy function that builds {label, value} pairs from LSM.
+local function MediaValuesFn(isTexture)
+    return function()
+        local list = NSI.LSM:List(isTexture and "statusbar" or "font")
+        local t = {}
+        for _, name in ipairs(list) do t[#t+1] = {label=name, value=name} end
+        return t
     end
-    return t
 end
 
 -- ---------------------------------------------------------------
---  Layout constants
+--  Returns the ordered widget-definition table for each type.
+--  All ranges and fields are aligned with Reminders.lua.
 -- ---------------------------------------------------------------
-local PAD_X   = 8
-local PAD_TOP = 26   -- room for title + close button
-local ROW_H   = 22
-local ROW_GAP = 4
+local function GetWidgetDefs(settingsName)
+    local S = NSRT.ReminderSettings[settingsName]
 
--- Creates all controls inside win and returns the required window height.
-local function BuildControls(win, settingsName, rowW)
-    local C = NSI.UI.Components
-    local function R(key) return NSRT.ReminderSettings[settingsName][key] end
-    local function W(key, v) NSRT.ReminderSettings[settingsName][key] = v; NSI:UpdateExistingFrames() end
+    local function R(key)   return S[key]                                                     end
+    local function W(key,v) S[key] = v ; NSI:UpdateExistingFrames()                          end
+    local function WGrow(v) S.GrowDirection = v ; NSI:UpdateExistingFrames()
+                            NSI:ArrangeStates(TYPE_MAP[settingsName])                         end
 
-    local y = -PAD_TOP
-
-    local function Place(ctrl)
-        ctrl:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, y)
-        y = y - (ROW_H + ROW_GAP)
+    -- Color helpers: storage is a {r,g,b,a} table; our ColorPicker needs 4 returns.
+    local function GetColor()
+        local c = S.colors
+        if not c then return 1, 1, 1, 1 end
+        return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
     end
+    local function SetColor(r,g,b,a) W("colors", {r,g,b,a}) end
 
-    local function DD(label, key, getItems)
-        Place(C.CreateDropdown(win, label, getItems, function() return R(key) end, rowW, ROW_H))
-    end
-    local function Num(label, key, min, max)
-        Place(C.CreateTextEntry(win, label,
-            function() return R(key) end,
-            function(v) W(key, v) end,
-            rowW, ROW_H, true, min, max))
+    -- Shorthand constructors
+    local function Slider(label, key, mn, mx)
+        return {Type="Slider", label=label,
+                get=function() return R(key) end,
+                set=function(v) W(key,v) end,
+                min=mn, max=mx}
     end
     local function Chk(label, key)
-        Place(C.CreateCheckButton(win, label,
-            function() return R(key) end,
-            function(v) W(key, v) end,
-            rowW, ROW_H))
+        return {Type="Checkbox", label=label,
+                get=function() return R(key) end,
+                set=function(v) W(key,v) end}
+    end
+    local function DD(label, key, valsFn)
+        return {Type="Dropdown", label=label,
+                get=function() return R(key) end,
+                set=function(v) W(key,v) end,
+                values=valsFn}
+    end
+    local function DDGrow(withLR)
+        return {Type="Dropdown", label="Grow Direction",
+                get=function() return R("GrowDirection") end,
+                set=WGrow,
+                values=GrowValues(withLR)}
     end
 
     if settingsName == "IconSettings" then
-        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("IconSettings", true) end)
-        Num("Width",             "Width",          20, 200)
-        Num("Height",            "Height",         20, 200)
-        Num("Spacing",           "Spacing",       -50, 100)
-        DD ("Font",              "Font",           function() return MediaItems("IconSettings", "Font") end)
-        Num("Font Size",         "FontSize",         5, 150)
-        Num("Timer Font Size",   "TimerFontSize",    5, 150)
-        Num("Glow Threshold",    "Glow",             0,  30)
-        Num("Text X Offset",     "xTextOffset",   -500, 500)
-        Num("Text Y Offset",     "yTextOffset",   -500, 500)
-        Num("Timer X",           "xTimer",        -100, 100)
-        Num("Timer Y",           "yTimer",        -100, 100)
-        Chk("Right-Aligned Text","RightAlignedText")
+        return {
+            DDGrow(true),
+            Slider("Width",           "Width",         20,   200),
+            Slider("Height",          "Height",        20,   200),
+            Slider("Spacing",         "Spacing",       -5,   20),
+            DD    ("Font",            "Font",          MediaValuesFn()),
+            Slider("Font Size",       "FontSize",      5,    200),
+            Slider("Timer Font Size", "TimerFontSize", 5,    200),
+            Slider("Glow Threshold",  "Glow",          0,    30),
+            Slider("Zoom",            "Zoom",          0,    100),
+            Slider("Text X Offset",   "xTextOffset",   -500, 500),
+            Slider("Text Y Offset",   "yTextOffset",   -500, 500),
+            Slider("Timer X",         "xTimer",        -100, 100),
+            Slider("Timer Y",         "yTimer",        -100, 100),
+            Chk   ("Right-Aligned Text", "RightAlignedText"),
+        }
+
     elseif settingsName == "BarSettings" then
-        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("BarSettings", false) end)
-        Num("Width",             "Width",         100, 600)
-        Num("Height",            "Height",         10, 100)
-        Num("Spacing",           "Spacing",       -50, 100)
-        DD ("Texture",           "Texture",        function() return MediaItems("BarSettings", "Texture", true) end)
-        DD ("Font",              "Font",           function() return MediaItems("BarSettings", "Font") end)
-        Num("Font Size",         "FontSize",         5, 150)
-        Num("Timer Font Size",   "TimerFontSize",    5, 150)
-        Num("Icon X Offset",     "xIcon",         -100, 100)
-        Num("Icon Y Offset",     "yIcon",         -100, 100)
-        Num("Text X Offset",     "xTextOffset",   -500, 500)
-        Num("Text Y Offset",     "yTextOffset",   -500, 500)
-        Num("Timer X",           "xTimer",        -100, 100)
-        Num("Timer Y",           "yTimer",        -100, 100)
+        return {
+            DDGrow(false),
+            Slider("Width",           "Width",         80,   500),
+            Slider("Height",          "Height",        10,   100),
+            Slider("Spacing",         "Spacing",       -5,   20),
+            DD    ("Texture",         "Texture",       MediaValuesFn(true)),
+            DD    ("Font",            "Font",          MediaValuesFn()),
+            Slider("Font Size",       "FontSize",      5,    200),
+            Slider("Timer Font Size", "TimerFontSize", 5,    200),
+            {Type="Color", label="Bar Color", get=GetColor, set=SetColor},
+            Slider("Icon X Offset",   "xIcon",         -100, 100),
+            Slider("Icon Y Offset",   "yIcon",         -100, 100),
+            Slider("Text X Offset",   "xTextOffset",   -500, 500),
+            Slider("Text Y Offset",   "yTextOffset",   -500, 500),
+            Slider("Timer X",         "xTimer",        -100, 100),
+            Slider("Timer Y",         "yTimer",        -100, 100),
+        }
+
     elseif settingsName == "TextSettings" then
-        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("TextSettings", false) end)
-        DD ("Font",              "Font",           function() return MediaItems("TextSettings", "Font") end)
-        Num("Font Size",         "FontSize",         5, 150)
-        Num("Spacing",           "Spacing",        -50, 100)
-        Chk("Center Aligned",    "CenterAligned")
+        return {
+            DDGrow(false),
+            DD    ("Font",          "Font",          MediaValuesFn()),
+            Slider("Font Size",     "FontSize",      5,  200),
+            {Type="Color", label="Text Color", get=GetColor, set=SetColor},
+            Slider("Spacing",       "Spacing",       -5, 20),
+            Chk   ("Center Aligned","CenterAligned"),
+        }
+
     elseif settingsName == "CircleSettings" then
-        DD ("Grow Direction",    "GrowDirection", function() return GrowItems("CircleSettings", true) end)
-        Num("Size",              "Size",            40, 200)
-        Num("Thickness",         "Thickness",        2,  50)
-        Num("Spacing",           "Spacing",        -50, 100)
-        DD ("Font",              "Font",           function() return MediaItems("CircleSettings", "Font") end)
-        Num("Font Size",         "FontSize",         5,  80)
-        Chk("Show Background Ring", "showBackground")
+        return {
+            DDGrow(true),
+            Slider("Size",      "Size",          40,  200),
+            Slider("Thickness", "Thickness",     2,   50),
+            Slider("Spacing",   "Spacing",       -50, 100),
+            DD    ("Font",      "Font",          MediaValuesFn()),
+            Slider("Font Size", "FontSize",      5,   80),
+            Chk   ("Show Background Ring", "showBackground"),
+        }
     end
 
-    -- y is negative; subtract the trailing gap, add bottom padding
-    return math.abs(y) - ROW_GAP + 8
+    return {}
 end
 
 -- ---------------------------------------------------------------
 --  Window positioning
 -- ---------------------------------------------------------------
 local DRAG_BORDER_INSET = 8
+local MIN_WIN_W         = 220
+local PAD_X             = 8
+local PAD_TOP           = 26   -- room for title + close button
 
 local function PositionSettingsWindow(win, moverFrame, settingsName)
-    local gd = NSRT.ReminderSettings[settingsName] and NSRT.ReminderSettings[settingsName].GrowDirection
+    local gd = NSRT.ReminderSettings[settingsName]
+             and NSRT.ReminderSettings[settingsName].GrowDirection
     win:ClearAllPoints()
     if gd == "Down" then
         win:SetPoint("BOTTOMLEFT", moverFrame, "TOPLEFT",    -DRAG_BORDER_INSET,  DRAG_BORDER_INSET + 3)
@@ -140,7 +159,7 @@ local function PositionSettingsWindow(win, moverFrame, settingsName)
 end
 
 local function GetAnchorWindowWidth(moverFrame)
-    return moverFrame:GetWidth() + DRAG_BORDER_INSET * 2
+    return math.max(MIN_WIN_W, moverFrame:GetWidth() + DRAG_BORDER_INSET * 2)
 end
 
 -- ---------------------------------------------------------------
@@ -192,7 +211,14 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     closeBtn:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(0.7, 0.7, 0.7) end)
     closeBtn:SetScript("OnClick", function() win:Hide() end)
 
-    win:SetHeight(BuildControls(win, settingsName, rowW))
+    -- Content frame: shifted past the title so BuildWidgets starts from (0,0)
+    local content = CreateFrame("Frame", nil, win)
+    content:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
+    content:SetWidth(rowW)
+
+    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), rowW)
+    content:SetHeight(contentH)
+    win:SetHeight(PAD_TOP + contentH + 8)
 
     PositionSettingsWindow(win, moverFrame, settingsName)
     win:Show()

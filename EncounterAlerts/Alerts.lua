@@ -91,8 +91,8 @@ function NSI:AddEncounterAlert(data)
                 end
             end
         else
-            local timers = phaseData
             local alertDef = self:MakeEncounterAlert(data)
+            alertDef.timers = phaseData
             alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
             self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
         end

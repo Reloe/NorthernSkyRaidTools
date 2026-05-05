@@ -603,6 +603,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     end)
 
     -- ---- Popup (parented to UIParent so it floats above everything) ----
+    local SB_W = 6   -- scrollbar width
     local popup = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
     popup:SetFrameStrata("TOOLTIP")
     popup:Hide()
@@ -614,18 +615,76 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     popup:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     popup:SetBackdropBorderColor(0, 1, 1, 0.7)
 
+    -- Scrollbar track (right strip inside popup)
+    local sbTrack = popup:CreateTexture(nil, "BACKGROUND")
+    sbTrack:SetColorTexture(0.10, 0.10, 0.10, 1)
+    sbTrack:SetPoint("TOPRIGHT",    popup, "TOPRIGHT",    -2, -2)
+    sbTrack:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -2,  2)
+    sbTrack:SetWidth(SB_W)
+    sbTrack:Hide()
+
+    -- Scrollbar thumb
+    local sbThumb = CreateFrame("Frame", nil, popup)
+    sbThumb:SetWidth(SB_W)
+    sbThumb:SetFrameLevel(popup:GetFrameLevel() + 5)
+    local sbTex = sbThumb:CreateTexture(nil, "OVERLAY")
+    sbTex:SetAllPoints(sbThumb)
+    sbTex:SetColorTexture(0, 1, 1, 0.45)
+    sbThumb:Hide()
+
     local scrollFrame = CreateFrame("ScrollFrame", nil, popup)
     scrollFrame:SetPoint("TOPLEFT",     popup, "TOPLEFT",     2,  -2)
-    scrollFrame:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -2,  2)
+    scrollFrame:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -(2 + SB_W + 1), 2)
     scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(_, delta)
-        local cur = scrollFrame:GetVerticalScroll()
-        scrollFrame:SetVerticalScroll(math.max(0, cur - delta * ROW_H))
-    end)
 
     local content = CreateFrame("Frame", nil, scrollFrame)
     scrollFrame:SetScrollChild(content)
     content._rows = {}
+
+    -- Shared scroll helper: clamps and syncs thumb
+    local function ScrollTo(offset)
+        local maxScroll = math.max(0, content:GetHeight() - scrollFrame:GetHeight())
+        local clamped   = math.max(0, math.min(maxScroll, offset))
+        scrollFrame:SetVerticalScroll(clamped)
+        -- Update thumb position
+        if maxScroll > 0 then
+            local trackH  = sbTrack:GetHeight()
+            local thumbH  = math.max(8, trackH * (scrollFrame:GetHeight() / content:GetHeight()))
+            sbThumb:SetHeight(thumbH)
+            local thumbY  = (clamped / maxScroll) * (trackH - thumbH)
+            sbThumb:ClearAllPoints()
+            sbThumb:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -(2 + thumbY))
+        end
+    end
+
+    scrollFrame:SetScript("OnMouseWheel", function(_, delta)
+        ScrollTo(scrollFrame:GetVerticalScroll() - delta * ROW_H)
+    end)
+
+    -- Thumb dragging
+    local sbDragging = false
+    local sbDragStartY, sbDragStartScroll
+    sbThumb:EnableMouse(true)
+    sbThumb:SetScript("OnMouseDown", function(self, btn)
+        if btn ~= "LeftButton" then return end
+        sbDragging = true
+        sbDragStartY      = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+        sbDragStartScroll = scrollFrame:GetVerticalScroll()
+        self:SetScript("OnUpdate", function()
+            if not sbDragging then return end
+            local curY = select(2, GetCursorPosition()) / UIParent:GetEffectiveScale()
+            local dy   = sbDragStartY - curY
+            local maxScroll = math.max(0, content:GetHeight() - scrollFrame:GetHeight())
+            local trackH    = sbTrack:GetHeight()
+            local thumbH    = sbThumb:GetHeight()
+            local ratio     = maxScroll / math.max(1, trackH - thumbH)
+            ScrollTo(sbDragStartScroll + dy * ratio)
+        end)
+    end)
+    sbThumb:SetScript("OnMouseUp", function(self)
+        sbDragging = false
+        self:SetScript("OnUpdate", nil)
+    end)
 
     -- Click-away: FULLSCREEN strata sits above DIALOG (settings win) but below TOOLTIP (popup)
     local clickaway = CreateFrame("Frame", nil, UIParent)
@@ -652,9 +711,12 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         local rowCount = #items
         if rowCount == 0 then return end
 
+        local needsScroll = rowCount > MAX_ROWS
         local popupH = math.min(rowCount * ROW_H, MAX_ROWS * ROW_H)
         popup:SetSize(dropW, popupH)
-        content:SetSize(dropW - 4, rowCount * ROW_H)
+        local contentW = dropW - 4 - (needsScroll and SB_W + 1 or 0)
+        content:SetSize(contentW, rowCount * ROW_H)
+        if needsScroll then sbTrack:Show() sbThumb:Show() else sbTrack:Hide() sbThumb:Hide() end
 
         -- Grow the row pool as needed (frames are never destroyed)
         for i = #content._rows + 1, rowCount do
@@ -697,7 +759,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
             content._rows[i]:Hide()
         end
 
-        scrollFrame:SetVerticalScroll(0)
+        ScrollTo(0)
 
         -- Position below the button; flip above if too close to screen bottom
         popup:ClearAllPoints()
@@ -732,6 +794,524 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 end
 
 -- ============================================================
+--  CreateSlider
+--
+--  A label + thin horizontal track with a draggable cyan thumb.
+--  The current value is displayed on the right. setValue fires
+--  only on mouse release (not continuously during drag).
+--
+--  Params
+--    parent   – WoW frame
+--    label    – display string on the left
+--    getValue – function() → number
+--    setValue – function(number)   called on mouse release only
+--    width    – number (default 220)
+--    height   – number (default 22)
+--    minVal   – number (default 0)
+--    maxVal   – number (default 100)
+--    step     – number | nil  (nil = smooth, floats shown to 2dp)
+--
+--  Returned object
+--    .frame    container Frame
+--    .label    FontString
+--    .slider   WoW Slider widget
+--    :SetValue(n)
+--    :GetValue() → number
+--    :SetPoint(…)
+--    :SetSize(w, h)
+-- ============================================================
+local function CreateSlider(parent, label, getValue, setValue,
+                            width, height, minVal, maxVal, step)
+    local totalW  = width  or 220
+    local totalH  = height or 22
+    local LABEL_W = math.floor(totalW * 0.38)
+    local VAL_W   = 38
+    local TRACK_W = totalW - LABEL_W - VAL_W - 8
+    local baseLevel = parent:GetFrameLevel() + 1
+
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(totalW, totalH)
+    container:SetFrameLevel(baseLevel)
+
+    -- Label
+    local lbl = MakeFontString(container, 13)
+    lbl:SetText(label or "")
+    lbl:SetJustifyH("LEFT")
+    lbl:SetJustifyV("MIDDLE")
+    lbl:SetPoint("LEFT", container, "LEFT", 0, 0)
+    lbl:SetWidth(LABEL_W)
+    lbl:SetHeight(totalH)
+
+    -- Track (visual only, behind the slider widget)
+    local trackTex = container:CreateTexture(nil, "BACKGROUND")
+    trackTex:SetColorTexture(0.10, 0.10, 0.10, 1)
+    trackTex:SetHeight(3)
+    trackTex:SetPoint("LEFT",  container, "LEFT", LABEL_W + 4, 0)
+    trackTex:SetWidth(TRACK_W)
+
+    -- Cyan fill that grows left → thumb position
+    local fillTex = container:CreateTexture(nil, "ARTWORK")
+    fillTex:SetColorTexture(0, 1, 1, 0.45)
+    fillTex:SetHeight(3)
+    fillTex:SetPoint("LEFT", container, "LEFT", LABEL_W + 4, 0)
+    fillTex:SetWidth(1)
+
+    -- Native Slider frame (handles all mouse + keyboard input)
+    local slider = CreateFrame("Slider", nil, container)
+    slider:SetOrientation("HORIZONTAL")
+    slider:SetPoint("LEFT", container, "LEFT", LABEL_W + 4, 0)
+    slider:SetSize(TRACK_W, totalH)
+    slider:SetFrameLevel(baseLevel + 2)
+    slider:SetMinMaxValues(minVal or 0, maxVal or 100)
+    if step then
+        slider:SetValueStep(step)
+        if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
+    end
+    slider:SetThumbTexture([[Interface\Buttons\WHITE8x8]])
+    local thumb = slider:GetThumbTexture()
+    thumb:SetSize(8, 14)
+    thumb:SetVertexColor(0, 1, 1, 1)
+
+    -- Value text (right side)
+    local valText = MakeFontString(container, 11)
+    valText:SetTextColor(0.65, 0.65, 0.65, 1)
+    valText:SetJustifyH("RIGHT")
+    valText:SetJustifyV("MIDDLE")
+    valText:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    valText:SetWidth(VAL_W)
+    valText:SetHeight(totalH)
+
+    local useFloat = (step and step < 1)
+        or ((minVal or 0) ~= math.floor(minVal or 0))
+        or ((maxVal or 0) ~= math.floor(maxVal or 0))
+
+    local function Fmt(v)
+        return useFloat and string.format("%.2f", v) or tostring(math.floor(v + 0.5))
+    end
+
+    local function UpdateVisual(value)
+        valText:SetText(Fmt(value))
+        local mn, mx = minVal or 0, maxVal or 100
+        local pct = mx > mn and (value - mn) / (mx - mn) or 0
+        fillTex:SetWidth(math.max(1, math.floor(pct * TRACK_W)))
+    end
+
+    -- Fire setValue only on mouse release, not during drag.
+    -- Keyboard changes (arrow keys) are not dragging, so they fire immediately.
+    local dragging    = false
+    local initialized = false
+
+    slider:SetScript("OnMouseDown", function() dragging = true end)
+    slider:SetScript("OnMouseUp", function(self)
+        dragging = false
+        if setValue then setValue(self:GetValue()) end
+    end)
+    slider:SetScript("OnValueChanged", function(_, value)
+        UpdateVisual(value)
+        if initialized and not dragging and setValue then setValue(value) end
+    end)
+    slider:SetScript("OnEnter", function() thumb:SetVertexColor(0.5, 1, 1, 1) end)
+    slider:SetScript("OnLeave", function() thumb:SetVertexColor(0,   1, 1, 1) end)
+
+    local initVal = getValue and getValue() or (minVal or 0)
+    slider:SetValue(initVal)
+    UpdateVisual(initVal)
+    initialized = true
+
+    -- Right-click on value label → inline EditBox to type a number
+    local valBtn = CreateFrame("Button", nil, container)
+    valBtn:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    valBtn:SetSize(VAL_W, totalH)
+    valBtn:SetFrameLevel(baseLevel + 4)
+    valBtn:RegisterForClicks("RightButtonUp")
+
+    local typeBox = CreateFrame("EditBox", nil, container, "BackdropTemplate")
+    typeBox:SetSize(VAL_W, totalH - 4)
+    typeBox:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    typeBox:SetFrameLevel(baseLevel + 5)
+    typeBox:SetAutoFocus(false)
+    typeBox:SetNumeric(false)
+    typeBox:SetMaxLetters(10)
+    typeBox:SetFont(FALLBACK_FONT, 11, "")
+    typeBox:SetTextColor(0, 1, 1, 1)
+    typeBox:SetJustifyH("RIGHT")
+    typeBox:SetBackdrop({bgFile=[[Interface\Buttons\WHITE8x8]], edgeFile=[[Interface\Buttons\WHITE8x8]], edgeSize=1})
+    typeBox:SetBackdropColor(0.04, 0.04, 0.06, 1)
+    typeBox:SetBackdropBorderColor(0, 1, 1, 0.8)
+    typeBox:Hide()
+
+    local function CommitTypeBox()
+        local raw = typeBox:GetText()
+        local n   = tonumber(raw)
+        if n then
+            local mn, mx = minVal or 0, maxVal or 100
+            n = math.max(mn, math.min(mx, n))
+            initialized = false
+            slider:SetValue(n)
+            UpdateVisual(n)
+            initialized = true
+            if setValue then setValue(n) end
+        end
+        typeBox:ClearFocus()
+        typeBox:Hide()
+        valText:Show()
+    end
+
+    valBtn:SetScript("OnClick", function()
+        valText:Hide()
+        typeBox:SetText(Fmt(slider:GetValue()))
+        typeBox:Show()
+        typeBox:SetFocus()
+        typeBox:HighlightText()
+    end)
+    typeBox:SetScript("OnEnterPressed", CommitTypeBox)
+    typeBox:SetScript("OnEscapePressed", function()
+        typeBox:ClearFocus()
+        typeBox:Hide()
+        valText:Show()
+    end)
+    typeBox:SetScript("OnEditFocusLost", function()
+        if typeBox:IsShown() then CommitTypeBox() end
+    end)
+
+    local obj = {frame = container, slider = slider, label = lbl}
+
+    function obj:SetValue(v)
+        initialized = false
+        slider:SetValue(v)
+        UpdateVisual(v)
+        initialized = true
+    end
+    function obj:GetValue()    return slider:GetValue()       end
+    function obj:SetPoint(...) self.frame:SetPoint(...)       end
+    function obj:SetSize(w,h)  self.frame:SetSize(w, h)      end
+    function obj:GetWidth()    return self.frame:GetWidth()   end
+
+    return obj
+end
+
+-- ============================================================
+--  CreateColorPicker
+--
+--  A label + color swatch button. Clicking opens WoW's built-in
+--  ColorPickerFrame with full alpha/opacity support. The swatch
+--  previews live as the picker is moved and restores on cancel.
+--
+--  Params
+--    parent   – WoW frame
+--    label    – display string on the left
+--    getValue – function() → r, g, b, a   (all 0–1)
+--    setValue – function(r, g, b, a)
+--    width    – number (default 220)
+--    height   – number (default 22)
+--
+--  Returned object
+--    .frame      container Frame
+--    .label      FontString
+--    :Refresh()  re-reads getValue and repaints the swatch
+--    :SetPoint(…)
+--    :SetSize(w, h)
+-- ============================================================
+local function CreateColorPicker(parent, label, getValue, setValue, width, height)
+    local totalW   = width  or 220
+    local totalH   = height or 22
+    local SWATCH_W = 40
+    local GAP      = 8
+    local baseLevel = parent:GetFrameLevel() + 1
+
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(totalW, totalH)
+    container:SetFrameLevel(baseLevel)
+
+    -- Label
+    local lbl = MakeFontString(container, 13)
+    lbl:SetText(label or "")
+    lbl:SetJustifyH("LEFT")
+    lbl:SetJustifyV("MIDDLE")
+    lbl:SetPoint("LEFT",  container, "LEFT",  0,                 0)
+    lbl:SetPoint("RIGHT", container, "RIGHT", -(SWATCH_W + GAP), 0)
+    lbl:SetHeight(totalH)
+
+    -- Swatch button (same backdrop pattern as CreateButton)
+    local swatchBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
+    swatchBtn:SetSize(SWATCH_W, totalH)
+    swatchBtn:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    swatchBtn:SetFrameLevel(baseLevel + 1)
+    MakeControlBackdrop(swatchBtn)
+
+    local swatchHover = MakeHoverBg(swatchBtn, baseLevel + 2)
+
+    -- Inset colour rectangle; alpha blends over the dark button background
+    local colorTex = swatchBtn:CreateTexture(nil, "ARTWORK")
+    colorTex:SetPoint("TOPLEFT",     swatchBtn, "TOPLEFT",     3, -3)
+    colorTex:SetPoint("BOTTOMRIGHT", swatchBtn, "BOTTOMRIGHT", -3,  3)
+
+    local function UpdateSwatch()
+        local r, g, b, a = 1, 1, 1, 1
+        if getValue then r, g, b, a = getValue() end
+        colorTex:SetColorTexture(r or 1, g or 1, b or 1, a or 1)
+    end
+    UpdateSwatch()
+
+    swatchBtn:SetScript("OnEnter", function()
+        UIFrameFadeIn(swatchHover, STYLE.hover_in, swatchHover:GetAlpha(), 1)
+    end)
+    swatchBtn:SetScript("OnLeave", function()
+        UIFrameFadeOut(swatchHover, STYLE.hover_out, swatchHover:GetAlpha(), 0)
+    end)
+
+    swatchBtn:SetScript("OnClick", function()
+        local r, g, b, a = 1, 1, 1, 1
+        if getValue then r, g, b, a = getValue() end
+        r = r or 1; g = g or 1; b = b or 1; a = a or 1
+        local prevR, prevG, prevB, prevA = r, g, b, a
+
+        -- Works with both the modern (10.x) and legacy ColorPickerFrame APIs.
+        local function ReadCurrent()
+            local nr, ng, nb = ColorPickerFrame:GetColorRGB()
+            local na
+            if ColorPickerFrame.GetColorAlpha then
+                na = 1 - ColorPickerFrame:GetColorAlpha()
+            elseif OpacitySliderFrame then
+                na = 1 - OpacitySliderFrame:GetValue()
+            else
+                na = 1
+            end
+            return nr, ng, nb, na
+        end
+
+        local function OnChange()
+            local nr, ng, nb, na = ReadCurrent()
+            colorTex:SetColorTexture(nr, ng, nb, na)
+            if setValue then setValue(nr, ng, nb, na) end
+        end
+
+        local function OnCancel(prev)
+            local cr, cg, cb, ca
+            if prev and prev.r then
+                cr = prev.r; cg = prev.g; cb = prev.b
+                ca = prev.opacity ~= nil and (1 - prev.opacity) or prevA
+            else
+                cr, cg, cb, ca = prevR, prevG, prevB, prevA
+            end
+            colorTex:SetColorTexture(cr, cg, cb, ca)
+            if setValue then setValue(cr, cg, cb, ca) end
+        end
+
+        if ColorPickerFrame.SetupColorPickerAndShow then
+            ColorPickerFrame:SetupColorPickerAndShow({
+                swatchFunc  = OnChange,
+                opacityFunc = OnChange,
+                cancelFunc  = OnCancel,
+                hasOpacity  = true,
+                r = r, g = g, b = b,
+                opacity = 1 - a,
+            })
+        else
+            ColorPickerFrame.func        = OnChange
+            ColorPickerFrame.opacityFunc = OnChange
+            ColorPickerFrame.cancelFunc  = OnCancel
+            ColorPickerFrame.hasOpacity  = true
+            ColorPickerFrame:SetColorRGB(r, g, b)
+            if OpacitySliderFrame then OpacitySliderFrame:SetValue(1 - a) end
+            ColorPickerFrame:Show()
+        end
+    end)
+
+    local obj = {frame = container, label = lbl, colorTex = colorTex}
+
+    function obj:Refresh()     UpdateSwatch()               end
+    function obj:SetPoint(...) self.frame:SetPoint(...)     end
+    function obj:SetSize(w,h)  self.frame:SetSize(w, h)    end
+    function obj:GetWidth()    return self.frame:GetWidth() end
+
+    return obj
+end
+
+-- ============================================================
+--  CreateLabel
+--
+--  A read-only text row, useful as a section header above a
+--  group of controls. Text is dimmed to distinguish it from
+--  interactive control labels.
+--
+--  Params
+--    parent  – WoW frame
+--    text    – display string
+--    width   – number (default 220)
+--    height  – number (default 16)
+--
+--  Returned object
+--    .frame   container Frame
+--    .label   FontString
+--    :SetText(s)
+--    :SetPoint(…)
+--    :SetSize(w, h)
+-- ============================================================
+local function CreateLabel(parent, text, width, height)
+    local totalW = width  or 220
+    local totalH = height or 16
+
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(totalW, totalH)
+
+    local lbl = MakeFontString(container, 12)
+    lbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    lbl:SetText(text or "")
+    lbl:SetJustifyH("LEFT")
+    lbl:SetJustifyV("MIDDLE")
+    lbl:SetAllPoints(container)
+
+    local obj = {frame = container, label = lbl}
+
+    function obj:SetText(s)    self.label:SetText(s)         end
+    function obj:SetPoint(...) self.frame:SetPoint(...)      end
+    function obj:SetSize(w,h)  self.frame:SetSize(w, h)     end
+    function obj:GetWidth()    return self.frame:GetWidth()  end
+
+    return obj
+end
+
+-- ============================================================
+--  CreateBreakline
+--
+--  A thin horizontal rule for separating groups of controls.
+--
+--  Params
+--    parent  – WoW frame
+--    width   – number (default 220)
+--    height  – number (default 10)  line is centred vertically
+--
+--  Returned object
+--    .frame
+--    :SetPoint(…)
+--    :SetSize(w, h)
+-- ============================================================
+local function CreateBreakline(parent, width, height)
+    local totalW = width  or 220
+    local totalH = height or 10
+
+    local container = CreateFrame("Frame", nil, parent)
+    container:SetSize(totalW, totalH)
+
+    local line = container:CreateTexture(nil, "ARTWORK")
+    line:SetColorTexture(0, 1, 1, 0.12)
+    line:SetHeight(1)
+    line:SetPoint("LEFT",  container, "LEFT",  0, 0)
+    line:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+
+    local obj = {frame = container}
+
+    function obj:SetPoint(...) self.frame:SetPoint(...)     end
+    function obj:SetSize(w,h)  self.frame:SetSize(w, h)    end
+    function obj:GetWidth()    return self.frame:GetWidth() end
+
+    return obj
+end
+
+-- ============================================================
+--  BuildWidgets
+--
+--  Lays out an ordered list of component descriptors inside
+--  a parent frame, stacking them top-to-bottom with a uniform
+--  gap. Returns the total height consumed so the caller can
+--  resize the container to fit.
+--
+--  definitions – array of descriptor tables, in display order:
+--
+--    {Type="Slider",    label=s, get=fn, set=fn, min=n, max=n, step=n}
+--    {Type="Dropdown",  label=s, get=fn, set=fn, values=tbl|fn}
+--       values entries: {label=s, value=any}
+--       get() returns the currently selected value (looked up to find label)
+--    {Type="Color",     label=s, get=fn, set=fn}
+--       get() → r, g, b, a (0–1 each);  set(r, g, b, a)
+--    {Type="Checkbox",  label=s, get=fn, set=fn}
+--    {Type="TextEntry", label=s, get=fn, set=fn, numeric=bool, min=n, max=n}
+--    {Type="Label",     text=s}
+--    {Type="Breakline"}
+--
+--    "Scale" is accepted as an alias for "Slider".
+--    Any descriptor may include height=n to override the default row height.
+-- ============================================================
+local WIDGET_H = {
+    Slider    = 22, Scale     = 22,
+    Dropdown  = 22, Color     = 22,
+    Checkbox  = 22, TextEntry = 22,
+    Label     = 16, Breakline = 10,
+}
+local WIDGET_GAP = 4
+
+local function BuildWidgets(parent, definitions, width)
+    local C = NSI.UI.Components
+    local y = 0
+
+    for _, def in ipairs(definitions) do
+        local t    = def.Type
+        local h    = def.height or WIDGET_H[t] or 22
+        local ctrl
+
+        if t == "Slider" or t == "Scale" then
+            ctrl = C.CreateSlider(parent, def.label,
+                def.get, def.set, width, h, def.min, def.max, def.step)
+
+        elseif t == "Dropdown" then
+            local function getItems()
+                local vals = type(def.values) == "function"
+                    and def.values() or (def.values or {})
+                local out = {}
+                for _, v in ipairs(vals) do
+                    out[#out + 1] = {
+                        label   = v.label,
+                        value   = v.value,
+                        onclick = function(_, _, val)
+                            if def.set then def.set(val) end
+                        end,
+                    }
+                end
+                return out
+            end
+            -- Resolve the current value to its display label
+            local function getSelected()
+                local cur  = def.get and def.get()
+                local vals = type(def.values) == "function"
+                    and def.values() or (def.values or {})
+                for _, v in ipairs(vals) do
+                    if v.value == cur then return v.label end
+                end
+                return cur ~= nil and tostring(cur) or ""
+            end
+            ctrl = C.CreateDropdown(parent, def.label,
+                getItems, getSelected, width, h)
+
+        elseif t == "Color" then
+            ctrl = C.CreateColorPicker(parent, def.label,
+                def.get, def.set, width, h)
+
+        elseif t == "Checkbox" then
+            ctrl = C.CreateCheckButton(parent, def.label,
+                def.get, def.set, width, h)
+
+        elseif t == "TextEntry" then
+            ctrl = C.CreateTextEntry(parent, def.label,
+                def.get, def.set, width, h, def.numeric, def.min, def.max)
+
+        elseif t == "Label" then
+            ctrl = C.CreateLabel(parent, def.text, width, h)
+
+        elseif t == "Breakline" then
+            ctrl = C.CreateBreakline(parent, width, h)
+        end
+
+        if ctrl then
+            ctrl:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
+            y = y + h + WIDGET_GAP
+        end
+    end
+
+    return y > 0 and (y - WIDGET_GAP) or 0
+end
+
+-- ============================================================
 --  Export
 -- ============================================================
 NSI.UI = NSI.UI or {}
@@ -741,6 +1321,11 @@ NSI.UI.Components = {
     CreateCheckButton   = CreateCheckButton,
     CreateTextEntry     = CreateTextEntry,
     CreateDropdown      = CreateDropdown,
+    CreateSlider        = CreateSlider,
+    CreateColorPicker   = CreateColorPicker,
+    CreateLabel         = CreateLabel,
+    CreateBreakline     = CreateBreakline,
+    BuildWidgets        = BuildWidgets,
     RefreshFonts        = RefreshFonts,
     STYLE               = STYLE,
 }
