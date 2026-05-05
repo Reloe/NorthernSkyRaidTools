@@ -2,10 +2,7 @@ NSRT.EncounterAlerts = {
     [3183] = {   -- encID
         [16] = { -- difficulty ID
             ["Soaks"] = {
-                timers = {
-                    [1] = { 10, 20, 30 }, -- timers for phase 1
-                    [2] = { 20, 30, 40 }, -- timers for phase 2
-                },
+                timers = {10, 20, 30},
                 dur = 10,
                 spellID = 370597,
                 text = "Soak",
