@@ -1082,15 +1082,7 @@ local function BuildBossRemindersUI(parentFrame)
         enabledCB:SetScript("OnClick", function(self)
             local val = self:GetChecked()
             -- Toggle all diffID entries with matching name
-            for did, diffTable in pairs(NSRT.EncounterAlerts[encID] or {}) do
-                if type(did) == "number" and type(diffTable) == "table" then
-                    for _, e in pairs(diffTable) do
-                        if type(e) == "table" and (e.name == alertName or e.text == alertName) then
-                            e.enabled = val
-                        end
-                    end
-                end
-            end
+            entry.enabled = val
             RebuildList()
         end)
 
