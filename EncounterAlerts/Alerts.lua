@@ -42,6 +42,8 @@ function NSI:MakeEncounterAlert(data, timers)
         loadConditions = NSI.DefaultLoadConditions(),
         extraOptions   = data.extraOptions,
         Preview        = data.Preview,
+        isSpecialDisplay = data.isSpecialDisplay,
+        Version        = data.Version,
     }
     if data.overrides then
         for k, v in pairs(data.overrides) do a[k] = v end
@@ -106,17 +108,25 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     NSRT.EncounterAlerts[encId]         = NSRT.EncounterAlerts[encId] or {}
     NSRT.EncounterAlerts[encId][diffID] = NSRT.EncounterAlerts[encId][diffID] or {}
     local diffTable = NSRT.EncounterAlerts[encId][diffID]
-    if ReloeReminder and diffTable[alertDef.internalID] then -- overwrite timers and some other data as they are defined by me
-        local existing = diffTable[alertDef.internalID]
-        existing.timers = alertDef.timers
-        existing.id = alertDef.id
-        existing.customIcon = alertDef.customIcon
-        existing.isConditional = alertDef.isConditional
-        existing.name = alertDef.name
-        existing.extraOptions = alertDef.extraOptions
-        existing.Preview = alertDef.Preview
-        existing.phase = alertDef.phase
-        return
+    local existing = diffTable[alertDef.internalID]
+    local Vers = alertDef.Version
+    local Overwrite = existing and Vers and ((not existing.Version) or Vers > existing.Version)
+    if ReloeReminder then
+        if Overwrite then
+            diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
+            return
+        elseif ReloeReminder and existing then
+            existing.timers = alertDef.timers
+            existing.id = alertDef.id
+            existing.customIcon = alertDef.customIcon
+            existing.isConditional = alertDef.isConditional
+            existing.name = alertDef.name
+            existing.extraOptions = alertDef.extraOptions
+            existing.Preview = alertDef.Preview
+            existing.phase = alertDef.phase
+            existing.isSpecialDisplay = alertDef.isSpecialDisplay
+            return
+        end
     end
     diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
 end
