@@ -112,6 +112,7 @@ function NSI:ReadInterruptNote(StartNumber)
     self.Interrupts.disabled = false
     self.Interrupts.max = 0
     self.Interrupts.myTable = {}
+    self.Interrupts.disabled = true
     local assign = false
     for line in string.gmatch(str,'[^\r\n]+') do
         line = strtrim(line)
@@ -131,6 +132,7 @@ function NSI:ReadInterruptNote(StartNumber)
                     num = num+1
                     table.insert(self.Interrupts.assignTable[count], name)
                     if UnitIsUnit(name, "player") then
+                        self.Interrupts.disabled = false
                         self.Interrupts.myID = count
                         self.Interrupts.myKick = num
                     end
