@@ -77,6 +77,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end
+        if NSRT.Alerts.ReloeReminders then
+            for key, encID in ipairs(NSI.CurrentEncounterIDs) do
+                if self.InitializeAlerts[encID] then
+                    self.InitializeAlerts[encID](self)
+                end
+            end
+        end
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
@@ -86,13 +93,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
-            end
-        end
-        if NSRT.Alerts.ReloeReminders then
-            for key, encID in ipairs(NSI.CurrentEncounterIDs) do
-                if self.InitializeAlerts[encID] then
-                    self.InitializeAlerts[encID](self)
-                end
             end
         end
     elseif e == "PLAYER_ENTERING_WORLD" then
