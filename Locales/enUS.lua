@@ -516,6 +516,8 @@ L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
 L["Belo'ren Feather Color"] = true
 L["Displays your Feather-Color on Belo'ren."] = true
+L["Lura Interrupts"] = true
+L["Interrupt WA for Lura P1."] = true
 
 -- ============================================================================
 -- UI/Reminders.lua (Reminder List Screen)
