@@ -37,12 +37,6 @@ function NSI:AddToReminder(info)
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
         return
     end
-    if info.SpecialDisplay then
-        if self.SpecialDisplayHandle[info.SpecialDisplay] then
-            self.SpecialDisplayHandle[info.SpecialDisplay](self, info)
-        end
-        return
-    end
     info.spellID = info.spellID and tonumber(info.spellID)
     if info.spellID and not info.DisplayType then
         info.DisplayType = NSRT.ReminderSettings.Bars and "Bar" or "Icon"
@@ -1704,7 +1698,7 @@ function NSI:FireEncounterAlerts(encID, id)
     if not diffTable then return end
     local now = GetTime()
     for _, entry in pairs(diffTable) do
-        if type(entry) == "table" and entry.ReloeReminder and entry.enabled then
+        if type(entry) == "table" and entry.ReloeReminder and entry.enabled and not entry.isSpecialDisplay then
             local alert = {
                 name            = entry.name,
                 text            = entry.text,
