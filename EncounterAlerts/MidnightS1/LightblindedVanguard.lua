@@ -43,7 +43,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil,
-    overrides = {SpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0},
+    overrides = {isSpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0},
     Preview = function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")
     end,
@@ -63,15 +63,16 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 end
 
-NSI.EncounterAlertSpecialDisplay[encID] = function(self, info)
-    if info.name == "TauntAlerts" then
-        local s = NSRT.EncounterAlerts[encID][id].TauntAlerts
+NSI.EncounterAlertStart[encID] = function(self, id)
+    local id = id or select(3, GetInstanceInfo()) or 0
+    local info = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].TauntAlerts
+    if info and UnitGroupRolesAssigned("player") == "TANK" then
         if not self.TauntFrame then
             self.TauntFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.TauntFrame:SetSize(100, 30)
             self.TauntFrame.Text = self.TauntFrame.Text or self.TauntFrame:CreateFontString(nil, "OVERLAY")
-            self.TauntFrame.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.TauntFrame.Text:SetText(s.Text)
+            self.TauntFrame.Text:SetFont(self.LSM:Fetch("font", info.Font), info.FontSize, "OUTLINE")
+            self.TauntFrame.Text:SetText(info.text)
             self.TauntFrame.Text:SetPoint("CENTER")
             self.TauntFrame.Text:Hide()
         end
@@ -91,9 +92,9 @@ NSI.EncounterAlertSpecialDisplay[encID] = function(self, info)
                 local isTanking = threatLevel and threatLevel >= 2
                 if isTanking then return end
                 self.TauntFrame:ClearAllPoints()
-                self.TauntFrame:SetPoint(s.Anchor, plate, s.relativeTo, s.xOffset, s.yOffset)
+                self.TauntFrame:SetPoint(info.Anchor, plate, info.relativeTo, info.xOffset, info.yOffset)
                 self.TauntFrame.Text:Show()
-                NSAPI:TTS("Taunt")
+                NSAPI:TTS(info.text)
                 self.TauntTimersCancel = C_Timer.NewTimer(3, function()
                     self.TauntFrame.Text:Hide()
                     self.TauntTimersCancel = nil
@@ -108,13 +109,15 @@ NSI.EncounterAlertSpecialDisplay[encID] = function(self, info)
         end)
         self:EncounterRegister("UNIT_SPELLCAST_SUCCEEDED", true, "player")
         self.TauntTimers = self.TauntTimers or {}
-        self.TauntTimers[#self.TauntTimers+1] = C_Timer.NewTimer(info.time-3.2, function()
-            self:EncounterRegister("UNIT_SPELLCAST_START", true, {"boss1", "boss2", "boss3"})
-            C_Timer.After(0.4, function()
-                self:EncounterRegister("UNIT_SPELLCAST_START", false)
+        for i, time in ipairs(info.timers) do
+            self.TauntTimers[#self.TauntTimers+1] = C_Timer.NewTimer(time-3.2, function()
+                self:EncounterRegister("UNIT_SPELLCAST_START", true, {"boss1", "boss2", "boss3"})
+                C_Timer.After(0.4, function()
+                    self:EncounterRegister("UNIT_SPELLCAST_START", false)
+                end)
+                C_Timer.After(7, function() blacklist = {} end)
             end)
-            C_Timer.After(7, function() blacklist = {} end)
-        end)
+        end
     end
 end
 
