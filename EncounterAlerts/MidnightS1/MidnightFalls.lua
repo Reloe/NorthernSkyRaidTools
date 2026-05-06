@@ -129,8 +129,8 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 2, TTS = false, dur = 5, spellID = 1253031,
-    overrides = {countdown = 3},
+    local data = {internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 5, spellID = 1253031,
+    overrides = {countdown = 3, enabled = false},
     timers = {
             [16] = {17.5, 25, 47.5, 55, 77.5, 85},
         },
