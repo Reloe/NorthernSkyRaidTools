@@ -29,6 +29,7 @@ function NSI:MakeEncounterAlert(data, timers)
         name           = data.name or data.internalID,
         text           = data.text,
         spellID        = data.spellID,
+        customIcon     = data.customIcon or nil,
         TTS            = data.TTS,
         TTSTimer       = data.TTSTimer or data.dur,
         dur            = data.dur,

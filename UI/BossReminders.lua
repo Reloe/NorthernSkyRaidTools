@@ -115,21 +115,21 @@ local function BuildBossRemindersUI(parentFrame)
         row.bossIcon:SetPoint("LEFT", row, "LEFT", 3, 0)
         row.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 
-        -- Lock icon for hardcoded rows
-        row.lockIcon = row:CreateTexture(nil, "ARTWORK")
-        row.lockIcon:SetSize(10, 10)
-        row.lockIcon:SetPoint("LEFT", row, "LEFT", 3, 0)
-        row.lockIcon:SetTexture([[Interface\PetBattles\PetBattle-LockIcon]])
-        row.lockIcon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
-        row.lockIcon:Hide()
-
+        
         row.nameLabel = row:CreateFontString(nil, "OVERLAY")
         row.nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
         row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
         row.nameLabel:SetPoint("RIGHT", row, "RIGHT", -22, 0)
         row.nameLabel:SetJustifyH("LEFT")
         row.nameLabel:SetWordWrap(false)
-
+        
+        -- Lock icon for hardcoded rows
+        row.lockIcon = row:CreateTexture(nil, "ARTWORK")
+        row.lockIcon:SetSize(10, 10)
+        row.lockIcon:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.lockIcon:SetTexture([[Interface\PetBattles\PetBattle-LockIcon]])
+        row.lockIcon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
+        row.lockIcon:Hide()
         row.deleteBtn = CreateFrame("Button", nil, row)
         row.deleteBtn:SetSize(14, 14)
         row.deleteBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
@@ -252,8 +252,12 @@ local function BuildBossRemindersUI(parentFrame)
 
                 if isReloe then
                     isEnabled = entry.entry.enabled
-                    icon      = BossData.BossIcons[entry.encID]
                     name      = ReloeAlertName(entry.entry)
+                    if entry.entry.customIcon then
+                        icon = entry.entry.customIcon
+                    else
+                        icon = BossData.BossIcons[entry.encID]
+                    end
                 else
                     local alert = entry.alert
                     isEnabled   = alert.enabled
@@ -272,24 +276,15 @@ local function BuildBossRemindersUI(parentFrame)
                     row.__background:SetVertexColor(0.4, 0.4, 0.4)
                     row.__background:SetAlpha(0.5)
                 end
-
-                -- Lock icon for reloe rows; boss icon for custom rows
-                if isReloe then
-                    row.bossIcon:Hide()
-                    row.lockIcon:Show()
-                    row.nameLabel:SetPoint("LEFT", row.lockIcon, "RIGHT", 4, 0)
+                if icon then
+                    row.bossIcon:SetTexture(icon)
+                    row.bossIcon:Show()
                 else
-                    row.lockIcon:Hide()
-                    if icon then
-                        row.bossIcon:SetTexture(icon)
-                        row.bossIcon:Show()
-                    else
-                        row.bossIcon:SetTexture(nil)
-                        row.bossIcon:Hide()
-                    end
-                    row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
+                    row.bossIcon:SetTexture(nil)
+                    row.bossIcon:Hide()
                 end
-
+                row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
+                
                 row.nameLabel:SetText(name)
                 row.nameLabel:SetTextColor(1, 1, 1, isEnabled and 1 or 0.45)
 
@@ -297,7 +292,9 @@ local function BuildBossRemindersUI(parentFrame)
                 if isReloe then
                     row.deleteBtn:Hide()
                     row.deleteBtn:SetScript("OnClick", nil)
+                    row.lockIcon:Show()
                 else
+                    row.lockIcon:Hide()
                     row.deleteBtn:Show()
                     local ri = entry.realIndex
                     row.deleteBtn:SetScript("OnClick", function()
@@ -345,7 +342,7 @@ local function BuildBossRemindersUI(parentFrame)
         table.insert(NSRT.CustomBossAlerts, {
             name          = "New Alert",
             enabled       = true,
-            encID         = 0,
+            encID         = filterEncID,
             phase         = 1,
             times         = {},
             Type          = "Text",
