@@ -84,7 +84,7 @@ local function BuildInterruptDisplayOptions()
                 else
                     NSI:CreateInterruptDisplay()
                     NSI.InterruptDisplay.Number:SetText("3")
-                    NSI.InterruptDisplay.Name:SetText(NSAPI:Shorten("player", 8, false, "GlobalNickNames", false, false))
+                    NSI.InterruptDisplay.Name:SetText(NSAPI:Shorten("player", 12, false, "GlobalNickNames", false, false))
                     NSI.InterruptDisplay.Box:SetColorTexture(0, 1, 0, 1)
                     NSI:MakeDraggable(NSI.InterruptDisplay, NSRT.InterruptSettings, true)
                 end
