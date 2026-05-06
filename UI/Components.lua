@@ -600,11 +600,10 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     valText:SetHeight(totalH)
 
     -- Arrow glyph
-    local arrowLbl = dropBtn:CreateFontString(nil, "OVERLAY")
-    arrowLbl:SetFont(FALLBACK_FONT, 9, "")
-    arrowLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    arrowLbl:SetText("\226\150\188")   -- ▼
-    arrowLbl:SetPoint("RIGHT", dropBtn, "RIGHT", -4, 0)
+    local arrowTexture = dropBtn:CreateTexture(nil, "OVERLAY")
+    arrowTexture:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]])
+    arrowTexture:SetSize(10, 10)
+    arrowTexture:SetPoint("RIGHT", dropBtn, "RIGHT", -4, 0)
 
     dropBtn:SetScript("OnEnter", function()
         UIFrameFadeIn(dropHover, STYLE.hover_in, dropHover:GetAlpha(), 1)
@@ -714,7 +713,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local function Close()
         popup:Hide()
         clickaway:Hide()
-        arrowLbl:SetText("\226\150\188")   -- ▼
+        arrowTexture:SetText("\226\150\188") -- ▼
     end
 
     local function Open()
@@ -783,7 +782,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
         popup:Show()
         clickaway:Show()
-        arrowLbl:SetText("\226\150\186")   -- ▲
+        arrowTexture:SetText("\226\150\186") -- ▲
     end
 
     clickaway:SetScript("OnMouseDown", Close)

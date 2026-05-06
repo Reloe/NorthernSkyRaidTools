@@ -1561,17 +1561,19 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         titleLabel:SetTextColor(0, 1, 1, 1)
         titleLabel:Hide()
         self[Name].TitleLabel = titleLabel
-
+    
         -- Gear button
         local gear = CreateFrame("Button", nil, self[Name])
         gear:SetSize(18, 18)
-        gear:SetPoint("TOPRIGHT", self[Name], "TOPRIGHT", -2, -2)
-        gear:SetNormalFontObject("GameFontNormalSmall")
-        gear:SetText("⚙")
-        gear:GetFontString():SetTextColor(0.8, 0.8, 0.8)
+        gear:SetPoint("RIGHT", self[Name], "RIGHT", -2, 0)
+        local gearTexture = titleFrame:CreateTexture(nil, "OVERLAY")
+        gearTexture:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\settings.png]])
+        gearTexture:SetSize(20, 20)
+        gearTexture:SetAllPoints(gear)
+        gearTexture:SetParent(gear)
         gear:Hide()
-        gear:SetScript("OnEnter", function(self) self:GetFontString():SetTextColor(0, 1, 1) end)
-        gear:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(0.8, 0.8, 0.8) end)
+        gear:SetScript("OnEnter", function(self) gearTexture:SetVertexColor(0, 0.8, 0.8, 1) end)
+        gear:SetScript("OnLeave", function(self) gearTexture:SetVertexColor(0.8, 0.8, 0.8, 1) end)
         gear:SetScript("OnClick", function()
             -- Close any other open windows first
             for _, n in ipairs({"IconMover","BarMover","TextMover","CircleMover"}) do
