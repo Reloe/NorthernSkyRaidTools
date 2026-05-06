@@ -115,6 +115,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         existing.name = alertDef.name
         existing.extraOptions = alertDef.extraOptions
         existing.Preview = alertDef.Preview
+        existing.phase = alertDef.phase
         return
     end
     diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
