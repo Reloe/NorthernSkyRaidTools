@@ -125,6 +125,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             existing.Preview = alertDef.Preview
             existing.phase = alertDef.phase
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
+            existing.customIcon = alertDef.customIcon
             return
         end
     end
