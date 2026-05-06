@@ -1266,6 +1266,7 @@ local function CreateScrollBox(parent, width, height)
     child:SetWidth(width - SB_W - 2)
     child:SetHeight(1)
     scrollFrame:SetScrollChild(child)
+    DF:ReskinSlider(scrollFrame)
 
     local obj = { frame = scrollFrame, scrollChild = child }
 
@@ -1281,6 +1282,7 @@ local function CreateScrollBox(parent, width, height)
         local maxScroll = math.max(0, child:GetHeight() - scrollFrame:GetHeight())
         bar:SetMinMaxValues(0, maxScroll)
         if bar:GetValue() > maxScroll then bar:SetValue(0) end
+
     end
     return obj
 end

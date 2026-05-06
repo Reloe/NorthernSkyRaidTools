@@ -1810,6 +1810,7 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
 end
 
 function NSI:UpdateNoteFrame(Name, SettingsTable, text)
+    if not self[Name] then return end
     if SettingsTable.enabled then
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
@@ -1907,11 +1908,14 @@ end
 -- current encounter and pass the player's load conditions.
 -- Called on ENCOUNTER_START after the hardcoded EncounterAlertStart handlers.
 function NSI:LoadCustomBossAlerts(encID)
-    if not NSRT.CustomBossAlerts or #NSRT.CustomBossAlerts == 0 then return end
+    if not NSRT.CustomBossAlerts then return end
+    local diff        = select(3, GetInstanceInfo()) or 0
+    local diffAlerts  = NSRT.CustomBossAlerts[diff]
+    if not diffAlerts or #diffAlerts == 0 then return end
     local playerName  = UnitName("player")
     local playerClass = select(2, UnitClass("player"))
     local playerSpec  = GetSpecialization()
-    for _, alert in ipairs(NSRT.CustomBossAlerts) do
+    for _, alert in ipairs(diffAlerts) do
         if alert.enabled and (alert.encID == 0 or alert.encID == encID) then
             local classOk = not alert.loadClass or alert.loadClass == "" or alert.loadClass == playerClass
             local specOk  = not alert.loadSpec  or alert.loadSpec  == 0  or alert.loadSpec  == playerSpec

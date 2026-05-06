@@ -44,11 +44,13 @@ local function BuildBossRemindersUI(parentFrame)
     local rightW     = content_width - rightX - pad  -- ~766
 
     -- ── Mutable state ───────────────────────────────────────────────────────
-    local selectedIndex      = nil   -- index into NSRT.CustomBossAlerts (custom mode)
+    local selectedIndex      = nil   -- index into NSRT.CustomBossAlerts[filterDiffID] (custom mode)
     local selectedReloeEncID = nil   -- encID of selected ReloeReminder alert
     local selectedReloeDiffID = nil  -- diffID of selected ReloeReminder alert
     local selectedReloeKey   = nil   -- key of selected ReloeReminder alert
     local filterEncID        = nil
+    local filterDiffID       = 16    -- default Mythic
+    local searchText         = ""
 
     -- forward declarations
     local rightPanel, SelectAlert, SelectReloeCreatedAlert, PreviewAlert
@@ -78,12 +80,43 @@ local function BuildBossRemindersUI(parentFrame)
         return opts
     end
 
-    local filterDD = DF:CreateDropDown(screen, BuildFilterOptions, nil, leftWidth - pad * 2, 22, nil,
+    local bossDDWidth = 134
+    local diffDDWidth = leftWidth - pad * 2 - bossDDWidth - 6   -- 80
+
+    local filterDD = DF:CreateDropDown(screen, BuildFilterOptions, nil, bossDDWidth, 22, nil,
         "NSUIEncAlertFilter", options_dropdown_template)
     filterDD:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20)
 
+    local function BuildDiffOptions()
+        local function switchDiff(id)
+            filterDiffID = id
+            selectedIndex = nil
+            if rightPanel then rightPanel:Hide() end
+            if screen.RebuildList then screen.RebuildList() end
+        end
+        return {
+            { label = "M", value = 16, onclick = function() switchDiff(16) end },
+            { label = "H", value = 15, onclick = function() switchDiff(15) end },
+            { label = "N", value = 14, onclick = function() switchDiff(14) end },
+        }
+    end
+
+    local diffDD = DF:CreateDropDown(screen, BuildDiffOptions, nil, diffDDWidth, 22, nil,
+        "NSUIEncAlertDiffFilter", options_dropdown_template)
+    diffDD:SetPoint("TOPLEFT", filterDD, "TOPRIGHT", 6, 0)
+    diffDD:Select(16)
+
+    -- ── Search bar ──────────────────────────────────────────────────────────
+    local searchEntry = DF:CreateTextEntry(screen, function() end, leftWidth - pad * 2, 22, nil,
+        "NSUIEncAlertSearch", nil, options_dropdown_template)
+    searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4)
+    searchEntry.editbox:SetScript("OnTextChanged", function(self)
+        searchText = self:GetText()
+        if screen.RebuildList then screen.RebuildList() end
+    end)
+
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
-    local scrollTop    = topY - 20 - 22 - 6   -- below title + filter + gap = -58
+    local scrollTop    = topY - 20 - 22 - 4 - 22 - 6   -- below title + filter row + search + gaps = -84
     local scrollHeight = tab_content_height + scrollTop - 22 - pad * 2  -- ~450
     local listW        = leftWidth - pad * 2   -- 220
 
@@ -91,6 +124,7 @@ local function BuildBossRemindersUI(parentFrame)
         "UIPanelScrollFrameTemplate")
     listScroll:SetSize(listW, scrollHeight)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
+    DF:ReskinSlider(listScroll)
 
     local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
     listChild:SetSize(listW - 18, 1)   -- 18px for the native scrollbar
@@ -169,36 +203,22 @@ local function BuildBossRemindersUI(parentFrame)
         for _, encID in ipairs(sortedEnc) do
             local encTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
             if encTable then
-                -- Sort diffIDs descending so we prefer mythic as representative
-                local diffIDs = {}
-                for diffID in pairs(encTable) do
-                    if type(diffID) == "number" then
-                        table.insert(diffIDs, diffID)
-                    end
-                end
-                table.sort(diffIDs, function(a, b) return a > b end)
-
-                local seenNames = {}
+                local diffTable = encTable[filterDiffID]
                 local alerts = {}
-                for _, diffID in ipairs(diffIDs) do
-                    local diffTable = encTable[diffID]
-                    if type(diffTable) == "table" then
-                        for key, entry in pairs(diffTable) do
-                            local entryName = entry.name or entry.text or key
-                            local phase = entry.phase
-                            local ReloeReminder = entry.ReloeReminder
-                            if type(entry) == "table" and ReloeReminder and not seenNames[entryName..phase] then
-                                seenNames[entryName..phase] = true
-                                table.insert(alerts, {
-                                    key    = key,
-                                    entry  = entry,
-                                    diffID = diffID,
-                                    phase  = phase or 1,
-                                    enabled = entry.enabled,
-                                    ReloeReminder = ReloeReminder,
-                                    id = entry.id,
-                                })
-                            end
+                if type(diffTable) == "table" then
+                    for key, entry in pairs(diffTable) do
+                        local phase = entry.phase
+                        local ReloeReminder = entry.ReloeReminder
+                        if type(entry) == "table" and ReloeReminder then
+                            table.insert(alerts, {
+                                key           = key,
+                                entry         = entry,
+                                diffID        = filterDiffID,
+                                phase         = phase or 1,
+                                enabled       = entry.enabled,
+                                ReloeReminder = ReloeReminder,
+                                id            = entry.id,
+                            })
                         end
                     end
                 end
@@ -215,21 +235,28 @@ local function BuildBossRemindersUI(parentFrame)
                     return an < bn
                 end)
                 for _, item in ipairs(alerts) do
-                    table.insert(t, {
-                        encID           = encID,
-                        diffID          = item.diffID,
-                        alertKey        = item.key,
-                        entry           = item.entry,
-                        _isReloeCreated = true,
-                    })
+                    local displayName = ReloeAlertName(item.entry)
+                    if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
+                        table.insert(t, {
+                            encID           = encID,
+                            diffID          = item.diffID,
+                            alertKey        = item.key,
+                            entry           = item.entry,
+                            _isReloeCreated = true,
+                        })
+                    end
                 end
             end
         end
 
         -- Custom alerts below
-        for i, alert in ipairs(NSRT.CustomBossAlerts or {}) do
+        local diffAlerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID] or {}
+        for i, alert in ipairs(diffAlerts) do
             if not filterEncID or alert.encID == filterEncID then
-                table.insert(t, { alert = alert, realIndex = i })
+                local name = alert.name or "Unnamed"
+                if searchText == "" or string.find(string.lower(name), string.lower(searchText), 1, true) then
+                    table.insert(t, { alert = alert, realIndex = i })
+                end
             end
         end
         return t
@@ -298,7 +325,8 @@ local function BuildBossRemindersUI(parentFrame)
                     row.deleteBtn:Show()
                     local ri = entry.realIndex
                     row.deleteBtn:SetScript("OnClick", function()
-                        table.remove(NSRT.CustomBossAlerts, ri)
+                        local alerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
+                        if alerts then table.remove(alerts, ri) end
                         if selectedIndex == ri then
                             selectedIndex = nil
                             if rightPanel then rightPanel:Hide() end
@@ -339,7 +367,9 @@ local function BuildBossRemindersUI(parentFrame)
     -- Create Alert button
     local createBtn = CreateButton(screen, "+ Create Alert", function()
         NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
-        table.insert(NSRT.CustomBossAlerts, {
+        NSRT.CustomBossAlerts[filterDiffID] = NSRT.CustomBossAlerts[filterDiffID] or {}
+        local diffAlerts = NSRT.CustomBossAlerts[filterDiffID]
+        table.insert(diffAlerts, {
             name          = "New Alert",
             enabled       = true,
             encID         = filterEncID,
@@ -358,7 +388,7 @@ local function BuildBossRemindersUI(parentFrame)
             loadCharacter = nil,
         })
         RebuildList()
-        SelectAlert(#NSRT.CustomBossAlerts)
+        SelectAlert(#diffAlerts)
     end, listW, 22)
     createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
@@ -612,6 +642,7 @@ local function BuildBossRemindersUI(parentFrame)
         "UIPanelScrollFrameTemplate")
     timesScroll:SetSize(timesListW, timesListH)
     timesScroll:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -114)
+    DF:ReskinSlider(timesScroll)
 
     local timesChild = CreateFrame("Frame", nil, timesScroll, "BackdropTemplate")
     timesChild:SetSize(timesListW - 18, 1)
@@ -1006,7 +1037,7 @@ local function BuildBossRemindersUI(parentFrame)
         selectedIndex        = index
         selectedReloeEncID   = nil
         selectedReloeKey     = nil
-        local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[index]
+        local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID] and NSRT.CustomBossAlerts[filterDiffID][index]
         if not alert then
             rightPanel:Hide()
             RebuildList()
