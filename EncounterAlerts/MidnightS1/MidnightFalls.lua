@@ -264,11 +264,14 @@ NSI.InitializeAlerts[encID] = function(self)
         NSI.IsLuraPreview = not NSI.IsLuraPreview
     end,
     difficulties = {14, 15, 16},
-    extraOptions ={
-        Scale = {Type = "Scale", min = 0.5, max = 2},
-        xOffset = {Type = "Scale", min = -2000, max = 2000},
-        yOffset = {Type = "Scale", min = -2000, max = 2000},
-        BackgroundColor = {Type = "Color"}},
+    extraOptions = {
+            { Type = "Label",    text = "Runes Display" },
+            { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,    get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.Scale   or 1    end, set = function(v) NSRT.EncounterAlerts[encID][16].RunesDisplay.Scale   = v end },
+            { Type = "Slider",   label = "xOffset",        min = -2000, max = 2000, get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.xOffset  or 300  end, set = function(v) NSRT.EncounterAlerts[encID][16].RunesDisplay.xOffset  = v end },
+            { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000, get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.yOffset  or -300 end, set = function(v) NSRT.EncounterAlerts[encID][16].RunesDisplay.yOffset  = v end },
+            { Type = "Color",    label = "BackgroundColor", get = function() local c = NSRT.EncounterAlerts[encID][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end, set = function(r,g,b,a) NSRT.EncounterAlerts[encID][16].RunesDisplay.BackgroundColor = {r,g,b,a} end },
+            { Type = "Breakline" },
+        },
     }
     self:AddEncounterAlert(data)
 

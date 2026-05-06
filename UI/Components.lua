@@ -69,6 +69,15 @@ local STYLE = {
 -- never destroyed mid-session so no weak table needed.
 local labelRegistry = {}
 
+local componentRegistry = {
+    Slider    = {},
+    Dropdown  = {},
+    Color     = {},
+    Checkbox  = {},
+    TextEntry = {},
+    Label     = {},
+    Breakline = {},
+}
 local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
 
 local function ValidateFont(path)
@@ -323,7 +332,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateCheckButton(parent, label, getValue, setValue, width, height)
+local function CreateCheckButton(parent, label, getValue, setValue, width, height, name)
     local totalW = width  or 180
     local totalH = height or 22
     local BOX    = 14
@@ -331,7 +340,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     local baseLevel = parent:GetFrameLevel() + 1
 
     -- Container acts as the hit target
-    local btn = CreateFrame("Button", nil, parent)
+    local btn       = CreateFrame("Button", name, parent)
     btn:SetSize(totalW, totalH)
     btn:SetFrameLevel(baseLevel)
 
@@ -403,6 +412,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)      end
     function obj:GetWidth()    return self.frame:GetWidth()   end
 
+    componentRegistry.Checkbox[#componentRegistry.Checkbox + 1] = obj
     return obj
 end
 
@@ -433,14 +443,14 @@ end
 --    :SetSize(w, h)
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
-                               width, height, numeric, minVal, maxVal)
+                               width, height, numeric, minVal, maxVal, name)
     local totalW  = width  or 220
     local totalH  = height or 22
     local BOX_W   = 60
     local GAP     = 8
     local baseLevel = parent:GetFrameLevel() + 1
 
-    local container = CreateFrame("Frame", nil, parent)
+    local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
     container:SetFrameLevel(baseLevel)
 
@@ -519,6 +529,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)                                     end
     function obj:GetWidth()    return self.frame:GetWidth()                                  end
 
+    componentRegistry.TextEntry[#componentRegistry.TextEntry + 1] = obj
     return obj
 end
 
@@ -544,14 +555,14 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
     local MAX_ROWS = 10
     local baseLevel = parent:GetFrameLevel() + 1
 
-    local container = CreateFrame("Frame", nil, parent)
+    local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
     container:SetFrameLevel(baseLevel)
 
@@ -790,6 +801,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)     end
     function obj:GetWidth()    return self.frame:GetWidth()  end
 
+    componentRegistry.Dropdown[#componentRegistry.Dropdown + 1] = obj
     return obj
 end
 
@@ -821,7 +833,7 @@ end
 --    :SetSize(w, h)
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
-                            width, height, minVal, maxVal, step)
+                            width, height, minVal, maxVal, step, name)
     local totalW  = width  or 220
     local totalH  = height or 22
     local LABEL_W = math.floor(totalW * 0.38)
@@ -829,7 +841,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     local TRACK_W = totalW - LABEL_W - VAL_W - 8
     local baseLevel = parent:GetFrameLevel() + 1
 
-    local container = CreateFrame("Frame", nil, parent)
+    local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
     container:SetFrameLevel(baseLevel)
 
@@ -987,6 +999,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)      end
     function obj:GetWidth()    return self.frame:GetWidth()   end
 
+    componentRegistry.Slider[#componentRegistry.Slider + 1] = obj
     return obj
 end
 
@@ -1012,14 +1025,14 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateColorPicker(parent, label, getValue, setValue, width, height)
+local function CreateColorPicker(parent, label, getValue, setValue, width, height, name)
     local totalW   = width  or 220
     local totalH   = height or 22
     local SWATCH_W = 40
     local GAP      = 8
     local baseLevel = parent:GetFrameLevel() + 1
 
-    local container = CreateFrame("Frame", nil, parent)
+    local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
     container:SetFrameLevel(baseLevel)
 
@@ -1125,6 +1138,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)    end
     function obj:GetWidth()    return self.frame:GetWidth() end
 
+    componentRegistry.Color[#componentRegistry.Color + 1] = obj
     return obj
 end
 
@@ -1148,11 +1162,11 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateLabel(parent, text, width, height)
+local function CreateLabel(parent, text, width, height, name)
     local totalW = width  or 220
     local totalH = height or 16
 
-    local container = CreateFrame("Frame", nil, parent)
+    local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
 
     local lbl = MakeFontString(container, 12)
@@ -1169,6 +1183,7 @@ local function CreateLabel(parent, text, width, height)
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)     end
     function obj:GetWidth()    return self.frame:GetWidth()  end
 
+    componentRegistry.Label[#componentRegistry.Label + 1] = obj
     return obj
 end
 
@@ -1187,11 +1202,11 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateBreakline(parent, width, height)
+local function CreateBreakline(parent, width, height, name)
     local totalW = width  or 220
     local totalH = height or 10
 
-    local container = CreateFrame("Frame", nil, parent)
+    local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
 
     local line = container:CreateTexture(nil, "ARTWORK")
@@ -1206,6 +1221,68 @@ local function CreateBreakline(parent, width, height)
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)    end
     function obj:GetWidth()    return self.frame:GetWidth() end
 
+    componentRegistry.Breakline[#componentRegistry.Breakline + 1] = obj
+    return obj
+end
+
+-- ============================================================
+--  CreateScrollBox
+--
+--  Creates a scrollable container.  Use .scrollChild as the
+--  parent argument to BuildWidgets; call :UpdateScrollBar()
+--  after setting the scroll child's height.
+--
+--  Params
+--    parent – WoW frame
+--    width  – outer scroll frame width
+--    height – outer scroll frame height (visible area)
+--
+--  Returned object
+--    .frame        outer ScrollFrame
+--    .scrollChild  inner content Frame (pass to BuildWidgets)
+--    :SetPoint(…)
+--    :UpdateScrollBar()  syncs native scrollbar to child height
+-- ============================================================
+local scrollBoxCounter = 0
+local SB_W = 16 -- native UIPanelScrollFrameTemplate scrollbar width
+
+local function CreateScrollBox(parent, width, height)
+    scrollBoxCounter = scrollBoxCounter + 1
+    local boxName = "NSRTScrollBox" .. scrollBoxCounter
+
+    local scrollFrame = CreateFrame("ScrollFrame", boxName, parent,
+        "UIPanelScrollFrameTemplate")
+    scrollFrame:SetSize(width, height)
+    scrollFrame:EnableMouseWheel(true)
+    scrollFrame:SetScript("OnMouseWheel", function(_, delta)
+        local bar = _G[boxName .. "ScrollBar"]
+        if bar then
+            local cur    = bar:GetValue()
+            local mn, mx = bar:GetMinMaxValues()
+            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 20)))
+        end
+    end)
+
+    local child = CreateFrame("Frame", boxName .. "Child", scrollFrame)
+    child:SetWidth(width - SB_W - 2)
+    child:SetHeight(1)
+    scrollFrame:SetScrollChild(child)
+
+    local obj = { frame = scrollFrame, scrollChild = child }
+
+    function obj:SetPoint(...) self.frame:SetPoint(...) end
+
+    function obj:SetSize(w, h) self.frame:SetSize(w, h) end
+
+    function obj:GetWidth() return self.frame:GetWidth() end
+
+    function obj:UpdateScrollBar()
+        local bar = _G[boxName .. "ScrollBar"]
+        if not bar then return end
+        local maxScroll = math.max(0, child:GetHeight() - scrollFrame:GetHeight())
+        bar:SetMinMaxValues(0, maxScroll)
+        if bar:GetValue() > maxScroll then bar:SetValue(0) end
+    end
     return obj
 end
 
@@ -1232,6 +1309,8 @@ end
 --
 --    "Scale" is accepted as an alias for "Slider".
 --    Any descriptor may include height=n to override the default row height.
+--    Pass namePrefix to give each created frame a unique global WoW name of
+--    the form namePrefix .. "_" .. gen .. Type .. index (e.g. "NSRTOpt_1Slider1").
 -- ============================================================
 local WIDGET_H = {
     Slider    = 22, Scale     = 22,
@@ -1240,19 +1319,31 @@ local WIDGET_H = {
     Label     = 16, Breakline = 10,
 }
 local WIDGET_GAP = 4
+local buildGen = 0
 
-local function BuildWidgets(parent, definitions, width)
+local function BuildWidgets(parent, definitions, width, namePrefix)
     local C = NSI.UI.Components
     local y = 0
+    local gen
+    if namePrefix then
+        buildGen = buildGen + 1
+        gen = buildGen
+    end
+    local typeCounts = {}
 
     for _, def in ipairs(definitions) do
         local t    = def.Type
         local h    = def.height or WIDGET_H[t] or 22
         local ctrl
 
+        local wName
+        if namePrefix then
+            typeCounts[t] = (typeCounts[t] or 0) + 1
+            wName = namePrefix .. "_" .. gen .. t .. typeCounts[t]
+        end
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
-                def.get, def.set, width, h, def.min, def.max, def.step)
+                def.get, def.set, width, h, def.min, def.max, def.step, wName)
 
         elseif t == "Dropdown" then
             local function getItems()
@@ -1270,7 +1361,6 @@ local function BuildWidgets(parent, definitions, width)
                 end
                 return out
             end
-            -- Resolve the current value to its display label
             local function getSelected()
                 local cur  = def.get and def.get()
                 local vals = type(def.values) == "function"
@@ -1281,25 +1371,25 @@ local function BuildWidgets(parent, definitions, width)
                 return cur ~= nil and tostring(cur) or ""
             end
             ctrl = C.CreateDropdown(parent, def.label,
-                getItems, getSelected, width, h)
+                getItems, getSelected, width, h, wName)
 
         elseif t == "Color" then
             ctrl = C.CreateColorPicker(parent, def.label,
-                def.get, def.set, width, h)
+                def.get, def.set, width, h, wName)
 
         elseif t == "Checkbox" then
             ctrl = C.CreateCheckButton(parent, def.label,
-                def.get, def.set, width, h)
+                def.get, def.set, width, h, wName)
 
         elseif t == "TextEntry" then
             ctrl = C.CreateTextEntry(parent, def.label,
-                def.get, def.set, width, h, def.numeric, def.min, def.max)
+                def.get, def.set, width, h, def.numeric, def.min, def.max, wName)
 
         elseif t == "Label" then
-            ctrl = C.CreateLabel(parent, def.text, width, h)
+            ctrl = C.CreateLabel(parent, def.text, width, h, wName)
 
         elseif t == "Breakline" then
-            ctrl = C.CreateBreakline(parent, width, h)
+            ctrl = C.CreateBreakline(parent, width, h, wName)
         end
 
         if ctrl then
@@ -1325,7 +1415,9 @@ NSI.UI.Components = {
     CreateColorPicker   = CreateColorPicker,
     CreateLabel         = CreateLabel,
     CreateBreakline     = CreateBreakline,
+    CreateScrollBox   = CreateScrollBox,
     BuildWidgets        = BuildWidgets,
     RefreshFonts        = RefreshFonts,
     STYLE               = STYLE,
+    registry          = componentRegistry,
 }

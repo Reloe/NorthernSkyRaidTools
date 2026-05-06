@@ -396,7 +396,7 @@ local function BuildBossRemindersUI(parentFrame)
     enabledLbl:SetPoint("LEFT", enabledCB, "RIGHT", 2, 0)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
-    local INNER_TABS     = { "Display", "Trigger", "Sound", "Load" }
+    local INNER_TABS     = { "Display", "Trigger", "Sound", "Load", "Options" }
     local innerTabBtns   = {}
     local innerTabFrames = {}
     local activeInnerTab = "Display"
@@ -421,6 +421,7 @@ local function BuildBossRemindersUI(parentFrame)
         btn:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", (i - 1) * (tabBtnW + tabBtnGap), tabRowY)
         innerTabBtns[tabName] = btn
     end
+    innerTabBtns["Options"].frame:Hide()
 
     -- ── Preview button — right-aligned on the tab row ────────────────────────
     -- (PreviewAlert body defined below, after dispF / sndF are in scope)
@@ -916,6 +917,27 @@ local function BuildBossRemindersUI(parentFrame)
         "Sound settings are fixed\nfor addon-created alerts.")
 
     -- ================================================================
+    -- OPTIONS TAB
+    -- ================================================================
+    local optF = innerTabFrames["Options"]
+    local optionsContentFrame = nil
+
+    local function RebuildOptionsContent(entry)
+        if optionsContentFrame then
+            optionsContentFrame:Hide()
+            optionsContentFrame = nil
+        end
+        if not (entry and entry.extraOptions) then return end
+        local scrollObj = NSI.UI.Components.CreateScrollBox(optF, rightW - 11, optF:GetHeight())
+        scrollObj.frame:SetPoint("TOPLEFT", optF, "TOPLEFT", 0, 0)
+        local totalH = NSI.UI.Components.BuildWidgets(
+            scrollObj.scrollChild, entry.extraOptions,
+            scrollObj.scrollChild:GetWidth(), "NSRTEncOptContent")
+        scrollObj.scrollChild:SetHeight(totalH)
+        scrollObj:UpdateScrollBar()
+        optionsContentFrame = scrollObj.frame
+    end
+    -- ================================================================
     -- Helper: set panel into custom-alert mode vs reloeCreated mode
     -- ================================================================
     local function SetCustomMode()
@@ -927,6 +949,8 @@ local function BuildBossRemindersUI(parentFrame)
         sndF._reloeMode = false
         nameEntry.editbox:SetEnabled(true)
         nameEntry.editbox:SetAlpha(1)
+        innerTabBtns["Options"].frame:Hide()
+        if activeInnerTab == "Options" then activeInnerTab = "Display" end
     end
 
     local function SetReloeCreatedMode()
@@ -1105,6 +1129,14 @@ local function BuildBossRemindersUI(parentFrame)
         sndF.cdCB:SetChecked(hasCD and true or false)
         sndF.cdEntry:SetText(hasCD and tostring(entry.countdown) or "")
 
+        -- Options tab: show only when the entry defines extraOptions
+        local hasOptions = entry.extraOptions ~= nil
+        innerTabBtns["Options"].frame:SetShown(hasOptions)
+        if hasOptions then
+            RebuildOptionsContent(entry)
+        else
+            if activeInnerTab == "Options" then activeInnerTab = "Display" end
+        end
         RebuildList()
         SelectInnerTab(activeInnerTab)
     end
