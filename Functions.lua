@@ -526,7 +526,7 @@ function NSI:EncounterRegister(event, enable, units, all)
         else
             self.EncounterFrame:RegisterEvent(event)
         end
-    else
+    elseif event then
         self.EncounterFrame:UnregisterEvent(event)
     end
 end
