@@ -11,6 +11,7 @@ local CreateSubButton   = NSI.UI.Components.CreateSubButton
 local CreateDropdown    = NSI.UI.Components.CreateDropdown
 local CreateTextEntry   = NSI.UI.Components.CreateTextEntry
 local CreateCheckButton = NSI.UI.Components.CreateCheckButton
+local CreateColorPicker = NSI.UI.Components.CreateColorPicker
 local ReskinScrollbar   = NSI.UI.Components.ReskinScrollbar
 local BossData          = NSI.UI.BossData
 
@@ -638,6 +639,164 @@ local function BuildBossRemindersUI(parentFrame)
     durEntry.editBox:SetScript("OnEditFocusLost", SaveDur)
     dispF.durEntry = durEntry
 
+    -- ── glowunit ────────────────────────────────────────────────────────
+    local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
+    glowunitLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    glowunitLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    glowunitLbl:SetText("Glow Unit  (unit token, e.g. player, focus)")
+    glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -190)
+
+    local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
+        nil, nil, nil, "NSUIEncAlertGlowUnit")
+    glowunitEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -206)
+    local function SaveGlowUnit(self)
+        local v = self:GetText()
+        if dispF._alert then dispF._alert.glowunit = (v ~= "") and v or nil end
+    end
+    glowunitEntry.editBox:SetScript("OnEnterPressed", function(self) SaveGlowUnit(self); self:ClearFocus() end)
+    glowunitEntry.editBox:SetScript("OnEditFocusLost", SaveGlowUnit)
+    dispF.glowunitEntry = glowunitEntry
+
+    -- ── colors ──────────────────────────────────────────────────────────
+    local colorsPicker = CreateColorPicker(dispF, "Color",
+        function()
+            local c = dispF._alert and dispF._alert.colors
+            if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
+            return 1, 1, 1, 1
+        end,
+        function(r, g, b, a)
+            if dispF._alert then dispF._alert.colors = {r, g, b, a} end
+        end,
+        200, 22, "NSUIEncAlertColors")
+    colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
+    dispF.colorsPicker = colorsPicker
+
+    -- ── Bars section: Ticks (shown only when display type = "Bar") ───────
+    local barsSection = CreateFrame("Frame", nil, dispF)
+    barsSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -278)
+    barsSection:SetSize(rightW, 200)
+    barsSection:Hide()
+
+    local ticksLbl = barsSection:CreateFontString(nil, "OVERLAY")
+    ticksLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    ticksLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    ticksLbl:SetText("Ticks  (bar percentage markers)")
+    ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
+
+    local ticksListH = 120
+    local ticksListW = rightW - 20
+
+    local ticksScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTicksScroll", barsSection,
+        "UIPanelScrollFrameTemplate")
+    ticksScroll:SetSize(ticksListW, ticksListH)
+    ticksScroll:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, -16)
+    ReskinScrollbar(ticksScroll)
+
+    local ticksChild = CreateFrame("Frame", nil, ticksScroll, "BackdropTemplate")
+    ticksChild:SetSize(ticksListW - 18, 1)
+    ticksChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+        tile = true, tileSize = 64 })
+    ticksChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
+    ticksScroll:SetScrollChild(ticksChild)
+
+    local tickRowH = 22
+    local tickRows = {}
+
+    local function RebuildTickRows()
+        for _, row in ipairs(tickRows) do row:Hide() end
+        tickRows = {}
+        if not dispF._alert then return end
+        local ticks = dispF._alert.ticks or {}
+        for i, v in ipairs(ticks) do
+            local row = CreateFrame("Frame", nil, ticksChild)
+            row:SetSize(ticksChild:GetWidth(), tickRowH)
+            row:SetPoint("TOPLEFT", ticksChild, "TOPLEFT", 0, -(i - 1) * tickRowH)
+
+            if i % 2 == 0 then
+                local bg = row:CreateTexture(nil, "BACKGROUND")
+                bg:SetAllPoints()
+                bg:SetColorTexture(1, 1, 1, 0.03)
+            end
+
+            local tLbl = row:CreateFontString(nil, "OVERLAY")
+            tLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
+            tLbl:SetTextColor(1, 1, 1, 1)
+            tLbl:SetPoint("LEFT", row, "LEFT", 8, 0)
+            tLbl:SetText(tostring(v))
+
+            local delBtn = CreateFrame("Button", nil, row)
+            delBtn:SetSize(14, 14)
+            delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+            delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+            delBtn:GetNormalTexture():SetDesaturated(true)
+            delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+            local ri = i
+            delBtn:SetScript("OnClick", function()
+                if dispF._alert then
+                    table.remove(dispF._alert.ticks, ri)
+                    RebuildTickRows()
+                end
+            end)
+
+            tickRows[i] = row
+        end
+
+        local totalH = math.max(#ticks * tickRowH, 1)
+        ticksChild:SetHeight(totalH)
+        local bar = _G["NSUIEncAlertTicksScrollScrollBar"]
+        if bar then
+            local maxScroll = math.max(0, totalH - ticksListH)
+            bar:SetMinMaxValues(0, maxScroll)
+            if bar:GetValue() > maxScroll then bar:SetValue(0) end
+        end
+    end
+    dispF.RebuildTickRows = RebuildTickRows
+
+    local addTickLbl = barsSection:CreateFontString(nil, "OVERLAY")
+    addTickLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+    addTickLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    addTickLbl:SetText("Add tick")
+    addTickLbl:SetPoint("TOPLEFT", ticksScroll, "BOTTOMLEFT", 0, -4)
+
+    local addTickEntry = CreateTextEntry(barsSection, nil, nil, nil, 90, 22,
+        nil, nil, nil, "NSUIEncAlertAddTick")
+    addTickEntry:SetPoint("TOPLEFT", ticksScroll, "BOTTOMLEFT", 0, -20)
+
+    local function DoAddTick()
+        local v = tonumber(addTickEntry:GetValue())
+        if v and dispF._alert then
+            dispF._alert.ticks = dispF._alert.ticks or {}
+            local inserted = false
+            for i2, existing in ipairs(dispF._alert.ticks) do
+                if v < existing then
+                    table.insert(dispF._alert.ticks, i2, v)
+                    inserted = true
+                    break
+                end
+            end
+            if not inserted then table.insert(dispF._alert.ticks, v) end
+            addTickEntry:SetValue("")
+            RebuildTickRows()
+        end
+    end
+
+    addTickEntry.editBox:SetScript("OnEnterPressed", function(self)
+        DoAddTick()
+        self:ClearFocus()
+    end)
+
+    local addTickBtn = CreateSubButton(barsSection, "Add", DoAddTick, 54,
+        "NSUIEncAlertAddTickBtn")
+    addTickBtn:SetPoint("LEFT", addTickEntry.frame, "RIGHT", 6, 0)
+
+    -- Patch SetDisplayType to also toggle barsSection visibility
+    local _prevSetDisplayType = SetDisplayType
+    SetDisplayType = function(t)
+        _prevSetDisplayType(t)
+        barsSection:SetShown(t == "Bar")
+    end
+    dispF.SetDisplayType = SetDisplayType
+
     -- ================================================================
     -- TRIGGER TAB
     -- ================================================================
@@ -744,7 +903,7 @@ local function BuildBossRemindersUI(parentFrame)
             local delBtn = CreateFrame("Button", nil, row)
             delBtn:SetSize(14, 14)
             delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            delBtn:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+            delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
             delBtn:GetNormalTexture():SetDesaturated(true)
             delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
             local ri = i
@@ -1144,6 +1303,9 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.textEntry:SetValue(alert.text or "")
         dispF.spellEntry:SetValue(alert.spellID and tostring(alert.spellID) or "")
         dispF.durEntry:SetValue(tostring(alert.dur or 8))
+        dispF.glowunitEntry:SetValue(alert.glowunit or "")
+        dispF.colorsPicker:Refresh()
+        dispF.RebuildTickRows()
 
         -- Trigger tab
         trigF.bossDD:Refresh()
@@ -1210,6 +1372,9 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.textEntry:SetValue(entry.text or "")
         dispF.spellEntry:SetValue(entry.spellID and tostring(entry.spellID) or "")
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
+        dispF.glowunitEntry:SetValue(entry.glowunit or "")
+        dispF.colorsPicker:Refresh()
+        dispF.RebuildTickRows()
 
         -- Trigger tab: inert (lock overlay shown)
         trigF.RebuildTimeRows()
