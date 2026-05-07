@@ -60,6 +60,8 @@ UI/Components.lua
 
 # UI - Components (depend on Core)
 UI/BossData.lua
+UI/SoundData.lua
+UI/ClassData.lua
 UI/Notes.lua
 UI/VersionCheck.lua
 UI/Nicknames.lua
