@@ -15,23 +15,9 @@ local CreateColorPicker = NSI.UI.Components.CreateColorPicker
 local ReskinScrollbar   = NSI.UI.Components.ReskinScrollbar
 local BossData          = NSI.UI.BossData
 
--- ============================================================================
--- WoW class constants
--- ============================================================================
-local CLASS_NAMES = {
-    "DEATHKNIGHT", "DEMONHUNTER", "DRUID", "EVOKER",
-    "HUNTER", "MAGE", "MONK", "PALADIN", "PRIEST",
-    "ROGUE", "SHAMAN", "WARLOCK", "WARRIOR",
-}
-local CLASS_DISPLAY = {
-    DEATHKNIGHT = "Death Knight", DEMONHUNTER = "Demon Hunter",
-    DRUID   = "Druid",   EVOKER   = "Evoker",  HUNTER  = "Hunter",
-    MAGE    = "Mage",    MONK     = "Monk",     PALADIN = "Paladin",
-    PRIEST  = "Priest",  ROGUE    = "Rogue",    SHAMAN  = "Shaman",
-    WARLOCK = "Warlock", WARRIOR  = "Warrior",
-}
 
 local MAX_LIST_ROWS = 80   -- hard cap; more than any reasonable alert count
+
 
 -- ============================================================================
 -- BuildBossRemindersUI
@@ -830,6 +816,55 @@ local function BuildBossRemindersUI(parentFrame)
     trigBossDD:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -18)
     trigF.bossDD = trigBossDD
 
+    -- Difficulty dropdown — moves the alert to a different diff table on change
+    local TRIG_DIFF_NAMES = { [14] = "Normal", [15] = "Heroic", [16] = "Mythic" }
+
+    local trigDiffLbl = trigF:CreateFontString(nil, "OVERLAY")
+    trigDiffLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    trigDiffLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    trigDiffLbl:SetText("Difficulty")
+    trigDiffLbl:SetPoint("TOPLEFT", trigBossDD.frame, "TOPRIGHT", 6, 16)
+
+    local function BuildTrigDiffOptions()
+        local opts = {}
+        for _, diffID in ipairs({ 14, 15, 16 }) do
+            local id = diffID
+            opts[#opts + 1] = {
+                label = TRIG_DIFF_NAMES[id],
+                value = id,
+                onclick = function(_, _, val)
+                    if not trigF._alert or val == filterDiffID then return end
+                    local alerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
+                    if not alerts then return end
+                    local alertToMove = trigF._alert
+                    local foundIdx
+                    for i, a in ipairs(alerts) do
+                        if a == alertToMove then foundIdx = i; break end
+                    end
+                    if not foundIdx then return end
+                    table.remove(alerts, foundIdx)
+                    alertToMove.id = NSI.EncounterAlerts:GenerateAlertID()
+                    NSRT.CustomBossAlerts[val] = NSRT.CustomBossAlerts[val] or {}
+                    table.insert(NSRT.CustomBossAlerts[val], alertToMove)
+                    filterDiffID = val
+                    selectedIndex = #NSRT.CustomBossAlerts[val]
+                    diffDD:Refresh()
+                    RebuildList()
+                end,
+            }
+        end
+        return opts
+    end
+
+    local function getTrigDiffSelected()
+        return TRIG_DIFF_NAMES[filterDiffID] or tostring(filterDiffID)
+    end
+
+    local trigDiffDD = CreateDropdown(trigF, nil, BuildTrigDiffOptions, getTrigDiffSelected,
+        90, 22, "NSUIEncAlertTrigDiff")
+    trigDiffDD:SetPoint("TOPLEFT", trigBossDD.frame, "TOPRIGHT", 6, 0)
+    trigF.trigDiffDD = trigDiffDD
+
     local phaseLbl = trigF:CreateFontString(nil, "OVERLAY")
     phaseLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     phaseLbl:SetTextColor(0.6, 0.6, 0.6, 1)
@@ -1064,6 +1099,21 @@ local function BuildBossRemindersUI(parentFrame)
     cdSecLbl:SetText("seconds")
     cdSecLbl:SetPoint("LEFT", cdEntry.frame, "RIGHT", 5, 0)
 
+    local sndFileLbl = sndF:CreateFontString(nil, "OVERLAY")
+    sndFileLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    sndFileLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    sndFileLbl:SetText("Sound File")
+    sndFileLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -162)
+
+    local soundGetItems, soundGetSelected = NSI:BuildSoundDropdown(
+        function() return sndF._alert and sndF._alert.sound end,
+        function(v) if sndF._alert then sndF._alert.sound = v end end
+    )
+    local soundDD = CreateDropdown(sndF, nil, soundGetItems, soundGetSelected,
+        rightW, 22, "NSUIEncAlertSound")
+    soundDD:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -178)
+    sndF.soundDD = soundDD
+
     -- ================================================================
     -- LOAD TAB
     -- ================================================================
@@ -1075,31 +1125,14 @@ local function BuildBossRemindersUI(parentFrame)
     classLbl:SetText("Class")
     classLbl:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -2)
 
-    local function BuildClassOptions()
-        local opts = {{ label = "All Classes", value = "", onclick = function()
-            if loadF._alert then loadF._alert.loadClass = nil end
-        end }}
-        for _, cls in ipairs(CLASS_NAMES) do
-            local c = cls
-            table.insert(opts, {
-                label   = CLASS_DISPLAY[c],
-                value   = c,
-                onclick = function(_, _, v)
-                    if loadF._alert then loadF._alert.loadClass = v end
-                end,
-            })
+    local classGetItems, classGetSelected = NSI:BuildClassDropdown(
+        function() return loadF._alert and loadF._alert.loadClass end,
+        function(v)
+            if loadF._alert then loadF._alert.loadClass = v end
+            loadF.specDD:Refresh()
         end
-        return opts
-    end
-
-    local function getClassSelected()
-        if not loadF._alert or not loadF._alert.loadClass or loadF._alert.loadClass == "" then
-            return "All Classes"
-        end
-        return CLASS_DISPLAY[loadF._alert.loadClass] or loadF._alert.loadClass
-    end
-
-    local classDD = CreateDropdown(loadF, nil, BuildClassOptions, getClassSelected,
+    )
+    local classDD = CreateDropdown(loadF, nil, classGetItems, classGetSelected,
         180, 22, "NSUIEncAlertClass")
     classDD:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -18)
     loadF.classDD = classDD
@@ -1107,35 +1140,16 @@ local function BuildBossRemindersUI(parentFrame)
     local specLbl = loadF:CreateFontString(nil, "OVERLAY")
     specLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     specLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    specLbl:SetText("Spec  (1–4 based on the class spec order)")
+    specLbl:SetText("Spec")
     specLbl:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -50)
 
-    local function BuildSpecOptions()
-        local opts = {{ label = "All Specs", value = 0, onclick = function()
-            if loadF._alert then loadF._alert.loadSpec = nil end
-        end }}
-        for i = 1, 4 do
-            local idx = i
-            table.insert(opts, {
-                label   = "Spec " .. i,
-                value   = i,
-                onclick = function(_, _, v)
-                    if loadF._alert then loadF._alert.loadSpec = v end
-                end,
-            })
-        end
-        return opts
-    end
-
-    local function getSpecSelected()
-        if not loadF._alert or not loadF._alert.loadSpec or loadF._alert.loadSpec == 0 then
-            return "All Specs"
-        end
-        return "Spec " .. loadF._alert.loadSpec
-    end
-
-    local specDD = CreateDropdown(loadF, nil, BuildSpecOptions, getSpecSelected,
-        120, 22, "NSUIEncAlertSpec")
+    local specGetItems, specGetSelected = NSI:BuildSpecDropdown(
+        function() return loadF._alert and loadF._alert.loadClass end,
+        function() return loadF._alert and loadF._alert.loadSpec end,
+        function(v) if loadF._alert then loadF._alert.loadSpec = v end end
+    )
+    local specDD = CreateDropdown(loadF, nil, specGetItems, specGetSelected,
+        180, 22, "NSUIEncAlertSpec")
     specDD:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -66)
     loadF.specDD = specDD
 
@@ -1309,6 +1323,7 @@ local function BuildBossRemindersUI(parentFrame)
 
         -- Trigger tab
         trigF.bossDD:Refresh()
+        trigF.trigDiffDD:Refresh()
         trigF.phaseEntry:SetValue(tostring(alert.phase or 1))
         trigF.RebuildTimeRows()
 
@@ -1319,6 +1334,7 @@ local function BuildBossRemindersUI(parentFrame)
         local hasCD = alert.countdown and alert.countdown ~= false
         sndF.cdCB:SetValue(hasCD and true or false)
         sndF.cdEntry:SetValue(hasCD and tostring(alert.countdown) or "")
+        sndF.soundDD:Refresh()
 
         -- Load tab
         loadF.classDD:Refresh()
@@ -1377,6 +1393,7 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.RebuildTickRows()
 
         -- Trigger tab: inert (lock overlay shown)
+        trigF.trigDiffDD:Refresh()
         trigF.RebuildTimeRows()
 
         -- Sound tab
@@ -1387,6 +1404,7 @@ local function BuildBossRemindersUI(parentFrame)
         local hasCD = entry.countdown and entry.countdown ~= false
         sndF.cdCB:SetValue(hasCD and true or false)
         sndF.cdEntry:SetValue(hasCD and tostring(entry.countdown) or "")
+        sndF.soundDD:Refresh()
 
         -- Options tab: show only when the entry defines extraOptions
         local hasOptions = entry.extraOptions ~= nil

@@ -1,7 +1,9 @@
 local _, NSI = ... -- Internal namespace
 
+NSI.EncounterAlerts = NSI.EncounterAlerts or {}
+
 local ID_CHARS = "abcdefghijklmnopqrstuvwxyz0123456789"
-local function GenerateAlertID()
+function NSI.EncounterAlerts:GenerateAlertID()
     local id = ""
     for _ = 1, 5 do
         local i = math.random(1, #ID_CHARS)
@@ -58,7 +60,7 @@ local function UniqueAlertID(diffTable, ReloeReminder, internalID)
         print("No internalID found for Reloe reminder alert. Aborting")
         return
     elseif not id then
-        repeat id = GenerateAlertID() until not diffTable[id]
+        repeat id = NSI.EncounterAlerts:GenerateAlertID() until not diffTable[id]
     end
     return id
 end
