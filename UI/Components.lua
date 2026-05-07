@@ -389,10 +389,11 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     end
     Refresh()
 
+    local cb = { fn = setValue }
     btn:SetScript("OnClick", function()
         isChecked = not isChecked
         Refresh()
-        if setValue then setValue(isChecked) end
+        if cb.fn then cb.fn(isChecked) end
     end)
     btn:SetScript("OnEnter", function()
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
@@ -404,13 +405,18 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     local obj = {frame = btn, label = lbl}
 
     function obj:SetValue(v)
-        isChecked = not not v
-        Refresh()
+        isChecked = not not v; Refresh()
     end
-    function obj:GetValue()    return isChecked               end
-    function obj:SetPoint(...) self.frame:SetPoint(...)       end
-    function obj:SetSize(w,h)  self.frame:SetSize(w, h)      end
-    function obj:GetWidth()    return self.frame:GetWidth()   end
+
+    function obj:GetValue() return isChecked end
+
+    function obj:SetOnChange(fn) cb.fn = fn end
+
+    function obj:SetPoint(...) self.frame:SetPoint(...) end
+
+    function obj:SetSize(w, h) self.frame:SetSize(w, h) end
+
+    function obj:GetWidth() return self.frame:GetWidth() end
 
     componentRegistry.Checkbox[#componentRegistry.Checkbox + 1] = obj
     return obj
@@ -444,29 +450,39 @@ end
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
                                width, height, numeric, minVal, maxVal, name)
-    local totalW  = width  or 220
-    local totalH  = height or 22
-    local BOX_W   = 60
-    local GAP     = 8
+    local totalW    = width or 220
+    local totalH    = height or 22
+    local BOX_W     = 60
+    local GAP       = 8
+    local hasLabel  = label and label ~= ""
     local baseLevel = parent:GetFrameLevel() + 1
 
     local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
     container:SetFrameLevel(baseLevel)
 
-    -- Label
-    local lbl = MakeFontString(container, 13)
-    lbl:SetText(label or "")
-    lbl:SetJustifyH("LEFT")
-    lbl:SetJustifyV("MIDDLE")
-    lbl:SetPoint("LEFT",  container, "LEFT",  0,              0)
-    lbl:SetPoint("RIGHT", container, "RIGHT", -(BOX_W + GAP), 0)
-    lbl:SetHeight(totalH)
+    -- Label (only when provided; omitting it makes the input span the full width)
+    local lbl
+    if hasLabel then
+        lbl = MakeFontString(container, 13)
+        lbl:SetText(label)
+        lbl:SetJustifyH("LEFT")
+        lbl:SetJustifyV("MIDDLE")
+        lbl:SetPoint("LEFT", container, "LEFT", 0, 0)
+        lbl:SetPoint("RIGHT", container, "RIGHT", -(BOX_W + GAP), 0)
+        lbl:SetHeight(totalH)
+    end
+
+    local inputW = hasLabel and BOX_W or totalW
 
     -- Input frame (backdrop + EditBox stacked inside)
     local inputFrame = CreateFrame("Frame", nil, container, "BackdropTemplate")
-    inputFrame:SetSize(BOX_W, totalH)
-    inputFrame:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    inputFrame:SetSize(inputW, totalH)
+    if hasLabel then
+        inputFrame:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    else
+        inputFrame:SetPoint("LEFT", container, "LEFT", 0, 0)
+    end
     inputFrame:SetFrameLevel(baseLevel + 1)
     MakeControlBackdrop(inputFrame)
 
@@ -713,7 +729,6 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local function Close()
         popup:Hide()
         clickaway:Hide()
-        arrowTexture:SetText("\226\150\188") -- ▼
     end
 
     local function Open()
@@ -735,13 +750,16 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
             local rowHover = MakeHoverBg(row, 2)
 
+            local iconTex = row:CreateTexture(nil, "ARTWORK")
+            iconTex:SetPoint("LEFT", row, "LEFT", 4, 0)
+            iconTex:Hide()
             local rlbl = MakeFontString(row, 12)
             rlbl:SetJustifyH("LEFT")
             rlbl:SetJustifyV("MIDDLE")
-            rlbl:SetPoint("LEFT",  row, "LEFT",  6, 0)
             rlbl:SetPoint("RIGHT", row, "RIGHT", 0, 0)
             rlbl:SetHeight(ROW_H)
 
+            row.iconTex      = iconTex
             row.rlbl      = rlbl
             row.rowHover  = rowHover
             content._rows[i] = row
@@ -751,6 +769,28 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         for i, item in ipairs(items) do
             local row = content._rows[i]
             row.rlbl:SetText(item.label or "")
+            -- Icon
+            if item.icon then
+                local sz = item.iconsize or { ROW_H - 6, ROW_H - 6 }
+                row.iconTex:SetSize(sz[1], sz[2])
+                row.iconTex:SetTexture(item.icon)
+                if item.texcoord then
+                    row.iconTex:SetTexCoord(unpack(item.texcoord))
+                else
+                    row.iconTex:SetTexCoord(0, 1, 0, 1)
+                end
+                row.iconTex:Show()
+                row.rlbl:ClearAllPoints()
+                row.rlbl:SetPoint("LEFT", row.iconTex, "RIGHT", 4, 0)
+                row.rlbl:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+                row.rlbl:SetHeight(ROW_H)
+            else
+                row.iconTex:Hide()
+                row.rlbl:ClearAllPoints()
+                row.rlbl:SetPoint("LEFT", row, "LEFT", 6, 0)
+                row.rlbl:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+                row.rlbl:SetHeight(ROW_H)
+            end
             row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(i - 1) * ROW_H)
             row:SetScript("OnEnter", function()
                 UIFrameFadeIn(row.rowHover, STYLE.hover_in, row.rowHover:GetAlpha(), 1)
@@ -782,7 +822,6 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
         popup:Show()
         clickaway:Show()
-        arrowTexture:SetText("\226\150\186") -- ▲
     end
 
     clickaway:SetScript("OnMouseDown", Close)
@@ -1242,6 +1281,88 @@ end
 --    :SetPoint(…)
 --    :UpdateScrollBar()  syncs native scrollbar to child height
 -- ============================================================
+-- ============================================================
+--  ReskinScrollbar
+--
+--  Applies the Northern Sky style to a native
+--  UIPanelScrollFrameTemplate scrollbar: dark track,
+--  thin cyan thumb, and custom chevron arrow buttons.
+--
+--  Params
+--    scrollFrame – a named ScrollFrame created with
+--                  UIPanelScrollFrameTemplate
+-- ============================================================
+local ICON_PATH = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\]]
+
+local function StyleArrowButton(btn, iconFile)
+    if not btn then return end
+
+    -- Clear all default Blizzard textures
+    if btn.SetNormalTexture then btn:SetNormalTexture("") end
+    if btn.SetPushedTexture then btn:SetPushedTexture("") end
+    if btn.SetHighlightTexture then btn:SetHighlightTexture("") end
+    if btn.SetDisabledTexture then btn:SetDisabledTexture("") end
+
+    -- Dark box background
+    local bg = btn:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints(btn)
+    bg:SetColorTexture(0.07, 0.07, 0.07, 1)
+
+    -- Cyan hover overlay (fades in/out)
+    local hoverBg = CreateFrame("Frame", nil, btn)
+    hoverBg:SetAllPoints(btn)
+    hoverBg:SetFrameLevel(btn:GetFrameLevel() + 1)
+    hoverBg:EnableMouse(false)
+    local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
+    hoverTex:SetAllPoints()
+    hoverTex:SetColorTexture(unpack(STYLE.hover_color))
+    hoverBg:SetAlpha(0)
+
+    -- Chevron icon centred inside the box
+    local iconFrame = CreateFrame("Frame", nil, btn)
+    iconFrame:SetSize(8, 8)
+    iconFrame:SetAllPoints(btn)
+    iconFrame:SetFrameLevel(btn:GetFrameLevel() + 2)
+    iconFrame:EnableMouse(false)
+    local icon = iconFrame:CreateTexture(nil, "ARTWORK")
+    icon:SetAllPoints()
+    icon:SetTexture(ICON_PATH .. iconFile)
+    icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+
+    btn:SetScript("OnEnter", function()
+        UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
+        icon:SetVertexColor(0, 1, 1, 1)
+    end)
+    btn:SetScript("OnLeave", function()
+        UIFrameFadeOut(hoverBg, STYLE.hover_out, hoverBg:GetAlpha(), 0)
+        icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    end)
+end
+
+local function ReskinScrollbar(scrollFrame)
+    local name = scrollFrame:GetName()
+    if not name then return end
+    local bar = _G[name .. "ScrollBar"]
+    if not bar then return end
+
+    -- Dark track behind the thumb
+    local track = bar:CreateTexture(nil, "BACKGROUND")
+    track:SetAllPoints(bar)
+    track:SetColorTexture(0.07, 0.07, 0.07, 1)
+
+    -- Thin cyan thumb
+    if bar.GetThumbTexture then
+        local thumb = bar:GetThumbTexture()
+        if thumb then
+            thumb:SetColorTexture(0, 1, 1, 0.45)
+            thumb:SetWidth(6)
+        end
+    end
+
+    -- Chevron arrow buttons
+    StyleArrowButton(_G[name .. "ScrollBarScrollUpButton"], "chevron-up.png")
+    StyleArrowButton(_G[name .. "ScrollBarScrollDownButton"], "chevron-down.png")
+end
 local scrollBoxCounter = 0
 local SB_W = 16 -- native UIPanelScrollFrameTemplate scrollbar width
 
@@ -1266,7 +1387,7 @@ local function CreateScrollBox(parent, width, height)
     child:SetWidth(width - SB_W - 2)
     child:SetHeight(1)
     scrollFrame:SetScrollChild(child)
-    DF:ReskinSlider(scrollFrame)
+    ReskinScrollbar(scrollFrame)
 
     local obj = { frame = scrollFrame, scrollChild = child }
 
@@ -1318,6 +1439,7 @@ local WIDGET_H = {
     Dropdown  = 22, Color     = 22,
     Checkbox  = 22, TextEntry = 22,
     Label     = 16, Breakline = 10,
+    Link      = 22,
 }
 local WIDGET_GAP = 4
 local buildGen = 0
@@ -1391,6 +1513,9 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
 
         elseif t == "Breakline" then
             ctrl = C.CreateBreakline(parent, width, h, wName)
+
+        elseif t == "Link" then
+            ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, wName)
         end
 
         if ctrl then
@@ -1400,6 +1525,552 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
     end
 
     return y > 0 and (y - WIDGET_GAP) or 0
+end
+
+-- ============================================================
+--  CreateDialog
+--
+--  Creates (or re-shows) a named dialog.  Each unique name maps
+--  to one frame cached in NSI.UI.Components.Dialogs; subsequent
+--  calls with the same name just re-show the cached frame.
+--
+--  Params
+--    name     – unique key; also forms the global WoW frame name
+--    title    – title bar text
+--    body     – body / content text (word-wrapped)
+--    btn1Text – primary button label
+--    btn1Fn   – function() called then dialog hides; may be nil
+--    btn2Text – secondary button label (nil → single centered button)
+--    btn2Fn   – function() called then dialog hides; may be nil
+--
+--  Returns the WoW frame.
+-- ============================================================
+local DIALOG_W       = 380
+local DIALOG_H       = 190
+local DIALOG_TITLE_H = 30
+local DIALOG_BTN_H   = 26
+local DIALOG_BTN_W   = 110
+local DIALOG_PAD     = 12
+
+local Dialogs = {}
+
+local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2Fn)
+    if Dialogs[name] then
+        Dialogs[name]:Show()
+        return Dialogs[name]
+    end
+
+    local frameName = "NSRTDialog_" .. name
+    local f = CreateFrame("Frame", frameName, UIParent, "BackdropTemplate")
+    f:SetSize(DIALOG_W, DIALOG_H)
+    f:SetPoint("CENTER", UIParent, "CENTER")
+    f:SetFrameStrata("DIALOG")
+    f:SetMovable(true)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:SetBackdrop({
+        bgFile   = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Buttons\WHITE8x8]],
+        edgeSize = 1,
+        tile     = true,
+        tileSize = 64,
+    })
+    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+
+    -- ── Title bar (drag handle) ──────────────────────────────────
+    local titleBar = CreateFrame("Frame", nil, f)
+    titleBar:SetPoint("TOPLEFT",  f, "TOPLEFT",  1, -1)
+    titleBar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
+    titleBar:SetHeight(DIALOG_TITLE_H)
+    titleBar:EnableMouse(true)
+    titleBar:SetScript("OnMouseDown", function(_, btn)
+        if btn == "LeftButton" then f:StartMoving() end
+    end)
+    titleBar:SetScript("OnMouseUp", function() f:StopMovingOrSizing() end)
+
+    local titleFS = MakeFontString(f, 14)
+    titleFS:SetText(title or "")
+    titleFS:SetJustifyH("LEFT")
+    titleFS:SetJustifyV("MIDDLE")
+    titleFS:SetPoint("LEFT",  titleBar, "LEFT",  DIALOG_PAD, 0)
+    titleFS:SetPoint("RIGHT", titleBar, "RIGHT", -28, 0)
+    titleFS:SetHeight(DIALOG_TITLE_H)
+
+    local titleSep = f:CreateTexture(nil, "ARTWORK")
+    titleSep:SetColorTexture(0, 1, 1, 0.20)
+    titleSep:SetHeight(1)
+    titleSep:SetPoint("TOPLEFT",  f, "TOPLEFT",  1, -(DIALOG_TITLE_H + 1))
+    titleSep:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -(DIALOG_TITLE_H + 1))
+
+    -- ── Close (×) button ────────────────────────────────────────
+    local xBtn = CreateFrame("Button", nil, f)
+    xBtn:SetSize(14, 14)
+    xBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -8)
+    xBtn:SetFrameLevel(f:GetFrameLevel() + 3)
+    xBtn:SetNormalTexture(ICON_PATH .. "x.png")
+    xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1)
+    xBtn:SetScript("OnEnter", function() xBtn:GetNormalTexture():SetVertexColor(0, 1, 1, 1) end)
+    xBtn:SetScript("OnLeave", function() xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1) end)
+    xBtn:SetScript("OnClick", function() f:Hide() end)
+
+    -- ── Body text ────────────────────────────────────────────────
+    local bodyFS = MakeFontString(f, 13)
+    bodyFS:SetText(body or "")
+    bodyFS:SetJustifyH("LEFT")
+    bodyFS:SetJustifyV("TOP")
+    bodyFS:SetWordWrap(true)
+    bodyFS:SetPoint("TOPLEFT",     f, "TOPLEFT",     DIALOG_PAD, -(DIALOG_TITLE_H + DIALOG_PAD))
+    bodyFS:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -DIALOG_PAD, DIALOG_BTN_H + DIALOG_PAD * 2)
+
+    -- ── Buttons ──────────────────────────────────────────────────
+    local btn1 = CreateButton(f, btn1Text or "OK", function()
+        if btn1Fn then btn1Fn() end
+        f:Hide()
+    end, DIALOG_BTN_W, DIALOG_BTN_H)
+
+    if btn2Text then
+        btn1:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -6, DIALOG_PAD)
+        local btn2 = CreateButton(f, btn2Text, function()
+            if btn2Fn then btn2Fn() end
+            f:Hide()
+        end, DIALOG_BTN_W, DIALOG_BTN_H)
+        btn2:SetPoint("BOTTOMLEFT", f, "BOTTOM", 6, DIALOG_PAD)
+    else
+        btn1:SetPoint("BOTTOM", f, "BOTTOM", 0, DIALOG_PAD)
+    end
+
+    -- Escape key support via UISpecialFrames
+    tinsert(UISpecialFrames, frameName)
+
+    Dialogs[name] = f
+    f:Show()
+    return f
+end
+
+-- ============================================================
+--  ShowContextMenu
+--
+--  Opens a styled context menu at the cursor position.
+--  Nested submenus open on hover; all menus share the NSRT
+--  visual style (dark bg, cyan border, hover fades).
+--
+--  items – array of descriptor tables:
+--    { type="button",  label="…", fnc=fn,    icon=texOrID, spellIcon=spellID }
+--    { type="submenu", label="…", items={…}, icon=texOrID, spellIcon=spellID }
+--    { type="label",   text="…" }
+--    { type="separator" }
+--
+--  width – optional fixed px width; nil = auto-sized to widest label
+-- ============================================================
+local CTX_ROW_H    = 20
+local CTX_SEP_H    = 8
+local CTX_LABEL_H  = 18
+local CTX_PAD_H    = 8
+local CTX_ICON_SZ  = 14
+local CTX_ICON_GAP = 4
+local CTX_ARROW_W  = 14
+
+local MAX_CTX_LEVELS = 5
+local ctxFrames      = {}
+local ctxClickaway   = nil
+local _ctxMeasureFS
+
+local function CtxMeasureText(text)
+    if not _ctxMeasureFS then
+        _ctxMeasureFS = UIParent:CreateFontString(nil, "ARTWORK")
+        _ctxMeasureFS:Hide()
+    end
+    _ctxMeasureFS:SetFont(
+        ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)),
+        13,
+        NSRT.Settings.GlobalFontFlags or "")
+    _ctxMeasureFS:SetText(text or "")
+    return _ctxMeasureFS:GetStringWidth()
+end
+
+local function ResolveCtxIcon(item)
+    if item.spellIcon then
+        if C_Spell and C_Spell.GetSpellTexture then
+            return C_Spell.GetSpellTexture(item.spellIcon)
+        elseif GetSpellTexture then
+            return GetSpellTexture(item.spellIcon)
+        end
+    end
+    return item.icon or nil
+end
+
+local function HideCtxFromLevel(level)
+    for i = level, MAX_CTX_LEVELS do
+        if ctxFrames[i] then ctxFrames[i]:Hide() end
+    end
+    if level <= 1 and ctxClickaway then ctxClickaway:Hide() end
+end
+
+local function EnsureCtxClickaway()
+    if ctxClickaway then return end
+    ctxClickaway = CreateFrame("Frame", nil, UIParent)
+    ctxClickaway:SetAllPoints(UIParent)
+    ctxClickaway:SetFrameStrata("FULLSCREEN")
+    ctxClickaway:EnableMouse(true)
+    ctxClickaway:Hide()
+    ctxClickaway:SetScript("OnMouseDown", function() HideCtxFromLevel(1) end)
+end
+
+local function GetOrCreateCtxFrame(level)
+    if ctxFrames[level] then return ctxFrames[level] end
+    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    f:SetFrameStrata("TOOLTIP")
+    f:SetFrameLevel(200 + level * 5)
+    f:Hide()
+    f:SetBackdrop({
+        bgFile   = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Buttons\WHITE8x8]],
+        edgeSize = 1,
+        tile     = true,
+        tileSize = 64,
+    })
+    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+    f._rows = {}
+    ctxFrames[level] = f
+    return f
+end
+
+local ShowContextAtLevel
+
+ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
+    HideCtxFromLevel(level + 1)
+    EnsureCtxClickaway()
+
+    local f         = GetOrCreateCtxFrame(level)
+    local baseLevel = f:GetFrameLevel()
+
+    -- ── Width ────────────────────────────────────────────────────
+    if not width then
+        local hasIcon, hasSubmenu = false, false
+        local maxW = 0
+        for _, item in ipairs(items) do
+            local t = item.type
+            if t == "button" or t == "submenu" then
+                local w = CtxMeasureText(item.label or "")
+                if w > maxW then maxW = w end
+                if ResolveCtxIcon(item) then hasIcon = true end
+                if t == "submenu" then hasSubmenu = true end
+            elseif t == "label" then
+                local w = CtxMeasureText(item.text or "")
+                if w > maxW then maxW = w end
+            end
+        end
+        local iconW  = hasIcon    and (CTX_ICON_SZ + CTX_ICON_GAP) or 0
+        local arrowW = hasSubmenu and CTX_ARROW_W                   or 0
+        width = math.max(math.ceil(maxW) + CTX_PAD_H * 2 + iconW + arrowW, 100)
+    end
+
+    -- ── Height ───────────────────────────────────────────────────
+    local totalH = 4   -- 2px inner padding top + bottom
+    for _, item in ipairs(items) do
+        if     item.type == "separator" then totalH = totalH + CTX_SEP_H
+        elseif item.type == "label"     then totalH = totalH + CTX_LABEL_H
+        else                                 totalH = totalH + CTX_ROW_H
+        end
+    end
+
+    f:SetSize(width, totalH)
+
+    -- ── Position with four-way edge-flip ─────────────────────────
+    local screenW = GetScreenWidth()
+    local flipX   = xNormal + width  > screenW
+    local flipY   = yTop    - totalH < 0
+    local anchorX = flipX and xFlip or xNormal
+    local framePt = (flipY and "BOTTOM" or "TOP") .. (flipX and "RIGHT" or "LEFT")
+    f:ClearAllPoints()
+    f:SetPoint(framePt, UIParent, "BOTTOMLEFT", anchorX, yTop)
+
+    -- ── Row pool helper ──────────────────────────────────────────
+    local rowPool = f._rows
+    local function GetRow(i)
+        if rowPool[i] then return rowPool[i] end
+
+        local row = CreateFrame("Button", nil, f)
+        row:SetFrameLevel(baseLevel + 2)
+
+        local hoverBg = CreateFrame("Frame", nil, row)
+        hoverBg:SetAllPoints(row)
+        hoverBg:SetFrameLevel(baseLevel + 3)
+        hoverBg:EnableMouse(false)
+        local ht = hoverBg:CreateTexture(nil, "BACKGROUND")
+        ht:SetAllPoints()
+        ht:SetColorTexture(unpack(STYLE.hover_color))
+        hoverBg:SetAlpha(0)
+        row.hoverBg = hoverBg
+
+        local sepTex = row:CreateTexture(nil, "ARTWORK")
+        sepTex:SetColorTexture(0, 1, 1, 0.15)
+        sepTex:SetHeight(1)
+        row.sepTex = sepTex
+
+        local iconFrame = CreateFrame("Frame", nil, row)
+        iconFrame:SetSize(CTX_ICON_SZ, CTX_ICON_SZ)
+        iconFrame:SetFrameLevel(baseLevel + 4)
+        iconFrame:EnableMouse(false)
+        local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
+        iconTex:SetAllPoints()
+        row.iconFrame = iconFrame
+        row.iconTex   = iconTex
+
+        local labelFS = MakeFontString(row, 13)
+        labelFS:SetJustifyH("LEFT")
+        labelFS:SetJustifyV("MIDDLE")
+        row.labelFS = labelFS
+
+        local arrowTex = row:CreateTexture(nil, "ARTWORK")
+        arrowTex:SetSize(8, 8)
+        arrowTex:SetPoint("RIGHT", row, "RIGHT", -(CTX_PAD_H - 2), 0)
+        arrowTex:SetTexture(ICON_PATH .. "chevron-right.png")
+        arrowTex:SetVertexColor(0.6, 0.6, 0.6, 1)
+        row.arrowTex = arrowTex
+
+        rowPool[i] = row
+        return row
+    end
+
+    -- ── Build rows ───────────────────────────────────────────────
+    local curY     = -2
+    local rowCount = 0
+
+    for _, item in ipairs(items) do
+        rowCount = rowCount + 1
+        local row   = GetRow(rowCount)
+        local itype = item.type
+
+        row.hoverBg:SetAlpha(0)
+        row.sepTex:Hide()
+        row.iconFrame:Hide()
+        row.arrowTex:Hide()
+        row.labelFS:SetText("")
+        row:SetScript("OnEnter", nil)
+        row:SetScript("OnLeave", nil)
+        row:SetScript("OnClick", nil)
+        row:EnableMouse(false)
+
+        if itype == "separator" then
+            row:SetSize(width, CTX_SEP_H)
+            row:SetPoint("TOPLEFT", f, "TOPLEFT", 0, curY)
+            row.sepTex:ClearAllPoints()
+            row.sepTex:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H, 0)
+            row.sepTex:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
+            row.sepTex:Show()
+            curY = curY - CTX_SEP_H
+
+        elseif itype == "label" then
+            row:SetSize(width, CTX_LABEL_H)
+            row:SetPoint("TOPLEFT", f, "TOPLEFT", 0, curY)
+            row.labelFS:SetTextColor(0.55, 0.55, 0.55, 1)
+            row.labelFS:SetText(item.text or "")
+            row.labelFS:ClearAllPoints()
+            row.labelFS:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H,  0)
+            row.labelFS:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
+            row.labelFS:SetHeight(CTX_LABEL_H)
+            curY = curY - CTX_LABEL_H
+
+        elseif itype == "button" or itype == "submenu" then
+            row:SetSize(width, CTX_ROW_H)
+            row:SetPoint("TOPLEFT", f, "TOPLEFT", 0, curY)
+            row:EnableMouse(true)
+
+            local tex   = ResolveCtxIcon(item)
+            local leftX = CTX_PAD_H
+            if tex then
+                row.iconTex:SetTexture(tex)
+                row.iconFrame:ClearAllPoints()
+                row.iconFrame:SetPoint("LEFT", row, "LEFT", CTX_PAD_H, 0)
+                row.iconFrame:Show()
+                leftX = CTX_PAD_H + CTX_ICON_SZ + CTX_ICON_GAP
+            end
+
+            local rightX = -CTX_PAD_H
+            if itype == "submenu" then
+                row.arrowTex:Show()
+                rightX = -(CTX_PAD_H + CTX_ARROW_W - 4)
+            end
+
+            row.labelFS:SetTextColor(1, 1, 1, 1)
+            row.labelFS:SetText(item.label or "")
+            row.labelFS:ClearAllPoints()
+            row.labelFS:SetPoint("LEFT",  row, "LEFT",  leftX,  0)
+            row.labelFS:SetPoint("RIGHT", row, "RIGHT", rightX, 0)
+            row.labelFS:SetHeight(CTX_ROW_H)
+
+            if itype == "button" then
+                row:SetScript("OnEnter", function()
+                    HideCtxFromLevel(level + 1)
+                    UIFrameFadeIn(row.hoverBg, STYLE.hover_in, row.hoverBg:GetAlpha(), 1)
+                end)
+                row:SetScript("OnLeave", function()
+                    UIFrameFadeOut(row.hoverBg, STYLE.hover_out, row.hoverBg:GetAlpha(), 0)
+                end)
+                if item.fnc then
+                    row:SetScript("OnClick", function()
+                        HideCtxFromLevel(1)
+                        item.fnc()
+                    end)
+                end
+            else -- submenu
+                local subItems = item.items or {}
+                row:SetScript("OnEnter", function()
+                    UIFrameFadeIn(row.hoverBg, STYLE.hover_in, row.hoverBg:GetAlpha(), 1)
+                    row.arrowTex:SetVertexColor(0, 1, 1, 1)
+                    local rRight = row:GetRight()
+                    local rLeft  = row:GetLeft()
+                    local rTop   = row:GetTop()
+                    if rRight and rTop then
+                        ShowContextAtLevel(subItems, level + 1, rRight + 2, rLeft - 2, rTop, nil)
+                    end
+                end)
+                row:SetScript("OnLeave", function()
+                    UIFrameFadeOut(row.hoverBg, STYLE.hover_out, row.hoverBg:GetAlpha(), 0)
+                    row.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 1)
+                end)
+            end
+
+            curY = curY - CTX_ROW_H
+        end
+
+        row:Show()
+    end
+
+    for i = rowCount + 1, #rowPool do rowPool[i]:Hide() end
+
+    f:Show()
+    if level == 1 then ctxClickaway:Show() end
+end
+
+local function ShowContextMenu(items, width)
+    EnsureCtxClickaway()
+    local scale  = UIParent:GetEffectiveScale()
+    local cx, cy = GetCursorPosition()
+    local uiX    = cx / scale
+    local uiY    = cy / scale
+    ShowContextAtLevel(items, 1, uiX, uiX, uiY, width)
+end
+
+-- ============================================================
+--  CreateLink
+--
+--  A button that opens a small copy-popup when clicked.
+--  The popup contains the url pre-selected in a focused
+--  EditBox; pressing Ctrl+C copies and closes the popup.
+--  Escape or clicking outside also closes it.
+--
+--  Params
+--    parent – WoW frame
+--    label  – button display text
+--    url    – text placed in the copy box
+--    width  – number (nil = auto from label)
+--    height – number (default 22)
+--    name   – optional global frame name
+--
+--  Returned object – same interface as CreateButton
+-- ============================================================
+local LINK_POPUP_W = 300
+local LINK_POPUP_H = 64
+local LINK_PAD     = 8
+
+local linkPopup
+
+local function EnsureLinkPopup()
+    if linkPopup then return end
+
+    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    f:SetSize(LINK_POPUP_W, LINK_POPUP_H)
+    f:SetFrameStrata("TOOLTIP")
+    f:SetMovable(true)
+    f:SetClampedToScreen(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStop",  function(self) self:StopMovingOrSizing() end)
+    f:Hide()
+    f:SetBackdrop({
+        bgFile   = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Buttons\WHITE8x8]],
+        edgeSize = 1,
+        tile     = true,
+        tileSize = 64,
+    })
+    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+
+    -- Hint label
+    local hint = MakeFontString(f, 11)
+    hint:SetTextColor(0.45, 0.45, 0.45, 1)
+    hint:SetText("Press Ctrl+C to copy")
+    hint:SetJustifyH("LEFT")
+    hint:SetPoint("TOPLEFT", f, "TOPLEFT", LINK_PAD, -LINK_PAD)
+
+    -- Input frame (same dark-box + focus-border pattern as CreateTextEntry)
+    local inputFrame = CreateFrame("Frame", nil, f, "BackdropTemplate")
+    inputFrame:SetPoint("TOPLEFT",     f, "TOPLEFT",     LINK_PAD,  -(LINK_PAD + 18 + 4))
+    inputFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -LINK_PAD, LINK_PAD)
+    inputFrame:SetFrameLevel(f:GetFrameLevel() + 1)
+    MakeControlBackdrop(inputFrame)
+
+    local focusBorder = CreateFrame("Frame", nil, inputFrame, "BackdropTemplate")
+    focusBorder:SetAllPoints(inputFrame)
+    focusBorder:SetFrameLevel(inputFrame:GetFrameLevel() + 1)
+    focusBorder:EnableMouse(false)
+    focusBorder:SetBackdrop({ edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
+    focusBorder:SetBackdropBorderColor(0, 1, 1, 0)
+
+    local edit = CreateFrame("EditBox", nil, inputFrame)
+    edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4, -2)
+    edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
+    edit:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), 12,
+        NSRT.Settings.GlobalFontFlags or "")
+    edit:SetTextColor(1, 1, 1, 1)
+    edit:SetAutoFocus(false)
+    edit:SetMultiLine(false)
+    edit:SetJustifyH("CENTER")
+    edit:SetJustifyV("MIDDLE")
+
+    edit:SetScript("OnEditFocusGained", function()
+        edit:HighlightText()
+        UIFrameFadeIn(focusBorder, STYLE.select_in, focusBorder:GetAlpha(), 1)
+    end)
+    edit:SetScript("OnEditFocusLost", function()
+        UIFrameFadeOut(focusBorder, STYLE.deselect_out, focusBorder:GetAlpha(), 0)
+    end)
+    edit:SetScript("OnEscapePressed", function() f:Hide() end)
+    edit:SetScript("OnKeyDown", function(_, key)
+        if key == "C" and IsControlKeyDown() then
+            C_Timer.After(0, function() f:Hide() end)
+        end
+    end)
+
+    linkPopup = { frame = f, edit = edit }
+end
+
+local function ShowLinkPopup(url, anchorFrame)
+    EnsureLinkPopup()
+
+    linkPopup.edit:SetText(url or "")
+
+    local f      = linkPopup.frame
+    local anchor = (NSI.UI.Core and NSI.UI.Core.NSUI) or UIParent
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", anchor, "CENTER")
+
+    f:Show()
+    linkPopup.edit:SetFocus()
+    linkPopup.edit:HighlightText()
+end
+
+local function CreateLink(parent, label, url, width, height, name)
+    local btn
+    btn = CreateButton(parent, label, function()
+        ShowLinkPopup(url, btn.frame)
+    end, width, height, name)
+    return btn
 end
 
 -- ============================================================
@@ -1416,9 +2087,14 @@ NSI.UI.Components = {
     CreateColorPicker   = CreateColorPicker,
     CreateLabel         = CreateLabel,
     CreateBreakline     = CreateBreakline,
-    CreateScrollBox   = CreateScrollBox,
+    CreateScrollBox     = CreateScrollBox,
+    ReskinScrollbar     = ReskinScrollbar,
     BuildWidgets        = BuildWidgets,
     RefreshFonts        = RefreshFonts,
+    CreateDialog        = CreateDialog,
+    ShowContextMenu     = ShowContextMenu,
+    CreateLink          = CreateLink,
     STYLE               = STYLE,
-    registry          = componentRegistry,
+    registry            = componentRegistry,
+    Dialogs             = Dialogs,
 }

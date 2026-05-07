@@ -5,11 +5,14 @@ local Core                      = NSI.UI.Core
 local NSUI                      = Core.NSUI
 local content_width             = Core.content_width
 local tab_content_height        = Core.tab_content_height
-local options_dropdown_template = Core.options_dropdown_template
 
-local CreateButton    = NSI.UI.Components.CreateButton
-local CreateSubButton = NSI.UI.Components.CreateSubButton
-local BossData        = NSI.UI.BossData
+local CreateButton      = NSI.UI.Components.CreateButton
+local CreateSubButton   = NSI.UI.Components.CreateSubButton
+local CreateDropdown    = NSI.UI.Components.CreateDropdown
+local CreateTextEntry   = NSI.UI.Components.CreateTextEntry
+local CreateCheckButton = NSI.UI.Components.CreateCheckButton
+local ReskinScrollbar   = NSI.UI.Components.ReskinScrollbar
+local BossData          = NSI.UI.BossData
 
 -- ============================================================================
 -- WoW class constants
@@ -83,8 +86,16 @@ local function BuildBossRemindersUI(parentFrame)
     local bossDDWidth = 134
     local diffDDWidth = leftWidth - pad * 2 - bossDDWidth - 6   -- 80
 
-    local filterDD = DF:CreateDropDown(screen, BuildFilterOptions, nil, bossDDWidth, 22, nil,
-        "NSUIEncAlertFilter", options_dropdown_template)
+    local function getFilterBossSelected()
+        if not filterEncID then return "All Bosses" end
+        for _, opt in ipairs(BossData.BuildBossDropdownOptions(nil, false)) do
+            if opt.value == filterEncID then return opt.label end
+        end
+        return tostring(filterEncID)
+    end
+
+    local filterDD = CreateDropdown(screen, nil, BuildFilterOptions, getFilterBossSelected,
+        bossDDWidth, 22, "NSUIEncAlertFilter")
     filterDD:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20)
 
     local function BuildDiffOptions()
@@ -101,16 +112,20 @@ local function BuildBossRemindersUI(parentFrame)
         }
     end
 
-    local diffDD = DF:CreateDropDown(screen, BuildDiffOptions, nil, diffDDWidth, 22, nil,
-        "NSUIEncAlertDiffFilter", options_dropdown_template)
-    diffDD:SetPoint("TOPLEFT", filterDD, "TOPRIGHT", 6, 0)
-    diffDD:Select(16)
+    local function getDiffSelected()
+        local names = { [16] = "M", [15] = "H", [14] = "N" }
+        return names[filterDiffID] or tostring(filterDiffID)
+    end
+
+    local diffDD = CreateDropdown(screen, nil, BuildDiffOptions, getDiffSelected,
+        diffDDWidth, 22, "NSUIEncAlertDiffFilter")
+    diffDD:SetPoint("TOPLEFT", filterDD.frame, "TOPRIGHT", 6, 0)
 
     -- ── Search bar ──────────────────────────────────────────────────────────
-    local searchEntry = DF:CreateTextEntry(screen, function() end, leftWidth - pad * 2, 22, nil,
-        "NSUIEncAlertSearch", nil, options_dropdown_template)
+    local searchEntry = CreateTextEntry(screen, nil, nil, nil, leftWidth - pad * 2, 22,
+        nil, nil, nil, "NSUIEncAlertSearch")
     searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4)
-    searchEntry.editbox:SetScript("OnTextChanged", function(self)
+    searchEntry.editBox:SetScript("OnTextChanged", function(self)
         searchText = self:GetText()
         if screen.RebuildList then screen.RebuildList() end
     end)
@@ -124,10 +139,10 @@ local function BuildBossRemindersUI(parentFrame)
         "UIPanelScrollFrameTemplate")
     listScroll:SetSize(listW, scrollHeight)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
-    DF:ReskinSlider(listScroll)
+    ReskinScrollbar(listScroll)
 
     local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
-    listChild:SetSize(listW - 18, 1)   -- 18px for the native scrollbar
+    listChild:SetSize(listW, 1)   -- 18px for the native scrollbar
     listChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
     listChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
@@ -144,19 +159,27 @@ local function BuildBossRemindersUI(parentFrame)
         row.__background:SetVertexColor(0.4, 0.4, 0.4)
         row.__background:SetAlpha(0.5)
 
+        -- Enabled toggle checkbox using the shared component
+        local cb = CreateCheckButton(row, "", nil, nil, 14, 14)
+        cb:SetPoint("LEFT", row, "LEFT", 3, 0)
+        cb.frame:HookScript("OnClick", function()
+            if screen.RebuildList then screen.RebuildList() end
+        end)
+        row.enabledCB = cb
+
         row.bossIcon = row:CreateTexture(nil, "ARTWORK")
         row.bossIcon:SetSize(16, 16)
-        row.bossIcon:SetPoint("LEFT", row, "LEFT", 3, 0)
+        row.bossIcon:SetPoint("LEFT", cb.frame, "RIGHT", 4, 0)
         row.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 
-        
+
         row.nameLabel = row:CreateFontString(nil, "OVERLAY")
         row.nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
         row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
         row.nameLabel:SetPoint("RIGHT", row, "RIGHT", -22, 0)
         row.nameLabel:SetJustifyH("LEFT")
         row.nameLabel:SetWordWrap(false)
-        
+
         -- Lock icon for hardcoded rows
         row.lockIcon = row:CreateTexture(nil, "ARTWORK")
         row.lockIcon:SetSize(14, 14)
@@ -311,9 +334,36 @@ local function BuildBossRemindersUI(parentFrame)
                     row.bossIcon:Hide()
                 end
                 row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
-                
+
                 row.nameLabel:SetText(name)
                 row.nameLabel:SetTextColor(1, 1, 1, isEnabled and 1 or 0.45)
+
+                -- Enabled checkbox: sync state then wire handler
+                row.enabledCB:SetValue(isEnabled)
+
+                if isReloe then
+                    local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
+                    row.enabledCB:SetOnChange(function(v)
+                        local e = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+                                   and NSRT.EncounterAlerts[eid][did]
+                                   and NSRT.EncounterAlerts[eid][did][akey]
+                        if e then
+                            e.enabled = v
+                            if selectedReloeEncID == eid and selectedReloeDiffID == did and selectedReloeKey == akey then
+                                enabledCB:SetValue(v)
+                            end
+                        end
+                    end)
+                else
+                    local alert = entry.alert
+                    local ri    = entry.realIndex
+                    row.enabledCB:SetOnChange(function(v)
+                        alert.enabled = v
+                        if selectedIndex == ri then
+                            enabledCB:SetValue(v)
+                        end
+                    end)
+                end
 
                 -- Delete button: hidden for reloeCreated rows
                 if isReloe then
@@ -337,15 +387,17 @@ local function BuildBossRemindersUI(parentFrame)
                     end)
                 end
 
-                -- Click to select
+                -- Click to select (skip when clicking the enabled checkbox)
                 if isReloe then
                     local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
                     row:SetScript("OnMouseDown", function()
+                        if row.enabledCB.frame:IsMouseOver() then return end
                         SelectReloeCreatedAlert(eid, did, akey)
                     end)
                 else
                     local ri = entry.realIndex
                     row:SetScript("OnMouseDown", function()
+                        if row.enabledCB.frame:IsMouseOver() then return end
                         SelectAlert(ri)
                     end)
                 end
@@ -407,20 +459,13 @@ local function BuildBossRemindersUI(parentFrame)
     nameLbl:SetText("Alert Name")
     nameLbl:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
 
-    local nameEntry = DF:CreateTextEntry(rightPanel, function() end, rightW - 110, 22, nil,
-        "NSUIEncAlertNameEntry", nil, options_dropdown_template)
+    local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightW - 110, 22,
+        nil, nil, nil, "NSUIEncAlertNameEntry")
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -14)
 
-    local enabledCB = CreateFrame("CheckButton", "NSUIEncAlertEnabled", rightPanel,
-        "UICheckButtonTemplate")
-    enabledCB:SetSize(22, 22)
-    enabledCB:SetPoint("LEFT", nameEntry.widget, "RIGHT", 8, 0)
-
-    local enabledLbl = rightPanel:CreateFontString(nil, "OVERLAY")
-    enabledLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
-    enabledLbl:SetTextColor(0.7, 0.7, 0.7, 1)
-    enabledLbl:SetText("Enabled")
-    enabledLbl:SetPoint("LEFT", enabledCB, "RIGHT", 2, 0)
+    local enabledCB = CreateCheckButton(rightPanel, "Enabled",
+        function() return false end, nil, 90, 22, "NSUIEncAlertEnabled")
+    enabledCB:SetPoint("LEFT", nameEntry.frame, "RIGHT", 8, 0)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local INNER_TABS     = { "Display", "Trigger", "Sound", "Load", "Options" }
@@ -451,7 +496,6 @@ local function BuildBossRemindersUI(parentFrame)
     innerTabBtns["Options"].frame:Hide()
 
     -- ── Preview button — right-aligned on the tab row ────────────────────────
-    -- (PreviewAlert body defined below, after dispF / sndF are in scope)
     local previewBtn = CreateButton(rightPanel, "Preview", function() PreviewAlert() end, 80, 18,
         "NSUIEncAlertPreview")
     previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY)
@@ -500,7 +544,6 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     local dispF = innerTabFrames["Display"]
 
-    -- (dispHint kept as a local so SetCustomMode/SetReloeCreatedMode can reference it)
     local dispHint = dispF:CreateFontString(nil, "OVERLAY")
     dispHint:Hide()
 
@@ -536,15 +579,15 @@ local function BuildBossRemindersUI(parentFrame)
     textLbl:SetText("Display Text")
     textLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -46)
 
-    local textEntry = DF:CreateTextEntry(dispF, function() end, rightW, 22, nil,
-        "NSUIEncAlertDisplayText", nil, options_dropdown_template)
+    local textEntry = CreateTextEntry(dispF, nil, nil, nil, rightW, 22,
+        nil, nil, nil, "NSUIEncAlertDisplayText")
     textEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -62)
     local function SaveDispText(self)
         local v = self:GetText()
         if dispF._alert then dispF._alert.text = v end
     end
-    textEntry.editbox:SetScript("OnEnterPressed", function(self) SaveDispText(self); self:ClearFocus() end)
-    textEntry.editbox:SetScript("OnEditFocusLost", SaveDispText)
+    textEntry.editBox:SetScript("OnEnterPressed", function(self) SaveDispText(self); self:ClearFocus() end)
+    textEntry.editBox:SetScript("OnEditFocusLost", SaveDispText)
     dispF.textEntry = textEntry
 
     local spellLbl = dispF:CreateFontString(nil, "OVERLAY")
@@ -553,15 +596,15 @@ local function BuildBossRemindersUI(parentFrame)
     spellLbl:SetText("Spell ID  (optional — drives bar / icon texture)")
     spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -94)
 
-    local spellEntry = DF:CreateTextEntry(dispF, function() end, 130, 22, nil,
-        "NSUIEncAlertSpellID", nil, options_dropdown_template)
+    local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
+        nil, nil, nil, "NSUIEncAlertSpellID")
     spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -110)
     local function SaveSpellID(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then dispF._alert.spellID = v end
     end
-    spellEntry.editbox:SetScript("OnEnterPressed", function(self) SaveSpellID(self); self:ClearFocus() end)
-    spellEntry.editbox:SetScript("OnEditFocusLost", SaveSpellID)
+    spellEntry.editBox:SetScript("OnEnterPressed", function(self) SaveSpellID(self); self:ClearFocus() end)
+    spellEntry.editBox:SetScript("OnEditFocusLost", SaveSpellID)
     dispF.spellEntry = spellEntry
 
     local durLbl = dispF:CreateFontString(nil, "OVERLAY")
@@ -570,15 +613,15 @@ local function BuildBossRemindersUI(parentFrame)
     durLbl:SetText("Duration  (seconds the alert is visible)")
     durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -142)
 
-    local durEntry = DF:CreateTextEntry(dispF, function() end, 80, 22, nil,
-        "NSUIEncAlertDuration", nil, options_dropdown_template)
+    local durEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
+        nil, nil, nil, "NSUIEncAlertDuration")
     durEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -158)
     local function SaveDur(self)
         local v = tonumber(self:GetText())
         if dispF._alert then dispF._alert.dur = v or 8 end
     end
-    durEntry.editbox:SetScript("OnEnterPressed", function(self) SaveDur(self); self:ClearFocus() end)
-    durEntry.editbox:SetScript("OnEditFocusLost", SaveDur)
+    durEntry.editBox:SetScript("OnEnterPressed", function(self) SaveDur(self); self:ClearFocus() end)
+    durEntry.editBox:SetScript("OnEditFocusLost", SaveDur)
     dispF.durEntry = durEntry
 
     -- ================================================================
@@ -601,8 +644,16 @@ local function BuildBossRemindersUI(parentFrame)
         end, "Any Boss")
     end
 
-    local trigBossDD = DF:CreateDropDown(trigF, BuildTrigBossOptions, nil, 200, 22, nil,
-        "NSUIEncAlertTrigBoss", options_dropdown_template)
+    local function getTrigBossSelected()
+        if not trigF._alert or not trigF._alert.encID then return "Any Boss" end
+        for _, opt in ipairs(BossData.BuildBossDropdownOptions(nil, false)) do
+            if opt.value == trigF._alert.encID then return opt.label end
+        end
+        return tostring(trigF._alert.encID)
+    end
+
+    local trigBossDD = CreateDropdown(trigF, nil, BuildTrigBossOptions, getTrigBossSelected,
+        200, 22, "NSUIEncAlertTrigBoss")
     trigBossDD:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -18)
     trigF.bossDD = trigBossDD
 
@@ -612,16 +663,16 @@ local function BuildBossRemindersUI(parentFrame)
     phaseLbl:SetText("Phase")
     phaseLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -50)
 
-    local phaseEntry = DF:CreateTextEntry(trigF, function() end, 60, 22, nil,
-        "NSUIEncAlertPhase", nil, options_dropdown_template)
+    local phaseEntry = CreateTextEntry(trigF, nil, nil, nil, 60, 22,
+        nil, nil, nil, "NSUIEncAlertPhase")
     phaseEntry:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -66)
-    phaseEntry.editbox:SetScript("OnEnterPressed", function(self)
+    phaseEntry.editBox:SetScript("OnEnterPressed", function(self)
         if trigF._alert then
             trigF._alert.phase = math.max(1, math.floor(tonumber(self:GetText()) or 1))
         end
         self:ClearFocus()
     end)
-    phaseEntry.editbox:SetScript("OnEditFocusLost", function(self)
+    phaseEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if trigF._alert then
             trigF._alert.phase = math.max(1, math.floor(tonumber(self:GetText()) or 1))
         end
@@ -642,7 +693,7 @@ local function BuildBossRemindersUI(parentFrame)
         "UIPanelScrollFrameTemplate")
     timesScroll:SetSize(timesListW, timesListH)
     timesScroll:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -114)
-    DF:ReskinSlider(timesScroll)
+    ReskinScrollbar(timesScroll)
 
     local timesChild = CreateFrame("Frame", nil, timesScroll, "BackdropTemplate")
     timesChild:SetSize(timesListW - 18, 1)
@@ -710,13 +761,13 @@ local function BuildBossRemindersUI(parentFrame)
     addTimeLbl:SetText("Add time (s)")
     addTimeLbl:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -4)
 
-    local addTimeEntry = DF:CreateTextEntry(trigF, function() end, 90, 22, nil,
-        "NSUIEncAlertAddTime", nil, options_dropdown_template)
+    local addTimeEntry = CreateTextEntry(trigF, nil, nil, nil, 90, 22,
+        nil, nil, nil, "NSUIEncAlertAddTime")
     addTimeEntry:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -20)
     trigF.addTimeEntry = addTimeEntry
 
     local function DoAddTime()
-        local v = tonumber(addTimeEntry:GetText())
+        local v = tonumber(addTimeEntry:GetValue())
         if v and trigF._alert then
             trigF._alert.times = trigF._alert.times or {}
             local inserted = false
@@ -728,19 +779,19 @@ local function BuildBossRemindersUI(parentFrame)
                 end
             end
             if not inserted then table.insert(trigF._alert.times, v) end
-            addTimeEntry:SetText("")
+            addTimeEntry:SetValue("")
             RebuildTimeRows()
         end
     end
 
-    addTimeEntry.editbox:SetScript("OnEnterPressed", function(self)
+    addTimeEntry.editBox:SetScript("OnEnterPressed", function(self)
         DoAddTime()
         self:ClearFocus()
     end)
 
     local addTimeBtn = CreateSubButton(trigF, "Add", DoAddTime, 54,
         "NSUIEncAlertAddTimeBtn")
-    addTimeBtn:SetPoint("LEFT", addTimeEntry.widget, "RIGHT", 6, 0)
+    addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
 
     -- Lock overlay for Trigger tab (shown when hardcoded boss is selected)
     trigF.lockOverlay = MakeLockOverlay(trigF,
@@ -751,29 +802,23 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     local sndF = innerTabFrames["Sound"]
 
-    -- (sndHint kept as a local so SetCustomMode/SetReloeCreatedMode can reference it)
     local sndHint = sndF:CreateFontString(nil, "OVERLAY")
     sndHint:Hide()
 
-    local ttsCB = CreateFrame("CheckButton", "NSUIEncAlertTTSCB", sndF, "UICheckButtonTemplate")
-    ttsCB:SetSize(22, 22)
+    local ttsCB = CreateCheckButton(sndF, "Enable Text-to-Speech",
+        function() return false end,
+        function(v)
+            if not sndF._alert then return end
+            if sndF._reloeMode then
+                local txt = sndF.ttsTextEntry and sndF.ttsTextEntry:GetValue() or ""
+                sndF._alert.TTS = v and ((txt ~= "") and txt or true) or false
+            else
+                sndF._alert.TTSEnabled = v
+            end
+        end,
+        rightW, 22, "NSUIEncAlertTTSCB")
     ttsCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -4)
-    ttsCB:SetScript("OnClick", function(self)
-        if not sndF._alert then return end
-        if sndF._reloeMode then
-            local v = sndF.ttsTextEntry:GetText()
-            sndF._alert.TTS = self:GetChecked() and ((v ~= "") and v or true) or false
-        else
-            sndF._alert.TTSEnabled = self:GetChecked()
-        end
-    end)
     sndF.ttsCB = ttsCB
-
-    local ttsToggleLbl = sndF:CreateFontString(nil, "OVERLAY")
-    ttsToggleLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
-    ttsToggleLbl:SetTextColor(0.7, 0.7, 0.7, 1)
-    ttsToggleLbl:SetText("Enable Text-to-Speech")
-    ttsToggleLbl:SetPoint("LEFT", ttsCB, "RIGHT", 4, 0)
 
     local ttsTextLbl = sndF:CreateFontString(nil, "OVERLAY")
     ttsTextLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
@@ -781,8 +826,8 @@ local function BuildBossRemindersUI(parentFrame)
     ttsTextLbl:SetText("TTS Text  (leave blank to speak the Display Text)")
     ttsTextLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -34)
 
-    local ttsTextEntry = DF:CreateTextEntry(sndF, function() end, rightW, 22, nil,
-        "NSUIEncAlertTTSText", nil, options_dropdown_template)
+    local ttsTextEntry = CreateTextEntry(sndF, nil, nil, nil, rightW, 22,
+        nil, nil, nil, "NSUIEncAlertTTSText")
     ttsTextEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -50)
     local function SaveTTSText(self)
         local v = self:GetText()
@@ -795,8 +840,8 @@ local function BuildBossRemindersUI(parentFrame)
             sndF._alert.TTSText = v
         end
     end
-    ttsTextEntry.editbox:SetScript("OnEnterPressed", function(self) SaveTTSText(self); self:ClearFocus() end)
-    ttsTextEntry.editbox:SetScript("OnEditFocusLost", SaveTTSText)
+    ttsTextEntry.editBox:SetScript("OnEnterPressed", function(self) SaveTTSText(self); self:ClearFocus() end)
+    ttsTextEntry.editBox:SetScript("OnEditFocusLost", SaveTTSText)
     sndF.ttsTextEntry = ttsTextEntry
 
     local ttsTimerLbl = sndF:CreateFontString(nil, "OVERLAY")
@@ -805,51 +850,46 @@ local function BuildBossRemindersUI(parentFrame)
     ttsTimerLbl:SetText("TTS Timer  (seconds — when TTS fires, on the same timeline as trigger time)")
     ttsTimerLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -82)
 
-    local ttsTimerEntry = DF:CreateTextEntry(sndF, function() end, 80, 22, nil,
-        "NSUIEncAlertTTSTimer", nil, options_dropdown_template)
+    local ttsTimerEntry = CreateTextEntry(sndF, nil, nil, nil, 80, 22,
+        nil, nil, nil, "NSUIEncAlertTTSTimer")
     ttsTimerEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -98)
     local function SaveTTSTimer(self)
         local v = tonumber(self:GetText())
         if sndF._alert then sndF._alert.TTSTimer = v or 8 end
     end
-    ttsTimerEntry.editbox:SetScript("OnEnterPressed", function(self) SaveTTSTimer(self); self:ClearFocus() end)
-    ttsTimerEntry.editbox:SetScript("OnEditFocusLost", SaveTTSTimer)
+    ttsTimerEntry.editBox:SetScript("OnEnterPressed", function(self) SaveTTSTimer(self); self:ClearFocus() end)
+    ttsTimerEntry.editBox:SetScript("OnEditFocusLost", SaveTTSTimer)
     sndF.ttsTimerEntry = ttsTimerEntry
 
-    local cdCB = CreateFrame("CheckButton", "NSUIEncAlertCDCB", sndF, "UICheckButtonTemplate")
-    cdCB:SetSize(22, 22)
+    local cdCB = CreateCheckButton(sndF, "Countdown for",
+        function() return false end,
+        function(v)
+            if sndF._alert then
+                local n = sndF.cdEntry and tonumber(sndF.cdEntry:GetValue()) or 5
+                sndF._alert.countdown = v and (n or 5) or false
+            end
+        end,
+        130, 22, "NSUIEncAlertCDCB")
     cdCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -130)
     sndF.cdCB = cdCB
 
-    local cdToggleLbl = sndF:CreateFontString(nil, "OVERLAY")
-    cdToggleLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
-    cdToggleLbl:SetTextColor(0.7, 0.7, 0.7, 1)
-    cdToggleLbl:SetText("Countdown for")
-    cdToggleLbl:SetPoint("LEFT", cdCB, "RIGHT", 4, 0)
-
-    local cdEntry = DF:CreateTextEntry(sndF, function() end, 60, 22, nil,
-        "NSUIEncAlertCountdown", nil, options_dropdown_template)
-    cdEntry:SetPoint("LEFT", cdToggleLbl, "RIGHT", 6, 0)
-    cdEntry:SetPoint("TOP",  cdCB, "TOP", 0, 0)
+    local cdEntry = CreateTextEntry(sndF, nil, nil, nil, 60, 22,
+        nil, nil, nil, "NSUIEncAlertCountdown")
+    cdEntry:SetPoint("LEFT", cdCB.frame, "RIGHT", 6, 0)
+    cdEntry:SetPoint("TOP",  cdCB.frame, "TOP", 0, 0)
     local function SaveCountdown(self)
         local v = tonumber(self:GetText())
         if sndF._alert then sndF._alert.countdown = (v and v > 0) and v or false end
     end
-    cdEntry.editbox:SetScript("OnEnterPressed", function(self) SaveCountdown(self); self:ClearFocus() end)
-    cdEntry.editbox:SetScript("OnEditFocusLost", SaveCountdown)
+    cdEntry.editBox:SetScript("OnEnterPressed", function(self) SaveCountdown(self); self:ClearFocus() end)
+    cdEntry.editBox:SetScript("OnEditFocusLost", SaveCountdown)
     sndF.cdEntry = cdEntry
 
     local cdSecLbl = sndF:CreateFontString(nil, "OVERLAY")
     cdSecLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     cdSecLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     cdSecLbl:SetText("seconds")
-    cdSecLbl:SetPoint("LEFT", cdEntry.widget, "RIGHT", 5, 0)
-
-    cdCB:SetScript("OnClick", function(self)
-        if sndF._alert then
-            sndF._alert.countdown = self:GetChecked() and (tonumber(cdEntry:GetText()) or 5) or false
-        end
-    end)
+    cdSecLbl:SetPoint("LEFT", cdEntry.frame, "RIGHT", 5, 0)
 
     -- ================================================================
     -- LOAD TAB
@@ -879,8 +919,15 @@ local function BuildBossRemindersUI(parentFrame)
         return opts
     end
 
-    local classDD = DF:CreateDropDown(loadF, BuildClassOptions, nil, 180, 22, nil,
-        "NSUIEncAlertClass", options_dropdown_template)
+    local function getClassSelected()
+        if not loadF._alert or not loadF._alert.loadClass or loadF._alert.loadClass == "" then
+            return "All Classes"
+        end
+        return CLASS_DISPLAY[loadF._alert.loadClass] or loadF._alert.loadClass
+    end
+
+    local classDD = CreateDropdown(loadF, nil, BuildClassOptions, getClassSelected,
+        180, 22, "NSUIEncAlertClass")
     classDD:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -18)
     loadF.classDD = classDD
 
@@ -907,8 +954,15 @@ local function BuildBossRemindersUI(parentFrame)
         return opts
     end
 
-    local specDD = DF:CreateDropDown(loadF, BuildSpecOptions, nil, 120, 22, nil,
-        "NSUIEncAlertSpec", options_dropdown_template)
+    local function getSpecSelected()
+        if not loadF._alert or not loadF._alert.loadSpec or loadF._alert.loadSpec == 0 then
+            return "All Specs"
+        end
+        return "Spec " .. loadF._alert.loadSpec
+    end
+
+    local specDD = CreateDropdown(loadF, nil, BuildSpecOptions, getSpecSelected,
+        120, 22, "NSUIEncAlertSpec")
     specDD:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -66)
     loadF.specDD = specDD
 
@@ -918,17 +972,17 @@ local function BuildBossRemindersUI(parentFrame)
     charLbl:SetText("Character Name  (exact match — leave blank for all)")
     charLbl:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -98)
 
-    local charEntry = DF:CreateTextEntry(loadF, function() end, 200, 22, nil,
-        "NSUIEncAlertChar", nil, options_dropdown_template)
+    local charEntry = CreateTextEntry(loadF, nil, nil, nil, 200, 22,
+        nil, nil, nil, "NSUIEncAlertChar")
     charEntry:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -114)
-    charEntry.editbox:SetScript("OnEnterPressed", function(self)
+    charEntry.editBox:SetScript("OnEnterPressed", function(self)
         if loadF._alert then
             local v = self:GetText()
             loadF._alert.loadCharacter = (v ~= "") and v or nil
         end
         self:ClearFocus()
     end)
-    charEntry.editbox:SetScript("OnEditFocusLost", function(self)
+    charEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if loadF._alert then
             local v = self:GetText()
             loadF._alert.loadCharacter = (v ~= "") and v or nil
@@ -965,6 +1019,7 @@ local function BuildBossRemindersUI(parentFrame)
         scrollObj:UpdateScrollBar()
         optionsContentFrame = scrollObj.frame
     end
+
     -- ================================================================
     -- Helper: set panel into custom-alert mode vs reloeCreated mode
     -- ================================================================
@@ -975,8 +1030,8 @@ local function BuildBossRemindersUI(parentFrame)
         dispHint:Hide()
         sndHint:Hide()
         sndF._reloeMode = false
-        nameEntry.editbox:SetEnabled(true)
-        nameEntry.editbox:SetAlpha(1)
+        nameEntry.editBox:SetEnabled(true)
+        nameEntry.editBox:SetAlpha(1)
         innerTabBtns["Options"].frame:Hide()
         if activeInnerTab == "Options" then activeInnerTab = "Display" end
     end
@@ -988,8 +1043,8 @@ local function BuildBossRemindersUI(parentFrame)
         dispHint:Hide()
         sndHint:Hide()
         sndF._reloeMode = true
-        nameEntry.editbox:SetEnabled(false)
-        nameEntry.editbox:SetAlpha(0.45)
+        nameEntry.editBox:SetEnabled(false)
+        nameEntry.editBox:SetAlpha(0.45)
     end
 
     -- ================================================================
@@ -1053,46 +1108,46 @@ local function BuildBossRemindersUI(parentFrame)
         loadF._alert = alert; loadF._hardcodedEncID = nil
 
         -- Header
-        nameEntry:SetText(alert.name or "")
-        enabledCB:SetChecked(alert.enabled and true or false)
+        nameEntry:SetValue(alert.name or "")
+        enabledCB:SetValue(alert.enabled and true or false)
 
-        nameEntry.editbox:SetScript("OnEnterPressed", function(self)
+        nameEntry.editBox:SetScript("OnEnterPressed", function(self)
             alert.name = self:GetText()
             self:ClearFocus()
             RebuildList()
         end)
-        nameEntry.editbox:SetScript("OnEditFocusLost", function(self)
+        nameEntry.editBox:SetScript("OnEditFocusLost", function(self)
             alert.name = self:GetText()
             RebuildList()
         end)
-        enabledCB:SetScript("OnClick", function(self)
-            alert.enabled = self:GetChecked()
+        enabledCB:SetOnChange(function(v)
+            alert.enabled = v
             RebuildList()
         end)
 
         -- Display tab
         dispF.SetDisplayType(alert.DisplayType or "Text")
-        dispF.textEntry:SetText(alert.text or "")
-        dispF.spellEntry:SetText(alert.spellID and tostring(alert.spellID) or "")
-        dispF.durEntry:SetText(tostring(alert.dur or 8))
+        dispF.textEntry:SetValue(alert.text or "")
+        dispF.spellEntry:SetValue(alert.spellID and tostring(alert.spellID) or "")
+        dispF.durEntry:SetValue(tostring(alert.dur or 8))
 
         -- Trigger tab
-        trigF.bossDD:Select(alert.encID or 0)
-        trigF.phaseEntry:SetText(tostring(alert.phase or 1))
+        trigF.bossDD:Refresh()
+        trigF.phaseEntry:SetValue(tostring(alert.phase or 1))
         trigF.RebuildTimeRows()
 
         -- Sound tab
-        sndF.ttsCB:SetChecked(alert.TTSEnabled and true or false)
-        sndF.ttsTextEntry:SetText(alert.TTSText or "")
-        sndF.ttsTimerEntry:SetText(tostring(alert.TTSTimer or 8))
+        sndF.ttsCB:SetValue(alert.TTSEnabled and true or false)
+        sndF.ttsTextEntry:SetValue(alert.TTSText or "")
+        sndF.ttsTimerEntry:SetValue(tostring(alert.TTSTimer or 8))
         local hasCD = alert.countdown and alert.countdown ~= false
-        sndF.cdCB:SetChecked(hasCD)
-        sndF.cdEntry:SetText(hasCD and tostring(alert.countdown) or "")
+        sndF.cdCB:SetValue(hasCD and true or false)
+        sndF.cdEntry:SetValue(hasCD and tostring(alert.countdown) or "")
 
         -- Load tab
-        loadF.classDD:Select(alert.loadClass or "")
-        loadF.specDD:Select(alert.loadSpec or 0)
-        loadF.charEntry:SetText(alert.loadCharacter or "")
+        loadF.classDD:Refresh()
+        loadF.specDD:Refresh()
+        loadF.charEntry:SetValue(alert.loadCharacter or "")
 
         RebuildList()
         SelectInnerTab(activeInnerTab)
@@ -1125,37 +1180,34 @@ local function BuildBossRemindersUI(parentFrame)
         loadF._alert = nil;   loadF._hardcodedEncID = nil
 
         -- Header: alert name (read-only)
-        nameEntry:SetText(ReloeAlertName(entry))
-        nameEntry.editbox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
-        nameEntry.editbox:SetScript("OnEditFocusLost", function() end)
+        nameEntry:SetValue(ReloeAlertName(entry))
+        nameEntry.editBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+        nameEntry.editBox:SetScript("OnEditFocusLost", function() end)
 
-        local alertName = entry.name or entry.text
-        enabledCB:SetChecked(entry.enabled and true or false)
-        enabledCB:SetScript("OnClick", function(self)
-            local val = self:GetChecked()
-            -- Toggle all diffID entries with matching name
-            entry.enabled = val
+        enabledCB:SetValue(entry.enabled and true or false)
+        enabledCB:SetOnChange(function(v)
+            entry.enabled = v
             RebuildList()
         end)
 
         -- Display tab: show stored values (editing locked by lock overlay)
         local dispType = entry.DisplayType
         dispF.SetDisplayType(dispType)
-        dispF.textEntry:SetText(entry.text or "")
-        dispF.spellEntry:SetText(entry.spellID and tostring(entry.spellID) or "")
-        dispF.durEntry:SetText(tostring(entry.dur or 8))
+        dispF.textEntry:SetValue(entry.text or "")
+        dispF.spellEntry:SetValue(entry.spellID and tostring(entry.spellID) or "")
+        dispF.durEntry:SetValue(tostring(entry.dur or 8))
 
         -- Trigger tab: inert (lock overlay shown)
         trigF.RebuildTimeRows()
 
         -- Sound tab
         local ttsActive = entry.TTS ~= false and entry.TTS ~= nil
-        sndF.ttsCB:SetChecked(ttsActive)
-        sndF.ttsTextEntry:SetText(type(entry.TTS) == "string" and entry.TTS or "")
-        sndF.ttsTimerEntry:SetText(tostring(entry.TTSTimer or entry.dur or 8))
+        sndF.ttsCB:SetValue(ttsActive)
+        sndF.ttsTextEntry:SetValue(type(entry.TTS) == "string" and entry.TTS or "")
+        sndF.ttsTimerEntry:SetValue(tostring(entry.TTSTimer or entry.dur or 8))
         local hasCD = entry.countdown and entry.countdown ~= false
-        sndF.cdCB:SetChecked(hasCD and true or false)
-        sndF.cdEntry:SetText(hasCD and tostring(entry.countdown) or "")
+        sndF.cdCB:SetValue(hasCD and true or false)
+        sndF.cdEntry:SetValue(hasCD and tostring(entry.countdown) or "")
 
         -- Options tab: show only when the entry defines extraOptions
         local hasOptions = entry.extraOptions ~= nil

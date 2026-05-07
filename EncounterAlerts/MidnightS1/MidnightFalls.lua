@@ -278,6 +278,8 @@ NSI.InitializeAlerts[encID] = function(self)
             { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000, get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.yOffset  or -300 end, set = function(v) for i=14, 16 do NSRT.EncounterAlerts[encID][i].RunesDisplay.yOffset  = v end LuraPreview(true) end},
             { Type = "Color",    label = "BackgroundColor", get = function() local c = NSRT.EncounterAlerts[encID][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end, set = function(r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[encID][i].RunesDisplay.BackgroundColor = {r,g,b,a} end LuraPreview(true) end},
             { Type = "Breakline" },
+            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",                                                                                       width = 150 },
+            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles",                                                                         width = 150 },
         },
     }
     self:AddEncounterAlert(data)
