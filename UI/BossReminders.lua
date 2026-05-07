@@ -300,18 +300,24 @@ local function BuildBossRemindersUI(parentFrame)
                 local isReloe   = entry._isReloeCreated
                 local isEnabled, icon, name
 
-                if isReloe then
-                    isEnabled = entry.entry.enabled
-                    name      = ReloeAlertName(entry.entry)
-                    if entry.entry.customIcon then
+                if filterEncID == nil or filterEncID == 0 then
+                    icon = BossData.BossIcons[entry.encID]
+                else
+                    if entry.entry.customIcon then 
                         icon = entry.entry.customIcon
+                    elseif entry.entry.spellID then
+                        _, _, icon = GetSpellInfo(entry.entry.spellID)
                     else
                         icon = BossData.BossIcons[entry.encID]
                     end
+                end
+
+                if isReloe then
+                    isEnabled = entry.entry.enabled
+                    name      = ReloeAlertName(entry.entry)
                 else
                     local alert = entry.alert
                     isEnabled   = alert.enabled
-                    icon        = BossData.BossIcons[alert.encID]
                     name        = alert.name or "Unnamed"
                 end
 
