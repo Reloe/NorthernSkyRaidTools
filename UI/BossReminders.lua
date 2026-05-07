@@ -56,7 +56,7 @@ local function BuildBossRemindersUI(parentFrame)
     local searchText         = ""
 
     -- forward declarations
-    local rightPanel, SelectAlert, SelectReloeCreatedAlert, PreviewAlert
+    local rightPanel, SelectAlert, SelectReloeCreatedAlert, PreviewAlert, enabledCB
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -381,15 +381,22 @@ local function BuildBossRemindersUI(parentFrame)
                     row.deleteBtn:Show()
                     local ri = entry.realIndex
                     row.deleteBtn:SetScript("OnClick", function()
-                        local alerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
-                        if alerts then table.remove(alerts, ri) end
-                        if selectedIndex == ri then
-                            selectedIndex = nil
-                            if rightPanel then rightPanel:Hide() end
-                        elseif selectedIndex and selectedIndex > ri then
-                            selectedIndex = selectedIndex - 1
+                        local deleteFunc = function()
+                            local alerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
+                            if alerts then table.remove(alerts, ri) end
+                            if selectedIndex == ri then
+                                selectedIndex = nil
+                                if rightPanel then rightPanel:Hide() end
+                            elseif selectedIndex and selectedIndex > ri then
+                                selectedIndex = selectedIndex - 1
+                            end
+                            RebuildList()
                         end
-                        RebuildList()
+
+                        local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. ri,
+                            "Delete Alert", "Are you sure you want to delete this alert?", "Cancel", nil, "Delete", deleteFunc,
+                            nil)
+                        deleteDialog:Show()
                     end)
                 end
 
@@ -469,7 +476,7 @@ local function BuildBossRemindersUI(parentFrame)
         nil, nil, nil, "NSUIEncAlertNameEntry")
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -14)
 
-    local enabledCB = CreateCheckButton(rightPanel, "Enabled",
+    enabledCB = CreateCheckButton(rightPanel, "Enabled",
         function() return false end, nil, 90, 22, "NSUIEncAlertEnabled")
     enabledCB:SetPoint("LEFT", nameEntry.frame, "RIGHT", 8, 0)
 
