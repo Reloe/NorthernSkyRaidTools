@@ -306,7 +306,7 @@ local function BuildBossRemindersUI(parentFrame)
                     if entry.entry.customIcon then 
                         icon = entry.entry.customIcon
                     elseif entry.entry.spellID then
-                        _, _, icon = GetSpellInfo(entry.entry.spellID)
+                        icon = entry.entry.spellID
                     else
                         icon = BossData.BossIcons[entry.encID]
                     end
