@@ -16,10 +16,6 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 end
 
-function NSAPI:TestChimaerus()
-    NSI.InitializeAlerts[encID](NSI)
-end
-
 NSI.EncounterAlertHandle[encID] = function(self, info)
     if UnitGroupRolesAssigned("player") == "TANK" then return false end
     if info and info.name and info.name == "Debuffs" then
