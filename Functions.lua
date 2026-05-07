@@ -518,7 +518,7 @@ function NSI:EncounterRegister(event, enable, units, all)
     end
     if enable then
         if units then
-            self.EncounterFrame:RegisterUnitEvent(event, unpack(units))
+            self.EncounterFrame:RegisterUnitEvent(event, type(units) == "table" and unpack(units) or units)
         else
             self.EncounterFrame:RegisterEvent(event)
         end
