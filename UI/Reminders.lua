@@ -899,7 +899,7 @@ local function BuildReminderScreen(personal, parentFrame)
                 isActive = (line.name == NSRT.ActiveReminder)
             end
 
-            if isLoaded then
+            if isLoaded or (isActive and not personal) then
                 line:SetBackdropBorderColor(0, 1, 0, 1)
                 line.__background:SetVertexColor(0, 1, 0)
                 line.__background:SetAlpha(1)
