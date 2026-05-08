@@ -892,11 +892,12 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.PersNote = value
                 NSI:ProcessReminder()
                 NSI:UpdateReminderFrame(true)
+                local charkey = NSI:GetProfileKey()
                 if not value then
                     NSI.PersonalReminder = ""
                     NSI.LoadedPersonalReminder = nil
-                    NSRT.StoredPersonalReminder = nil
-                    NSRT.ActivePersonalReminder = {}
+                    NSRT.StoredPersonalReminder[charkey] = nil
+                    NSRT.ActivePersonalReminder[charkey] = {}
                 end
             end,
             nocombat = true,

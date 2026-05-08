@@ -21,7 +21,7 @@ function NSI:AddMissingDefaults()
         ActiveReminder = nil,
         ActivePersonalReminder = {},
         StoredSharedReminder = nil,
-        StoredPersonalReminder = nil,
+        StoredPersonalReminder = {},
 
         -- NSUI / timeline window
         NSUI = {
@@ -449,7 +449,7 @@ function NSI:CreateProfile(name, init)
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder, true) end
+    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:SaveProfile()
 end
 
@@ -465,7 +465,7 @@ function NSI:LoadProfile(name, skipsave, init)
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder, true) end
+    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:AddMissingDefaults()
     self:SaveProfile()
 end

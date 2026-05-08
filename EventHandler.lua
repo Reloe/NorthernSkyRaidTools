@@ -71,7 +71,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         end
-        self:SetReminder(NSRT.StoredPersonalReminder, true, true) -- loading active personal reminder from last session
+        local charkey = self:GetProfileKey()
+        self:SetReminder(NSRT.StoredPersonalReminder[charkey], true, true) -- loading active personal reminder from last session
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
@@ -234,7 +235,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
-            if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
+            if reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
                 self.Reminder = reminderstring
                 NSRT.StoredSharedReminder = reminderstring
                 self.ReminderReceivedTime = GetTime()
