@@ -13,11 +13,99 @@ local CreateTextEntry   = NSI.UI.Components.CreateTextEntry
 local CreateCheckButton = NSI.UI.Components.CreateCheckButton
 local CreateColorPicker = NSI.UI.Components.CreateColorPicker
 local ReskinScrollbar   = NSI.UI.Components.ReskinScrollbar
+local ShowContextMenu   = NSI.UI.Components.ShowContextMenu
 local BossData          = NSI.UI.BossData
 
 
 local MAX_LIST_ROWS = 80   -- hard cap; more than any reasonable alert count
 
+-- ============================================================================
+-- Alert Export / Import popups
+-- ============================================================================
+local alertsExportPopup
+local alertsImportPopup
+
+local function ShowExportPopup(str, label)
+    if not alertsExportPopup then
+        alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "Export Alerts",
+            "NSUIEncAlertExportString", { DontRightClickClose = true })
+        alertsExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        alertsExportPopup:SetFrameLevel(100)
+
+        alertsExportPopup.infoLabel = DF:CreateLabel(alertsExportPopup, "",
+            DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+        alertsExportPopup.infoLabel:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -30)
+
+        alertsExportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsExportPopup, 280, 80, _,
+            "EncAlertExportTextEdit", true, false, true)
+        alertsExportPopup.textbox:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -50)
+        alertsExportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsExportPopup, "BOTTOMRIGHT", -10, 40)
+        DF:ApplyStandardBackdrop(alertsExportPopup.textbox)
+        DF:ReskinSlider(alertsExportPopup.textbox.scroll)
+        alertsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        alertsExportPopup.textbox.editbox:SetFont(
+            NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+
+        local doneBtn = DF:CreateButton(alertsExportPopup, function()
+            alertsExportPopup:Hide()
+        end, 280, 20, "Done")
+        doneBtn:SetPoint("BOTTOM", alertsExportPopup, "BOTTOM", 0, 10)
+        doneBtn:SetTemplate(Core.options_button_template)
+    end
+
+    alertsExportPopup.infoLabel:SetText(label or "")
+    alertsExportPopup.textbox:SetText(str or "")
+    alertsExportPopup.textbox:SetFocus()
+    alertsExportPopup:Show()
+end
+
+local function ShowImportPopup()
+    if not alertsImportPopup then
+        alertsImportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "Import Alerts",
+            "NSUIEncAlertImportString", { DontRightClickClose = true })
+        alertsImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        alertsImportPopup:SetFrameLevel(100)
+
+        local statusLabel = DF:CreateLabel(alertsImportPopup,
+            "Paste an alerts export string below and click Import.",
+            DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+        statusLabel:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -30)
+
+        alertsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsImportPopup, 280, 80, _,
+            "EncAlertImportTextEdit", true, false, true)
+        alertsImportPopup.textbox:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -50)
+        alertsImportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsImportPopup, "BOTTOMRIGHT", -10, 40)
+        DF:ApplyStandardBackdrop(alertsImportPopup.textbox)
+        DF:ReskinSlider(alertsImportPopup.textbox.scroll)
+        alertsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        alertsImportPopup.textbox.editbox:SetFont(
+            NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+
+        local importBtn = DF:CreateButton(alertsImportPopup, function()
+            local str = alertsImportPopup.textbox:GetText()
+            local count = NSAPI:ImportAlertsString(str)
+            if count then
+                print("|cFF00FFFFNSRT:|r Imported " .. count .. " alert(s).")
+                alertsImportPopup:Hide()
+                local enc = NSUI.encounters_frame
+                if enc and enc.RebuildList then enc.RebuildList() end
+            else
+                statusLabel:SetText(
+                    "|cFFFF0000Invalid import string. Please check and try again.|r")
+            end
+        end, 280, 20, "Import")
+        importBtn:SetPoint("BOTTOM", alertsImportPopup, "BOTTOM", 0, 10)
+        importBtn:SetTemplate(Core.options_button_template)
+
+        alertsImportPopup:HookScript("OnShow", function()
+            statusLabel:SetText("Paste an alerts export string below and click Import.")
+            alertsImportPopup.textbox:SetText("")
+            alertsImportPopup.textbox:SetFocus()
+        end)
+    end
+
+    alertsImportPopup:Show()
+end
 
 -- ============================================================================
 -- BuildBossRemindersUI
@@ -119,7 +207,7 @@ local function BuildBossRemindersUI(parentFrame)
 
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
     local scrollTop    = topY - 20 - 22 - 4 - 22 - 6   -- below title + filter row + search + gaps = -84
-    local scrollHeight = tab_content_height + scrollTop - 22 - pad * 2  -- ~450
+    local scrollHeight = tab_content_height + scrollTop - 22 - pad * 2 - 26  -- extra 26 for import/export row
     local listW        = leftWidth - pad * 2   -- 220
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIEncAlertListScroll", screen,
@@ -391,15 +479,40 @@ local function BuildBossRemindersUI(parentFrame)
                 -- Click to select (skip when clicking the enabled checkbox)
                 if isReloe then
                     local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
-                    row:SetScript("OnMouseDown", function()
+                    row:SetScript("OnMouseDown", function(self, button)
                         if row.enabledCB.frame:IsMouseOver() then return end
-                        SelectReloeCreatedAlert(eid, did, akey)
+                        if button == "RightButton" then
+                            local data = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+                                     and NSRT.EncounterAlerts[eid][did]
+                                     and NSRT.EncounterAlerts[eid][did][akey]
+                            local name = data and (data.name or data.text or akey) or akey
+                            ShowContextMenu({
+                                { type = "button", label = "Export Alert", fnc = function()
+                                    local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
+                                    ShowExportPopup(str, name)
+                                end },
+                            })
+                        else
+                            SelectReloeCreatedAlert(eid, did, akey)
+                        end
                     end)
                 else
                     local ri = entry.realIndex
-                    row:SetScript("OnMouseDown", function()
+                    row:SetScript("OnMouseDown", function(self, button)
                         if row.enabledCB.frame:IsMouseOver() then return end
-                        SelectAlert(ri)
+                        if button == "RightButton" then
+                            local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
+                                      and NSRT.CustomBossAlerts[filterDiffID][ri]
+                            local name = alert and (alert.name or "Unnamed") or "Unnamed"
+                            ShowContextMenu({
+                                { type = "button", label = "Export Alert", fnc = function()
+                                    local str = NSI:ExportSingleAlertString("custom", nil, filterDiffID, nil, alert)
+                                    ShowExportPopup(str, name)
+                                end },
+                            })
+                        else
+                            SelectAlert(ri)
+                        end
                     end)
                 end
             end
@@ -444,6 +557,21 @@ local function BuildBossRemindersUI(parentFrame)
         SelectAlert(#diffAlerts)
     end, listW, 22)
     createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
+
+    -- Import / Export buttons (row above create)
+    local halfW = math.floor((listW - 4) / 2)
+    local ioY   = pad + 22 + 4
+
+    local importAlertsBtn = CreateButton(screen, "Import", function()
+        ShowImportPopup()
+    end, halfW, 22)
+    importAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, ioY)
+
+    local exportAlertsBtn = CreateButton(screen, "Export", function()
+        local str = NSI:ExportAlertsString()
+        ShowExportPopup(str, "All encounter alerts")
+    end, halfW, 22)
+    exportAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad + halfW + 4, ioY)
 
     -- ================================================================
     -- Right Panel

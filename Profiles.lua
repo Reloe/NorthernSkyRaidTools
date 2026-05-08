@@ -550,6 +550,112 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
     return name
 end
 
+function NSI:ExportAlertsString()
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    local exportTable = {
+        version          = 1,
+        type             = "alerts",
+        encounterAlerts  = NSRT.EncounterAlerts  or {},
+        customBossAlerts = NSRT.CustomBossAlerts or {},
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    return LibDeflate:EncodeForPrint(compressed)
+end
+
+function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    local exportTable = {
+        version   = 1,
+        type      = "single_alert",
+        alertType = alertType,
+        encID     = encID,
+        diffID    = diffID,
+        alertKey  = alertKey,
+        data      = data,
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    return LibDeflate:EncodeForPrint(compressed)
+end
+
+function NSAPI:ImportAlertsString(importString)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    if not importString or importString == "" then return nil end
+    local decoded = LibDeflate:DecodeForPrint(importString)
+    if not decoded then return nil end
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return nil end
+    local success, t = LibSerialize:Deserialize(decompressed)
+    if not success or type(t) ~= "table" then return nil end
+
+    if t.type == "alerts" then
+        local count = 0
+        NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
+        NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
+        for encID, encData in pairs(t.encounterAlerts or {}) do
+            NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+            for diffID, diffData in pairs(encData) do
+                NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                for alertKey, alert in pairs(diffData) do
+                    NSRT.EncounterAlerts[encID][diffID][alertKey] = alert
+                    count = count + 1
+                end
+            end
+        end
+        for diffID, diffAlerts in pairs(t.customBossAlerts or {}) do
+            NSRT.CustomBossAlerts[diffID] = NSRT.CustomBossAlerts[diffID] or {}
+            for _, imported in ipairs(diffAlerts) do
+                local found = false
+                if imported.id then
+                    for i, existing in ipairs(NSRT.CustomBossAlerts[diffID]) do
+                        if existing.id == imported.id then
+                            NSRT.CustomBossAlerts[diffID][i] = imported
+                            found = true
+                            count = count + 1
+                            break
+                        end
+                    end
+                end
+                if not found then
+                    table.insert(NSRT.CustomBossAlerts[diffID], imported)
+                    count = count + 1
+                end
+            end
+        end
+        return count
+    elseif t.type == "single_alert" then
+        NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
+        NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
+        if t.alertType == "encounter" and t.encID and t.diffID and t.alertKey then
+            NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
+            NSRT.EncounterAlerts[t.encID][t.diffID] = NSRT.EncounterAlerts[t.encID][t.diffID] or {}
+            NSRT.EncounterAlerts[t.encID][t.diffID][t.alertKey] = t.data
+            return 1
+        elseif t.alertType == "custom" and t.diffID then
+            NSRT.CustomBossAlerts[t.diffID] = NSRT.CustomBossAlerts[t.diffID] or {}
+            local found = false
+            if t.data and t.data.id then
+                for i, existing in ipairs(NSRT.CustomBossAlerts[t.diffID]) do
+                    if existing.id == t.data.id then
+                        NSRT.CustomBossAlerts[t.diffID][i] = t.data
+                        found = true
+                        break
+                    end
+                end
+            end
+            if not found then
+                table.insert(NSRT.CustomBossAlerts[t.diffID], t.data)
+            end
+            return 1
+        end
+    end
+    return nil
+end
+
 function NSI:LoadMyProfile()
     local ProfileKey = self:GetProfileKey()
     local ProfileToLoad = "default"
