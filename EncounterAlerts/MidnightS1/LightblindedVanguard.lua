@@ -27,7 +27,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {internalID = "Peace Aura", text = "Peace Aura", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
     overrides = {loadConditions = tankConditions},
     timers = {
-            [16] = {22, 40, 58, 76, 112, 130, 166, 184, 202, 220, 274, 292, 310, 328, 346, 364, 382},
+            [16] = {132, 291, 450},
         },
     }
     self:AddEncounterAlert(data)
@@ -64,9 +64,9 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id)
-    local id = id or select(3, GetInstanceInfo()) or 0
+    id = id or self:DifficultyCheck(14) or 0
     local info = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].TauntAlerts
-    if info and UnitGroupRolesAssigned("player") == "TANK" then
+    if info and info.enabled and UnitGroupRolesAssigned("player") == "TANK" then
         if not self.TauntFrame then
             self.TauntFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.TauntFrame:SetSize(100, 30)
@@ -81,6 +81,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
             [6795]   = true, [355]   = true, [62124]  = true, [49576] = true,
         }
         local blacklist = {}
+        self:EncounterRegister("UNIT_SPELLCAST_SUCCEEDED", true, "player")
         self.EncounterFrame:SetScript("OnEvent", function(_, e, u, _, spellID)
             if e == "UNIT_SPELLCAST_START" then
                 if not u:find("^nameplate%d") then return end
@@ -107,7 +108,6 @@ NSI.EncounterAlertStart[encID] = function(self, id)
                 end
             end
         end)
-        self:EncounterRegister("UNIT_SPELLCAST_SUCCEEDED", true, "player")
         self.TauntTimers = self.TauntTimers or {}
         for i, time in ipairs(info.timers) do
             self.TauntTimers[#self.TauntTimers+1] = C_Timer.NewTimer(time-3.2, function()

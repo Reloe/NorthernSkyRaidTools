@@ -10,14 +10,10 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {isConditional = true},
     timers = {
-            [16] = {{39, 112}, {39, 112}},
+            [16] = {{5, 39, 112}, {39, 112}},
         },
     }
     self:AddEncounterAlert(data)
-end
-
-function NSAPI:TestChimaerus()
-    NSI.InitializeAlerts[encID](NSI)
 end
 
 NSI.EncounterAlertHandle[encID] = function(self, info)

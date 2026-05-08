@@ -67,7 +67,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     end
     if classFile then -- basically "if unit found"
         local name = UnitName(unit)
-        local color = classFile == "PRIEST" and CreateColor(128/255, 128/255, 128/255) or GetClassColorObj(classFile)
+        local color = classFile == "PRIEST" and CreateColor(200/255, 200/255, 200/255) or GetClassColorObj(classFile)
         name = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
             return combined and specicon..roleicon..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or specicon, combined and "" or roleicon
@@ -518,11 +518,15 @@ function NSI:EncounterRegister(event, enable, units, all)
     end
     if enable then
         if units then
-            self.EncounterFrame:RegisterUnitEvent(event, unpack(units))
+            if type(units) == "table" then
+                self.EncounterFrame:RegisterUnitEvent(event, units[1], units[2], units[3], units[4])
+            else
+                self.EncounterFrame:RegisterUnitEvent(event, units)
+            end
         else
             self.EncounterFrame:RegisterEvent(event)
         end
-    else
+    elseif event then
         self.EncounterFrame:UnregisterEvent(event)
     end
 end

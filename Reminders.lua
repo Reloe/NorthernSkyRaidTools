@@ -125,7 +125,6 @@ function NSI:AddToReminder(info)
         IsAlert = info.IsAlert,
         Ticks = info.Ticks,
         skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
-        SpecialDisplay = info.SpecialDisplay,
         isConditional = info.isConditional,
     })
 end
@@ -1720,6 +1719,9 @@ function NSI:FireEncounterAlerts(encID, id)
                 DisplayType     = entry.DisplayType,
                 startTime       = now,
                 phase           = entry.phase,
+                isConditional   = entry.isConditional,
+                internalID      = entry.internalID,
+                DisplayType     = entry.DisplayType,
             }
             alert.phase = entry.phase or 1
             self:AddRemindersFromTable(alert, entry.timers or {})
