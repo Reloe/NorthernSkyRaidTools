@@ -10,7 +10,7 @@ local DF = _G["DetailsFramework"]
 
 local STYLE = {
     -- Normal state
-    bg_color       = { 0.06, 0.06, 0.06, 0.8 },
+    bg_color       = { 0.4, 0.4, 0.4, 0.8 },
     -- Input control background (text entries, sliders, color pickers, checkboxes)
     input_bg_color = { 0.4, 0.4, 0.4, 0.9 },
 
