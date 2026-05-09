@@ -406,10 +406,12 @@ function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
 end
 
 local ignored = {
-    ["Profiles"] = true,
-    ["ProfileKeys"] = true,
-    ["CurrentProfile"] = true,
-    ["MainProfile"] = true,
+    ["Profiles"]         = true,
+    ["ProfileKeys"]      = true,
+    ["CurrentProfile"]   = true,
+    ["MainProfile"]      = true,
+    ["EncounterAlerts"]  = true,
+    ["CustomBossAlerts"] = true,
 }
 
 function NSI:GetProfileKey()
@@ -461,13 +463,13 @@ function NSI:LoadProfile(name, skipsave, init)
                 NSRT[k] = type(v) == "table" and CopyTable(v) or v
             end
         end
-    end
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
     if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:AddMissingDefaults()
     self:SaveProfile()
+    end
 end
 
 function NSI:SaveProfile()
