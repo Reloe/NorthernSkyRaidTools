@@ -811,7 +811,7 @@ local function BuildBossRemindersUI(parentFrame)
     local ticksLbl = barsSection:CreateFontString(nil, "OVERLAY")
     ticksLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     ticksLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    ticksLbl:SetText("Ticks  (bar percentage markers)")
+    ticksLbl:SetText("Ticks  (seconds into the display where ticks should appear)")
     ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
 
     local ticksListH = 120
@@ -835,41 +835,40 @@ local function BuildBossRemindersUI(parentFrame)
 
     local function RebuildTickRows()
         for _, row in ipairs(tickRows) do row:Hide() end
-        tickRows = {}
         if not dispF._alert then return end
         local ticks = dispF._alert.Ticks or {}
         for i, v in ipairs(ticks) do
-            local row = CreateFrame("Frame", nil, ticksChild)
-            row:SetSize(ticksChild:GetWidth(), tickRowH)
-            row:SetPoint("TOPLEFT", ticksChild, "TOPLEFT", 0, -(i - 1) * tickRowH)
-
-            if i % 2 == 0 then
-                local bg = row:CreateTexture(nil, "BACKGROUND")
-                bg:SetAllPoints()
-                bg:SetColorTexture(1, 1, 1, 0.03)
+            if not tickRows[i] then
+                tickRows[i] = CreateFrame("Frame", nil, ticksChild)
+                tickRows[i].bg = tickRows[i]:CreateTexture(nil, "BACKGROUND")
+                tickRows[i].tLbl = tickRows[i]:CreateFontString(nil, "OVERLAY")
+                tickRows[i].delBtn = CreateFrame("Button", nil, tickRows[i])
+                tickRows[i].tLbl:SetTextColor(1, 1, 1, 1)
+                tickRows[i].tLbl:SetPoint("LEFT", tickRows[i], "LEFT", 8, 0)
+                tickRows[i].bg:SetAllPoints(tickRows[i])
+                tickRows[i]:SetSize(ticksChild:GetWidth(), tickRowH)
+                tickRows[i]:SetPoint("TOPLEFT", ticksChild, "TOPLEFT", 0, -(i - 1) * tickRowH)
+                tickRows[i].delBtn:SetSize(14, 14)
+                tickRows[i].delBtn:SetPoint("RIGHT", tickRows[i], "RIGHT", -6, 0)
+                tickRows[i].delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+                tickRows[i].delBtn:GetNormalTexture():SetDesaturated(true)
+                tickRows[i].delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
             end
+            if i % 2 == 0 then
+                tickRows[i].bg:SetColorTexture(0.2, 0.2, 0.2, 0.9)
+            else
+                tickRows[i].bg:SetColorTexture(0, 0, 0, 0)
+            end
+            tickRows[i].tLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
+            tickRows[i].tLbl:SetText(tostring(v))
 
-            local tLbl = row:CreateFontString(nil, "OVERLAY")
-            tLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
-            tLbl:SetTextColor(1, 1, 1, 1)
-            tLbl:SetPoint("LEFT", row, "LEFT", 8, 0)
-            tLbl:SetText(tostring(v))
-
-            local delBtn = CreateFrame("Button", nil, row)
-            delBtn:SetSize(14, 14)
-            delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-            delBtn:GetNormalTexture():SetDesaturated(true)
-            delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
-            local ri = i
-            delBtn:SetScript("OnClick", function()
+            tickRows[i].delBtn:SetScript("OnClick", function()
                 if dispF._alert then
-                    table.remove(dispF._alert.Ticks, ri)
+                    table.remove(dispF._alert.Ticks, i)
                     RebuildTickRows()
                 end
             end)
-
-            tickRows[i] = row
+            tickRows[i]:Show()
         end
 
         local totalH = math.max(#ticks * tickRowH, 1)
@@ -1060,41 +1059,43 @@ local function BuildBossRemindersUI(parentFrame)
 
     local function RebuildTimeRows()
         for _, row in ipairs(timeRows) do row:Hide() end
-        timeRows = {}
         if not trigF._alert then return end
         local times = trigF._alert.times or {}
         for i, t in ipairs(times) do
-            local row = CreateFrame("Frame", nil, timesChild)
-            row:SetSize(timesChild:GetWidth(), timeRowH)
-            row:SetPoint("TOPLEFT", timesChild, "TOPLEFT", 0, -(i - 1) * timeRowH)
-
-            if i % 2 == 0 then
-                local bg = row:CreateTexture(nil, "BACKGROUND")
-                bg:SetAllPoints()
-                bg:SetColorTexture(1, 1, 1, 0.03)
+            if not timeRows[i] then
+                timeRows[i] = CreateFrame("Frame", nil, timesChild)
+                timeRows[i]:SetSize(timesChild:GetWidth(), timeRowH)
+                timeRows[i]:SetPoint("TOPLEFT", timesChild, "TOPLEFT", 0, -(i - 1) * timeRowH)
+                timeRows[i].bg = timeRows[i]:CreateTexture(nil, "BACKGROUND")
+                timeRows[i].bg:SetAllPoints(timeRows[i])
+                timeRows[i].tLbl = timeRows[i]:CreateFontString(nil, "OVERLAY")
+                timeRows[i].tLbl:SetPoint("LEFT", timeRows[i], "LEFT", 8, 0)
+                timeRows[i].tLbl:SetTextColor(1, 1, 1, 1)
+                timeRows[i].delBtn = CreateFrame("Button", nil, timeRows[i])
+                timeRows[i].delBtn:SetSize(14, 14)
+                timeRows[i].delBtn:SetPoint("RIGHT", timeRows[i], "RIGHT", -6, 0)
+                timeRows[i].delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+                timeRows[i].delBtn:GetNormalTexture():SetDesaturated(true)
+                timeRows[i].delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
             end
 
-            local tLbl = row:CreateFontString(nil, "OVERLAY")
-            tLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
-            tLbl:SetTextColor(1, 1, 1, 1)
-            tLbl:SetPoint("LEFT", row, "LEFT", 8, 0)
-            tLbl:SetText(string.format("%.2f s", t))
+            if i % 2 == 0 then
+                timeRows[i].bg:SetColorTexture(0.2, 0.2, 0.2, 0.9)
+            else
+                timeRows[i].bg:SetColorTexture(0, 0, 0, 0)
+            end
 
-            local delBtn = CreateFrame("Button", nil, row)
-            delBtn:SetSize(14, 14)
-            delBtn:SetPoint("RIGHT", row, "RIGHT", -6, 0)
-            delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-            delBtn:GetNormalTexture():SetDesaturated(true)
-            delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
-            local ri = i
-            delBtn:SetScript("OnClick", function()
+            timeRows[i].tLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
+            timeRows[i].tLbl:SetText(string.format("%.2f s", t))
+
+            timeRows[i].delBtn:SetScript("OnClick", function()
                 if trigF._alert then
-                    table.remove(trigF._alert.times, ri)
+                    table.remove(trigF._alert.times, i)
                     RebuildTimeRows()
                 end
             end)
 
-            timeRows[i] = row
+            timeRows[i]:Show()
         end
 
         local totalH = math.max(#times * timeRowH, 1)
