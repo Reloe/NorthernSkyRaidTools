@@ -71,15 +71,6 @@ local function BuildWAImportsOptions()
         },
         {
             type = "button",
-            name = L["Belo'ren Feather Color"],
-            desc = L["Displays your Feather-Color on Belo'ren."],
-            func = function(self)
-                WAButton("Belo'ren Feather Color", "BelorenFeatherColor", "https://wago.io/dHBF7wW34")
-            end,
-            nocombat = true
-        },
-        {
-            type = "button",
             name = L["Lura Interrupts"],
             desc = L["Interrupt WA for Lura P1."],
             func = function(self)
