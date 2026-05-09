@@ -284,8 +284,19 @@ NSI.InitializeAlerts[encID] = function(self)
                 get = [[return function(NSI) local c = NSRT.EncounterAlerts[3183][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end]],
                 set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
             { Type = "Breakline" },
-            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",                                                                                       width = 150 },
-            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles",                                                                         width = 150 },
+            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
+            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles", width = 150 },
+            { Type = "Button",   label = "Create Macros", width = 150,
+            func = [[return function(NSI)
+                local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
+                for i=1, 5 do
+                    local macroName = "NSRT_LURA_RUNE_"..i
+                    if not GetMacroInfo(macroName) then
+                        CreateMacro(macroName, iconIDs[i], "/raid "..iconIDs[i])
+                    end
+                end
+            end]]
+            }
         },
     }
     self:AddEncounterAlert(data)
@@ -316,9 +327,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self:ReadInterruptNote(1)
         self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
             if e == "UNIT_SPELLCAST_START" then
-                print("cast start", unit)
                 if self.Interrupts.myTrackedID and unit == "boss"..self.Interrupts.myTrackedID and UnitIsEnemy(unit, "player") then
-                    print("my tracked cast started")
                     self:InterruptOnCastStart(true)
                     if self.ResetTimer then
                         self.ResetTimer:Cancel()
@@ -398,7 +407,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY)
                 self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY + 30)
             end
-            self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
+            self.LuraRunesDisplay[pos]:SetFormattedText("|TInterface\\AddOns\\NorthernSkyRaidTools\\Media\\EncounterPics\\%s:48:48|t", text)
             self.LuraRunesDisplay[pos]:Show()
 
             local number = pos
@@ -450,7 +459,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.HideTimer = C_Timer.NewTimer(hideduration, function()
                     HideAllRunes()
                 end)
-
                 if id ~= 16 or self.Phase == 4 then
                     DisplayRune(pos, msg, false)
                     return
