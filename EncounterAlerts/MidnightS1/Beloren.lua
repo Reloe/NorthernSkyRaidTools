@@ -55,6 +55,7 @@ NSI.InitializeAlerts[encID] = function(self)
         phase = nil,
         TTS = false,
         dur = 5,
+        id = 0,
         spellID = nil,
         difficulties = {14, 15, 16},
         customIcon = 7636520,
