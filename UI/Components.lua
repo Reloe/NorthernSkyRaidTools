@@ -11,6 +11,8 @@ local DF = _G["DetailsFramework"]
 local STYLE = {
     -- Normal state
     bg_color       = { 0.06, 0.06, 0.06, 0.8 },
+    -- Input control background (text entries, sliders, color pickers, checkboxes)
+    input_bg_color = { 0.4, 0.4, 0.4, 0.9 },
 
     -- Hover overlay (fades in/out on mouse enter/leave)
     hover_color     = {0,    1,    1,    0.13},
@@ -299,7 +301,7 @@ local function MakeControlBackdrop(frame)
         tile     = true,
         tileSize = 64,
     })
-    frame:SetBackdropColor(unpack(STYLE.bg_color))
+    frame:SetBackdropColor(unpack(STYLE.input_bg_color))
 end
 
 local function MakeFontString(parent, size)
