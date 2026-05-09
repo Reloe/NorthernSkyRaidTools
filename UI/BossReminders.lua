@@ -1366,37 +1366,14 @@ local function BuildBossRemindersUI(parentFrame)
     -- PreviewAlert ── fire the current alert visually without a trigger
     -- ================================================================
     PreviewAlert = function()
-        local text, spellID, dur, Type, ttsEnabled, ttsText, ttsTimer, countdown
         if not dispF._alert then return end
-        local a    = dispF._alert
-        if a.Preview then a.Preview() return end -- allow custom preview functions
-        text       = a.text or ""
-        spellID    = a.spellID
-        dur        = a.dur or 8
-        countdown  = a.countdown
-        -- Support both custom-alert TTS fields (TTSEnabled/TTSText/TTSTimer)
-        -- and reloe-created alert TTS fields (TTS string/false, TTSTimer)
-        if a.TTSEnabled ~= nil then
-            -- custom alert format
-            ttsEnabled = a.TTSEnabled
-            ttsText    = a.TTSText
-            ttsTimer   = a.TTSTimer
-        else
-            -- reloe-created format: TTS is the string itself (or false/nil)
-            ttsEnabled = a.TTS ~= false and a.TTS ~= nil
-            ttsText    = type(a.TTS) == "string" and a.TTS or nil
-            ttsTimer   = a.TTSTimer
+        if dispF._alert.Preview then -- allow custom preview functions
+            dispF._alert:Preview()
+            return
         end
-
-        -- These tables are normally created by HideAllReminders; ensure they exist
-        NSI.PlayedSound      = NSI.PlayedSound      or {}
-        NSI.StartedCountdown = NSI.StartedCountdown or {}
-
-        local info     = NSI:CreateDefaultAlert(text, Type, spellID, dur, 99, 0)
-        info.TTS       = ttsEnabled and ((ttsText and ttsText ~= "") and ttsText or text) or false
-        info.TTSTimer  = ttsTimer or dur
-        info.countdown = countdown or false
-        info.DisplayType = a.DisplayType
+        DevTool:AddData(dispF._alert)
+        local info = NSI:CreateReminder(dispF._alert, true)
+        DevTool:AddData(info)
         NSI:DisplayReminder(info)
     end
 

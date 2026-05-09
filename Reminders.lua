@@ -23,19 +23,52 @@ local symbols = {
     skull = 8,
 }
 
-function NSI:AddToReminder(info)
+function NSI:AddToReminder(reminderInfo)
+    local info = self:CreateReminder(reminderInfo)
+    if not info then return end
+    table.insert(self.ProcessedReminder[info.encID][info.phase],
+    {
+        name = info.internalID or info.name,
+        notsticky = info.notsticky,
+        DisplayType = info.DisplayType,
+        TTSTimer = info.TTSTimer,
+        rawtext = info.rawtext,
+        phase = info.phase,
+        colors = info.colors,
+        id = #self.ProcessedReminder[info.encID][info.phase]+1,
+        countdown = info.countdown and tonumber(info.countdown),
+        glowunit = info.glowunit,
+        sound = info.sound,
+        time = info.time,
+        text = info.text,
+        TTS = info.TTS,
+        spellID = info.spellID and tonumber(info.spellID),
+        dur = info.dur or 8,
+        skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
+        IsAlert = info.IsAlert,
+        Ticks = info.Ticks,
+        skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
+        isConditional = info.isConditional,
+    })
+end
+
+function NSI:CreateReminder(info, preview)
     info = CopyTable(info)
+    if preview then
+        info.time = info.dur or 60
+        info.encID = 0
+    end
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
+    if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
+        return nil
+    end
     if info.colors and type(info.colors) == "string" then
         local colors = {}
         for color in info.colors:gmatch("([^%s:]+)") do
             table.insert(colors, tonumber(color))
         end
         info.colors = colors
-    end
-    if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
-        return
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     if info.spellID and not info.DisplayType then
@@ -103,30 +136,13 @@ function NSI:AddToReminder(info)
     end
 
     self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}
-    table.insert(self.ProcessedReminder[info.encID][info.phase],
-    {
-        name = info.internalID or info.name,
-        notsticky = info.notsticky,
-        DisplayType = info.DisplayType,
-        TTSTimer = info.TTSTimer,
-        rawtext = info.rawtext,
-        phase = info.phase,
-        colors = info.colors,
-        id = #self.ProcessedReminder[info.encID][info.phase]+1,
-        countdown = info.countdown and tonumber(info.countdown),
-        glowunit = info.glowunit,
-        sound = info.sound,
-        time = info.time,
-        text = info.text,
-        TTS = info.TTS,
-        spellID = info.spellID and tonumber(info.spellID),
-        dur = info.dur or 8,
-        skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
-        IsAlert = info.IsAlert,
-        Ticks = info.Ticks,
-        skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
-        isConditional = info.isConditional,
-    })
+    info.name = info.internalID or info.name
+    info.id = #self.ProcessedReminder[info.encID][info.phase]+1
+    info.countdown = info.countdown and tonumber(info.countdown)
+    info.spellID = info.spellID and tonumber(info.spellID)
+    info.dur = info.dur or 8
+    info.skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText)
+    return info
 end
 
 function NSI:ProcessReminder()
@@ -1701,29 +1717,8 @@ function NSI:FireEncounterAlerts(encID, id)
     local now = GetTime()
     for _, entry in pairs(diffTable) do
         if type(entry) == "table" and entry.ReloeReminder and entry.enabled and not entry.isSpecialDisplay then
-            local alert = {
-                name            = entry.name,
-                text            = entry.text,
-                spellID         = entry.spellID,
-                dur             = entry.dur,
-                encID           = encID,
-                notsticky       = entry.notsticky,
-                IsAlert         = entry.IsAlert,
-                countdown       = entry.countdown,
-                TTSTimer        = entry.TTSTimer,
-                TTS             = entry.TTS,
-                sound           = entry.sound,
-                skipdur         = entry.skipdur,
-                glowunit        = entry.glowunit,
-                colors          = entry.colors,
-                Ticks           = entry.Ticks,
-                DisplayType     = entry.DisplayType,
-                startTime       = now,
-                phase           = entry.phase,
-                isConditional   = entry.isConditional,
-                internalID      = entry.internalID,
-                DisplayType     = entry.DisplayType,
-            }
+            local alert = CopyTable(entry)
+            alert.encID = encID
             alert.phase = entry.phase or 1
             self:AddRemindersFromTable(alert, entry.timers or {})
         end
