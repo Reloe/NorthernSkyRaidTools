@@ -26,7 +26,7 @@ NSI.InitializeAlerts[encID] = function(self)
     data.internalID = "HealthDisplay"
     data.text = nil
     data.timers = nil
-    data.Preview = function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end
+    data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end]]
     data.difficulties = {14, 15, 16}
     self:AddEncounterAlert(data)
 end

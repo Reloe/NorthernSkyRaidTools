@@ -1923,9 +1923,9 @@ function NSI:LoadCustomBossAlerts(encID)
 end
 
 function NSI:EvaluateLoad(info)
-    local shouldLoad = true
     local cond = info.loadConditions
     if not cond then return true end
+    local shouldLoad = true
     if cond.Roles and next(cond.Roles) then
         shouldLoad = false
         local myRole = UnitGroupRolesAssigned("player")

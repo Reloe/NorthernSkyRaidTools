@@ -376,7 +376,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     lbl:SetPoint("RIGHT", btn, "RIGHT",   0,   0)
     lbl:SetHeight(totalH)
 
-    local isChecked = getValue and getValue() or false
+    local isChecked = getValue and getValue(NSI) or false
 
     local function Refresh()
         if isChecked then
@@ -393,7 +393,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     btn:SetScript("OnClick", function()
         isChecked = not isChecked
         Refresh()
-        if cb.fn then cb.fn(isChecked) end
+        if cb.fn then cb.fn(NSI, isChecked) end
     end)
     btn:SetScript("OnEnter", function()
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
@@ -505,28 +505,28 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
     edit:SetMaxLetters(numeric and 8 or 200)
-    edit:SetText(tostring(getValue and getValue() or ""))
+    edit:SetText(tostring(getValue and getValue(NSI) or ""))
 
     local function Commit()
         local raw = edit:GetText()
         if numeric then
             local n = tonumber(raw)
             if not n then
-                edit:SetText(tostring(getValue and getValue() or 0))
+                edit:SetText(tostring(getValue and getValue(NSI) or 0))
                 return
             end
             if minVal then n = math.max(n, minVal) end
             if maxVal then n = math.min(n, maxVal) end
             edit:SetText(tostring(n))
-            if setValue then setValue(n) end
+            if setValue then setValue(NSI, n) end
         else
-            if setValue then setValue(raw) end
+            if setValue then setValue(NSI, raw) end
         end
     end
 
     edit:SetScript("OnEnterPressed", function() Commit() ; edit:ClearFocus() end)
     edit:SetScript("OnEscapePressed", function()
-        edit:SetText(tostring(getValue and getValue() or ""))
+        edit:SetText(tostring(getValue and getValue(NSI) or ""))
         edit:ClearFocus()
     end)
     edit:SetScript("OnEditFocusGained", function()
@@ -954,16 +954,16 @@ local function CreateSlider(parent, label, getValue, setValue,
     slider:SetScript("OnMouseDown", function() dragging = true end)
     slider:SetScript("OnMouseUp", function(self)
         dragging = false
-        if setValue then setValue(self:GetValue()) end
+        if setValue then setValue(NSI, self:GetValue()) end
     end)
     slider:SetScript("OnValueChanged", function(_, value)
         UpdateVisual(value)
-        if initialized and not dragging and setValue then setValue(value) end
+        if initialized and not dragging and setValue then setValue(NSI, value) end
     end)
     slider:SetScript("OnEnter", function() thumb:SetVertexColor(0.5, 1, 1, 1) end)
     slider:SetScript("OnLeave", function() thumb:SetVertexColor(0,   1, 1, 1) end)
 
-    local initVal = getValue and getValue() or (minVal or 0)
+    local initVal = getValue and getValue(NSI) or (minVal or 0)
     slider:SetValue(initVal)
     UpdateVisual(initVal)
     initialized = true
@@ -1000,7 +1000,7 @@ local function CreateSlider(parent, label, getValue, setValue,
             slider:SetValue(n)
             UpdateVisual(n)
             initialized = true
-            if setValue then setValue(n) end
+            if setValue then setValue(NSI, n) end
         end
         typeBox:ClearFocus()
         typeBox:Hide()
@@ -1099,7 +1099,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
 
     local function UpdateSwatch()
         local r, g, b, a = 1, 1, 1, 1
-        if getValue then r, g, b, a = getValue() end
+        if getValue then r, g, b, a = getValue(NSI) end
         colorTex:SetColorTexture(r or 1, g or 1, b or 1, a or 1)
     end
     UpdateSwatch()
@@ -1113,7 +1113,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
 
     swatchBtn:SetScript("OnClick", function()
         local r, g, b, a = 1, 1, 1, 1
-        if getValue then r, g, b, a = getValue() end
+        if getValue then r, g, b, a = getValue(NSI) end
         r = r or 1; g = g or 1; b = b or 1; a = a or 1
         local prevR, prevG, prevB, prevA = r, g, b, a
 
@@ -1134,7 +1134,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
         local function OnChange()
             local nr, ng, nb, na = ReadCurrent()
             colorTex:SetColorTexture(nr, ng, nb, na)
-            if setValue then setValue(nr, ng, nb, na) end
+            if setValue then setValue(NSI, nr, ng, nb, na) end
         end
 
         local function OnCancel(prev)
@@ -1146,7 +1146,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
                 cr, cg, cb, ca = prevR, prevG, prevB, prevA
             end
             colorTex:SetColorTexture(cr, cg, cb, ca)
-            if setValue then setValue(cr, cg, cb, ca) end
+            if setValue then setValue(NSI, cr, cg, cb, ca) end
         end
 
         if ColorPickerFrame.SetupColorPickerAndShow then
@@ -1444,6 +1444,20 @@ local WIDGET_H = {
 local WIDGET_GAP = 4
 local buildGen = 0
 
+-- Accepts a function or a loadstring-compatible string ("return function(...) end").
+-- Returns a callable, or nil if the input is nil.
+local function ResolveCallback(v)
+    if type(v) == "string" then
+        local fn, err = loadstring(v)
+        if not fn then
+            print("|cFFFF0000NSRT BuildWidgets:|r failed to compile callback:", err)
+            return nil
+        end
+        return fn()   -- the string must evaluate to a function
+    end
+    return v          -- already a function (or nil)
+end
+
 local function BuildWidgets(parent, definitions, width, namePrefix)
     local C = NSI.UI.Components
     local y = 0
@@ -1466,9 +1480,12 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         end
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
-                def.get, def.set, width, h, def.min, def.max, def.step, wName)
+                ResolveCallback(def.get), ResolveCallback(def.set),
+                width, h, def.min, def.max, def.step, wName)
 
         elseif t == "Dropdown" then
+            local resolvedGet = ResolveCallback(def.get)
+            local resolvedSet = ResolveCallback(def.set)
             local function getItems()
                 local vals = type(def.values) == "function"
                     and def.values() or (def.values or {})
@@ -1478,14 +1495,14 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                         label   = v.label,
                         value   = v.value,
                         onclick = function(_, _, val)
-                            if def.set then def.set(val) end
+                            if resolvedSet then resolvedSet(NSI, val) end
                         end,
                     }
                 end
                 return out
             end
             local function getSelected()
-                local cur  = def.get and def.get()
+                local cur  = resolvedGet and resolvedGet(NSI)
                 local vals = type(def.values) == "function"
                     and def.values() or (def.values or {})
                 for _, v in ipairs(vals) do
@@ -1498,15 +1515,16 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
 
         elseif t == "Color" then
             ctrl = C.CreateColorPicker(parent, def.label,
-                def.get, def.set, width, h, wName)
+                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName)
 
         elseif t == "Checkbox" then
             ctrl = C.CreateCheckButton(parent, def.label,
-                def.get, def.set, width, h, wName)
+                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName)
 
         elseif t == "TextEntry" then
             ctrl = C.CreateTextEntry(parent, def.label,
-                def.get, def.set, width, h, def.numeric, def.min, def.max, wName)
+                ResolveCallback(def.get), ResolveCallback(def.set),
+                width, h, def.numeric, def.min, def.max, wName)
 
         elseif t == "Label" then
             ctrl = C.CreateLabel(parent, def.text, width, h, wName)

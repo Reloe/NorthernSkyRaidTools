@@ -576,8 +576,13 @@ local function BuildBossRemindersUI(parentFrame)
     importAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, ioY)
 
     local exportAlertsBtn = CreateButton(screen, "Export", function()
-        local str = NSI:ExportAlertsString()
-        ShowExportPopup(str, "All encounter alerts")
+        local encFilter = filterEncID ~= 0 and filterEncID or nil
+        local label = "All encounter alerts"
+        if encFilter then
+            label = getFilterBossSelected()
+        end
+        local str = NSI:ExportAlertsString(encFilter, filterDiffID)
+        ShowExportPopup(str, label)
     end, halfW, 22)
     exportAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad + halfW + 4, ioY)
 
@@ -1376,7 +1381,17 @@ local function BuildBossRemindersUI(parentFrame)
     PreviewAlert = function()
         if not dispF._alert then return end
         if dispF._alert.Preview then -- allow custom preview functions
-            dispF._alert:Preview()
+            local preview = dispF._alert.Preview
+            if type(preview) == "string" then
+                local fn, err = loadstring(preview)
+                if fn then
+                    fn()(NSI)
+                else
+                    print("|cFFFF0000NSRT Preview error:|r", err)
+                end
+            else
+                preview()
+            end
             return
         end
         local info = NSI:CreateReminder(dispF._alert, true)

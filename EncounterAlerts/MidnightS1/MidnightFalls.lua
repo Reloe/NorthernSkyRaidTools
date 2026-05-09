@@ -253,19 +253,17 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local function LuraPreview(Update)
-        if NSI.IsLuraPreview then
-            if Update then
-                NSI.EncounterAlertStart[encID](NSI, 16, true)
+    local LuraPreview = [[
+        return function(self, update)
+            if self.IsLuraPreview then
+                self.EncounterAlertStop[3183](self, true)
+                self.IsLuraPreview = false
             else
-                NSI.EncounterAlertStop[encID](NSI, true)
-                NSI.IsLuraPreview = false
+                self.EncounterAlertStart[3183](self, 16, true)
+                self.IsLuraPreview = true
             end
-        elseif not Update then
-            NSI.EncounterAlertStart[encID](NSI, 16, true)
-            NSI.IsLuraPreview = true
         end
-    end
+    ]]
 
     local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
     overrides = {Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
@@ -273,10 +271,18 @@ NSI.InitializeAlerts[encID] = function(self)
     difficulties = {14, 15, 16},
     extraOptions = {
             { Type = "Label",    text = "Runes Display" },
-            { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,    get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.Scale   or 1    end, set = function(v) for i=14, 16 do NSRT.EncounterAlerts[encID][i].RunesDisplay.Scale    = v end LuraPreview(true) end},
-            { Type = "Slider",   label = "xOffset",        min = -2000, max = 2000, get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.xOffset  or 300  end, set = function(v) for i=14, 16 do NSRT.EncounterAlerts[encID][i].RunesDisplay.xOffset  = v end LuraPreview(true) end},
-            { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000, get = function() return NSRT.EncounterAlerts[encID][16].RunesDisplay.yOffset  or -300 end, set = function(v) for i=14, 16 do NSRT.EncounterAlerts[encID][i].RunesDisplay.yOffset  = v end LuraPreview(true) end},
-            { Type = "Color",    label = "BackgroundColor", get = function() local c = NSRT.EncounterAlerts[encID][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end, set = function(r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[encID][i].RunesDisplay.BackgroundColor = {r,g,b,a} end LuraPreview(true) end},
+            { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.Scale   or 1    end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.Scale    = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+            { Type = "Slider",   label = "xOffset",        min = -2000, max = 2000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.xOffset  or 300  end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.xOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+            { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.yOffset  or -300 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.yOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+            { Type = "Color",    label = "BackgroundColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3183][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
             { Type = "Breakline" },
             { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",                                                                                       width = 150 },
             { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles",                                                                         width = 150 },
@@ -287,9 +293,9 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {internalID = "InterruptDisplay", text = nil, internalID = "InterruptDisplay", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
     customIcon = 132938, id = 0.1, timers = nil, difficulties = {16},
-    Preview = function()
+    Preview = [[return function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
-    end
+    end]],
     }
     self:AddEncounterAlert(data)
 end

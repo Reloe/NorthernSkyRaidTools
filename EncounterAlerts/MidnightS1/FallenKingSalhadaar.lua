@@ -32,7 +32,7 @@ NSI.InitializeAlerts[encID] = function(self)
     data.internalID = "CC Display"
     data.text = nil
     data.timers = nil
-    data.Preview = function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end
+    data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]]
     data.TTS = false
     data.difficulties = {16}
     self:AddEncounterAlert(data)

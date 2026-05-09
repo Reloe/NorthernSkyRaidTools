@@ -550,14 +550,16 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
     return name
 end
 
-function NSI:ExportAlertsString()
+function NSI:ExportAlertsString(encID)
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate = LibStub("LibDeflate")
+    local encounterAlerts = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
+    local customAlerts = encID and NSRT.CustomBossAlerts[encID] or NSRT.CustomBossAlerts
     local exportTable = {
         version          = 1,
         type             = "alerts",
-        encounterAlerts  = NSRT.EncounterAlerts  or {},
-        customBossAlerts = NSRT.CustomBossAlerts or {},
+        encounterAlerts  = encounterAlerts  or {},
+        customBossAlerts = customAlerts or {},
     }
     local serialized = LibSerialize:Serialize(exportTable)
     local compressed = LibDeflate:CompressDeflate(serialized)

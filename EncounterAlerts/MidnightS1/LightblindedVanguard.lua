@@ -45,9 +45,9 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil,
     overrides = {isSpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0},
-    Preview = function()
+    Preview = [[return function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")
-    end,
+    end]],
     extraOptions ={
         Font = {Type = "Dropdown", DropdownType = "Fonts"},
         FontSize = {Type = "Scale", min = 10, max = 100},
