@@ -326,8 +326,10 @@ local function BuildBossRemindersUI(parentFrame)
                     end
                 end
                 table.sort(alerts, function(a, b)
-                    if a.enabled ~= b.enabled then return a.enabled end -- display disabled at the bottom
-                    if a.ReloeReminder ~= b.ReloeReminder then return b.ReloeReminder end -- display self-created reminders first
+                    local ae, be = a.enabled ~= false, b.enabled ~= false
+                    if ae ~= be then return ae end -- display disabled at the bottom
+                    local ar, br = a.ReloeReminder == true, b.ReloeReminder == true
+                    if ar ~= br then return br end -- display self-created reminders first
                     if a.phase ~= b.phase then return a.phase < b.phase end
                     local aID = a.entry.id
                     local bID = b.entry.id
@@ -430,7 +432,7 @@ local function BuildBossRemindersUI(parentFrame)
 
                 if isReloe then
                     local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
-                    row.enabledCB:SetOnChange(function(v)
+                    row.enabledCB:SetOnChange(function(nsi, v)
                         local e = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                    and NSRT.EncounterAlerts[eid][did]
                                    and NSRT.EncounterAlerts[eid][did][akey]
@@ -444,7 +446,7 @@ local function BuildBossRemindersUI(parentFrame)
                 else
                     local alert = entry.alert
                     local ri    = entry.realIndex
-                    row.enabledCB:SetOnChange(function(v)
+                    row.enabledCB:SetOnChange(function(nsi, v)
                         alert.enabled = v
                         if selectedIndex == ri then
                             enabledCB:SetValue(v)
@@ -1440,7 +1442,7 @@ local function BuildBossRemindersUI(parentFrame)
             alert.name = self:GetText()
             RebuildList()
         end)
-        enabledCB:SetOnChange(function(v)
+        enabledCB:SetOnChange(function(nsi, v)
             alert.enabled = v
             RebuildList()
         end)
@@ -1510,7 +1512,7 @@ local function BuildBossRemindersUI(parentFrame)
         nameEntry.editBox:SetScript("OnEditFocusLost", function() end)
 
         enabledCB:SetValue(entry.enabled and true or false)
-        enabledCB:SetOnChange(function(v)
+        enabledCB:SetOnChange(function(nsi, v)
             entry.enabled = v
             RebuildList()
         end)

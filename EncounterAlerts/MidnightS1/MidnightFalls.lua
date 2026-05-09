@@ -207,6 +207,19 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {internalID = "Left Soak-Time", text = "Soak-Time", DisplayType = "Bar", encID = encID, phase = 4, TTS = false, dur = 20, spellID = 1266897,
+    overrides = {enabled = false},
+    timers = {
+            [16] = {38.7, 110.7, 148.7},
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.internalID = "Right Soak-Time"
+    data.timers = {
+        [16] = {58.5, 93.5, 168.5},
+    }
+    self:AddEncounterAlert(data)
+
     local data = {internalID = "Left Stars", text = "Stars", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 4, spellID = nil,
     overrides = {enabled = false},
     timers = {
@@ -223,19 +236,6 @@ NSI.InitializeAlerts[encID] = function(self)
     data.overrides = {}
     data.timers = {
         [16] = {130.4, 137.2, 144.4, 150.2, 157.4, 164.2},
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {internalID = "Left Soak-Time", text = "Soak-Time", DisplayType = "Bar", encID = encID, phase = 4, TTS = false, dur = 20, spellID = 1266897,
-    overrides = {enabled = false},
-    timers = {
-            [16] = {38.7, 110.7, 148.7},
-        },
-    }
-    self:AddEncounterAlert(data)
-    data.internalID = "Right Soak-Time"
-    data.timers = {
-        [16] = {58.5, 93.5, 168.5},
     }
     self:AddEncounterAlert(data)
 
@@ -267,7 +267,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
     overrides = {Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
-    Preview = LuraPreview,
+    Preview = LuraPreview, customIcon = 7454100,
     difficulties = {14, 15, 16},
     extraOptions = {
             { Type = "Label",    text = "Runes Display" },
