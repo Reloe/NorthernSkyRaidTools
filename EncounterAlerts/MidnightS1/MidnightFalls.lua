@@ -265,7 +265,7 @@ NSI.InitializeAlerts[encID] = function(self)
         end
     ]]
 
-    local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
+    local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
     overrides = {BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
     Preview = LuraPreview, customIcon = 7454100,
     difficulties = {14, 15, 16},
@@ -302,7 +302,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
 
-    local data = {internalID = "InterruptDisplay", text = nil, internalID = "InterruptDisplay", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
+    local data = {internalID = "InterruptDisplay", text = nil, internalID = "InterruptDisplay", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
     customIcon = 132938, id = 0.1, timers = nil, difficulties = {16},
     overrides = {BlockCopy = true},
     Preview = [[return function()
