@@ -85,6 +85,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
         self.EncounterFrame:SetScript("OnEvent", function(_, e, u, _, spellID)
             if e == "UNIT_SPELLCAST_START" then
                 if not u:find("^nameplate%d") then return end
+                if not UnitIsEnemy("player", u) then return end
                 local plate = C_NamePlate.GetNamePlateForUnit(u)
                 if not plate then return end
                 if blacklist[u] then return end
@@ -111,7 +112,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
         self.TauntTimers = self.TauntTimers or {}
         for i, time in ipairs(info.timers) do
             self.TauntTimers[#self.TauntTimers+1] = C_Timer.NewTimer(time-3.2, function()
-                self:EncounterRegister("UNIT_SPELLCAST_START", true, {"boss1", "boss2", "boss3"})
+                self:EncounterRegister("UNIT_SPELLCAST_START", true)
                 C_Timer.After(0.4, function()
                     self:EncounterRegister("UNIT_SPELLCAST_START", false)
                 end)
