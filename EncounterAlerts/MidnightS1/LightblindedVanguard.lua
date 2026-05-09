@@ -21,6 +21,7 @@ NSI.InitializeAlerts[encID] = function(self)
             [16] = {54.4, 162.6, 212.5, 322, 372, 481.5},
         },
     }
+    self:AddEncounterAlert(data)
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
