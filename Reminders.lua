@@ -1959,3 +1959,13 @@ function NSI:EvaluateLoad(info)
     end
     return shouldLoad
 end
+
+function NSI:ImportReloeReminders()
+    if NSRT.Alerts.ReloeReminders then
+        for key, encID in ipairs(NSI.CurrentEncounterIDs) do
+            if self.InitializeAlerts[encID] then
+                self.InitializeAlerts[encID](self)
+            end
+        end
+    end
+end

@@ -113,7 +113,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     local diffTable = NSRT.EncounterAlerts[encId][diffID]
     local existing = diffTable[alertDef.internalID]
     local Vers = alertDef.Version
-    local Overwrite = existing and Vers and ((not existing.Version) or Vers > existing.Version)
+    local Overwrite = existing and ((Vers and ((not existing.Version) or Vers > existing.Version)) or existing.Reset)
     if ReloeReminder then
         if Overwrite then
             diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef

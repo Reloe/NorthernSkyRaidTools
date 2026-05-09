@@ -935,13 +935,7 @@ local function BuildReminderOptions()
             get = function() return NSRT.Alerts.ReloeReminders end,
             set = function(self, fixedparam, value)
                 NSRT.Alerts.ReloeReminders = value
-                if NSRT.Alerts.ReloeReminders then
-                    for key, encID in ipairs(NSI.CurrentEncounterIDs) do
-                        if NSI.InitializeAlerts[encID] then
-                            NSI.InitializeAlerts[encID](NSI)
-                        end
-                    end
-                end
+                NSI:ImportReloeReminders()
             end,
             nocombat = true,
         },
