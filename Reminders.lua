@@ -921,9 +921,9 @@ function NSI:CreateCircle(info)
 end
 
 function NSI:AddTickToBar(F, percent, HideTimer)
-    if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
+    if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) or percent > 1 or percent < 0 then return end
     local s = NSRT.ReminderSettings.BarSettings
-    local width = s.Width * (percent)
+    local width = s.Width * percent
     local height = s.Height
     F.Ticks = F.Ticks or {}
     for i=1, #F.Ticks+1 do
