@@ -84,7 +84,7 @@ function NSI:AddEncounterAlert(data)
         end
         return
     end
-    for diffID, phaseData in pairs(data.timers) do
+    for diffID, phaseData in pairs(data.timers or {}) do
         if phaseData[1] and type(phaseData[1]) == "table" then -- multiple phases were provided
             for phase, timers in ipairs(phaseData) do
                 if next(timers) then

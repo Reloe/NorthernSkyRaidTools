@@ -48,17 +48,48 @@ NSI.InitializeAlerts[encID] = function(self)
     Preview = [[return function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")
     end]],
-    extraOptions ={
-        Font = {Type = "Dropdown", DropdownType = "Fonts"},
-        FontSize = {Type = "Scale", min = 10, max = 100},
-        Anchor = {Type = "Dropdown", DropdownType = "Anchors"},
-        relativeTo = {Type = "Dropdown", DropdownType = "Anchors"},
-        xOffset = {Type = "Scale", min = -100, max = 100},
-        yOffset = {Type = "Scale", min = -100, max = 100},
-    },
     timers = {
             [15] = {29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350},
             [16] = {61, 65, 115, 119, 151, 155, 169, 173, 223, 227, 277, 281, 313, 317, 331, 335, 385, 389, 439, 443},
+    },
+    extraOptions = {
+        { Type = "Dropdown", label = "Font",
+            get = [[return function(NSI) return NSRT.EncounterAlerts[3180][16].TauntAlerts.Font or "Expressway" end]],
+            set = [[return function(NSI, v) for i=15, 16 do NSRT.EncounterAlerts[3180][i].TauntAlerts.Font = v end end]],
+            values = [[ return function(NSI)
+                local t = {}
+                for _, name in ipairs(NSI.LSM:List("font")) do
+                    t[#t + 1] = { label = name, value = name }
+                end
+                return t
+            end ]]},
+        { Type = "Slider", label = "FontSize", min = 10, max = 100,
+            get = [[return function(NSI) return NSRT.EncounterAlerts[3180][16].TauntAlerts.FontSize or 50 end]],
+            set = [[return function(NSI, v) for i=15, 16 do NSRT.EncounterAlerts[3180][i].TauntAlerts.FontSize = v end end]] },
+        { Type = "Dropdown", label = "Anchor",
+            get = [[return function(NSI) return NSRT.EncounterAlerts[3180][16].TauntAlerts.Anchor or "TOP" end]],
+            set = [[return function(NSI, v) for i=15, 16 do NSRT.EncounterAlerts[3180][i].TauntAlerts.Anchor = v end end]],
+            values = [[ return function(NSI)
+                local anchors = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+                local t = {}
+                for _, a in ipairs(anchors) do t[#t + 1] = { label = a, value = a } end
+                return t
+            end ]]},
+        { Type = "Dropdown", label = "relativeTo",
+            get = [[return function(NSI) return NSRT.EncounterAlerts[3180][16].TauntAlerts.relativeTo or "BOTTOM" end]],
+            set = [[return function(NSI, v) for i=15, 16 do NSRT.EncounterAlerts[3180][i].TauntAlerts.relativeTo = v end end]],
+            values = [[ return function(NSI)
+                local anchors = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+                local t = {}
+                for _, a in ipairs(anchors) do t[#t + 1] = { label = a, value = a } end
+                return t
+            end ]]},
+        { Type = "Slider", label = "xOffset", min = -100, max = 100,
+            get = [[return function(NSI) return NSRT.EncounterAlerts[3180][16].TauntAlerts.xOffset or 0 end]],
+            set = [[return function(NSI, v) for i=15, 16 do NSRT.EncounterAlerts[3180][i].TauntAlerts.xOffset = v end end]] },
+        { Type = "Slider", label = "yOffset", min = -100, max = 100,
+            get = [[return function(NSI) return NSRT.EncounterAlerts[3180][16].TauntAlerts.yOffset or 0 end]],
+            set = [[return function(NSI, v) for i=15, 16 do NSRT.EncounterAlerts[3180][i].TauntAlerts.yOffset = v end end]] },
         },
     }
     self:AddEncounterAlert(data)

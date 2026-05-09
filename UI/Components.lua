@@ -1486,11 +1486,12 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 width, h, def.min, def.max, def.step, wName)
 
         elseif t == "Dropdown" then
-            local resolvedGet = ResolveCallback(def.get)
-            local resolvedSet = ResolveCallback(def.set)
+            local resolvedGet    = ResolveCallback(def.get)
+            local resolvedSet    = ResolveCallback(def.set)
+            local resolvedValues = ResolveCallback(def.values)
             local function getItems()
-                local vals = type(def.values) == "function"
-                    and def.values() or (def.values or {})
+                local vals = type(resolvedValues) == "function"
+                    and resolvedValues(NSI) or (resolvedValues or {})
                 local out = {}
                 for _, v in ipairs(vals) do
                     out[#out + 1] = {
@@ -1505,8 +1506,8 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
             end
             local function getSelected()
                 local cur  = resolvedGet and resolvedGet(NSI)
-                local vals = type(def.values) == "function"
-                    and def.values() or (def.values or {})
+                local vals = type(resolvedValues) == "function"
+                    and resolvedValues(NSI) or (resolvedValues or {})
                 for _, v in ipairs(vals) do
                     if v.value == cur then return v.label end
                 end
