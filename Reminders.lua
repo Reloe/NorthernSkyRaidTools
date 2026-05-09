@@ -620,20 +620,22 @@ function NSI:CreateText(info)
             return self.ReminderText[i]
         end
         if not self.ReminderText[i] then
-            self.ReminderText[i] = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
+            local F = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
-            self.ReminderText[i]:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
-            self.ReminderText[i]:SetFrameStrata("HIGH")
-            self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
+            F:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             local anchor = s.CenterAligned and "CENTER" or "LEFT"
-            self.ReminderText[i].Text:SetPoint(anchor, self.ReminderText[i], anchor, 0, 0)
-            self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.ReminderText[i].Text:SetShadowOffset(0, 0)
-            self.ReminderText[i].Text:SetTextColor(unpack(info.colors or s.colors))
-            self:SetProperties(self.ReminderText[i], info, false, s)
-            return self.ReminderText[i]
+            F.Text:SetPoint(anchor, F, anchor, 0, 0)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.colors or s.colors))
+            self:SetProperties(F, info, false, s)
+            self.ReminderText[i] = F
+            return F
         end
     end
 end
@@ -647,45 +649,47 @@ function NSI:CreateIcon(info)
             return self.ReminderIcon[i]
         end
         if not self.ReminderIcon[i] then
-            self.ReminderIcon[i] = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
+            local F = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
             local yoffset = (s.GrowDirection == "Up" and (i-1) * s.Height) or (s.GrowDirection == "Down" and -(i-1) * s.Height) or 0
             local xoffset = (s.GrowDirection == "Right" and (i-1) * s.Width) or (s.GrowDirection == "Left" and -(i-1) * s.Width) or 0
-            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
-            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
-            self.ReminderIcon[i]:SetFrameStrata("HIGH")
-            self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
-            self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
+            F:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+            F.Icon = F:CreateTexture(nil, "ARTWORK")
+            F.Icon:SetAllPoints(F)
             local z = ((s.Zoom) * 0.5) / 100
-            self.ReminderIcon[i].Icon:SetTexCoord(z, 1 - z, z, 1 - z)
-            self.ReminderIcon[i].Border = CreateFrame("Frame", nil, self.ReminderIcon[i], "BackdropTemplate")
-            self.ReminderIcon[i].Border:SetAllPoints(self.ReminderIcon[i])
-            self.ReminderIcon[i].Border:SetBackdrop({
+            F.Icon:SetTexCoord(z, 1 - z, z, 1 - z)
+            F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.Border:SetAllPoints(F)
+            F.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.ReminderIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self.ReminderIcon[i].Text = self.ReminderIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
             local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
-            self.ReminderIcon[i].Text:SetPoint(anchor, self.ReminderIcon[i], relativePoint, s.xTextOffset, s.yTextOffset)
-            self.ReminderIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.ReminderIcon[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.ReminderIcon[i].Text:SetShadowOffset(0, 0)
-            self.ReminderIcon[i].Text:SetTextColor(unpack(info.colors or s.colors))
-            self.ReminderIcon[i].Swipe = CreateFrame("Cooldown", nil, self.ReminderIcon[i], "CooldownFrameTemplate")
-            self.ReminderIcon[i].Swipe:SetAllPoints()
-            self.ReminderIcon[i].Swipe:SetDrawBling(false)
-            self.ReminderIcon[i].Swipe:SetDrawEdge(false)
-            self.ReminderIcon[i].Swipe:SetReverse(true)
-            self.ReminderIcon[i].Swipe:SetHideCountdownNumbers(true)
-            self.ReminderIcon[i].TimerText = self.ReminderIcon[i].Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderIcon[i].TimerText:SetPoint("CENTER", self.ReminderIcon[i].Swipe, "CENTER", s.xTimer, s.yTimer)
-            self.ReminderIcon[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            self.ReminderIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.ReminderIcon[i].TimerText:SetShadowOffset(0, 0)
-            self.ReminderIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)
-            self:SetProperties(self.ReminderIcon[i], info, false, s)
-            return self.ReminderIcon[i]
+            F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.colors or s.colors))
+            F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
+            F.Swipe:SetAllPoints()
+            F.Swipe:SetDrawBling(false)
+            F.Swipe:SetDrawEdge(false)
+            F.Swipe:SetReverse(true)
+            F.Swipe:SetHideCountdownNumbers(true)
+            F.TimerText = F.Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            F.TimerText:SetShadowColor(0, 0, 0, 1)
+            F.TimerText:SetShadowOffset(0, 0)
+            F.TimerText:SetDrawLayer("OVERLAY", 7)
+            self:SetProperties(F, info, false, s)
+            self.ReminderIcon[i] = F
+            return F
         end
     end
 end
@@ -709,22 +713,23 @@ function NSI:CreateUnitFrameIcon(info, name)
             return self.UnitIcon[i]
         end
         if not self.UnitIcon[i] then
-            self.UnitIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.UnitIcon[i]:SetSize(s.Width, s.Height)
-            self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
-            self.UnitIcon[i].Icon = self.UnitIcon[i]:CreateTexture(nil, "ARTWORK")
-            self.UnitIcon[i].Icon:SetAllPoints(self.UnitIcon[i])
-            self.UnitIcon[i]:SetFrameStrata("TOOLTIP")
-            self.UnitIcon[i].Icon:SetTexture(spellInfo.iconID)
-            self.UnitIcon[i].Border = CreateFrame("Frame", nil, self.UnitIcon[i], "BackdropTemplate")
-            self.UnitIcon[i].Border:SetAllPoints(self.UnitIcon[i])
-            self.UnitIcon[i].Border:SetBackdrop({
+            local F = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            F:SetSize(s.Width, s.Height)
+            F:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
+            F.Icon = F:CreateTexture(nil, "ARTWORK")
+            F.Icon:SetAllPoints(F)
+            F:SetFrameStrata("TOOLTIP")
+            F.Icon:SetTexture(spellInfo.iconID)
+            F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.Border:SetAllPoints(F)
+            F.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.UnitIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self:SetProperties(self.UnitIcon[i], info, true, s)
-            return self.UnitIcon[i]
+            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            self:SetProperties(F, info, true, s)
+            self.UnitIcon[i] = F
+            return F
         end
     end
 end
@@ -738,41 +743,43 @@ function NSI:CreateBar(info)
             return self.ReminderBar[i]
         end
         if not self.ReminderBar[i] then
-            self.ReminderBar[i] = CreateFrame("StatusBar", 'NSUIReminderBar' .. i, UIParent, "BackdropTemplate")
-            self.ReminderBar[i]:SetBackdrop({
+            local F = CreateFrame("StatusBar", 'NSUIReminderBar' .. i, UIParent, "BackdropTemplate")
+            F:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             tileSize = 0,
             })
-            self.ReminderBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            self.ReminderBar[i]:SetStatusBarColor(unpack(info.colors or s.colors))
-            self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.8)
+            F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
+            F:SetStatusBarColor(unpack(info.colors or s.colors))
+            F:SetBackdropColor(0, 0, 0, 0.8)
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            self.ReminderBar[i]:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderBar[i]:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
-            self.ReminderBar[i]:SetFrameStrata("HIGH")
-            self.ReminderBar[i].Border = CreateFrame("Frame", nil, self.ReminderBar[i], "BackdropTemplate")
-            self.ReminderBar[i].Border:SetAllPoints(self.ReminderBar[i])
-            self.ReminderBar[i].Border:SetBackdrop({
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
+            F:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+            F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.Border:SetAllPoints(F)
+            F.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.ReminderBar[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self.ReminderBar[i].Icon = self.ReminderBar[i]:CreateTexture(nil, "ARTWORK")
-            self.ReminderBar[i].Icon:SetPoint("RIGHT", self.ReminderBar[i], "LEFT", s.xIcon, s.yIcon)
-            self.ReminderBar[i].Icon:SetSize(s.Height, s.Height)
-            self.ReminderBar[i].Text = self.ReminderBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderBar[i].Text:SetPoint("LEFT", self.ReminderBar[i].Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
-            self.ReminderBar[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.ReminderBar[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.ReminderBar[i].Text:SetShadowOffset(0, 0)
-            self.ReminderBar[i].Text:SetTextColor(1, 1, 1, 1)
-            self.ReminderBar[i].TimerText = self.ReminderBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderBar[i].TimerText:SetPoint("RIGHT", self.ReminderBar[i], "RIGHT", s.xTimer, s.yTimer)
-            self.ReminderBar[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            self.ReminderBar[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.ReminderBar[i].TimerText:SetShadowOffset(0, 0)
-            self:SetProperties(self.ReminderBar[i], info, false, s)
-            return self.ReminderBar[i]
+            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.Icon = F:CreateTexture(nil, "ARTWORK")
+            F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
+            F.Icon:SetSize(s.Height, s.Height)
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(1, 1, 1, 1)
+            F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            F.TimerText:SetShadowColor(0, 0, 0, 1)
+            F.TimerText:SetShadowOffset(0, 0)
+            self:SetProperties(F, info, false, s)
+            self.ReminderBar[i] = F
+            return F
         end
     end
 end
@@ -804,6 +811,7 @@ function NSI:CreateCircle(info)
             F.IsCircle = true
             F:SetSize(s.Size, s.Size)
             F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
 
             -- Mask for ring thickness
             F.mask = F:CreateMaskTexture()
@@ -1554,7 +1562,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         titleLabel:SetTextColor(0, 1, 1, 1)
         titleLabel:Hide()
         self[Name].TitleLabel = titleLabel
-    
+
         -- Gear button
         local gear = CreateFrame("Button", nil, self[Name])
         gear:SetSize(18, 18)
