@@ -34,6 +34,7 @@ NSI.InitializeAlerts[encID] = function(self)
     data.timers = nil
     data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]]
     data.TTS = false
+    data.overrides = {BlockCopy = true}
     data.difficulties = {16}
     self:AddEncounterAlert(data)
 end

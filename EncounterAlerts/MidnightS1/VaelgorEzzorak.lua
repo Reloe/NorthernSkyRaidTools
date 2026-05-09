@@ -28,6 +28,7 @@ NSI.InitializeAlerts[encID] = function(self)
     data.timers = nil
     data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end]]
     data.difficulties = {14, 15, 16}
+    data.overrides = {BlockCopy = true}
     self:AddEncounterAlert(data)
 end
 
