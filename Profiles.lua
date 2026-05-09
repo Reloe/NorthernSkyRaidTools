@@ -558,6 +558,7 @@ function NSI:ExportAlertsString(encID)
     local exportTable = {
         version          = 1,
         type             = "alerts",
+        encID            = encID,
         encounterAlerts  = encounterAlerts  or {},
         customBossAlerts = customAlerts or {},
     }
@@ -598,37 +599,54 @@ function NSAPI:ImportAlertsString(importString)
         local count = 0
         NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
         NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
-        for encID, encData in pairs(t.encounterAlerts or {}) do
-            NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-            for diffID, diffData in pairs(encData) do
-                NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
-                for alertKey, alert in pairs(diffData) do
-                    NSRT.EncounterAlerts[encID][diffID][alertKey] = alert
-                    count = count + 1
-                end
-            end
-        end
-        for diffID, diffAlerts in pairs(t.customBossAlerts or {}) do
-            NSRT.CustomBossAlerts[diffID] = NSRT.CustomBossAlerts[diffID] or {}
-            for _, imported in ipairs(diffAlerts) do
-                local found = false
-                if imported.id then
-                    for i, existing in ipairs(NSRT.CustomBossAlerts[diffID]) do
-                        if existing.id == imported.id then
-                            NSRT.CustomBossAlerts[diffID][i] = imported
-                            found = true
-                            count = count + 1
-                            break
-                        end
+        if t.encID then
+            if t.encounterAlerts then -- encounter alerts is always a full overwrite because they can't partially exist
+                NSRT.EncounterAlerts[t.encID] = t.encounterAlerts
+                for _, diffData in pairs(t.encounterAlerts or {}) do
+                    for alertKey, alert in pairs(diffData) do
+                        count = count + 1
                     end
                 end
-                if not found then
-                    table.insert(NSRT.CustomBossAlerts[diffID], imported)
-                    count = count + 1
+            end
+            if t.customBossAlerts then
+                NSRT.CustomBossAlerts[t.encID] = t.customBossAlerts[t.encID] or {}
+                for diffID, diffData in pairs(t.customBossAlerts or {}) do
+                    NSRT.CustomBossAlerts[t.encID][diffID] = NSRT.CustomBossAlerts[t.encID][diffID] or {}
+                    for alertKey, alert in pairs(diffData) do
+                        NSRT.CustomBossAlerts[diffID][alertKey] = alert
+                        count = count + 1
+                    end
+                end
+            end
+            return count
+        end
+        if t.encounterAlerts then
+            NSRT.EncounterAlerts = t.encounterAlerts
+            for encID, encData in pairs(t.encounterAlerts or {}) do
+                for diffID, diffData in pairs(encData) do
+                    for alertKey, alert in pairs(diffData) do
+                        count = count + 1
+                    end
                 end
             end
         end
-        return count
+        local overwritecount = 0
+        if t.customBossAlerts then
+            for encID, encData in pairs(t.customBossAlerts or {}) do
+                NSRT.CustomBossAlerts[encID] = NSRT.CustomBossAlerts[encID] or {}
+                for diffID, diffAlerts in pairs(encData) do
+                    NSRT.CustomBossAlerts[encID][diffID] = NSRT.CustomBossAlerts[encID][diffID] or {}
+                    for alertKey, alert in pairs(diffAlerts) do
+                        if NSRT.CustomBossAlerts[encID][diffID][alertKey] then
+                            overwritecount = overwritecount + 1
+                        end
+                        NSRT.CustomBossAlerts[encID][diffID][alertKey] = alert
+                        count = count + 1
+                    end
+                end
+            end
+        end
+        return count, overwritecount
     elseif t.type == "single_alert" then
         NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
         NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}

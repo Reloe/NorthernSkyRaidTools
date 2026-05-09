@@ -83,9 +83,12 @@ local function ShowImportPopup()
 
         local importBtn = DF:CreateButton(alertsImportPopup, function()
             local str = alertsImportPopup.textbox:GetText()
-            local count = NSAPI:ImportAlertsString(str)
+            local count, overwriteCount = NSAPI:ImportAlertsString(str)
             if count then
                 print("|cFF00FFFFNSRT:|r Imported " .. count .. " alert(s).")
+                if overwriteCount and overwriteCount > 0 then
+                    print("|cFFFFFF00NSRT:|r Overwritten " .. overwriteCount .. " alert(s).")
+                end
                 alertsImportPopup:Hide()
                 local enc = NSUI.encounters_frame
                 if enc and enc.RebuildList then enc.RebuildList() end
@@ -581,7 +584,7 @@ local function BuildBossRemindersUI(parentFrame)
         if encFilter then
             label = getFilterBossSelected()
         end
-        local str = NSI:ExportAlertsString(encFilter, filterDiffID)
+        local str = NSI:ExportAlertsString(encFilter)
         ShowExportPopup(str, label)
     end, halfW, 22)
     exportAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad + halfW + 4, ioY)
