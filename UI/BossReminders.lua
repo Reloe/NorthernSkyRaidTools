@@ -820,7 +820,7 @@ local function BuildBossRemindersUI(parentFrame)
         for _, row in ipairs(tickRows) do row:Hide() end
         tickRows = {}
         if not dispF._alert then return end
-        local ticks = dispF._alert.ticks or {}
+        local ticks = dispF._alert.Ticks or {}
         for i, v in ipairs(ticks) do
             local row = CreateFrame("Frame", nil, ticksChild)
             row:SetSize(ticksChild:GetWidth(), tickRowH)
@@ -847,7 +847,7 @@ local function BuildBossRemindersUI(parentFrame)
             local ri = i
             delBtn:SetScript("OnClick", function()
                 if dispF._alert then
-                    table.remove(dispF._alert.ticks, ri)
+                    table.remove(dispF._alert.Ticks, ri)
                     RebuildTickRows()
                 end
             end)
@@ -879,16 +879,16 @@ local function BuildBossRemindersUI(parentFrame)
     local function DoAddTick()
         local v = tonumber(addTickEntry:GetValue())
         if v and dispF._alert then
-            dispF._alert.ticks = dispF._alert.ticks or {}
+            dispF._alert.Ticks = dispF._alert.Ticks or {}
             local inserted = false
-            for i2, existing in ipairs(dispF._alert.ticks) do
+            for i2, existing in ipairs(dispF._alert.Ticks) do
                 if v < existing then
-                    table.insert(dispF._alert.ticks, i2, v)
+                    table.insert(dispF._alert.Ticks, i2, v)
                     inserted = true
                     break
                 end
             end
-            if not inserted then table.insert(dispF._alert.ticks, v) end
+            if not inserted then table.insert(dispF._alert.Ticks, v) end
             addTickEntry:SetValue("")
             RebuildTickRows()
         end
