@@ -697,9 +697,8 @@ function NSI:CreateUnitFrameIcon(info, name)
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
     if not spellInfo then return end
     local unit = NSAPI:GetChar(name, true)
-    local i = UnitInRaid(unit)
-    if (not UnitExists(unit)) or (not i) then return end
-    local F = self.LGF.GetUnitFrame("raid"..i)
+    if (not UnitExists(unit)) then return end
+    local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, #self.UnitIcon+1 do
@@ -1267,6 +1266,7 @@ function NSI:HideAllReminders(FullReset)
         for k, v in pairs(self.AllGlows) do
             self.LCG.PixelGlow_Stop(k, v)
         end
+        self.AllGlows = {}
     end
     local parent = self.ReminderText or {}
     for i=1, #parent do
@@ -1295,7 +1295,7 @@ function NSI:HideAllReminders(FullReset)
     end
     if not FullReset then return end
     self.ReminderTimer = nil
-    self.AllGlows = nil
+    self.AllGlows = {}
     self.Timelines = {}
     self.RemovedTimelines = {}
     self.CustomEvents = {}
@@ -1489,7 +1489,7 @@ function NSI:GlowFrame(unit, id, F)
     local color = {0, 1, 0, 1}
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
-    local i = UnitInRaid(unit)
+    local i = UnitInRaid(unit) or UnitInParty(unit) or "player"
     if (not UnitExists(unit)) or (not i) then return end
     id = unit..id
     local F = self.LGF.GetUnitFrame(unit)
@@ -1508,7 +1508,7 @@ function NSI:HideGlows(units, id, F)
     if not units then return end
     for i, unit in ipairs(units) do
         unit = NSAPI:GetChar(unit, true)
-        local i = UnitInRaid(unit)
+        local i = UnitInRaid(unit) or UnitInParty(unit) or "player"
         if (not UnitExists(unit)) or (not i) then return end
         local newid = unit..id
         local F = self.LGF.GetUnitFrame(unit)

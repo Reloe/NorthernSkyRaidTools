@@ -757,7 +757,7 @@ local function BuildBossRemindersUI(parentFrame)
     local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
     glowunitLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     glowunitLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    glowunitLbl:SetText("Glow Unit  (unit token, e.g. player, focus)")
+    glowunitLbl:SetText("Glow Unit  (player names, space seperated")
     glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -190)
 
     local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
