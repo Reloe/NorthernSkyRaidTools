@@ -1122,7 +1122,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
             local nr, ng, nb = ColorPickerFrame:GetColorRGB()
             local na
             if ColorPickerFrame.GetColorAlpha then
-                na = 1 - ColorPickerFrame:GetColorAlpha()
+                na = ColorPickerFrame:GetColorAlpha()
             elseif OpacitySliderFrame then
                 na = 1 - OpacitySliderFrame:GetValue()
             else
@@ -1141,7 +1141,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
             local cr, cg, cb, ca
             if prev and prev.r then
                 cr = prev.r; cg = prev.g; cb = prev.b
-                ca = prev.opacity ~= nil and (1 - prev.opacity) or prevA
+                ca = prev.opacity ~= nil and prev.opacity or prevA
             else
                 cr, cg, cb, ca = prevR, prevG, prevB, prevA
             end
@@ -1156,7 +1156,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
                 cancelFunc  = OnCancel,
                 hasOpacity  = true,
                 r = r, g = g, b = b,
-                opacity = 1 - a,
+                opacity = a,
             })
         else
             ColorPickerFrame.func        = OnChange
