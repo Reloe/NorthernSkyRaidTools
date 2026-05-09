@@ -34,8 +34,8 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     local id = id or self:DifficultyCheck(14) or 0
 
-    local hpDisplay = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].HealthDisplay and NSRT.EncounterAlerts[encID][id].HealthDisplay.enabled
-    if hpDisplay then
+    local hpDisplay = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].HealthDisplay
+    if hpDisplay and hpDisplay.enabled and self:EvaluateLoad(hpDisplay) then
         if not self.VaelgorEzzorakFrame then
             self.VaelgorEzzorakFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.VaelgorEzzorakFrame:SetScript("OnEvent", function(_, e, u)

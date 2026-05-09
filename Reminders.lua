@@ -1688,7 +1688,6 @@ function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID, I
         IsAlert = not IsAssignment,
         countdown = false,
         DisplayType = DisplayType,
-        role = nil,     -- "TANK", "HEALER", "DPS", "MELEE", "RANGED", or nil for all roles
     }
     return info
 end

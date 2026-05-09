@@ -67,7 +67,7 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id)
     id = id or self:DifficultyCheck(14) or 0
     local info = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].TauntAlerts
-    if info and info.enabled and UnitGroupRolesAssigned("player") == "TANK" then
+    if info and info.enabled and self:EvaluateLoad(info) then
         if not self.TauntFrame then
             self.TauntFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.TauntFrame:SetSize(100, 30)

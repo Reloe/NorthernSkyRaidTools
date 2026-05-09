@@ -306,8 +306,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     if realpull and id == 16 then
         NSI.NSRTFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
-    local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay and NSRT.EncounterAlerts[encID][id].InterruptDisplay.enabled
-    if interrupts and realpull and id == 16 then
+    local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay and NSRT.EncounterAlerts[encID][id].InterruptDisplay
+    if interrupts and interrupts.enabled and self:EvaluateLoad(interrupts) and realpull and id == 16 then
         self:EncounterRegister("UNIT_SPELLCAST_START", true, {"boss2", "boss3", "boss4"})
         self:EncounterRegister("UNIT_SPELLCAST_INTERRUPTED", true, {"boss2", "boss3", "boss4"})
         self:EncounterRegister("UNIT_SPELLCAST_STOP", true, {"boss2", "boss3", "boss4"})
@@ -357,8 +357,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
         end)
     end
-    local runes = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].RunesDisplay and NSRT.EncounterAlerts[encID][id].RunesDisplay.enabled
-    if runes and (realpull or preview) then
+    local runes = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].RunesDisplay and NSRT.EncounterAlerts[encID][id].RunesDisplay
+    if runes and runes.enabled and self:EvaluateLoad(runes) and (realpull or preview) then
         local s = NSRT.EncounterAlerts[encID][id].RunesDisplay
         local isTank = UnitGroupRolesAssigned("player") == "TANK"
         local XOffset = { 50, 60, 0, -60, -50 }
