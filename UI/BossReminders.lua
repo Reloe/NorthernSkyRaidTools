@@ -109,6 +109,7 @@ local function ShowImportPopup()
     end
 
     alertsImportPopup:Show()
+    alertsImportPopup.textbox:SetFocus()
 end
 
 -- ============================================================================
