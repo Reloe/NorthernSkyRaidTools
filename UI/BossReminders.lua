@@ -89,6 +89,7 @@ local function ShowImportPopup()
                 alertsImportPopup:Hide()
                 local enc = NSUI.encounters_frame
                 if enc and enc.RebuildList then enc.RebuildList() end
+                if enc and enc.RefreshSelected then enc.RefreshSelected() end
             else
                 statusLabel:SetText(
                     "|cFFFF0000Invalid import string. Please check and try again.|r")
@@ -529,6 +530,13 @@ local function BuildBossRemindersUI(parentFrame)
     end
 
     screen.RebuildList = RebuildList
+    screen.RefreshSelected = function()
+        if selectedReloeEncID and selectedReloeDiffID and selectedReloeKey then
+            SelectReloeCreatedAlert(selectedReloeEncID, selectedReloeDiffID, selectedReloeKey)
+        elseif selectedIndex then
+            SelectAlert(selectedIndex)
+        end
+    end
 
     -- Create Alert button
     local createBtn = CreateButton(screen, "+ Create Alert", function()
