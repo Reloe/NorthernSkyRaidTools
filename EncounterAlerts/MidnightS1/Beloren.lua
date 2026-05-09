@@ -35,6 +35,48 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local FeatherColorIconPreview = [[
+        return function(self, update)
+            if self.FeatherColorIconPreview then
+                self.EncounterAlertStop[3182](self, true)
+                self.FeatherColorIconPreview = false
+            else
+                self.EncounterAlertStart[3182](self, 16, true)
+                self.FeatherColorIconPreview = true
+            end
+        end
+    ]]
+    local data = {
+        internalID = "Feather Color",
+        text = nil,
+        DisplayType = "Icon",
+        encID = encID,
+        phase = nil,
+        TTS = false,
+        dur = 5,
+        spellID = nil,
+        difficulties = {14, 15, 16},
+        customIcon = 7636520,
+        timers = nil,
+        overrides = {BlockCopy = true, Size = 100, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300},
+        Preview = FeatherColorIconPreview,
+        extraOptions = {
+            {
+                Type = "Label",
+                text = "Feather Color Icon"
+            },
+            {
+                Type = "Slider",
+                label = "Size",
+                min = 50,
+                max = 200,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3182][16]["Feather Color"].Size or 100 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3182][i]["Feather Color"].Size = v end NSI.EncounterAlertStop[3182](NSI, true) NSI.EncounterAlertStart[3182](NSI, 16, true) end]]
+            },
+        },
+    }
+    self:AddEncounterAlert(data)
 end
 
 local detectedDurations = { -- Death Drop
@@ -70,5 +112,70 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
                 break
             end
         end
+    end
+end
+
+NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
+    id = id or self:DifficultyCheck(14) or 0
+    local featherColor = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Feather Color"]
+    if featherColor and featherColor.enabled then
+        local s = NSRT.EncounterAlerts[encID][id]["Feather Color"]
+        self:EncounterRegister("UNIT_AURA", true, "player")
+        self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
+            if e == "UNIT_AURA" then
+                local info = ...
+                if not info.addedAuras then return end
+
+                self.FeatherColorIconFrame:Hide()
+
+                -- all debuff aura instance IDs on us that we applied ourselves
+                local playerCastAuraInstanceIDsTest = {}
+                local playerCastAuraInstanceIDs = C_UnitAuras.GetUnitAuraInstanceIDs("player", "HARMFUL|PLAYER")
+                for _, auraInstanceID in ipairs(playerCastAuraInstanceIDs) do
+                    playerCastAuraInstanceIDsTest[auraInstanceID] = true
+                end
+
+                -- all debuff aura instance IDs on us, sorted by duration (infinite duration first)
+                local auras = C_UnitAuras.GetUnitAuras("player", "HARMFUL", 10, Enum.UnitAuraSortRule.ExpirationOnly, Enum.UnitAuraSortDirection.Reverse)
+                for _, aura in ipairs(auras) do
+                    -- first debuff we see that we didn't apply ourselves is probably the feather
+                    if not playerCastAuraInstanceIDsTest[aura.auraInstanceID] then
+                        self.FeatherColorIconFrame.texture:SetTexture(aura.icon)
+                        self.FeatherColorIconFrame:Show()
+                        return
+                    end
+                end
+            end
+        end)
+
+        if not self.FeatherColorIconFrame then
+            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame, "BackdropTemplate")
+            self.FeatherColorIconFrame.texture = self.FeatherColorIconFrame:CreateTexture("NSRTFeatherColorIconFrameTexture", "BACKGROUND")
+            self.FeatherColorIconFrame.texture:SetAllPoints()
+        end
+
+        if preview then
+            local light = math.random(1, 2) == 1
+            self.FeatherColorIconFrame.texture:SetTexture(light and 7636520 or 7636525)
+            self:MakeDraggable(self.FeatherColorIconFrame, s, true)
+        end
+
+        self.FeatherColorIconFrame:ClearAllPoints()
+        self.FeatherColorIconFrame:SetPoint(s.Anchor or "CENTER", self.NSRTFrame, s.relativeTo or "CENTER", s.xOffset or 0, s.yOffset or 0)
+        self.FeatherColorIconFrame:SetWidth(s.Size or 100)
+        self.FeatherColorIconFrame:SetHeight(s.Size or 100)
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
+    local featherColor = NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16]["Feather Color"]
+    if featherColor and featherColor.enabled and self:EvaluateLoad(featherColor) then
+        self:EncounterRegister("UNIT_AURA", false, "player")
+
+        if preview then
+            self:MakeDraggable(self.FeatherColorIconFrame, nil, false)
+        end
+
+        self.FeatherColorIconFrame:Hide()
     end
 end
