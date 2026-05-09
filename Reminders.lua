@@ -26,30 +26,7 @@ local symbols = {
 function NSI:AddToReminder(reminderInfo)
     local info = self:CreateReminder(reminderInfo)
     if not info then return end
-    table.insert(self.ProcessedReminder[info.encID][info.phase],
-    {
-        name = info.internalID or info.name,
-        notsticky = info.notsticky,
-        DisplayType = info.DisplayType,
-        TTSTimer = info.TTSTimer,
-        rawtext = info.rawtext,
-        phase = info.phase,
-        colors = info.colors,
-        id = #self.ProcessedReminder[info.encID][info.phase]+1,
-        countdown = info.countdown and tonumber(info.countdown),
-        glowunit = info.glowunit,
-        sound = info.sound,
-        time = info.time,
-        text = info.text,
-        TTS = info.TTS,
-        spellID = info.spellID and tonumber(info.spellID),
-        dur = info.dur or 8,
-        skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
-        IsAlert = info.IsAlert,
-        Ticks = info.Ticks,
-        skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
-        isConditional = info.isConditional,
-    })
+    table.insert(self.ProcessedReminder[info.encID][info.phase], info)
 end
 
 function NSI:CreateReminder(info, preview)
@@ -142,6 +119,7 @@ function NSI:CreateReminder(info, preview)
     info.spellID = info.spellID and tonumber(info.spellID)
     info.dur = info.dur or 8
     info.skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText)
+    info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     return info
 end
 
@@ -1154,7 +1132,6 @@ function NSI:PlayReminderSound(info, default)
                 return
             end
         end
-
         -- No LSM match found, try to play it directly as a path
         local success = PlaySoundFile(sound, "Master")
         if success then return end

@@ -6,7 +6,15 @@ local _, NSI = ...
 -- Clicking a row also previews the sound via PlaySoundFile.
 function NSI:BuildSoundDropdown(getValue, setValue)
     local function getItems()
-        local t = {}
+        local t = {
+            {
+                label   = "None",
+                value   = nil,
+                onclick = function()
+                    if setValue then setValue(nil) end
+                end,
+            },
+        }
         for _, sound in ipairs(NSI.LSM:List("sound")) do
             t[#t + 1] = {
                 label   = sound,
@@ -21,7 +29,8 @@ function NSI:BuildSoundDropdown(getValue, setValue)
     end
 
     local function getSelected()
-        return getValue and getValue() or ""
+        local v = getValue and getValue()
+        return v or "None"
     end
 
     return getItems, getSelected

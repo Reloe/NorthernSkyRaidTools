@@ -1371,9 +1371,8 @@ local function BuildBossRemindersUI(parentFrame)
             dispF._alert:Preview()
             return
         end
-        DevTool:AddData(dispF._alert)
         local info = NSI:CreateReminder(dispF._alert, true)
-        DevTool:AddData(info)
+        NSI:HideAllReminders()
         NSI:DisplayReminder(info)
     end
 
