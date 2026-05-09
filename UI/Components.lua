@@ -1537,6 +1537,12 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
 
         elseif t == "Link" then
             ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, wName)
+
+        elseif t == "Button" then
+            local resolvedFunc = ResolveCallback(def.func)
+            ctrl = C.CreateButton(parent, def.label, function()
+                if resolvedFunc then resolvedFunc(NSI) end
+            end, def.width or width, h, wName)
         end
 
         if ctrl then
