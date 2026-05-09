@@ -74,7 +74,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     if not subgroup then return end
-    local Soak = self:CreateDefaultAlert("", "Text", nil, 8, 1, encID)
+    local Soak = self:CreateDefaultAlert("", "Text", nil, 8, 1, encID, true)
     local timers = { 14.2, 114.2, 213, 314.6, 409.7 }
     for i, v in ipairs(timers) do
         Soak.time = v

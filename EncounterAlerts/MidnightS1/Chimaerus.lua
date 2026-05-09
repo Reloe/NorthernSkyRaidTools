@@ -44,7 +44,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if diff < 14 or diff > 16 then return end
     if diff == 16 and self.Assignments[encID].Soaks then
         local subgroup = self:GetSubGroup("player")
-        local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID)
+        local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID, true)
         Alert.dur, Alert.TTSTimer = 10, 5
         for phase = 1, 3 do
             Alert.phase = phase

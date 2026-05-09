@@ -1696,6 +1696,7 @@ end
 -- Iterates NSRT.EncounterAlerts[encID][id] and fires all enabled ReloeReminder alerts.
 -- loadConditions role filtering is handled at display time, not here.
 function NSI:FireEncounterAlerts(encID, id)
+    if self:IsUsingTLAlerts() then return end
     if not NSRT.EncounterAlerts or not NSRT.EncounterAlerts[encID] then return end
     local diffTable = NSRT.EncounterAlerts[encID][id]
     if not diffTable then return end

@@ -1399,6 +1399,7 @@ local function BuildBossRemindersUI(parentFrame)
             end
             return
         end
+        if self:IsUsingTLAlerts() then print("|cFFFF0000NSRT :|r Preview is disabled because you are displaying alerts through TimelineReminders.") end
         local info = NSI:CreateReminder(dispF._alert, true)
         NSI:HideAllReminders()
         NSI:DisplayReminder(info)
