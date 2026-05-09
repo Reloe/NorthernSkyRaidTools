@@ -1693,11 +1693,13 @@ function NSI:FireEncounterAlerts(encID, id)
     if not diffTable then return end
     local now = GetTime()
     for _, entry in pairs(diffTable) do
-        if type(entry) == "table" and entry.ReloeReminder and entry.enabled and not entry.isSpecialDisplay then
-            local alert = CopyTable(entry)
-            alert.encID = encID
-            alert.phase = entry.phase or 1
-            self:AddRemindersFromTable(alert, entry.timers or {})
+        if type(entry) == "table" and entry.enabled and not entry.isSpecialDisplay then
+            if self:EvaluateLoad(entry) then
+                local alert = CopyTable(entry)
+                alert.encID = encID
+                alert.phase = entry.phase or 1
+                self:AddRemindersFromTable(alert, entry.timers or {})
+            end
         end
     end
 end
@@ -1918,4 +1920,34 @@ function NSI:LoadCustomBossAlerts(encID)
             end
         end
     end
+end
+
+function NSI:EvaluateLoad(info)
+    local shouldLoad = true
+    local cond = info.loadConditions
+    if not cond then return true end
+    if cond.Roles and next(cond.Roles) then
+        shouldLoad = false
+        local myRole = UnitGroupRolesAssigned("player")
+        if cond.Roles[myRole] then return true end
+        local IsMelee = self:IsMelee("player")
+        if cond.Roles["MELEE"] and IsMelee then return true end
+        if cond.Roles["RANGED"] and not IsMelee then return true end
+    end
+    if cond.Classes and next(cond.Classes) then
+        shouldLoad = false
+        local myClass = select(2, UnitClass("player"))
+        if cond.Classes[myClass] then return true end
+    end
+    if cond.SpecIDs and next(cond.SpecIDs) then
+        shouldLoad = false
+        local mySpec = self:GetMySpecID()
+        if cond.SpecIDs[mySpec] then return true end
+    end
+    if cond.Names and next(cond.Names) then
+        shouldLoad = false
+        local myName = UnitName("player")
+        if cond.Names[myName] then return true end
+    end
+    return shouldLoad
 end
