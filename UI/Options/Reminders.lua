@@ -735,57 +735,55 @@ local function BuildReminderOptions()
                     NSI.LGF.GetUnitFrame("player")
                     local info1 = {
                         text = "Personals",
-                        phase = 1, id = 1, DisplayType = "Text",
+                        phase = 1, id = 1, DisplayType = "Text", dur = 10,
                         TTS = false,
                         TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
                         countdown = NSRT.ReminderSettings.TextCountdown,
-                        dur = NSRT.ReminderSettings.TextDuration,
                     }
                     NSI:DisplayReminder(info1)
                     local info2 = {
                         text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
-                        phase = 1, id = 2, DisplayType = "Text",
+                        phase = 1, id = 2, DisplayType = "Text", dur = 10,
                         TTS = false, TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
-                        countdown = false, dur = NSRT.ReminderSettings.TextDuration,
+                        countdown = false,
                     }
                     NSI:DisplayReminder(info2)
                     local info3 = {
                         text = "Give Ironbark", DisplayType = "Icon", spellID = 102342,
-                        phase = 1, id = 3,
+                        phase = 1, id = 3, dur = 10,
                         TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = NSRT.ReminderSettings.SpellCountdown,
-                        dur = NSRT.ReminderSettings.SpellDuration, glowunit = {"player"},
+                        countdown = NSRT.ReminderSettings.SpellCountdown, glowunit = {"player"},
                     }
                     NSI:DisplayReminder(info3)
                     local info4 = {
                         text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
-                        DisplayType = "Icon", spellID = 115203,
+                        DisplayType = "Icon", spellID = 115203, dur = 10,
                         phase = 1, id = 4, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                        countdown = false,
                     }
                     NSI:DisplayReminder(info4)
                     local info5 = {
                         text = "Breath", DisplayType = "Bar", spellID = 1256855,
-                        phase = 1, id = 5, TTS = false,
+                        phase = 1, id = 5, TTS = false, dur = 10,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                        countdown = false,
                         glowunit = {"player"},
                     }
                     NSI:DisplayReminder(info5)
                     local info6 = {
                         text = "Dodge", DisplayType = "Bar",
-                        phase = 1, id = 6, TTS = false,
+                        phase = 1, id = 6, TTS = false, dur = 10,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                        countdown = false,
                     }
                     NSI:DisplayReminder(info6)
                     local info7 = {
-                        text = "Dispel", DisplayType = "Circle", spellID = 528,
+                        text = "Dispel", DisplayType = "Circle", spellID = 528, dur = 10,
                         phase = 1, id = 7, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false, dur = NSRT.ReminderSettings.SpellDuration,
+                        countdown = false,
                     }
                     NSI:DisplayReminder(info7)
                     NSI:UpdateExistingFrames()
