@@ -39,10 +39,10 @@ NSI.InitializeAlerts[encID] = function(self)
     local FeatherColorIconPreview = [[
         return function(self, update)
             if self.FeatherColorIconPreview then
-                self.EncounterAlertStop[3182](self, true)
+                self.EncounterAlertStop[3182](self, "Feather Color")
                 self.FeatherColorIconPreview = false
             else
-                self.EncounterAlertStart[3182](self, 16, true)
+                self.EncounterAlertStart[3182](self, 16, "Feather Color")
                 self.FeatherColorIconPreview = true
             end
         end
@@ -119,7 +119,7 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck(14) or 0
     local featherColor = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Feather Color"]
-    if (featherColor and featherColor.enabled and self:EvaluateLoad(featherColor)) or preview then
+    if featherColor and ((featherColor.enabled and self:EvaluateLoad(featherColor) and not preview) or (preview and preview == "Feather Color")) then
         local s = NSRT.EncounterAlerts[encID][id]["Feather Color"]
 
         if not self.FeatherColorIconFrame then
@@ -172,7 +172,7 @@ end
 
 NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
     if self.FeatherColorIconFrame then
-        if preview then
+        if preview and preview == "Feather Color" then
             self:MakeDraggable(self.FeatherColorIconFrame, nil, false)
         end
         self.FeatherColorIconFrame:Hide()
