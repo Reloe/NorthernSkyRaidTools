@@ -362,6 +362,8 @@ function NSI:ProcessReminder()
     end
 end
 
+local CircleTexture = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_white.png"
+
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
     local parent = self.ReminderText or {}
     for i=1, #parent do
@@ -439,7 +441,6 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         if F and F:IsShown() then
             local s = NSRT.ReminderSettings.CircleSettings
             F:SetSize(s.Size, s.Size)
-            F.mask:SetSize(s.Size - 2 * s.Thickness, s.Size - 2 * s.Thickness)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         end
     end
@@ -551,11 +552,12 @@ function NSI:SetProperties(F, info, skipsound, s)
     if info.DisplayType == "Circle" then
         local s_c = NSRT.ReminderSettings.CircleSettings
         local r, g, b = unpack(info.colors or s_c.colors)
-        for i = 1, 4 do F.foregroundTextures[i]:SetVertexColor(r, g, b) end
+        F.ring:SetVertexColor(r, g, b, 1)
+        F.Swipe:SetCooldown(info.startTime, info.dur)
         if spellInfo then
-            F.circleText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "..(info.text or spellInfo.name)
+            F.circleText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
         else
-            F.circleText = info.text or ""
+            F.circleText = ""
         end
         F.TimerText:SetText(F.circleText)
     end
@@ -702,20 +704,20 @@ function NSI:CreateUnitFrameIcon(info, name)
     if not spellInfo then return end
     local unit = NSAPI:GetChar(name, true)
     if (not UnitExists(unit)) then return end
-    local F = self.LGF.GetUnitFrame(unit)
-    if not F then return end
+    local UnitFrame = self.LGF.GetUnitFrame(unit)
+    if not UnitFrame then return end
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, #self.UnitIcon+1 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then
             self.UnitIcon[i]:ClearAllPoints()
-            self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
+            self.UnitIcon[i]:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
             self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i]
         end
         if not self.UnitIcon[i] then
             local F = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
             F:SetSize(s.Width, s.Height)
-            F:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
+            F:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
             F.Icon = F:CreateTexture(nil, "ARTWORK")
             F.Icon:SetAllPoints(F)
             F:SetFrameStrata("TOOLTIP")
@@ -784,20 +786,6 @@ function NSI:CreateBar(info)
     end
 end
 
-local CIRCLE_TEX  = "Interface\\AddOns\\TimelineReminders\\Media\\Textures\\circle_white.png"
-local CIRCLE_MASK = "Interface\\AddOns\\TimelineReminders\\Media\\Textures\\circle_inner_mask.png"
-
-local function HorizontallyMirrorCircle(texture, width)
-    local ULx, ULy = texture:GetVertexOffset(UPPER_LEFT_VERTEX)
-    local URx, URy = texture:GetVertexOffset(UPPER_RIGHT_VERTEX)
-    local LLx, LLy = texture:GetVertexOffset(LOWER_LEFT_VERTEX)
-    local LRx, LRy = texture:GetVertexOffset(LOWER_RIGHT_VERTEX)
-    texture:SetVertexOffset(UPPER_LEFT_VERTEX,  width - ULx,  ULy)
-    texture:SetVertexOffset(UPPER_RIGHT_VERTEX, -width - URx, URy)
-    texture:SetVertexOffset(LOWER_LEFT_VERTEX,  width - LLx,  LLy)
-    texture:SetVertexOffset(LOWER_RIGHT_VERTEX, -width - LRx, LRy)
-end
-
 function NSI:CreateCircle(info)
     self.ReminderCircle = self.ReminderCircle or {}
     local s = NSRT.ReminderSettings.CircleSettings
@@ -813,110 +801,32 @@ function NSI:CreateCircle(info)
             F:SetFrameStrata("HIGH")
             F:SetFrameLevel(10)
 
-            -- Mask for ring thickness
-            F.mask = F:CreateMaskTexture()
-            F.mask:SetPoint("CENTER")
-            F.mask:SetTexture(CIRCLE_MASK, "CLAMPTOWHITE", "CLAMPTOWHITE", "NEAREST")
-            F.mask:SetSnapToPixelGrid(false)
-            F.mask:SetTexelSnappingBias(0)
-            F.mask:SetSize(s.Size - 2 * s.Thickness, s.Size - 2 * s.Thickness)
+            F.bg = F:CreateTexture(nil, "BACKGROUND")
+            F.bg:SetTexture(CircleTexture)
+            F.bg:SetAllPoints(F)
+            F.bg:SetVertexColor(0.15, 0.15, 0.15, 0.8)
 
-            -- 4 background + 4 foreground quadrant textures
-            F.backgroundTextures = {}
-            F.foregroundTextures = {}
-            local quadCoords = {
-                {0.5,0, 0.5,0.5, 1,0, 1,0.5},     -- upper-right   anchors: BL=CENTER, TR=TOPRIGHT
-                {0.5,0.5, 0.5,1, 1,0.5, 1,1},      -- lower-right   anchors: TL=CENTER, BR=BOTTOMRIGHT
-                {0,0.5, 0,1, 0.5,0.5, 0.5,1},      -- lower-left    anchors: TR=CENTER, BL=BOTTOMLEFT
-                {0,0, 0,0.5, 0.5,0, 0.5,0.5},      -- upper-left    anchors: BR=CENTER, TL=TOPLEFT
-            }
-            local quadAnchors = {
-                {"BOTTOMLEFT","CENTER","TOPRIGHT","TOPRIGHT"},
-                {"TOPLEFT","CENTER","BOTTOMRIGHT","BOTTOMRIGHT"},
-                {"TOPRIGHT","CENTER","BOTTOMLEFT","BOTTOMLEFT"},
-                {"BOTTOMRIGHT","CENTER","TOPLEFT","TOPLEFT"},
-            }
-            for q = 1, 4 do
-                local bg = F:CreateTexture(nil, "BACKGROUND")
-                bg:SetTexture(CIRCLE_TEX)
-                bg:SetVertexColor(0, 0, 0, 0.5)
-                bg:AddMaskTexture(F.mask)
-                bg:SetSnapToPixelGrid(false) bg:SetTexelSnappingBias(0)
-                bg:SetPoint(quadAnchors[q][1], F, quadAnchors[q][2])
-                bg:SetPoint(quadAnchors[q][3], F, quadAnchors[q][4])
-                local c = quadCoords[q]
-                bg:SetTexCoord(c[1],c[2], c[3],c[4], c[5],c[6], c[7],c[8])
-                F.backgroundTextures[q] = bg
+            F.ring = F:CreateTexture(nil, "ARTWORK")
+            F.ring:SetTexture(CircleTexture)
+            F.ring:SetAllPoints(F)
 
-                local fg = F:CreateTexture(nil, "BACKGROUND")
-                fg:SetTexture(CIRCLE_TEX)
-                fg:AddMaskTexture(F.mask)
-                fg:SetSnapToPixelGrid(false) fg:SetTexelSnappingBias(0)
-                fg:SetPoint(quadAnchors[q][1], F, quadAnchors[q][2])
-                fg:SetPoint(quadAnchors[q][3], F, quadAnchors[q][4])
-                F.foregroundTextures[q] = fg
+            F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
+            F.Swipe:SetAllPoints(F)
+            F.Swipe:SetDrawBling(false)
+            F.Swipe:SetDrawEdge(false)
+            F.Swipe:SetReverse(false)
+            F.Swipe:SetHideCountdownNumbers(true)
+            if F.Swipe.SetSwipeTexture then
+                F.Swipe:SetSwipeTexture(CircleTexture)
             end
+            F.Swipe:SetSwipeColor(0, 0, 0, 0.85)
 
-            -- Resets all foreground quads to full visibility
-            function F:SetFull()
-                local coords = {
-                    {0.5,0, 0.5,0.5, 1,0, 1,0.5},
-                    {0.5,0.5, 0.5,1, 1,0.5, 1,1},
-                    {0,0.5, 0,1, 0.5,0.5, 0.5,1},
-                    {0,0, 0,0.5, 0.5,0, 0.5,0.5},
-                }
-                for q = 1, 4 do
-                    F.foregroundTextures[q]:ClearVertexOffsets()
-                    local c = coords[q]
-                    F.foregroundTextures[q]:SetTexCoord(c[1],c[2], c[3],c[4], c[5],c[6], c[7],c[8])
-                    F.foregroundTextures[q]:Show()
-                end
-            end
-
-            -- Drives the countdown drain animation (degrees = elapsed/total * 360)
-            function F.SetDegrees(degrees)
-                degrees = Clamp(degrees, 0, 360)
-                local radius = 0.5 * s.Size
-                local rad = math.rad(90 - degrees)
-                local u, v = math.cos(rad), math.sin(rad)
-                F:SetFull()
-                -- upper-right (0–90)
-                F.foregroundTextures[1]:SetShown(degrees < 90)
-                if degrees == 0 or (degrees > 0 and degrees < 90) then
-                    F.foregroundTextures[1]:SetVertexOffset(UPPER_RIGHT_VERTEX, -u*radius, (v-1)*radius)
-                    F.foregroundTextures[1]:SetTexCoord(0,0, 0,0.5, 0.5*(1-u),0.5*(1-v), 0.5,0.5)
-                    HorizontallyMirrorCircle(F.foregroundTextures[1], radius)
-                end
-                -- lower-right (90–180)
-                F.foregroundTextures[2]:SetShown(degrees < 180)
-                if degrees == 90 or (degrees > 90 and degrees < 180) then
-                    F.foregroundTextures[2]:SetVertexOffset(UPPER_RIGHT_VERTEX, (u-1)*radius, v*radius)
-                    F.foregroundTextures[2]:SetTexCoord(0.5,0.5, 0.5,1, 0.5*(1+u),0.5*(1-v), 1,1)
-                end
-                -- lower-left (180–270)
-                F.foregroundTextures[3]:SetShown(degrees < 270)
-                if degrees == 180 or (degrees > 180 and degrees < 270) then
-                    F.foregroundTextures[3]:SetVertexOffset(LOWER_LEFT_VERTEX, -u*radius, (v+1)*radius)
-                    F.foregroundTextures[3]:SetTexCoord(0.5,0.5, 0.5*(1-u),0.5*(1-v), 1,0.5, 1,1)
-                    HorizontallyMirrorCircle(F.foregroundTextures[3], radius)
-                end
-                -- upper-left (270–360)
-                F.foregroundTextures[4]:SetShown(degrees < 360)
-                if degrees == 270 or (degrees > 270 and degrees < 360) then
-                    F.foregroundTextures[4]:SetVertexOffset(LOWER_LEFT_VERTEX, (u+1)*radius, v*radius)
-                    F.foregroundTextures[4]:SetTexCoord(0,0, 0.5*(1+u),0.5*(1-v), 0.5,0, 0.5,0.5)
-                end
-            end
-
-            -- Timer/text label above the circle
             F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.TimerText:SetPoint("BOTTOM", F, "TOP", 0, 4)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.TimerText:SetShadowColor(0, 0, 0, 1)
             F.TimerText:SetShadowOffset(1, -1)
 
-            F:SetFull()
-            -- initial position
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
             local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
             F:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "BOTTOMLEFT", xoff, yoff)
@@ -1071,14 +981,9 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     end
     local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
     if info.DisplayType == "Circle" then
-        local elapsed = GetTime() - info.startTime
-        local degrees = math.min((elapsed / info.dur) * 360, 360)
-        F.SetDegrees(degrees)
-        local circleRemStr = rem < 3 and string.format("%.1f", math.max(rem, 0)) or tostring(math.ceil(rem))
-        F.TimerText:SetText((F.circleText or "").." ("..circleRemStr..")")
+        F.TimerText:SetText((F.circleText or "")..text)
         return
     elseif info.DisplayType == "Text" then
-        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
         F.Text:SetText(text)
         return
     elseif info.DisplayType == "Bar" then

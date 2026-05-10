@@ -965,7 +965,12 @@ local function CreateSlider(parent, label, getValue, setValue,
     slider:SetScript("OnEnter", function() thumb:SetVertexColor(0.5, 1, 1, 1) end)
     slider:SetScript("OnLeave", function() thumb:SetVertexColor(0,   1, 1, 1) end)
 
-    local initVal = getValue and getValue(NSI) or (minVal or 0)
+    local initVal = (getValue and getValue(NSI)) or (minVal or 0)
+    local mn, mx = minVal or 0, maxVal or 100
+    if type(initVal) ~= "number" or initVal ~= initVal or initVal == math.huge or initVal == -math.huge then
+        initVal = mn
+    end
+    initVal = math.max(mn, math.min(mx, initVal))
     slider:SetValue(initVal)
     UpdateVisual(initVal)
     initialized = true

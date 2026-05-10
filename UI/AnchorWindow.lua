@@ -39,35 +39,39 @@ end
 local function GetWidgetDefs(settingsName)
     local S = NSRT.ReminderSettings[settingsName]
 
-    local function R(key)   return S[key]                                                     end
-    local function W(key,v) S[key] = v ; NSI:UpdateExistingFrames()                          end
-    local function WGrow(v) S.GrowDirection = v ; NSI:UpdateExistingFrames()
-                            NSI:ArrangeStates(TYPE_MAP[settingsName])                         end
+    local function R(key) return S[key] end
+    local function W(key,v) S[key] = v ; NSI:UpdateExistingFrames() end
+    local function WGrow(_, v)
+        S.GrowDirection = v ; NSI:UpdateExistingFrames()
+        NSI:ArrangeStates(TYPE_MAP[settingsName])
+    end
 
     -- Color helpers: storage is a {r,g,b,a} table; our ColorPicker needs 4 returns.
+    -- BuildWidgets passes NSI as the first argument to all callbacks.
     local function GetColor()
         local c = S.colors
         if not c then return 1, 1, 1, 1 end
         return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
     end
-    local function SetColor(r,g,b,a) W("colors", {r,g,b,a}) end
+    local function SetColor(_, r, g, b, a) W("colors", {r, g, b, a}) end
 
     -- Shorthand constructors
+    -- Note: BuildWidgets calls get(NSI) and set(NSI, value), so closures accept _ for NSI.
     local function Slider(label, key, mn, mx)
         return {Type="Slider", label=label,
-                get=function() return R(key) end,
-                set=function(v) W(key,v) end,
+                get=function()    return R(key) end,
+                set=function(_, v) W(key, v) end,
                 min=mn, max=mx}
     end
     local function Chk(label, key)
         return {Type="Checkbox", label=label,
-                get=function() return R(key) end,
-                set=function(v) W(key,v) end}
+                get=function()    return R(key) end,
+                set=function(_, v) W(key, v) end}
     end
     local function DD(label, key, valsFn)
         return {Type="Dropdown", label=label,
-                get=function() return R(key) end,
-                set=function(v) W(key,v) end,
+                get=function()    return R(key) end,
+                set=function(_, v) W(key, v) end,
                 values=valsFn}
     end
     local function DDGrow(withLR)
@@ -128,7 +132,6 @@ local function GetWidgetDefs(settingsName)
         return {
             DDGrow(true),
             Slider("Size",      "Size",          40,  200),
-            Slider("Thickness", "Thickness",     2,   50),
             Slider("Spacing",   "Spacing",       -50, 100),
             DD    ("Font",      "Font",          MediaValuesFn()),
             Slider("Font Size", "FontSize",      5,   80),

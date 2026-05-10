@@ -185,7 +185,6 @@ function NSI:AddMissingDefaults()
                 yOffset = -200,
                 colors = { 1, 0.8, 0, 1 },
                 Size = 80,
-                Thickness = 10,
                 Font = "Expressway",
                 FontSize = 18,
                 Spacing = 5,
