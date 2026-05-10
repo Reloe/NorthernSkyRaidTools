@@ -482,8 +482,9 @@ function NSI:ArrangeStates(DisplayType)
         local Spacing = s.Spacing or 0
         v.Frame:ClearAllPoints()
         if DisplayType == "Texts" then
+            local textHeight = issecretvalue(v.Frame.Text:GetStringHeight()) and (s.FontSize or 14) or v.Frame.Text:GetStringHeight()
             -- Texts stretch to anchor width, so double-point from anchor edges = centered
-            local h = v.Frame.Text and v.Frame.Text:GetStringHeight() or s.FontSize or 14
+            local h = v.Frame.Text and textHeight or s.FontSize or 14
             if s.GrowDirection == "Up" then
                 v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "TOPLEFT",  0, ANCHOR_PAD + (i-1)*(h+Spacing))
                 v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderTextMover", "TOPRIGHT", 0, ANCHOR_PAD + (i-1)*(h+Spacing) + h)
@@ -524,7 +525,7 @@ function NSI:ArrangeStates(DisplayType)
                 v.Frame:SetPoint("RIGHT",  "NSUIReminderCircleMover", "LEFT",  -(ANCHOR_PAD + (i-1)*(sz+Spacing)), 0)
             end
         else
-            print("NSRT: Reminder anchoring issue @ NSI:ArrangeStates (unknown type: "..tostring(Type)..")")
+            print("NSRT: Reminder anchoring issue @ NSI:ArrangeStates (unknown type: "..tostring(DisplayType)..")")
         end
     end
 end
@@ -911,7 +912,7 @@ function NSI:DisplayReminder(info, bypass)
         remString = tostring(math.ceil(rem))
     end
     local remString = (rem % 1 == 0) and string.format("%.1f", rem) or rem
-    local text = info.text ~= "" and info.text or ""
+    local text = info.text
     local F
     if info.DisplayType == "Circle" then
         F = self:CreateCircle(info)
@@ -965,14 +966,16 @@ end
 
 function NSI:UpdateReminderDisplay(info, F, skipsound)
     local rem = info.dur - (GetTime() - info.startTime)
+    local encId = info.encID or 0
+    local phase = info.phase or 0
     local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
-    if rem <= SoundTimer and (not self.PlayedSound["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if rem <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
         self:PlayReminderSound(info)
-        self.PlayedSound["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
+        self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
-    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
         NSAPI:TTSCountdown(info.countdown)
-        self.StartedCountdown["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
+        self.StartedCountdown["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
     if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
@@ -1014,8 +1017,8 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         if rem <= 3 and F.TimerText then
             F.TimerText:SetTextColor(1, 0, 0, 1)
         end
-        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] then
-            self.GlowStarted["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
+        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["enc"..encId.."ph"..phase.."id"..info.id] then
+            self.GlowStarted["enc"..encId.."ph"..phase.."id"..info.id] = true
             self:GlowFrame(nil, nil, F)
         end
         if F.TimerText then F.TimerText:SetText(remString) end

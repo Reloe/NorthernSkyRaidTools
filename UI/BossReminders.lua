@@ -385,13 +385,17 @@ local function BuildBossRemindersUI(parentFrame)
                 if filterEncID == nil or filterEncID == 0 then
                     icon = BossData.BossIcons[entry.encID]
                 else
-                    local spell = entry.entry.spellID and C_Spell.GetSpellInfo(entry.entry.spellID)
-                    if entry.entry.customIcon then
-                        icon = entry.entry.customIcon
-                    elseif spell then
-                        icon = spell.iconID
+
+                    local customIcon = entry.entry.customIcon and C_Spell.GetSpellInfo(entry.entry.customIcon)
+                    if customIcon then
+                        icon = customIcon.iconID
                     else
-                        icon = BossData.BossIcons[entry.encID]
+                        local spell = entry.entry.spellID and C_Spell.GetSpellInfo(entry.entry.spellID)
+                        if spell then
+                            icon = spell.iconID
+                        else
+                            icon = BossData.BossIcons[entry.encID]
+                        end
                     end
                 end
 
