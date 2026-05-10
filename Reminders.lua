@@ -552,22 +552,27 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
     end)
+    local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
     if info.DisplayType == "Text" then
+        if spellInfo then
+            F.SpellText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
+        else
+            F.SpellText = ""
+        end
         F.Text:SetTextColor(unpack(info.colors or s.colors))
         return
     end
-    local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
     if info.DisplayType == "Circle" then
         local s_c = NSRT.ReminderSettings.CircleSettings
         local r, g, b = unpack(info.colors or s_c.colors)
         F.ring:SetVertexColor(r, g, b, 1)
         F.Swipe:SetCooldown(info.startTime, info.dur)
         if spellInfo then
-            F.circleText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
+            F.SpellText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
         else
-            F.circleText = ""
+            F.SpellText = ""
         end
-        F.TimerText:SetText(F.circleText)
+        F.TimerText:SetText(F.SpellText)
     end
     if info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
@@ -985,12 +990,13 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     else
         remString = tostring(math.ceil(rem))
     end
-    local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
     if info.DisplayType == "Circle" then
-        F.TimerText:SetText((F.circleText or "")..text)
+        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+        F.TimerText:SetText((F.SpellText or "")..text)
         return
     elseif info.DisplayType == "Text" then
-        F.Text:SetText(text)
+        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+        F.Text:SetText((F.SpellText or "")..text)
         return
     elseif info.DisplayType == "Bar" then
         if F.SetValue then F:SetValue((GetTime()-info.startTime)) end
