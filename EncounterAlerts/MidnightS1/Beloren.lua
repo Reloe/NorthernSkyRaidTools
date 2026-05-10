@@ -119,8 +119,27 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck(14) or 0
     local featherColor = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Feather Color"]
-    if featherColor and featherColor.enabled then
+    if (featherColor and featherColor.enabled and self:EvaluateLoad(featherColor)) or preview then
         local s = NSRT.EncounterAlerts[encID][id]["Feather Color"]
+
+        if not self.FeatherColorIconFrame then
+            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame, "BackdropTemplate")
+            self.FeatherColorIconFrame.texture = self.FeatherColorIconFrame:CreateTexture("NSRTFeatherColorIconFrameTexture", "BACKGROUND")
+            self.FeatherColorIconFrame.texture:SetAllPoints()
+        end
+
+        self.FeatherColorIconFrame:ClearAllPoints()
+        self.FeatherColorIconFrame:SetPoint(s.Anchor or "CENTER", self.NSRTFrame, s.relativeTo or "CENTER", s.xOffset or 0, s.yOffset or 0)
+        self.FeatherColorIconFrame:SetWidth(s.Size or 100)
+        self.FeatherColorIconFrame:SetHeight(s.Size or 100)
+
+        if preview then
+            local light = math.random(1, 2) == 1
+            self.FeatherColorIconFrame.texture:SetTexture(light and 7636520 or 7636525)
+            self:MakeDraggable(self.FeatherColorIconFrame, s, true)
+            return
+        end
+
         self:EncounterRegister("UNIT_AURA", true, "player")
         self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
             if e == "UNIT_AURA" then
@@ -148,35 +167,14 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 end
             end
         end)
-
-        if not self.FeatherColorIconFrame then
-            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame, "BackdropTemplate")
-            self.FeatherColorIconFrame.texture = self.FeatherColorIconFrame:CreateTexture("NSRTFeatherColorIconFrameTexture", "BACKGROUND")
-            self.FeatherColorIconFrame.texture:SetAllPoints()
-        end
-
-        if preview then
-            local light = math.random(1, 2) == 1
-            self.FeatherColorIconFrame.texture:SetTexture(light and 7636520 or 7636525)
-            self:MakeDraggable(self.FeatherColorIconFrame, s, true)
-        end
-
-        self.FeatherColorIconFrame:ClearAllPoints()
-        self.FeatherColorIconFrame:SetPoint(s.Anchor or "CENTER", self.NSRTFrame, s.relativeTo or "CENTER", s.xOffset or 0, s.yOffset or 0)
-        self.FeatherColorIconFrame:SetWidth(s.Size or 100)
-        self.FeatherColorIconFrame:SetHeight(s.Size or 100)
     end
 end
 
 NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
-    local featherColor = NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16]["Feather Color"]
-    if featherColor and featherColor.enabled and self:EvaluateLoad(featherColor) then
-        self:EncounterRegister("UNIT_AURA", false, "player")
-
+    if self.FeatherColorIconFrame then
         if preview then
             self:MakeDraggable(self.FeatherColorIconFrame, nil, false)
         end
-
         self.FeatherColorIconFrame:Hide()
     end
 end
