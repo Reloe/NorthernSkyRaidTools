@@ -114,6 +114,9 @@ function NSI:ReadInterruptNote(StartNumber)
     self.Interrupts.myTable = {}
     self.Interrupts.disabled = true
     local assign = false
+    str = str:gsub("||r", "")
+    str = str:gsub("||c%x%x%x%x%x%x%x%x", "")
+    str = strtrim(str)
     for line in string.gmatch(str,'[^\r\n]+') do
         line = strtrim(line)
         if strlower(line) == "intend" then
@@ -128,6 +131,7 @@ function NSI:ReadInterruptNote(StartNumber)
             count = count+1
             self.Interrupts.assignTable[count] = self.Interrupts.assignTable[count] or {}
             for name in line:gmatch("%S+") do
+                name = NSAPI:GetChar(name, true, "GlobalNickNames")
                 if UnitInRaid(name) then
                     num = num+1
                     table.insert(self.Interrupts.assignTable[count], name)
