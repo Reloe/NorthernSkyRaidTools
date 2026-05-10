@@ -23,6 +23,13 @@ local symbols = {
     skull = 8,
 }
 
+local allowedTypes = {
+    ["Text"] = true,
+    ["Bar"] = true,
+    ["Icon"] = true,
+    ["Circle"] = true,
+}
+
 function NSI:AddToReminder(reminderInfo)
     local info = self:CreateReminder(reminderInfo)
     if not info then return end
@@ -48,8 +55,8 @@ function NSI:CreateReminder(info, preview)
         info.colors = colors
     end
     info.spellID = info.spellID and tonumber(info.spellID)
-    if info.spellID and not info.DisplayType then
-        info.DisplayType = NSRT.ReminderSettings.Bars and "Bar" or "Icon"
+    if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
+        info.DisplayType = info.spellID and (NSRT.ReminderSettings.Bars and "Bar" or "Icon") or "Text"
     end
     -- convert to booleans
     if info.TTS == "true" then info.TTS = true end
@@ -175,6 +182,7 @@ function NSI:ProcessReminder()
                 end
             end
             local tag = line:match("tag:([^;]+)")
+            local DisplayType = line:match("DisplayType:([^;]+)")
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
@@ -297,7 +305,7 @@ function NSI:ProcessReminder()
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})
                             end
                         end
-                        self:AddToReminder({text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, DisplayType = nil, notsticky = false})
+                        self:AddToReminder({DisplayType = DisplayType, text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, notsticky = false})
                     end
                 end
             else
@@ -528,11 +536,12 @@ function NSI:SetProperties(F, info, skipsound, s)
         self.elapsed = 0
         NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
+    F.info = info
     F:SetScript("OnHide", function()
         if info.glowunit then
             self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
         end
-        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 then
+        if F.Swipe and info.DisplayType == "Icon" and NSRT.ReminderSettings.IconSettings.Glow > 0 then
             self:HideGlows(nil, nil, F)
         end
         NSI:ArrangeStates(F.DisplayType)
@@ -543,7 +552,6 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
     end)
-    F.info = info
     if info.DisplayType == "Text" then
         F.Text:SetTextColor(unpack(info.colors or s.colors))
         return
@@ -816,16 +824,14 @@ function NSI:CreateCircle(info)
             F.Swipe:SetDrawEdge(false)
             F.Swipe:SetReverse(false)
             F.Swipe:SetHideCountdownNumbers(true)
-            if F.Swipe.SetSwipeTexture then
-                F.Swipe:SetSwipeTexture(CircleTexture)
-            end
+            F.Swipe:SetSwipeTexture(CircleTexture)
             F.Swipe:SetSwipeColor(0, 0, 0, 0.85)
 
             F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.TimerText:SetPoint("BOTTOM", F, "TOP", 0, 4)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.TimerText:SetShadowColor(0, 0, 0, 1)
-            F.TimerText:SetShadowOffset(1, -1)
+            F.TimerText:SetShadowOffset(0, 0)
 
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
             local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
