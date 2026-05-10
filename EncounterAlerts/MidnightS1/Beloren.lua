@@ -78,6 +78,30 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local ColorSwapPreview = [[
+        return function(self, update)
+            self.EncounterAlertStart[3182](self, 16, "Color Swap")
+        end
+    ]]
+    local data = {
+        internalID = "Color Swap",
+        text = "SWAPPED",
+        DisplayType = "Text",
+        encID = encID,
+        phase = nil,
+        TTS = false,
+        dur = 3,
+        id = 1,
+        spellID = nil,
+        customIcon = 1242792,
+        difficulties = {14, 15, 16},
+        timers = nil,
+        overrides = {BlockCopy = true},
+        skiptime = true,
+        Preview = ColorSwapPreview,
+    }
+    self:AddEncounterAlert(data)
 end
 
 local detectedDurations = { -- Death Drop
@@ -119,6 +143,8 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck(14) or 0
     local featherColor = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Feather Color"]
+    local colorSwap = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Color Swap"]
+
     if featherColor and ((featherColor.enabled and self:EvaluateLoad(featherColor) and not preview) or (preview and preview == "Feather Color")) then
         local s = NSRT.EncounterAlerts[encID][id]["Feather Color"]
 
@@ -167,6 +193,47 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 end
             end
         end)
+    end
+
+    if colorSwap and ((colorSwap.enabled and self:EvaluateLoad(colorSwap) and not preview) or (preview and preview == "Color Swap")) then
+        local s = NSRT.EncounterAlerts[encID][id]["Color Swap"]
+
+        self.channeling = false
+
+        self:EncounterRegister("UNIT_SPELLCAST_CHANNEL_START", true, "boss1")
+        self:EncounterRegister("UNIT_SPELLCAST_CHANNEL_STOP", true, "boss1")
+        self:EncounterRegister("ENCOUNTER_WARNING", true)
+        self.EncounterFrame:SetScript("OnEvent", function(_, e, ...)
+            if e == "UNIT_SPELLCAST_CHANNEL_START" then
+                self.channeling = true
+            elseif e == "UNIT_SPELLCAST_CHANNEL_STOP" then
+                self.channeling = false
+            elseif e == "ENCOUNTER_WARNING" then
+                if not self.channeling then
+                    return
+                end
+                local encounterWarningInfo = ...
+                local icon = "\124T"..encounterWarningInfo.iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
+                local text = string.format("%s %s %s", icon, s.text, icon)
+
+                local info = CopyTable(s)
+                info.text = text
+
+                self:DisplayReminder(info)
+            end
+        end)
+
+        if preview then
+            local light = math.random(1, 2) == 1
+            local iconFileID = light and secretwrap(7636520) or secretwrap(7636525)
+            local icon = "\124T"..iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
+            local text = string.format("%s %s %s", icon, s.text, icon)
+
+            local info = CopyTable(s)
+            info.text = text
+
+            self:DisplayReminder(info)
+        end
     end
 end
 
