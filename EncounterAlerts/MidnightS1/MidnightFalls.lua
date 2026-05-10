@@ -267,7 +267,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
     overrides = {BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
-    Preview = LuraPreview, customIcon = 7454100,
+    Preview = LuraPreview, customIcon = 1284980,
     difficulties = {14, 15, 16},
     extraOptions = {
             { Type = "Label",    text = "Runes Display" },
@@ -303,7 +303,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
 
     local data = {internalID = "InterruptDisplay", text = nil, internalID = "InterruptDisplay", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
-    customIcon = 132938, id = 0.1, timers = nil, difficulties = {16},
+    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
     overrides = {BlockCopy = true},
     Preview = [[return function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
