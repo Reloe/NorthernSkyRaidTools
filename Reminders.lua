@@ -382,6 +382,9 @@ end
 local CircleTexture = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_white.png"
 
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
+    if self._uefPending then return end
+    self._uefPending = true
+    C_Timer.After(0, function() self._uefPending = false end)
     local parent = self.ReminderText or {}
     for i=1, #parent do
         local F = parent[i]
@@ -405,12 +408,12 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local z = ((s.Zoom) * 0.5) / 100
             F.Icon:SetTexCoord(z, 1 - z, z, 1 - z)
             F.Border:SetAllPoints(F)
-            local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
-            local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
+            local anchor = s.RightAlignedText and "RIGHT" or "LEFT"
+            local relativePoint = s.RightAlignedText and "LEFT" or "RIGHT"
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            if F.info and F.info.skiptime then
+            if s.HideTimerText then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -436,13 +439,13 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            F:SetStatusBarColor(unpack(F.info.barColors or s.barColors))
-            if F.Text then F.Text:SetTextColor(unpack(F.info.textColors or s.textColors)) end
+            F:SetStatusBarColor(unpack(s.barColors))
+            if F.Text then F.Text:SetTextColor(unpack(s.textColors)) end
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            if F.info and F.info.skiptime then
+            if s.HideTimerText then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -460,6 +463,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local s = NSRT.ReminderSettings.CircleSettings
             F:SetSize(s.Size, s.Size)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.TimerText:SetTextColor(unpack(s.textColors))
         end
     end
     self:ArrangeStates("Circles")
@@ -574,16 +578,16 @@ function NSI:SetProperties(F, info, skipsound, s)
         return
     end
     if info.DisplayType == "Circle" then
-        local s_c = NSRT.ReminderSettings.CircleSettings
-        local r, g, b, a = unpack(info.textColors or s_c.textColors)
+        local s = NSRT.ReminderSettings.CircleSettings
+        local r, g, b, a = unpack(info.textColors or s.textColors)
         F.TimerText:SetTextColor(r, g, b, a)
-        local r2, g2, b2, a2 = unpack(info.ringColors or s_c.ringColors)
-        F.ring:SetVertexColor(r2, g2, b2, a2)
-        local showBg = (info.showBackground ~= nil) and info.showBackground or s_c.showBackground
-        local showBgBool = showBg ~= false
-        if F.bg   then F.bg:SetShown(showBgBool) end
-        if F.ring then F.ring:Show() end
+        local showBg = (info.showBackground == nil) and s.showBackground or info.showBackground
+        if F.ring then
+            local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
+            F.ring:SetShown(shouldShow)
+        end
         F.Swipe:SetCooldown(info.startTime, info.dur)
+        F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
         if spellInfo then
             F.SpellText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
         else
@@ -832,16 +836,12 @@ function NSI:CreateCircle(info)
             F:SetFrameStrata("HIGH")
             F:SetFrameLevel(10)
 
-            F.bg = F:CreateTexture(nil, "BACKGROUND")
-            F.bg:SetTexture(CircleTexture)
-            F.bg:SetAllPoints(F)
-            F.bg:SetVertexColor(unpack(info.ringColors or s.ringColors))
-            local _showBgCreate = (info.showBackground ~= nil and info.showBackground or s.showBackground) ~= false
-            F.bg:SetShown(_showBgCreate)
-
             F.ring = F:CreateTexture(nil, "ARTWORK")
             F.ring:SetTexture(CircleTexture)
             F.ring:SetAllPoints(F)
+            F.ring:SetVertexColor(0, 0, 0, 0.85)
+            local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
+            F.ring:SetShown(shouldShow)
 
             F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
             F.Swipe:SetAllPoints(F)
@@ -850,7 +850,7 @@ function NSI:CreateCircle(info)
             F.Swipe:SetReverse(false)
             F.Swipe:SetHideCountdownNumbers(true)
             F.Swipe:SetSwipeTexture(CircleTexture)
-            F.Swipe:SetSwipeColor(0, 0, 0, 0.85)
+            F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
 
             F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.TimerText:SetPoint("BOTTOM", F, "TOP", 0, 4)
@@ -921,7 +921,7 @@ function NSI:DisplayReminder(info, bypass)
         return
     end
     local remString
-    if rem < 3 then
+    if rem <= 3 then
         if rem < 0 then
             remString = ""
         else
@@ -931,7 +931,6 @@ function NSI:DisplayReminder(info, bypass)
     else
         remString = tostring(math.ceil(rem))
     end
-    local remString = (rem % 1 == 0) and string.format("%.1f", rem) or rem
     local text = info.text
     local F
     if info.DisplayType == "Circle" then
@@ -1003,7 +1002,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         return
     end
     local remString
-    if rem < 3 then
+    if rem <= 3.5 then
         if rem < 0 then
             remString = ""
         else

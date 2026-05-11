@@ -40,9 +40,13 @@ local function GetWidgetDefs(settingsName)
     local S = NSRT.ReminderSettings[settingsName]
 
     local function R(key) return S[key] end
-    local function W(key,v) S[key] = v ; NSI:UpdateExistingFrames() end
+    local function W(key,v)
+        S[key] = v
+        if NSI.IsInPreview then NSI:SpawnPreviewReminders() end
+    end
     local function WGrow(_, v)
-        S.GrowDirection = v ; NSI:UpdateExistingFrames()
+        S.GrowDirection = v
+        if NSI.IsInPreview then NSI:SpawnPreviewReminders() end
         NSI:ArrangeStates(TYPE_MAP[settingsName])
     end
 
@@ -143,11 +147,11 @@ local function GetWidgetDefs(settingsName)
 
     elseif settingsName == "CircleSettings" then
         local function GetRingColor()
-            local c = S.ringcolors
+            local c = S.ringColors
             if not c then return 1, 1, 1, 1 end
             return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
         end
-        local function SetRingColor(_, r, g, b, a) W("ringcolors", {r, g, b, a}) end
+        local function SetRingColor(_, r, g, b, a) W("ringColors", {r, g, b, a}) end
         return {
             DDGrow(true),
             Slider("Size",      "Size",          40,  200),

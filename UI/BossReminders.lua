@@ -808,8 +808,8 @@ local function BuildBossRemindersUI(parentFrame)
 
     for i, tn in ipairs(TYPES) do
         local tb = CreateSubButton(dispF, tn, function()
-            SetDisplayType(tn)
             if dispF._alert then NSI:SaveAlertData(dispF._alert, "DisplayType", tn) end
+            SetDisplayType(tn)
         end, typeBtnW, "NSUIEncAlertType_" .. tn)
         tb:SetPoint("TOPLEFT", dispF, "TOPLEFT", (i - 1) * (typeBtnW + 3), -18)
         typeBtns[tn] = tb
@@ -946,6 +946,10 @@ local function BuildBossRemindersUI(parentFrame)
         function()
             local c = dispF._alert and dispF._alert.textColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
+            local dt = dispF._alert and dispF._alert.DisplayType or "Text"
+            local typeMap = { Text="TextSettings", Icon="IconSettings", Circle="CircleSettings", Bar="BarSettings" }
+            local fc = NSRT.ReminderSettings[typeMap[dt] or "TextSettings"].textColors
+            if fc then return fc[1] or 1, fc[2] or 1, fc[3] or 1, fc[4] or 1 end
             return 1, 1, 1, 1
         end,
         function(_, r, g, b, a)
@@ -971,9 +975,9 @@ local function BuildBossRemindersUI(parentFrame)
         function()
             local c = dispF._alert and dispF._alert.ringcolors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
-            return 1, 1, 1, 1
+            return unpack(NSRT.ReminderSettings.CircleSettings.ringColors)
         end,
-        function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "ringcolors", {r, g, b, a}) end end,
+        function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "ringColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertRingColors")
     ringColorsPicker:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
     dispF.ringColorsPicker = ringColorsPicker
@@ -1117,7 +1121,7 @@ local function BuildBossRemindersUI(parentFrame)
         function()
             local c = dispF._alert and dispF._alert.textColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
-            return 1, 1, 1, 1
+            return unpack(NSRT.ReminderSettings.BarSettings.textColors)
         end,
         function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "textColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertBarTextColors")
@@ -1138,7 +1142,7 @@ local function BuildBossRemindersUI(parentFrame)
         function()
             local c = dispF._alert and dispF._alert.barColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
-            return 1, 0, 0, 1
+            return unpack(NSRT.ReminderSettings.BarSettings.barColors)
         end,
         function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "barColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertBarFillColors")
@@ -1167,6 +1171,7 @@ local function BuildBossRemindersUI(parentFrame)
         -- Label for the shared picker (used for non-Bar types)
         local COLOR_LABELS = { Text="Text Color", Icon="Text Color", Circle="Text Color" }
         dispF.colorsLbl:SetText(COLOR_LABELS[t] or "Color")
+        if dispF.colorsPicker then dispF.colorsPicker:Refresh() end
     end
     dispF.SetDisplayType = SetDisplayType
 

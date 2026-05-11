@@ -195,7 +195,7 @@ function NSI:AddMissingDefaults()
                 Font = "Expressway",
                 FontSize = 18,
                 Spacing = 5,
-                showBackground = true,
+                showBackground = false,
                 HideTimerText = false,
             },
             UnitIconSettings = {

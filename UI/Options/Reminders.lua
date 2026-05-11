@@ -9,6 +9,79 @@ local build_growdirection_options = Core.build_growdirection_options
 local build_raidframeicon_options = Core.build_raidframeicon_options
 local build_sound_dropdown = Core.build_sound_dropdown
 
+function NSI:SpawnPreviewReminders()
+    self:HideAllReminders()
+    self.AllGlows = self.AllGlows or {}
+    self.PlayedSound = {}
+    self.StartedCountdown = {}
+    self.GlowStarted = {}
+    self.LGF.GetUnitFrame("player")
+    local info1 = {
+        text = "Personals",
+        phase = 1, id = 1, DisplayType = "Text", dur = 8,
+        TTS = false,
+        skiptime = NSRT.ReminderSettings.TextSettings.HideTimerText,
+    }
+    local info2 = {
+        text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
+        phase = 1, id = 2, DisplayType = "Text", dur = 8,
+        TTS = false,
+        skiptime = NSRT.ReminderSettings.TextSettings.HideTimerText,
+    }
+    local info3 = {
+        text = "Give Ironbark", DisplayType = "Icon", spellID = 102342,
+        phase = 1, id = 3, dur = 8,
+        TTS = false,
+        skiptime = NSRT.ReminderSettings.IconSettings.HideTimerText,
+        glowunit = {"player"},
+    }
+    local info4 = {
+        text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
+        DisplayType = "Icon", spellID = 115203, dur = 8,
+        phase = 1, id = 4, TTS = false,
+        skiptime = NSRT.ReminderSettings.IconSettings.HideTimerText,
+        countdown = false,
+    }
+    local info5 = {
+        text = "Breath", DisplayType = "Bar", spellID = 1256855,
+        phase = 1, id = 5, TTS = false, dur = 8,
+        glowunit = {"player"},
+        skiptime = NSRT.ReminderSettings.BarSettings.HideTimerText,
+        colors = NSRT.ReminderSettings.BarSettings.colors,
+        barColors = NSRT.ReminderSettings.BarSettings.barColors,
+    }
+    local info6 = {
+        text = "Dodge", DisplayType = "Bar",
+        phase = 1, id = 6, TTS = false, dur = 8,
+        skiptime = NSRT.ReminderSettings.BarSettings.HideTimerText,
+        colors = NSRT.ReminderSettings.BarSettings.colors,
+        barColors = NSRT.ReminderSettings.BarSettings.barColors,
+    }
+    local info7 = {
+        text = "Dispel", DisplayType = "Circle", spellID = 528, dur = 8,
+        phase = 1, id = 7, TTS = false,
+        skiptime = NSRT.ReminderSettings.CircleSettings.HideTimerText,
+        ringColors = NSRT.ReminderSettings.CircleSettings.ringColors,
+        showBackground = NSRT.ReminderSettings.CircleSettings.showBackground,
+    }
+    self:DisplayReminder(info1)
+    self:DisplayReminder(info2)
+    self:DisplayReminder(info3)
+    self:DisplayReminder(info4)
+    self:DisplayReminder(info5)
+    self:DisplayReminder(info6)
+    self:DisplayReminder(info7)
+    local loopInterval = 8
+    if self.PreviewTicker then self.PreviewTicker:Cancel() end
+    self.PreviewTicker = C_Timer.NewTicker(loopInterval, function()
+        if self.IsInPreview then
+            self:HideAllReminders()
+            self:SpawnPreviewReminders()
+        end
+    end)
+    self:UpdateExistingFrames()
+end
+
 local function BuildReminderOptions()
     return {
         {
@@ -355,75 +428,6 @@ local function BuildReminderOptions()
                     CircleMover = NSRT.ReminderSettings.CircleSettings,
                 }
 
-                -- Shared spawn function so the ticker can loop it
-                local function SpawnPreviewReminders()
-                    NSI.AllGlows = NSI.AllGlows or {}
-                    NSI.PlayedSound = {}
-                    NSI.StartedCountdown = {}
-                    NSI.GlowStarted = {}
-                    NSI.LGF.GetUnitFrame("player")
-                    local info1 = {
-                        text = "Personals",
-                        phase = 1, id = 1, DisplayType = "Text", dur = 10,
-                        TTS = false,
-                        TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
-                        countdown = NSRT.ReminderSettings.TextCountdown,
-                    }
-                    NSI:DisplayReminder(info1)
-                    local info2 = {
-                        text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
-                        phase = 1, id = 2, DisplayType = "Text", dur = 10,
-                        TTS = false, TTSTimer = NSRT.ReminderSettings.TextTTSTimer,
-                        countdown = false,
-                    }
-                    NSI:DisplayReminder(info2)
-                    local info3 = {
-                        text = "Give Ironbark", DisplayType = "Icon", spellID = 102342,
-                        phase = 1, id = 3, dur = 10,
-                        TTS = false,
-                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = NSRT.ReminderSettings.SpellCountdown, glowunit = {"player"},
-                    }
-                    NSI:DisplayReminder(info3)
-                    local info4 = {
-                        text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
-                        DisplayType = "Icon", spellID = 115203, dur = 10,
-                        phase = 1, id = 4, TTS = false,
-                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false,
-                    }
-                    NSI:DisplayReminder(info4)
-                    local info5 = {
-                        text = "Breath", DisplayType = "Bar", spellID = 1256855,
-                        phase = 1, id = 5, TTS = false, dur = 10,
-                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false,
-                        glowunit = {"player"},
-                        colors = NSRT.ReminderSettings.BarSettings.colors,
-                        barColors = NSRT.ReminderSettings.BarSettings.barColors,
-                    }
-                    NSI:DisplayReminder(info5)
-                    local info6 = {
-                        text = "Dodge", DisplayType = "Bar",
-                        phase = 1, id = 6, TTS = false, dur = 10,
-                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false,
-                        colors = NSRT.ReminderSettings.BarSettings.colors,
-                        barColors = NSRT.ReminderSettings.BarSettings.barColors,
-                    }
-                    NSI:DisplayReminder(info6)
-                    local info7 = {
-                        text = "Dispel", DisplayType = "Circle", spellID = 528, dur = 10,
-                        phase = 1, id = 7, TTS = false,
-                        TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
-                        countdown = false,
-                        ringcolors = NSRT.ReminderSettings.CircleSettings.ringcolors,
-                        showBackground = NSRT.ReminderSettings.CircleSettings.showBackground,
-                    }
-                    NSI:DisplayReminder(info7)
-                    NSI:UpdateExistingFrames()
-                end
-
                 -- Stop function used by Exit button
                 local function StopPreview()
                     if NSI.PreviewTicker then
@@ -482,19 +486,7 @@ local function BuildReminderOptions()
                     NSI:MakeDraggable(NSI[v], allSettings[v], true)
                 end
 
-                SpawnPreviewReminders()
-
-                local loopInterval = math.max(
-                    NSRT.ReminderSettings.SpellDuration or 12,
-                    NSRT.ReminderSettings.TextDuration  or 8
-                )
-                NSI.PreviewTicker = C_Timer.NewTicker(loopInterval, function()
-                    if NSI.IsInPreview then
-                        NSI:HideAllReminders()
-                        SpawnPreviewReminders()
-                    end
-                end)
-
+                NSI:SpawnPreviewReminders()
                 NSI.PreviewBar:Show()
                 NSUI:Hide()
             end,
