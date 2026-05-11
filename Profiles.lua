@@ -624,6 +624,7 @@ function NSAPI:ImportAlertsString(importString)
                     end
                 end
             end
+            NSI:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", t.encID)
             return count
         end
         if t.encounterAlerts then
@@ -652,6 +653,7 @@ function NSAPI:ImportAlertsString(importString)
                 end
             end
         end
+        NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
         return count, overwritecount
     elseif t.type == "single_alert" then
         NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
@@ -660,6 +662,7 @@ function NSAPI:ImportAlertsString(importString)
             NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
             NSRT.EncounterAlerts[t.encID][t.diffID] = NSRT.EncounterAlerts[t.encID][t.diffID] or {}
             NSRT.EncounterAlerts[t.encID][t.diffID][t.alertKey] = t.data
+            NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, t.alertKey)
             return 1
         elseif t.alertType == "custom" and t.encID and t.diffID then
             NSRT.CustomBossAlerts[t.encID] = NSRT.CustomBossAlerts[t.encID] or {}
@@ -667,6 +670,7 @@ function NSAPI:ImportAlertsString(importString)
             local diffTable = NSRT.CustomBossAlerts[t.encID][t.diffID]
             local importKey = t.alertKey or NSI:UniqueAlertID(diffTable, false)
             diffTable[importKey] = t.data
+            NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, t.alertKey)
             return 1
         end
     end

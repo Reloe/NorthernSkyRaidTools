@@ -1888,5 +1888,6 @@ function NSI:ImportReloeReminders()
                 self.InitializeAlerts[encID](self)
             end
         end
+        NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
     end
 end
