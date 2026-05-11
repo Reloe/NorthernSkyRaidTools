@@ -86,7 +86,6 @@ function NSI:AddMissingDefaults()
             TextTTSTimer = 5,
             AutoShare = true,
             NoteCountdown = false,
-            HideTimerText = false,
             HideTextTimerText = false,
             PersonalReminderFrame = {
                 enabled = true,
@@ -144,6 +143,7 @@ function NSI:AddMissingDefaults()
                 Spacing = -1,
                 Glow = 0,
                 Zoom = 0,
+                HideTimerText = false,
             },
             BarSettings = {
                 GrowDirection = "Up",
@@ -167,6 +167,7 @@ function NSI:AddMissingDefaults()
                 FontSize = 22,
                 TimerFontSize = 22,
                 Spacing = -1,
+                HideTimerText = false,
             },
             TextSettings = {
                 textColors = { 1, 1, 1, 1 },
@@ -179,6 +180,7 @@ function NSI:AddMissingDefaults()
                 Font = "Expressway",
                 FontSize = 50,
                 Spacing = 1,
+                HideTimerText = false,
             },
             CircleSettings = {
                 GrowDirection = "Up",
@@ -194,6 +196,7 @@ function NSI:AddMissingDefaults()
                 FontSize = 18,
                 Spacing = 5,
                 showBackground = true,
+                HideTimerText = false,
             },
             UnitIconSettings = {
                 Position = "CENTER",

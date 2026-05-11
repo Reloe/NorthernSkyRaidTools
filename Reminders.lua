@@ -132,7 +132,7 @@ function NSI:CreateReminder(info, preview)
     info.countdown = info.countdown and tonumber(info.countdown)
     info.spellID = info.spellID and tonumber(info.spellID)
     info.dur = info.dur or 8
-    info.skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText)
+    if info.skiptime == nil then info.skiptime = NSRT.ReminderSettings[settingsRef[info.DisplayType]].HideTimerText end
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
     info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors

@@ -98,6 +98,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Timer Y",         "yTimer",        -100, 100),
             {Type="Color", label="Text Color", get=GetColor, set=SetColor},
             Chk   ("Right-Aligned Text", "RightAlignedText"),
+            Chk   ("Hide Timer Text", "HideTimerText"),
         }
 
     elseif settingsName == "BarSettings" then
@@ -125,6 +126,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Text Y Offset",   "yTextOffset",   -500, 500),
             Slider("Timer X",         "xTimer",        -100, 100),
             Slider("Timer Y",         "yTimer",        -100, 100),
+            Chk   ("Hide Timer Text", "HideTimerText"),
         }
 
     elseif settingsName == "TextSettings" then
@@ -136,6 +138,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Spacing",       "Spacing",       -5, 20),
             Slider("Sticky Duration", "Sticky",      0,  30),
             Chk   ("Center Aligned","CenterAligned"),
+            Chk   ("Hide Timer Text", "HideTimerText"),
         }
 
     elseif settingsName == "CircleSettings" then
@@ -155,6 +158,7 @@ local function GetWidgetDefs(settingsName)
             {Type="Color", label="Text Color",  get=GetColor,     set=SetColor},
             {Type="Color", label="Ring Color",  get=GetRingColor, set=SetRingColor},
             Chk   ("Show Background Ring", "showBackground"),
+            Chk   ("Hide Timer Text", "HideTimerText"),
         }
     end
 
