@@ -427,7 +427,8 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            F:SetStatusBarColor(unpack(F.info.colors or s.colors))
+            F:SetStatusBarColor(unpack(F.info.barColors or s.barColors))
+            if F.Text then F.Text:SetTextColor(unpack(F.info.colors or s.colors)) end
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
@@ -565,8 +566,14 @@ function NSI:SetProperties(F, info, skipsound, s)
     end
     if info.DisplayType == "Circle" then
         local s_c = NSRT.ReminderSettings.CircleSettings
-        local r, g, b = unpack(info.colors or s_c.colors)
-        F.ring:SetVertexColor(r, g, b, 1)
+        local r, g, b, a = unpack(info.colors or s_c.colors)
+        F.TimerText:SetTextColor(r, g, b, a)
+        local r2, g2, b2, a2 = unpack(info.ringcolors or s_c.ringcolors)
+        F.ring:SetVertexColor(r2, g2, b2, a2)
+        local showBg = (info.showBackground ~= nil) and info.showBackground or s_c.showBackground
+        local showBgBool = showBg ~= false
+        if F.bg   then F.bg:SetShown(showBgBool) end
+        if F.ring then F.ring:Show() end
         F.Swipe:SetCooldown(info.startTime, info.dur)
         if spellInfo then
             F.SpellText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
@@ -601,8 +608,9 @@ function NSI:SetProperties(F, info, skipsound, s)
             F.Icon:Hide()
         end
         if F.SetStatusBarColor then
-            F:SetStatusBarColor(unpack(info.colors or s.colors or {1,1,1,1}))
+            F:SetStatusBarColor(unpack(info.barColors or s.barColors or {1,0,0,1}))
         end
+        if F.Text then F.Text:SetTextColor(unpack(info.colors or s.colors or {1,1,1,1})) end
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
             if info.skiptime then
@@ -765,7 +773,7 @@ function NSI:CreateBar(info)
             tileSize = 0,
             })
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            F:SetStatusBarColor(unpack(info.colors or s.colors))
+            F:SetStatusBarColor(unpack(info.barColors or s.barColors))
             F:SetBackdropColor(0, 0, 0, 0.8)
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
             F:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
@@ -818,7 +826,9 @@ function NSI:CreateCircle(info)
             F.bg = F:CreateTexture(nil, "BACKGROUND")
             F.bg:SetTexture(CircleTexture)
             F.bg:SetAllPoints(F)
-            F.bg:SetVertexColor(0.15, 0.15, 0.15, 0.8)
+            F.bg:SetVertexColor(unpack(info.ringcolors or s.ringcolors))
+            local _showBgCreate = (info.showBackground ~= nil and info.showBackground or s.showBackground) ~= false
+            F.bg:SetShown(_showBgCreate)
 
             F.ring = F:CreateTexture(nil, "ARTWORK")
             F.ring:SetTexture(CircleTexture)
@@ -838,6 +848,7 @@ function NSI:CreateCircle(info)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.TimerText:SetShadowColor(0, 0, 0, 1)
             F.TimerText:SetShadowOffset(0, 0)
+            F.TimerText:SetTextColor(unpack(info.colors or s.colors))
 
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
             local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0

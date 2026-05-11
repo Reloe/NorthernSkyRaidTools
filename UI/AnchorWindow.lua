@@ -96,10 +96,17 @@ local function GetWidgetDefs(settingsName)
             Slider("Text Y Offset",   "yTextOffset",   -500, 500),
             Slider("Timer X",         "xTimer",        -100, 100),
             Slider("Timer Y",         "yTimer",        -100, 100),
+            {Type="Color", label="Text Color", get=GetColor, set=SetColor},
             Chk   ("Right-Aligned Text", "RightAlignedText"),
         }
 
     elseif settingsName == "BarSettings" then
+        local function GetBarFillColor()
+            local c = S.barColors
+            if not c then return 1, 0, 0, 1 end
+            return c[1] or 1, c[2] or 0, c[3] or 0, c[4] or 1
+        end
+        local function SetBarFillColor(_, r, g, b, a) W("barColors", {r, g, b, a}) end
         return {
             DDGrow(false),
             Slider("Width",           "Width",         80,   500),
@@ -109,7 +116,8 @@ local function GetWidgetDefs(settingsName)
             DD    ("Font",            "Font",          MediaValuesFn()),
             Slider("Font Size",       "FontSize",      5,    200),
             Slider("Timer Font Size", "TimerFontSize", 5,    200),
-            {Type="Color", label="Bar Color", get=GetColor, set=SetColor},
+            {Type="Color", label="Bar Fill Color",  get=GetBarFillColor, set=SetBarFillColor},
+            {Type="Color", label="Bar Text Color",  get=GetColor,        set=SetColor},
             Slider("Icon X Offset",   "xIcon",         -100, 100),
             Slider("Icon Y Offset",   "yIcon",         -100, 100),
             Slider("Text X Offset",   "xTextOffset",   -500, 500),
@@ -129,12 +137,20 @@ local function GetWidgetDefs(settingsName)
         }
 
     elseif settingsName == "CircleSettings" then
+        local function GetRingColor()
+            local c = S.ringcolors
+            if not c then return 1, 1, 1, 1 end
+            return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+        end
+        local function SetRingColor(_, r, g, b, a) W("ringcolors", {r, g, b, a}) end
         return {
             DDGrow(true),
             Slider("Size",      "Size",          40,  200),
             Slider("Spacing",   "Spacing",       -50, 100),
             DD    ("Font",      "Font",          MediaValuesFn()),
             Slider("Font Size", "FontSize",      5,   80),
+            {Type="Color", label="Text Color",  get=GetColor,     set=SetColor},
+            {Type="Color", label="Ring Color",  get=GetRingColor, set=SetRingColor},
             Chk   ("Show Background Ring", "showBackground"),
         }
     end

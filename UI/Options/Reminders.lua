@@ -536,7 +536,7 @@ local function BuildReminderOptions()
             desc = L["Color of the Bars"],
             get = function() return NSRT.ReminderSettings.BarSettings.colors end,
             set = function(self, r, g, b, a)
-                NSRT.ReminderSettings.BarSettings.colors = {r, g, b, a}
+                NSRT.ReminderSettings.BarSettings.colors = {r, g, b, a}  -- bar text color
                 NSI:UpdateExistingFrames()
             end,
             hasAlpha = true,
@@ -770,6 +770,8 @@ local function BuildReminderOptions()
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false,
                         glowunit = {"player"},
+                        colors = NSRT.ReminderSettings.BarSettings.colors,
+                        barColors = NSRT.ReminderSettings.BarSettings.barColors,
                     }
                     NSI:DisplayReminder(info5)
                     local info6 = {
@@ -777,6 +779,8 @@ local function BuildReminderOptions()
                         phase = 1, id = 6, TTS = false, dur = 10,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false,
+                        colors = NSRT.ReminderSettings.BarSettings.colors,
+                        barColors = NSRT.ReminderSettings.BarSettings.barColors,
                     }
                     NSI:DisplayReminder(info6)
                     local info7 = {
@@ -784,6 +788,8 @@ local function BuildReminderOptions()
                         phase = 1, id = 7, TTS = false,
                         TTSTimer = NSRT.ReminderSettings.SpellTTSTimer,
                         countdown = false,
+                        ringcolors = NSRT.ReminderSettings.CircleSettings.ringcolors,
+                        showBackground = NSRT.ReminderSettings.CircleSettings.showBackground,
                     }
                     NSI:DisplayReminder(info7)
                     NSI:UpdateExistingFrames()

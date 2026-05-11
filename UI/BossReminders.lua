@@ -567,9 +567,7 @@ local function BuildBossRemindersUI(parentFrame)
             TTSText       = "",
             TTSTimer      = 8,
             countdown     = false,
-            loadClass     = nil,
-            loadSpec      = nil,
-            loadCharacter = nil,
+            loadConditions = { Classes = {}, SpecIDs = {}, Names = {}, Roles = {}, },
         })
         RebuildList()
         SelectAlert(#diffAlerts)
@@ -628,9 +626,14 @@ local function BuildBossRemindersUI(parentFrame)
     local function SelectInnerTab(name)
         activeInnerTab = name
         for _, tn in ipairs(INNER_TABS) do
-            innerTabFrames[tn]:SetShown(tn == name)
-            if tn == name then innerTabBtns[tn]:Select()
-            else               innerTabBtns[tn]:Deselect() end
+            local f = innerTabFrames[tn]
+            f:SetShown(tn == name)
+            if tn == name then
+                innerTabBtns[tn]:Select()
+                if f.Rebuild then f.Rebuild() end   -- e.g. RebuildLoadTab when Load is selected
+            else
+                innerTabBtns[tn]:Deselect()
+            end
         end
     end
 
@@ -746,11 +749,11 @@ local function BuildBossRemindersUI(parentFrame)
     spellLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     spellLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     spellLbl:SetText("Spell ID  (optional — drives bar / icon texture)")
-    spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -94)
+    spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -90)
 
     local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
         nil, nil, nil, "NSUIEncAlertSpellID")
-    spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -110)
+    spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -106)
     local function SaveSpellID(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then dispF._alert.spellID = v end
@@ -763,11 +766,11 @@ local function BuildBossRemindersUI(parentFrame)
     durLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     durLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     durLbl:SetText("Duration  (seconds the alert is visible)")
-    durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -142)
+    durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -134)
 
     local durEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
         nil, nil, nil, "NSUIEncAlertDuration")
-    durEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -158)
+    durEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -150)
     local function SaveDur(self)
         local v = tonumber(self:GetText())
         if dispF._alert then dispF._alert.dur = v or 8 end
@@ -781,11 +784,11 @@ local function BuildBossRemindersUI(parentFrame)
     glowunitLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     glowunitLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     glowunitLbl:SetText("Glow Unit  (player names, space seperated")
-    glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -190)
+    glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -178)
 
     local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
         nil, nil, nil, "NSUIEncAlertGlowUnit")
-    glowunitEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -206)
+    glowunitEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -194)
     local function SaveGlowUnit(self)
         local v = self:GetText()
         if dispF._alert then dispF._alert.glowunit = (v ~= "") and v or nil end
@@ -795,23 +798,62 @@ local function BuildBossRemindersUI(parentFrame)
     dispF.glowunitEntry = glowunitEntry
 
     -- ── colors ──────────────────────────────────────────────────────────
-    local colorsPicker = CreateColorPicker(dispF, "Color",
+    local colorsLbl = dispF:CreateFontString(nil, "OVERLAY")
+    colorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    colorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    colorsLbl:SetText("Color")
+    colorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
+    dispF.colorsLbl = colorsLbl
+
+    local colorsPicker = CreateColorPicker(dispF, nil,
         function()
             local c = dispF._alert and dispF._alert.colors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
             return 1, 1, 1, 1
         end,
-        function(r, g, b, a)
+        function(_, r, g, b, a)
             if dispF._alert then dispF._alert.colors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertColors")
-    colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
+    colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -232)
     dispF.colorsPicker = colorsPicker
+
+    -- ── Circle section (shown only when display type = "Circle") ────────
+    local circleSection = CreateFrame("Frame", nil, dispF)
+    circleSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -266)
+    circleSection:SetSize(rightW, 60)
+    circleSection:Hide()
+
+    local ringColorsLbl = circleSection:CreateFontString(nil, "OVERLAY")
+    ringColorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    ringColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    ringColorsLbl:SetText("Ring Color")
+    ringColorsLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 0)
+
+    local ringColorsPicker = CreateColorPicker(circleSection, nil,
+        function()
+            local c = dispF._alert and dispF._alert.ringcolors
+            if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
+            return 1, 1, 1, 1
+        end,
+        function(_, r, g, b, a)
+            if dispF._alert then dispF._alert.ringcolors = {r, g, b, a} end
+        end,
+        200, 22, "NSUIEncAlertRingColors")
+    ringColorsPicker:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, -16)
+    dispF.ringColorsPicker = ringColorsPicker
+
+    local showBgCB = CreateCheckButton(circleSection, "Show Background Ring",
+        function() return dispF._alert and dispF._alert.showBackground ~= false end,
+        function(_, v) if dispF._alert then dispF._alert.showBackground = v end end,
+        200, 22, "NSUIEncAlertShowBg")
+    showBgCB:SetPoint("TOPLEFT", ringColorsPicker.frame, "BOTTOMLEFT", 0, -4)
+    dispF.showBgCB = showBgCB
 
     -- ── Bars section: Ticks (shown only when display type = "Bar") ───────
     local barsSection = CreateFrame("Frame", nil, dispF)
-    barsSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -278)
-    barsSection:SetSize(rightW, 200)
+    barsSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -316)
+    barsSection:SetSize(rightW, 130)
     barsSection:Hide()
 
     local ticksLbl = barsSection:CreateFontString(nil, "OVERLAY")
@@ -820,7 +862,7 @@ local function BuildBossRemindersUI(parentFrame)
     ticksLbl:SetText("Ticks  (seconds into the display where ticks should appear)")
     ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
 
-    local ticksListH = 120
+    local ticksListH = 60
     local ticksListW = rightW - 20
 
     local ticksScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTicksScroll", barsSection,
@@ -925,11 +967,73 @@ local function BuildBossRemindersUI(parentFrame)
         "NSUIEncAlertAddTickBtn")
     addTickBtn:SetPoint("LEFT", addTickEntry.frame, "RIGHT", 6, 0)
 
-    -- Patch SetDisplayType to also toggle barsSection visibility
+    -- Bar-specific text color picker — shown at the TOP slot (y=-244) for Bar type,
+    -- replacing the shared colorsPicker which is hidden when Bar is selected
+    local barTextColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
+    barTextColorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    barTextColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    barTextColorsLbl:SetText("Bar Text Color")
+    barTextColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
+    barTextColorsLbl:Hide()
+
+    local barTextColorsPicker = CreateColorPicker(dispF, nil,
+        function()
+            local c = dispF._alert and dispF._alert.colors
+            if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
+            return 1, 1, 1, 1
+        end,
+        function(_, r, g, b, a)
+            if dispF._alert then dispF._alert.colors = {r, g, b, a} end
+        end,
+        200, 22, "NSUIEncAlertBarTextColors")
+    barTextColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -232)
+    barTextColorsPicker.frame:Hide()
+    dispF.barTextColorsPicker = barTextColorsPicker
+    dispF.barTextColorsLbl    = barTextColorsLbl
+
+    -- Bar fill color picker — shown below text color for Bar type
+    local barFillColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
+    barFillColorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    barFillColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    barFillColorsLbl:SetText("Bar Fill Color")
+    barFillColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -256)
+    barFillColorsLbl:Hide()
+
+    local barFillColorsPicker = CreateColorPicker(dispF, nil,
+        function()
+            local c = dispF._alert and dispF._alert.barColors
+            if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
+            return 1, 0, 0, 1
+        end,
+        function(_, r, g, b, a)
+            if dispF._alert then dispF._alert.barColors = {r, g, b, a} end
+        end,
+        200, 22, "NSUIEncAlertBarFillColors")
+    barFillColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -272)
+    barFillColorsPicker.frame:Hide()
+    dispF.barFillColorsPicker = barFillColorsPicker
+    dispF.barFillColorsLbl    = barFillColorsLbl
+
+    -- Patch SetDisplayType to toggle type-specific sections and relabel the color picker
     local _prevSetDisplayType = SetDisplayType
     SetDisplayType = function(t)
         _prevSetDisplayType(t)
-        barsSection:SetShown(t == "Bar")
+        local isBar    = t == "Bar"
+        local isCircle = t == "Circle"
+        -- Shared color row: hide for Bar (replaced by two bar-specific rows)
+        dispF.colorsLbl:SetShown(not isBar)
+        dispF.colorsPicker.frame:SetShown(not isBar)
+        -- Bar-specific rows
+        dispF.barTextColorsLbl:SetShown(isBar)
+        dispF.barTextColorsPicker.frame:SetShown(isBar)
+        dispF.barFillColorsLbl:SetShown(isBar)
+        dispF.barFillColorsPicker.frame:SetShown(isBar)
+        -- Type sections
+        barsSection:SetShown(isBar)
+        circleSection:SetShown(isCircle)
+        -- Label for the shared picker (used for non-Bar types)
+        local COLOR_LABELS = { Text="Text Color", Icon="Text Color", Circle="Text Color" }
+        dispF.colorsLbl:SetText(COLOR_LABELS[t] or "Color")
     end
     dispF.SetDisplayType = SetDisplayType
 
@@ -1271,63 +1375,392 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     local loadF = innerTabFrames["Load"]
 
-    local classLbl = loadF:CreateFontString(nil, "OVERLAY")
-    classLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
-    classLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    classLbl:SetText("Class")
-    classLbl:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -2)
+    -- ── Static class / spec data ─────────────────────────────────────────────
+    local CLASS_DATA = {
+        { key = "WARRIOR",     label = "Warrior" },
+        { key = "PALADIN",     label = "Paladin" },
+        { key = "HUNTER",      label = "Hunter" },
+        { key = "ROGUE",       label = "Rogue" },
+        { key = "PRIEST",      label = "Priest" },
+        { key = "DEATHKNIGHT", label = "Death Knight" },
+        { key = "SHAMAN",      label = "Shaman" },
+        { key = "MAGE",        label = "Mage" },
+        { key = "WARLOCK",     label = "Warlock" },
+        { key = "MONK",        label = "Monk" },
+        { key = "DRUID",       label = "Druid" },
+        { key = "DEMONHUNTER", label = "Demon Hunter" },
+        { key = "EVOKER",      label = "Evoker" },
+    }
+    local SPEC_DATA = {
+        { class="WARRIOR",     id=71,   label="Arms" },
+        { class="WARRIOR",     id=72,   label="Fury" },
+        { class="WARRIOR",     id=73,   label="Protection" },
+        { class="PALADIN",     id=65,   label="Holy" },
+        { class="PALADIN",     id=66,   label="Protection" },
+        { class="PALADIN",     id=70,   label="Retribution" },
+        { class="HUNTER",      id=253,  label="Beast Mastery" },
+        { class="HUNTER",      id=254,  label="Marksmanship" },
+        { class="HUNTER",      id=255,  label="Survival" },
+        { class="ROGUE",       id=259,  label="Assassination" },
+        { class="ROGUE",       id=260,  label="Outlaw" },
+        { class="ROGUE",       id=261,  label="Subtlety" },
+        { class="PRIEST",      id=256,  label="Discipline" },
+        { class="PRIEST",      id=257,  label="Holy" },
+        { class="PRIEST",      id=258,  label="Shadow" },
+        { class="DEATHKNIGHT", id=250,  label="Blood" },
+        { class="DEATHKNIGHT", id=251,  label="Frost" },
+        { class="DEATHKNIGHT", id=252,  label="Unholy" },
+        { class="SHAMAN",      id=262,  label="Elemental" },
+        { class="SHAMAN",      id=263,  label="Enhancement" },
+        { class="SHAMAN",      id=264,  label="Restoration" },
+        { class="MAGE",        id=62,   label="Arcane" },
+        { class="MAGE",        id=63,   label="Fire" },
+        { class="MAGE",        id=64,   label="Frost" },
+        { class="WARLOCK",     id=265,  label="Affliction" },
+        { class="WARLOCK",     id=266,  label="Demonology" },
+        { class="WARLOCK",     id=267,  label="Destruction" },
+        { class="MONK",        id=268,  label="Brewmaster" },
+        { class="MONK",        id=269,  label="Windwalker" },
+        { class="MONK",        id=270,  label="Mistweaver" },
+        { class="DRUID",       id=102,  label="Balance" },
+        { class="DRUID",       id=103,  label="Feral" },
+        { class="DRUID",       id=104,  label="Guardian" },
+        { class="DRUID",       id=105,  label="Restoration" },
+        { class="DEMONHUNTER", id=577,  label="Havoc" },
+        { class="DEMONHUNTER", id=581,  label="Vengeance" },
+        { class="DEMONHUNTER", id=1480, label="Devourer" },
+        { class="EVOKER",      id=1467, label="Devastation" },
+        { class="EVOKER",      id=1468, label="Preservation" },
+        { class="EVOKER",      id=1473, label="Augmentation" },
+    }
 
-    local classGetItems, classGetSelected = NSI:BuildClassDropdown(
-        function() return loadF._alert and loadF._alert.loadClass end,
-        function(v)
-            if loadF._alert then loadF._alert.loadClass = v end
-            loadF.specDD:Refresh()
+    local loadRowH   = 20
+    local loadListW  = rightW - 20
+
+    -- ── Names section constants (anchored to bottom of loadF) ────────────────
+    local NAMES_SEC_H    = 180   -- total height reserved at the bottom
+    local namesListH     = 112   -- height of the names scroll list
+
+    -- ── Main scroll (classes + specs), fills loadF above the names section ───
+    -- Height = panel height - rightPanel margins(20) - inner-tab header(68) - names section(NAMES_SEC_H+4)
+    local loadScrollH = tab_content_height - 20 - 68 - NAMES_SEC_H - 4
+    local loadScroll = CreateFrame("ScrollFrame", "NSUIEncAlertLoadScroll", loadF,
+        "UIPanelScrollFrameTemplate")
+    loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
+    loadScroll:SetSize(loadListW, loadScrollH)
+    loadScroll:EnableMouseWheel(true)
+    loadScroll:SetScript("OnMouseWheel", function(_, delta)
+        local bar = _G["NSUIEncAlertLoadScrollScrollBar"]
+        if bar then
+            local cur = bar:GetValue()
+            local mn, mx = bar:GetMinMaxValues()
+            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 20)))
         end
-    )
-    local classDD = CreateDropdown(loadF, nil, classGetItems, classGetSelected,
-        180, 22, "NSUIEncAlertClass")
-    classDD:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -18)
-    loadF.classDD = classDD
-
-    local specLbl = loadF:CreateFontString(nil, "OVERLAY")
-    specLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
-    specLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    specLbl:SetText("Spec")
-    specLbl:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -50)
-
-    local specGetItems, specGetSelected = NSI:BuildSpecDropdown(
-        function() return loadF._alert and loadF._alert.loadClass end,
-        function() return loadF._alert and loadF._alert.loadSpec end,
-        function(v) if loadF._alert then loadF._alert.loadSpec = v end end
-    )
-    local specDD = CreateDropdown(loadF, nil, specGetItems, specGetSelected,
-        180, 22, "NSUIEncAlertSpec")
-    specDD:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -66)
-    loadF.specDD = specDD
-
-    local charLbl = loadF:CreateFontString(nil, "OVERLAY")
-    charLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
-    charLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    charLbl:SetText("Character Name  (exact match — leave blank for all)")
-    charLbl:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -98)
-
-    local charEntry = CreateTextEntry(loadF, nil, nil, nil, 200, 22,
-        nil, nil, nil, "NSUIEncAlertChar")
-    charEntry:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, -114)
-    charEntry.editBox:SetScript("OnEnterPressed", function(self)
-        if loadF._alert then
-            local v = self:GetText()
-            loadF._alert.loadCharacter = (v ~= "") and v or nil
-        end
-        self:ClearFocus()
     end)
-    charEntry.editBox:SetScript("OnEditFocusLost", function(self)
-        if loadF._alert then
-            local v = self:GetText()
-            loadF._alert.loadCharacter = (v ~= "") and v or nil
+    ReskinScrollbar(loadScroll)
+
+    local loadScrollChild = CreateFrame("Frame", nil, loadScroll, "BackdropTemplate")
+    loadScrollChild:SetSize(loadListW - 18, 1)
+    loadScrollChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+        tile = true, tileSize = 64 })
+    loadScrollChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
+    loadScroll:SetScrollChild(loadScrollChild)
+
+    -- Collapse state per section (persists across Rebuild calls)
+    local sectionCollapsed = { Roles = true, Classes = true, Specs = true }
+    local RebuildLoadTab  -- forward declaration
+
+    local hdrFontPath = NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)
+    local function MakeSectionHdr(label, sectionKey)
+        local btn = CreateFrame("Button", nil, loadScrollChild)
+        btn:SetSize(loadListW - 18, 18)
+        btn.arrowTex = btn:CreateTexture(nil, "OVERLAY")
+        btn.arrowTex:SetSize(10, 10)
+        btn.arrowTex:SetPoint("LEFT", btn, "LEFT", 2, 0)
+        btn.arrowTex:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]])
+        btn.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 1)
+        btn.textLbl = btn:CreateFontString(nil, "OVERLAY")
+        btn.textLbl:SetFont(hdrFontPath, 11, "")
+        btn.textLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+        btn.textLbl:SetPoint("LEFT", btn, "LEFT", 16, 0)
+        btn.textLbl:SetText(label)
+        btn:SetScript("OnClick", function()
+            sectionCollapsed[sectionKey] = not sectionCollapsed[sectionKey]
+            if RebuildLoadTab then RebuildLoadTab() end
+        end)
+        btn:SetScript("OnEnter", function() btn.textLbl:SetTextColor(0.85, 0.85, 0.85, 1) end)
+        btn:SetScript("OnLeave", function() btn.textLbl:SetTextColor(0.55, 0.55, 0.55, 1) end)
+        return btn
+    end
+
+    local function MakeCheckRow(parent)
+        local row = CreateFrame("Button", nil, parent)
+        row:SetSize(loadListW - 18, loadRowH)
+        row.bg = row:CreateTexture(nil, "BACKGROUND")
+        row.bg:SetAllPoints(row)
+        row.bg:SetColorTexture(0, 0, 0, 0)
+        row.checkTex = row:CreateTexture(nil, "OVERLAY")
+        row.checkTex:SetSize(12, 12)
+        row.checkTex:SetPoint("LEFT", row, "LEFT", 4, 0)
+        row.checkTex:SetTexture([[Interface\Buttons\UI-CheckBox-Check]])
+        row.checkTex:SetVertexColor(0.2, 1, 0.2, 1)
+        row.checkTex:Hide()
+        row.nameLbl = row:CreateFontString(nil, "OVERLAY")
+        row.nameLbl:SetFont(hdrFontPath, 12, "")
+        row.nameLbl:SetPoint("LEFT", row, "LEFT", 22, 0)
+        return row
+    end
+
+    -- Section header buttons (repositioned and arrow updated in RebuildLoadTab)
+    local classSecHdr = MakeSectionHdr("Classes  (leave all unchecked for any class)", "Classes")
+    local specSecHdr  = MakeSectionHdr("Specializations  (leave all unchecked for any spec)", "Specs")
+
+    -- Pre-create class rows (one per class, fixed set)
+    local classRowFrames = {}
+    for i, cd in ipairs(CLASS_DATA) do
+        local row = MakeCheckRow(loadScrollChild)
+        local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[cd.key]
+        if cc then row.nameLbl:SetTextColor(cc.r, cc.g, cc.b, 1)
+        else        row.nameLbl:SetTextColor(1, 1, 1, 1) end
+        row.nameLbl:SetText(cd.label)
+        row._classKey = cd.key
+        classRowFrames[i] = row
+        row:Hide()
+    end
+
+    -- Pre-create spec rows (one per spec, fixed set)
+    local specRowFrames = {}
+    for i, sd in ipairs(SPEC_DATA) do
+        local row = MakeCheckRow(loadScrollChild)
+        local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[sd.class]
+        if cc then row.nameLbl:SetTextColor(cc.r * 0.8 + 0.2, cc.g * 0.8 + 0.2, cc.b * 0.8 + 0.2, 1)
+        else       row.nameLbl:SetTextColor(0.85, 0.85, 0.85, 1) end
+        row.nameLbl:SetText(sd.label)
+        row._specID   = sd.id
+        row._classKey = sd.class
+        specRowFrames[i] = row
+        row:Hide()
+    end
+
+    local ROLE_DATA = {
+        { key = "TANK",    label = "Tank" },
+        { key = "HEALER",  label = "Healer" },
+        { key = "DAMAGER", label = "DPS" },
+        { key = "MELEE",   label = "Melee" },
+        { key = "RANGED",  label = "Ranged" },
+    }
+    local ROLE_COLORS = {
+        TANK    = { 0.3, 0.5, 1.0 },
+        HEALER  = { 0.3, 0.9, 0.3 },
+        DAMAGER = { 0.9, 0.2, 0.2 },
+        MELEE   = { 0.95, 0.55, 0.2 },
+        RANGED  = { 0.9, 0.8, 0.2 },
+    }
+
+    local rolesSecHdr = MakeSectionHdr("Roles  (leave all unchecked for any role)", "Roles")
+
+    local roleRowFrames = {}
+    for i, rd in ipairs(ROLE_DATA) do
+        local row = MakeCheckRow(loadScrollChild)
+        local rc = ROLE_COLORS[rd.key]
+        row.nameLbl:SetTextColor(rc[1], rc[2], rc[3], 1)
+        row.nameLbl:SetText(rd.label)
+        row._roleKey = rd.key
+        roleRowFrames[i] = row
+        row:Hide()
+    end
+
+    -- ── Names section (fixed at bottom of loadF) ──────────────────────────────
+    local namesHdrLbl = loadF:CreateFontString(nil, "OVERLAY")
+    namesHdrLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+    namesHdrLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    namesHdrLbl:SetText("Character Names  (exact match, leave empty for all)")
+    namesHdrLbl:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 12)
+
+    local nameAddEntry = CreateTextEntry(loadF, nil, nil, nil, 180, 22,
+        nil, nil, nil, "NSUIEncAlertNameAdd")
+    nameAddEntry:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 36)
+
+    local DoAddName  -- forward declaration so nameAddBtn closure can reference it
+    local nameAddBtn = CreateSubButton(loadF, "Add", function() if DoAddName then DoAddName() end end,
+        54, "NSUIEncAlertNameAddBtn")
+    nameAddBtn:SetPoint("LEFT", nameAddEntry.frame, "RIGHT", 6, 0)
+
+    local namesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertNamesScroll", loadF,
+        "UIPanelScrollFrameTemplate")
+    namesScroll:SetSize(loadListW, namesListH)
+    namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 4)
+    namesScroll:EnableMouseWheel(true)
+    namesScroll:SetScript("OnMouseWheel", function(_, delta)
+        local bar = _G["NSUIEncAlertNamesScrollScrollBar"]
+        if bar then
+            local cur = bar:GetValue()
+            local mn, mx = bar:GetMinMaxValues()
+            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 20)))
         end
     end)
-    loadF.charEntry = charEntry
+    ReskinScrollbar(namesScroll)
+
+    local namesChild = CreateFrame("Frame", nil, namesScroll, "BackdropTemplate")
+    namesChild:SetSize(loadListW - 18, 1)
+    namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
+        tile = true, tileSize = 64 })
+    namesChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
+    namesScroll:SetScrollChild(namesChild)
+
+    local nameRowH  = 20
+    local nameRows  = {}
+
+    local function RebuildNameRows()
+        for _, row in ipairs(nameRows) do row:Hide() end
+        if not loadF._alert then return end
+        local cond = loadF._alert.loadConditions
+        if not (cond and cond.Names) then return end
+        local i = 0
+        for name, _ in pairs(cond.Names) do
+            i = i + 1
+            if not nameRows[i] then
+                nameRows[i] = CreateFrame("Frame", nil, namesChild)
+                nameRows[i]:SetSize(namesChild:GetWidth(), nameRowH)
+                nameRows[i].bg = nameRows[i]:CreateTexture(nil, "BACKGROUND")
+                nameRows[i].bg:SetAllPoints(nameRows[i])
+                nameRows[i].nLbl = nameRows[i]:CreateFontString(nil, "OVERLAY")
+                nameRows[i].nLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+                nameRows[i].nLbl:SetPoint("LEFT", nameRows[i], "LEFT", 8, 0)
+                nameRows[i].nLbl:SetTextColor(1, 1, 1, 1)
+                nameRows[i].delBtn = CreateFrame("Button", nil, nameRows[i])
+                nameRows[i].delBtn:SetSize(14, 14)
+                nameRows[i].delBtn:SetPoint("RIGHT", nameRows[i], "RIGHT", -6, 0)
+                nameRows[i].delBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+                nameRows[i].delBtn:GetNormalTexture():SetDesaturated(true)
+                nameRows[i].delBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+            end
+            nameRows[i]:ClearAllPoints()
+            nameRows[i]:SetPoint("TOPLEFT", namesChild, "TOPLEFT", 0, -(i - 1) * nameRowH)
+            nameRows[i].bg:SetColorTexture(i % 2 == 0 and 0.2 or 0, i % 2 == 0 and 0.2 or 0,
+                i % 2 == 0 and 0.2 or 0, i % 2 == 0 and 0.9 or 0)
+            nameRows[i].nLbl:SetText(name)
+            local capName = name
+            nameRows[i].delBtn:SetScript("OnClick", function()
+                if loadF._alert and loadF._alert.loadConditions
+                        and loadF._alert.loadConditions.Names then
+                    loadF._alert.loadConditions.Names[capName] = nil
+                    RebuildNameRows()
+                end
+            end)
+            nameRows[i]:Show()
+        end
+        namesChild:SetHeight(math.max(i * nameRowH, 1))
+        local bar = _G["NSUIEncAlertNamesScrollScrollBar"]
+        if bar then
+            local maxScroll = math.max(0, i * nameRowH - namesListH)
+            bar:SetMinMaxValues(0, maxScroll)
+            if bar:GetValue() > maxScroll then bar:SetValue(0) end
+        end
+    end
+
+    DoAddName = function()
+        if not loadF._alert then return end   -- no alert selected, nothing to write to
+        local v = nameAddEntry:GetValue()
+        if not v or v == "" then return end
+        loadF._alert.loadConditions = loadF._alert.loadConditions or {}
+        loadF._alert.loadConditions.Names = loadF._alert.loadConditions.Names or {}
+        loadF._alert.loadConditions.Names[v] = true
+        nameAddEntry:SetValue("")
+        RebuildNameRows()
+    end
+    nameAddEntry.editBox:SetScript("OnEnterPressed", function(self)
+        DoAddName(); self:ClearFocus()
+    end)
+
+    -- ── RebuildLoadTab — main function called on SelectAlert / tab selection ──
+    RebuildLoadTab = function()
+        if not loadF._alert then return end
+        local alert = loadF._alert
+        alert.loadConditions = alert.loadConditions or {}
+        alert.loadConditions.Classes = alert.loadConditions.Classes or {}
+        alert.loadConditions.SpecIDs = alert.loadConditions.SpecIDs or {}
+        alert.loadConditions.Roles   = alert.loadConditions.Roles   or {}
+        alert.loadConditions.Names   = alert.loadConditions.Names   or {}
+        local cond = alert.loadConditions
+
+        local y    = 0
+        local hdrH = 18
+        local gapH = 4
+
+        local function LayoutSection(hdrBtn, rows, dataList, collapsedKey, isSelected, onToggle, colorFn)
+            hdrBtn:ClearAllPoints()
+            hdrBtn:SetPoint("TOPLEFT", loadScrollChild, "TOPLEFT", 0, -y)
+            local collapsed = sectionCollapsed[collapsedKey]
+            -- Flip arrow chevron vertically when collapsed
+            if collapsed then
+                hdrBtn.arrowTex:SetTexCoord(0, 1, 1, 0)  -- flipped = pointing right
+            else
+                hdrBtn.arrowTex:SetTexCoord(0, 1, 0, 1)  -- normal = pointing down
+            end
+            y = y + hdrH + 2
+
+            for i, data in ipairs(dataList) do
+                local row = rows[i]
+                if collapsed then
+                    row:Hide()
+                else
+                    row:ClearAllPoints()
+                    row:SetPoint("TOPLEFT", loadScrollChild, "TOPLEFT", 0, -y)
+                    local selected = isSelected(data)
+                    if selected then
+                        local r, g, b = colorFn(data)
+                        row.bg:SetColorTexture(r * 0.3, g * 0.3, b * 0.3, 0.85)
+                        row.checkTex:Show()
+                    else
+                        row.bg:SetColorTexture(
+                            i % 2 == 0 and 0.12 or 0,
+                            i % 2 == 0 and 0.12 or 0,
+                            i % 2 == 0 and 0.12 or 0,
+                            i % 2 == 0 and 0.5 or 0)
+                        row.checkTex:Hide()
+                    end
+                    local d = data
+                    row:SetScript("OnClick", function() onToggle(d, cond); RebuildLoadTab() end)
+                    row:Show()
+                    y = y + loadRowH
+                end
+            end
+            y = y + gapH
+        end
+
+        LayoutSection(rolesSecHdr, roleRowFrames, ROLE_DATA, "Roles",
+            function(d) return cond.Roles[d.key] end,
+            function(d, c) if c.Roles[d.key] then c.Roles[d.key] = nil else c.Roles[d.key] = true end end,
+            function(d) local rc = ROLE_COLORS[d.key]; return rc[1], rc[2], rc[3] end)
+
+        LayoutSection(classSecHdr, classRowFrames, CLASS_DATA, "Classes",
+            function(d) return cond.Classes[d.key] end,
+            function(d, c) if c.Classes[d.key] then c.Classes[d.key] = nil else c.Classes[d.key] = true end end,
+            function(d)
+                local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[d.key]
+                return cc and cc.r or 0.5, cc and cc.g or 0.8, cc and cc.b or 0.5
+            end)
+
+        LayoutSection(specSecHdr, specRowFrames, SPEC_DATA, "Specs",
+            function(d) return cond.SpecIDs[d.id] end,
+            function(d, c) if c.SpecIDs[d.id] then c.SpecIDs[d.id] = nil else c.SpecIDs[d.id] = true end end,
+            function(d)
+                local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[d.class]
+                return cc and cc.r or 0.5, cc and cc.g or 0.8, cc and cc.b or 0.5
+            end)
+
+        loadScrollChild:SetHeight(math.max(y, 1))
+        local bar = _G["NSUIEncAlertLoadScrollScrollBar"]
+        if bar then
+            local maxScroll = math.max(0, y - loadScroll:GetHeight())
+            bar:SetMinMaxValues(0, maxScroll)
+            if bar:GetValue() > maxScroll then bar:SetValue(0) end
+        end
+
+        RebuildNameRows()
+    end
+    loadF.Rebuild = RebuildLoadTab
 
     -- Lock overlay for Load tab (reloeCreated alerts use built-in role field)
     loadF.lockOverlay = MakeLockOverlay(loadF,
@@ -1458,6 +1891,10 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.durEntry:SetValue(tostring(alert.dur or 8))
         dispF.glowunitEntry:SetValue(alert.glowunit or "")
         dispF.colorsPicker:Refresh()
+        dispF.ringColorsPicker:Refresh()
+        dispF.barTextColorsPicker:Refresh()
+        dispF.barFillColorsPicker:Refresh()
+        dispF.showBgCB:SetValue(alert.showBackground ~= false)
         dispF.RebuildTickRows()
 
         -- Trigger tab
@@ -1476,9 +1913,7 @@ local function BuildBossRemindersUI(parentFrame)
         sndF.soundDD:Refresh()
 
         -- Load tab
-        loadF.classDD:Refresh()
-        loadF.specDD:Refresh()
-        loadF.charEntry:SetValue(alert.loadCharacter or "")
+        loadF.Rebuild()
 
         RebuildList()
         SelectInnerTab(activeInnerTab)
@@ -1508,7 +1943,7 @@ local function BuildBossRemindersUI(parentFrame)
         dispF._alert = entry; dispF._hardcodedEncID = nil
         trigF._alert = nil;   trigF._hardcodedEncID = nil
         sndF._alert  = entry; sndF._hardcodedEncID  = nil
-        loadF._alert = nil;   loadF._hardcodedEncID = nil
+        loadF._alert = entry;   loadF._hardcodedEncID = nil
 
         -- Header: alert name (read-only)
         nameEntry:SetValue(ReloeAlertName(entry))
@@ -1529,6 +1964,10 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
         dispF.glowunitEntry:SetValue(entry.glowunit or "")
         dispF.colorsPicker:Refresh()
+        dispF.ringColorsPicker:Refresh()
+        dispF.barTextColorsPicker:Refresh()
+        dispF.barFillColorsPicker:Refresh()
+        dispF.showBgCB:SetValue((entry.showBackground ~= false))
         dispF.RebuildTickRows()
 
         -- Trigger tab: inert (lock overlay shown)

@@ -16,7 +16,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "Heal Absorb Ticks", text = "", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 20, spellID = 1248721,
-    overrides = {colors = {0,1,0,1}, Ticks = {5, 10, 15}},
+    overrides = {barColors = {0,1,0,1}, Ticks = {5, 10, 15}},
     timers = {
             [16] = {54.4, 162.6, 212.5, 322, 372, 481.5},
         },
