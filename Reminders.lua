@@ -1083,6 +1083,10 @@ function NSI:StartReminders(phase, testrun)
     self.AllGlows = {}
     self.ReminderTimer = {}
     if testrun then
+        if self:IsUsingTLReminders() then
+            print("You have selected to display Reminders through TimelineReminders, thus the test run of NSRT will not display anything.")
+            return
+        end
         if not self.ProcessedReminder then self:ProcessReminder() end
         if not self.ProcessedReminder then return end
         for encID, encData in pairs(self.ProcessedReminder) do
