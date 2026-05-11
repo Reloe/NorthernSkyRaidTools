@@ -331,6 +331,7 @@ local function BuildBossRemindersUI(parentFrame)
                         if searchText == "" or string.find(string.lower(name), string.lower(searchText), 1, true) then
                             table.insert(t, {
                                 encID           = encID,
+                                diffID          = filterDiffID,
                                 alert           = alert,
                                 alertKey        = k,
                                 _isReloeCreated = false,
@@ -493,31 +494,69 @@ local function BuildBossRemindersUI(parentFrame)
                                      and NSRT.EncounterAlerts[eid][did]
                                      and NSRT.EncounterAlerts[eid][did][akey]
                             local name = data and (data.name or data.text or akey) or akey
-                            ShowContextMenu({
-                                { type = "button", label = "Export Alert", fnc = function()
-                                    local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
-                                    ShowExportPopup(str, name)
-                                end },
-                            })
+                            if not entry.BlockCopy then
+                                ShowContextMenu({
+                                    { type = "button", label = "Export Alert", fnc = function()
+                                        local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
+                                        ShowExportPopup(str, name)
+                                    end },
+                                    {type = "button", label = "Reset", fnc = function()
+                                        entry.entry.Reset = true
+                                        NSI:ImportReloeReminders()
+                                        RebuildList()
+                                        SelectReloeCreatedAlert(eid, did, akey)
+                                    end},
+                                    {type = "button", label = "Duplicate", fnc = function()
+                                        NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
+                                        NSRT.CustomBossAlerts[eid] = NSRT.CustomBossAlerts[eid] or {}
+                                        NSRT.CustomBossAlerts[eid][did] = NSRT.CustomBossAlerts[eid][did] or {}
+                                        local diffTable = NSRT.CustomBossAlerts[eid][did]
+                                        local newKey = NSI:UniqueAlertID(diffTable, false)
+                                        local newData = CopyTable(entry.entry)
+                                        entry.ReloeReminder = nil
+                                        NSRT.CustomBossAlerts[eid][did][newKey] = newData
+                                        RebuildList()
+                                    end},
+                                })
+                            else
+                                ShowContextMenu({
+                                    { type = "button", label = "Export Alert", fnc = function()
+                                        local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
+                                        ShowExportPopup(str, name)
+                                    end },
+                                    {type = "button", label = "Reset", fnc = function()
+                                        entry.entry.Reset = true
+                                        NSI:ImportReloeReminders()
+                                        RebuildList()
+                                        SelectReloeCreatedAlert(eid, did, akey)
+                                    end},
+                                })
+                            end
                         else
                             SelectReloeCreatedAlert(eid, did, akey)
                         end
                     end)
                 else
-                    local akey     = entry.alertKey
-                    local ri_encID = entry.encID
+                    local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
                     row:SetScript("OnMouseDown", function(self, button)
                         if row.enabledCB.frame:IsMouseOver() then return end
                         if button == "RightButton" then
-                            local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[ri_encID]
-                                      and NSRT.CustomBossAlerts[ri_encID][filterDiffID]
-                                      and NSRT.CustomBossAlerts[ri_encID][filterDiffID][akey]
+                            local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[eid]
+                                      and NSRT.CustomBossAlerts[eid][did]
+                                      and NSRT.CustomBossAlerts[eid][did][akey]
                             local name = alert and (alert.name or "Unnamed") or "Unnamed"
                             ShowContextMenu({
                                 { type = "button", label = "Export Alert", fnc = function()
-                                    local str = NSI:ExportSingleAlertString("custom", ri_encID, filterDiffID, akey, alert)
+                                    local str = NSI:ExportSingleAlertString("custom", eid, did, akey, alert)
                                     ShowExportPopup(str, name)
                                 end },
+                                {type = "button", label = "Duplicate", fnc = function()
+                                    local diffTable = NSRT.CustomBossAlerts[eid][did]
+                                    local newKey = NSI:UniqueAlertID(diffTable, false)
+                                    local newData = CopyTable(diffTable[akey])
+                                    diffTable[newKey] = newData
+                                    RebuildList()
+                                end},
                             })
                         else
                             SelectAlert(akey, ri_encID)
