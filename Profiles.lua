@@ -10,7 +10,6 @@ function NSI:AddMissingDefaults()
         InviteList = {},
         AssignmentSettings = {},
         CooldownList = {},
-        CustomBossAlerts = {},
         PASounds = {
             UseDefaultPASounds = false,
             UseDefaultMPlusPASounds = false,
@@ -418,7 +417,6 @@ local ignored = {
     ["CurrentProfile"]   = true,
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
-    ["CustomBossAlerts"] = true,
 }
 
 function NSI:GetProfileKey()
@@ -563,13 +561,11 @@ function NSI:ExportAlertsString(encID)
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate = LibStub("LibDeflate")
     local encounterAlerts = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
-    local customAlerts = encID and NSRT.CustomBossAlerts[encID] or NSRT.CustomBossAlerts
     local exportTable = {
-        version          = 1,
-        type             = "alerts",
-        encID            = encID,
-        encounterAlerts  = encounterAlerts  or {},
-        customBossAlerts = customAlerts or {},
+        version         = 1,
+        type            = "alerts",
+        encID           = encID,
+        encounterAlerts = encounterAlerts or {},
     }
     local serialized = LibSerialize:Serialize(exportTable)
     local compressed = LibDeflate:CompressDeflate(serialized)
@@ -606,24 +602,30 @@ function NSAPI:ImportAlertsString(importString)
 
     if t.type == "alerts" then
         local count = 0
-        NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
-        NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
         if t.encID then
-            if t.encounterAlerts then -- encounter alerts is always a full overwrite because they can't partially exist
-                NSRT.EncounterAlerts[t.encID] = t.encounterAlerts
-                for _, diffData in pairs(t.encounterAlerts or {}) do
-                    for alertKey, alert in pairs(diffData) do
-                        count = count + 1
+            if t.encounterAlerts then
+                -- Per-encounter import: full overwrite of that encounter's Reloe alerts,
+                -- merge user alerts (ReloeReminder==nil) by generating fresh keys
+                NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
+                for diffID, diffData in pairs(t.encounterAlerts or {}) do
+                    NSRT.EncounterAlerts[t.encID][diffID] = NSRT.EncounterAlerts[t.encID][diffID] or {}
+                    local destDiff = NSRT.EncounterAlerts[t.encID][diffID]
+                    -- Wipe existing Reloe entries for this diff
+                    for k, a in pairs(destDiff) do
+                        if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
                     end
-                end
-            end
-            if t.customBossAlerts then
-                NSRT.CustomBossAlerts[t.encID] = t.customBossAlerts[t.encID] or {}
-                for diffID, diffData in pairs(t.customBossAlerts or {}) do
-                    NSRT.CustomBossAlerts[t.encID][diffID] = NSRT.CustomBossAlerts[t.encID][diffID] or {}
                     for alertKey, alert in pairs(diffData) do
-                        NSRT.CustomBossAlerts[t.encID][diffID][alertKey] = alert
-                        count = count + 1
+                        if type(alert) == "table" then
+                            if alert.ReloeReminder then
+                                destDiff[alertKey] = alert
+                            else
+                                alert.ReloeReminder = nil
+                                local newKey = NSI:UniqueAlertID(destDiff, false)
+                                destDiff[newKey] = alert
+                            end
+                            count = count + 1
+                        end
                     end
                 end
             end
@@ -631,49 +633,52 @@ function NSAPI:ImportAlertsString(importString)
             return count
         end
         if t.encounterAlerts then
-            NSRT.EncounterAlerts = t.encounterAlerts
+            -- Full import: overwrite Reloe entries globally, merge user alerts
+            local overwritecount = 0
             for encID, encData in pairs(t.encounterAlerts or {}) do
+                NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
                 for diffID, diffData in pairs(encData) do
+                    NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                    local destDiff = NSRT.EncounterAlerts[encID][diffID]
+                    -- Wipe existing Reloe entries
+                    for k, a in pairs(destDiff) do
+                        if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
+                    end
                     for alertKey, alert in pairs(diffData) do
-                        count = count + 1
-                    end
-                end
-            end
-        end
-        local overwritecount = 0
-        if t.customBossAlerts then
-            for encID, encData in pairs(t.customBossAlerts or {}) do
-                NSRT.CustomBossAlerts[encID] = NSRT.CustomBossAlerts[encID] or {}
-                for diffID, diffAlerts in pairs(encData) do
-                    NSRT.CustomBossAlerts[encID][diffID] = NSRT.CustomBossAlerts[encID][diffID] or {}
-                    for alertKey, alert in pairs(diffAlerts) do
-                        if NSRT.CustomBossAlerts[encID][diffID][alertKey] then
-                            overwritecount = overwritecount + 1
+                        if type(alert) == "table" then
+                            if alert.ReloeReminder then
+                                destDiff[alertKey] = alert
+                            else
+                                alert.ReloeReminder = nil
+                                local newKey = NSI:UniqueAlertID(destDiff, false)
+                                destDiff[newKey] = alert
+                            end
+                            count = count + 1
                         end
-                        NSRT.CustomBossAlerts[encID][diffID][alertKey] = alert
-                        count = count + 1
                     end
                 end
             end
+            NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+            return count, overwritecount
         end
         NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
-        return count, overwritecount
+        return count
     elseif t.type == "single_alert" then
-        NSRT.EncounterAlerts  = NSRT.EncounterAlerts  or {}
-        NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
-        if t.alertType == "encounter" and t.encID and t.diffID and t.alertKey then
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        if t.encID and t.diffID then
             NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
             NSRT.EncounterAlerts[t.encID][t.diffID] = NSRT.EncounterAlerts[t.encID][t.diffID] or {}
-            NSRT.EncounterAlerts[t.encID][t.diffID][t.alertKey] = t.data
-            NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, t.alertKey)
-            return 1
-        elseif t.alertType == "custom" and t.encID and t.diffID then
-            NSRT.CustomBossAlerts[t.encID] = NSRT.CustomBossAlerts[t.encID] or {}
-            NSRT.CustomBossAlerts[t.encID][t.diffID] = NSRT.CustomBossAlerts[t.encID][t.diffID] or {}
-            local diffTable = NSRT.CustomBossAlerts[t.encID][t.diffID]
-            local importKey = t.alertKey or NSI:UniqueAlertID(diffTable, false)
+            local diffTable = NSRT.EncounterAlerts[t.encID][t.diffID]
+            local importKey
+            if t.alertKey then
+                -- Keep the original key for both Reloe and user alerts so re-imports update in place
+                importKey = t.alertKey
+            else
+                importKey = NSI:UniqueAlertID(diffTable, false)
+            end
+            if t.data then t.data.ReloeReminder = t.alertType == "encounter" and t.data.ReloeReminder or nil end
             diffTable[importKey] = t.data
-            NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, t.alertKey)
+            NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, importKey)
             return 1
         end
     end

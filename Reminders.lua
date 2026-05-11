@@ -1832,23 +1832,6 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
-function NSI:LoadCustomBossAlerts(encID, id)
-    if self:IsUsingTLAlerts() then return end
-    if not NSRT.CustomBossAlerts or not NSRT.CustomBossAlerts[encID] then return end
-    local diffTable = NSRT.CustomBossAlerts[encID][id]
-    if not diffTable then return end
-    local now = GetTime()
-    for _, entry in pairs(diffTable) do
-        if type(entry) == "table" and entry.enabled then
-            if self:EvaluateLoad(entry) then
-                local alert = CopyTable(entry)
-                alert.encID = encID
-                alert.phase = entry.phase or 1
-                self:AddRemindersFromTable(alert, entry.timers or {})
-            end
-        end
-    end
-end
 
 function NSI:EvaluateLoad(info)
     local cond = info.loadConditions
