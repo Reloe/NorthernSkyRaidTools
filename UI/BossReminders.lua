@@ -897,7 +897,7 @@ local function BuildBossRemindersUI(parentFrame)
             if dispF._alert then dispF._alert.textColors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertColors")
-    colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -232)
+    colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
     dispF.colorsPicker = colorsPicker
 
     -- ── Circle section (shown only when display type = "Circle") ────────
@@ -910,7 +910,7 @@ local function BuildBossRemindersUI(parentFrame)
     ringColorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     ringColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     ringColorsLbl:SetText("Ring Color")
-    ringColorsLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 0)
+    ringColorsLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
 
     local ringColorsPicker = CreateColorPicker(circleSection, nil,
         function()
@@ -922,7 +922,7 @@ local function BuildBossRemindersUI(parentFrame)
             if dispF._alert then dispF._alert.ringcolors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertRingColors")
-    ringColorsPicker:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, -16)
+    ringColorsPicker:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
     dispF.ringColorsPicker = ringColorsPicker
 
     local showBgCB = CreateCheckButton(circleSection, "Show Background Ring",
@@ -934,7 +934,7 @@ local function BuildBossRemindersUI(parentFrame)
 
     -- ── Bars section: Ticks (shown only when display type = "Bar") ───────
     local barsSection = CreateFrame("Frame", nil, dispF)
-    barsSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -316)
+    barsSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -300)
     barsSection:SetSize(rightW, 130)
     barsSection:Hide()
 
@@ -944,7 +944,7 @@ local function BuildBossRemindersUI(parentFrame)
     ticksLbl:SetText("Ticks  (seconds into the display where ticks should appear)")
     ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
 
-    local ticksListH = 60
+    local ticksListH = 100
     local ticksListW = rightW - 20
 
     local ticksScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTicksScroll", barsSection,
@@ -1068,7 +1068,7 @@ local function BuildBossRemindersUI(parentFrame)
             if dispF._alert then dispF._alert.textColors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertBarTextColors")
-    barTextColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -232)
+    barTextColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
     barTextColorsPicker.frame:Hide()
     dispF.barTextColorsPicker = barTextColorsPicker
     dispF.barTextColorsLbl    = barTextColorsLbl
@@ -1078,7 +1078,7 @@ local function BuildBossRemindersUI(parentFrame)
     barFillColorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     barFillColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     barFillColorsLbl:SetText("Bar Fill Color")
-    barFillColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -256)
+    barFillColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
     barFillColorsLbl:Hide()
 
     local barFillColorsPicker = CreateColorPicker(dispF, nil,
@@ -1091,7 +1091,7 @@ local function BuildBossRemindersUI(parentFrame)
             if dispF._alert then dispF._alert.barColors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertBarFillColors")
-    barFillColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -272)
+    barFillColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
     barFillColorsPicker.frame:Hide()
     dispF.barFillColorsPicker = barFillColorsPicker
     dispF.barFillColorsLbl    = barFillColorsLbl
