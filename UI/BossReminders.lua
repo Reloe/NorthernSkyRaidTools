@@ -220,7 +220,7 @@ local function BuildBossRemindersUI(parentFrame)
 
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
     local scrollTop    = topY - 20 - 22 - 4 - 22 - 6   -- below title + filter row + search + gaps = -84
-    local scrollHeight = tab_content_height + scrollTop - 22 - pad * 2 - 26  -- extra 26 for import/export row
+    local scrollHeight = tab_content_height + scrollTop - 18 - pad * 2 - 20 - 20 - 2 - 16 - 2  -- extra rows: import/export(18+2), full-reset(18+2), reloe-checkbox(16+2)
     local listW        = leftWidth - pad * 2   -- 220
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIEncAlertListScroll", screen,
@@ -628,16 +628,16 @@ local function BuildBossRemindersUI(parentFrame)
         RebuildList()
         SelectAlert(newKey, createEncID)
         NSI:FireCallback("NSRT_ALERT_CHANGED", createEncID, filterDiffID, newKey)
-    end, listW, 22)
-    createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
+    end, listW, 18)
+    createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, 8)
 
     -- Import / Export buttons (row above create)
     local halfW = math.floor((listW - 4) / 2)
-    local ioY   = pad + 22 + 4
+    local ioY   = 8 + 18 + 2
 
     local importAlertsBtn = CreateButton(screen, "Import", function()
         ShowImportPopup()
-    end, halfW, 22)
+    end, halfW, 18)
     importAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, ioY)
 
     local exportAlertsBtn = CreateButton(screen, "Export", function()
@@ -648,8 +648,38 @@ local function BuildBossRemindersUI(parentFrame)
         end
         local str = NSI:ExportAlertsString(encFilter)
         ShowExportPopup(str, label)
-    end, halfW, 22)
+    end, halfW, 18)
     exportAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad + halfW + 4, ioY)
+
+    -- Import Reloe Reminders checkbox + Full Reset button (row above import/export)
+    local reloeY = ioY + 18 + 2
+
+    local reloeImportCB = CreateCheckButton(screen, "Import Reloe Reminders",
+        function() return NSRT.Alerts.ReloeReminders end,
+        function(_, v)
+            NSRT.Alerts.ReloeReminders = v
+            NSI:ImportReloeReminders()
+            RebuildList()
+        end,
+        listW, 16, "NSUIEncAlertReloeImportCB")
+    reloeImportCB:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, reloeY)
+
+    local resetY = reloeY + 16 + 2
+
+    local fullResetBtn = CreateButton(screen, "Full Reset", function()
+        local function DoReset()
+            NSRT.EncounterAlerts = {}
+            NSI:ImportReloeReminders()
+            RebuildList()
+        end
+        local dialog = NSI.UI.Components.CreateDialog(
+            "NSRTEncAlertFullReset",
+            "Full Reset",
+            "This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?",
+            "Cancel", nil, "Reset", DoReset, nil)
+        dialog:Show()
+    end, listW, 18)
+    fullResetBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, resetY)
 
     -- ================================================================
     -- Right Panel
