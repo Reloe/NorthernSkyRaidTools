@@ -135,6 +135,7 @@ function NSI:CreateReminder(info, preview)
     info.skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText)
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
+    info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
     return info
 end
 
@@ -973,7 +974,7 @@ function NSI:DisplayReminder(info, bypass)
     end
     if info.glowunit then
         for i, name in ipairs(info.glowunit) do
-            self:GlowFrame(name, "p"..info.phase.."id"..info.id)
+            self:GlowFrame(name, "p"..info.phase.."id"..info.id, nil, info.glowColors)
             if info.spellID then
                 local UnitIcon = self:CreateUnitFrameIcon(info, name)
                 if UnitIcon then UnitIcon:Show() end
@@ -1431,7 +1432,7 @@ function NSI:InviteListFromReminder(str)
     return found and list or false
 end
 
-function NSI:GlowFrame(unit, id, F)
+function NSI:GlowFrame(unit, id, F, colors)
     if F then
         local s = NSRT.ReminderSettings.GlowSettings
         self.LCG.ButtonGlow_Start(F, nil, nil, 1000)
@@ -1448,7 +1449,7 @@ function NSI:GlowFrame(unit, id, F)
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows[F] = id
     local s = NSRT.ReminderSettings.GlowSettings
-    self.LCG.PixelGlow_Start(F, s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id, 1000)
+    self.LCG.PixelGlow_Start(F, colors or s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id, 1000)
 end
 
 function NSI:HideGlows(units, id, F)

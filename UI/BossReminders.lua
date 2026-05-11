@@ -879,6 +879,26 @@ local function BuildBossRemindersUI(parentFrame)
     glowunitEntry.editBox:SetScript("OnEditFocusLost", SaveGlowUnit)
     dispF.glowunitEntry = glowunitEntry
 
+    local glowcolorlbl = dispF:CreateFontString(nil, "OVERLAY")
+    glowcolorlbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    glowcolorlbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    glowcolorlbl:SetText("Glow Color")
+    glowcolorlbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 265, -198)
+    dispF.glowcolorlbl = glowcolorlbl
+
+    local glowunitColor = CreateColorPicker(dispF, nil,
+        function()
+            local c = dispF._alert and dispF._alert.glowColors
+            if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
+            return unpack(NSRT.ReminderSettings.GlowSettings.colors)
+        end,
+        function(_, r, g, b, a)
+            if dispF._alert then dispF._alert.glowColors = {r, g, b, a} end
+        end,
+        200, 22, "NSUIEncAlertGlowColors")
+    glowunitColor:SetPoint("TOPLEFT", dispF, "TOPLEFT", 60, -194)
+    dispF.glowunitColor = glowunitColor
+
     -- ── colors ──────────────────────────────────────────────────────────
     local colorsLbl = dispF:CreateFontString(nil, "OVERLAY")
     colorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
