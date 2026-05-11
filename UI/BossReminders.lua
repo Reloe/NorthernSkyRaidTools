@@ -494,7 +494,7 @@ local function BuildBossRemindersUI(parentFrame)
                                      and NSRT.EncounterAlerts[eid][did]
                                      and NSRT.EncounterAlerts[eid][did][akey]
                             local name = data and (data.name or data.text or akey) or akey
-                            if not entry.BlockCopy then
+                            if not entry.entry.BlockCopy then
                                 ShowContextMenu({
                                     { type = "button", label = "Export Alert", fnc = function()
                                         local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
