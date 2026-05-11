@@ -421,11 +421,11 @@ local defs = {
                                                  set = function(v) S.FontSize = v  end,
                                                  min = 8,   max = 72,  step = 1 },
     { Type = "Color",    label = "Text Color",  get = function()
-                                                         local c = S.colors
+                                                         local c = S.textColors
                                                          return c[1], c[2], c[3], c[4]
                                                      end,
                                                  set = function(r,g,b,a)
-                                                         S.colors = {r,g,b,a}
+                                                         S.textColors = {r,g,b,a}
                                                      end },
     { Type = "Label",    text  = "Options" },
     { Type = "Breakline" },

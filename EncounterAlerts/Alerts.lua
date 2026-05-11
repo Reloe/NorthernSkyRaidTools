@@ -38,7 +38,6 @@ function NSI:MakeEncounterAlert(data, timers)
         timers         = timers or data.timers or {},
         phase          = data.phase,
         DisplayType    = data.DisplayType,
-        notsticky      = true,
         skiptime       = data.skiptime,
         IsAlert        = true,
         ReloeReminder  = true,
@@ -48,6 +47,7 @@ function NSI:MakeEncounterAlert(data, timers)
         Preview        = data.Preview,
         isSpecialDisplay = data.isSpecialDisplay,
         Version        = data.Version,
+        sticky         = data.sticky or 0,
     }
     if data.overrides then
         for k, v in pairs(data.overrides) do a[k] = v end
@@ -55,7 +55,7 @@ function NSI:MakeEncounterAlert(data, timers)
     return a
 end
 
-local function UniqueAlertID(diffTable, ReloeReminder, internalID)
+function NSI:UniqueAlertID(diffTable, ReloeReminder, internalID)
     local id = internalID
     if ReloeReminder and not id then
         print("No internalID found for Reloe reminder alert. Aborting")
@@ -117,7 +117,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     local Overwrite = existing and ((Vers and ((not existing.Version) or Vers > existing.Version)) or existing.Reset)
     if ReloeReminder then
         if Overwrite then
-            diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
+            diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
             return
         elseif ReloeReminder and existing then
             existing.timers = alertDef.timers
@@ -133,7 +133,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             return
         end
     end
-    diffTable[UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
+    diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
 end
 
 -- Returns the alert entry for the given encId/diffID whose name matches, or nil.

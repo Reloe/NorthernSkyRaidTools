@@ -30,6 +30,13 @@ local allowedTypes = {
     ["Circle"] = true,
 }
 
+local settingsRef = {
+    Icon = "IconSettings",
+    Bar = "BarSettings",
+    Text = "TextSettings",
+    Circle = "CircleSettings",
+}
+
 function NSI:AddToReminder(reminderInfo)
     local info = self:CreateReminder(reminderInfo)
     if not info then return end
@@ -47,12 +54,12 @@ function NSI:CreateReminder(info, preview)
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
         return nil
     end
-    if info.colors and type(info.colors) == "string" then
+    if info.textColors and type(info.textColors) == "string" then
         local colors = {}
-        for color in info.colors:gmatch("([^%s:]+)") do
+        for color in info.textColors:gmatch("([^%s:]+)") do
             table.insert(colors, tonumber(color))
         end
-        info.colors = colors
+        info.textColors = colors
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
@@ -127,6 +134,7 @@ function NSI:CreateReminder(info, preview)
     info.dur = info.dur or 8
     info.skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText)
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
+    info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
     return info
 end
 
@@ -305,7 +313,7 @@ function NSI:ProcessReminder()
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})
                             end
                         end
-                        self:AddToReminder({DisplayType = DisplayType, text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, notsticky = false})
+                        self:AddToReminder({DisplayType = DisplayType, text = text, phase = phase, textColors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID})
                     end
                 end
             else
@@ -428,7 +436,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(F.info.barColors or s.barColors))
-            if F.Text then F.Text:SetTextColor(unpack(F.info.colors or s.colors)) end
+            if F.Text then F.Text:SetTextColor(unpack(F.info.textColors or s.textColors)) end
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
@@ -561,14 +569,14 @@ function NSI:SetProperties(F, info, skipsound, s)
         else
             F.SpellText = ""
         end
-        F.Text:SetTextColor(unpack(info.colors or s.colors))
+        F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         return
     end
     if info.DisplayType == "Circle" then
         local s_c = NSRT.ReminderSettings.CircleSettings
-        local r, g, b, a = unpack(info.colors or s_c.colors)
+        local r, g, b, a = unpack(info.textColors or s_c.textColors)
         F.TimerText:SetTextColor(r, g, b, a)
-        local r2, g2, b2, a2 = unpack(info.ringcolors or s_c.ringcolors)
+        local r2, g2, b2, a2 = unpack(info.ringColors or s_c.ringColors)
         F.ring:SetVertexColor(r2, g2, b2, a2)
         local showBg = (info.showBackground ~= nil) and info.showBackground or s_c.showBackground
         local showBgBool = showBg ~= false
@@ -599,7 +607,7 @@ function NSI:SetProperties(F, info, skipsound, s)
                 end
             end
         end
-        if F.Text then F.Text:SetTextColor(unpack(info.colors or s.colors)) end
+        if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors)) end
     elseif info.DisplayType == "Bar" then
         if spellInfo then
             F.Icon:SetTexture(spellInfo.iconID)
@@ -610,7 +618,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         if F.SetStatusBarColor then
             F:SetStatusBarColor(unpack(info.barColors or s.barColors or {1,0,0,1}))
         end
-        if F.Text then F.Text:SetTextColor(unpack(info.colors or s.colors or {1,1,1,1})) end
+        if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1})) end
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
             if info.skiptime then
@@ -656,7 +664,7 @@ function NSI:CreateText(info)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.Text:SetShadowColor(0, 0, 0, 1)
             F.Text:SetShadowOffset(0, 0)
-            F.Text:SetTextColor(unpack(info.colors or s.colors))
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             self:SetProperties(F, info, false, s)
             self.ReminderText[i] = F
             return F
@@ -698,7 +706,7 @@ function NSI:CreateIcon(info)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.Text:SetShadowColor(0, 0, 0, 1)
             F.Text:SetShadowOffset(0, 0)
-            F.Text:SetTextColor(unpack(info.colors or s.colors))
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
             F.Swipe:SetAllPoints()
             F.Swipe:SetDrawBling(false)
@@ -795,7 +803,7 @@ function NSI:CreateBar(info)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.Text:SetShadowColor(0, 0, 0, 1)
             F.Text:SetShadowOffset(0, 0)
-            F.Text:SetTextColor(1, 1, 1, 1)
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
@@ -826,7 +834,7 @@ function NSI:CreateCircle(info)
             F.bg = F:CreateTexture(nil, "BACKGROUND")
             F.bg:SetTexture(CircleTexture)
             F.bg:SetAllPoints(F)
-            F.bg:SetVertexColor(unpack(info.ringcolors or s.ringcolors))
+            F.bg:SetVertexColor(unpack(info.ringColors or s.ringColors))
             local _showBgCreate = (info.showBackground ~= nil and info.showBackground or s.showBackground) ~= false
             F.bg:SetShown(_showBgCreate)
 
@@ -848,7 +856,7 @@ function NSI:CreateCircle(info)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.TimerText:SetShadowColor(0, 0, 0, 1)
             F.TimerText:SetShadowOffset(0, 0)
-            F.TimerText:SetTextColor(unpack(info.colors or s.colors))
+            F.TimerText:SetTextColor(unpack(info.textColors or s.textColors))
 
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
             local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
@@ -908,7 +916,7 @@ function NSI:DisplayReminder(info, bypass)
     info.dur = dur
     info.expires = now + dur
     local rem = info.dur - (now - info.startTime)
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
+    if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
     end
     local remString
@@ -988,7 +996,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         NSAPI:TTSCountdown(info.countdown)
         self.StartedCountdown["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
+    if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         F:Hide()
         return
@@ -1824,42 +1832,19 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
--- Iterates NSRT.CustomBossAlerts and registers any alerts that match the
--- current encounter and pass the player's load conditions.
--- Called on ENCOUNTER_START after the hardcoded EncounterAlertStart handlers.
-function NSI:LoadCustomBossAlerts(encID)
-    if not NSRT.CustomBossAlerts then return end
-    local diff        = select(3, GetInstanceInfo()) or 0
-    local diffAlerts  = NSRT.CustomBossAlerts[diff]
-    if not diffAlerts or #diffAlerts == 0 then return end
-    local playerName  = UnitName("player")
-    local playerClass = select(2, UnitClass("player"))
-    local playerSpec  = GetSpecialization()
-    for _, alert in ipairs(diffAlerts) do
-        if alert.enabled and (alert.encID == 0 or alert.encID == encID) then
-            local classOk = not alert.loadClass or alert.loadClass == "" or alert.loadClass == playerClass
-            local specOk  = not alert.loadSpec  or alert.loadSpec  == 0  or alert.loadSpec  == playerSpec
-            local charOk  = not alert.loadCharacter or alert.loadCharacter == "" or alert.loadCharacter == playerName
-            if classOk and specOk and charOk then
-                local ttsText = (alert.TTSEnabled and alert.TTSText ~= "" and alert.TTSText) or
-                                (alert.TTSEnabled and alert.text) or false
-                for _, t in ipairs(alert.times or {}) do
-                    self:AddToReminder({
-                        text          = alert.text,
-                        spellID       = alert.spellID,
-                        dur           = alert.dur or 8,
-                        phase         = alert.phase or 1,
-                        encID         = encID,
-                        time          = t,
-                        TTS           = ttsText,
-                        TTSTimer      = alert.TTSTimer,
-                        countdown     = alert.countdown or false,
-                        notsticky     = true,
-                        IsAlert       = true,
-                        DisplayType   = alert.DisplayType,
-                        _noEncOverride = true,
-                    })
-                end
+function NSI:LoadCustomBossAlerts(encID, id)
+    if self:IsUsingTLAlerts() then return end
+    if not NSRT.CustomBossAlerts or not NSRT.CustomBossAlerts[encID] then return end
+    local diffTable = NSRT.CustomBossAlerts[encID][id]
+    if not diffTable then return end
+    local now = GetTime()
+    for _, entry in pairs(diffTable) do
+        if type(entry) == "table" and entry.enabled then
+            if self:EvaluateLoad(entry) then
+                local alert = CopyTable(entry)
+                alert.encID = encID
+                alert.phase = entry.phase or 1
+                self:AddRemindersFromTable(alert, entry.timers or {})
             end
         end
     end

@@ -127,8 +127,9 @@ local function BuildBossRemindersUI(parentFrame)
     local rightW     = content_width - rightX - pad  -- ~766
 
     -- ── Mutable state ───────────────────────────────────────────────────────
-    local selectedIndex      = nil   -- index into NSRT.CustomBossAlerts[filterDiffID] (custom mode)
-    local selectedReloeEncID = nil   -- encID of selected ReloeReminder alert
+    local selectedCustomKey     = nil   -- key into NSRT.CustomBossAlerts[encID][filterDiffID] (custom mode)
+    local selectedCustomEncID = nil   -- encID of the selected custom alert
+    local selectedReloeEncID  = nil   -- encID of selected ReloeReminder alert
     local selectedReloeDiffID = nil  -- diffID of selected ReloeReminder alert
     local selectedReloeKey   = nil   -- key of selected ReloeReminder alert
     local filterEncID        = nil
@@ -181,7 +182,7 @@ local function BuildBossRemindersUI(parentFrame)
     local function BuildDiffOptions()
         local function switchDiff(id)
             filterDiffID = id
-            selectedIndex = nil
+            selectedCustomKey = nil
             if rightPanel then rightPanel:Hide() end
             if screen.RebuildList then screen.RebuildList() end
         end
@@ -293,77 +294,70 @@ local function BuildBossRemindersUI(parentFrame)
     local function RebuildScrollData()
         local t = {}
 
-        -- One row per ReloeReminder alert (deduplicated by alertKey, prefer higher diffID)
-        local sortedEnc = {}
-        for encID in pairs(NSRT.EncounterAlerts or {}) do
+        -- Gather Reloe-created alerts
+        for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
             if not filterEncID or filterEncID == encID then
-                table.insert(sortedEnc, encID)
-            end
-        end
-        table.sort(sortedEnc, function(a, b)
-            return (NSI.EncounterOrder[a] or 99) < (NSI.EncounterOrder[b] or 99)
-        end)
-        for _, encID in ipairs(sortedEnc) do
-            local encTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
-            if encTable then
-                local diffTable = encTable[filterDiffID]
-                local alerts = {}
+                local diffTable = type(encTable) == "table" and encTable[filterDiffID]
                 if type(diffTable) == "table" then
                     for key, entry in pairs(diffTable) do
-                        local phase = entry.phase
-                        local ReloeReminder = entry.ReloeReminder
-                        if type(entry) == "table" and ReloeReminder then
-                            table.insert(alerts, {
-                                key           = key,
-                                entry         = entry,
-                                diffID        = filterDiffID,
-                                phase         = phase or 1,
-                                enabled       = entry.enabled,
-                                ReloeReminder = ReloeReminder,
-                                id            = entry.id,
-                            })
+                        if type(entry) == "table" and entry.ReloeReminder then
+                            local displayName = ReloeAlertName(entry)
+                            if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
+                                table.insert(t, {
+                                    encID           = encID,
+                                    diffID          = filterDiffID,
+                                    alertKey        = key,
+                                    entry           = entry,
+                                    _isReloeCreated = true,
+                                    _enabled        = entry.enabled ~= false,
+                                    _phase          = entry.phase or 1,
+                                    _sortName       = displayName,
+                                    _orderID        = entry.id,
+                                })
+                            end
                         end
-                    end
-                end
-                table.sort(alerts, function(a, b)
-                    local ae, be = a.enabled ~= false, b.enabled ~= false
-                    if ae ~= be then return ae end -- display disabled at the bottom
-                    local ar, br = a.ReloeReminder == true, b.ReloeReminder == true
-                    if ar ~= br then return br end -- display self-created reminders first
-                    if a.phase ~= b.phase then return a.phase < b.phase end
-                    local aID = a.entry.id
-                    local bID = b.entry.id
-                    if aID and bID then return aID < bID end
-                    if aID or bID then return aID ~= nil end
-                    local an = a.entry.name or a.entry.text or a.key
-                    local bn = b.entry.name or b.entry.text or b.key
-                    return an < bn
-                end)
-                for _, item in ipairs(alerts) do
-                    local displayName = ReloeAlertName(item.entry)
-                    if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
-                        table.insert(t, {
-                            encID           = encID,
-                            diffID          = item.diffID,
-                            alertKey        = item.key,
-                            entry           = item.entry,
-                            _isReloeCreated = true,
-                        })
                     end
                 end
             end
         end
 
-        -- Custom alerts below
-        local diffAlerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID] or {}
-        for i, alert in ipairs(diffAlerts) do
-            if not filterEncID or alert.encID == filterEncID then
-                local name = alert.name or "Unnamed"
-                if searchText == "" or string.find(string.lower(name), string.lower(searchText), 1, true) then
-                    table.insert(t, { alert = alert, realIndex = i })
+        -- Gather user-created custom alerts
+        for encID, encData in pairs(NSRT.CustomBossAlerts or {}) do
+            if not filterEncID or filterEncID == encID then
+                local diffTable = type(encData) == "table" and encData[filterDiffID]
+                if type(diffTable) == "table" then
+                    for k, alert in pairs(diffTable) do
+                        local name = alert.name or "Unnamed"
+                        if searchText == "" or string.find(string.lower(name), string.lower(searchText), 1, true) then
+                            table.insert(t, {
+                                encID           = encID,
+                                alert           = alert,
+                                alertKey        = k,
+                                _isReloeCreated = false,
+                                _enabled        = alert.enabled ~= false,
+                                _phase          = alert.phase or 1,
+                                _sortName       = name,
+                            })
+                        end
+                    end
                 end
             end
         end
+
+        -- Sort into four groups: custom-enabled(0), reloe-enabled(1), custom-disabled(2), reloe-disabled(3)
+        -- Within group: encounter order → phase → name/id
+        table.sort(t, function(a, b)
+            local ag = (a._enabled and 0 or 2) + (a._isReloeCreated and 1 or 0)
+            local bg = (b._enabled and 0 or 2) + (b._isReloeCreated and 1 or 0)
+            if ag ~= bg then return ag < bg end
+            local ao = NSI.EncounterOrder[a.encID] or 99
+            local bo = NSI.EncounterOrder[b.encID] or 99
+            if ao ~= bo then return ao < bo end
+            if a._phase ~= b._phase then return a._phase < b._phase end
+            if a._orderID and b._orderID and a._orderID ~= b._orderID then return a._orderID < b._orderID end
+            return (a._sortName or "") < (b._sortName or "")
+        end)
+
         return t
     end
 
@@ -385,12 +379,12 @@ local function BuildBossRemindersUI(parentFrame)
                 if filterEncID == nil or filterEncID == 0 then
                     icon = BossData.BossIcons[entry.encID]
                 else
-
-                    local customIcon = entry.entry.customIcon and C_Spell.GetSpellInfo(entry.entry.customIcon)
+                    local alertData = isReloe and entry.entry or entry.alert
+                    local customIcon = alertData and alertData.customIcon and C_Spell.GetSpellInfo(alertData.customIcon)
                     if customIcon then
                         icon = customIcon.iconID
                     else
-                        local spell = entry.entry.spellID and C_Spell.GetSpellInfo(entry.entry.spellID)
+                        local spell = alertData and alertData.spellID and C_Spell.GetSpellInfo(alertData.spellID)
                         if spell then
                             icon = spell.iconID
                         else
@@ -411,7 +405,7 @@ local function BuildBossRemindersUI(parentFrame)
                 -- Selected highlight
                 local isSelected = isReloe
                     and (selectedReloeEncID == entry.encID and selectedReloeDiffID == entry.diffID and selectedReloeKey == entry.alertKey)
-                    or  (not isReloe and selectedIndex == entry.realIndex)
+                    or  (not isReloe and selectedCustomKey == entry.alertKey and selectedCustomEncID == entry.encID)
                 if isSelected then
                     row.__background:SetVertexColor(0, 1, 1)
                     row.__background:SetAlpha(1)
@@ -448,11 +442,12 @@ local function BuildBossRemindersUI(parentFrame)
                         end
                     end)
                 else
-                    local alert = entry.alert
-                    local ri    = entry.realIndex
+                    local alert   = entry.alert
+                    local akey    = entry.alertKey
+                    local aencID  = entry.encID
                     row.enabledCB:SetOnChange(function(nsi, v)
                         alert.enabled = v
-                        if selectedIndex == ri then
+                        if selectedCustomKey == akey and selectedCustomEncID == aencID then
                             enabledCB:SetValue(v)
                         end
                     end)
@@ -466,21 +461,22 @@ local function BuildBossRemindersUI(parentFrame)
                 else
                     row.lockIcon:Hide()
                     row.deleteBtn:Show()
-                    local ri = entry.realIndex
+                    local akey     = entry.alertKey
+                    local ri_encID = entry.encID
                     row.deleteBtn:SetScript("OnClick", function()
                         local deleteFunc = function()
-                            local alerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
-                            if alerts then table.remove(alerts, ri) end
-                            if selectedIndex == ri then
-                                selectedIndex = nil
+                            local diffTable = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[ri_encID]
+                                         and NSRT.CustomBossAlerts[ri_encID][filterDiffID]
+                            if diffTable then diffTable[akey] = nil end
+                            if selectedCustomKey == akey and selectedCustomEncID == ri_encID then
+                                selectedCustomKey    = nil
+                                selectedCustomEncID = nil
                                 if rightPanel then rightPanel:Hide() end
-                            elseif selectedIndex and selectedIndex > ri then
-                                selectedIndex = selectedIndex - 1
                             end
                             RebuildList()
                         end
 
-                        local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. ri,
+                        local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(akey),
                             "Delete Alert", "Are you sure you want to delete this alert?", "Cancel", nil, "Delete", deleteFunc,
                             nil)
                         deleteDialog:Show()
@@ -508,21 +504,23 @@ local function BuildBossRemindersUI(parentFrame)
                         end
                     end)
                 else
-                    local ri = entry.realIndex
+                    local akey     = entry.alertKey
+                    local ri_encID = entry.encID
                     row:SetScript("OnMouseDown", function(self, button)
                         if row.enabledCB.frame:IsMouseOver() then return end
                         if button == "RightButton" then
-                            local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
-                                      and NSRT.CustomBossAlerts[filterDiffID][ri]
+                            local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[ri_encID]
+                                      and NSRT.CustomBossAlerts[ri_encID][filterDiffID]
+                                      and NSRT.CustomBossAlerts[ri_encID][filterDiffID][akey]
                             local name = alert and (alert.name or "Unnamed") or "Unnamed"
                             ShowContextMenu({
                                 { type = "button", label = "Export Alert", fnc = function()
-                                    local str = NSI:ExportSingleAlertString("custom", nil, filterDiffID, nil, alert)
+                                    local str = NSI:ExportSingleAlertString("custom", ri_encID, filterDiffID, akey, alert)
                                     ShowExportPopup(str, name)
                                 end },
                             })
                         else
-                            SelectAlert(ri)
+                            SelectAlert(akey, ri_encID)
                         end
                     end)
                 end
@@ -543,34 +541,43 @@ local function BuildBossRemindersUI(parentFrame)
     screen.RefreshSelected = function()
         if selectedReloeEncID and selectedReloeDiffID and selectedReloeKey then
             SelectReloeCreatedAlert(selectedReloeEncID, selectedReloeDiffID, selectedReloeKey)
-        elseif selectedIndex then
-            SelectAlert(selectedIndex)
+        elseif selectedCustomKey and selectedCustomEncID then
+            SelectAlert(selectedCustomKey, selectedCustomEncID)
         end
     end
 
     -- Create Alert button
     local createBtn = CreateButton(screen, "+ Create Alert", function()
+        -- Resolve which encID to create under: current filter or first available boss
+        local createEncID = (filterEncID and filterEncID ~= 0) and filterEncID or (function()
+            local opts = BossData.BuildBossDropdownOptions(nil, false)
+            return opts and opts[1] and opts[1].value or nil
+        end)()
+        if not createEncID then return end  -- no bosses defined
         NSRT.CustomBossAlerts = NSRT.CustomBossAlerts or {}
-        NSRT.CustomBossAlerts[filterDiffID] = NSRT.CustomBossAlerts[filterDiffID] or {}
-        local diffAlerts = NSRT.CustomBossAlerts[filterDiffID]
-        table.insert(diffAlerts, {
+        NSRT.CustomBossAlerts[createEncID] = NSRT.CustomBossAlerts[createEncID] or {}
+        NSRT.CustomBossAlerts[createEncID][filterDiffID] = NSRT.CustomBossAlerts[createEncID][filterDiffID] or {}
+        local diffTable = NSRT.CustomBossAlerts[createEncID][filterDiffID]
+        local newKey = NSI:UniqueAlertID(diffTable, false)
+        diffTable[newKey] = {
             name          = "New Alert",
             enabled       = true,
-            encID         = filterEncID,
             phase         = 1,
-            times         = {},
-            Type          = "Text",
+            timers         = {},
+            DisplayType          = "Text",
             text          = "",
             spellID       = nil,
             dur           = 8,
             TTSEnabled    = false,
-            TTSText       = "",
+            TTS           = false,
             TTSTimer      = 8,
             countdown     = false,
+            DisplayType   = "Text",
+            sticky        = 0,
             loadConditions = { Classes = {}, SpecIDs = {}, Names = {}, Roles = {}, },
-        })
+        }
         RebuildList()
-        SelectAlert(#diffAlerts)
+        SelectAlert(newKey, createEncID)
     end, listW, 22)
     createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
@@ -748,7 +755,7 @@ local function BuildBossRemindersUI(parentFrame)
     local spellLbl = dispF:CreateFontString(nil, "OVERLAY")
     spellLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     spellLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    spellLbl:SetText("Spell ID  (optional — drives bar / icon texture)")
+    spellLbl:SetText("Spell ID")
     spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -90)
 
     local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
@@ -757,15 +764,34 @@ local function BuildBossRemindersUI(parentFrame)
     local function SaveSpellID(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then dispF._alert.spellID = v end
+        RebuildList()
     end
     spellEntry.editBox:SetScript("OnEnterPressed", function(self) SaveSpellID(self); self:ClearFocus() end)
     spellEntry.editBox:SetScript("OnEditFocusLost", SaveSpellID)
     dispF.spellEntry = spellEntry
 
+    local customIconLbl = dispF:CreateFontString(nil, "OVERLAY")
+    customIconLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    customIconLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    customIconLbl:SetText("Custom Icon (overrides icon in list)")
+    customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 142, -90)
+
+    local customIconEntry = CreateTextEntry(dispF, nil, nil, nil, 180, 22,
+        nil, nil, nil, "NSUIEncAlertCustomIcon")
+    customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 142, -106)
+    local function SaveCustomIcon(self)
+        local v = tonumber(self:GetText()) or nil
+        if dispF._alert then dispF._alert.customIcon = v end
+        RebuildList()
+    end
+    customIconEntry.editBox:SetScript("OnEnterPressed", function(self) SaveCustomIcon(self); self:ClearFocus() end)
+    customIconEntry.editBox:SetScript("OnEditFocusLost", SaveCustomIcon)
+    dispF.customIconEntry = customIconEntry
+
     local durLbl = dispF:CreateFontString(nil, "OVERLAY")
     durLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     durLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    durLbl:SetText("Duration  (seconds the alert is visible)")
+    durLbl:SetText("Duration")
     durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -134)
 
     local durEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
@@ -778,6 +804,23 @@ local function BuildBossRemindersUI(parentFrame)
     durEntry.editBox:SetScript("OnEnterPressed", function(self) SaveDur(self); self:ClearFocus() end)
     durEntry.editBox:SetScript("OnEditFocusLost", SaveDur)
     dispF.durEntry = durEntry
+
+    local stickyLbl = dispF:CreateFontString(nil, "OVERLAY")
+    stickyLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    stickyLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    stickyLbl:SetText("Sticky duration (0 to disable)")
+    stickyLbl:SetPoint("TOPLEFT", durLbl, "TOPRIGHT", 55, 0)
+
+    local stickyEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
+        nil, nil, nil, "NSUIEncAlertSticky")
+    stickyEntry:SetPoint("TOPLEFT", durEntry.frame, "TOPRIGHT", 20, 0)
+    local function SaveSticky(self)
+        local v = tonumber(self:GetText())
+        if dispF._alert then dispF._alert.sticky = v end
+    end
+    stickyEntry.editBox:SetScript("OnEnterPressed", function(self) SaveSticky(self); self:ClearFocus() end)
+    stickyEntry.editBox:SetScript("OnEditFocusLost", SaveSticky)
+    dispF.stickyEntry = stickyEntry
 
     -- ── glowunit ────────────────────────────────────────────────────────
     local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
@@ -807,12 +850,12 @@ local function BuildBossRemindersUI(parentFrame)
 
     local colorsPicker = CreateColorPicker(dispF, nil,
         function()
-            local c = dispF._alert and dispF._alert.colors
+            local c = dispF._alert and dispF._alert.textColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
             return 1, 1, 1, 1
         end,
         function(_, r, g, b, a)
-            if dispF._alert then dispF._alert.colors = {r, g, b, a} end
+            if dispF._alert then dispF._alert.textColors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertColors")
     colorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -232)
@@ -978,12 +1021,12 @@ local function BuildBossRemindersUI(parentFrame)
 
     local barTextColorsPicker = CreateColorPicker(dispF, nil,
         function()
-            local c = dispF._alert and dispF._alert.colors
+            local c = dispF._alert and dispF._alert.textColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
             return 1, 1, 1, 1
         end,
         function(_, r, g, b, a)
-            if dispF._alert then dispF._alert.colors = {r, g, b, a} end
+            if dispF._alert then dispF._alert.textColors = {r, g, b, a} end
         end,
         200, 22, "NSUIEncAlertBarTextColors")
     barTextColorsPicker:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -232)
@@ -1050,19 +1093,32 @@ local function BuildBossRemindersUI(parentFrame)
 
     local function BuildTrigBossOptions()
         return BossData.BuildBossDropdownOptions(function(v)
-            if trigF._alert then
-                trigF._alert.encID = v
-                RebuildList()
+            if not trigF._alert or not selectedCustomEncID or v == selectedCustomEncID then return end
+            -- Move the alert from the old encID bucket to the new one
+            local fromAlerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[selectedCustomEncID]
+                           and NSRT.CustomBossAlerts[selectedCustomEncID][filterDiffID]
+            if not fromAlerts then return end
+            local foundKey
+            for k, a in pairs(fromAlerts) do
+                if a == trigF._alert then foundKey = k; break end
             end
-        end, "Any Boss")
+            if not foundKey then return end
+            fromAlerts[foundKey] = nil
+            NSRT.CustomBossAlerts[v] = NSRT.CustomBossAlerts[v] or {}
+            NSRT.CustomBossAlerts[v][filterDiffID] = NSRT.CustomBossAlerts[v][filterDiffID] or {}
+            NSRT.CustomBossAlerts[v][filterDiffID][foundKey] = trigF._alert
+            selectedCustomEncID = v
+            selectedCustomKey = foundKey
+            RebuildList()
+        end, false)
     end
 
     local function getTrigBossSelected()
-        if not trigF._alert or not trigF._alert.encID then return "Any Boss" end
+        if not selectedCustomEncID then return "?" end
         for _, opt in ipairs(BossData.BuildBossDropdownOptions(nil, false)) do
-            if opt.value == trigF._alert.encID then return opt.label end
+            if opt.value == selectedCustomEncID then return opt.label end
         end
-        return tostring(trigF._alert.encID)
+        return tostring(selectedCustomEncID)
     end
 
     local trigBossDD = CreateDropdown(trigF, nil, BuildTrigBossOptions, getTrigBossSelected,
@@ -1087,21 +1143,23 @@ local function BuildBossRemindersUI(parentFrame)
                 label = TRIG_DIFF_NAMES[id],
                 value = id,
                 onclick = function(_, _, val)
-                    if not trigF._alert or val == filterDiffID then return end
-                    local alerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID]
-                    if not alerts then return end
+                    if not trigF._alert or not selectedCustomEncID or val == filterDiffID then return end
+                    local fromAlerts = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[selectedCustomEncID]
+                                   and NSRT.CustomBossAlerts[selectedCustomEncID][filterDiffID]
+                    if not fromAlerts then return end
                     local alertToMove = trigF._alert
-                    local foundIdx
-                    for i, a in ipairs(alerts) do
-                        if a == alertToMove then foundIdx = i; break end
+                    local foundKey
+                    for k, a in pairs(fromAlerts) do
+                        if a == alertToMove then foundKey = k; break end
                     end
-                    if not foundIdx then return end
-                    table.remove(alerts, foundIdx)
-                    alertToMove.id = NSI.EncounterAlerts:GenerateAlertID()
-                    NSRT.CustomBossAlerts[val] = NSRT.CustomBossAlerts[val] or {}
-                    table.insert(NSRT.CustomBossAlerts[val], alertToMove)
+                    if not foundKey then return end
+                    fromAlerts[foundKey] = nil
+                    NSRT.CustomBossAlerts[selectedCustomEncID][val] = NSRT.CustomBossAlerts[selectedCustomEncID][val] or {}
+                    local toTable = NSRT.CustomBossAlerts[selectedCustomEncID][val]
+                    local newKey = NSI:UniqueAlertID(toTable, false)
+                    toTable[newKey] = alertToMove
                     filterDiffID = val
-                    selectedIndex = #NSRT.CustomBossAlerts[val]
+                    selectedCustomKey = newKey
                     diffDD:Refresh()
                     RebuildList()
                 end,
@@ -1131,12 +1189,14 @@ local function BuildBossRemindersUI(parentFrame)
     phaseEntry.editBox:SetScript("OnEnterPressed", function(self)
         if trigF._alert then
             trigF._alert.phase = math.max(1, math.floor(tonumber(self:GetText()) or 1))
+            RebuildList()
         end
         self:ClearFocus()
     end)
     phaseEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if trigF._alert then
             trigF._alert.phase = math.max(1, math.floor(tonumber(self:GetText()) or 1))
+            RebuildList()
         end
     end)
     trigF.phaseEntry = phaseEntry
@@ -1170,7 +1230,7 @@ local function BuildBossRemindersUI(parentFrame)
     local function RebuildTimeRows()
         for _, row in ipairs(timeRows) do row:Hide() end
         if not trigF._alert then return end
-        local times = trigF._alert.times or {}
+        local times = trigF._alert.timers or {}
         for i, t in ipairs(times) do
             if not timeRows[i] then
                 timeRows[i] = CreateFrame("Frame", nil, timesChild)
@@ -1200,7 +1260,7 @@ local function BuildBossRemindersUI(parentFrame)
 
             timeRows[i].delBtn:SetScript("OnClick", function()
                 if trigF._alert then
-                    table.remove(trigF._alert.times, i)
+                    table.remove(trigF._alert.timers, i)
                     RebuildTimeRows()
                 end
             end)
@@ -1233,16 +1293,16 @@ local function BuildBossRemindersUI(parentFrame)
     local function DoAddTime()
         local v = tonumber(addTimeEntry:GetValue())
         if v and trigF._alert then
-            trigF._alert.times = trigF._alert.times or {}
+            trigF._alert.timers = trigF._alert.timers or {}
             local inserted = false
-            for i2, existing in ipairs(trigF._alert.times) do
+            for i2, existing in ipairs(trigF._alert.timers) do
                 if v < existing then
-                    table.insert(trigF._alert.times, i2, v)
+                    table.insert(trigF._alert.timers, i2, v)
                     inserted = true
                     break
                 end
             end
-            if not inserted then table.insert(trigF._alert.times, v) end
+            if not inserted then table.insert(trigF._alert.timers, v) end
             addTimeEntry:SetValue("")
             RebuildTimeRows()
         end
@@ -1271,7 +1331,7 @@ local function BuildBossRemindersUI(parentFrame)
 
     local ttsCB = CreateCheckButton(sndF, "Enable Text-to-Speech",
         function() return false end,
-        function(v)
+        function(_, v)
             if not sndF._alert then return end
             if sndF._reloeMode then
                 local txt = sndF.ttsTextEntry and sndF.ttsTextEntry:GetValue() or ""
@@ -1327,7 +1387,7 @@ local function BuildBossRemindersUI(parentFrame)
 
     local cdCB = CreateCheckButton(sndF, "Countdown for",
         function() return false end,
-        function(v)
+        function(_, v)
             if sndF._alert then
                 local n = sndF.cdEntry and tonumber(sndF.cdEntry:GetValue()) or 5
                 sndF._alert.countdown = v and (n or 5) or false
@@ -1847,11 +1907,14 @@ local function BuildBossRemindersUI(parentFrame)
     -- ================================================================
     -- SelectAlert ── load a custom alert into all right-panel controls
     -- ================================================================
-    SelectAlert = function(index)
-        selectedIndex        = index
+    SelectAlert = function(key, encID)
+        selectedCustomKey    = key
+        selectedCustomEncID  = encID or selectedCustomEncID
         selectedReloeEncID   = nil
         selectedReloeKey     = nil
-        local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[filterDiffID] and NSRT.CustomBossAlerts[filterDiffID][index]
+        local alert = NSRT.CustomBossAlerts and NSRT.CustomBossAlerts[selectedCustomEncID]
+                  and NSRT.CustomBossAlerts[selectedCustomEncID][filterDiffID]
+                  and NSRT.CustomBossAlerts[selectedCustomEncID][filterDiffID][key]
         if not alert then
             rightPanel:Hide()
             RebuildList()
@@ -1888,7 +1951,9 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.SetDisplayType(alert.DisplayType or "Text")
         dispF.textEntry:SetValue(alert.text or "")
         dispF.spellEntry:SetValue(alert.spellID and tostring(alert.spellID) or "")
+        dispF.customIconEntry:SetValue(alert.customIcon and tostring(alert.customIcon) or "")
         dispF.durEntry:SetValue(tostring(alert.dur or 8))
+        dispF.stickyEntry:SetValue(alert.sticky and tostring(alert.sticky) or "")
         dispF.glowunitEntry:SetValue(alert.glowunit or "")
         dispF.colorsPicker:Refresh()
         dispF.ringColorsPicker:Refresh()
@@ -1926,7 +1991,7 @@ local function BuildBossRemindersUI(parentFrame)
         selectedReloeEncID  = encID
         selectedReloeDiffID = diffID
         selectedReloeKey    = alertKey
-        selectedIndex       = nil
+        selectedCustomKey   = nil
 
         local entry = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
                       and NSRT.EncounterAlerts[encID][diffID]
@@ -1961,7 +2026,9 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.SetDisplayType(dispType)
         dispF.textEntry:SetValue(entry.text or "")
         dispF.spellEntry:SetValue(entry.spellID and tostring(entry.spellID) or "")
+        dispF.customIconEntry:SetValue(entry.customIcon and tostring(entry.customIcon) or "")
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
+        dispF.stickyEntry:SetValue(entry.sticky and tostring(entry.sticky) or "")
         dispF.glowunitEntry:SetValue(entry.glowunit or "")
         dispF.colorsPicker:Refresh()
         dispF.ringColorsPicker:Refresh()
@@ -2002,8 +2069,8 @@ local function BuildBossRemindersUI(parentFrame)
         RebuildList()
         if selectedReloeEncID and selectedReloeDiffID and selectedReloeKey then
             SelectReloeCreatedAlert(selectedReloeEncID, selectedReloeDiffID, selectedReloeKey)
-        elseif selectedIndex then
-            SelectAlert(selectedIndex)
+        elseif selectedCustomKey then
+            SelectAlert(selectedCustomKey)
         end
     end)
 

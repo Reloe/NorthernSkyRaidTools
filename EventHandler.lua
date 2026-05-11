@@ -135,7 +135,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
-        self:LoadCustomBossAlerts(self.EncounterID)
+        self:LoadCustomBossAlerts(self.EncounterID, diff)
         self:StartReminders(self.Phase)
         self:InitPrivateAuras()
         if NSRT.ReminderSettings.NoteCountdown then

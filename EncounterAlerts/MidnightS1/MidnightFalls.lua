@@ -285,6 +285,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
             { Type = "Breakline" },
             { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
+            { Type = "Label",    text = "The Texture files are no longer required for most users. They are only required if you are a person pressing the Macros."},
             { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles", width = 150 },
             { Type = "Button",   label = "Create Macros", width = 150,
             func = [[return function(NSI)

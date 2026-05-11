@@ -75,7 +75,6 @@ function NSI:AddMissingDefaults()
         ReminderSettings = {
             enabled = true,
             PersNote = true,
-            Sticky = 5,
             SpellTTS = true,
             TextTTS = true,
             SpellDuration = 10,
@@ -129,7 +128,8 @@ function NSI:AddMissingDefaults()
                 GrowDirection = "Down",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
-                colors = { 1, 1, 1, 1 },
+                Sticky = 5,
+                textColors = { 1, 1, 1, 1 },
                 xOffset = -500,
                 yOffset = 400,
                 xTextOffset = 0,
@@ -149,11 +149,12 @@ function NSI:AddMissingDefaults()
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
+                Sticky = 5,
                 Width = 300,
                 Height = 40,
                 xIcon = 0,
                 yIcon = 0,
-                colors = { 1, 1, 1, 1 },
+                textColors = { 1, 1, 1, 1 },
                 barColors = { 1, 0, 0, 1 },
                 Texture = "Atrocity",
                 xOffset = -400,
@@ -168,10 +169,11 @@ function NSI:AddMissingDefaults()
                 Spacing = -1,
             },
             TextSettings = {
-                colors = { 1, 1, 1, 1 },
+                textColors = { 1, 1, 1, 1 },
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
+                Sticky = 5,
                 xOffset = 0,
                 yOffset = 200,
                 Font = "Expressway",
@@ -182,10 +184,11 @@ function NSI:AddMissingDefaults()
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
+                Sticky = 5,
                 xOffset = 0,
                 yOffset = -200,
-                colors = { 1, 1, 1, 1 },
-                ringcolors = { 1, 1, 1, 1 },
+                textColors = { 1, 1, 1, 1 },
+                ringColors = { 1, 1, 1, 1 },
                 Size = 80,
                 Font = "Expressway",
                 FontSize = 18,
@@ -616,7 +619,7 @@ function NSAPI:ImportAlertsString(importString)
                 for diffID, diffData in pairs(t.customBossAlerts or {}) do
                     NSRT.CustomBossAlerts[t.encID][diffID] = NSRT.CustomBossAlerts[t.encID][diffID] or {}
                     for alertKey, alert in pairs(diffData) do
-                        NSRT.CustomBossAlerts[diffID][alertKey] = alert
+                        NSRT.CustomBossAlerts[t.encID][diffID][alertKey] = alert
                         count = count + 1
                     end
                 end
@@ -658,21 +661,12 @@ function NSAPI:ImportAlertsString(importString)
             NSRT.EncounterAlerts[t.encID][t.diffID] = NSRT.EncounterAlerts[t.encID][t.diffID] or {}
             NSRT.EncounterAlerts[t.encID][t.diffID][t.alertKey] = t.data
             return 1
-        elseif t.alertType == "custom" and t.diffID then
-            NSRT.CustomBossAlerts[t.diffID] = NSRT.CustomBossAlerts[t.diffID] or {}
-            local found = false
-            if t.data and t.data.id then
-                for i, existing in ipairs(NSRT.CustomBossAlerts[t.diffID]) do
-                    if existing.id == t.data.id then
-                        NSRT.CustomBossAlerts[t.diffID][i] = t.data
-                        found = true
-                        break
-                    end
-                end
-            end
-            if not found then
-                table.insert(NSRT.CustomBossAlerts[t.diffID], t.data)
-            end
+        elseif t.alertType == "custom" and t.encID and t.diffID then
+            NSRT.CustomBossAlerts[t.encID] = NSRT.CustomBossAlerts[t.encID] or {}
+            NSRT.CustomBossAlerts[t.encID][t.diffID] = NSRT.CustomBossAlerts[t.encID][t.diffID] or {}
+            local diffTable = NSRT.CustomBossAlerts[t.encID][t.diffID]
+            local importKey = t.alertKey or NSI:UniqueAlertID(diffTable, false)
+            diffTable[importKey] = t.data
             return 1
         end
     end

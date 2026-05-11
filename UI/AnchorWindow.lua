@@ -49,12 +49,11 @@ local function GetWidgetDefs(settingsName)
     -- Color helpers: storage is a {r,g,b,a} table; our ColorPicker needs 4 returns.
     -- BuildWidgets passes NSI as the first argument to all callbacks.
     local function GetColor()
-        local c = S.colors
+        local c = S.textColors
         if not c then return 1, 1, 1, 1 end
         return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
     end
-    local function SetColor(_, r, g, b, a) W("colors", {r, g, b, a}) end
-
+    local function SetColor(_, r, g, b, a) W("textColors", {r, g, b, a}) end
     -- Shorthand constructors
     -- Note: BuildWidgets calls get(NSI) and set(NSI, value), so closures accept _ for NSI.
     local function Slider(label, key, mn, mx)
@@ -87,6 +86,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Width",           "Width",         20,   200),
             Slider("Height",          "Height",        20,   200),
             Slider("Spacing",         "Spacing",       -5,   20),
+            Slider("Sticky Duration", "Sticky",        0,    30),
             DD    ("Font",            "Font",          MediaValuesFn()),
             Slider("Font Size",       "FontSize",      5,    200),
             Slider("Timer Font Size", "TimerFontSize", 5,    200),
@@ -112,6 +112,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Width",           "Width",         80,   500),
             Slider("Height",          "Height",        10,   100),
             Slider("Spacing",         "Spacing",       -5,   20),
+            Slider("Sticky Duration", "Sticky",        0,    30),
             DD    ("Texture",         "Texture",       MediaValuesFn(true)),
             DD    ("Font",            "Font",          MediaValuesFn()),
             Slider("Font Size",       "FontSize",      5,    200),
@@ -133,6 +134,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Font Size",     "FontSize",      5,  200),
             {Type="Color", label="Text Color", get=GetColor, set=SetColor},
             Slider("Spacing",       "Spacing",       -5, 20),
+            Slider("Sticky Duration", "Sticky",      0,  30),
             Chk   ("Center Aligned","CenterAligned"),
         }
 
@@ -149,6 +151,7 @@ local function GetWidgetDefs(settingsName)
             Slider("Spacing",   "Spacing",       -50, 100),
             DD    ("Font",      "Font",          MediaValuesFn()),
             Slider("Font Size", "FontSize",      5,   80),
+            Slider("Sticky Duration", "Sticky",  0,   30),
             {Type="Color", label="Text Color",  get=GetColor,     set=SetColor},
             {Type="Color", label="Ring Color",  get=GetRingColor, set=SetRingColor},
             Chk   ("Show Background Ring", "showBackground"),
