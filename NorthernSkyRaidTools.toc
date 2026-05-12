@@ -49,9 +49,6 @@ EncounterAlerts/MidnightS1/Beloren.lua
 EncounterAlerts/MidnightS1/MidnightFalls.lua
 EncounterAlerts/MidnightS1/MotherlodeDebug.lua
 
-EncounterAlerts/ManaforgeOmega/NexusKing.lua
-EncounterAlerts/ManaforgeOmega/Dimensius.lua
-
 # UI - Core (must load first to create NSUI panel and shared utilities)
 UI/Core.lua
 
@@ -66,7 +63,7 @@ UI/Notes.lua
 UI/VersionCheck.lua
 UI/Nicknames.lua
 UI/Reminders.lua
-UI/BossReminders.lua
+UI/EncounterAlerts.lua
 UI/Cooldowns.lua
 UI/PrivateAuras.lua
 UI/General.lua
@@ -77,7 +74,6 @@ UI/Options/General.lua
 UI/Options/Nicknames.lua
 UI/Options/Reminders.lua
 UI/Options/Assignments.lua
-UI/Options/EncounterAlerts.lua
 UI/Options/InterruptDisplay.lua
 UI/Options/ReadyCheck.lua
 UI/Options/PrivateAuras.lua

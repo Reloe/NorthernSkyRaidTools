@@ -19,7 +19,7 @@ local options_slider_template      = Core.options_slider_template
 local options_button_template      = Core.options_button_template
 
 -- Get UI builder functions from modules
-local BuildBossRemindersUI         = NSI.UI.BossReminders.BuildBossRemindersUI
+local BuildEncounterAlertsUI       = NSI.UI.EncounterAlerts.BuildEncounterAlertsUI
 local BuildVersionCheckUI          = NSI.UI.VersionCheck.BuildVersionCheckUI
 local BuildNicknameEditUI          = NSI.UI.Nicknames.BuildNicknameEditUI
 local BuildRemindersEditUI         = NSI.UI.Reminders.BuildRemindersEditUI
@@ -388,7 +388,7 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Build custom UI components
     -- --------------------------------------------------------
-    NSUI.encounters_frame         = BuildBossRemindersUI(encounteralerts_tab)
+    NSUI.encounters_frame         = BuildEncounterAlertsUI(encounteralerts_tab)
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()

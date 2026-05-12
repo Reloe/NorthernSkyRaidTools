@@ -113,9 +113,9 @@ local function ShowImportPopup()
 end
 
 -- ============================================================================
--- BuildBossRemindersUI
+-- BuildEncounterAlertsUI
 -- ============================================================================
-local function BuildBossRemindersUI(parentFrame)
+local function BuildEncounterAlertsUI(parentFrame)
     local screen = parentFrame
 
     -- ── Layout constants ────────────────────────────────────────────────────
@@ -882,6 +882,31 @@ local function BuildBossRemindersUI(parentFrame)
     stickyEntry.editBox:SetScript("OnEditFocusLost", SaveSticky)
     dispF.stickyEntry = stickyEntry
 
+    local hideTimerCB = CreateCheckButton(dispF, "Hide Timer",
+        function()
+            if not dispF._alert then return false end
+            if dispF._alert.HideTimer ~= nil then return dispF._alert.HideTimer end
+            local typeMap = { Text="TextSettings", Icon="IconSettings", Circle="CircleSettings", Bar="BarSettings" }
+            local s = NSRT.ReminderSettings[typeMap[dispF._alert.DisplayType or "Text"] or "TextSettings"]
+            return s and s.HideTimerText or false
+        end,
+        function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideTimer", v or nil) end end,
+        110, 22, "NSUIEncAlertHideTimer")
+    hideTimerCB:SetPoint("LEFT", stickyEntry.frame, "RIGHT", 14, 0)
+    dispF.hideTimerCB = hideTimerCB
+
+    local hideSwipeCB = CreateCheckButton(dispF, "Hide Swipe",
+        function()
+            if not dispF._alert then return false end
+            if dispF._alert.HideSwipe ~= nil then return dispF._alert.HideSwipe end
+            return NSRT.ReminderSettings.IconSettings.HideSwipe or false
+        end,
+        function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideSwipe", v or nil) end end,
+        110, 22, "NSUIEncAlertHideSwipe")
+    hideSwipeCB:SetPoint("LEFT", hideTimerCB.frame, "RIGHT", 4, 0)
+    hideSwipeCB.frame:Hide()   -- only shown for Icon type
+    dispF.hideSwipeCB = hideSwipeCB
+
     -- ── glowunit ────────────────────────────────────────────────────────
     local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
     glowunitLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
@@ -968,7 +993,11 @@ local function BuildBossRemindersUI(parentFrame)
     dispF.ringColorsPicker = ringColorsPicker
 
     local showBgCB = CreateCheckButton(circleSection, "Show Background Ring",
-        function() return dispF._alert and dispF._alert.showBackground ~= false end,
+        function()
+            if not dispF._alert then return NSRT.ReminderSettings.CircleSettings.showBackground end
+            if dispF._alert.showBackground ~= nil then return dispF._alert.showBackground ~= false end
+            return NSRT.ReminderSettings.CircleSettings.showBackground
+        end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "showBackground", v) end end,
         200, 22, "NSUIEncAlertShowBg")
     showBgCB:SetPoint("TOPLEFT", ringColorsPicker.frame, "BOTTOMLEFT", 0, -4)
@@ -1153,6 +1182,8 @@ local function BuildBossRemindersUI(parentFrame)
         -- Type sections
         barsSection:SetShown(isBar)
         circleSection:SetShown(isCircle)
+        -- HideSwipe only relevant for Icon type
+        dispF.hideSwipeCB.frame:SetShown(t == "Icon")
         -- Label for the shared picker (used for non-Bar types)
         local COLOR_LABELS = { Text="Text Color", Icon="Text Color", Circle="Text Color" }
         dispF.colorsLbl:SetText(COLOR_LABELS[t] or "Color")
@@ -2021,12 +2052,17 @@ local function BuildBossRemindersUI(parentFrame)
         dispF.customIconEntry:SetValue(entry.customIcon and tostring(entry.customIcon) or "")
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
         dispF.stickyEntry:SetValue(entry.sticky and tostring(entry.sticky) or "")
+        local typeMap = { Text="TextSettings", Icon="IconSettings", Circle="CircleSettings", Bar="BarSettings" }
+        local s = NSRT.ReminderSettings[typeMap[entry.DisplayType or "Text"] or "TextSettings"]
+        dispF.hideTimerCB:SetValue(entry.HideTimer ~= nil and entry.HideTimer or (s and s.HideTimerText or false))
+        dispF.hideSwipeCB:SetValue(entry.HideSwipe ~= nil and entry.HideSwipe or (NSRT.ReminderSettings.IconSettings.HideSwipe or false))
+        local showBg = entry.showBackground ~= nil and entry.showBackground or NSRT.ReminderSettings.CircleSettings.showBackground
+        dispF.showBgCB:SetValue(showBg ~= false)
         dispF.glowunitEntry:SetValue(entry.glowunit or "")
         dispF.colorsPicker:Refresh()
         dispF.ringColorsPicker:Refresh()
         dispF.barTextColorsPicker:Refresh()
         dispF.barFillColorsPicker:Refresh()
-        dispF.showBgCB:SetValue(entry.showBackground ~= false)
         dispF.RebuildTickRows()
 
         -- Trigger tab
@@ -2075,10 +2111,24 @@ local function BuildBossRemindersUI(parentFrame)
     return screen
 end
 
--- ============================================================================
--- Export
--- ============================================================================
+local function BuildEncounterAlertsOptions()
+    return {
+    }
+end
+
+local function BuildEncounterAlertsCallback()
+    return function()
+        -- No specific callback needed
+    end
+end
+
+-- Export to namespace
 NSI.UI = NSI.UI or {}
-NSI.UI.BossReminders = {
-    BuildBossRemindersUI = BuildBossRemindersUI,
+NSI.UI.EncounterAlerts = {
+    BuildEncounterAlertsUI = BuildEncounterAlertsUI,
+}
+NSI.UI.Options = NSI.UI.Options or {}
+NSI.UI.Options.EncounterAlerts = {
+    BuildOptions = BuildEncounterAlertsOptions,
+    BuildCallback = BuildEncounterAlertsCallback,
 }
