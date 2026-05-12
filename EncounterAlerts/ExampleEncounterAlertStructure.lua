@@ -17,9 +17,12 @@ NSRT.EncounterAlerts = {
                 TTSTimer = nil,        -- nil/int
                 TTS = nil,             -- nil = defined by user settings but possible to be overwritten as false/true or string
                 sound = nil,           -- nil/string
-                skipdur = nil,         -- nil or true
+                HideTimer = nil,         -- nil or true
+                HideSwipe = nil,         -- nil or true
                 glowunit = nil,        -- nil/table
-                colors = nil,          -- nil/table
+                textColors = nil,          -- nil/table
+                barColors = nil,
+                ringColors = nil,
                 Ticks = nil,           -- nil/table
                 ReloeReminder = true, -- bool (true when created in the code as a Reloe provided reminder)
                 enabled = true,        -- bool

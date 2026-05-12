@@ -54,16 +54,24 @@ function NSI:CreateReminder(info, preview)
     if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
         return nil
     end
+    info.spellID = info.spellID and tonumber(info.spellID)
+    if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
+        info.DisplayType = info.spellID and (NSRT.ReminderSettings.Bars and "Bar" or "Icon") or "Text"
+    end
     if info.textColors and type(info.textColors) == "string" then
         local colors = {}
         for color in info.textColors:gmatch("([^%s:]+)") do
             table.insert(colors, tonumber(color))
         end
-        info.textColors = colors
-    end
-    info.spellID = info.spellID and tonumber(info.spellID)
-    if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
-        info.DisplayType = info.spellID and (NSRT.ReminderSettings.Bars and "Bar" or "Icon") or "Text"
+        if info.DisplayType == "Bar" then
+            info.barColors = colors
+            info.textColors = nil
+        elseif info.DisplayType == "Circle" then
+            info.ringColors = colors
+            info.textColors = nil
+        else
+            info.textColors = colors
+        end
     end
     -- convert to booleans
     if info.TTS == "true" then info.TTS = true end
@@ -463,8 +471,8 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         if F and F:IsShown() then
             local s = NSRT.ReminderSettings.CircleSettings
             F:SetSize(s.Size, s.Size)
-            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.TimerText:SetTextColor(unpack(s.textColors))
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetTextColor(unpack(s.textColors))
         end
     end
     self:ArrangeStates("Circles")
@@ -581,7 +589,7 @@ function NSI:SetProperties(F, info, skipsound, s)
     if info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
-        F.TimerText:SetTextColor(r, g, b, a)
+        F.Text:SetTextColor(r, g, b, a)
         local showBg = (info.showBackground == nil) and s.showBackground or info.showBackground
         if F.ring then
             local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
@@ -594,7 +602,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         else
             F.SpellText = ""
         end
-        F.TimerText:SetText(F.SpellText)
+        F.Text:SetText(F.SpellText)
     end
     if info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
@@ -626,7 +634,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         end
         if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1})) end
         if F.TimerText then
-            F.TimerText:SetTextColor(1, 1, 1, 1)
+            F.TimerText:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1}))
             if info.HideTimer then
                 F.TimerText:Hide()
             else
@@ -855,13 +863,12 @@ function NSI:CreateCircle(info)
             F.Swipe:SetSwipeTexture(CircleTexture)
             F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
 
-            F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            F.TimerText:SetPoint("BOTTOM", F, "TOP", 0, 4)
-            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.TimerText:SetShadowColor(0, 0, 0, 1)
-            F.TimerText:SetShadowOffset(0, 0)
-            F.TimerText:SetTextColor(unpack(info.textColors or s.textColors))
-
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.Text:SetPoint("BOTTOM", F, "TOP", 0, 4)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
             local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
             F:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "BOTTOMLEFT", xoff, yoff)
@@ -1017,7 +1024,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     end
     if info.DisplayType == "Circle" then
         local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
-        F.TimerText:SetText((F.SpellText or "")..text)
+        F.Text:SetText((F.SpellText or "")..text)
         return
     elseif info.DisplayType == "Text" then
         local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString

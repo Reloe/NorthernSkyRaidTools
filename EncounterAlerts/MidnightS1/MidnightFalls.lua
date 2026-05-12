@@ -49,7 +49,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P1 Tank-Hit First", name = "TankHit - Starting Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
-    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
             [16] = {21.5, 61.5, 101.5, 141.5},
         },
@@ -57,7 +57,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P1 Tank-Hit Second", name = "TankHit - Second Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
-    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
             [16] = {41.5, 81.5, 121.5, 161.5},
         },
@@ -65,7 +65,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P2 Tank-Hit First", name = "TankHit - Starting Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = nil,
-    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
             [16] =  {21.5, 61.5,},
         },
@@ -73,7 +73,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P2 Tank-Hit Second", name = "TankHit - Second Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = nil,
-    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
             [16] = {41.5, 81.5},
         },
@@ -81,7 +81,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P1 Taunt First", name = "Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
             [16] = {46, 86, 126, 166},
         },
@@ -89,7 +89,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P1 Taunt Second", name = "Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
             [16] = {26, 66, 106, 146},
         },
@@ -97,7 +97,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P2 Taunts First", name = "Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
             [16] = {46, 86},
         },
@@ -105,7 +105,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P2 Taunts Second", name = "Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {colors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
+    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
             [16] =  {46, 86},
         },
@@ -113,7 +113,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "P3 Tank-Hit", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 6, spellID = nil,
-    overrides = {colors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
             [16] = {41.5, 71.5, 101.5, 131.5, 161.5},
         },
@@ -122,7 +122,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
 
     local data = {internalID = "Full Blaze", text = "Full Blaze", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
-    overrides = {colors = {1, 0, 0, 1}},
+    overrides = {textColors = {1, 0, 0, 1}},
     timers = {
             [16] = {37.7},
         },
