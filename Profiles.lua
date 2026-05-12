@@ -143,6 +143,7 @@ function NSI:AddMissingDefaults()
                 Glow = 0,
                 Zoom = 0,
                 HideTimerText = false,
+                HideSwipe = false,
             },
             BarSettings = {
                 GrowDirection = "Up",

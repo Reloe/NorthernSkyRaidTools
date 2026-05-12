@@ -103,6 +103,7 @@ local function GetWidgetDefs(settingsName)
             {Type="Color", label="Text Color", get=GetColor, set=SetColor},
             Chk   ("Right-Aligned Text", "RightAlignedText"),
             Chk   ("Hide Timer Text", "HideTimerText"),
+            Chk   ("Hide Swipe", "HideSwipe"),
         }
 
     elseif settingsName == "BarSettings" then

@@ -98,7 +98,7 @@ NSI.InitializeAlerts[encID] = function(self)
         difficulties = {14, 15, 16},
         timers = nil,
         overrides = {BlockCopy = true},
-        skiptime = true,
+        HideTimer = true,
         Preview = ColorSwapPreview,
     }
     self:AddEncounterAlert(data)

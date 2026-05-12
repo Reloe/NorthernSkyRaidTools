@@ -38,7 +38,7 @@ function NSI:MakeEncounterAlert(data, timers)
         timers         = timers or data.timers or {},
         phase          = data.phase,
         DisplayType    = data.DisplayType,
-        skiptime       = data.skiptime,
+        HideTimer      = data.HideTimer,
         IsAlert        = true,
         ReloeReminder  = true,
         enabled        = true,

@@ -20,47 +20,49 @@ function NSI:SpawnPreviewReminders()
         text = "Personals",
         phase = 1, id = 1, DisplayType = "Text", dur = 8,
         TTS = false,
-        skiptime = NSRT.ReminderSettings.TextSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.TextSettings.HideTimerText,
     }
     local info2 = {
         text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
         phase = 1, id = 2, DisplayType = "Text", dur = 8,
         TTS = false,
-        skiptime = NSRT.ReminderSettings.TextSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.TextSettings.HideTimerText,
     }
     local info3 = {
         text = "Give Ironbark", DisplayType = "Icon", spellID = 102342,
         phase = 1, id = 3, dur = 8,
         TTS = false,
-        skiptime = NSRT.ReminderSettings.IconSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.IconSettings.HideTimerText,
+        HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe,
         glowunit = {"player"},
     }
     local info4 = {
         text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
         DisplayType = "Icon", spellID = 115203, dur = 8,
         phase = 1, id = 4, TTS = false,
-        skiptime = NSRT.ReminderSettings.IconSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.IconSettings.HideTimerText,
+        HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe,
         countdown = false,
     }
     local info5 = {
         text = "Breath", DisplayType = "Bar", spellID = 1256855,
         phase = 1, id = 5, TTS = false, dur = 8,
         glowunit = {"player"},
-        skiptime = NSRT.ReminderSettings.BarSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.BarSettings.HideTimerText,
         colors = NSRT.ReminderSettings.BarSettings.colors,
         barColors = NSRT.ReminderSettings.BarSettings.barColors,
     }
     local info6 = {
         text = "Dodge", DisplayType = "Bar",
         phase = 1, id = 6, TTS = false, dur = 8,
-        skiptime = NSRT.ReminderSettings.BarSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.BarSettings.HideTimerText,
         colors = NSRT.ReminderSettings.BarSettings.colors,
         barColors = NSRT.ReminderSettings.BarSettings.barColors,
     }
     local info7 = {
         text = "Dispel", DisplayType = "Circle", spellID = 528, dur = 8,
         phase = 1, id = 7, TTS = false,
-        skiptime = NSRT.ReminderSettings.CircleSettings.HideTimerText,
+        HideTimer = NSRT.ReminderSettings.CircleSettings.HideTimerText,
         ringColors = NSRT.ReminderSettings.CircleSettings.ringColors,
         showBackground = NSRT.ReminderSettings.CircleSettings.showBackground,
     }

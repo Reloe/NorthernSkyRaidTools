@@ -132,10 +132,11 @@ function NSI:CreateReminder(info, preview)
     info.countdown = info.countdown and tonumber(info.countdown)
     info.spellID = info.spellID and tonumber(info.spellID)
     info.dur = info.dur or 8
-    if info.skiptime == nil then info.skiptime = NSRT.ReminderSettings[settingsRef[info.DisplayType]].HideTimerText end
+    if info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings[settingsRef[info.DisplayType]].HideTimerText end
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
     info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
+    if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
     return info
 end
 
@@ -418,7 +419,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             else
                 F.TimerText:Show()
             end
-            F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
+            F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
     end
@@ -598,18 +599,18 @@ function NSI:SetProperties(F, info, skipsound, s)
     if info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
         F.Icon:SetTexture(spellInfo.iconID)
-        if info.skipdur then
+        DevTool:AddData(info)
+        if info.HideSwipe then
             if F.Swipe then F.Swipe:SetCooldown(0, 0) end
-            if F.TimerText then F.TimerText:Hide() end
         else
             if F.Swipe then F.Swipe:SetCooldown(GetTime(), info.dur) end
-            if F.TimerText then
-                F.TimerText:SetTextColor(1, 1, 0, 1)
-                if info.skiptime then
-                    F.TimerText:Hide()
-                else
-                    F.TimerText:Show()
-                end
+        end
+        if F.TimerText then
+            F.TimerText:SetTextColor(1, 1, 0, 1)
+            if info.HideTimer then
+                F.TimerText:Hide()
+            else
+                F.TimerText:Show()
             end
         end
         if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors)) end
@@ -626,7 +627,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1})) end
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 1, 1)
-            if info.skiptime then
+            if info.HideTimer then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -718,12 +719,14 @@ function NSI:CreateIcon(info)
             F.Swipe:SetDrawEdge(false)
             F.Swipe:SetReverse(true)
             F.Swipe:SetHideCountdownNumbers(true)
-            F.TimerText = F.Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
+            F.TimerOverlay = CreateFrame("Frame", nil, F)
+            F.TimerOverlay:SetAllPoints(F)
+            F.TimerOverlay:SetFrameLevel(F.Swipe:GetFrameLevel() + 1)
+            F.TimerText = F.TimerOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
             F.TimerText:SetShadowColor(0, 0, 0, 1)
             F.TimerText:SetShadowOffset(0, 0)
-            F.TimerText:SetDrawLayer("OVERLAY", 7)
             self:SetProperties(F, info, false, s)
             self.ReminderIcon[i] = F
             return F
@@ -941,7 +944,7 @@ function NSI:DisplayReminder(info, bypass)
     elseif info.DisplayType == "Text" then
         F = self:CreateText(info)
         F.DisplayType = "Texts"
-        text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+        text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
         F.Text:SetText(text)
         F:Show()
         self:ArrangeStates("Texts")
@@ -1013,11 +1016,11 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         remString = tostring(math.ceil(rem))
     end
     if info.DisplayType == "Circle" then
-        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
         F.TimerText:SetText((F.SpellText or "")..text)
         return
     elseif info.DisplayType == "Text" then
-        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
+        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
         F.Text:SetText((F.SpellText or "")..text)
         return
     elseif info.DisplayType == "Bar" then
