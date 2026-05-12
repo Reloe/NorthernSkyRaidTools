@@ -44,7 +44,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if diff < 14 or diff > 16 then return end
     if diff == 16 and self.Assignments[encID].Soaks then
         local subgroup = self:GetSubGroup("player")
-        local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID, true)
+        local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID)
         Alert.dur, Alert.TTSTimer = 10, 5
         for phase = 1, 3 do
             Alert.phase = phase
@@ -54,7 +54,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
             Alert.time, Alert.text = 91.4, subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             Alert.TTS = subgroup >= 3 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
-            Alert.time, Alert.text = 158.7, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+            Alert.time, Alert.text = 155.2, subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
             Alert.TTS = subgroup <= 2 and "Soak" or "Don't soak"
             self:AddToReminder(Alert)
         end
@@ -65,7 +65,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     elseif self.Assignments[encID].SplitSoaks and diff ~= 16 then
         if UnitGroupRolesAssigned("player") == "TANK" then return end
         local _, first = self:GetSortedGroup(true, false, false)
-        local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID, true)
+        local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID)
         local group = 2
         for i, v in ipairs(first) do
             if UnitIsUnit(v.unitid, "player") then group = 1; break end

@@ -170,7 +170,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID] and self.Assignments[encID].Soaks) then return end
     if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
-    local Alert = self:CreateDefaultAlert("", "text", nil, 8, 1, encID, true) -- text, Type, spellID, dur, phase, encID
+    local Alert = self:CreateDefaultAlert("", "text", nil, 8, 1, encID) -- text, Type, spellID, dur, phase, encID
     local group = {}
     local healer = {}
     for unit in self:IterateGroupMembers() do

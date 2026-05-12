@@ -1622,7 +1622,7 @@ function NSAPI:DebugTimeline(e, dur)
     NSI:EventHandler(e, true, true, {duration = dur})
 end
 
-function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID, IsAssignment)
+function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID) -- only used for Assignments now
     local id = self.DefaultAlertID or 10000
     self.DefaultAlertID = self.DefaultAlertID and self.DefaultAlertID + 1 or 10001
     local info =
@@ -1633,12 +1633,11 @@ function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID, I
         TTSTimer = dur, -- tts on show
         text = text,
         TTS = (DisplayType == "Text" and NSRT.ReminderSettings.TextTTS and text) or (DisplayType ~= "Text" and NSRT.ReminderSettings.SpellTTS and text), -- use the user's settings
-        notsticky = true,
+        sticky = 0,
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
         IsAssignment = IsAssignment,
-        IsAlert = not IsAssignment,
         countdown = false,
         DisplayType = DisplayType,
     }
