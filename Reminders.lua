@@ -144,6 +144,7 @@ function NSI:CreateReminder(info, preview)
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
     info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
+    if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
     if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
     return info
 end
@@ -602,7 +603,6 @@ function NSI:SetProperties(F, info, skipsound, s)
         else
             F.SpellText = ""
         end
-        F.Text:SetText(F.SpellText)
     end
     if info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
@@ -918,6 +918,26 @@ function NSI:CheckReminderLogic(info)
     end
 end
 
+function NSI:GetDisplayedText(rem, info, F)
+    local remString
+    if rem <= info.Decimals then
+        if rem < 0 then
+            remString = ""
+        else
+            rem = Round(rem * 10 + 0.5) / 10
+            remString = string.format("%.1f", rem)
+        end
+    else
+        remString = tostring(math.ceil(rem))
+    end
+    if info.DisplayType == "Text" or info.DisplayType == "Circle" then
+        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and (remString == "" and info.text or info.text.." - ("..remString..")")) or remString
+        return (F and F.SpellText or "")..text
+    else
+        return info.text, remString
+    end
+end
+
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed then return end
@@ -930,28 +950,17 @@ function NSI:DisplayReminder(info, bypass)
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
     end
-    local remString
-    if rem <= 3 then
-        if rem < 0 then
-            remString = ""
-        else
-            rem = math.floor(rem * 10 + 0.5) / 10
-            remString = string.format("%.1f", rem)
-        end
-    else
-        remString = tostring(math.ceil(rem))
-    end
-    local text = info.text
     local F
+    local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
         F = self:CreateCircle(info)
+        F.DisplayType = "Circles"
+        F.Text:SetText(text)
         F:Show()
         self:ArrangeStates("Circles")
-        F.DisplayType = "Circles"
     elseif info.DisplayType == "Text" then
         F = self:CreateText(info)
         F.DisplayType = "Texts"
-        text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
         F.Text:SetText(text)
         F:Show()
         self:ArrangeStates("Texts")
@@ -963,7 +972,7 @@ function NSI:DisplayReminder(info, bypass)
             F:Show()
             self:ArrangeStates("Bars")
             F.DisplayType = "Bars"
-            F.Text:SetText(text)
+            F.Text:SetText(info.text)
             F.TimerText:SetText(remString)
             if not info.spellID then F.Icon:Hide() else F.Icon:Show() end
         elseif info.DisplayType == "Icon" then
@@ -971,7 +980,7 @@ function NSI:DisplayReminder(info, bypass)
             F:Show()
             self:ArrangeStates("Icons")
             F.DisplayType = "Icons"
-            F.Text:SetText(text)
+            F.Text:SetText(info.text)
             F.TimerText:SetText(remString)
         end
     end
@@ -1011,24 +1020,12 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         F:Hide()
         return
     end
-    local remString
-    if rem <= 3.5 then
-        if rem < 0 then
-            remString = ""
-        else
-            rem = math.floor(rem * 10 + 0.5) / 10
-            remString = string.format("%.1f", rem)
-        end
-    else
-        remString = tostring(math.ceil(rem))
-    end
+    local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
-        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
-        F.Text:SetText((F.SpellText or "")..text)
+        F.Text:SetText(text)
         return
     elseif info.DisplayType == "Text" then
-        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
-        F.Text:SetText((F.SpellText or "")..text)
+        F.Text:SetText(text)
         return
     elseif info.DisplayType == "Bar" then
         if F.SetValue then F:SetValue((GetTime()-info.startTime)) end

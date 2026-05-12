@@ -144,6 +144,7 @@ function NSI:AddMissingDefaults()
                 Zoom = 0,
                 HideTimerText = false,
                 HideSwipe = false,
+                Decimals = 3,
             },
             BarSettings = {
                 GrowDirection = "Up",
@@ -168,6 +169,7 @@ function NSI:AddMissingDefaults()
                 TimerFontSize = 22,
                 Spacing = -1,
                 HideTimerText = false,
+                Decimals = 3,
             },
             TextSettings = {
                 textColors = { 1, 1, 1, 1 },
@@ -181,6 +183,7 @@ function NSI:AddMissingDefaults()
                 FontSize = 50,
                 Spacing = 1,
                 HideTimerText = false,
+                Decimals = 3,
             },
             CircleSettings = {
                 GrowDirection = "Up",
@@ -197,6 +200,7 @@ function NSI:AddMissingDefaults()
                 Spacing = 5,
                 showBackground = false,
                 HideTimerText = false,
+                Decimals = 3,
             },
             UnitIconSettings = {
                 Position = "CENTER",
