@@ -9,6 +9,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local rangedConditions = self:DefaultLoadConditions()
     rangedConditions.Roles.RANGED = true
+    local dpsCondtions = self:DefaultLoadConditions()
+    dpsCondtions.Roles.DAMAGER = true
     local data = {internalID = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {loadConditions = rangedConditions},
     timers = {
@@ -24,6 +26,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    overrides = {loadConditions = dpsCondtions},
     timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
         },
