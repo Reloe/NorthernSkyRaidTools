@@ -212,10 +212,24 @@ local function BuildEncounterAlertsUI(parentFrame)
     local searchEntry = CreateTextEntry(screen, nil, nil, nil, leftWidth - pad * 2, 22,
         nil, nil, nil, "NSUIEncAlertSearch")
     searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4)
+
+    local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  Search...")
+    searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
+    searchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
+    searchHint:SetFont(STANDARD_TEXT_FONT, 14, "")
+
+    local function UpdateSearchHint(eb)
+        searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus())
+    end
+
     searchEntry.editBox:SetScript("OnTextChanged", function(self)
         searchText = self:GetText()
+        UpdateSearchHint(self)
         if screen.RebuildList then screen.RebuildList() end
     end)
+    searchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateSearchHint(self) end)
+    searchEntry.editBox:HookScript("OnEditFocusLost",   function(self) UpdateSearchHint(self) end)
 
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
     local scrollTop    = topY - 20 - 22 - 4 - 22 - 6   -- below title + filter row + search + gaps = -84
