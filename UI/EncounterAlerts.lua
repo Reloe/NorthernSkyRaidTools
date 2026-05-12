@@ -760,21 +760,33 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- ================================================================
     -- Helper: build a lock overlay for a tab frame
+    -- transparent=true → invisible background (blocks clicks but content is visible)
     -- ================================================================
-    local function MakeLockOverlay(parent, message)
+    local function MakeLockOverlay(parent, message, transparent)
         local ov = CreateFrame("Frame", nil, parent, "BackdropTemplate")
         ov:SetAllPoints(parent)
         ov:SetFrameLevel(parent:GetFrameLevel() + 10)
-        DF:ApplyStandardBackdrop(ov)
-        ov.__background:SetVertexColor(0.02, 0.02, 0.02)
-        ov.__background:SetAlpha(0.82)
+        ov:EnableMouse(true)
 
-        local lbl = ov:CreateFontString(nil, "OVERLAY")
-        lbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
-        lbl:SetTextColor(0.55, 0.55, 0.55, 1)
-        lbl:SetText(message)
-        lbl:SetPoint("CENTER", ov, "CENTER", 0, 0)
-        lbl:SetJustifyH("CENTER")
+        if transparent then
+            -- No background; just intercept mouse. Show a small read-only badge top-right.
+            local badge = ov:CreateFontString(nil, "OVERLAY")
+            badge:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+            badge:SetTextColor(0.9, 0.75, 0.2, 0.85)
+            badge:SetText("|TInterface\\PetBattles\\PetBattle-LockIcon:12:12:0:-1|t Read-only")
+            badge:SetPoint("TOPRIGHT", ov, "TOPRIGHT", 0, 0)
+        else
+            DF:ApplyStandardBackdrop(ov)
+            ov.__background:SetVertexColor(0.02, 0.02, 0.02)
+            ov.__background:SetAlpha(0.82)
+
+            local lbl = ov:CreateFontString(nil, "OVERLAY")
+            lbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
+            lbl:SetTextColor(0.55, 0.55, 0.55, 1)
+            lbl:SetText(message)
+            lbl:SetPoint("CENTER", ov, "CENTER", 0, 0)
+            lbl:SetJustifyH("CENTER")
+        end
 
         ov:Hide()
         return ov
@@ -1437,9 +1449,9 @@ local function BuildEncounterAlertsUI(parentFrame)
         "NSUIEncAlertAddTimeBtn")
     addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
 
-    -- Lock overlay for Trigger tab (shown when hardcoded boss is selected)
-    trigF.lockOverlay = MakeLockOverlay(trigF,
-        "Trigger timing is defined in code\nand cannot be edited here.")
+    -- Lock overlay for Trigger tab (shown when ReloeReminder is selected)
+    -- transparent=true so the triggers are still visible, just not interactable
+    trigF.lockOverlay = MakeLockOverlay(trigF, nil, true)
 
     -- ================================================================
     -- SOUND TAB
@@ -2080,9 +2092,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         dispF.RebuildTickRows()
 
         -- Trigger tab
-        if not isReloe then
-            trigF.bossDD:Refresh()
-        end
+        trigF.bossDD:Refresh()
         trigF.trigDiffDD:Refresh()
         trigF.phaseEntry:SetValue(tostring(entry.phase or 1))
         trigF.RebuildTimeRows()
