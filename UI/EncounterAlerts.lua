@@ -698,6 +698,8 @@ local function BuildEncounterAlertsUI(parentFrame)
                 isEnabled = entry.data.enabled
                 name      = isReloe and ReloeAlertName(entry.data) or (entry.data.name or "Unnamed")
 
+                local willLoad = NSI:EvaluateLoad(entry.data)
+
                 -- Selected highlight
                 local isSelected = isReloe
                     and (selectedEncID == entry.encID and selectedDiffID == entry.diffID and selectedKey == entry.alertKey)
@@ -707,11 +709,12 @@ local function BuildEncounterAlertsUI(parentFrame)
                     row.__background:SetAlpha(1)
                 else
                     row.__background:SetVertexColor(0.4, 0.4, 0.4)
-                    row.__background:SetAlpha(0.5)
+                    row.__background:SetAlpha(willLoad and 0.5 or 0.2)
                 end
                 if icon then
                     row.bossIcon:SetTexture(icon)
                     row.bossIcon:Show()
+                    row.bossIcon:SetAlpha(willLoad and 1 or 0.35)
                 else
                     row.bossIcon:SetTexture(nil)
                     row.bossIcon:Hide()
@@ -719,7 +722,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
 
                 row.nameLabel:SetText(name)
-                row.nameLabel:SetTextColor(1, 1, 1, isEnabled and 1 or 0.45)
+                local alpha = willLoad and (isEnabled and 1 or 0.45) or 0.35
+                row.nameLabel:SetTextColor(1, 1, 1, alpha)
+                row.enabledCB.frame:SetAlpha(willLoad and 1 or 0.4)
 
                 if row.pinIcon then
                     row.pinIcon:SetShown(entry._pinned == true)
@@ -2247,6 +2252,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     loadF._alert.loadConditions.Names[capName] = nil
                     NSI:SaveAlertData(loadF._alert, "loadConditions", loadF._alert.loadConditions)
                     RebuildNameRows()
+                    RebuildList()
                 end
             end)
             nameRows[i]:Show()
@@ -2270,6 +2276,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         NSI:SaveAlertData(loadF._alert, "loadConditions", loadF._alert.loadConditions)
         nameAddEntry:SetValue("")
         RebuildNameRows()
+        RebuildList()
     end
     nameAddEntry.editBox:SetScript("OnEnterPressed", function(self)
         DoAddName(); self:ClearFocus()
@@ -2327,6 +2334,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     function()
                         onToggle(d, cond);
                         RebuildLoadTab()
+                        RebuildList()
                         NSI:FireCallback("NSRT_ALERT_CHANGED", alert.encID, alert.diffID, alert.alertKey)
                     end)
                     row:Show()
