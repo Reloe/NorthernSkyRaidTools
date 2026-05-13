@@ -11,14 +11,14 @@ NSI.InitializeAlerts[encID] = function(self)
     rangedConditions.Roles.RANGED = true
     local dpsConditions = self:DefaultLoadConditions()
     dpsConditions.Roles.DAMAGER = true
-    local data = {group = "P1", internalID = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {group = "Alleria P1", internalID = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {loadConditions = rangedConditions},
     timers = {
             [16] = {9.6, 30.4},
         },
     }
     self:AddEncounterAlert(data)
-    local data = {group = {"P1", nil, "P2", nil, "P3"}, internalID = "Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {loadConditions = rangedConditions},
     timers = {
             [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
@@ -27,7 +27,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "P1", internalID = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {group = "Alleria P1", internalID = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {loadConditions = dpsConditions},
     timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
@@ -35,7 +35,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = {"P1", nil, "P2", nil, "P3"}, internalID = "Explosion", text = "Explosion", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 12, spellID = 1233819,
+    local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Explosion", text = "Explosion", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 12, spellID = 1233819,
     overrides = {Ticks = {6}},
     timers = {
             [16] = {{27, 67, 99.5, 126.6}, {}, {37, 62, 89, 114}, {}, {54, 114, 174}},
@@ -52,7 +52,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "P3", internalID = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
+    local data = {group = "Alleria P3", internalID = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
     timers = {
             [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
         },

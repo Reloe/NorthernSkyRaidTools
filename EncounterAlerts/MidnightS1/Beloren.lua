@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
-    local data = {group = {nil, "P1", "P2"}, internalID = "Gateway", text = "Gateway", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 6.6, spellID = 311699,
+    local data = {group = {nil, "Beloren P1", "Beloren P2"}, internalID = "Gateway", text = "Gateway", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 6.6, spellID = 311699,
     timers = {
             [15] = {{}, {6.6}, {6.6}},
             [16] = {{}, {6.6}, {6.6}},
@@ -15,21 +15,21 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = {nil, "P1", "P2"}, internalID = "Next Hit", text = "Next Hit", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 3.5, spellID = 1242792,
+    local data = {group = {nil, "Beloren P1", "Beloren P2"}, internalID = "Next Hit", text = "Next Hit", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 3.5, spellID = 1242792,
     timers = {
             [16] = {{}, {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7, 43.2, 46.7}, {11.7, 15.2, 18.7, 22.2, 25.7, 29.2, 32.7, 36.2, 39.7, 43.2, 46.7}},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = {"P1", "P2"}, internalID = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
+    local data = {group = {"Beloren P1", "Beloren P2"}, internalID = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
     timers = {
             [16] = {{18.8, 68.8}, {70.6, 120.6, 170.6}},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = {"P1", "P2"}, internalID = "Quills", text = "Quills", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    local data = {group = {"Beloren P1", "Beloren P2"}, internalID = "Quills", text = "Quills", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
     timers = {
             [16] = {{27.4, 37.4, 47.4, 77.4, 87.4, 97.4}, {79.2, 89.2, 99.2, 129.2, 139.2, 149.2, 179.2}},
         },

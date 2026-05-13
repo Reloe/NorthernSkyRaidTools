@@ -563,15 +563,34 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
     return name
 end
 
-function NSI:ExportAlertsString(encID)
+function NSI:ExportAlertsString(encID, diffID)
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate = LibStub("LibDeflate")
-    local encounterAlerts = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
+    local source = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
+    local encounterAlerts
+    if diffID then
+        encounterAlerts = {}
+        if encID then
+            local diffTable = source and source[diffID]
+            if diffTable then
+                encounterAlerts[encID] = { [diffID] = diffTable }
+            end
+        else
+            for eid, encTable in pairs(source or {}) do
+                if type(encTable) == "table" and encTable[diffID] then
+                    encounterAlerts[eid] = { [diffID] = encTable[diffID] }
+                end
+            end
+        end
+    else
+        encounterAlerts = source or {}
+    end
     local exportTable = {
         version         = 1,
         type            = "alerts",
         encID           = encID,
-        encounterAlerts = encounterAlerts or {},
+        diffID          = diffID,
+        encounterAlerts = encounterAlerts,
     }
     local serialized = LibSerialize:Serialize(exportTable)
     local compressed = LibDeflate:CompressDeflate(serialized)
@@ -595,18 +614,20 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
     return LibDeflate:EncodeForPrint(compressed)
 end
 
-function NSI:ExportGroupString(encID, groupName)
+function NSI:ExportGroupString(encID, groupName, diffID)
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate   = LibStub("LibDeflate")
     local encounterAlerts = {}
     local encTable = encID and NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
     if type(encTable) == "table" then
-        for diffID, diffTable in pairs(encTable) do
-            for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
-                if type(alert) == "table" and alert.group == groupName then
-                    encounterAlerts[encID] = encounterAlerts[encID] or {}
-                    encounterAlerts[encID][diffID] = encounterAlerts[encID][diffID] or {}
-                    encounterAlerts[encID][diffID][key] = alert
+        for did, diffTable in pairs(encTable) do
+            if (not diffID) or did == diffID then
+                for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
+                    if type(alert) == "table" and alert.group == groupName then
+                        encounterAlerts[encID] = encounterAlerts[encID] or {}
+                        encounterAlerts[encID][did] = encounterAlerts[encID][did] or {}
+                        encounterAlerts[encID][did][key] = alert
+                    end
                 end
             end
         end
@@ -617,6 +638,7 @@ function NSI:ExportGroupString(encID, groupName)
         type            = "alert_group",
         groupName       = groupName,
         groupEncID      = encID,
+        diffID          = diffID,
         groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
         encounterAlerts = encounterAlerts,
     }
@@ -641,26 +663,25 @@ function NSAPI:ImportAlertsString(importString)
         NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
         if t.encID then
             if t.encounterAlerts then
-                -- Per-encounter import: full overwrite of that encounter's Reloe alerts,
-                -- merge user alerts (ReloeReminder==nil) by generating fresh keys
                 NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
-                for diffID, diffData in pairs(t.encounterAlerts or {}) do
-                    NSRT.EncounterAlerts[t.encID][diffID] = NSRT.EncounterAlerts[t.encID][diffID] or {}
-                    local destDiff = NSRT.EncounterAlerts[t.encID][diffID]
-                    -- Wipe existing Reloe entries for this diff
-                    for k, a in pairs(destDiff) do
-                        if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
-                    end
-                    for alertKey, alert in pairs(diffData) do
-                        if type(alert) == "table" then
-                            if alert.ReloeReminder then
-                                destDiff[alertKey] = alert
-                            else
-                                alert.ReloeReminder = nil
-                                local newKey = NSI:UniqueAlertID(destDiff, false)
-                                destDiff[newKey] = alert
+                for diffID, diffData in pairs(t.encounterAlerts[t.encID] or t.encounterAlerts or {}) do
+                    if (not t.diffID) or diffID == t.diffID then
+                        NSRT.EncounterAlerts[t.encID][diffID] = NSRT.EncounterAlerts[t.encID][diffID] or {}
+                        local destDiff = NSRT.EncounterAlerts[t.encID][diffID]
+                        for k, a in pairs(destDiff) do
+                            if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
+                        end
+                        for alertKey, alert in pairs(diffData) do
+                            if type(alert) == "table" then
+                                if alert.ReloeReminder then
+                                    destDiff[alertKey] = alert
+                                else
+                                    alert.ReloeReminder = nil
+                                    local newKey = NSI:UniqueAlertID(destDiff, false)
+                                    destDiff[newKey] = alert
+                                end
+                                count = count + 1
                             end
-                            count = count + 1
                         end
                     end
                 end
@@ -669,27 +690,27 @@ function NSAPI:ImportAlertsString(importString)
             return count
         end
         if t.encounterAlerts then
-            -- Full import: overwrite Reloe entries globally, merge user alerts
             local overwritecount = 0
             for encID, encData in pairs(t.encounterAlerts or {}) do
                 NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
                 for diffID, diffData in pairs(encData) do
-                    NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
-                    local destDiff = NSRT.EncounterAlerts[encID][diffID]
-                    -- Wipe existing Reloe entries
-                    for k, a in pairs(destDiff) do
-                        if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
-                    end
-                    for alertKey, alert in pairs(diffData) do
-                        if type(alert) == "table" then
-                            if alert.ReloeReminder then
-                                destDiff[alertKey] = alert
-                            else
-                                alert.ReloeReminder = nil
-                                local newKey = NSI:UniqueAlertID(destDiff, false)
-                                destDiff[newKey] = alert
+                    if (not t.diffID) or diffID == t.diffID then
+                        NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                        local destDiff = NSRT.EncounterAlerts[encID][diffID]
+                        for k, a in pairs(destDiff) do
+                            if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
+                        end
+                        for alertKey, alert in pairs(diffData) do
+                            if type(alert) == "table" then
+                                if alert.ReloeReminder then
+                                    destDiff[alertKey] = alert
+                                else
+                                    alert.ReloeReminder = nil
+                                    local newKey = NSI:UniqueAlertID(destDiff, false)
+                                    destDiff[newKey] = alert
+                                end
+                                count = count + 1
                             end
-                            count = count + 1
                         end
                     end
                 end
@@ -728,18 +749,20 @@ function NSAPI:ImportAlertsString(importString)
         for encID, encData in pairs(t.encounterAlerts or {}) do
             NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
             for diffID, diffData in pairs(encData) do
-                NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
-                local destDiff = NSRT.EncounterAlerts[encID][diffID]
-                for alertKey, alert in pairs(diffData) do
-                    if type(alert) == "table" then
-                        if alert.ReloeReminder then
-                            destDiff[alertKey] = alert
-                        else
-                            alert.ReloeReminder = nil
-                            local importKey = alertKey or NSI:UniqueAlertID(destDiff, false)
-                            destDiff[importKey] = alert
+                if (not t.diffID) or diffID == t.diffID then
+                    NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                    local destDiff = NSRT.EncounterAlerts[encID][diffID]
+                    for alertKey, alert in pairs(diffData) do
+                        if type(alert) == "table" then
+                            if alert.ReloeReminder then
+                                destDiff[alertKey] = alert
+                            else
+                                alert.ReloeReminder = nil
+                                local importKey = alertKey or NSI:UniqueAlertID(destDiff, false)
+                                destDiff[importKey] = alert
+                            end
+                            count = count + 1
                         end
-                        count = count + 1
                     end
                 end
             end
