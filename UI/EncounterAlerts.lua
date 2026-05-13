@@ -328,8 +328,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     encID           = encID,
                                     diffID          = filterDiffID,
                                     alertKey        = key,
-                                    entry           = isReloe and entry or nil,
-                                    alert           = not isReloe and entry or nil,
+                                    data            = entry,
                                     _isReloeCreated = isReloe,
                                     _enabled        = entry.enabled ~= false,
                                     _phase          = entry.phase or 1,
@@ -378,7 +377,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 if filterEncID == nil or filterEncID == 0 then
                     icon = BossData.BossIcons[entry.encID]
                 else
-                    local alertData = isReloe and entry.entry or entry.alert
+                    local alertData = entry.data
                     local customIcon = alertData and alertData.customIcon and C_Spell.GetSpellInfo(alertData.customIcon)
                     if customIcon then
                         icon = customIcon.iconID
@@ -392,14 +391,8 @@ local function BuildEncounterAlertsUI(parentFrame)
                     end
                 end
 
-                if isReloe then
-                    isEnabled = entry.entry.enabled
-                    name      = ReloeAlertName(entry.entry)
-                else
-                    local alert = entry.alert
-                    isEnabled   = alert.enabled
-                    name        = alert.name or "Unnamed"
-                end
+                isEnabled = entry.data.enabled
+                name      = isReloe and ReloeAlertName(entry.data) or (entry.data.name or "Unnamed")
 
                 -- Selected highlight
                 local isSelected = isReloe
@@ -441,7 +434,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                         end
                     end)
                 else
-                    local alert   = entry.alert
+                    local alert   = entry.data
                     local akey    = entry.alertKey
                     local aencID  = entry.encID
                     row.enabledCB:SetOnChange(function(nsi, v)
@@ -467,7 +460,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                             local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[ri_encID]
                                          and NSRT.EncounterAlerts[ri_encID][filterDiffID]
                             if diffTable then
-                                diffTable[akey] = nil 
+                                diffTable[akey] = nil
                                 NSI:FireCallback("NSRT_ALERT_CHANGED", ri_encID, filterDiffID, akey)
                             end
                             if selectedKey == akey and selectedEncID == ri_encID then
@@ -495,17 +488,26 @@ local function BuildEncounterAlertsUI(parentFrame)
                                      and NSRT.EncounterAlerts[eid][did]
                                      and NSRT.EncounterAlerts[eid][did][akey]
                             local name = data and (data.name or data.text or akey) or akey
-                            if not entry.entry.BlockCopy then
+                            if not entry.data.BlockCopy then
                                 ShowContextMenu({
                                     { type = "button", label = "Export Alert", fnc = function()
                                         local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
                                         ShowExportPopup(str, name)
                                     end },
                                     {type = "button", label = "Reset", fnc = function()
-                                        entry.entry.Reset = true
+                                        local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
+                                        if diffTable then diffTable[akey] = nil end
                                         NSI:ImportReloeReminders()
                                         RebuildList()
-                                        SelectAlert(akey, did, eid)
+                                        local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+                                                        and NSRT.EncounterAlerts[eid][did]
+                                                        and NSRT.EncounterAlerts[eid][did][akey]
+                                        if stillExists then
+                                            SelectAlert(akey, did, eid)
+                                        else
+                                            selectedKey = nil; selectedEncID = nil
+                                            if rightPanel then rightPanel:Hide() end
+                                        end
                                     end},
                                     {type = "button", label = "Duplicate", fnc = function()
                                         NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
@@ -513,7 +515,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                         NSRT.EncounterAlerts[eid][did] = NSRT.EncounterAlerts[eid][did] or {}
                                         local diffTable = NSRT.EncounterAlerts[eid][did]
                                         local newKey = NSI:UniqueAlertID(diffTable, false)
-                                        local newData = CopyTable(entry.entry)
+                                        local newData = CopyTable(entry.data)
                                         newData.ReloeReminder = nil
                                         diffTable[newKey] = newData
                                         RebuildList()
@@ -526,10 +528,19 @@ local function BuildEncounterAlertsUI(parentFrame)
                                         ShowExportPopup(str, name)
                                     end },
                                     {type = "button", label = "Reset", fnc = function()
-                                        entry.entry.Reset = true
+                                        local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
+                                        if diffTable then diffTable[akey] = nil end
                                         NSI:ImportReloeReminders()
                                         RebuildList()
-                                        SelectAlert(akey, did, eid)
+                                        local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+                                                        and NSRT.EncounterAlerts[eid][did]
+                                                        and NSRT.EncounterAlerts[eid][did][akey]
+                                        if stillExists then
+                                            SelectAlert(akey, did, eid)
+                                        else
+                                            selectedKey = nil; selectedEncID = nil
+                                            if rightPanel then rightPanel:Hide() end
+                                        end
                                     end},
                                 })
                             end
