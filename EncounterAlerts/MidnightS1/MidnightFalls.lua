@@ -488,7 +488,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesFrame:Show()
             local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
             for i = 1, 5 do
-                DisplayRune(i, iconIDs[i], false)
+                DisplayRune(i, secretwrap(iconIDs[i]), false)
             end
         end
         local timers = {
