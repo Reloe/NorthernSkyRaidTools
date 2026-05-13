@@ -1839,7 +1839,6 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
-
 function NSI:EvaluateLoad(info)
     local cond = info.loadConditions
     if not cond then return true end
@@ -1878,5 +1877,11 @@ function NSI:ImportReloeReminders()
             end
         end
         NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+    end
+end
+
+function NSI:DeleteReloeReminder(encID, diffID, alertKey)
+    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
+        NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
     end
 end
