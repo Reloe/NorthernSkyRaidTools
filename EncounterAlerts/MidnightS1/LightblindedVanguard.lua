@@ -139,6 +139,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
                     self.TauntTimersCancel:Cancel()
                     self.TauntTimersCancel = nil
                 end
+                self.TauntFrame.Text:Hide()
             end
         end)
         self.TauntTimers = self.TauntTimers or {}
@@ -148,7 +149,10 @@ NSI.EncounterAlertStart[encID] = function(self, id)
                 C_Timer.After(0.4, function()
                     self:EncounterRegister("UNIT_SPELLCAST_START", false)
                 end)
-                C_Timer.After(7, function() blacklist = {} end)
+                C_Timer.After(7, function()
+                    blacklist = {}
+                    self.TauntFrame.Text:Hide()
+                end)
             end)
         end
     end
