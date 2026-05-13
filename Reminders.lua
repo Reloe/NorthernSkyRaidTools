@@ -45,7 +45,7 @@ end
 
 function NSI:CreateReminder(info, preview)
     info = CopyTable(info)
-    if preview then
+    if preview or not info.encID then
         info.time = info.dur or 60
         info.encID = 0
     end
@@ -920,6 +920,7 @@ end
 
 function NSI:GetDisplayedText(rem, info, F)
     local remString
+    if not info.Decimals then DevTool:AddData(info) end
     if rem <= info.Decimals then
         if rem < 0 then
             remString = ""

@@ -9,8 +9,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local rangedConditions = self:DefaultLoadConditions()
     rangedConditions.Roles.RANGED = true
-    local dpsCondtions = self:DefaultLoadConditions()
-    dpsCondtions.Roles.DAMAGER = true
+    local dpsConditions = self:DefaultLoadConditions()
+    dpsConditions.Roles.DAMAGER = true
     local data = {internalID = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
     overrides = {loadConditions = rangedConditions},
     timers = {
@@ -18,15 +18,17 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-    data.internalID, data.text = "Bait", "Bait"
-    data.timers = {
-        [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
-        [16] = {{9.6, 30.4}, {}, {23, 48, 75, 100, 127}, {}, {40, 100, 160}},
-    },
+    local data = {internalID = "Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    overrides = {loadConditions = rangedConditions},
+    timers = {
+            [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
+            [16] = {{9.6, 30.4}, {}, {23, 48, 75, 100, 127}, {}, {40, 100, 160}},
+        },
+    }
     self:AddEncounterAlert(data)
 
     local data = {internalID = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
-    overrides = {loadConditions = dpsCondtions},
+    overrides = {loadConditions = dpsConditions},
     timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
         },

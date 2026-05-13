@@ -216,7 +216,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 local icon = "\124T"..encounterWarningInfo.iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
                 local text = string.format("%s %s %s", icon, s.text, icon)
 
-                local info = CopyTable(s)
+                local info = self:CreateReminder(CopyTable(s), true)
                 info.text = text
 
                 self:DisplayReminder(info)
@@ -229,7 +229,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             local icon = "\124T"..iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
             local text = string.format("%s %s %s", icon, s.text, icon)
 
-            local info = CopyTable(s)
+            local info = self:CreateReminder(CopyTable(s), true)
             info.text = text
 
             self:DisplayReminder(info)
