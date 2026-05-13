@@ -499,6 +499,7 @@ function NSI:PreviewRaidPA(Show, Init)
         self.PARaidPreviewFrame:SetFrameStrata("DIALOG")
     end
     self.PARaidPreviewFrame:SetSize(NSRT.PARaidSettings.Width, NSRT.PARaidSettings.Height)
+    self.PARaidPreviewFrame:ClearAllPoints()
     self.PARaidPreviewFrame:SetPoint(NSRT.PARaidSettings.Anchor, MyFrame, NSRT.PARaidSettings.relativeTo, NSRT.PARaidSettings.xOffset, NSRT.PARaidSettings.yOffset)
     self.PARaidPreviewFrame:Show()
 
