@@ -10,9 +10,9 @@ local DF = _G["DetailsFramework"]
 
 local STYLE = {
     -- Normal state
-    bg_color       = { 0.4, 0.4, 0.4, 0.8 },
+    bg_color       = { 0.1, 0.1, 0.1, 0.8 },
     -- Input control background (text entries, sliders, color pickers, checkboxes)
-    input_bg_color = { 0.4, 0.4, 0.4, 0.9 },
+    input_bg_color = { 0.1, 0.1, 0.1, 0.9 },
 
     -- Hover overlay (fades in/out on mouse enter/leave)
     hover_color     = {0,    1,    1,    0.13},
