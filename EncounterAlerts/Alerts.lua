@@ -31,7 +31,7 @@ function NSI:MakeEncounterAlert(data, timers)
         name           = data.name or data.internalID,
         text           = data.text,
         spellID        = data.spellID,
-        customIcon     = data.customIcon or nil,
+        customIcon     = data.customIcon,
         TTS            = data.TTS,
         TTSTimer       = data.TTSTimer or data.dur,
         dur            = data.dur,
@@ -42,12 +42,12 @@ function NSI:MakeEncounterAlert(data, timers)
         IsAlert        = true,
         ReloeReminder  = true,
         enabled        = true,
-        loadConditions = NSI.DefaultLoadConditions(),
         extraOptions   = data.extraOptions,
         Preview        = data.Preview,
         isSpecialDisplay = data.isSpecialDisplay,
         Version        = data.Version,
         sticky         = data.sticky or 0,
+        group          = data.group,
     }
     if data.overrides then
         for k, v in pairs(data.overrides) do a[k] = v end

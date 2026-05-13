@@ -67,7 +67,8 @@ function NSI:AddMissingDefaults()
         },
 
         Alerts = {
-            ReloeReminders = false
+            ReloeReminders = false,
+            Groups = {},
         },
 
         -- Reminder Settings
@@ -594,6 +595,36 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
     return LibDeflate:EncodeForPrint(compressed)
 end
 
+function NSI:ExportGroupString(encID, groupName)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate   = LibStub("LibDeflate")
+    local encounterAlerts = {}
+    local encTable = encID and NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+    if type(encTable) == "table" then
+        for diffID, diffTable in pairs(encTable) do
+            for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
+                if type(alert) == "table" and alert.group == groupName then
+                    encounterAlerts[encID] = encounterAlerts[encID] or {}
+                    encounterAlerts[encID][diffID] = encounterAlerts[encID][diffID] or {}
+                    encounterAlerts[encID][diffID][key] = alert
+                end
+            end
+        end
+    end
+    local gk = tostring(encID) .. "|" .. groupName
+    local exportTable = {
+        version         = 1,
+        type            = "alert_group",
+        groupName       = groupName,
+        groupEncID      = encID,
+        groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
+        encounterAlerts = encounterAlerts,
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    return LibDeflate:EncodeForPrint(compressed)
+end
+
 function NSAPI:ImportAlertsString(importString)
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate = LibStub("LibDeflate")
@@ -686,6 +717,35 @@ function NSAPI:ImportAlertsString(importString)
             NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, importKey)
             return 1
         end
+    elseif t.type == "alert_group" then
+        local count = 0
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        NSRT.Alerts = NSRT.Alerts or {}
+        NSRT.Alerts.Groups = NSRT.Alerts.Groups or {}
+        if t.groupName then
+            NSRT.Alerts.Groups[t.groupName] = t.groupMeta or { collapsed = false }
+        end
+        for encID, encData in pairs(t.encounterAlerts or {}) do
+            NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+            for diffID, diffData in pairs(encData) do
+                NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                local destDiff = NSRT.EncounterAlerts[encID][diffID]
+                for alertKey, alert in pairs(diffData) do
+                    if type(alert) == "table" then
+                        if alert.ReloeReminder then
+                            destDiff[alertKey] = alert
+                        else
+                            alert.ReloeReminder = nil
+                            local importKey = alertKey or NSI:UniqueAlertID(destDiff, false)
+                            destDiff[importKey] = alert
+                        end
+                        count = count + 1
+                    end
+                end
+            end
+        end
+        NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+        return count
     end
     return nil
 end

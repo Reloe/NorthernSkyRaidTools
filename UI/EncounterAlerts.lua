@@ -17,7 +17,8 @@ local ShowContextMenu   = NSI.UI.Components.ShowContextMenu
 local BossData          = NSI.UI.BossData
 
 
-local MAX_LIST_ROWS = 80   -- hard cap; more than any reasonable alert count
+local MAX_LIST_ROWS  = 80
+local MAX_GROUP_ROWS = 30
 
 -- ============================================================================
 -- Alert Export / Import popups
@@ -144,7 +145,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     -- forward declarations
-    local rightPanel, SelectAlert, PreviewAlert, enabledCB
+    local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupEntry
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -296,9 +297,57 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.deleteBtn:GetNormalTexture():SetDesaturated(true)
         row.deleteBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
 
+        -- Ungroup button: replaces delete/lock slot when the row is inside a group
+        row.ungroupBtn = CreateFrame("Button", nil, row)
+        row.ungroupBtn:SetSize(16, 14)
+        row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        local _ubFS = row.ungroupBtn:CreateFontString(nil, "OVERLAY")
+        _ubFS:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+        _ubFS:SetAllPoints()
+        _ubFS:SetJustifyH("CENTER")
+        _ubFS:SetText("◄")
+        _ubFS:SetTextColor(0.4, 0.85, 1, 1)
+        row.ungroupBtn:SetHighlightTexture([[Interface\Buttons\UI-Panel-Button-Highlight]])
+        row.ungroupBtn:Hide()
+
         row:EnableMouse(true)
         row:Hide()
         listRows[i] = row
+    end
+
+    -- Pre-allocate the group header row pool ────────────────────────────────
+    local groupHeaderRows = {}
+    for i = 1, MAX_GROUP_ROWS do
+        local row = CreateFrame("Frame", nil, listChild, "BackdropTemplate")
+        row:SetSize(listChild:GetWidth(), lineHeight)
+        DF:ApplyStandardBackdrop(row)
+        row.__background:SetVertexColor(0.05, 0.30, 0.40)
+        row.__background:SetAlpha(0.90)
+
+        local arrow = row:CreateFontString(nil, "OVERLAY")
+        arrow:SetFont("Fonts\\FRIZQT__.TTF", 10, "")
+        arrow:SetTextColor(0, 0.9, 1, 1)
+        arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
+        row.collapseArrow = arrow
+
+        local nameLabel = row:CreateFontString(nil, "OVERLAY")
+        nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+        nameLabel:SetTextColor(0.2, 0.85, 1, 1)
+        nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)
+        nameLabel:SetPoint("RIGHT", row, "RIGHT", -36, 0)
+        nameLabel:SetJustifyH("LEFT")
+        nameLabel:SetWordWrap(false)
+        row.nameLabel = nameLabel
+
+        local countLabel = row:CreateFontString(nil, "OVERLAY")
+        countLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+        countLabel:SetTextColor(0.5, 0.5, 0.5, 1)
+        countLabel:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.countLabel = countLabel
+
+        row:EnableMouse(true)
+        row:Hide()
+        groupHeaderRows[i] = row
     end
 
     -- Returns a display name for a ReloeReminder alert entry.
@@ -311,39 +360,75 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     -- RebuildList ─────────────────────────────────────────────────────────────
-    local function RebuildScrollData()
-        local t = {}
+    -- Group management helpers (groups are encounter-ID scoped)
+    -- Collapse state key: tostring(encID).."|".groupName
+    local function GroupKey(encID, name) return tostring(encID) .. "|" .. name end
 
-        -- Single loop: all alerts live in NSRT.EncounterAlerts; ReloeReminder distinguishes them
-        for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
-            if not filterEncID or filterEncID == encID then
-                local diffTable = type(encTable) == "table" and encTable[filterDiffID]
-                if type(diffTable) == "table" then
-                    for key, entry in pairs(diffTable) do
-                        if type(entry) == "table" then
-                            local isReloe    = entry.ReloeReminder == true
-                            local displayName = isReloe and ReloeAlertName(entry) or (entry.name or "Unnamed")
-                            if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
-                                table.insert(t, {
-                                    encID           = encID,
-                                    diffID          = filterDiffID,
-                                    alertKey        = key,
-                                    data            = entry,
-                                    _isReloeCreated = isReloe,
-                                    _enabled        = entry.enabled ~= false,
-                                    _phase          = entry.phase or 1,
-                                    _sortName       = displayName,
-                                    _orderID        = isReloe and entry.id or nil,
-                                })
-                            end
+    local function EnsureGroup(encID, name)
+        NSRT.Alerts = NSRT.Alerts or {}
+        NSRT.Alerts.Groups = NSRT.Alerts.Groups or {}
+        local k = GroupKey(encID, name)
+        if not NSRT.Alerts.Groups[k] then
+            NSRT.Alerts.Groups[k] = { collapsed = false }
+        end
+    end
+
+    local function DeleteGroup(encID, name)
+        local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+        if enc then
+            for _, diffTable in pairs(enc) do
+                for _, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
+                    if type(alert) == "table" and alert.group == name then alert.group = nil end
+                end
+            end
+        end
+        if NSRT.Alerts and NSRT.Alerts.Groups then NSRT.Alerts.Groups[GroupKey(encID, name)] = nil end
+    end
+
+    local function DeleteGroupWithAlerts(encID, name)
+        local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+        if enc then
+            for _, diffTable in pairs(enc) do
+                for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
+                    if type(alert) == "table" and alert.group == name then
+                        if alert.ReloeReminder then
+                            alert.group = nil
+                        else
+                            diffTable[key] = nil
                         end
                     end
                 end
             end
         end
+        if NSRT.Alerts and NSRT.Alerts.Groups then NSRT.Alerts.Groups[GroupKey(encID, name)] = nil end
+    end
 
-        -- Sort into four groups: custom-enabled(0), reloe-enabled(1), custom-disabled(2), reloe-disabled(3)
-        -- Within group: encounter order → phase → name/id
+    local function GetGroupsForEnc(eid)
+        local groups = {}
+        local prefix = tostring(eid) .. "|"
+        for k in pairs(NSRT.Alerts and NSRT.Alerts.Groups or {}) do
+            if k:sub(1, #prefix) == prefix then
+                table.insert(groups, k:sub(#prefix + 1))
+            end
+        end
+        -- Also include groups that exist via alert.group without an explicit Groups entry
+        local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+        if type(enc) == "table" then
+            for _, diffTable in pairs(enc) do
+                for _, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
+                    if type(alert) == "table" and alert.group and alert.group ~= "" then
+                        local found = false
+                        for _, g in ipairs(groups) do if g == alert.group then found = true; break end end
+                        if not found then table.insert(groups, alert.group) end
+                    end
+                end
+            end
+        end
+        table.sort(groups)
+        return groups
+    end
+
+    local function SortAlerts(t)
         table.sort(t, function(a, b)
             local ag = (a._enabled and 0 or 2) + (a._isReloeCreated and 1 or 0)
             local bg = (b._enabled and 0 or 2) + (b._isReloeCreated and 1 or 0)
@@ -355,6 +440,116 @@ local function BuildEncounterAlertsUI(parentFrame)
             if a._orderID and b._orderID and a._orderID ~= b._orderID then return a._orderID < b._orderID end
             return (a._sortName or "") < (b._sortName or "")
         end)
+    end
+
+    local function RebuildScrollData()
+        local ungrouped    = {}
+        local groupedAlerts = {}  -- { ["encID|groupName"] = { alert items } }
+
+        -- Single loop: all alerts live in NSRT.EncounterAlerts; ReloeReminder distinguishes them
+        for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
+            if not filterEncID or filterEncID == encID then
+                local diffTable = type(encTable) == "table" and encTable[filterDiffID]
+                if type(diffTable) == "table" then
+                    for key, entry in pairs(diffTable) do
+                        if type(entry) == "table" then
+                            local isReloe     = entry.ReloeReminder == true
+                            local displayName = isReloe and ReloeAlertName(entry) or (entry.name or "Unnamed")
+                            if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
+                                local item = {
+                                    _type           = "alert",
+                                    encID           = encID,
+                                    diffID          = filterDiffID,
+                                    alertKey        = key,
+                                    data            = entry,
+                                    _isReloeCreated = isReloe,
+                                    _enabled        = entry.enabled ~= false,
+                                    _phase          = entry.phase or 1,
+                                    _sortName       = displayName,
+                                    _orderID        = isReloe and entry.id or nil,
+                                    _group          = entry.group,
+                                }
+                                local grp = entry.group and entry.group ~= "" and entry.group
+                                if grp then
+                                    local gk = GroupKey(encID, grp)
+                                    groupedAlerts[gk] = groupedAlerts[gk] or { encID = encID, groupName = grp }
+                                    table.insert(groupedAlerts[gk], item)
+                                else
+                                    table.insert(ungrouped, item)
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+
+        -- Collect all encounter-scoped group keys that have members
+        local allGroupKeys = {}
+        for gk in pairs(groupedAlerts) do allGroupKeys[gk] = true end
+        -- Include explicit Groups metadata entries only if they have members too
+        -- (empty groups are not shown; orphaned entries are cleaned up)
+        if NSRT.Alerts and NSRT.Alerts.Groups then
+            local toRemove = {}
+            for gk in pairs(NSRT.Alerts.Groups) do
+                if not allGroupKeys[gk] then
+                    local sep = gk:find("|")
+                    local eid = sep and tonumber(gk:sub(1, sep - 1))
+                    if not filterEncID or eid == filterEncID then
+                        table.insert(toRemove, gk)
+                    end
+                end
+            end
+            for _, gk in ipairs(toRemove) do NSRT.Alerts.Groups[gk] = nil end
+        end
+        local sortedGroupKeys = {}
+        for gk in pairs(allGroupKeys) do table.insert(sortedGroupKeys, gk) end
+        table.sort(sortedGroupKeys, function(a, b)
+            -- Sort by encID order first, then group name
+            local sepA, sepB = a:find("|"), b:find("|")
+            local eidA = tonumber(a:sub(1, sepA - 1)) or 0
+            local eidB = tonumber(b:sub(1, sepB - 1)) or 0
+            local oA = NSI.EncounterOrder[eidA] or 99
+            local oB = NSI.EncounterOrder[eidB] or 99
+            if oA ~= oB then return oA < oB end
+            return a:sub(sepA + 1) < b:sub(sepB + 1)
+        end)
+
+        local t = {}
+        for _, gk in ipairs(sortedGroupKeys) do
+            local gdata    = groupedAlerts[gk] or {}
+            local encID    = gdata.encID or (function()
+                local sep = gk:find("|")
+                return sep and tonumber(gk:sub(1, sep - 1)) or 0
+            end)()
+            local groupName = gdata.groupName or gk:sub((gk:find("|") or 0) + 1)
+            -- Gather members (skip the encID/groupName fields)
+            local members = {}
+            for _, item in ipairs(gdata) do table.insert(members, item) end
+            SortAlerts(members)
+            local collapsed = NSRT.Alerts and NSRT.Alerts.Groups
+                          and NSRT.Alerts.Groups[gk] and NSRT.Alerts.Groups[gk].collapsed
+            table.insert(t, {
+                _type      = "group_header",
+                groupKey   = gk,
+                groupName  = groupName,
+                groupEncID = encID,
+                _count     = #members,
+                _collapsed = collapsed,
+            })
+            if not collapsed then
+                for _, item in ipairs(members) do
+                    item._inGroup = true
+                    table.insert(t, item)
+                end
+            end
+        end
+
+        -- Ungrouped alerts below
+        SortAlerts(ungrouped)
+        for _, item in ipairs(ungrouped) do
+            table.insert(t, item)
+        end
 
         return t
     end
@@ -363,13 +558,77 @@ local function BuildEncounterAlertsUI(parentFrame)
         local savedScroll = listScroll:GetVerticalScroll()
         local data = RebuildScrollData()
 
-        for i = 1, MAX_LIST_ROWS do
-            local row   = listRows[i]
-            local entry = data[i]
+        local alertIdx = 0
+        local groupIdx = 0
+        local slot     = 0   -- total visual rows rendered (drives y positioning)
 
-            if not entry then
-                row:Hide()
+        for _, entry in ipairs(data) do
+            slot = slot + 1
+
+            -- ── Group header row ─────────────────────────────────────────────
+            if entry._type == "group_header" then
+                groupIdx = groupIdx + 1
+                if groupIdx > MAX_GROUP_ROWS then break end
+                local row   = groupHeaderRows[groupIdx]
+                local gname = entry.groupName
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -(slot - 1) * lineHeight)
+                row:SetWidth(listChild:GetWidth())
+                row.collapseArrow:SetText(entry._collapsed and "▶" or "▼")
+                row.nameLabel:SetText(gname)
+                row.countLabel:SetText("(" .. entry._count .. ")")
+                row:Show()
+
+                row:SetScript("OnMouseDown", function(self, button)
+                    local gname   = entry.groupName
+                    local gencID  = entry.groupEncID
+                    local gk      = entry.groupKey
+                    if button == "RightButton" then
+                        ShowContextMenu({
+                            { type = "button", label = "Export Group", fnc = function()
+                                local str = NSI:ExportGroupString(gencID, gname)
+                                ShowExportPopup(str, "Group: " .. gname)
+                            end },
+                            { type = "button", label = "Delete Group (keep alerts)", fnc = function()
+                                DeleteGroup(gencID, gname)
+                                RebuildList()
+                            end },
+                            { type = "button", label = "Delete Group with Alerts", fnc = function()
+                                local dlg = NSI.UI.Components.CreateDialog(
+                                    "NSRTDeleteGroupAlerts",
+                                    "Delete Group with Alerts",
+                                    "Delete group '" .. gname .. "' and all its user-created alerts?\n(ReloeReminders will only be ungrouped.)",
+                                    "Cancel", nil, "Delete", function()
+                                        DeleteGroupWithAlerts(gencID, gname)
+                                        local still = selectedKey and NSRT.EncounterAlerts
+                                            and NSRT.EncounterAlerts[selectedEncID]
+                                            and NSRT.EncounterAlerts[selectedEncID][selectedDiffID or filterDiffID]
+                                            and NSRT.EncounterAlerts[selectedEncID][selectedDiffID or filterDiffID][selectedKey]
+                                        if not still then
+                                            selectedKey = nil; selectedEncID = nil
+                                            if rightPanel then rightPanel:Hide() end
+                                        end
+                                        RebuildList()
+                                    end, nil)
+                                dlg:Show()
+                            end },
+                        })
+                    else
+                        EnsureGroup(gencID, gname)
+                        NSRT.Alerts.Groups[gk].collapsed = not NSRT.Alerts.Groups[gk].collapsed
+                        RebuildList()
+                    end
+                end)
+
+            -- ── Alert row ────────────────────────────────────────────────────
             else
+                alertIdx = alertIdx + 1
+                if alertIdx > MAX_LIST_ROWS then break end
+                local row    = listRows[alertIdx]
+                local indent = entry._inGroup and 14 or 0
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", listChild, "TOPLEFT", indent, -(slot - 1) * lineHeight)
+                row:SetWidth(listChild:GetWidth() - indent)
                 row:Show()
 
                 local isReloe   = entry._isReloeCreated
@@ -446,142 +705,169 @@ local function BuildEncounterAlertsUI(parentFrame)
                     end)
                 end
 
-                -- Delete button: hidden for reloeCreated rows
-                if isReloe then
+                -- Right-side button: ungroup (if grouped) > lock (reloe) > delete (user)
+                if entry._inGroup then
                     row.deleteBtn:Hide()
                     row.deleteBtn:SetScript("OnClick", nil)
-                    row.lockIcon:Show()
-                else
                     row.lockIcon:Hide()
-                    row.deleteBtn:Show()
-                    local akey     = entry.alertKey
-                    local ri_encID = entry.encID
-                    row.deleteBtn:SetScript("OnClick", function()
-                        local deleteFunc = function()
-                            local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[ri_encID]
-                                         and NSRT.EncounterAlerts[ri_encID][filterDiffID]
-                            if diffTable then
-                                diffTable[akey] = nil
-                                NSI:FireCallback("NSRT_ALERT_CHANGED", ri_encID, filterDiffID, akey)
-                            end
-                            if selectedKey == akey and selectedEncID == ri_encID then
-                                selectedKey    = nil
-                                selectedEncID = nil
-                                if rightPanel then rightPanel:Hide() end
-                            end
-                            RebuildList()
+                    row.ungroupBtn:Show()
+                    local akey_ug, eid_ug = entry.alertKey, entry.encID
+                    row.ungroupBtn:SetScript("OnClick", function()
+                        local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid_ug]
+                                      and NSRT.EncounterAlerts[eid_ug][filterDiffID]
+                        if diffTable and diffTable[akey_ug] then
+                            diffTable[akey_ug].group = nil
                         end
-
-                        local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(akey),
-                            "Delete Alert", "Are you sure you want to delete this alert?", "Cancel", nil, "Delete", deleteFunc,
-                            nil)
-                        deleteDialog:Show()
+                        RebuildList()
                     end)
+                else
+                    row.ungroupBtn:Hide()
+                    row.ungroupBtn:SetScript("OnClick", nil)
+                    if isReloe then
+                        row.deleteBtn:Hide()
+                        row.deleteBtn:SetScript("OnClick", nil)
+                        row.lockIcon:Show()
+                    else
+                        row.lockIcon:Hide()
+                        row.deleteBtn:Show()
+                        local akey     = entry.alertKey
+                        local ri_encID = entry.encID
+                        row.deleteBtn:SetScript("OnClick", function()
+                            local deleteFunc = function()
+                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[ri_encID]
+                                             and NSRT.EncounterAlerts[ri_encID][filterDiffID]
+                                if diffTable then
+                                    diffTable[akey] = nil
+                                    NSI:FireCallback("NSRT_ALERT_CHANGED", ri_encID, filterDiffID, akey)
+                                end
+                                if selectedKey == akey and selectedEncID == ri_encID then
+                                    selectedKey    = nil
+                                    selectedEncID  = nil
+                                    if rightPanel then rightPanel:Hide() end
+                                end
+                                RebuildList()
+                            end
+                            local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(akey),
+                                "Delete Alert", "Are you sure you want to delete this alert?", "Cancel", nil, "Delete", deleteFunc, nil)
+                            deleteDialog:Show()
+                        end)
+                    end
                 end
 
                 -- Click to select (skip when clicking the enabled checkbox)
-                if isReloe then
+                do
                     local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
-                    row:SetScript("OnMouseDown", function(self, button)
-                        if row.enabledCB.frame:IsMouseOver() then return end
-                        if button == "RightButton" then
-                            local data = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
-                                     and NSRT.EncounterAlerts[eid][did]
-                                     and NSRT.EncounterAlerts[eid][did][akey]
-                            local name = data and (data.name or data.text or akey) or akey
-                            if not entry.data.BlockCopy then
-                                ShowContextMenu({
-                                    { type = "button", label = "Export Alert", fnc = function()
-                                        local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
-                                        ShowExportPopup(str, name)
-                                    end },
-                                    {type = "button", label = "Reset", fnc = function()
-                                        local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
-                                        if diffTable then diffTable[akey] = nil end
-                                        NSI:ImportReloeReminders()
-                                        RebuildList()
-                                        local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
-                                                        and NSRT.EncounterAlerts[eid][did]
-                                                        and NSRT.EncounterAlerts[eid][did][akey]
-                                        if stillExists then
-                                            SelectAlert(akey, did, eid)
-                                        else
-                                            selectedKey = nil; selectedEncID = nil
-                                            if rightPanel then rightPanel:Hide() end
-                                        end
-                                    end},
-                                    {type = "button", label = "Duplicate", fnc = function()
-                                        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-                                        NSRT.EncounterAlerts[eid] = NSRT.EncounterAlerts[eid] or {}
-                                        NSRT.EncounterAlerts[eid][did] = NSRT.EncounterAlerts[eid][did] or {}
-                                        local diffTable = NSRT.EncounterAlerts[eid][did]
-                                        local newKey = NSI:UniqueAlertID(diffTable, false)
-                                        local newData = CopyTable(entry.data)
-                                        newData.ReloeReminder = nil
-                                        diffTable[newKey] = newData
-                                        RebuildList()
-                                    end},
-                                })
-                            else
-                                ShowContextMenu({
-                                    { type = "button", label = "Export Alert", fnc = function()
-                                        local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, data)
-                                        ShowExportPopup(str, name)
-                                    end },
-                                    {type = "button", label = "Reset", fnc = function()
-                                        local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
-                                        if diffTable then diffTable[akey] = nil end
-                                        NSI:ImportReloeReminders()
-                                        RebuildList()
-                                        local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
-                                                        and NSRT.EncounterAlerts[eid][did]
-                                                        and NSRT.EncounterAlerts[eid][did][akey]
-                                        if stillExists then
-                                            SelectAlert(akey, did, eid)
-                                        else
-                                            selectedKey = nil; selectedEncID = nil
-                                            if rightPanel then rightPanel:Hide() end
-                                        end
-                                    end},
-                                })
-                            end
-                        else
-                            SelectAlert(akey, did, eid)
-                        end
-                    end)
-                else
-                    local eid, did, akey = entry.encID, entry.diffID, entry.alertKey
+                    local isReloeRow = isReloe
                     row:SetScript("OnMouseDown", function(self, button)
                         if row.enabledCB.frame:IsMouseOver() then return end
                         if button == "RightButton" then
                             local alert = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                       and NSRT.EncounterAlerts[eid][did]
                                       and NSRT.EncounterAlerts[eid][did][akey]
-                            local name = alert and (alert.name or "Unnamed") or "Unnamed"
-                            ShowContextMenu({
+                            local name = alert and (alert.name or alert.text or "Unnamed") or "Unnamed"
+
+                            -- Group submenu (shared for all alert types)
+                            local groupSubItems = {}
+                            for _, gname in ipairs(GetGroupsForEnc(eid)) do
+                                local gn = gname
+                                table.insert(groupSubItems, { type = "button", label = gn, fnc = function()
+                                    if alert then alert.group = gn; EnsureGroup(eid, gn); RebuildList() end
+                                end })
+                            end
+                            table.insert(groupSubItems, { type = "button", label = "New Group...", fnc = function()
+                                StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"] = {
+                                    text = "Enter new group name:",
+                                    button1 = "OK",
+                                    button2 = "Cancel",
+                                    hasEditBox = true,
+                                    timeout = 0,
+                                    whileDead = true,
+                                    hideOnEscape = true,
+                                    OnAccept = function(self)
+                                        local newName = self.EditBox:GetText()
+                                        if newName and newName ~= "" then
+                                            if alert then alert.group = newName end
+                                            EnsureGroup(eid, newName)
+                                            RebuildList()
+                                        end
+                                    end,
+                                    EditBoxOnEnterPressed = function(self)
+                                        local parent = self:GetParent()
+                                        StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"].OnAccept(parent)
+                                        parent:Hide()
+                                    end,
+                                }
+                                StaticPopup_Show("NSRT_NEW_GROUP_INPUT")
+                            end })
+
+                            -- Build menu conditionally
+                            local menuItems = {
                                 { type = "button", label = "Export Alert", fnc = function()
                                     local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, alert)
                                     ShowExportPopup(str, name)
                                 end },
-                                {type = "button", label = "Duplicate", fnc = function()
+                                { type = "submenu", label = alert and alert.group and "Move to Group" or "Add to Group",
+                                  items = groupSubItems },
+                            }
+
+                            if isReloeRow then
+                                table.insert(menuItems, { type = "button", label = "Reset", fnc = function()
+                                    local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
+                                    if diffTable then diffTable[akey] = nil end
+                                    NSI:ImportReloeReminders()
+                                    RebuildList()
+                                    local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+                                                    and NSRT.EncounterAlerts[eid][did]
+                                                    and NSRT.EncounterAlerts[eid][did][akey]
+                                    if stillExists then
+                                        SelectAlert(akey, did, eid)
+                                    else
+                                        selectedKey = nil; selectedEncID = nil
+                                        if rightPanel then rightPanel:Hide() end
+                                    end
+                                end })
+                            end
+
+                            if not (isReloeRow and entry.data.BlockCopy) then
+                                table.insert(menuItems, { type = "button", label = "Duplicate", fnc = function()
+                                    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+                                    NSRT.EncounterAlerts[eid] = NSRT.EncounterAlerts[eid] or {}
                                     NSRT.EncounterAlerts[eid][did] = NSRT.EncounterAlerts[eid][did] or {}
                                     local diffTable = NSRT.EncounterAlerts[eid][did]
                                     local newKey = NSI:UniqueAlertID(diffTable, false)
-                                    local newData = CopyTable(diffTable[akey])
+                                    local newData = CopyTable(entry.data)
                                     newData.ReloeReminder = nil
                                     diffTable[newKey] = newData
                                     RebuildList()
-                                end},
-                            })
+                                end })
+                            end
+
+                            if alert and alert.group then
+                                table.insert(menuItems, { type = "button", label = "Remove from Group", fnc = function()
+                                    alert.group = nil
+                                    RebuildList()
+                                end })
+                            end
+
+                            ShowContextMenu(menuItems)
                         else
                             SelectAlert(akey, did, eid)
                         end
                     end)
                 end
-            end
+            end  -- alert row end
+        end  -- data loop end
+
+        -- Hide unused pool slots
+        for i = alertIdx + 1, MAX_LIST_ROWS  do listRows[i]:Hide() end
+        for i = groupIdx + 1, MAX_GROUP_ROWS do groupHeaderRows[i]:Hide() end
+
+        -- Sync the group text-entry field if a grouped alert is selected
+        if groupEntry and groupEntry._alert then
+            groupEntry:SetValue(groupEntry._alert.group or "")
         end
 
-        local totalH = math.max(#data * lineHeight, 1)
+        local totalH = math.max(slot * lineHeight, 1)
         listChild:SetHeight(totalH)
         local bar = _G["NSUIEncAlertListScrollScrollBar"]
         if bar then
@@ -702,20 +988,39 @@ local function BuildEncounterAlertsUI(parentFrame)
     rightPanel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -pad,   pad)
     rightPanel:Hide()
 
-    -- ── Header: name entry + enabled checkbox ────────────────────────────────
+    -- ── Header: name entry + group entry + enabled checkbox ─────────────────
     local nameLbl = rightPanel:CreateFontString(nil, "OVERLAY")
     nameLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
     nameLbl:SetTextColor(0.55, 0.55, 0.55, 1)
     nameLbl:SetText("Alert Name")
     nameLbl:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
 
-    local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightW - 110, 22,
+    local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightW - 240, 22,
         nil, nil, nil, "NSUIEncAlertNameEntry")
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -14)
 
+    local groupLbl = rightPanel:CreateFontString(nil, "OVERLAY")
+    groupLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+    groupLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    groupLbl:SetText("Group")
+    groupLbl:SetPoint("BOTTOMLEFT", nameEntry.frame, "BOTTOMRIGHT", 12, 22)
+
+    groupEntry = CreateTextEntry(rightPanel, nil, nil, nil, 120, 22,
+        nil, nil, nil, "NSUIEncAlertGroupEntry")
+    groupEntry:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
+    groupEntry.editBox:SetScript("OnEditFocusLost", function(self)
+        local val = self:GetText()
+        local alert = groupEntry._alert
+        if not alert then return end
+        local newGroup = val ~= "" and val or nil
+        alert.group = newGroup
+        if newGroup then EnsureGroup(groupEntry._encID or 0, newGroup) end
+        RebuildList()
+    end)
+
     enabledCB = CreateCheckButton(rightPanel, "Enabled",
         function() return false end, nil, 90, 22, "NSUIEncAlertEnabled")
-    enabledCB:SetPoint("LEFT", nameEntry.frame, "RIGHT", 8, 0)
+    enabledCB:SetPoint("LEFT", groupEntry.frame, "RIGHT", 8, 0)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local INNER_TABS     = { "Display", "Trigger", "Sound", "Load", "Options" }
@@ -806,12 +1111,18 @@ local function BuildEncounterAlertsUI(parentFrame)
         return ov
     end
 
+    -- ── Pre-declarations for cross-tab upvalue references ────────────────────
+    local dispF, trigF, sndF, loadF
+    local dispHint, sndHint
+    local RebuildOptionsContent
+
     -- ================================================================
     -- DISPLAY TAB
     -- ================================================================
-    local dispF = innerTabFrames["Display"]
+    do
+    dispF = innerTabFrames["Display"]
 
-    local dispHint = dispF:CreateFontString(nil, "OVERLAY")
+    dispHint = dispF:CreateFontString(nil, "OVERLAY")
     dispHint:Hide()
 
     local typeLbl = dispF:CreateFontString(nil, "OVERLAY")
@@ -1230,11 +1541,13 @@ local function BuildEncounterAlertsUI(parentFrame)
         if dispF.colorsPicker then dispF.colorsPicker:Refresh() end
     end
     dispF.SetDisplayType = SetDisplayType
+    end -- DISPLAY TAB
 
     -- ================================================================
     -- TRIGGER TAB
     -- ================================================================
-    local trigF = innerTabFrames["Trigger"]
+    do
+    trigF = innerTabFrames["Trigger"]
 
     local trigBossLbl = trigF:CreateFontString(nil, "OVERLAY")
     trigBossLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
@@ -1466,13 +1779,15 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Lock overlay for Trigger tab (shown when ReloeReminder is selected)
     -- transparent=true so the triggers are still visible, just not interactable
     trigF.lockOverlay = MakeLockOverlay(trigF, nil, true)
+    end -- TRIGGER TAB
 
     -- ================================================================
     -- SOUND TAB
     -- ================================================================
-    local sndF = innerTabFrames["Sound"]
+    do
+    sndF = innerTabFrames["Sound"]
 
-    local sndHint = sndF:CreateFontString(nil, "OVERLAY")
+    sndHint = sndF:CreateFontString(nil, "OVERLAY")
     sndHint:Hide()
 
     local ttsCB = CreateCheckButton(sndF, "Enable Text-to-Speech",
@@ -1564,11 +1879,13 @@ local function BuildEncounterAlertsUI(parentFrame)
         rightW, 22, "NSUIEncAlertSound")
     soundDD:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -178)
     sndF.soundDD = soundDD
+    end -- SOUND TAB
 
     -- ================================================================
     -- LOAD TAB
     -- ================================================================
-    local loadF = innerTabFrames["Load"]
+    do
+    loadF = innerTabFrames["Load"]
 
     -- ── Static class / spec data ─────────────────────────────────────────────
     local CLASS_DATA = {
@@ -1971,14 +2288,16 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Lock overlay for Sound tab (reloeCreated alerts — sound is managed by the addon)
     sndF.lockOverlay = MakeLockOverlay(sndF,
         "Sound settings are fixed\nfor addon-created alerts.")
+    end -- LOAD TAB
 
     -- ================================================================
     -- OPTIONS TAB
     -- ================================================================
+    do
     local optF = innerTabFrames["Options"]
     local optionsContentFrame = nil
 
-    local function RebuildOptionsContent(entry)
+    RebuildOptionsContent = function(entry)
         if optionsContentFrame then
             optionsContentFrame:Hide()
             optionsContentFrame = nil
@@ -1993,6 +2312,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         scrollObj:UpdateScrollBar()
         optionsContentFrame = scrollObj.frame
     end
+    end -- OPTIONS TAB
 
     -- ================================================================
     -- Helper: set panel into custom-alert mode vs reloeCreated mode
@@ -2073,6 +2393,9 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         -- Header
         nameEntry:SetValue(isReloe and ReloeAlertName(entry) or (entry.name or ""))
+        groupEntry:SetValue(entry.group or "")
+        groupEntry._alert = entry
+        groupEntry._encID = entry.encID
         enabledCB:SetValue(entry.enabled ~= false)
         if not isReloe then
             nameEntry.editBox:SetScript("OnEditFocusLost", function(self)
