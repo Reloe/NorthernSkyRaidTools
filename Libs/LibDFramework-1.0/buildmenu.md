@@ -1151,12 +1151,115 @@ With align_as_pairs = true:
 
 Why it matters
 - align_as_pairs is the primary layout mode for serious options panels. It allows
-	a panel with mixed widget types (dropdowns, sliders, toggles, color pickers)
-	to look uniform and readable because every input control starts at the same
-	horizontal pixel. Without it, varying label lengths produce a ragged right
-	boundary that looks inconsistent. The hover highlight and full-row click
-	behavior that comes with this mode also improves usability, especially for
-	dense configuration screens.
+  a panel with mixed widget types (dropdowns, sliders, toggles, color pickers)
+  to look uniform and readable because every input control starts at the same
+  horizontal pixel. Without it, varying label lengths produce a ragged right
+  boundary that looks inconsistent. The hover highlight and full-row click
+  behavior that comes with this mode also improves usability, especially for
+  dense configuration screens.
+
+⚠️ CRITICAL REQUIREMENT: align_as_pairs REQUIRES canvasFrame
+---------------------------------------------------------------------
+When using `align_as_pairs = true`, you MUST pass a canvasFrame to BuildMenu
+instead of a regular frame. A canvasFrame is created using the
+`detailsFramework:CreateCanvasScrollBox()` function.
+
+Why this requirement exists:
+- The align_as_pairs layout mode creates highlight frames and performs anchoring
+  operations that require the special properties of a canvas scroll child.
+- Using a regular frame with align_as_pairs will result in incorrect widget
+  positioning, missing hover highlights, or complete layout failures.
+- This is NOT optional — it is a hard requirement for proper functionality.
+
+❌ INCORRECT usage (will not work properly):
+```lua
+-- Creating a regular frame
+local optionsFrame = CreateFrame("frame", nil, parent)
+optionsFrame:SetPoint("topleft", parent, "topleft", 0, 0)
+optionsFrame:SetPoint("bottomright", parent, "bottomright", 0, 0)
+
+local menuOptions = {
+    align_as_pairs = true,  -- This will NOT work correctly!
+    {type = "toggle", name = "Option 1", get = GetOpt1, set = SetOpt1},
+}
+
+DF:BuildMenu(optionsFrame, menuOptions)  -- WRONG! Using regular frame
+```
+
+✅ CORRECT usage (required for align_as_pairs):
+```lua
+-- Create a canvas scroll frame using CreateCanvasScrollBox
+local canvasFrame = detailsFramework:CreateCanvasScrollBox(optionsPanel, nil, "MyCanvasFrame")
+canvasFrame:SetPoint("topleft", optionsPanel, "topleft", 0, -2)
+canvasFrame:SetPoint("bottomright", optionsPanel, "bottomright", -26, 25)
+
+-- Store reference if needed for later access
+optionsPanel.canvasFrame = canvasFrame
+
+local menuOptions = {
+    align_as_pairs = true,  -- This WILL work correctly!
+    {type = "toggle", name = "Option 1", get = GetOpt1, set = SetOpt1},
+    {type = "range", name = "Option 2", get = GetOpt2, set = SetOpt2, min = 0, max = 100},
+}
+
+-- Pass the canvasFrame (not the regular frame) to BuildMenu
+DF:BuildMenu(canvasFrame, menuOptions)
+```
+
+Complete working example:
+```lua
+local parent = SomeExistingFrame
+local optionsPanel = CreateFrame("frame", "MyOptionsPanel", parent, "BackdropTemplate")
+optionsPanel:SetSize(500, 400)
+optionsPanel:SetPoint("center", parent, "center")
+
+-- Step 1: Create canvas scroll box
+local canvasFrame = detailsFramework:CreateCanvasScrollBox(optionsPanel, nil, "OptionsCanvas")
+canvasFrame:SetPoint("topleft", optionsPanel, "topleft", 0, -2)
+canvasFrame:SetPoint("bottomright", optionsPanel, "bottomright", -26, 25)
+
+-- Step 2: Define menu options with align_as_pairs
+local menuOptions = {
+    align_as_pairs = true,
+    align_as_pairs_string_space = 180,  -- Optional: customize label column width
+    
+    {type = "label", get = function() return "Settings:" end,
+     text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")},
+    
+    {type = "toggle", name = "Enable Feature",
+     get = function() return MyDB.enabled end,
+     set = function(_, _, v) MyDB.enabled = v end},
+    
+    {type = "range", name = "Slider Value",
+     get = function() return MyDB.sliderValue end,
+     set = function(_, _, v) MyDB.sliderValue = v end,
+     min = 0, max = 100, step = 1},
+    
+    {type = "select", name = "Dropdown Option",
+     get = function() return MyDB.dropdownValue end,
+     values = function()
+         return {
+             {value = 1, label = "Option A"},
+             {value = 2, label = "Option B"},
+             {value = 3, label = "Option C"},
+         }
+     end},
+}
+
+-- Step 3: Build menu using canvasFrame (NOT optionsPanel)
+DF:BuildMenu(canvasFrame, menuOptions, 10, -10, nil, false,
+    DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE"),
+    DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE"),
+    DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE"),
+    true,
+    DF:GetTemplate("slider", "OPTIONS_SLIDER_TEMPLATE"))
+```
+
+Key points to remember:
+1. Always use `CreateCanvasScrollBox()` when you need `align_as_pairs = true`
+2. Pass the returned canvasFrame to BuildMenu, not the parent frame
+3. The canvasFrame handles scrolling automatically for content that exceeds bounds
+4. Without this requirement met, widgets may appear misaligned or highlights may fail
 
 ---------------------------------------------------------------------
 align_as_pairs_string_space
@@ -1609,11 +1712,14 @@ Field: text_template
 - Built-in templates accessible via DF:GetTemplate("font", name):
 	- "OPTIONS_FONT_TEMPLATE": {color = {1, 1, 1, 0.9}, size = 9.6} — standard option label
 	- "ORANGE_FONT_TEMPLATE": {color = {1, 0.8235, 0, 1}, size = 11} — section headers
+	  (recommended for section header labels; see Part 7 section G for best practices)
 	- "SMALL_SILVER": {color = "silver", size = 9} — de-emphasized text
 - When text_template is set on a widgetTable, it overrides the textTemplate
 	argument passed to BuildMenu for that widget's label only.
 - The fallback chain is: widgetTable.text_template → BuildMenu's textTemplate
 	argument → DF.font_templates["ORANGE_FONT_TEMPLATE"].
+- See Part 8, section G "Section header best practices" for recommended patterns
+	when organizing options into visually distinct groups.
 
 Field: button_template
 - Alternate template path used by some widgets (notably textentry fallback).
@@ -1661,8 +1767,12 @@ D) Widget-type reference
 - Typical fields: type, get, text, text_template, color, font, size,
 	namePhraseId, id, hidden, disabled.
 - Notes:
-	- get() may return dynamic string each refresh.
+	- get() may return dynamic string each refresh. Using get() with a function
+	  enables localization updates without rebuilding the menu.
 	- text is fallback when get is absent.
+	- For section header labels, always use get() with text_template set to
+	  DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"). See Part 8, section G
+	  "Section header best practices" for the complete recommended pattern.
 
 2) select (and specialized select* types)
 - Typical fields: type, get, set, values, name, desc, namePhraseId,
@@ -1769,7 +1879,15 @@ Minimal example:
 
 9) blank / space / breakline (layout rows)
 - blank (or space alias): vertical spacer row, no widget construction.
+  Recommended use: adding visual breathing room between sections.
 - breakline: forces next column / wrap behavior depending on scrollframe mode.
+  Recommended use: separating logical option sections with column breaks or
+  layout wrapping. See Part 8, section G for the recommended section header pattern.
+- Notes:
+	- breakline is particularly useful before section headers (labels with
+	  ORANGE_FONT_TEMPLATE) to provide clear visual separation.
+	- In single-column layouts without use_scrollframe, use blank instead of
+	  breakline for simpler spacing between sections.
 
 10) group
 - Typical fields: type, name, color, UseBackdrop, BackgroundColor,
@@ -1891,6 +2009,93 @@ Group with BackdropTemplate border:
 Group with fixed width and height:
 
 	{type = "group", name = "fixedGroup", color = {0.1, 0.1, 0.1, 0.5}, width = 300, height = 120}
+
+---------------------------------------------------------------------
+G) Section header best practices
+---------------------------------------------------------------------
+
+Context
+- Options panels often group related settings into logical sections.
+- A section typically starts with a visual label (header) that describes the
+	section's purpose, followed by related widget rows.
+- Between sections, a blank/breakline row provides visual separation.
+
+Recommended section pattern
+- Each section should follow this structure:
+
+	{type = "breakline"},  -- separator between sections (or blank at start)
+	{type = "label", get = function() return "Section Name:" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")},
+	-- section widgets follow below
+	{type = "toggle", name = "Option 1", get = GetOpt1, set = SetOpt1, text_template = options_text_template},
+	{type = "range",  name = "Option 2", get = GetOpt2, set = SetOpt2, min = 1, max = 10, step = 1, text_template = options_text_template},
+	{type = "color",  name = "Option 3", get = GetOpt3, set = SetOpt3, text_template = options_text_template},
+
+Section header guidelines
+
+1) Always use get() function for dynamic localization support
+   - Instead of: {type = "label", name = "Frame Settings:"}
+   - Recommended: {type = "label", get = function() return "Frame Settings:" end}
+   - This allows the text to update when the UI language changes without
+     rebuilding the menu.
+
+2) Always use ORANGE_FONT_TEMPLATE for visual distinction
+   - text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+   - This distinguishes section headers from regular option labels through
+     color (orange) and size (11pt).
+   - Alternatives include SMALL_SILVER for secondary sections or
+     OPTIONS_FONT_TEMPLATE for subtle headers.
+
+3) Use breakline before each section (except the first row)
+   - {type = "breakline"} provides column/layout separation.
+   - Alternatively, {type = "blank"} adds vertical spacing without layout
+     side-effects (useful in single-column layouts).
+   - Omit the separator before the very first section header.
+
+4) Omit name field from section header label
+   - The get() function supplies all needed text.
+   - Setting both name and get() may cause unexpected behavior with
+     localization systems.
+
+Full panel example with multiple sections
+
+	local DF = DetailsFramework
+	local options_text_template = DF:GetTemplate("font", "OPTIONS_FONT_TEMPLATE")
+	local options_dropdown_template = DF:GetTemplate("dropdown", "OPTIONS_DROPDOWN_TEMPLATE")
+	local options_switch_template = DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPLATE")
+	local options_slider_template = DF:GetTemplate("slider", "OPTIONS_SLIDER_TEMPLATE")
+
+	local menuOptions = {
+		-- Frame Settings section
+		{type = "label", get = function() return "Frame Settings:" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")},
+		{type = "toggle", name = "Enabled", get = GetEnabled, set = SetEnabled, text_template = options_text_template},
+		{type = "toggle", name = "Locked", get = GetLocked, set = SetLocked, text_template = options_text_template},
+		{type = "toggle", name = "Show Title", get = GetShowTitle, set = SetShowTitle, text_template = options_text_template},
+		{type = "range", name = "Scale", get = GetScale, set = SetScale, min = 0.5, max = 2, step = 0.1, usedecimals = true, text_template = options_text_template},
+
+		-- Text Settings section
+		{type = "breakline"},
+		{type = "label", get = function() return "Text Settings:" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")},
+		{type = "range", name = "Font Size", get = GetFontSize, set = SetFontSize, min = 8, max = 24, step = 1, text_template = options_text_template},
+		{type = "color", name = "Font Color", get = GetFontColor, set = SetFontColor, text_template = options_text_template},
+		{type = "select", name = "Font Face", get = GetFontFace, values = BuildFontList, text_template = options_text_template},
+		{type = "select", name = "Font Shadow", get = GetFontShadow, values = BuildShadowList, text_template = options_text_template},
+
+		-- Color Settings section
+		{type = "breakline"},
+		{type = "label", get = function() return "Color Settings:" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")},
+		{type = "color", name = "Backdrop Color", get = GetBackdropColor, set = SetBackdropColor, text_template = options_text_template},
+		{type = "color", name = "Highlight Color", get = GetHighlightColor, set = SetHighlightColor, text_template = options_text_template},
+	}
+
+	DF:BuildMenu(parentFrame, menuOptions, 7, -50, 500, true, options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template)
+
+Why this pattern matters
+- Improves visual hierarchy and readability of complex option panels.
+- get() function support enables real-time localization updates without
+	panel rebuilds.
+- ORANGE_FONT_TEMPLATE provides consistent visual styling across addons.
+- breakline/blank separation improves scannability and UX.
+- Reduces cognitive load by chunking related options into logical groups.
 
 =====================================================================
 End of Part 8
