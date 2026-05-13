@@ -159,52 +159,10 @@ L["SpellName TTS if empty"] = true
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = true
 L["Bars"] = true
 L["Show Progress Bars instead of icons"] = true
-L["Sticky"] = true
-L["Keep Reminders shown for X seconds if the spell hasn't been pressed yet"] = true
 
 -- UI/Options/Reminders.lua — Text Settings
 L["Text Settings"] = true
-L["Grow Direction"] = true
 L["When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'Spread in 10'"] = true
-L["Font-Size"] = true
-L["Font Size"] = true
-L["Text-Color"] = true
-L["Color of Text-Reminders"] = true
-L["Spacing"] = true
-L["Spacing between Text reminders"] = true
-L["Center-Aligned Text"] = true
-L["When enabled, text reminders will be center-aligned instead of left-aligned."] = true
-
--- UI/Options/Reminders.lua — Icon Settings
-L["Icon Settings"] = true
-L["Icon-Width"] = true
-L["Width of the Icon"] = true
-L["Icon-Height"] = true
-L["Height of the Icon"] = true
-L["Text-X-Offset"] = true
-L["X-Offset of the Text of the Icon"] = true
-L["Text-Y-Offset"] = true
-L["Y-Offset of the Text of the Icon"] = true
-L["Right-Aligned Text"] = true
-L["Change the Text to be right-aligned, you still have to fix the offset yourself."] = true
-L["Timer-Text Font-Size"] = true
-L["Font Size of the Timer-Text"] = true
-L["Spacing between Icon reminders"] = true
-L["Icon-Glow"] = true
-L["At how many seconds you want the Icon to start glowing. 0 = disabled"] = true
-L["Icon-Zoom"] = true
-L["Zoom level of the Icons"] = true
-
--- UI/Options/Reminders.lua — Bar Settings
-L["Bar Settings"] = true
-L["Bar-Width"] = true
-L["Width of the Bar"] = true
-L["Bar-Height"] = true
-L["Height of the Bar"] = true
-L["Texture"] = true
-L["Bar-Color"] = true
-L["Color of the Bars"] = true
-L["Spacing between Bar reminders"] = true
 
 -- UI/Options/Reminders.lua — Raidframe Icon Settings
 L["Raidframe Icon Settings"] = true
@@ -470,6 +428,10 @@ L["Y-Offset of the Private Aura Display"] = true
 L["Max-Icons"] = true
 L["Maximum number of icons to display"] = true
 L["Scale"] = true
+L["Anchor"] = true
+L["The Anchor point of the Private Aura's"] = true
+L["Relative To"] = true
+L["The Anochr point the Private Aura's are anchored to."] = true
 L["Text-Scale"] = true
 L["This will scale the size of Stacks and Duration text."] = true
 L["Hide Border"] = true
@@ -508,6 +470,35 @@ L["Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuf
 L["This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included."] = true
 
 -- ============================================================================
+-- UI/AnchorWindow.lua — Anchor settings popup
+-- ============================================================================
+L["Up"] = true
+L["Down"] = true
+L["Left"] = true
+L["Right"] = true
+L["Sticky Duration"] = true
+L["Font"] = true
+L["Timer Font Size"] = true
+L["Decimals Threshold"] = true
+L["Glow Threshold"] = true
+L["Zoom"] = true
+L["Text X Offset"] = true
+L["Text Y Offset"] = true
+L["Timer X"] = true
+L["Timer Y"] = true
+L["Text Color"] = true
+L["Hide Swipe"] = true
+L["Bar Fill Color"] = true
+L["Bar Text Color"] = true
+L["Icon X Offset"] = true
+L["Icon Y Offset"] = true
+L["Center Aligned"] = true
+L["Size"] = true
+L["Show Background Ring"] = true
+L["Ring Color"] = true
+L["Circle Settings"] = true
+
+-- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================
 L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] = true
@@ -517,50 +508,82 @@ L["Paladins Dispel Assign"] = true
 L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."] = true
 L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
-L["Belo'ren Feather Color"] = true
-L["Displays your Feather-Color on Belo'ren."] = true
 L["Lura Interrupts"] = true
 L["Interrupt WA for Lura P1."] = true
 
 -- ============================================================================
--- UI/Reminders.lua (Reminder List Screen)
+-- UI/EncounterAlerts.lua
 -- ============================================================================
-L["Import Reminder String"] = true
-L["Import Personal Reminder String"] = true
-L["Update"] = true
-L["Import"] = true
-L["|cFF00FFFFPersonal|r Reminders"] = true
-L["|cFF00FFFFShared|r Reminders"] = true
-L["No Boss"] = true
-L["Normal"] = true
-L["Heroic"] = true
-L["Mythic"] = true
-L["Load"] = true
-L["Load & Send"] = true
-L["Save"] = true
-L["Confirm Deletion"] = true
-L["Confirm"] = true
-L["Cancel"] = true
-L["Delete"] = true
-L["Invite"] = true
-L["Arrange"] = true
-L["Unload"] = true
-L["Delete All"] = true
-L["Confirm Clear All"] = true
-L["All Bosses"] = true
-L["(No Enc)"] = true
-L["Received:"] = true
-L["Active Note"] = true
-
--- ============================================================================
--- UI/General.lua (Export/Import Popups)
--- ============================================================================
-L["Export Profile"] = true
-L["Done"] = true
-L["Exporting profile: |cFF00FFFF%s|r"] = true
-L["Import Profile"] = true
-L["Invalid import string. Please check and try again."] = true
-L["Paste a profile string below and click Import."] = true
+-- Export/Import popups
+L["Export Alerts"] = true
+L["Import Alerts"] = true
+L["Paste an alerts export string below and click Import."] = true
+L["All encounter alerts"] = true
+-- Left panel
+L["+ Create Alert"] = true
+L["Export"] = true
+L["Full Reset"] = true
+L["Reset"] = true
+L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"] = true
+L["New Alert"] = true
+L["Unnamed"] = true
+-- Context menus
+L["Export Group"] = true
+L["Delete Group (keep alerts)"] = true
+L["Delete Group with Alerts"] = true
+L["Delete group '%s' and all its user-created alerts?\n(ReloeReminders will only be ungrouped.)"] = true
+L["New Group..."] = true
+L["Enter new group name:"] = true
+L["OK"] = true
+L["Export Alert"] = true
+L["Add to Group"] = true
+L["Move to Group"] = true
+L["Duplicate"] = true
+L["Remove from Group"] = true
+L["Pin to Top"] = true
+L["Unpin"] = true
+L["Delete Alert"] = true
+L["Are you sure you want to delete this alert?"] = true
+-- Right panel header
+L["Alert Name"] = true
+L["Group"] = true
+-- Inner tabs
+L["Display"] = true
+L["Trigger"] = true
+L["Options"] = true
+-- Display tab
+L["Type"] = true
+L["Display Text"] = true
+L["Spell ID"] = true
+L["Custom Icon (overrides icon in list)"] = true
+L["Sticky duration (0 to disable)"] = true
+L["Hide Timer"] = true
+L["Glow Unit (player names, space seperated"] = true
+L["Glow Color"] = true
+L["Color"] = true
+L["Ticks (seconds into the display where ticks should appear)"] = true
+L["Add tick"] = true
+L["Add"] = true
+-- Trigger tab
+L["Boss"] = true
+L["Difficulty"] = true
+L["Phase"] = true
+L["Trigger Times (seconds into phase)"] = true
+L["Add time (s)"] = true
+-- Sound tab
+L["Enable Text-to-Speech"] = true
+L["TTS Text (leave blank to speak the Display Text)"] = true
+L["TTS Timer (seconds before the Alert expires)"] = true
+L["Countdown for"] = true
+L["seconds"] = true
+L["Sound File"] = true
+-- Load tab
+L["Classes (leave all unchecked for any class)"] = true
+L["Specializations (leave all unchecked for any spec)"] = true
+L["Roles (leave all unchecked for any role)"] = true
+L["Character Names (exact match, leave empty for all)"] = true
+L["Class / spec filters do not apply\nto addon-created alerts."] = true
+L["Sound settings are fixed\nfor addon-created alerts."] = true
 
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
