@@ -159,52 +159,10 @@ L["SpellName TTS if empty"] = true
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = true
 L["Bars"] = true
 L["Show Progress Bars instead of icons"] = true
-L["Sticky"] = true
-L["Keep Reminders shown for X seconds if the spell hasn't been pressed yet"] = true
 
 -- UI/Options/Reminders.lua — Text Settings
 L["Text Settings"] = true
-L["Grow Direction"] = true
 L["When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'Spread in 10'"] = true
-L["Font-Size"] = true
-L["Font Size"] = true
-L["Text-Color"] = true
-L["Color of Text-Reminders"] = true
-L["Spacing"] = true
-L["Spacing between Text reminders"] = true
-L["Center-Aligned Text"] = true
-L["When enabled, text reminders will be center-aligned instead of left-aligned."] = true
-
--- UI/Options/Reminders.lua — Icon Settings
-L["Icon Settings"] = true
-L["Icon-Width"] = true
-L["Width of the Icon"] = true
-L["Icon-Height"] = true
-L["Height of the Icon"] = true
-L["Text-X-Offset"] = true
-L["X-Offset of the Text of the Icon"] = true
-L["Text-Y-Offset"] = true
-L["Y-Offset of the Text of the Icon"] = true
-L["Right-Aligned Text"] = true
-L["Change the Text to be right-aligned, you still have to fix the offset yourself."] = true
-L["Timer-Text Font-Size"] = true
-L["Font Size of the Timer-Text"] = true
-L["Spacing between Icon reminders"] = true
-L["Icon-Glow"] = true
-L["At how many seconds you want the Icon to start glowing. 0 = disabled"] = true
-L["Icon-Zoom"] = true
-L["Zoom level of the Icons"] = true
-
--- UI/Options/Reminders.lua — Bar Settings
-L["Bar Settings"] = true
-L["Bar-Width"] = true
-L["Width of the Bar"] = true
-L["Bar-Height"] = true
-L["Height of the Bar"] = true
-L["Texture"] = true
-L["Bar-Color"] = true
-L["Color of the Bars"] = true
-L["Spacing between Bar reminders"] = true
 
 -- UI/Options/Reminders.lua — Raidframe Icon Settings
 L["Raidframe Icon Settings"] = true
@@ -470,6 +428,10 @@ L["Y-Offset of the Private Aura Display"] = true
 L["Max-Icons"] = true
 L["Maximum number of icons to display"] = true
 L["Scale"] = true
+L["Anchor"] = true
+L["The Anchor point of the Private Aura's"] = true
+L["Relative To"] = true
+L["The Anochr point the Private Aura's are anchored to."] = true
 L["Text-Scale"] = true
 L["This will scale the size of Stacks and Duration text."] = true
 L["Hide Border"] = true
@@ -546,50 +508,8 @@ L["Paladins Dispel Assign"] = true
 L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."] = true
 L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
-L["Belo'ren Feather Color"] = true
-L["Displays your Feather-Color on Belo'ren."] = true
 L["Lura Interrupts"] = true
 L["Interrupt WA for Lura P1."] = true
-
--- ============================================================================
--- UI/Reminders.lua (Reminder List Screen)
--- ============================================================================
-L["Import Reminder String"] = true
-L["Import Personal Reminder String"] = true
-L["Update"] = true
-L["Import"] = true
-L["|cFF00FFFFPersonal|r Reminders"] = true
-L["|cFF00FFFFShared|r Reminders"] = true
-L["No Boss"] = true
-L["Normal"] = true
-L["Heroic"] = true
-L["Mythic"] = true
-L["Load"] = true
-L["Load & Send"] = true
-L["Save"] = true
-L["Confirm Deletion"] = true
-L["Confirm"] = true
-L["Cancel"] = true
-L["Delete"] = true
-L["Invite"] = true
-L["Arrange"] = true
-L["Unload"] = true
-L["Delete All"] = true
-L["Confirm Clear All"] = true
-L["All Bosses"] = true
-L["(No Enc)"] = true
-L["Received:"] = true
-L["Active Note"] = true
-
--- ============================================================================
--- UI/General.lua (Export/Import Popups)
--- ============================================================================
-L["Export Profile"] = true
-L["Done"] = true
-L["Exporting profile: |cFF00FFFF%s|r"] = true
-L["Import Profile"] = true
-L["Invalid import string. Please check and try again."] = true
-L["Paste a profile string below and click Import."] = true
 
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
