@@ -17,8 +17,7 @@ local ShowContextMenu   = NSI.UI.Components.ShowContextMenu
 local BossData          = NSI.UI.BossData
 
 
-local MAX_LIST_ROWS  = 80
-local MAX_GROUP_ROWS = 30
+
 
 -- ============================================================================
 -- Alert Export / Import popups
@@ -250,13 +249,13 @@ local function BuildEncounterAlertsUI(parentFrame)
     listChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
     listScroll:SetScrollChild(listChild)
 
-    -- Pre-allocate the row pool ──────────────────────────────────────────────
-    local listRows = {}
+    -- Dynamic row pools — rows are created on demand and reused across rebuilds
+    local listRows        = {}
+    local groupHeaderRows = {}
 
-    for i = 1, MAX_LIST_ROWS do
+    local function CreateListRow()
         local row = CreateFrame("Frame", nil, listChild, "BackdropTemplate")
         row:SetSize(listChild:GetWidth(), lineHeight)
-        row:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -(i - 1) * lineHeight)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.4, 0.4, 0.4)
         row.__background:SetAlpha(0.5)
@@ -274,7 +273,6 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.bossIcon:SetPoint("LEFT", cb.frame, "RIGHT", 4, 0)
         row.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 
-
         row.nameLabel = row:CreateFontString(nil, "OVERLAY")
         row.nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
         row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
@@ -289,6 +287,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.lockIcon:SetTexture([[Interface\PetBattles\PetBattle-LockIcon]])
         row.lockIcon:SetVertexColor(0.7, 0.7, 0.7, 0.9)
         row.lockIcon:Hide()
+
         row.deleteBtn = CreateFrame("Button", nil, row)
         row.deleteBtn:SetSize(14, 14)
         row.deleteBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
@@ -312,12 +311,10 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         row:EnableMouse(true)
         row:Hide()
-        listRows[i] = row
+        return row
     end
 
-    -- Pre-allocate the group header row pool ────────────────────────────────
-    local groupHeaderRows = {}
-    for i = 1, MAX_GROUP_ROWS do
+    local function CreateGroupHeaderRow()
         local row = CreateFrame("Frame", nil, listChild, "BackdropTemplate")
         row:SetSize(listChild:GetWidth(), lineHeight)
         DF:ApplyStandardBackdrop(row)
@@ -347,7 +344,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         row:EnableMouse(true)
         row:Hide()
-        groupHeaderRows[i] = row
+        return row
     end
 
     -- Returns a display name for a ReloeReminder alert entry.
@@ -568,7 +565,9 @@ local function BuildEncounterAlertsUI(parentFrame)
             -- ── Group header row ─────────────────────────────────────────────
             if entry._type == "group_header" then
                 groupIdx = groupIdx + 1
-                if groupIdx > MAX_GROUP_ROWS then break end
+                if not groupHeaderRows[groupIdx] then
+                    groupHeaderRows[groupIdx] = CreateGroupHeaderRow()
+                end
                 local row   = groupHeaderRows[groupIdx]
                 local gname = entry.groupName
                 row:ClearAllPoints()
@@ -623,7 +622,9 @@ local function BuildEncounterAlertsUI(parentFrame)
             -- ── Alert row ────────────────────────────────────────────────────
             else
                 alertIdx = alertIdx + 1
-                if alertIdx > MAX_LIST_ROWS then break end
+                if not listRows[alertIdx] then
+                    listRows[alertIdx] = CreateListRow()
+                end
                 local row    = listRows[alertIdx]
                 local indent = entry._inGroup and 14 or 0
                 row:ClearAllPoints()
@@ -859,8 +860,8 @@ local function BuildEncounterAlertsUI(parentFrame)
         end  -- data loop end
 
         -- Hide unused pool slots
-        for i = alertIdx + 1, MAX_LIST_ROWS  do listRows[i]:Hide() end
-        for i = groupIdx + 1, MAX_GROUP_ROWS do groupHeaderRows[i]:Hide() end
+        for i = alertIdx + 1, #listRows        do listRows[i]:Hide() end
+        for i = groupIdx + 1, #groupHeaderRows do groupHeaderRows[i]:Hide() end
 
         -- Sync the group text-entry field if a grouped alert is selected
         if groupEntry and groupEntry._alert then
