@@ -360,6 +360,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local function RebuildList()
+        local savedScroll = listScroll:GetVerticalScroll()
         local data = RebuildScrollData()
 
         for i = 1, MAX_LIST_ROWS do
@@ -586,7 +587,9 @@ local function BuildEncounterAlertsUI(parentFrame)
         if bar then
             local maxScroll = math.max(0, totalH - listScroll:GetHeight())
             bar:SetMinMaxValues(0, maxScroll)
-            if bar:GetValue() > maxScroll then bar:SetValue(0) end
+            local clampedScroll = math.min(savedScroll, maxScroll)
+            bar:SetValue(clampedScroll)
+            listScroll:SetVerticalScroll(clampedScroll)
         end
     end
 
