@@ -300,9 +300,17 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.ungroupBtn = CreateFrame("Button", nil, row)
         row.ungroupBtn:SetSize(14, 14)
         row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.ungroupBtn:SetNormalTexture([[Interface\Buttons\Arrow-Left-Up]])
-        row.ungroupBtn:SetHighlightTexture([[Interface\Buttons\Arrow-Left-Down]])
-        row.ungroupBtn:GetNormalTexture():SetVertexColor(0.4, 0.85, 1, 1)
+        local _ubTex = row.ungroupBtn:CreateTexture(nil, "ARTWORK")
+        _ubTex:SetAllPoints()
+        _ubTex:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
+        _ubTex:SetVertexColor(0.4, 0.85, 1, 1)
+        _ubTex:SetRotation(math.pi / 2)   -- rotate to point left
+        row.ungroupBtn._normalTex = _ubTex
+        local _ubHiTex = row.ungroupBtn:CreateTexture(nil, "HIGHLIGHT")
+        _ubHiTex:SetAllPoints()
+        _ubHiTex:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
+        _ubHiTex:SetVertexColor(0.7, 1, 1, 1)
+        _ubHiTex:SetRotation(math.pi / 2)
         row.ungroupBtn:Hide()
 
         -- Pin indicator (shown when alert is pinned to top)
@@ -747,9 +755,9 @@ local function BuildEncounterAlertsUI(parentFrame)
 
                 -- Right-side button: ungroup (if grouped) > lock (reloe) > delete (user)
                 if entry._inGroup then
-                    row.deleteBtn:Hide()
-                    row.deleteBtn:SetScript("OnClick", nil)
                     row.lockIcon:Hide()
+                    -- Ungroup always sits at far right when grouped
+                    row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
                     row.ungroupBtn:Show()
                     local akey_ug, eid_ug = entry.alertKey, entry.encID
                     row.ungroupBtn:SetScript("OnClick", function()
@@ -760,9 +768,40 @@ local function BuildEncounterAlertsUI(parentFrame)
                         end
                         RebuildList()
                     end)
+                    if isReloe then
+                        row.deleteBtn:Hide()
+                        row.deleteBtn:SetScript("OnClick", nil)
+                    else
+                        -- trash bin sits just left of the ungroup arrow
+                        local akey     = entry.alertKey
+                        local ri_encID = entry.encID
+                        row.deleteBtn:Show()
+                        row.deleteBtn:SetPoint("RIGHT", row.ungroupBtn, "LEFT", -4, 0)
+                        row.deleteBtn:SetScript("OnClick", function()
+                            local deleteFunc = function()
+                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[ri_encID]
+                                             and NSRT.EncounterAlerts[ri_encID][filterDiffID]
+                                if diffTable then
+                                    diffTable[akey] = nil
+                                    NSI:FireCallback("NSRT_ALERT_CHANGED", ri_encID, filterDiffID, akey)
+                                end
+                                if selectedKey == akey and selectedEncID == ri_encID then
+                                    selectedKey    = nil
+                                    selectedEncID  = nil
+                                    if rightPanel then rightPanel:Hide() end
+                                end
+                                RebuildList()
+                            end
+                            local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(akey),
+                                "Delete Alert", "Are you sure you want to delete this alert?", "Cancel", nil, "Delete", deleteFunc, nil)
+                            deleteDialog:Show()
+                        end)
+                    end
                 else
                     row.ungroupBtn:Hide()
                     row.ungroupBtn:SetScript("OnClick", nil)
+                    row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)  -- reset anchor
+                    row.deleteBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)   -- reset anchor
                     if isReloe then
                         row.deleteBtn:Hide()
                         row.deleteBtn:SetScript("OnClick", nil)
