@@ -145,7 +145,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     -- forward declarations
-    local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupEntry
+    local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupDD
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -351,7 +351,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.nameLabel = nameLabel
 
         local countLabel = row:CreateFontString(nil, "OVERLAY")
-        countLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, NSRT.Settings.GlobalFontFlags or "")
+        countLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, NSRT.Settings.GlobalFontFlags or "")
         countLabel:SetTextColor(0.5, 0.5, 0.5, 1)
         countLabel:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.countLabel = countLabel
@@ -951,10 +951,8 @@ local function BuildEncounterAlertsUI(parentFrame)
         for i = alertIdx + 1, #listRows        do listRows[i]:Hide() end
         for i = groupIdx + 1, #groupHeaderRows do groupHeaderRows[i]:Hide() end
 
-        -- Sync the group text-entry field if a grouped alert is selected
-        if groupEntry and groupEntry._alert then
-            groupEntry:SetValue(groupEntry._alert.group or "")
-        end
+        -- Sync the group dropdown if an alert is selected
+        if groupDD then groupDD:Refresh() end
 
         local totalH = math.max(slot * lineHeight, 1)
         listChild:SetHeight(totalH)
@@ -1094,22 +1092,73 @@ local function BuildEncounterAlertsUI(parentFrame)
     groupLbl:SetText(L["Group"])
     groupLbl:SetPoint("BOTTOMLEFT", nameEntry.frame, "BOTTOMRIGHT", 12, 22)
 
-    groupEntry = CreateTextEntry(rightPanel, nil, nil, nil, 120, 22,
-        nil, nil, nil, "NSUIEncAlertGroupEntry")
-    groupEntry:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
-    groupEntry.editBox:SetScript("OnEditFocusLost", function(self)
-        local val = self:GetText()
-        local alert = groupEntry._alert
-        if not alert then return end
-        local newGroup = val ~= "" and val or nil
-        alert.group = newGroup
-        if newGroup then EnsureGroup(groupEntry._encID or 0, newGroup) end
-        RebuildList()
-    end)
+    local function BuildGroupItems()
+        local eid   = groupDD._eid
+        local did   = groupDD._did
+        local akey  = groupDD._akey
+        local alert = eid and did and akey
+                  and NSRT.EncounterAlerts
+                  and NSRT.EncounterAlerts[eid]
+                  and NSRT.EncounterAlerts[eid][did]
+                  and NSRT.EncounterAlerts[eid][did][akey]
+        local items = {}
+        table.insert(items, { label = L["— No Group —"], onclick = function()
+            if alert then alert.group = nil; RebuildList(); groupDD:Refresh() end
+        end })
+        for _, gname in ipairs(GetGroupsForEnc(eid or 0)) do
+            local gn = gname
+            table.insert(items, { label = gn, onclick = function()
+                if alert then alert.group = gn; EnsureGroup(eid, gn); RebuildList(); groupDD:Refresh() end
+            end })
+        end
+        table.insert(items, { label = L["New Group..."], onclick = function()
+            StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"] = {
+                text = L["Enter new group name:"],
+                button1 = L["OK"],
+                button2 = L["Cancel"],
+                hasEditBox = true,
+                timeout = 0,
+                whileDead = true,
+                hideOnEscape = true,
+                OnAccept = function(self)
+                    local newName = self.EditBox:GetText()
+                    if newName and newName ~= "" then
+                        if alert then alert.group = newName end
+                        EnsureGroup(eid, newName)
+                        RebuildList()
+                        groupDD:Refresh()
+                    end
+                end,
+                EditBoxOnEnterPressed = function(self)
+                    local parent = self:GetParent()
+                    StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"].OnAccept(parent)
+                    parent:Hide()
+                end,
+            }
+            StaticPopup_Show("NSRT_NEW_GROUP_INPUT")
+        end })
+        return items
+    end
+
+    local function GetGroupSelected()
+        local eid   = groupDD and groupDD._eid
+        local did   = groupDD and groupDD._did
+        local akey  = groupDD and groupDD._akey
+        local alert = eid and did and akey
+                  and NSRT.EncounterAlerts
+                  and NSRT.EncounterAlerts[eid]
+                  and NSRT.EncounterAlerts[eid][did]
+                  and NSRT.EncounterAlerts[eid][did][akey]
+        return (alert and alert.group) or L["— No Group —"]
+    end
+
+    groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected,
+        120, 22, "NSUIEncAlertGroupDD")
+    groupDD:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
 
     enabledCB = CreateCheckButton(rightPanel, L["Enabled"],
         function() return false end, nil, 90, 22, "NSUIEncAlertEnabled")
-    enabledCB:SetPoint("LEFT", groupEntry.frame, "RIGHT", 8, 0)
+    enabledCB:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local INNER_TABS     = { "Display", "Trigger", "Sound", "Load", "Options" }
@@ -2485,9 +2534,10 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         -- Header
         nameEntry:SetValue(isReloe and ReloeAlertName(entry) or (entry.name or ""))
-        groupEntry:SetValue(entry.group or "")
-        groupEntry._alert = entry
-        groupEntry._encID = entry.encID
+        groupDD._eid  = selectedEncID
+        groupDD._did  = selectedDiffID
+        groupDD._akey = selectedKey
+        groupDD:Refresh()
         enabledCB:SetValue(entry.enabled ~= false)
         if not isReloe then
             nameEntry.editBox:SetScript("OnEditFocusLost", function(self)
