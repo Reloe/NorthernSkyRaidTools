@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("NorthernSkyRaidTools", "enUS", true, true)
+local L = LibStub("AceLocale-3.0"):NewLocale("NorthernSkyRaidTools", "enUS", true, false)
 
 if not L then return end
 
@@ -510,6 +510,80 @@ L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
 L["Lura Interrupts"] = true
 L["Interrupt WA for Lura P1."] = true
+
+-- ============================================================================
+-- UI/EncounterAlerts.lua
+-- ============================================================================
+-- Export/Import popups
+L["Export Alerts"] = true
+L["Import Alerts"] = true
+L["Paste an alerts export string below and click Import."] = true
+L["All encounter alerts"] = true
+-- Left panel
+L["+ Create Alert"] = true
+L["Export"] = true
+L["Full Reset"] = true
+L["Reset"] = true
+L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"] = true
+L["New Alert"] = true
+L["Unnamed"] = true
+-- Context menus
+L["Export Group"] = true
+L["Delete Group (keep alerts)"] = true
+L["Delete Group with Alerts"] = true
+L["Delete group '%s' and all its user-created alerts?\n(ReloeReminders will only be ungrouped.)"] = true
+L["New Group..."] = true
+L["Enter new group name:"] = true
+L["OK"] = true
+L["Export Alert"] = true
+L["Add to Group"] = true
+L["Move to Group"] = true
+L["Duplicate"] = true
+L["Remove from Group"] = true
+L["Pin to Top"] = true
+L["Unpin"] = true
+L["Delete Alert"] = true
+L["Are you sure you want to delete this alert?"] = true
+-- Right panel header
+L["Alert Name"] = true
+L["Group"] = true
+-- Inner tabs
+L["Display"] = true
+L["Trigger"] = true
+L["Options"] = true
+-- Display tab
+L["Type"] = true
+L["Display Text"] = true
+L["Spell ID"] = true
+L["Custom Icon (overrides icon in list)"] = true
+L["Sticky duration (0 to disable)"] = true
+L["Hide Timer"] = true
+L["Glow Unit (player names, space seperated"] = true
+L["Glow Color"] = true
+L["Color"] = true
+L["Ticks (seconds into the display where ticks should appear)"] = true
+L["Add tick"] = true
+L["Add"] = true
+-- Trigger tab
+L["Boss"] = true
+L["Difficulty"] = true
+L["Phase"] = true
+L["Trigger Times (seconds into phase)"] = true
+L["Add time (s)"] = true
+-- Sound tab
+L["Enable Text-to-Speech"] = true
+L["TTS Text (leave blank to speak the Display Text)"] = true
+L["TTS Timer (seconds before the Alert expires)"] = true
+L["Countdown for"] = true
+L["seconds"] = true
+L["Sound File"] = true
+-- Load tab
+L["Classes (leave all unchecked for any class)"] = true
+L["Specializations (leave all unchecked for any spec)"] = true
+L["Roles (leave all unchecked for any role)"] = true
+L["Character Names (exact match, leave empty for all)"] = true
+L["Class / spec filters do not apply\nto addon-created alerts."] = true
+L["Sound settings are fixed\nfor addon-created alerts."] = true
 
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
