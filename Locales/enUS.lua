@@ -508,6 +508,35 @@ L["Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuf
 L["This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included."] = true
 
 -- ============================================================================
+-- UI/AnchorWindow.lua — Anchor settings popup
+-- ============================================================================
+L["Up"] = true
+L["Down"] = true
+L["Left"] = true
+L["Right"] = true
+L["Sticky Duration"] = true
+L["Font"] = true
+L["Timer Font Size"] = true
+L["Decimals Threshold"] = true
+L["Glow Threshold"] = true
+L["Zoom"] = true
+L["Text X Offset"] = true
+L["Text Y Offset"] = true
+L["Timer X"] = true
+L["Timer Y"] = true
+L["Text Color"] = true
+L["Hide Swipe"] = true
+L["Bar Fill Color"] = true
+L["Bar Text Color"] = true
+L["Icon X Offset"] = true
+L["Icon Y Offset"] = true
+L["Center Aligned"] = true
+L["Size"] = true
+L["Show Background Ring"] = true
+L["Ring Color"] = true
+L["Circle Settings"] = true
+
+-- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================
 L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] = true
