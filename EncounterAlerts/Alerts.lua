@@ -26,6 +26,10 @@ end
 -- timers: { [phase] = {times...} }
 -- overrides: optional table of field overrides
 function NSI:MakeEncounterAlert(data, timers)
+    local group = data.group
+    if group and type(group) == "table" then
+        group = data.phase and group[data.phase]
+    end
     local a = {
         internalID     = data.internalID,
         name           = data.name or data.internalID,
@@ -47,7 +51,7 @@ function NSI:MakeEncounterAlert(data, timers)
         isSpecialDisplay = data.isSpecialDisplay,
         Version        = data.Version,
         sticky         = data.sticky or 0,
-        group          = data.group,
+        group          = group,
     }
     if data.overrides then
         for k, v in pairs(data.overrides) do a[k] = v end
@@ -89,8 +93,8 @@ function NSI:AddEncounterAlert(data)
         if phaseData[1] and type(phaseData[1]) == "table" then -- multiple phases were provided
             for phase, timers in ipairs(phaseData) do
                 if next(timers) then
+                    data.phase = phase
                     local alertDef = self:MakeEncounterAlert(data, timers)
-                    alertDef.phase = phase
                     alertDef.internalID = data.internalID.."_P"..phase
                     alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
                     self:InsertEncounterAlert(data.encID, diffID, alertDef, true)

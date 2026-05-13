@@ -25,7 +25,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
-    local data = {internalID = "Peace Aura", text = "Peace Aura", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
+    local data = {group = "Auras", internalID = "Peace Aura", text = "Peace Aura", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = nil,
     overrides = {loadConditions = tankConditions},
     timers = {
             [16] = {132, 291, 450},

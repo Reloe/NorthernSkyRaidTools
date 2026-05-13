@@ -309,6 +309,14 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.ungroupBtn:SetHighlightTexture([[Interface\Buttons\UI-Panel-Button-Highlight]])
         row.ungroupBtn:Hide()
 
+        -- Pin indicator (shown top-left when alert is pinned)
+        row.pinIcon = row:CreateFontString(nil, "OVERLAY")
+        row.pinIcon:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        row.pinIcon:SetText("▲")
+        row.pinIcon:SetTextColor(1, 0.85, 0, 1)
+        row.pinIcon:SetPoint("RIGHT", row, "RIGHT", -20, 0)
+        row.pinIcon:Hide()
+
         row:EnableMouse(true)
         row:Hide()
         return row
@@ -327,10 +335,17 @@ local function BuildEncounterAlertsUI(parentFrame)
         arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.collapseArrow = arrow
 
+        local bossIcon = row:CreateTexture(nil, "ARTWORK")
+        bossIcon:SetSize(16, 16)
+        bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+        bossIcon:SetPoint("LEFT", row, "LEFT", 18, 0)
+        bossIcon:Hide()
+        row.bossIcon = bossIcon
+
         local nameLabel = row:CreateFontString(nil, "OVERLAY")
         nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
         nameLabel:SetTextColor(0.2, 0.85, 1, 1)
-        nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)
+        nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)  -- repositioned dynamically
         nameLabel:SetPoint("RIGHT", row, "RIGHT", -36, 0)
         nameLabel:SetJustifyH("LEFT")
         nameLabel:SetWordWrap(false)
@@ -352,8 +367,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local base = (entry.name and entry.name ~= "") and entry.name
                   or (entry.text and entry.text ~= "") and entry.text
                   or "?"
-        local phase = entry.phase
-        return phase and entry.name.." (P"..phase..")" or entry.name
+        return base
     end
 
     -- RebuildList ─────────────────────────────────────────────────────────────
@@ -366,7 +380,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         NSRT.Alerts.Groups = NSRT.Alerts.Groups or {}
         local k = GroupKey(encID, name)
         if not NSRT.Alerts.Groups[k] then
-            NSRT.Alerts.Groups[k] = { collapsed = false }
+            NSRT.Alerts.Groups[k] = { collapsed = true }
         end
     end
 
@@ -440,6 +454,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local function RebuildScrollData()
+        local pinned       = {}
         local ungrouped    = {}
         local groupedAlerts = {}  -- { ["encID|groupName"] = { alert items } }
 
@@ -471,6 +486,8 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local gk = GroupKey(encID, grp)
                                     groupedAlerts[gk] = groupedAlerts[gk] or { encID = encID, groupName = grp }
                                     table.insert(groupedAlerts[gk], item)
+                                elseif entry.pinned and filterEncID and filterEncID ~= 0 then
+                                    table.insert(pinned, item)
                                 else
                                     table.insert(ungrouped, item)
                                 end
@@ -513,6 +530,11 @@ local function BuildEncounterAlertsUI(parentFrame)
         end)
 
         local t = {}
+        SortAlerts(pinned)
+        for _, item in ipairs(pinned) do
+            item._pinned = true
+            table.insert(t, item)
+        end
         for _, gk in ipairs(sortedGroupKeys) do
             local gdata    = groupedAlerts[gk] or {}
             local encID    = gdata.encID or (function()
@@ -524,8 +546,8 @@ local function BuildEncounterAlertsUI(parentFrame)
             local members = {}
             for _, item in ipairs(gdata) do table.insert(members, item) end
             SortAlerts(members)
-            local collapsed = NSRT.Alerts and NSRT.Alerts.Groups
-                          and NSRT.Alerts.Groups[gk] and NSRT.Alerts.Groups[gk].collapsed
+            local gEntry = NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]
+            local collapsed = gEntry == nil or gEntry.collapsed
             table.insert(t, {
                 _type      = "group_header",
                 groupKey   = gk,
@@ -542,7 +564,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
         end
 
-        -- Ungrouped alerts below
+        -- Ungrouped (non-pinned) alerts below groups
         SortAlerts(ungrouped)
         for _, item in ipairs(ungrouped) do
             table.insert(t, item)
@@ -576,6 +598,21 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row.collapseArrow:SetText(entry._collapsed and "▶" or "▼")
                 row.nameLabel:SetText(gname)
                 row.countLabel:SetText("(" .. entry._count .. ")")
+
+                -- Boss icon: only shown when viewing all bosses
+                local showBossIcon = not filterEncID or filterEncID == 0
+                local bossIconTex = showBossIcon and BossData.BossIcons[entry.groupEncID]
+                if row.bossIcon then
+                    if bossIconTex then
+                        row.bossIcon:SetTexture(bossIconTex)
+                        row.bossIcon:Show()
+                        row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
+                    else
+                        row.bossIcon:Hide()
+                        row.nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)
+                    end
+                end
+
                 row:Show()
 
                 row:SetScript("OnMouseDown", function(self, button)
@@ -677,6 +714,10 @@ local function BuildEncounterAlertsUI(parentFrame)
 
                 row.nameLabel:SetText(name)
                 row.nameLabel:SetTextColor(1, 1, 1, isEnabled and 1 or 0.45)
+
+                if row.pinIcon then
+                    row.pinIcon:SetShown(entry._pinned == true)
+                end
 
                 -- Enabled checkbox: sync state then wire handler
                 row.enabledCB:SetValue(isEnabled)
@@ -849,6 +890,15 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     RebuildList()
                                 end })
                             end
+
+                            table.insert(menuItems, { type = "button",
+                                label = (alert and alert.pinned) and "Unpin" or "Pin to Top",
+                                fnc = function()
+                                    if alert then
+                                        alert.pinned = not alert.pinned or nil
+                                        RebuildList()
+                                    end
+                                end })
 
                             ShowContextMenu(menuItems)
                         else
@@ -2480,7 +2530,13 @@ end
 
 local function BuildEncounterAlertsCallback()
     return function()
-        -- No specific callback needed
+        if NSRT.Alerts and NSRT.Alerts.Groups then
+            for _, gdata in pairs(NSRT.Alerts.Groups) do
+                if type(gdata) == "table" then
+                    gdata.collapsed = true
+                end
+            end
+        end
     end
 end
 
