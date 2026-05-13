@@ -300,17 +300,10 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.ungroupBtn = CreateFrame("Button", nil, row)
         row.ungroupBtn:SetSize(14, 14)
         row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        local _ubTex = row.ungroupBtn:CreateTexture(nil, "ARTWORK")
-        _ubTex:SetAllPoints()
-        _ubTex:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
-        _ubTex:SetVertexColor(0.4, 0.85, 1, 1)
-        _ubTex:SetRotation(math.pi / 2)   -- rotate to point left
-        row.ungroupBtn._normalTex = _ubTex
-        local _ubHiTex = row.ungroupBtn:CreateTexture(nil, "HIGHLIGHT")
-        _ubHiTex:SetAllPoints()
-        _ubHiTex:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
-        _ubHiTex:SetVertexColor(0.7, 1, 1, 1)
-        _ubHiTex:SetRotation(math.pi / 2)
+        row.ungroupBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\minus.png]])
+        row.ungroupBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\minus.png]])
+        row.ungroupBtn:GetNormalTexture():SetVertexColor(0.4, 0.85, 1, 1)
+        row.ungroupBtn:GetHighlightTexture():SetVertexColor(0.7, 1, 1, 1)
         row.ungroupBtn:Hide()
 
         -- Pin indicator (shown when alert is pinned to top)
@@ -348,7 +341,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.bossIcon = bossIcon
 
         local nameLabel = row:CreateFontString(nil, "OVERLAY")
-        nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+        nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, NSRT.Settings.GlobalFontFlags or "")
         nameLabel:SetTextColor(0.2, 0.85, 1, 1)
         nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)  -- repositioned dynamically
         nameLabel:SetPoint("RIGHT", row, "RIGHT", -36, 0)
@@ -357,7 +350,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.nameLabel = nameLabel
 
         local countLabel = row:CreateFontString(nil, "OVERLAY")
-        countLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+        countLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, NSRT.Settings.GlobalFontFlags or "")
         countLabel:SetTextColor(0.5, 0.5, 0.5, 1)
         countLabel:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.countLabel = countLabel
@@ -600,8 +593,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -(slot - 1) * lineHeight)
                 row:SetWidth(listChild:GetWidth())
-                row.collapseArrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
-                row.collapseArrow:SetRotation(entry._collapsed and -math.pi / 2 or 0)
+                row.collapseArrow:SetTexture(entry._collapsed and
+                    [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]] or
+                    [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]])
+                row.collapseArrow:SetVertexColor(0.4, 0.85, 1, 1)
                 row.nameLabel:SetText(gname)
                 row.countLabel:SetText("(" .. entry._count .. ")")
 
