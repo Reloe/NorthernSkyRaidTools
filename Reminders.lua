@@ -135,7 +135,7 @@ function NSI:CreateReminder(info, preview)
     end
 
     self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}
-    info.name = info.internalID or info.name
+    info.name = info.name or info.internalID
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.countdown = info.countdown and tonumber(info.countdown)
     info.spellID = info.spellID and tonumber(info.spellID)
@@ -931,7 +931,7 @@ function NSI:GetDisplayedText(rem, info, F)
         remString = tostring(math.ceil(rem))
     end
     if info.DisplayType == "Text" or info.DisplayType == "Circle" then
-        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and (remString == "" and info.text or info.text.." - ("..remString..")")) or remString
+        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and (remString == "" and info.text or info.text.." ("..remString..")")) or remString
         return (F and F.SpellText or "")..text
     else
         return info.text, remString

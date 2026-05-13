@@ -7,17 +7,19 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
+    local loadConditions = self:DefaultLoadConditions()
+    loadConditions.Roles.DAMAGER = true
+    loadConditions.Roles.HEALER = true
     local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    overrides = {isConditional = true, BlockCopy = true},
+    overrides = {isConditional = true, BlockCopy = true, loadConditions = loadConditions},
     timers = {
-            [16] = {{5, 39, 112}, {39, 112}},
+            [16] = {{39, 112}, {39, 112}},
         },
     }
     self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertHandle[encID] = function(self, info)
-    if UnitGroupRolesAssigned("player") == "TANK" then return false end
     if info and info.name and info.name == "Debuffs" then
         for j = 1, 40 do
             local u = "nameplate" .. j
