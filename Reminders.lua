@@ -607,7 +607,6 @@ function NSI:SetProperties(F, info, skipsound, s)
     if info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
         F.Icon:SetTexture(spellInfo.iconID)
-        DevTool:AddData(info)
         if info.HideSwipe then
             if F.Swipe then F.Swipe:SetCooldown(0, 0) end
         else
@@ -920,7 +919,6 @@ end
 
 function NSI:GetDisplayedText(rem, info, F)
     local remString
-    if not info.Decimals then DevTool:AddData(info) end
     if rem <= info.Decimals then
         if rem < 0 then
             remString = ""
