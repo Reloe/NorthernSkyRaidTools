@@ -1837,6 +1837,13 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
+function NSI:GetRoleFromSpec()
+    local myspec = self:GetMySpecID()
+    if NSI.tanktable[myspec] then return "TANK" end
+    if NSI.healertable[myspec] then return "HEALER" end
+    if NSI.dpstable[myspec] then return "DAMAGER" end
+    return "NONE"
+end
 function NSI:EvaluateLoad(info)
     local cond = info.loadConditions
     if not cond then return true end
@@ -1844,6 +1851,9 @@ function NSI:EvaluateLoad(info)
     if cond.Roles and next(cond.Roles) then
         shouldLoad = false
         local myRole = UnitGroupRolesAssigned("player")
+        if myRole == "NONE" then
+            myRole = self:GetRoleFromSpec()
+        end
         if cond.Roles[myRole] then return true end
         local IsMelee = self:IsMelee("player")
         if cond.Roles["MELEE"] and IsMelee then return true end
