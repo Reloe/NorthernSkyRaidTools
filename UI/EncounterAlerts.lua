@@ -627,6 +627,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 local str = NSI:ExportGroupString(gencID, gname, filterDiffID)
                                 ShowExportPopup(str, "Group: " .. gname)
                             end },
+                            { type = "separator" },
                             { type = "button", label = L["Delete Group (keep alerts)"], fnc = function()
                                 DeleteGroup(gencID, gname)
                                 RebuildList()
@@ -938,6 +939,36 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     end
                                 end })
 
+                            if not isReloeRow then
+                                table.insert(menuItems, { type = "separator" })
+
+                                table.insert(menuItems,
+                                    {
+                                        type = "button",
+                                        label = L["Delete"],
+                                        fnc = function()
+                                            local deleteFunc = function()
+                                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
+                                                    and NSRT.EncounterAlerts[eid][did]
+                                                if diffTable then
+                                                    diffTable[akey] = nil
+                                                    NSI:FireCallback("NSRT_ALERT_CHANGED", eid, did, akey)
+                                                end
+                                                if selectedKey == akey and selectedEncID == eid then
+                                                    selectedKey   = nil
+                                                    selectedEncID = nil
+                                                    if rightPanel then rightPanel:Hide() end
+                                                end
+                                                RebuildList()
+                                            end
+                                            local deleteDialog = NSI.UI.Components.CreateDialog(
+                                                "NSRTDeleteAlertConfirm" .. tostring(akey),
+                                                L["Delete Alert"], L["Are you sure you want to delete this alert?"],
+                                                L["Cancel"], nil, L["Delete"], deleteFunc, nil)
+                                            deleteDialog:Show()
+                                        end
+                                    })
+                            end
                             ShowContextMenu(menuItems)
                         else
                             SelectAlert(akey, did, eid)
@@ -2086,6 +2117,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local loadRowH   = 20
     local loadListW  = rightW - 20
+    local loadListH = 240
 
     -- ── Names section constants (anchored to bottom of loadF) ────────────────
     local NAMES_SEC_H    = 180   -- total height reserved at the bottom
@@ -2110,7 +2142,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     ReskinScrollbar(loadScroll)
 
     local loadScrollChild = CreateFrame("Frame", nil, loadScroll, "BackdropTemplate")
-    loadScrollChild:SetSize(loadListW - 18, 1)
+    loadScrollChild:SetSize(loadListW - 18, loadListH)
     loadScrollChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
     loadScrollChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
@@ -2122,7 +2154,13 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local hdrFontPath = NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)
     local function MakeSectionHdr(label, sectionKey)
-        local btn = CreateFrame("Button", nil, loadScrollChild)
+        local btn = CreateFrame("Button", nil, loadScrollChild, "BackdropTemplate")
+        btn:SetBackdrop({
+            bgFile   = [[Interface\Tooltips\UI-Tooltip-Background]],
+            tile     = true,
+            tileSize = 64,
+        })
+        btn:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
         btn:SetSize(loadListW - 18, 18)
         btn.arrowTex = btn:CreateTexture(nil, "OVERLAY")
         btn.arrowTex:SetSize(10, 10)
@@ -2144,20 +2182,67 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local function MakeCheckRow(parent)
+        local BOX       = 12
+        local baseLevel = parent:GetFrameLevel() + 1
         local row = CreateFrame("Button", nil, parent)
         row:SetSize(loadListW - 18, loadRowH)
+            row:SetFrameLevel(baseLevel)
         row.bg = row:CreateTexture(nil, "BACKGROUND")
         row.bg:SetAllPoints(row)
         row.bg:SetColorTexture(0, 0, 0, 0)
-        row.checkTex = row:CreateTexture(nil, "OVERLAY")
-        row.checkTex:SetSize(12, 12)
-        row.checkTex:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.checkTex:SetTexture([[Interface\Buttons\UI-CheckBox-Check]])
-        row.checkTex:SetVertexColor(0.2, 1, 0.2, 1)
-        row.checkTex:Hide()
-        row.nameLbl = row:CreateFontString(nil, "OVERLAY")
-        row.nameLbl:SetFont(hdrFontPath, 12, "")
-        row.nameLbl:SetPoint("LEFT", row, "LEFT", 22, 0)
+        -- Cyan hover overlay (fades in/out on mouse enter/leave)
+        local hoverBg = CreateFrame("Frame", nil, row)
+        hoverBg:SetAllPoints(row)
+        hoverBg:SetFrameLevel(baseLevel + 1)
+        hoverBg:EnableMouse(false)
+        local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
+        hoverTex:SetAllPoints()
+        hoverTex:SetColorTexture(0, 1, 1, 0.13)
+        hoverBg:SetAlpha(0)
+        row.hoverBg = hoverBg
+
+        -- Checkbox box (styled like Components.lua CreateCheckButton)
+        local checkBox = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        checkBox:SetSize(BOX, BOX)
+        checkBox:SetPoint("LEFT", row, "LEFT", 4, 0)
+        checkBox:SetFrameLevel(baseLevel + 2)
+        checkBox:SetBackdrop({
+            bgFile   = [[Interface\Buttons\WHITE8x8]],
+            edgeFile = [[Interface\Buttons\WHITE8x8]],
+            edgeSize = 1,
+        })
+        checkBox:SetBackdropColor(0.10, 0.10, 0.10, 0.9)
+        checkBox:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+        row.checkBox = checkBox
+
+        -- Cyan fill shown when selected
+        local checkFill = checkBox:CreateTexture(nil, "ARTWORK")
+        checkFill:SetPoint("TOPLEFT", checkBox, "TOPLEFT", 2, -2)
+        checkFill:SetPoint("BOTTOMRIGHT", checkBox, "BOTTOMRIGHT", -2, 2)
+        checkFill:SetColorTexture(0, 1, 1, 0.85)
+        checkFill:Hide()
+        row.checkFill = checkFill
+
+        -- Label in its own frame above the hover overlay
+        local lblFrame = CreateFrame("Frame", nil, row)
+        lblFrame:SetFrameLevel(baseLevel + 2)
+        lblFrame:EnableMouse(false)
+        lblFrame:SetPoint("LEFT", row, "LEFT", 22, 0)
+        lblFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+        lblFrame:SetHeight(loadRowH)
+
+        row.nameLbl = lblFrame:CreateFontString(nil, "OVERLAY")
+    row.nameLbl:SetFont(hdrFontPath, 12, "")
+        row.nameLbl:SetAllPoints(lblFrame)
+        row.nameLbl:SetJustifyH("LEFT")
+        row.nameLbl:SetJustifyV("MIDDLE")
+
+        row:SetScript("OnEnter", function()
+            UIFrameFadeIn(hoverBg, 0.12, hoverBg:GetAlpha(), 1)
+        end)
+        row:SetScript("OnLeave", function()
+            UIFrameFadeOut(hoverBg, 0.20, hoverBg:GetAlpha(), 0)
+        end)
         return row
     end
 
@@ -2348,9 +2433,9 @@ local function BuildEncounterAlertsUI(parentFrame)
             local collapsed = sectionCollapsed[collapsedKey]
             -- Flip arrow chevron vertically when collapsed
             if collapsed then
-                hdrBtn.arrowTex:SetTexCoord(0, 1, 1, 0)  -- flipped = pointing right
+                    hdrBtn.arrowTex:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]])
             else
-                hdrBtn.arrowTex:SetTexCoord(0, 1, 0, 1)  -- normal = pointing down
+                    hdrBtn.arrowTex:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]])
             end
             y = y + hdrH + 2
 
@@ -2365,14 +2450,16 @@ local function BuildEncounterAlertsUI(parentFrame)
                     if selected then
                         local r, g, b = colorFn(data)
                         row.bg:SetColorTexture(r * 0.3, g * 0.3, b * 0.3, 0.85)
-                        row.checkTex:Show()
+                            row.checkFill:Show()
+                            row.checkBox:SetBackdropBorderColor(0, 1, 1, 0.9)
                     else
                         row.bg:SetColorTexture(
                             i % 2 == 0 and 0.12 or 0,
                             i % 2 == 0 and 0.12 or 0,
                             i % 2 == 0 and 0.12 or 0,
                             i % 2 == 0 and 0.5 or 0)
-                        row.checkTex:Hide()
+                            row.checkFill:Hide()
+                            row.checkBox:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
                     end
                     local d = data
                     row:SetScript("OnClick",
@@ -2410,7 +2497,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 return cc and cc.r or 0.5, cc and cc.g or 0.8, cc and cc.b or 0.5
             end)
 
-        loadScrollChild:SetHeight(math.max(y, 1))
+        loadScrollChild:SetHeight(math.max(y, loadListH))
         local bar = _G["NSUIEncAlertLoadScrollScrollBar"]
         if bar then
             local maxScroll = math.max(0, y - loadScroll:GetHeight())
