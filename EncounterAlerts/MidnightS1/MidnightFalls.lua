@@ -372,7 +372,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
         end)
     end
-    local runes = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].RunesDisplay and NSRT.EncounterAlerts[encID][id]
+    local runes = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].RunesDisplay
     if runes and ((runes.enabled and self:EvaluateLoad(runes) and realpull) or (preview and preview == "Runes Display")) then
         local s = NSRT.EncounterAlerts[encID][id].RunesDisplay
         local isTank = UnitGroupRolesAssigned("player") == "TANK"
