@@ -577,7 +577,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
-    local MAX_ROWS = 10
+    local MAX_ROWS = 11
     local baseLevel = parent:GetFrameLevel() + 1
 
     local container = CreateFrame("Frame", name, parent)
