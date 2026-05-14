@@ -22,7 +22,7 @@ NSI.InitializeAlerts[encID] = function(self)
     overrides = {loadConditions = rangedConditions},
     timers = {
             [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
-            [16] = {{9.6, 30.4}, {}, {23, 48, 75, 100, 127}, {}, {40, 100, 160}},
+            [16] = {{13, 53, 85.6, 112.6}, {}, {23, 48, 75, 100, 127}, {}, {40, 100, 160}},
         },
     }
     self:AddEncounterAlert(data)
