@@ -134,6 +134,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local filterEncID        = nil
     local filterDiffID       = 16    -- default Mythic
     local searchText         = ""
+    local groupsByEnc        = {}    -- [encID] = { [groupName] = true } — populated each RebuildScrollData
 
     function NSI:SaveAlertData(alert, dataKey, newData)
         if alert then
@@ -415,24 +416,8 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local function GetGroupsForEnc(eid)
         local groups = {}
-        local prefix = tostring(eid) .. "|"
-        for k in pairs(NSRT.Alerts and NSRT.Alerts.Groups or {}) do
-            if k:sub(1, #prefix) == prefix then
-                table.insert(groups, k:sub(#prefix + 1))
-            end
-        end
-        -- Also include groups that exist via alert.group without an explicit Groups entry
-        local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
-        if type(enc) == "table" then
-            for _, diffTable in pairs(enc) do
-                for _, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
-                    if type(alert) == "table" and alert.group and alert.group ~= "" then
-                        local found = false
-                        for _, g in ipairs(groups) do if g == alert.group then found = true; break end end
-                        if not found then table.insert(groups, alert.group) end
-                    end
-                end
-            end
+        for name in pairs(groupsByEnc[eid] or {}) do
+            table.insert(groups, name)
         end
         table.sort(groups)
         return groups
@@ -456,6 +441,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local pinned       = {}
         local ungrouped    = {}
         local groupedAlerts = {}  -- { ["encID|groupName"] = { alert items } }
+        groupsByEnc = {}  -- reset cache
 
         -- Single loop: all alerts live in NSRT.EncounterAlerts; ReloeReminder distinguishes them
         for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
@@ -464,6 +450,13 @@ local function BuildEncounterAlertsUI(parentFrame)
                 if type(diffTable) == "table" then
                     for key, entry in pairs(diffTable) do
                         if type(entry) == "table" then
+                            -- Populate group cache regardless of search filter
+                            local grp = entry.group and entry.group ~= "" and entry.group
+                            if grp then
+                                groupsByEnc[encID] = groupsByEnc[encID] or {}
+                                groupsByEnc[encID][grp] = true
+                            end
+
                             local isReloe     = entry.ReloeReminder == true
                             local displayName = isReloe and ReloeAlertName(entry) or (entry.name or L["Unnamed"])
                             if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
@@ -480,7 +473,6 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     _orderID        = isReloe and entry.id or nil,
                                     _group          = entry.group,
                                 }
-                                local grp = entry.group and entry.group ~= "" and entry.group
                                 if grp then
                                     local gk = GroupKey(encID, grp)
                                     groupedAlerts[gk] = groupedAlerts[gk] or { encID = encID, groupName = grp }
