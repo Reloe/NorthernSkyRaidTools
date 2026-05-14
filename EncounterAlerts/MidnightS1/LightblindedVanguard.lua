@@ -208,16 +208,16 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         end
     end
     if not mygroup then return end
-    local pos = (mygroup == 1 and "Star") or (mygroup == 2 and "Orange") or (mygroup == 3 and "Purple") or (mygroup == 4 and "Green") or "Flex Spot"
-    local text = (IsHealer and "Go to {rt" .. mygroup .. "}") or "Soak {rt" .. mygroup .. "}"
-    local TTS = (IsHealer and "Go to " .. pos) or "Soak " .. pos
+    local pos = (mygroup == 1 and "Front Left") or (mygroup == 2 and "Front Right") or (mygroup == 3 and "Back Left") or (mygroup == 4 and "Back Right") or "Flex Spot"
+    local text = (IsHealer and "Go to "..pos) or "Soak "..pos
+    local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
     Alert.TTS, Alert.text = TTS, text
 
     local timers = { 90.5, 145.9, 249.4, 305.4 }
     self:AddRemindersFromTable(Alert, timers)
 
     if NSRT.AssignmentSettings.OnPull then
-        local text = mygroup == 1 and "|cFFFFFF00Star|r" or mygroup == 2 and "|cFFFFA500Orange|r" or mygroup == 3 and "|cFF9400D3Purple|r" or mygroup == 4 and "|cFF00FF00Green|r" or ""
-        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the " .. text .. " Group", 5)
+        local text = mygroup == 1 and "Front Left" or mygroup == 2 and "Front Right" or mygroup == 3 and "Back Left" or mygroup == 4 and "Back Right" or ""
+        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000"..text.."|r Group", 5)
     end
 end

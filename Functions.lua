@@ -37,7 +37,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     if issecretvalue(unit) or not unit then return unit, "", "" end
     local name = UnitName(unit)
     if issecretvalue(name) then return unit, "", "" end
-    local classFile = unit and select(2, UnitClass(unit))
+    local classFile = select(2, UnitClass(unit))
     if specicon then
         local specid = 0
         if unit then specid = NSI:GetSpecs(unit) or 0 end
