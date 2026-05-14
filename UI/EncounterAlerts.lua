@@ -485,7 +485,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local gk = GroupKey(encID, grp)
                                     groupedAlerts[gk] = groupedAlerts[gk] or { encID = encID, groupName = grp }
                                     table.insert(groupedAlerts[gk], item)
-                                elseif entry.pinned and filterEncID and filterEncID ~= 0 then
+                                elseif entry.pinned then
                                     table.insert(pinned, item)
                                 else
                                     table.insert(ungrouped, item)
