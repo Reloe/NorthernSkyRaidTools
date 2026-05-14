@@ -615,19 +615,19 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
 end
 
 function NSI:ExportGroupString(encID, groupName, diffID)
+    if not encID or not groupName then return nil end
     local LibSerialize = LibStub("LibSerialize")
     local LibDeflate   = LibStub("LibDeflate")
     local encounterAlerts = {}
     local encTable = encID and NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
-    if type(encTable) == "table" then
-        for did, diffTable in pairs(encTable) do
-            if (not diffID) or did == diffID then
-                for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
-                    if type(alert) == "table" and alert.group == groupName then
-                        encounterAlerts[encID] = encounterAlerts[encID] or {}
-                        encounterAlerts[encID][did] = encounterAlerts[encID][did] or {}
-                        encounterAlerts[encID][did][key] = alert
-                    end
+    if not encTable then return nil end
+    for did, diffTable in pairs(encTable) do
+        if (not diffID) or did == diffID then
+            for key, alert in pairs(diffTable or {}) do
+                if alert.group and alert.group == groupName then
+                    encounterAlerts[encID] = encounterAlerts[encID] or {}
+                    encounterAlerts[encID][did] = encounterAlerts[encID][did] or {}
+                    encounterAlerts[encID][did][key] = alert
                 end
             end
         end
@@ -746,7 +746,9 @@ function NSAPI:ImportAlertsString(importString)
         if t.groupName then
             NSRT.Alerts.Groups[t.groupName] = t.groupMeta or { collapsed = false }
         end
-        for encID, encData in pairs(t.encounterAlerts or {}) do
+        local encID = t.groupEncID
+        local encData = encID and t.encounterAlerts and t.encounterAlerts[encID]
+        if encID and encData then
             NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
             for diffID, diffData in pairs(encData) do
                 if (not t.diffID) or diffID == t.diffID then
@@ -766,8 +768,8 @@ function NSAPI:ImportAlertsString(importString)
                     end
                 end
             end
+            NSI:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", encID)
         end
-        NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
         return count
     end
     return nil
