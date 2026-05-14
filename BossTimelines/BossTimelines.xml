@@ -12,6 +12,5 @@
     <Script file="Chimaerus.lua"/>
     <Script file="CrownOfTheCosmos.lua"/>
     <Script file="MidnightFalls.lua"/>
-    <Script file="DimensiusTheAllDevouring.lua"/>
-    <Script file="NexusKingSaladhaar.lua"/>
+    <Script file="Rotmire.lua"/>
 </Ui>
