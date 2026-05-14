@@ -51,6 +51,11 @@ local SoundListRaid = {
     [1279512] = "Targeted", -- Starsplinter
     [1286294] = "Red", -- Blue Memory Game
     [1284984] = "Blue", -- Red Memory Game
+
+    -- Sporefall
+    [1222088] = "Spread", -- Festering Vines
+    [1299508] = "Camp", -- Fungling Fixate
+    [1221639] = "Boss", -- Shroomling Fixate
 }
 
 local SoundListMPlus = {
