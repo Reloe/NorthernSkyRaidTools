@@ -10,6 +10,7 @@ NSI.EncounterOrder = {
     [3306] = 7, -- Chimaerus
     [3182] = 8, -- Belo'ren
     [3183] = 9, -- Midnight Falls
+    [3159] = 10, -- Rotmire
 }
 
 local symbols = {

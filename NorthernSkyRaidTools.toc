@@ -47,6 +47,7 @@ EncounterAlerts/MidnightS1/CrownOfThecosmos.lua
 EncounterAlerts/MidnightS1/Chimaerus.lua
 EncounterAlerts/MidnightS1/Beloren.lua
 EncounterAlerts/MidnightS1/MidnightFalls.lua
+EncounterAlerts/MidnightS1/Rotmire.lua
 EncounterAlerts/MidnightS1/MotherlodeDebug.lua
 
 # UI - Core (must load first to create NSUI panel and shared utilities)
