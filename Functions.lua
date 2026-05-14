@@ -67,12 +67,13 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     end
     if classFile then -- basically "if unit found"
         local name = UnitName(unit)
+        if issecretvalue(name) then return unit, "", "" end
         local color = classFile == "PRIEST" and CreateColor(200/255, 200/255, 200/255) or GetClassColorObj(classFile)
-        name = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
+        local newname = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
-            return combined and specicon..roleicon..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or specicon, combined and "" or roleicon
+            return combined and specicon..roleicon..color:WrapTextInColorCode(newname) or color:WrapTextInColorCode(newname), combined and "" or specicon, combined and "" or roleicon
         else
-            return combined and specicon..roleicon..name or name, combined and "" or specicon, combined and "" or roleicon
+            return combined and specicon..roleicon..newname or newname, combined and "" or specicon, combined and "" or roleicon
         end
     else
         return unit, "", "" -- return input if nothing was found
