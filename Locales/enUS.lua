@@ -582,7 +582,7 @@ L["Sound File"] = true
 L["Classes (leave all unchecked for any class)"] = true
 L["Specializations (leave all unchecked for any spec)"] = true
 L["Roles (leave all unchecked for any role)"] = true
-L["Character Names (exact match, leave empty for all)"] = true
+L["Character Names (no server name)"] = true
 L["Class / spec filters do not apply\nto addon-created alerts."] = true
 L["Sound settings are fixed\nfor addon-created alerts."] = true
 

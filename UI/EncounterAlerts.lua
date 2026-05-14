@@ -2309,7 +2309,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local namesHdrLbl = loadF:CreateFontString(nil, "OVERLAY")
     namesHdrLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
     namesHdrLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    namesHdrLbl:SetText(L["Character Names (exact match, leave empty for all)"])
+    namesHdrLbl:SetText(L["Character Names (no server name)"])
     namesHdrLbl:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 12)
 
     local nameAddEntry = CreateTextEntry(loadF, nil, nil, nil, 180, 22,
