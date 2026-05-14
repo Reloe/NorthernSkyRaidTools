@@ -28,30 +28,30 @@ local alertsImportPopup
 
 local function ShowExportPopup(str, label)
     if not alertsExportPopup then
-        alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, L["Export Alerts"],
+        alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. L["Export Alerts"] .. "|r",
             "NSUIEncAlertExportString", { DontRightClickClose = true })
         alertsExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsExportPopup:SetFrameLevel(100)
 
-        alertsExportPopup.infoLabel = DF:CreateLabel(alertsExportPopup, "",
-            DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+        alertsExportPopup.infoLabel = alertsExportPopup:CreateFontString(nil, "OVERLAY")
+        alertsExportPopup.infoLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
+        alertsExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
         alertsExportPopup.infoLabel:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -30)
 
         alertsExportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsExportPopup, 280, 80, _,
             "EncAlertExportTextEdit", true, false, true)
         alertsExportPopup.textbox:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -50)
-        alertsExportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsExportPopup, "BOTTOMRIGHT", -10, 40)
+        alertsExportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsExportPopup, "BOTTOMRIGHT", -25, 40)
         DF:ApplyStandardBackdrop(alertsExportPopup.textbox)
         DF:ReskinSlider(alertsExportPopup.textbox.scroll)
         alertsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         alertsExportPopup.textbox.editbox:SetFont(
             NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
 
-        local doneBtn = DF:CreateButton(alertsExportPopup, function()
+        local doneBtn = CreateButton(alertsExportPopup, L["Done"], function()
             alertsExportPopup:Hide()
-        end, 280, 20, L["Done"])
+        end, 280, 20)
         doneBtn:SetPoint("BOTTOM", alertsExportPopup, "BOTTOM", 0, 10)
-        doneBtn:SetTemplate(Core.options_button_template)
     end
 
     alertsExportPopup.infoLabel:SetText(label or "")
@@ -62,27 +62,28 @@ end
 
 local function ShowImportPopup()
     if not alertsImportPopup then
-        alertsImportPopup = DF:CreateSimplePanel(NSUI, 800, 400, L["Import Alerts"],
+        alertsImportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. L["Import Alerts"] .. "|r",
             "NSUIEncAlertImportString", { DontRightClickClose = true })
         alertsImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsImportPopup:SetFrameLevel(100)
 
-        local statusLabel = DF:CreateLabel(alertsImportPopup,
-            L["Paste an alerts export string below and click Import."],
-            DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+        local statusLabel = alertsImportPopup:CreateFontString(nil, "OVERLAY")
+        statusLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "")
+        statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        statusLabel:SetText(L["Paste an alerts export string below and click Import."])
         statusLabel:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -30)
 
         alertsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsImportPopup, 280, 80, _,
             "EncAlertImportTextEdit", true, false, true)
         alertsImportPopup.textbox:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -50)
-        alertsImportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsImportPopup, "BOTTOMRIGHT", -10, 40)
+        alertsImportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsImportPopup, "BOTTOMRIGHT", -25, 40)
         DF:ApplyStandardBackdrop(alertsImportPopup.textbox)
         DF:ReskinSlider(alertsImportPopup.textbox.scroll)
         alertsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         alertsImportPopup.textbox.editbox:SetFont(
             NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
 
-        local importBtn = DF:CreateButton(alertsImportPopup, function()
+        local importBtn = CreateButton(alertsImportPopup, L["Import"], function()
             local str = alertsImportPopup.textbox:GetText()
             local count, overwriteCount = NSAPI:ImportAlertsString(str)
             if count then
@@ -98,9 +99,8 @@ local function ShowImportPopup()
                 statusLabel:SetText(
                     "|cFFFF0000" .. L["Invalid import string. Please check and try again."] .. "|r")
             end
-        end, 280, 20, L["Import"])
+        end, 280, 20)
         importBtn:SetPoint("BOTTOM", alertsImportPopup, "BOTTOM", 0, 10)
-        importBtn:SetTemplate(Core.options_button_template)
 
         alertsImportPopup:HookScript("OnShow", function()
             statusLabel:SetText(L["Paste an alerts export string below and click Import."])
