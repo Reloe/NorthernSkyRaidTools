@@ -1017,19 +1017,19 @@ local function BuildEncounterAlertsUI(parentFrame)
         NSRT.EncounterAlerts[createEncID][filterDiffID] = NSRT.EncounterAlerts[createEncID][filterDiffID] or {}
         local diffTable = NSRT.EncounterAlerts[createEncID][filterDiffID]
         local newKey = NSI:UniqueAlertID(diffTable, false)
+        local s = NSRT.ReminderSettings
         diffTable[newKey] = {
             name          = L["New Alert"],
             enabled       = true,
             phase         = 1,
-            timers         = {},
-            DisplayType          = "Text",
+            timers        = {},
+            DisplayType   = "Text",
             text          = "",
             spellID       = nil,
-            dur           = 8,
-            TTS           = false,
-            TTSTimer      = 8,
+            dur           = s.TextDuration or 8,
+            TTS           = s.TextTTS and true or false,
+            TTSTimer      = s.TextTTSTimer or 8,
             countdown     = false,
-            DisplayType   = "Text",
             sticky        = 0,
             loadConditions = { Classes = {}, SpecIDs = {}, Names = {}, Roles = {}, },
         }
