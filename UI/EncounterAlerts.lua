@@ -887,7 +887,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 table.insert(menuItems, { type = "button", label = L["Reset"], fnc = function()
                                     local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
                                     if diffTable then diffTable[akey] = nil end
-                                    NSI:ImportReloeReminders()
+                                    NSI:ImportReloeReminders(eid)
                                     RebuildList()
                                     local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                                     and NSRT.EncounterAlerts[eid][did]
