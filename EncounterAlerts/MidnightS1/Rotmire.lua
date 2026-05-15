@@ -15,4 +15,58 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
+    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
+    overrides = {BlockCopy = true},
+    Preview = [[return function()
+        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
+    end]],
+    }
+    self:AddEncounterAlert(data)
+end
+
+NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
+    local id = self:DifficultyCheck(16) or 0
+    local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay
+    if interrupts and interrupts.enabled and self:EvaluateLoad(interrupts) and id == 16 then
+        self:ReadInterruptNote(1)
+        if (not self.Interrupts.myTrackedID) or (not self.Interrupts.myTrackedID == 2) then return end
+        self:EncounterRegister("UNIT_SPELLCAST_START", true, "boss2")
+        self:EncounterRegister("UNIT_SPELLCAST_INTERRUPTED", true, "boss2")
+        self:EncounterRegister("UNIT_SPELLCAST_STOP", true, "boss2")
+        self:EncounterRegister("INSTANCE_ENCOUNTER_ENGAGE_UNIT", true)
+        self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
+            if e == "UNIT_SPELLCAST_START" then
+                if UnitIsEnemy(unit, "player") then
+                    self:InterruptOnCastStart(true)
+                    if self.ResetTimer then
+                        self.ResetTimer:Cancel()
+                    end
+                    self.ResetTimer = C_Timer.NewTimer(10, function()
+                        self:ResetInterrupts()
+                    end)
+                end
+            elseif e == "UNIT_SPELLCAST_INTERRUPTED" then
+                if UnitIsEnemy(unit, "player") then
+                    self:OnInterrupt(true)
+                end
+            elseif e == "UNIT_SPELLCAST_STOP" then
+                if UnitIsEnemy(unit, "player") then
+                    self:OnCastStop(true)
+                end
+            elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+                if UnitExists("boss2") and UnitIsEnemy("boss2", "player") then
+                    self:DisplayInterrupt()
+                end
+                if not UnitExists("boss2") then
+                    self:ResetInterrupts()
+                end
+            end
+        end)
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
+    self:HideInterrupt()
 end

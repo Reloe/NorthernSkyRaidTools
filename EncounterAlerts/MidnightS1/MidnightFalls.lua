@@ -307,7 +307,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {internalID = "InterruptDisplay", text = nil, internalID = "InterruptDisplay", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
+    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
     customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
     overrides = {pinned = true, BlockCopy = true},
     Preview = [[return function()
