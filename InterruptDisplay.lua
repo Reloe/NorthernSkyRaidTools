@@ -70,14 +70,34 @@ function NSI:ResetInterrupts()
     self.Interrupts.castCount = 1
     self.Interrupts.myTrackedID = self.Interrupts.myID
     self:HideInterrupt()
+    self:HideInterruptBar()
 end
 
-function NSI:InterruptOnCastStart()
+function NSI:InterruptOnCastStart(info)
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
     self:DisplayInterrupt(true)
     if self.Interrupts.castCount == self.Interrupts.myKick then
         self:PlayInterruptSound()
+        if NSRT.InterruptSettings.ShowBar and info then
+            self:ShowInterruptBar(info)
+        end
+    end
+end
+
+function NSI:ShowInterruptBar(info)
+    info.DisplayType = "Bar"
+    info.TTS = false
+    info.text = "Interrupt"
+    local alert = self:CreateReminder(info)
+    self.InterruptBar = self:DisplayReminder(alert)
+end
+
+function NSI:HideInterruptBar()
+    if self.InterruptBar then
+        self.InterruptBar:Hide()
+        self.InterruptBar = nil
+        self:ArrangeStates("Bar")
     end
 end
 
@@ -85,6 +105,7 @@ function NSI:OnInterrupt()
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
     self:DisplayInterrupt()
+    self:HideInterruptBar()
 end
 
 function NSI:OnCastStop()

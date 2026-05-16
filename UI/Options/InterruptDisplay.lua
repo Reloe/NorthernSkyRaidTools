@@ -92,6 +92,13 @@ local function BuildInterruptDisplayOptions()
             nocombat = true,
             spacement = true,
         },
+        {
+            type = "toggle",
+            name = L["Show Interrupt Bar"],
+            desc = L["Show a Bar when it's your turn to interrupt. This Bar will show through the reminder system and use your default settings for bars."],
+            get = function() return NSRT.InterruptSettings.ShowBar end,
+            set = function(_, _, value) NSRT.InterruptSettings.ShowBar = value; refreshPreview() end,
+        },
 
         {
             type = "range",

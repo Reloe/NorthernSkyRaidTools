@@ -352,6 +352,7 @@ function NSI:AddMissingDefaults()
 
         -- Interrupt Display
         InterruptSettings = {
+            ShowBar = false,
             Anchor = "CENTER",
             relativeTo = "CENTER",
             xOffset = -600,

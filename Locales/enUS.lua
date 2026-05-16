@@ -659,3 +659,5 @@ L["Interrupt Next Text Color"] = true
 L["Color of the number when you are up next to interrupt"] = true
 L["Interrupt Default Text Color"] = true
 L["Color of the number when it's not your turn to interrupt"] = true
+L["Show Interrupt Bar"] = true
+L["Show a Bar when it's your turn to interrupt. This Bar will show through the reminder system and use your default settings for bars."] = true
