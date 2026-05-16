@@ -27,6 +27,7 @@ function NSI:CreateInterruptDisplay()
 end
 
 function NSI:DisplayInterrupt(isCastStart)
+    local s = NSRT.InterruptSettings
     local myKick = self.Interrupts.myKick
     local castCount = self.Interrupts.castCount
     local unit = self.Interrupts.myTable[castCount]
@@ -36,18 +37,18 @@ function NSI:DisplayInterrupt(isCastStart)
     self.InterruptDisplay.Name:SetText(name)
     if castCount == myKick then
         if isCastStart then -- player interrupts now
-            self.InterruptDisplay.Box:SetColorTexture(0, 1, 0, 1)
-            self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
+            self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNowColor))
+            self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNowTextColor))
         else -- player interrupts next
-            self.InterruptDisplay.Box:SetColorTexture(1, 1, 0, 1)
-            self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
+            self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNextColor))
+            self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNextTextColor))
         end
     elseif (castCount+1 == myKick) or (myKick == 1 and castCount == self.Interrupts.max) then
-        self.InterruptDisplay.Box:SetColorTexture(1, 1, 0, 1)
-        self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
+        self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNextColor))
+        self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNextTextColor))
     else
-        self.InterruptDisplay.Number:SetTextColor(1, 1, 1, 1)
-        self.InterruptDisplay.Box:SetColorTexture(1, 0, 0, 1)
+        self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptDefaultColor))
+        self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptDefaultTextColor))
     end
     self.InterruptDisplay:Show()
 end

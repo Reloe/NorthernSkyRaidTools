@@ -330,7 +330,6 @@ local function BuildReminderOptions()
             max = 60,
             nocombat = true,
         },
-
         {
             type = "color",
             name = L["Glow-Color"],
@@ -341,7 +340,6 @@ local function BuildReminderOptions()
             end,
             hasAlpha = true,
             nocombat = true
-
         },
         {
             type = "label",
