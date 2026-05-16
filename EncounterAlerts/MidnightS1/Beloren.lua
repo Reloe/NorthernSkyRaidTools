@@ -149,7 +149,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         local s = NSRT.EncounterAlerts[encID][id]["Feather Color"]
 
         if not self.FeatherColorIconFrame then
-            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame)
+            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame, "BackdropTemplate")
             self.FeatherColorIconFrame.texture = self.FeatherColorIconFrame:CreateTexture("NSRTFeatherColorIconFrameTexture", "BACKGROUND")
             self.FeatherColorIconFrame.texture:SetAllPoints()
         end
