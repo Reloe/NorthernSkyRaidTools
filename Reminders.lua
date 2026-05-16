@@ -580,11 +580,7 @@ function NSI:SetProperties(F, info, skipsound, s)
     end)
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
     if info.DisplayType == "Text" then
-        if spellInfo then
-            F.SpellText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
-        else
-            F.SpellText = ""
-        end
+        F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
         F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         return
     end
@@ -599,11 +595,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         end
         F.Swipe:SetCooldown(info.startTime, info.dur)
         F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
-        if spellInfo then
-            F.SpellText = "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t "
-        else
-            F.SpellText = ""
-        end
+        F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
     end
     if info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
@@ -642,6 +634,7 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
     end
+    if not info.spellID then return end
     F:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
     F:SetScript("OnEvent", function(self, e, ...)
         -- only registered for player so spellID is never secret
