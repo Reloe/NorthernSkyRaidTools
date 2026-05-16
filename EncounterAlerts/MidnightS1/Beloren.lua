@@ -149,7 +149,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         local s = NSRT.EncounterAlerts[encID][id]["Feather Color"]
 
         if not self.FeatherColorIconFrame then
-            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame, "BackdropTemplate")
+            self.FeatherColorIconFrame = CreateFrame("Frame", "NSRTFeatherColorIconFrame", self.NSRTFrame)
             self.FeatherColorIconFrame.texture = self.FeatherColorIconFrame:CreateTexture("NSRTFeatherColorIconFrameTexture", "BACKGROUND")
             self.FeatherColorIconFrame.texture:SetAllPoints()
         end
@@ -166,30 +166,28 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             return
         end
 
-        self:EncounterRegister("UNIT_AURA", true, "player")
-        self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
-            if e == "UNIT_AURA" then
-                local info = ...
-                if not info.addedAuras then return end
+        self.FeatherColorIconFrame:RegisterUnitEvent("UNIT_AURA", "player")
+        self.FeatherColorIconFrame:SetScript("OnEvent", function(_, e, ...)
+            local unit, info = ...
+            if not info.addedAuras then return end
 
-                self.FeatherColorIconFrame:Hide()
+            self.FeatherColorIconFrame:Hide()
 
-                -- all debuff aura instance IDs on us that we applied ourselves
-                local playerCastAuraInstanceIDsTest = {}
-                local playerCastAuraInstanceIDs = C_UnitAuras.GetUnitAuraInstanceIDs("player", "HARMFUL|PLAYER")
-                for _, auraInstanceID in ipairs(playerCastAuraInstanceIDs) do
-                    playerCastAuraInstanceIDsTest[auraInstanceID] = true
-                end
+            -- all debuff aura instance IDs on us that we applied ourselves
+            local playerCastAuraInstanceIDsTest = {}
+            local playerCastAuraInstanceIDs = C_UnitAuras.GetUnitAuraInstanceIDs("player", "HARMFUL|PLAYER")
+            for _, auraInstanceID in ipairs(playerCastAuraInstanceIDs) do
+                playerCastAuraInstanceIDsTest[auraInstanceID] = true
+            end
 
-                -- all debuff aura instance IDs on us, sorted by duration (infinite duration first)
-                local auras = C_UnitAuras.GetUnitAuras("player", "HARMFUL", 10, Enum.UnitAuraSortRule.ExpirationOnly, Enum.UnitAuraSortDirection.Reverse)
-                for _, aura in ipairs(auras) do
-                    -- first debuff we see that we didn't apply ourselves is probably the feather
-                    if not playerCastAuraInstanceIDsTest[aura.auraInstanceID] then
-                        self.FeatherColorIconFrame.texture:SetTexture(aura.icon)
-                        self.FeatherColorIconFrame:Show()
-                        return
-                    end
+            -- all debuff aura instance IDs on us, sorted by duration (infinite duration first)
+            local auras = C_UnitAuras.GetUnitAuras("player", "HARMFUL", 10, Enum.UnitAuraSortRule.ExpirationOnly, Enum.UnitAuraSortDirection.Reverse)
+            for _, aura in ipairs(auras) do
+                -- first debuff we see that we didn't apply ourselves is probably the feather
+                if not playerCastAuraInstanceIDsTest[aura.auraInstanceID] then
+                    self.FeatherColorIconFrame.texture:SetTexture(aura.icon)
+                    self.FeatherColorIconFrame:Show()
+                    return
                 end
             end
         end)
@@ -243,5 +241,6 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
             self:MakeDraggable(self.FeatherColorIconFrame, nil, false)
         end
         self.FeatherColorIconFrame:Hide()
+        self.FeatherColorIconFrame:UnregisterAllEvents()
     end
 end
