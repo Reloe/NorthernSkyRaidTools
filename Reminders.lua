@@ -151,7 +151,6 @@ function NSI:CreateReminder(info, preview)
     info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
     if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
     if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
-    DevTool:AddData(info)
     return info
 end
 
