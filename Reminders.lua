@@ -147,6 +147,7 @@ function NSI:CreateReminder(info, preview)
     info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
     if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
     if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
+    DevTool:AddData(info)
     return info
 end
 
@@ -634,7 +635,7 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
     end
-    if not info.spellID then return end
+    if info.ReloeReminder or not info.spellID then return end
     F:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
     F:SetScript("OnEvent", function(self, e, ...)
         -- only registered for player so spellID is never secret
