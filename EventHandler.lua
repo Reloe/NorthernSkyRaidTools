@@ -132,6 +132,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.RemovedTimelines = {}
         self.CustomEvents = self.CustomEvents or {}
         self.DefaultAlertID = 10000
+        self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
@@ -153,6 +154,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
     elseif e == "ENCOUNTER_END" and wowevent then
         self:LogTimeline(e, ...)
         local encID, encounterName, _, _, kill = ...

@@ -52,7 +52,11 @@ function NSI:CreateReminder(info, preview)
     end
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
-    if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
+    if info.IsAssignment and self:IsUsingTLAssignments() then
+        table.insert(self.TLAlerts, info)
+        return nil
+    end
+    if (info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
         return nil
     end
     info.spellID = info.spellID and tonumber(info.spellID)
@@ -1812,12 +1816,25 @@ function NSAPI:ToggleTLReminders()
     end
 end
 
+
 function NSI:IsUsingTLReminders()
     return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineReminders")
 end
 
 function NSI:IsUsingTLAlerts()
-    return NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
+    local IsUsingAlerts = NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
+    if IsUsingAlerts then
+        if true then -- outdated version check - only relevant for alerts since assignment use old system and reminders ist just the note.
+            if not self.HasTLWarning then
+                print("|cFF00FFFFNSRT:|r You have selected to use Timeline Reminders for NSRT Alerts but your version of Timeline Reminders is outdated and not compatible. NSRT will display these alerts instead until you update.")
+                self.HasTLWarning = true
+                C_Timer.After(60, function() self.HasTLWarning = nil end)
+            end
+            return false
+        end
+        return true
+    end
+    return false
 end
 
 function NSI:IsUsingTLAssignments()
