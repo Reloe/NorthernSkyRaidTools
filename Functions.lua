@@ -320,6 +320,11 @@ function NSI:ApplyLocaleOverride()
             end
         end
     end
+    -- Refresh sidebar and header button labels to reflect the new locale
+    local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
+    if menu and menu.RefreshTabLabels then
+        menu:RefreshTabLabels()
+    end
 end
 
 function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettings", ...}
