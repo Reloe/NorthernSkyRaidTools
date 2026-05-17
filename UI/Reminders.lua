@@ -12,6 +12,160 @@ local options_button_template = Core.options_button_template
 local CreateButton = NSI.UI.Components.CreateButton
 
 -- ============================================================================
+-- Preview Mode Functions
+-- ============================================================================
+
+function NSI:SpawnPreviewReminders()
+    self:HideAllReminders()
+    self.AllGlows = self.AllGlows or {}
+    self.PlayedSound = {}
+    self.StartedCountdown = {}
+    self.GlowStarted = {}
+    self.LGF.GetUnitFrame("player")
+    local info1 = {
+        text = "Personals",
+        DisplayType = "Text",
+        dur = 8,
+        spellID = 22812,
+        TTS = false,
+        countdown = false,
+    }
+    local info2 = {
+        text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
+        DisplayType = "Text",
+        dur = 8,
+        TTS = false,
+        countdown = false,
+    }
+    local info3 = {
+        text = "Give Ironbark",
+        DisplayType = "Icon",
+        dur = 8,
+        spellID = 102342,
+        glowunit = "player",
+        TTS = false,
+        countdown = false,
+    }
+    local info4 = {
+        text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
+        DisplayType = "Icon",
+        dur = 8,
+        spellID = 115203,
+        TTS = false,
+        countdown = false,
+    }
+    local info5 = {
+        text = "Breath",
+        DisplayType = "Bar",
+        dur = 8,
+        spellID = 1256855,
+        TTS = false,
+    }
+    local info6 = {
+        text = "Dodge",
+        DisplayType = "Bar",
+        dur = 8,
+        TTS = false,
+    }
+    local info7 = {
+        text = "Dispel",
+        DisplayType = "Circle",
+        dur = 8,
+        spellID = 528,
+        TTS = false,
+    }
+    self:DisplayReminder(self:CreateReminder(info1, true))
+    self:DisplayReminder(self:CreateReminder(info2, true))
+    self:DisplayReminder(self:CreateReminder(info3, true))
+    self:DisplayReminder(self:CreateReminder(info4, true))
+    self:DisplayReminder(self:CreateReminder(info5, true))
+    self:DisplayReminder(self:CreateReminder(info6, true))
+    self:DisplayReminder(self:CreateReminder(info7, true))
+    local loopInterval = 8
+    if self.PreviewTicker then self.PreviewTicker:Cancel() end
+    self.PreviewTicker = C_Timer.NewTicker(loopInterval, function()
+        if self.IsInPreview then
+            self:HideAllReminders()
+            self:SpawnPreviewReminders()
+        end
+    end)
+    self:UpdateExistingFrames()
+end
+
+function NSI:TogglePreviewMode()
+    -- If already in preview, stop it
+    if self.IsInPreview then
+        if self.PreviewTicker then
+            self.PreviewTicker:Cancel()
+            self.PreviewTicker = nil
+        end
+        self.IsInPreview = false
+        self:HideAllReminders()
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
+            if self[v] then
+                self[v]:StopMovingOrSizing()
+            end
+            self:MakeDraggable(self[v], nil, false)
+        end
+        if self.PreviewBar then self.PreviewBar:Hide() end
+        NSUI:Show()
+        return
+    end
+
+    local allMovers = {"IconMover", "BarMover", "TextMover", "CircleMover"}
+    local allSettings = {
+        IconMover = NSRT.ReminderSettings.IconSettings,
+        BarMover = NSRT.ReminderSettings.BarSettings,
+        TextMover = NSRT.ReminderSettings.TextSettings,
+        CircleMover = NSRT.ReminderSettings.CircleSettings,
+    }
+
+    -- Build the floating preview bar once
+    if not self.PreviewBar then
+        local bar = CreateFrame("Frame", "NSRTPreviewBar", UIParent, "BackdropTemplate")
+        bar:SetSize(230, 30)
+        bar:SetPoint("TOP", UIParent, "TOP", 0, -150)
+        bar:SetFrameStrata("DIALOG")
+        bar:SetFrameLevel(100)
+        bar:SetBackdrop({
+            bgFile = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+        bar:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+        bar:SetBackdropBorderColor(1, 0.55, 0, 1)
+
+        local lbl = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        lbl:SetPoint("LEFT", bar, "LEFT", 10, 0)
+        lbl:SetText("Preview Mode")
+        lbl:SetTextColor(1, 0.75, 0.2, 1)
+
+        local exitBtn = CreateFrame("Button", nil, bar)
+        exitBtn:SetSize(70, 22)
+        exitBtn:SetPoint("RIGHT", bar, "RIGHT", -10, 0)
+        exitBtn:SetNormalFontObject("GameFontNormalSmall")
+        exitBtn:SetText("Exit Preview")
+        exitBtn:GetFontString():SetTextColor(0.9, 0.3, 0.3)
+        exitBtn:SetScript("OnEnter", function(b) b:GetFontString():SetTextColor(1, 0.1, 0.1) end)
+        exitBtn:SetScript("OnLeave", function(b) b:GetFontString():SetTextColor(0.9, 0.3, 0.3) end)
+        exitBtn:SetScript("OnClick", function() NSI:TogglePreviewMode() end)
+
+        bar:Hide()
+        self.PreviewBar = bar
+    end
+
+    -- Start preview
+    self.IsInPreview = true
+    for _, v in ipairs(allMovers) do
+        self:MakeDraggable(self[v], allSettings[v], true)
+    end
+
+    self:SpawnPreviewReminders()
+    self.PreviewBar:Show()
+    NSUI:Hide()
+end
+
+-- ============================================================================
 -- Import Popups
 -- ============================================================================
 local ImportReminderStringFrame

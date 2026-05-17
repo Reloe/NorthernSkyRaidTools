@@ -1056,7 +1056,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2
     local ADDOPT_H   = 98
-    local addOptFrame = CreateStyledFrame(UIParent, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
+    local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
 

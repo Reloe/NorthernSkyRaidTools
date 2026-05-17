@@ -240,6 +240,23 @@ function NSUI:Init()
         tabSystem.AllButtonsByName[nt.name] = hdrBtn
         table.insert(tabSystem.AllButtons, hdrBtn)
     end
+
+    -- --------------------------------------------------------
+    -- Anchor/Preview button (icon-only, far right of header)
+    -- --------------------------------------------------------
+    local ANCHOR_BTN_SIZE = 26
+    local anchorBtn = CreateButton(
+        NSUI,
+        "",  -- icon-only, no text
+        function() NSI:TogglePreviewMode() end,
+        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+        "NSUIAnchorBtn",
+        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
+        nil,  -- textSize
+        { title = L["Preview Alerts"], desc = L["Preview Reminders and unlock their anchors to move them around"] }
+    )
+    anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
+
     -- --------------------------------------------------------
     -- Tab selection logic (matches Details' SelectOptionsSection)
     -- --------------------------------------------------------
