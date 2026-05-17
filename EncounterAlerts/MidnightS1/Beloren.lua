@@ -166,8 +166,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             return
         end
 
-        self:EncounterRegister("UNIT_AURA", true, "player")
-        self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
+        self:EncounterRegister("BelorenFeather", "UNIT_AURA", true, "player")
+        self:EncounterFunction("BelorenFeather", function(_, e, unit, ...)
             if e == "UNIT_AURA" then
                 local info = ...
                 if not info.addedAuras then return end
@@ -200,10 +200,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         self.channeling = false
 
-        self:EncounterRegister("UNIT_SPELLCAST_CHANNEL_START", true, "boss1")
-        self:EncounterRegister("UNIT_SPELLCAST_CHANNEL_STOP", true, "boss1")
-        self:EncounterRegister("ENCOUNTER_WARNING", true)
-        self.EncounterFrame:SetScript("OnEvent", function(_, e, ...)
+        self:EncounterRegister("BelorenColorSwap", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP"}, true, "boss1")
+        self:EncounterRegister("BelorenColorSwap", "ENCOUNTER_WARNING", true)
+
+        self:EncounterFunction("BelorenColorSwap", function(_, e, ...)
             if e == "UNIT_SPELLCAST_CHANNEL_START" then
                 self.channeling = true
             elseif e == "UNIT_SPELLCAST_CHANNEL_STOP" then
