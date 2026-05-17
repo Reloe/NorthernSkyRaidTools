@@ -1409,7 +1409,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     stickyEntry.editBox:SetScript("OnEditFocusLost", SaveSticky)
     dispF.stickyEntry = stickyEntry
 
-    local hideTimerCB = CreateCheckButton(dispF, L["Hide Timer"],
+    local hideTimerCB = CreateCheckButton(dispF, L["Hide Timer Text"],
         function()
             if not dispF._alert then return false end
             if dispF._alert.HideTimer ~= nil then return dispF._alert.HideTimer end
