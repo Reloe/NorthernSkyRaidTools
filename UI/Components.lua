@@ -41,12 +41,14 @@ local STYLE = {
 --
 --  Params
 --    parent  – WoW frame
---    text    – display string
+--    text    – display string (nil or "" for icon-only buttons)
 --    onClick – function(buttonObj) called on click; may be nil
 --    width   – number (nil: text pixel width + 20px padding, icon included in content)
 --    height  – number (default 26)
 --    name    – optional global frame name string
---     icon    – optional lib icon name
+--    icon    – optional lib icon name or full texture path
+--    textSize– optional font size override
+--    tooltip – optional tooltip: string (title only) or table {title=s, desc=s}
 --
 --  Returned object fields & methods
 --    .frame           WoW Button frame (anchor, reparent, etc.)
@@ -98,7 +100,7 @@ local function RefreshFonts()
     end
 end
 
-local function CreateButton(parent, text, onClick, width, height, name, icon, textSize)
+local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip)
     -- ---- base frame -------------------------------------------
     -- Width is resolved after measuring the label; start with a stub size.
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
@@ -171,8 +173,13 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
 
         local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
         iconTex:SetAllPoints()
-        local texture_info = NSI.LSM:Fetch("statusbar", icon)
-        iconTex:SetTexture(texture_info .. ".png")
+        -- Support both direct texture paths and LibSharedMedia names
+        if icon:find("\\") or icon:find("/") then
+            iconTex:SetTexture(icon)
+        else
+            local texture_info = NSI.LSM:Fetch("statusbar", icon)
+            iconTex:SetTexture(texture_info .. ".png")
+        end
         iconTex:SetTexCoord(0.1, 0.9, 0.09, 0.91)
         iconTex:SetVertexColor(1, 1, 1)
         btn.icon = iconTex
@@ -181,18 +188,40 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
         local groupLeft = (btnWidth - contentW) / 2
         iconFrame:SetPoint("LEFT", btn, "LEFT", groupLeft, 0)
 
-        labelFrame:SetSize(textWidth, btnHeight)
-        labelFrame:SetPoint("LEFT", iconFrame, "RIGHT", iconGap, 0)
+        -- For icon-only buttons (no text), just center the icon
+        if textWidth <= 1 then
+            iconFrame:ClearAllPoints()
+            iconFrame:SetPoint("CENTER", btn, "CENTER", 0, 0)
+            labelFrame:Hide()
+        else
+            labelFrame:SetSize(textWidth, btnHeight)
+            labelFrame:SetPoint("LEFT", iconFrame, "RIGHT", iconGap, 0)
+        end
     else
         labelFrame:SetSize(textWidth, btnHeight)
         labelFrame:SetPoint("CENTER", btn, "CENTER", 0, 0)
     end
     -- ---- mouse scripts ----------------------------------------
-    btn:SetScript("OnEnter", function()
+    btn:SetScript("OnEnter", function(self)
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
+        if tooltip then
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            if type(tooltip) == "table" then
+                GameTooltip:SetText(tooltip.title or "")
+                if tooltip.desc then
+                    GameTooltip:AddLine(tooltip.desc, 1, 1, 1, true)
+                end
+            else
+                GameTooltip:SetText(tooltip)
+            end
+            GameTooltip:Show()
+        end
     end)
     btn:SetScript("OnLeave", function()
         UIFrameFadeOut(hoverBg, STYLE.hover_out, hoverBg:GetAlpha(), 0)
+        if tooltip then
+            GameTooltip:Hide()
+        end
     end)
 
     -- ---- public object ----------------------------------------
