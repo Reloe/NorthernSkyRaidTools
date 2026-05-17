@@ -325,7 +325,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     end
     local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay
     if interrupts and interrupts.enabled and self:EvaluateLoad(interrupts) and realpull and id == 16 then
-        self:EncounterRegister("InterruptDisplay", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP", "INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, true, {"boss2", "boss3", "boss4"})
+        self:EncounterRegister("InterruptDisplay", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, true, {"boss2", "boss3", "boss4"})
+        self:EncounterRegister("InterruptDisplay", "INSTANCE_ENCOUNTER_ENGAGE_UNIT", true)
         self:ReadInterruptNote(1)
         self:EncounterFunction("InterruptDisplay", function(_, e, unit, ...)
             if e == "UNIT_SPELLCAST_START" then

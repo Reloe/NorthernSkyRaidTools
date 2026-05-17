@@ -200,7 +200,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         self.channeling = false
 
-        self:EncounterRegister("BelorenColorSwap", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP", "ENCOUNTER_WARNING"}, true, "boss1")
+        self:EncounterRegister("BelorenColorSwap", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP"}, true, "boss1")
+        self:EncounterRegister("BelorenColorSwap", "ENCOUNTER_WARNING", true)
 
         self:EncounterFunction("BelorenColorSwap", function(_, e, ...)
             if e == "UNIT_SPELLCAST_CHANNEL_START" then
