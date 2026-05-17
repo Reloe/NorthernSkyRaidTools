@@ -107,7 +107,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Lura Tanks", internalID = "P2 Taunts Second", name = "P2 Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
     overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
-            [16] =  {46, 86},
+            [16] =  {26, 66},
         },
     }
     self:AddEncounterAlert(data)
