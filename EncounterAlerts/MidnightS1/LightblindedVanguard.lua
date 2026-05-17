@@ -113,8 +113,8 @@ NSI.EncounterAlertStart[encID] = function(self, id)
             [6795]   = true, [355]   = true, [62124]  = true, [49576] = true,
         }
         local blacklist = {}
-        self:EncounterRegister("UNIT_SPELLCAST_SUCCEEDED", true, "player")
-        self.EncounterFrame:SetScript("OnEvent", function(_, e, u, _, spellID)
+        self:EncounterRegister("VanguardTaunts", "UNIT_SPELLCAST_SUCCEEDED", true, "player")
+        self:EncounterFunction("VanguardTaunts", function(_, e, u, _, spellID)
             if e == "UNIT_SPELLCAST_START" then
                 if not u:find("^nameplate%d") then return end
                 if not UnitIsEnemy("player", u) then return end
@@ -134,7 +134,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
                     self.TauntFrame.Text:Hide()
                     self.TauntTimersCancel = nil
                 end)
-                self:EncounterRegister("UNIT_SPELLCAST_START", false)
+                self:EncounterRegister("VanguardTaunts", "UNIT_SPELLCAST_START", false)
             elseif e == "UNIT_SPELLCAST_SUCCEEDED" and Taunts[spellID] then
                 if self.TauntTimersCancel then
                     self.TauntTimersCancel:Cancel()
@@ -146,9 +146,9 @@ NSI.EncounterAlertStart[encID] = function(self, id)
         self.TauntTimers = self.TauntTimers or {}
         for i, time in ipairs(info.timers) do
             self.TauntTimers[#self.TauntTimers+1] = C_Timer.NewTimer(time-3.1, function()
-                self:EncounterRegister("UNIT_SPELLCAST_START", true)
+                self:EncounterRegister("VanguardTaunts", "UNIT_SPELLCAST_START", true)
                 C_Timer.After(0.2, function()
-                    self:EncounterRegister("UNIT_SPELLCAST_START", false)
+                    self:EncounterRegister("VanguardTaunts", "UNIT_SPELLCAST_START", false)
                 end)
                 C_Timer.After(7, function()
                     blacklist = {}

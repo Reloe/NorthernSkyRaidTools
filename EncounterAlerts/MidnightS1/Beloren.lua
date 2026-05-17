@@ -166,28 +166,30 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             return
         end
 
-        self.FeatherColorIconFrame:RegisterUnitEvent("UNIT_AURA", "player")
-        self.FeatherColorIconFrame:SetScript("OnEvent", function(_, e, ...)
-            local unit, info = ...
-            if not info.addedAuras then return end
+        self:EncounterRegister("BelorenFeather", "UNIT_AURA", true, "player")
+        self:EncounterFunction("BelorenFeather", function(_, e, unit, ...)
+            if e == "UNIT_AURA" then
+                local info = ...
+                if not info.addedAuras then return end
 
-            self.FeatherColorIconFrame:Hide()
+                self.FeatherColorIconFrame:Hide()
 
-            -- all debuff aura instance IDs on us that we applied ourselves
-            local playerCastAuraInstanceIDsTest = {}
-            local playerCastAuraInstanceIDs = C_UnitAuras.GetUnitAuraInstanceIDs("player", "HARMFUL|PLAYER")
-            for _, auraInstanceID in ipairs(playerCastAuraInstanceIDs) do
-                playerCastAuraInstanceIDsTest[auraInstanceID] = true
-            end
+                -- all debuff aura instance IDs on us that we applied ourselves
+                local playerCastAuraInstanceIDsTest = {}
+                local playerCastAuraInstanceIDs = C_UnitAuras.GetUnitAuraInstanceIDs("player", "HARMFUL|PLAYER")
+                for _, auraInstanceID in ipairs(playerCastAuraInstanceIDs) do
+                    playerCastAuraInstanceIDsTest[auraInstanceID] = true
+                end
 
-            -- all debuff aura instance IDs on us, sorted by duration (infinite duration first)
-            local auras = C_UnitAuras.GetUnitAuras("player", "HARMFUL", 10, Enum.UnitAuraSortRule.ExpirationOnly, Enum.UnitAuraSortDirection.Reverse)
-            for _, aura in ipairs(auras) do
-                -- first debuff we see that we didn't apply ourselves is probably the feather
-                if not playerCastAuraInstanceIDsTest[aura.auraInstanceID] then
-                    self.FeatherColorIconFrame.texture:SetTexture(aura.icon)
-                    self.FeatherColorIconFrame:Show()
-                    return
+                -- all debuff aura instance IDs on us, sorted by duration (infinite duration first)
+                local auras = C_UnitAuras.GetUnitAuras("player", "HARMFUL", 10, Enum.UnitAuraSortRule.ExpirationOnly, Enum.UnitAuraSortDirection.Reverse)
+                for _, aura in ipairs(auras) do
+                    -- first debuff we see that we didn't apply ourselves is probably the feather
+                    if not playerCastAuraInstanceIDsTest[aura.auraInstanceID] then
+                        self.FeatherColorIconFrame.texture:SetTexture(aura.icon)
+                        self.FeatherColorIconFrame:Show()
+                        return
+                    end
                 end
             end
         end)
@@ -198,10 +200,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
         self.channeling = false
 
-        self:EncounterRegister("UNIT_SPELLCAST_CHANNEL_START", true, "boss1")
-        self:EncounterRegister("UNIT_SPELLCAST_CHANNEL_STOP", true, "boss1")
-        self:EncounterRegister("ENCOUNTER_WARNING", true)
-        self.EncounterFrame:SetScript("OnEvent", function(_, e, ...)
+        self:EncounterRegister("BelorenColorSwap", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP", "ENCOUNTER_WARNING"}, true, "boss1")
+
+        self:EncounterFunction("BelorenColorSwap", function(_, e, ...)
             if e == "UNIT_SPELLCAST_CHANNEL_START" then
                 self.channeling = true
             elseif e == "UNIT_SPELLCAST_CHANNEL_STOP" then
@@ -241,6 +242,5 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
             self:MakeDraggable(self.FeatherColorIconFrame, nil, false)
         end
         self.FeatherColorIconFrame:Hide()
-        self.FeatherColorIconFrame:UnregisterAllEvents()
     end
 end

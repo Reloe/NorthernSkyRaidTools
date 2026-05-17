@@ -325,12 +325,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     end
     local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay
     if interrupts and interrupts.enabled and self:EvaluateLoad(interrupts) and realpull and id == 16 then
-        self:EncounterRegister("UNIT_SPELLCAST_START", true, {"boss2", "boss3", "boss4"})
-        self:EncounterRegister("UNIT_SPELLCAST_INTERRUPTED", true, {"boss2", "boss3", "boss4"})
-        self:EncounterRegister("UNIT_SPELLCAST_STOP", true, {"boss2", "boss3", "boss4"})
-        self:EncounterRegister("INSTANCE_ENCOUNTER_ENGAGE_UNIT", true)
+        self:EncounterRegister("InterruptDisplay", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP", "INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, true, {"boss2", "boss3", "boss4"})
         self:ReadInterruptNote(1)
-        self.EncounterFrame:SetScript("OnEvent", function(_, e, unit, ...)
+        self:EncounterFunction("InterruptDisplay", function(_, e, unit, ...)
             if e == "UNIT_SPELLCAST_START" then
                 if self.Interrupts.myTrackedID and unit == "boss"..self.Interrupts.myTrackedID and UnitIsEnemy(unit, "player") then
                     local info = {spellID = 1284934, dur = 2}
@@ -602,10 +599,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
             self.PhaseSwapTime = now
             if self.Phase == 2 and difficultyID == 16 then
                 self:HideInterrupt()
-                self:EncounterRegister("UNIT_SPELLCAST_START", false)
-                self:EncounterRegister("UNIT_SPELLCAST_INTERRUPTED", false)
-                self:EncounterRegister("UNIT_SPELLCAST_STOP", false)
-                self:EncounterRegister("INSTANCE_ENCOUNTER_ENGAGE_UNIT", false)
+                self:EncounterRegister("InterruptDisplay", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP", "INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, false)
                 if self.Interrupts then self.Interrupts.disabled = true end
             end
             if self.Phase == 4 and difficultyID == 16 then

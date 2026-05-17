@@ -514,25 +514,43 @@ function NSI:GetMySpecID()
     return C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()) or 0
 end
 
-function NSI:EncounterRegister(event, enable, units, all)
-    if not self.EncounterFrame then
-        self.EncounterFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+function NSI:EncounterRegister(frameName, event, enable, units, all)
+    if not frameName then return end
+    if not self.EncounterFrames then
+        self.EncounterFrames = {}
     end
     if all then
-        self.EncounterFrame:UnregisterAllEvents()
+        for k, v in pairs(self.EncounterFrames) do
+            v:UnregisterAllEvents()
+        end
+        return
+    end
+    if event and not self.EncounterFrames[frameName] then
+        self.EncounterFrames[frameName] = CreateFrame("Frame", nil, self.NSRTFrame)
+    end
+    if event and type(event) == "table" then
+        for _, e in ipairs(event) do
+            self:EncounterRegister(frameName, e, enable, units)
+        end
         return
     end
     if enable then
         if units then
             if type(units) == "table" then
-                self.EncounterFrame:RegisterUnitEvent(event, units[1], units[2], units[3], units[4])
+                self.EncounterFrames[frameName]:RegisterUnitEvent(event, units[1], units[2], units[3], units[4])
             else
-                self.EncounterFrame:RegisterUnitEvent(event, units)
+                self.EncounterFrames[frameName]:RegisterUnitEvent(event, units)
             end
         else
-            self.EncounterFrame:RegisterEvent(event)
+            self.EncounterFrames[frameName]:RegisterEvent(event)
         end
     elseif event then
-        self.EncounterFrame:UnregisterEvent(event)
+        self.EncounterFrames[frameName]:UnregisterEvent(event)
+    end
+end
+
+function NSI:EncounterFunction(frameName, func)
+    if self.EncounterFrames and self.EncounterFrames[frameName] then
+        self.EncounterFrames[frameName]:SetScript("OnEvent", func)
     end
 end
