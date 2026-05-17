@@ -557,6 +557,27 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = L["Clear Note on Boss-Kill"],
+            desc = L["Automatically clear the Shared & Personal Note on a Boss-Kill."],
+            get = function() return NSRT.ReminderSettings.ClearOnKill end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.ClearOnKill = value
+            end,
+            nocombat = true,
+        },{
+            type = "toggle",
+            boxfirst = true,
+            name = L["Only Receive Guild Reminders"],
+            desc = L["Only receive Shared-reminders from guild members."],
+            get = function() return NSRT.ReminderSettings.OnlyReceiveGuild end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OnlyReceiveGuild = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             name = L["Import Reloe Reminders"],
             desc = L["Automatically import all of Reloe's custom created reminders for the current tier's bosses. Display settings of these reminders can be edited."],
             get = function() return NSRT.Alerts.ReloeReminders end,

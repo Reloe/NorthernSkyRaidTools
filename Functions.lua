@@ -536,3 +536,14 @@ function NSI:EncounterRegister(event, enable, units, all)
         self.EncounterFrame:UnregisterEvent(event)
     end
 end
+
+function NSI:IsInSameGuild(unit)
+    local playerName = UnitName(unit)
+    for i=1, GetNumGuildMembers() do
+        local name = GetGuildRosterInfo(i)
+        if name == playerName then
+            return true
+        end
+    end
+    return false
+end

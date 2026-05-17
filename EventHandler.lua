@@ -184,7 +184,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         if kill then
             local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
-            if NoteName and NSRT.Reminders[NoteName] then
+            local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
+            if NSRT.Settings.ClearOnKill then
+                if not HasAutoLoadNote then NSI:SetReminder(nil) end
+                NSI:SetReminder(nil, true)
+            end
+            if HasAutoLoadNote then
                 C_Timer.After(2, function()
                     if self:Restricted() then return end
                     if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then
@@ -230,7 +235,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
-            if reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
+            if reminderstring and type(reminderstring) == "string" and reminderstring ~= "" and ((not NSRT.ReminderSettings.OnlyReceiveGuild) or self:IsInSameGuild(unit)) then
                 self.Reminder = reminderstring
                 NSRT.StoredSharedReminder = reminderstring
                 self.ReminderReceivedTime = GetTime()

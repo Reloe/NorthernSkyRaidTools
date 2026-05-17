@@ -190,12 +190,8 @@ function NSI:QoLEvents(e, ...)
                 end
             end
             -- unfortunately have to check guild roster because C_GuildInfo.MemberExistsByName is a security risk as it can't check the realm
-            for i=1, GetNumGuildMembers() do
-                local name = GetGuildRosterInfo(i)
-                if name == playerName then
-                    C_PartyInfo.InviteUnit(playerName)
-                    return
-                end
+            if self:IsInSameGuild(playerName) then
+                C_PartyInfo.InviteUnit(playerName)
             end
         end
     elseif e == "UNIT_SPELLCAST_SUCCEEDED" then

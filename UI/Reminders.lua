@@ -704,7 +704,6 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local ClearButton = CreateButton(screen, L["Unload"], function()
         if not personal then
-            NSRT.StoredSharedReminder = nil
             NSI:SetReminder(nil)
             NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         else

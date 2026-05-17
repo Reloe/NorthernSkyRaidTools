@@ -84,9 +84,10 @@ function NSI:AddMissingDefaults()
             SpellName = true,
             SpellTTSTimer = 5,
             TextTTSTimer = 5,
-            AutoShare = true,
+            AutoShare = false,
+            OnlyReceiveGuild = false,
             NoteCountdown = false,
-            HideTextTimerText = false,
+            ClearOnKill = true,
             PersonalReminderFrame = {
                 enabled = true,
                 Width = 500,
