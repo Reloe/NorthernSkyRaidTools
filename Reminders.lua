@@ -1823,7 +1823,8 @@ end
 function NSI:IsUsingTLAlerts()
     local IsUsingAlerts = NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
     if IsUsingAlerts then
-        if true then -- outdated version check - only relevant for alerts since assignment use old system and reminders ist just the note.
+        local version = tonumber(C_AddOns.GetAddOnMetadata("TimelineReminders", "Version"):match("^v(.+)$"))
+        if version and version < 307 then -- outdated version check - only relevant for alerts since assignment use old system and reminders ist just the note.
             if not self.HasTLWarning then
                 print("|cFF00FFFFNSRT:|r You have selected to use Timeline Reminders for NSRT Alerts but your version of Timeline Reminders is outdated and not compatible. NSRT will display these alerts instead until you update.")
                 self.HasTLWarning = true
