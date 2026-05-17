@@ -538,9 +538,15 @@ function NSI:EncounterRegister(event, enable, units, all)
 end
 
 function NSI:IsInSameGuild(unit)
-    local playerName = UnitName(unit)
+    local name, realm = UnitName(unit)
+    if not realm then
+        realm = select(2, UnitFullName("player"))
+    end
+    if not name then return false end
+    local playerName = name.."-"..realm
     for i=1, GetNumGuildMembers() do
         local name = GetGuildRosterInfo(i)
+        print(i, name)
         if name == playerName then
             return true
         end
