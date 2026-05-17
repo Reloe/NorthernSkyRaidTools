@@ -1352,11 +1352,37 @@ local function BuildEncounterAlertsUI(parentFrame)
     local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
         nil, nil, nil, "NSUIEncAlertSpellID")
     spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -106)
+
+    -- Spell icon preview: shown immediately to the right of the entry
+    local spellIconFrame = CreateFrame("Frame", nil, dispF, "BackdropTemplate")
+    spellIconFrame:SetSize(22, 22)
+    spellIconFrame:SetPoint("LEFT", spellEntry.frame, "RIGHT", 4, 0)
+    DF:ApplyStandardBackdrop(spellIconFrame)
+    local spellIconTex = spellIconFrame:CreateTexture(nil, "ARTWORK")
+    spellIconTex:SetPoint("TOPLEFT",     spellIconFrame, "TOPLEFT",     1,  -1)
+    spellIconTex:SetPoint("BOTTOMRIGHT", spellIconFrame, "BOTTOMRIGHT", -1,  1)
+    spellIconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    spellIconFrame.texture = spellIconTex
+    spellIconFrame:Hide()
+    dispF.spellIconFrame = spellIconFrame
+
+    local function UpdateSpellIcon(text)
+        local id = tonumber(text)
+        local spell = id and C_Spell.GetSpellInfo(id)
+        if spell and spell.iconID then
+            spellIconTex:SetTexture(spell.iconID)
+            spellIconFrame:Show()
+        else
+            spellIconFrame:Hide()
+        end
+    end
+
     local function SaveSpellID(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "spellID", v) end
         RebuildList()
     end
+    spellEntry.editBox:SetScript("OnTextChanged", function(self) UpdateSpellIcon(self:GetText()) end)
     spellEntry.editBox:SetScript("OnEditFocusLost", SaveSpellID)
     dispF.spellEntry = spellEntry
 
@@ -1364,11 +1390,11 @@ local function BuildEncounterAlertsUI(parentFrame)
     customIconLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     customIconLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     customIconLbl:SetText(L["Custom Icon (overrides icon in list)"])
-    customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 142, -90)
+    customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 162, -90)
 
     local customIconEntry = CreateTextEntry(dispF, nil, nil, nil, 180, 22,
         nil, nil, nil, "NSUIEncAlertCustomIcon")
-    customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 142, -106)
+    customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 162, -106)
     local function SaveCustomIcon(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "customIcon", v) end
@@ -1418,7 +1444,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             return s and s.HideTimerText or false
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideTimer", v or nil) end end,
-        110, 22, "NSUIEncAlertHideTimer")
+        135, 22, "NSUIEncAlertHideTimer")
     hideTimerCB:SetPoint("LEFT", stickyEntry.frame, "RIGHT", 14, 0)
     dispF.hideTimerCB = hideTimerCB
 
@@ -1430,7 +1456,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideSwipe", v or nil) end end,
         110, 22, "NSUIEncAlertHideSwipe")
-    hideSwipeCB:SetPoint("LEFT", hideTimerCB.frame, "RIGHT", 4, 0)
+    hideSwipeCB:SetPoint("LEFT", hideTimerCB.frame, "RIGHT", 20, 0)
     hideSwipeCB.frame:Hide()   -- only shown for Icon type
     dispF.hideSwipeCB = hideSwipeCB
 
@@ -2657,6 +2683,15 @@ local function BuildEncounterAlertsUI(parentFrame)
         dispF.SetDisplayType(entry.DisplayType or "Text")
         dispF.textEntry:SetValue(entry.text or "")
         dispF.spellEntry:SetValue(entry.spellID and tostring(entry.spellID) or "")
+        do  -- sync spell icon preview
+            local spell = entry.spellID and C_Spell.GetSpellInfo(entry.spellID)
+            if spell and spell.iconID then
+                dispF.spellIconFrame.texture:SetTexture(spell.iconID)
+                dispF.spellIconFrame:Show()
+            else
+                dispF.spellIconFrame:Hide()
+            end
+        end
         dispF.customIconEntry:SetValue(entry.customIcon and tostring(entry.customIcon) or "")
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
         dispF.stickyEntry:SetValue(entry.sticky and tostring(entry.sticky) or "")
