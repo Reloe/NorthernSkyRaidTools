@@ -185,7 +185,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if kill then
             local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
             local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
-            if NSRT.Settings.ClearOnKill then
+            if NSRT.ReminderSettings.ClearOnKill then
                 if not HasAutoLoadNote then NSI:SetReminder(nil) end
                 NSI:SetReminder(nil, true)
             end
