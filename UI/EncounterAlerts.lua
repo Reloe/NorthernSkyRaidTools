@@ -1084,6 +1084,9 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             NSI:ImportReloeReminders()
             RebuildList()
+            if selectedEncID and selectedKey then
+                SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+            end
         end
         local dialog = NSI.UI.Components.CreateDialog(
             "NSRTEncAlertFullReset",
