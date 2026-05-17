@@ -1681,6 +1681,57 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
 end
 
 -- ============================================================
+--  CreateStyledFrame
+--
+--  A general-purpose container frame styled with the Northern
+--  Sky visual style: dark background, cyan border, and an ×
+--  close button top-right. Draggable and clamped to screen.
+--
+--  Params
+--    parent – WoW frame (nil defaults to UIParent)
+--    width  – number
+--    height – number
+--    name   – optional global frame name (also registers Escape key support)
+--
+--  Returns the WoW Frame directly; use it as a parent for child
+--  widgets. Call :Hide() / :Show() to toggle visibility.
+-- ============================================================
+local function CreateStyledFrame(parent, width, height, name)
+    local f = CreateFrame("Frame", name, parent or UIParent, "BackdropTemplate")
+    f:SetSize(width or 400, height or 300)
+    f:SetMovable(true)
+    f:SetClampedToScreen(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStop",  function(self) self:StopMovingOrSizing() end)
+
+    f:SetBackdrop({
+        bgFile   = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Buttons\WHITE8x8]],
+        edgeSize = 1,
+        tile     = true,
+        tileSize = 64,
+    })
+    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+
+    local xBtn = CreateFrame("Button", nil, f)
+    xBtn:SetSize(14, 14)
+    xBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -8)
+    xBtn:SetFrameLevel(f:GetFrameLevel() + 3)
+    xBtn:SetNormalTexture(ICON_PATH .. "x.png")
+    xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1)
+    xBtn:SetScript("OnEnter", function() xBtn:GetNormalTexture():SetVertexColor(0, 1, 1, 1) end)
+    xBtn:SetScript("OnLeave", function() xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1) end)
+    xBtn:SetScript("OnClick", function() f:Hide() end)
+
+    if name then tinsert(UISpecialFrames, name) end
+
+    return f
+end
+
+-- ============================================================
 --  ShowContextMenu
 --
 --  Opens a styled context menu at the cursor position.
@@ -2124,6 +2175,7 @@ NSI.UI.Components = {
     BuildWidgets        = BuildWidgets,
     RefreshFonts        = RefreshFonts,
     CreateDialog        = CreateDialog,
+    CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
     CreateLink          = CreateLink,
     STYLE               = STYLE,

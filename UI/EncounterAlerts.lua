@@ -6,14 +6,15 @@ local NSUI                      = Core.NSUI
 local content_width             = Core.content_width
 local tab_content_height        = Core.tab_content_height
 
-local CreateButton      = NSI.UI.Components.CreateButton
-local CreateSubButton   = NSI.UI.Components.CreateSubButton
-local CreateDropdown    = NSI.UI.Components.CreateDropdown
-local CreateTextEntry   = NSI.UI.Components.CreateTextEntry
-local CreateCheckButton = NSI.UI.Components.CreateCheckButton
-local CreateColorPicker = NSI.UI.Components.CreateColorPicker
-local ReskinScrollbar   = NSI.UI.Components.ReskinScrollbar
-local ShowContextMenu   = NSI.UI.Components.ShowContextMenu
+local CreateButton        = NSI.UI.Components.CreateButton
+local CreateSubButton     = NSI.UI.Components.CreateSubButton
+local CreateDropdown      = NSI.UI.Components.CreateDropdown
+local CreateTextEntry     = NSI.UI.Components.CreateTextEntry
+local CreateCheckButton   = NSI.UI.Components.CreateCheckButton
+local CreateColorPicker   = NSI.UI.Components.CreateColorPicker
+local ReskinScrollbar     = NSI.UI.Components.ReskinScrollbar
+local ShowContextMenu     = NSI.UI.Components.ShowContextMenu
+local CreateStyledFrame   = NSI.UI.Components.CreateFrame
 local BossData          = NSI.UI.BossData
 local L                 = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
@@ -235,7 +236,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
     local scrollTop    = topY - 20 - 22 - 4 - 22 - 6   -- below title + filter row + search + gaps = -84
-    local scrollHeight = tab_content_height + scrollTop - 18 - pad * 2 - 20 - 20 - 2 - 16 - 2  -- extra rows: import/export(18+2), full-reset(18+2), reloe-checkbox(16+2)
+    local scrollHeight = tab_content_height + scrollTop - 18 - pad * 2 - 20 - 20 - 2  -- extra rows: import/export(18+2), additional-options(18+2)
     local listW        = leftWidth - pad * 2   -- 220
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIEncAlertListScroll", screen,
@@ -1051,22 +1052,25 @@ local function BuildEncounterAlertsUI(parentFrame)
     end, halfW, 18)
     exportAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad + halfW + 4, ioY)
 
-    -- Import Reloe Reminders checkbox + Full Reset button (row above import/export)
-    local reloeY = ioY + 18 + 2
+    -- Additional Options popup — positioned to the right of the main NSUI window
+    local ADDOPT_PAD = 12
+    local ADDOPT_W   = listW + ADDOPT_PAD * 2
+    local ADDOPT_H   = 98
+    local addOptFrame = CreateStyledFrame(UIParent, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
+    addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
+    addOptFrame:Hide()
 
-    local reloeImportCB = CreateCheckButton(screen, L["Import Reloe Reminders"],
+    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import Reloe Reminders"],
         function() return NSRT.Alerts.ReloeReminders end,
         function(_, v)
             NSRT.Alerts.ReloeReminders = v
             NSI:ImportReloeReminders()
             RebuildList()
         end,
-        listW, 16, "NSUIEncAlertReloeImportCB")
-    reloeImportCB:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, reloeY)
+        listW, 22, "NSUIEncAlertReloeImportCB")
+    reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
 
-    local resetY = reloeY + 16 + 2
-
-    local fullResetBtn = CreateButton(screen, L["Full Reset"], function()
+    local fullResetBtn = CreateButton(addOptFrame, L["Full Reset"], function()
         local function DoReset()
             -- Only wipe Reloe-created alerts; preserve user-created ones
             for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
@@ -1087,8 +1091,19 @@ local function BuildEncounterAlertsUI(parentFrame)
             L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"],
             L["Cancel"], nil, L["Reset"], DoReset, nil)
         dialog:Show()
+    end, listW, 26)
+    fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
+
+    -- "Additional Options" button replaces the two rows that moved into the popup
+    local addOptY = ioY + 18 + 2
+    local addOptBtn = CreateButton(screen, L["Additional Options"], function()
+        if addOptFrame:IsShown() then
+            addOptFrame:Hide()
+        else
+            addOptFrame:Show()
+        end
     end, listW, 18)
-    fullResetBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, resetY)
+    addOptBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, addOptY)
 
     -- ================================================================
     -- Right Panel
@@ -1535,6 +1550,9 @@ local function BuildEncounterAlertsUI(parentFrame)
     ticksScroll:SetSize(ticksListW, ticksListH)
     ticksScroll:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, -16)
     ReskinScrollbar(ticksScroll)
+    local ticksBg = ticksScroll:CreateTexture(nil, "BACKGROUND")
+    ticksBg:SetAllPoints(ticksScroll)
+    ticksBg:SetColorTexture(0.04, 0.04, 0.04, 0.85)
 
     local ticksChild = CreateFrame("Frame", nil, ticksScroll, "BackdropTemplate")
     ticksChild:SetSize(ticksListW - 18, 1)
@@ -1834,6 +1852,9 @@ local function BuildEncounterAlertsUI(parentFrame)
     timesScroll:SetSize(timesListW, timesListH)
     timesScroll:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -114)
     ReskinScrollbar(timesScroll)
+    local timesBg = timesScroll:CreateTexture(nil, "BACKGROUND")
+    timesBg:SetAllPoints(timesScroll)
+    timesBg:SetColorTexture(0.04, 0.04, 0.04, 0.85)
 
     local timesChild = CreateFrame("Frame", nil, timesScroll, "BackdropTemplate")
     timesChild:SetSize(timesListW - 18, 1)
@@ -2327,6 +2348,9 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
     end)
     ReskinScrollbar(namesScroll)
+    local namesBg = namesScroll:CreateTexture(nil, "BACKGROUND")
+    namesBg:SetAllPoints(namesScroll)
+    namesBg:SetColorTexture(0.04, 0.04, 0.04, 0.85)
 
     local namesChild = CreateFrame("Frame", nil, namesScroll, "BackdropTemplate")
     namesChild:SetSize(loadListW - 18, 1)
