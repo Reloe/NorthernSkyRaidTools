@@ -424,3 +424,17 @@ function NSI:TierCheck(Slot)
         end
     end
 end
+
+function NSI:GetPlayerGroupNumber(name)
+    if not name then
+        name = UnitName("player")
+    end
+
+    local n, g
+    for i=1,GetNumGroupMembers() do 
+        n,_,g=GetRaidRosterInfo(i) 
+        if n==name then
+            return g
+        end
+    end
+end
