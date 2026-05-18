@@ -299,6 +299,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        if NSRT.ReadyCheckSettings.DisplayGroupCheck and not self:Restricted() then
+            local groupNumber = NSI:GetPlayerGroupNumber()
+
+            if groupNumber then
+                local groupText = "You are in group |cFF00FFFF" ..groupNumber .. "|r" 
+                if text == "" then
+                    text = groupText
+                else
+                    text = text.."\n"..groupText
+                end
+            end
+        end
         local Gear = self:GearCheck()
         if Gear and Gear ~= "" then
             if text == "" then

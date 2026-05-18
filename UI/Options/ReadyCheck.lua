@@ -111,6 +111,17 @@ local function BuildReadyCheckOptions()
             icontexture = 607513,
             iconsize = {16, 16},
         },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = L["Display Group Number"],
+            desc = L["Displays your raid group number on ready check."],
+            get = function() return NSRT.ReadyCheckSettings.DisplayGroupCheck end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.DisplayGroupCheck = value
+            end,
+            nocombat = true,
+        },
 
         {
             type = "label",
