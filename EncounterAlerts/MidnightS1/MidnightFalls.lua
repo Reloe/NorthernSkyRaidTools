@@ -137,13 +137,26 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Lura P2", internalID = "Soaks", name = "Galvanize", text = "Soaks", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 7, spellID = nil,
+    local data = {group = "Lura P2 Soaks", internalID = "Galvanize", name = "Generic Soak", text = "Soaks", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 7, spellID = nil,
     timers = {
             [15] = {20, 50, 80},
             [16] = {19, 49, 79},
         },
     }
     self:AddEncounterAlert(data)
+
+    local markers = {"Star", "Orange", "Skull", "Cross"}
+    local numbers = {1, 2, 8, 7}
+    for i=1, 4 do
+        local data = {group = "Lura P2 Soaks", internalID = "Soak "..markers[i], name = markers[i].." Soak", text = "Soak {rt"..numbers[i].."}",
+        DisplayType = "Text", encID = encID, phase = 3, TTS = "Soak "..markers[i], dur = 7, spellID = nil,
+        overrides = {enabled = false},
+        timers = {
+                [16] = {19, 49, 79},
+            },
+        }
+        self:AddEncounterAlert(data)
+    end
 
     local data = {group = "Lura P2", internalID = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
     timers = {
