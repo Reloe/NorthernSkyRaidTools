@@ -278,16 +278,16 @@ NSI.InitializeAlerts[encID] = function(self)
             { Type = "Label",    text = "Runes Display" },
             { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.Scale   or 1    end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.Scale    = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.Scale    = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
             { Type = "Slider",   label = "xOffset",        min = -2000, max = 2000,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.xOffset  or 300  end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.xOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.xOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
             { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.yOffset  or -300 end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.yOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.yOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
             { Type = "Color",    label = "BackgroundColor",
                 get = [[return function(NSI) local c = NSRT.EncounterAlerts[3183][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end]],
-                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, true) end]]},
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
             { Type = "Breakline" },
             { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
             { Type = "Label",    text = "The Texture files are no longer required for most users. They are only required if you are a person pressing the Macros."},
@@ -488,6 +488,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self.LuraRunesNumbers = self.LuraRunesNumbers or {}
         self.AlertTimers = self.AlertTimers or {}
         if preview then
+            self.IsLuraPreview = true
             self:MakeDraggable(self.LuraRunesFrame, s, true)
             self.LuraRunesFrame:Show()
             local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }

@@ -73,7 +73,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 min = 50,
                 max = 200,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3182][16]["Feather Color"].Size or 100 end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3182][i]["Feather Color"].Size = v end NSI.EncounterAlertStop[3182](NSI, true) NSI.EncounterAlertStart[3182](NSI, 16, true) end]]
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3182][i]["Feather Color"].Size = v end NSI.EncounterAlertStop[3182](NSI, true) NSI.EncounterAlertStart[3182](NSI, 16, "Feather Color") end]]
             },
         },
     }
@@ -160,6 +160,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self.FeatherColorIconFrame:SetHeight(s.Size or 100)
 
         if preview then
+            self.FeatherColorIconPreview = true
             local light = math.random(1, 2) == 1
             self.FeatherColorIconFrame.texture:SetTexture(light and 7636520 or 7636525)
             self:MakeDraggable(self.FeatherColorIconFrame, s, true)
