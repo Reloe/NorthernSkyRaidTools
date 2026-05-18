@@ -83,7 +83,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Lura Tanks", internalID = "P1 Taunt First", name = "P1 Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
     overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
-            [16] = {46, 86, 126, 166},
+            [16] = {45, 85, 125, 165},
         },
     }
     self:AddEncounterAlert(data)
@@ -91,7 +91,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Lura Tanks", internalID = "P1 Taunt Second", name = "P1 Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
     overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
-            [16] = {26, 66, 106, 146},
+            [16] = {25, 65, 105, 145},
         },
     }
     self:AddEncounterAlert(data)
@@ -99,7 +99,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Lura Tanks", internalID = "P2 Taunts First", name = "P2 Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
     overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
-            [16] = {46, 86},
+            [16] = {45, 85},
         },
     }
     self:AddEncounterAlert(data)
@@ -107,7 +107,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Lura Tanks", internalID = "P2 Taunts Second", name = "P2 Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
     overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
     timers = {
-            [16] =  {26, 66},
+            [16] =  {25, 65},
         },
     }
     self:AddEncounterAlert(data)
