@@ -290,6 +290,9 @@ function NSI:ProcessReminder()
                     if colors then
                         displayLine = displayLine:gsub("colors:"..colors, "")
                     end
+                    if DisplayType then
+                        displayLine = displayLine:gsub("DisplayType:"..DisplayType, "")
+                    end
                     -- convert names to nicknames and color code them
                     local tagNames = ""
                     if not NSRT.ReminderSettings.HidePlayerNames then
