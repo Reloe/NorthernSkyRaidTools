@@ -532,10 +532,14 @@ L["+ Create Alert"] = true
 L["Export"] = true
 L["Full Reset"] = true
 L["Reset"] = true
+L["Enable All Reminders"] = true
+L["Disable All Reminders"] = true
 L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"] = true
 L["New Alert"] = true
 L["Unnamed"] = true
 -- Context menus
+L["Enable All"] = true
+L["Disable All"] = true
 L["Export Group"] = true
 L["Delete Group (keep alerts)"] = true
 L["Delete Group with Alerts"] = true

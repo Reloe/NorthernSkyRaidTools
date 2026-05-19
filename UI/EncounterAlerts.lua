@@ -628,6 +628,33 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 ShowExportPopup(str, "Group: " .. gname)
                             end },
                             { type = "separator" },
+                            { type = "button", label = L["Enable All"], fnc = function()
+                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[gencID]
+                                              and NSRT.EncounterAlerts[gencID][filterDiffID]
+                                if diffTable then
+                                    for akey, alert in pairs(diffTable) do
+                                        if type(alert) == "table" and alert.group == gname then
+                                            alert.enabled = true
+                                            NSI:FireCallback("NSRT_ALERT_CHANGED", gencID, filterDiffID, akey)
+                                        end
+                                    end
+                                end
+                                RebuildList()
+                            end },
+                            { type = "button", label = L["Disable All"], fnc = function()
+                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[gencID]
+                                              and NSRT.EncounterAlerts[gencID][filterDiffID]
+                                if diffTable then
+                                    for akey, alert in pairs(diffTable) do
+                                        if type(alert) == "table" and alert.group == gname then
+                                            alert.enabled = false
+                                            NSI:FireCallback("NSRT_ALERT_CHANGED", gencID, filterDiffID, akey)
+                                        end
+                                    end
+                                end
+                                RebuildList()
+                            end },
+                            { type = "separator" },
                             { type = "button", label = L["Delete Group (keep alerts)"], fnc = function()
                                 DeleteGroup(gencID, gname)
                                 RebuildList()
@@ -1065,7 +1092,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Additional Options popup — positioned to the right of the main NSUI window
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2
-    local ADDOPT_H   = 98
+    local ADDOPT_H   = 158
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
@@ -1106,6 +1133,33 @@ local function BuildEncounterAlertsUI(parentFrame)
         dialog:Show()
     end, listW, 26)
     fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
+
+    local function SetReloeAlertsEnabled(enabled)
+        for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
+            if not filterEncID or filterEncID == encID then
+                local diffTable = type(encTable) == "table" and encTable[filterDiffID]
+                if type(diffTable) == "table" then
+                    for akey, alert in pairs(diffTable) do
+                        if type(alert) == "table" and alert.ReloeReminder then
+                            alert.enabled = enabled
+                            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, filterDiffID, akey)
+                        end
+                    end
+                end
+            end
+        end
+        RebuildList()
+    end
+
+    local enableAllBtn = CreateButton(addOptFrame, L["Enable All Reminders"], function()
+        SetReloeAlertsEnabled(true)
+    end, listW, 22)
+    enableAllBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
+
+    local disableAllBtn = CreateButton(addOptFrame, L["Disable All Reminders"], function()
+        SetReloeAlertsEnabled(false)
+    end, listW, 22)
+    disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)
 
     -- "Additional Options" button replaces the two rows that moved into the popup
     local addOptY = ioY + 18 + 2
