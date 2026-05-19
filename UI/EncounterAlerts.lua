@@ -1151,12 +1151,12 @@ local function BuildEncounterAlertsUI(parentFrame)
         RebuildList()
     end
 
-    local enableAllBtn = CreateButton(addOptFrame, L["Enable All Reminders"], function()
+    local enableAllBtn = CreateButton(addOptFrame, L["Enable Selected Boss Reminders"], function()
         SetReloeAlertsEnabled(true)
     end, listW, 22)
     enableAllBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
 
-    local disableAllBtn = CreateButton(addOptFrame, L["Disable All Reminders"], function()
+    local disableAllBtn = CreateButton(addOptFrame, L["Disable Selected Boss Reminders"], function()
         SetReloeAlertsEnabled(false)
     end, listW, 22)
     disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)
