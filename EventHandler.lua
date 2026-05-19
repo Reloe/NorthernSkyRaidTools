@@ -300,10 +300,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
         if NSRT.ReadyCheckSettings.DisplayGroupCheck and not self:Restricted() then
-            local groupNumber = NSI:GetPlayerGroupNumber()
+            local groupNumber = self:GetSubGroup()
 
             if groupNumber then
-                local groupText = "You are in group |cFF00FFFF" ..groupNumber .. "|r" 
+                local groupText = "You are in group |cFF00FFFF" ..groupNumber .. "|r"
                 if text == "" then
                     text = groupText
                 else
