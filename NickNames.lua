@@ -89,6 +89,14 @@ function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickn
     return name -- Return input if nothing was found
 end
 
+function NSAPI:ImportNickNames(importString) -- string format is charactername-realm:nickname;charactername-realm:nickname;...
+    return NSI:ImportNickNames(importString)
+end
+
+function NSAPI:SyncNickNames()
+    return NSI:SyncNickNames()
+end
+
 -- Own NickName Change
 function NSI:NickNameUpdated(nickname)
     local name, realm = UnitFullName("player")

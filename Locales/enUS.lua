@@ -514,6 +514,8 @@ L["Paladins Dispel Assign"] = true
 L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."] = true
 L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
+L["Belo'ren Feather Color"] = true
+L["Displays your Feather-Color on Belo'ren."] = true
 L["Lura Interrupts"] = true
 L["Interrupt WA for Lura P1."] = true
 
