@@ -256,7 +256,6 @@ end
 NSI.Callbacks = NSI.Callbacks or LibStub("CallbackHandler-1.0"):New(NSI)
 
 function NSI:FireCallback(event, ...)
-    print(...)
     self.Callbacks:Fire(event, ...)
 end
 
