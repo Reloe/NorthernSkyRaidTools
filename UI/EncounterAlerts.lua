@@ -141,7 +141,14 @@ local function BuildEncounterAlertsUI(parentFrame)
         if alert then
             alert[dataKey] = newData
             if selectedEncID and selectedDiffID and selectedKey then
-                self:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, selectedDiffID, selectedKey)
+                if not self._saveAlertDebounce then
+                    self._saveAlertDebounce = true
+                    local eid, did, key = selectedEncID, selectedDiffID, selectedKey
+                    C_Timer.After(0, function()
+                        self._saveAlertDebounce = false
+                        self:FireCallback("NSRT_ALERT_CHANGED", eid, did, key)
+                    end)
+                end
             end
         end
     end
@@ -734,17 +741,20 @@ local function BuildEncounterAlertsUI(parentFrame)
                             if selectedEncID == eid and selectedDiffID == did and selectedKey == akey then
                                 enabledCB:SetValue(v)
                             end
+                            NSI:FireCallback("NSRT_ALERT_CHANGED", eid, did, akey)
                         end
                     end)
                 else
                     local alert   = entry.data
                     local akey    = entry.alertKey
                     local aencID  = entry.encID
+                    local adid    = entry.diffID
                     row.enabledCB:SetOnChange(function(nsi, v)
                         alert.enabled = v
                         if selectedKey == akey and selectedEncID == aencID then
                             enabledCB:SetValue(v)
                         end
+                        NSI:FireCallback("NSRT_ALERT_CHANGED", aencID, adid, akey)
                     end)
                 end
 
@@ -1667,7 +1677,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             if not inserted then table.insert(dispF._alert.Ticks, v) end
             addTickEntry:SetValue("")
-            NSI:FireCallback("NSRT_ALERT_CHANGED", dispF._alert.encID, dispF._alert.diffID, dispF._alert.alertKey)
+            NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, filterDiffID, selectedKey)
             RebuildTickRows()
         end
     end
@@ -1775,12 +1785,15 @@ local function BuildEncounterAlertsUI(parentFrame)
                 if a == trigF._alert then foundKey = k; break end
             end
             if not foundKey then return end
+            local oldEncID = selectedEncID
             fromAlerts[foundKey] = nil
             NSRT.EncounterAlerts[v] = NSRT.EncounterAlerts[v] or {}
             NSRT.EncounterAlerts[v][filterDiffID] = NSRT.EncounterAlerts[v][filterDiffID] or {}
             NSRT.EncounterAlerts[v][filterDiffID][foundKey] = trigF._alert
             selectedEncID = v
             selectedKey = foundKey
+            NSI:FireCallback("NSRT_ALERT_CHANGED", oldEncID, filterDiffID, foundKey)
+            NSI:FireCallback("NSRT_ALERT_CHANGED", v, filterDiffID, foundKey)
             RebuildList()
         end, false)
     end
@@ -1825,6 +1838,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                         if a == alertToMove then foundKey = k; break end
                     end
                     if not foundKey then return end
+                    local oldDiffID = filterDiffID
                     fromAlerts[foundKey] = nil
                     NSRT.EncounterAlerts[selectedEncID][val] = NSRT.EncounterAlerts[selectedEncID][val] or {}
                     local toTable = NSRT.EncounterAlerts[selectedEncID][val]
@@ -1832,6 +1846,8 @@ local function BuildEncounterAlertsUI(parentFrame)
                     toTable[newKey] = alertToMove
                     filterDiffID = val
                     selectedKey = newKey
+                    NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, oldDiffID, foundKey)
+                    NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, val, newKey)
                     diffDD:Refresh()
                     RebuildList()
                 end,
@@ -1973,7 +1989,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             if not inserted then table.insert(trigF._alert.timers, v) end
             addTimeEntry:SetValue("")
-            NSI:FireCallback("NSRT_ALERT_CHANGED", trigF._alert.encID, trigF._alert.diffID, trigF._alert.alertKey)
+            NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, filterDiffID, selectedKey)
             RebuildTimeRows()
         end
     end
@@ -2006,7 +2022,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         function(_, v)
             if not sndF._alert then return end
             local txt = sndF.ttsTextEntry and sndF.ttsTextEntry:GetValue() or ""
-            sndF._alert.TTS = v and ((txt ~= "") and txt or true) or false
+            NSI:SaveAlertData(sndF._alert, "TTS", v and ((txt ~= "") and txt or true) or false)
         end,
         rightW, 22, "NSUIEncAlertTTSCB")
     ttsCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -4)
@@ -2047,22 +2063,17 @@ local function BuildEncounterAlertsUI(parentFrame)
     ttsTimerEntry.editBox:SetScript("OnEditFocusLost", SaveTTSTimer)
     sndF.ttsTimerEntry = ttsTimerEntry
 
-    local cdCB = CreateCheckButton(sndF, L["Countdown for"],
-        function() return false end,
-        function(_, v)
-            if sndF._alert then
-                local n = sndF.cdEntry and tonumber(sndF.cdEntry:GetValue()) or 5
-                NSI:SaveAlertData(sndF._alert, "countdown", v and (n or 5) or false)
-            end
-        end,
-        130, 22, "NSUIEncAlertCDCB")
-    cdCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -130)
-    sndF.cdCB = cdCB
+    local cdLbl = sndF:CreateFontString(nil, "OVERLAY")
+    cdLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    cdLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    cdLbl:SetText(L["Countdown for"])
+    cdLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -138)
+    sndF.cdLbl = cdLbl
 
     local cdEntry = CreateTextEntry(sndF, nil, nil, nil, 60, 22,
         nil, nil, nil, "NSUIEncAlertCountdown")
-    cdEntry:SetPoint("LEFT", cdCB.frame, "RIGHT", 6, 0)
-    cdEntry:SetPoint("TOP",  cdCB.frame, "TOP", 0, 0)
+    cdEntry:SetPoint("LEFT", cdLbl, "RIGHT", 6, 0)
+    cdEntry:SetPoint("TOP",  cdLbl, "TOP", 0, 6)
     local function SaveCountdown(self)
         local v = tonumber(self:GetText())
         if sndF._alert then NSI:SaveAlertData(sndF._alert, "countdown", (v and v > 0) and v or false) end
@@ -2512,7 +2523,6 @@ local function BuildEncounterAlertsUI(parentFrame)
                         onToggle(d, cond);
                         RebuildLoadTab()
                         RebuildList()
-                        NSI:FireCallback("NSRT_ALERT_CHANGED", alert.encID, alert.diffID, alert.alertKey)
                     end)
                     row:Show()
                     y = y + loadRowH
@@ -2523,12 +2533,18 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         LayoutSection(rolesSecHdr, roleRowFrames, ROLE_DATA, "Roles",
             function(d) return cond.Roles[d.key] end,
-            function(d, c) if c.Roles[d.key] then c.Roles[d.key] = nil else c.Roles[d.key] = true end end,
+            function(d, c)
+                if c.Roles[d.key] then c.Roles[d.key] = nil else c.Roles[d.key] = true end
+                NSI:SaveAlertData(alert, "loadConditions", alert.loadConditions)
+            end,
             function(d) local rc = ROLE_COLORS[d.key]; return rc[1], rc[2], rc[3] end)
 
         LayoutSection(classSecHdr, classRowFrames, CLASS_DATA, "Classes",
             function(d) return cond.Classes[d.key] end,
-            function(d, c) if c.Classes[d.key] then c.Classes[d.key] = nil else c.Classes[d.key] = true end end,
+            function(d, c)
+                if c.Classes[d.key] then c.Classes[d.key] = nil else c.Classes[d.key] = true end
+                NSI:SaveAlertData(alert, "loadConditions", alert.loadConditions)
+            end,
             function(d)
                 local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[d.key]
                 return cc and cc.r or 0.5, cc and cc.g or 0.8, cc and cc.b or 0.5
@@ -2536,7 +2552,10 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         LayoutSection(specSecHdr, specRowFrames, SPEC_DATA, "Specs",
             function(d) return cond.SpecIDs[d.id] end,
-            function(d, c) if c.SpecIDs[d.id] then c.SpecIDs[d.id] = nil else c.SpecIDs[d.id] = true end end,
+            function(d, c)
+                if c.SpecIDs[d.id] then c.SpecIDs[d.id] = nil else c.SpecIDs[d.id] = true end
+                NSI:SaveAlertData(alert, "loadConditions", alert.loadConditions)
+            end,
             function(d)
                 local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[d.class]
                 return cc and cc.r or 0.5, cc and cc.g or 0.8, cc and cc.b or 0.5
@@ -2678,6 +2697,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end)
         end
         enabledCB:SetOnChange(function(nsi, v)
+            NSI:SaveAlertData(entry, "enabled", v)
             entry.enabled = v
             RebuildList()
         end)
@@ -2723,7 +2743,6 @@ local function BuildEncounterAlertsUI(parentFrame)
         sndF.ttsTextEntry:SetValue(type(entry.TTS) == "string" and entry.TTS or "")
         sndF.ttsTimerEntry:SetValue(tostring(entry.TTSTimer or entry.dur or 8))
         local hasCD = entry.countdown and entry.countdown ~= false
-        sndF.cdCB:SetValue(hasCD and true or false)
         sndF.cdEntry:SetValue(hasCD and tostring(entry.countdown) or "")
         sndF.soundDD:Refresh()
 

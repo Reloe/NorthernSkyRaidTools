@@ -1915,3 +1915,7 @@ function NSI:DeleteReloeReminder(encID, diffID, alertKey)
         NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
     end
 end
+
+function NSAPI:GetAlerts()
+    return {}
+end
