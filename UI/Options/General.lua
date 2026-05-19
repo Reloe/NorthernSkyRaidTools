@@ -71,6 +71,17 @@ local function BuildGeneralOptions()
             max = 100,
         },
         {
+            type = "range",
+            name = L["Global Encounter Font-Size"],
+            desc = L["Size of the global Encounter font"],
+            get = function() return NSRT.Settings["GlobalEncounterFontSize"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["GlobalEncounterFontSize"] = value
+            end,
+            min = 10,
+            max = 100,
+        },
+        {
             type = "select",
             name = L["Global Font Outline"],
             desc = L["Font outline flags applied to all addon text."],

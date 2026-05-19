@@ -35,6 +35,7 @@ local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00
     NSUI_panel_options)
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")
+NSUI:SetFrameLevel(1)
 DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "x |cFF00FFFFbird|r")
 NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 

@@ -19,6 +19,7 @@ local options_slider_template      = Core.options_slider_template
 local options_button_template      = Core.options_button_template
 
 -- Get UI builder functions from modules
+local BuildEncounterAlertsUI       = NSI.UI.EncounterAlerts.BuildEncounterAlertsUI
 local BuildVersionCheckUI          = NSI.UI.VersionCheck.BuildVersionCheckUI
 local BuildNicknameEditUI          = NSI.UI.Nicknames.BuildNicknameEditUI
 local BuildRemindersEditUI         = NSI.UI.Reminders.BuildRemindersEditUI
@@ -59,24 +60,24 @@ local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 -- Tab groups – blank strings become visual spacers between groups
 local TABS_GROUPS                  = {
     {
-        { name = "General",    text = L["General"] },
-        { name = "QoL",        text = L["Quality of Life"] },
-        { name = "ReadyCheck", text = L["Ready Check"] },
+        { name = "General",    textKey = "General" },
+        { name = "QoL",        textKey = "Quality of Life" },
+        { name = "ReadyCheck", textKey = "Ready Check" },
     },
     {
-        { name = "Reminders",       text = L["Reminders"] },
-        { name = "Reminders-Note",  text = L["Note-Display"] },
-        { name = "EncounterAlerts",   text = L["Encounter Alerts"] },
-        { name = "InterruptDisplay", text = L["Interrupt Display"] },
-        { name = "Assignments",      text = L["Assignments"] },
+        { name = "Reminders",        textKey = "Reminders" },
+        { name = "Reminders-Note",   textKey = "Note-Display" },
+        { name = "EncounterAlerts",  textKey = "Encounter Alerts" },
+        { name = "InterruptDisplay", textKey = "Interrupt Display" },
+        { name = "Assignments",      textKey = "Assignments" },
     },
     {
-        { name = "PrivateAura", text = L["Private Auras"] },
-        { name = "WAImports",   text = L["WA Imports"] },
+        { name = "PrivateAura", textKey = "Private Auras" },
+        { name = "WAImports",   textKey = "WA Imports" },
     },
     {
-        { name = "Nicknames", text = L["Nicknames"] },
-        { name = "Versions",  text = L["Version Check"] },
+        { name = "Nicknames", textKey = "Nicknames" },
+        { name = "Versions",  textKey = "Version Check" },
     },
 }
 
@@ -120,6 +121,14 @@ function NSUI:Init()
         SelectTab(name)
     end
 
+    function tabSystem:RefreshTabLabels()
+        for _, btn in ipairs(self.AllButtons) do
+            if btn._textKey then
+                btn:SetText(L[btn._textKey])
+            end
+        end
+    end
+
     -- --------------------------------------------------------
     -- Sidebar background
     -- --------------------------------------------------------
@@ -159,23 +168,22 @@ function NSUI:Init()
             contentFrame:Hide()
             contentFrame:EnableMouse(false)
 
-            -- Register by both name and display text for maximum compat
+            -- Register by name; textKey is resolved lazily so locale switches are picked up
             tabSystem.AllFramesByName[tab.name] = contentFrame
-            tabSystem.AllFramesByName[tab.text] = contentFrame
             table.insert(tabSystem.AllFrames, contentFrame)
 
             -- Sidebar button
             local btn = CreateButton(
                 sidebarBg,
-                tab.text,
+                L[tab.textKey],
                 function() SelectTab(tab.name) end,
                 SIDEBAR_BTN_WIDTH, SIDEBAR_BTN_HEIGHT,
                 "NSUITabBtn_" .. tab.name
             )
             btn:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 5, btnY)
+            btn._textKey = tab.textKey
 
             tabSystem.AllButtonsByName[tab.name] = btn
-            tabSystem.AllButtonsByName[tab.text] = btn
             table.insert(tabSystem.AllButtons, btn)
 
             btnY = btnY - SIDEBAR_BTN_HEIGHT - SIDEBAR_BTN_GAP
@@ -198,8 +206,8 @@ function NSUI:Init()
     local NOTES_HEADER_BTN_Y = -38
 
     local notesTabs = {
-        { name = "SharedNotes",   text = L["Shared Notes"],   icon = "users_icon" },
-        { name = "PersonalNotes", text = L["Personal Notes"], icon = "user_icon" },
+        { name = "SharedNotes",   textKey = "Shared Notes",   icon = "users_icon" },
+        { name = "PersonalNotes", textKey = "Personal Notes", icon = "user_icon" },
     }
 
     for i, nt in ipairs(notesTabs) do
@@ -211,13 +219,12 @@ function NSUI:Init()
         notesFrame:EnableMouse(false)
 
         tabSystem.AllFramesByName[nt.name] = notesFrame
-        tabSystem.AllFramesByName[nt.text] = notesFrame
         table.insert(tabSystem.AllFrames, notesFrame)
 
         -- Persistent header button (lives on NSUI, always visible)
         local hdrBtn = CreateButton(
             NSUI,
-            nt.text,
+            L[nt.textKey],
             function() SelectTab(nt.name) end,
             NOTES_HEADER_BTN_W, NOTES_HEADER_BTN_H,
             "NSUIHeaderBtn_" .. nt.name,
@@ -228,11 +235,28 @@ function NSUI:Init()
             162 + 10 + (i - 1) * (NOTES_HEADER_BTN_W + 6),
             NOTES_HEADER_BTN_Y
         )
+        hdrBtn._textKey = nt.textKey
 
         tabSystem.AllButtonsByName[nt.name] = hdrBtn
-        tabSystem.AllButtonsByName[nt.text] = hdrBtn
         table.insert(tabSystem.AllButtons, hdrBtn)
     end
+
+    -- --------------------------------------------------------
+    -- Anchor/Preview button (icon-only, far right of header)
+    -- --------------------------------------------------------
+    local ANCHOR_BTN_SIZE = 26
+    local anchorBtn = CreateButton(
+        NSUI,
+        "",  -- icon-only, no text
+        function() NSI:TogglePreviewMode() end,
+        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+        "NSUIAnchorBtn",
+        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
+        nil,  -- textSize
+        { title = L["Preview Alerts"], desc = L["Preview Reminders and unlock their anchors to move them around"] }
+    )
+    anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
+
     -- --------------------------------------------------------
     -- Tab selection logic (matches Details' SelectOptionsSection)
     -- --------------------------------------------------------
@@ -387,6 +411,7 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Build custom UI components
     -- --------------------------------------------------------
+    NSUI.encounters_frame         = BuildEncounterAlertsUI(encounteralerts_tab)
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()

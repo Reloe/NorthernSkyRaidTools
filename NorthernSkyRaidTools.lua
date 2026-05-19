@@ -40,7 +40,10 @@ end
 
 NSI.EncounterAlertStart = {}
 NSI.EncounterAlertStop = {}
+NSI.EncounterAlertHandle = {}
+NSI.EncounterAlertSpecialDisplay = {}
 NSI.ShowWarningAlert = {}
 NSI.ShowBossWhisperAlert = {}
 NSI.AddAssignments = {}
 NSI.DetectPhaseChange = {}
+NSI.InitializeAlerts = {}

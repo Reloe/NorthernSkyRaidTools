@@ -6,6 +6,27 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local build_PAgrowdirection_options = Core.build_PAgrowdirection_options
 
+local ANCHOR_POINTS = {
+    "TOPLEFT", "TOP", "TOPRIGHT",
+    "LEFT",    "CENTER", "RIGHT",
+    "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT",
+}
+
+local function build_anchor_options(settingsKey, key)
+    local t = {}
+    for _, pt in ipairs(ANCHOR_POINTS) do
+        t[#t + 1] = {
+            value = pt,
+            label = pt,
+            onclick = function()
+                NSRT[settingsKey][key] = pt
+                NSI:UpdatePADisplay(false)
+            end,
+        }
+    end
+    return t
+end
+
 local function BuildPrivateAurasOptions()
     return {
         {
@@ -310,6 +331,20 @@ local function BuildPrivateAurasOptions()
             end,
             min = -200,
             max = 200,
+        },
+        {
+            type = "select",
+            name = L["Anchor"],
+            desc = L["The Anchor point of the Private Aura's"],
+            get = function() return NSRT.PARaidSettings.Anchor end,
+            values = function() return build_anchor_options("PARaidSettings", "Anchor") end,
+        },
+        {
+            type = "select",
+            name = L["Relative To"],
+            desc = L["The Anochr point the Private Aura's are anchored to."],
+            get = function() return NSRT.PARaidSettings.relativeTo end,
+            values = function() return build_anchor_options("PARaidSettings", "relativeTo") end,
         },
         {
             type = "range",

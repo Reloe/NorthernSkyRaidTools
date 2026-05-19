@@ -2,47 +2,55 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3179
 -- /run NSAPI:DebugEncounter(3179)
-NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    if not NSRT.EncounterAlerts[encID] then
-        NSRT.EncounterAlerts[encID] = {enabled = false}
-    end
-    id = id or self:DifficultyCheck(14) or 0
-    if NSRT.EncounterAlerts[encID].enabled then -- text, Type, spellID, dur, phase, encID
-        local Alert = self:CreateDefaultAlert("Beams", "Text", nil, 8, 1, encID)
-        local timers = {
-            [0] = {},
+
+NSI.InitializeAlerts[encID] = function(self)
+    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+
+    local data = {internalID = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
+    timers = {
             [14] = {102.6, 224.2, 346},
             [15] = {102.6, 224.2, 346},
             [16] = {102.6, 224.2, 346},
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
+        },
+    }
+    self:AddEncounterAlert(data)
+    data.internalID, data.text = "Orbs", "Orbs"
+    data.timers = {
+        [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
+        [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
+        [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6},
+    }
+    self:AddEncounterAlert(data)
+    data.internalID, data.text = "CC Adds", "CC Adds"
+    data.timers = {
+        [14] = {20, 65, 141, 187, 263, 308},
+        [15] = {20, 65, 141, 187, 263, 308},
+        [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5},
+    }
+    self:AddEncounterAlert(data)
+    data.internalID = "CC Display"
+    data.text = nil
+    data.timers = nil
+    data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]]
+    data.TTS = false
+    data.overrides = {BlockCopy = true}
+    data.difficulties = {16}
+    self:AddEncounterAlert(data)
+end
 
-        local Alert = self:CreateDefaultAlert("Orbs", "Text", nil, 5, 1, encID)
-        timers = {
-            [0] = {},
-            [14] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
-            [15] = {14.1, 59.1, 135, 180.7, 256.5, 301.6},
-            [16] = {18.1, 63.1, 141, 186.7, 262.5, 307.6},
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
+NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
+    id = id or self:DifficultyCheck(14) or 0
 
-        local Alert = self:CreateDefaultAlert("CC Adds", "CC Adds", nil, 5, 1, encID)
-        timers = {
-            [0] = {},
-            [14] = {20, 65, 141, 187, 263, 308},
-            [15] = {20, 65, 141, 187, 263, 308},
-            [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5},
-        }
-        self:AddRemindersFromTable(Alert, timers[id])
-    end
-    if NSRT.EncounterAlerts[encID].CCAddsDisplay and id == 16 then
+    local ccEntry = id == 16 and NSI:GetEncounterAlertByName(encID, id, "CC Display")
+    if ccEntry and ccEntry.enabled then
         self.platetexts = self.platetexts or {}
         local plateref = {}
         local function DisplayNameplateText(u)
             local plate = C_NamePlate.GetNamePlateForUnit(u)
             if plate then
                 local interruptible = select(8, UnitCastingInfo(u))
-                for i=1, #self.platetexts+1 do
+                for i = 1, #self.platetexts + 1 do
                     if self.platetexts[i] and not self.platetexts[i]:IsShown() then
                         self.platetexts[i]:SetText("CC")
                         self.platetexts[i].bgTexture:SetColorTexture(0, 1, 0, 0.8)
@@ -58,7 +66,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         end
                         return
                     elseif not self.platetexts[i] then
-
                         self.platetexts[i] = self.plateframe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                         self.platetexts[i]:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 18, "OUTLINE")
                         self.platetexts[i]:SetPoint("BOTTOM", plate, "TOP", 0, 0)
@@ -96,7 +103,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                         return
                     end
                 end
-                -- fallback if plateref somehow doesn't exist
                 for i, v in ipairs(self.platetexts) do
                     if v.unit == u then
                         v:Hide()
@@ -106,7 +112,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                 end
                 return
             elseif e == "NAME_PLATE_UNIT_ADDED" or e == "UNIT_AURA" or e == "UNIT_SPELLCAST_START" then
-                if (e == "UNIT_AURA" or e == "UNIT_SPELLCAST_START") and not u:find("^nameplate%d") then return end -- only allow nameplate units for UNIT_AURA
+                if (e == "UNIT_AURA" or e == "UNIT_SPELLCAST_START") and not u:find("^nameplate%d") then return end
                 if UnitLevel(u) ~= -1 then
                     local aura1 = C_UnitAuras.GetAuraDataByIndex(u, 1, "HELPFUL")
                     if aura1 then
@@ -127,15 +133,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         if not self.plateframe then
             self.plateframe = CreateFrame("Frame")
             self.plateframe:SetScript("OnEvent", function(_, e, u)
-                if e == "NAME_PLATE_UNIT_ADDED" then
-                    UpdateNameplateTexts(e, u)
-                elseif e == "NAME_PLATE_UNIT_REMOVED" then
-                    UpdateNameplateTexts(e, u)
-                elseif e == "UNIT_AURA" then
-                    UpdateNameplateTexts(e, u)
-                elseif e == "UNIT_SPELLCAST_START" then
-                    UpdateNameplateTexts(e, u)
-                end
+                UpdateNameplateTexts(e, u)
             end)
         end
         self.plateframe:RegisterEvent("NAME_PLATE_UNIT_ADDED")
@@ -146,8 +144,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     end
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    if NSRT.EncounterAlerts[encID].CCAddsDisplay then
+NSI.EncounterAlertStop[encID] = function(self, id) -- on ENCOUNTER_END
+    local diffID = id or select(3, GetInstanceInfo()) or 0
+    local ccEntry = NSI:GetEncounterAlertByName(encID, diffID, "CC Display")
+    if ccEntry and ccEntry.enabled then
         if self.plateframe then
             for i, v in ipairs(self.platetexts) do
                 v:Hide()

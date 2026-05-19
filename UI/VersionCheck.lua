@@ -92,9 +92,8 @@ local function BuildVersionCheckUI(parent)
         for i = 1, totalLines do
             local index = i + offset
             local thisData = data[index]
+            local line = self:GetLine(i)
             if thisData then
-                local line = self:GetLine(i)
-
                 local name = thisData.name
                 local version = thisData.version
                 local ignore = thisData.ignoreCheck
@@ -142,6 +141,11 @@ local function BuildVersionCheckUI(parent)
                     NSI.VersionCheckData.lastclick[name] = GetTime()
                     SendChatMessage(message, "WHISPER", nil, name)
                 end)
+            elseif line then
+                line.name:SetText("")
+                line.version:SetText("")
+                line.ignorelist:SetText("")
+                line:SetScript("OnClick", nil)
             end
         end
     end

@@ -89,6 +89,8 @@ L["Global Font"] = true
 L["This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility."] = true
 L["Global Font-Size"] = true
 L["Size of the global font"] = true
+L["Global Encounter Font-Size"] = true
+L["Size of the global Encounter font"] = true
 L["Global Font Outline"] = true
 L["Font outline flags applied to all addon text."] = true
 L["None"] = true
@@ -157,52 +159,10 @@ L["SpellName TTS if empty"] = true
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = true
 L["Bars"] = true
 L["Show Progress Bars instead of icons"] = true
-L["Sticky"] = true
-L["Keep Reminders shown for X seconds if the spell hasn't been pressed yet"] = true
 
 -- UI/Options/Reminders.lua — Text Settings
 L["Text Settings"] = true
-L["Grow Direction"] = true
 L["When TTS is played, this will also announce the remaining duration of the reminder. So for example it could say 'Spread in 10'"] = true
-L["Font-Size"] = true
-L["Font Size"] = true
-L["Text-Color"] = true
-L["Color of Text-Reminders"] = true
-L["Spacing"] = true
-L["Spacing between Text reminders"] = true
-L["Center-Aligned Text"] = true
-L["When enabled, text reminders will be center-aligned instead of left-aligned."] = true
-
--- UI/Options/Reminders.lua — Icon Settings
-L["Icon Settings"] = true
-L["Icon-Width"] = true
-L["Width of the Icon"] = true
-L["Icon-Height"] = true
-L["Height of the Icon"] = true
-L["Text-X-Offset"] = true
-L["X-Offset of the Text of the Icon"] = true
-L["Text-Y-Offset"] = true
-L["Y-Offset of the Text of the Icon"] = true
-L["Right-Aligned Text"] = true
-L["Change the Text to be right-aligned, you still have to fix the offset yourself."] = true
-L["Timer-Text Font-Size"] = true
-L["Font Size of the Timer-Text"] = true
-L["Spacing between Icon reminders"] = true
-L["Icon-Glow"] = true
-L["At how many seconds you want the Icon to start glowing. 0 = disabled"] = true
-L["Icon-Zoom"] = true
-L["Zoom level of the Icons"] = true
-
--- UI/Options/Reminders.lua — Bar Settings
-L["Bar Settings"] = true
-L["Bar-Width"] = true
-L["Width of the Bar"] = true
-L["Bar-Height"] = true
-L["Height of the Bar"] = true
-L["Texture"] = true
-L["Bar-Color"] = true
-L["Color of the Bars"] = true
-L["Spacing between Bar reminders"] = true
 
 -- UI/Options/Reminders.lua — Raidframe Icon Settings
 L["Raidframe Icon Settings"] = true
@@ -239,10 +199,15 @@ L["Enables reminders set into your personal reminder"] = true
 L["Use MRT Note Reminders"] = true
 L["Enables reminders entered into MRT note"] = true
 L["Share on Ready Check"] = true
+L["Clear Note on Boss-Kill"] = true
+L["Automatically clear the Shared & Personal Note on a Boss-Kill."] = true
+L["Only Receive Guild Reminders"] = true
+L["Only receive Shared-reminders from guild members."] = true
 L["Automatically share the current active reminder on ready check if you are the raidleader. If you want to share a note as assist you can do so in the Shared Reminders-list"] = true
 L["Test Active Reminder"] = true
 L["Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test. This button does nothing if you are using TimelineReminders to display Reminders."] = true
-
+L["Import Reloe Reminders"] = true
+L["Automatically import all of Reloe's custom created reminders for the current tier's bosses. Display settings of these reminders can be edited."] = true
 -- UI/Options/Reminders.lua — Reminder Note Options
 L["This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 3 types of displays. The first one shows all reminders, the second one shows only those that will activate for you. And the third shows all text that is not a reminder."] = true
 L["All Reminders Note"] = true
@@ -312,7 +277,7 @@ L["Gloom Soaks - Mythic Only"] = true
 L["Assigns Group 1&2 to soak the first cast, Group 3&4 to soak the second cast. This is overkill as only 7 people are required. Alternatively you can create a custom Assignment through wowutils."] = true
 L["Lightblinded Vanguard"] = true
 L["Execution Sentence - Mythic Only"] = true
-L["Automatically assigns players to Star, Orange, Triangle and Purple for Execution Sentence. Melee are preferred for Star/Orange, Ranged for Triangle/Purple. You should be putting down World Markers for this."] = true
+L["Automatically assigns players to Front Left/Right and Back Left/Right. Melee are preferred for Front Left/Right, Ranged for Back Left/Right. Healers are evenly split, if you are more than 4healers than some healers will be told to have a 'Flex Spot'"] = true
 L["Chimaerus"] = true
 L["Alndust Upheaval - Mythic"] = true
 L["Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast"] = true
@@ -371,6 +336,8 @@ L["Repair Check"] = true
 L["Checks if any piece needs repair"] = true
 L["Gateway Control Shard Check"] = true
 L["Checks if you have a Gateway Control Shard and whether or not it is located on your actionbars"] = true
+L["Gateway Control Shard Check"] = true
+L["Displays your raid group number on ready check."] = true
 L["Exceptions"] = true
 L["Skip Gateway Keybind-Check"] = true
 L["If enabled, the addon will not check if your Gateway Shard is bound as there might be addon-combinations where this is producing a false-positive. In those cases you can enable this setting to remove the redundant alert."] = true
@@ -467,6 +434,10 @@ L["Y-Offset of the Private Aura Display"] = true
 L["Max-Icons"] = true
 L["Maximum number of icons to display"] = true
 L["Scale"] = true
+L["Anchor"] = true
+L["The Anchor point of the Private Aura's"] = true
+L["Relative To"] = true
+L["The Anochr point the Private Aura's are anchored to."] = true
 L["Text-Scale"] = true
 L["This will scale the size of Stacks and Duration text."] = true
 L["Hide Border"] = true
@@ -505,6 +476,35 @@ L["Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuf
 L["This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included."] = true
 
 -- ============================================================================
+-- UI/AnchorWindow.lua — Anchor settings popup
+-- ============================================================================
+L["Up"] = true
+L["Down"] = true
+L["Left"] = true
+L["Right"] = true
+L["Sticky Duration"] = true
+L["Font"] = true
+L["Timer Font Size"] = true
+L["Decimals Threshold"] = true
+L["Glow Threshold"] = true
+L["Zoom"] = true
+L["Text X Offset"] = true
+L["Text Y Offset"] = true
+L["Timer X"] = true
+L["Timer Y"] = true
+L["Text Color"] = true
+L["Hide Swipe"] = true
+L["Bar Fill Color"] = true
+L["Bar Text Color"] = true
+L["Icon X Offset"] = true
+L["Icon Y Offset"] = true
+L["Center Aligned"] = true
+L["Size"] = true
+L["Show Background Ring"] = true
+L["Ring Color"] = true
+L["Circle Settings"] = true
+
+-- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================
 L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] = true
@@ -520,44 +520,79 @@ L["Lura Interrupts"] = true
 L["Interrupt WA for Lura P1."] = true
 
 -- ============================================================================
--- UI/Reminders.lua (Reminder List Screen)
+-- UI/EncounterAlerts.lua
 -- ============================================================================
-L["Import Reminder String"] = true
-L["Import Personal Reminder String"] = true
-L["Update"] = true
-L["Import"] = true
-L["|cFF00FFFFPersonal|r Reminders"] = true
-L["|cFF00FFFFShared|r Reminders"] = true
-L["No Boss"] = true
-L["Normal"] = true
-L["Heroic"] = true
-L["Mythic"] = true
-L["Load"] = true
-L["Load & Send"] = true
-L["Save"] = true
-L["Confirm Deletion"] = true
-L["Confirm"] = true
-L["Cancel"] = true
-L["Delete"] = true
-L["Invite"] = true
-L["Arrange"] = true
-L["Unload"] = true
-L["Delete All"] = true
-L["Confirm Clear All"] = true
-L["All Bosses"] = true
-L["(No Enc)"] = true
-L["Received:"] = true
-L["Active Note"] = true
-
--- ============================================================================
--- UI/General.lua (Export/Import Popups)
--- ============================================================================
-L["Export Profile"] = true
-L["Done"] = true
-L["Exporting profile: |cFF00FFFF%s|r"] = true
-L["Import Profile"] = true
-L["Invalid import string. Please check and try again."] = true
-L["Paste a profile string below and click Import."] = true
+-- Export/Import popups
+L["Export Alerts"] = true
+L["Import Alerts"] = true
+L["Paste an alerts export string below and click Import."] = true
+L["All encounter alerts"] = true
+-- Left panel
+L["+ Create Alert"] = true
+L["Export"] = true
+L["Full Reset"] = true
+L["Reset"] = true
+L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"] = true
+L["New Alert"] = true
+L["Unnamed"] = true
+-- Context menus
+L["Export Group"] = true
+L["Delete Group (keep alerts)"] = true
+L["Delete Group with Alerts"] = true
+L["Delete group '%s' and all its user-created alerts?\n(ReloeReminders will only be ungrouped.)"] = true
+L["New Group..."] = true
+L["Enter new group name:"] = true
+L["OK"] = true
+L["Export Alert"] = true
+L["Add to Group"] = true
+L["Move to Group"] = true
+L["Duplicate"] = true
+L["Remove from Group"] = true
+L["Pin to Top"] = true
+L["Unpin"] = true
+L["Delete Alert"] = true
+L["Are you sure you want to delete this alert?"] = true
+-- Right panel header
+L["Alert Name"] = true
+L["Group"] = true
+L["- No Group -"] = true
+-- Inner tabs
+L["Display"] = true
+L["Trigger"] = true
+L["Options"] = true
+-- Display tab
+L["Type"] = true
+L["Display Text"] = true
+L["Spell ID"] = true
+L["Custom Icon (overrides icon in list)"] = true
+L["Sticky duration (0 to disable)"] = true
+L["Hide Timer Text"] = true
+L["Glow Unit (player names, space seperated"] = true
+L["Glow Color"] = true
+L["Color"] = true
+L["Ticks (seconds into the display where ticks should appear)"] = true
+L["Add tick"] = true
+L["Add"] = true
+-- Trigger tab
+L["Boss"] = true
+L["Difficulty"] = true
+L["Phase"] = true
+L["Trigger Times (seconds into phase)"] = true
+L["Add time (s)"] = true
+-- Sound tab
+L["Enable Text-to-Speech"] = true
+L["TTS Text (leave blank to speak the Display Text)"] = true
+L["TTS Timer (seconds before the Alert expires)"] = true
+L["Countdown for"] = true
+L["seconds"] = true
+L["Sound File"] = true
+-- Load tab
+L["Classes (leave all unchecked for any class)"] = true
+L["Specializations (leave all unchecked for any spec)"] = true
+L["Roles (leave all unchecked for any role)"] = true
+L["Character Names (no server name)"] = true
+L["Class / spec filters do not apply\nto addon-created alerts."] = true
+L["Sound settings are fixed\nfor addon-created alerts."] = true
 
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
@@ -620,3 +655,17 @@ L["Outline style for the name"] = true
 L["Interrupt Sound"] = true
 L["Sound played when it is your turn to interrupt"] = true
 L["Accept"] = true
+L["Interrupt Now Color"] = true
+L["Color of the display box when it's your turn to interrupt"] = true
+L["Interrupt Next Color"] = true
+L["Color of the display box when you are up next to interrupt"] = true
+L["Interrupt Default Color"] = true
+L["Color of the display box when it's not your turn to interrupt"] = true
+L["Interrupt Now Text Color"] = true
+L["Color of the number when it's your turn to interrupt"] = true
+L["Interrupt Next Text Color"] = true
+L["Color of the number when you are up next to interrupt"] = true
+L["Interrupt Default Text Color"] = true
+L["Color of the number when it's not your turn to interrupt"] = true
+L["Show Interrupt Bar"] = true
+L["Show a Bar when it's your turn to interrupt. This Bar will show through the reminder system and use your default settings for bars."] = true

@@ -49,7 +49,7 @@ local function BuildAssignmentsOptions()
             type = "toggle",
             boxfirst = true,
             name = L["Execution Sentence - Mythic Only"],
-            desc = L["Automatically assigns players to Star, Orange, Triangle and Purple for Execution Sentence. Melee are preferred for Star/Orange, Ranged for Triangle/Purple. You should be putting down World Markers for this."],
+            desc = L["Automatically assigns players to Front Left/Right and Back Left/Right. Melee are preferred for Front Left/Right, Ranged for Back Left/Right. Healers are evenly split, if you are more than 4healers than some healers will be told to have a 'Flex Spot'"],
             get = function() return NSRT.AssignmentSettings[3180] and NSRT.AssignmentSettings[3180].Soaks end,
             set = function(self, fixedparam, value)
                 NSRT.AssignmentSettings[3180] = NSRT.AssignmentSettings[3180] or {}

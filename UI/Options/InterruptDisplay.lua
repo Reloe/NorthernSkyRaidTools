@@ -84,13 +84,20 @@ local function BuildInterruptDisplayOptions()
                 else
                     NSI:CreateInterruptDisplay()
                     NSI.InterruptDisplay.Number:SetText("3")
-                    NSI.InterruptDisplay.Name:SetText(NSAPI:Shorten("player", 8, false, "GlobalNickNames", false, false))
+                    NSI.InterruptDisplay.Name:SetText(NSAPI:Shorten("player", 12, false, "GlobalNickNames", false, false))
                     NSI.InterruptDisplay.Box:SetColorTexture(0, 1, 0, 1)
                     NSI:MakeDraggable(NSI.InterruptDisplay, NSRT.InterruptSettings, true)
                 end
             end,
             nocombat = true,
             spacement = true,
+        },
+        {
+            type = "toggle",
+            name = L["Show Interrupt Bar"],
+            desc = L["Show a Bar when it's your turn to interrupt. This Bar will show through the reminder system and use your default settings for bars."],
+            get = function() return NSRT.InterruptSettings.ShowBar end,
+            set = function(_, _, value) NSRT.InterruptSettings.ShowBar = value; refreshPreview() end,
         },
 
         {
@@ -149,6 +156,33 @@ local function BuildInterruptDisplayOptions()
             set = function() end,
             values = function() return buildSoundOptions() end,
         },
+        {
+            type = "color",
+            name = L["Interrupt Now Color"],
+            desc = L["Color of the display box when it's your turn to interrupt"],
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNowColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNowColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = L["Interrupt Next Color"],
+            desc = L["Color of the display box when you are up next to interrupt"],
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = L["Interrupt Default Color"],
+            desc = L["Color of the display box when it's not your turn to interrupt"],
+            get = function() return unpack(NSRT.InterruptSettings.InterruptDefaultColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptDefaultColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
 
         { type = "breakline" },
         { type = "label", get = function() return L["Number Settings"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
@@ -205,6 +239,34 @@ local function BuildInterruptDisplayOptions()
             get = function() return NSRT.InterruptSettings.NumberRelativeTo end,
             set = function() end,
             values = function() return buildAnchorOptions("NumberRelativeTo") end,
+        },
+
+        {
+            type = "color",
+            name = L["Interrupt Now Text Color"],
+            desc = L["Color of the number when it's your turn to interrupt"],
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNowTextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNowTextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = L["Interrupt Next Text Color"],
+            desc = L["Color of the number when you are up next to interrupt"],
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNextTextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNextTextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = L["Interrupt Default Text Color"],
+            desc = L["Color of the number when it's not your turn to interrupt"],
+            get = function() return unpack(NSRT.InterruptSettings.InterruptDefaultTextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptDefaultTextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
         },
 
         { type = "breakline" },

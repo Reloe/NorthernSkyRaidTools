@@ -27,6 +27,7 @@ function NSI:CreateInterruptDisplay()
 end
 
 function NSI:DisplayInterrupt(isCastStart)
+    local s = NSRT.InterruptSettings
     local myKick = self.Interrupts.myKick
     local castCount = self.Interrupts.castCount
     local unit = self.Interrupts.myTable[castCount]
@@ -36,18 +37,18 @@ function NSI:DisplayInterrupt(isCastStart)
     self.InterruptDisplay.Name:SetText(name)
     if castCount == myKick then
         if isCastStart then -- player interrupts now
-            self.InterruptDisplay.Box:SetColorTexture(0, 1, 0, 1)
-            self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
+            self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNowColor))
+            self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNowTextColor))
         else -- player interrupts next
-            self.InterruptDisplay.Box:SetColorTexture(1, 1, 0, 1)
-            self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
+            self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNextColor))
+            self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNextTextColor))
         end
     elseif (castCount+1 == myKick) or (myKick == 1 and castCount == self.Interrupts.max) then
-        self.InterruptDisplay.Box:SetColorTexture(1, 1, 0, 1)
-        self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
+        self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNextColor))
+        self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNextTextColor))
     else
-        self.InterruptDisplay.Number:SetTextColor(1, 1, 1, 1)
-        self.InterruptDisplay.Box:SetColorTexture(1, 0, 0, 1)
+        self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptDefaultColor))
+        self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptDefaultTextColor))
     end
     self.InterruptDisplay:Show()
 end
@@ -69,14 +70,34 @@ function NSI:ResetInterrupts()
     self.Interrupts.castCount = 1
     self.Interrupts.myTrackedID = self.Interrupts.myID
     self:HideInterrupt()
+    self:HideInterruptBar()
 end
 
-function NSI:InterruptOnCastStart()
+function NSI:InterruptOnCastStart(info)
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
     self:DisplayInterrupt(true)
     if self.Interrupts.castCount == self.Interrupts.myKick then
         self:PlayInterruptSound()
+        if NSRT.InterruptSettings.ShowBar and info then
+            self:ShowInterruptBar(info)
+        end
+    end
+end
+
+function NSI:ShowInterruptBar(info)
+    info.DisplayType = "Bar"
+    info.TTS = false
+    info.text = "Interrupt"
+    local alert = self:CreateReminder(info)
+    self.InterruptBar = self:DisplayReminder(alert)
+end
+
+function NSI:HideInterruptBar()
+    if self.InterruptBar then
+        self.InterruptBar:Hide()
+        self.InterruptBar = nil
+        self:ArrangeStates("Bar")
     end
 end
 
@@ -84,6 +105,7 @@ function NSI:OnInterrupt()
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
     self:DisplayInterrupt()
+    self:HideInterruptBar()
 end
 
 function NSI:OnCastStop()
@@ -112,7 +134,11 @@ function NSI:ReadInterruptNote(StartNumber)
     self.Interrupts.disabled = false
     self.Interrupts.max = 0
     self.Interrupts.myTable = {}
+    self.Interrupts.disabled = true
     local assign = false
+    str = str:gsub("||r", "")
+    str = str:gsub("||c%x%x%x%x%x%x%x%x", "")
+    str = strtrim(str)
     for line in string.gmatch(str,'[^\r\n]+') do
         line = strtrim(line)
         if strlower(line) == "intend" then
@@ -127,10 +153,12 @@ function NSI:ReadInterruptNote(StartNumber)
             count = count+1
             self.Interrupts.assignTable[count] = self.Interrupts.assignTable[count] or {}
             for name in line:gmatch("%S+") do
+                name = NSAPI:GetChar(name, true, "GlobalNickNames")
                 if UnitInRaid(name) then
                     num = num+1
                     table.insert(self.Interrupts.assignTable[count], name)
                     if UnitIsUnit(name, "player") then
+                        self.Interrupts.disabled = false
                         self.Interrupts.myID = count
                         self.Interrupts.myKick = num
                     end

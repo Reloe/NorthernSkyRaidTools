@@ -10,6 +10,7 @@ NSI.EncounterOrder = {
     [3306] = 7, -- Chimaerus
     [3182] = 8, -- Belo'ren
     [3183] = 9, -- Midnight Falls
+    [3159] = 10, -- Rotmire
 }
 
 local symbols = {
@@ -23,24 +24,60 @@ local symbols = {
     skull = 8,
 }
 
-function NSI:AddToReminder(info)
+local allowedTypes = {
+    ["Text"] = true,
+    ["Bar"] = true,
+    ["Icon"] = true,
+    ["Circle"] = true,
+}
+
+local settingsRef = {
+    Icon = "IconSettings",
+    Bar = "BarSettings",
+    Text = "TextSettings",
+    Circle = "CircleSettings",
+}
+
+function NSI:AddToReminder(reminderInfo)
+    local info = self:CreateReminder(reminderInfo)
+    if not info then return end
+    table.insert(self.ProcessedReminder[info.encID][info.phase], info)
+end
+
+function NSI:CreateReminder(info, preview)
     info = CopyTable(info)
+    if preview or not info.encID then
+        info.time = info.dur or 60
+        info.encID = 0
+    end
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
-    if info.colors and type(info.colors) == "string" then
-        local colors = {}
-        for color in info.colors:gmatch("([^%s:]+)") do
-            table.insert(colors, tonumber(color))
-        end
-        info.colors = colors
-    end
-    if (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsAssignment and self:IsUsingTLAssignments()) then
+    if info.IsAssignment and self:IsUsingTLAssignments() then
         table.insert(self.TLAlerts, info)
-        return
-    elseif self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment) then
-        return
+        return nil
+    end
+    if (info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
+        return nil
     end
     info.spellID = info.spellID and tonumber(info.spellID)
+    if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
+        info.DisplayType = info.spellID and (NSRT.ReminderSettings.Bars and "Bar" or "Icon") or "Text"
+    end
+    if info.textColors and type(info.textColors) == "string" then
+        local colors = {}
+        for color in info.textColors:gmatch("([^%s:]+)") do
+            table.insert(colors, tonumber(color))
+        end
+        if info.DisplayType == "Bar" then
+            info.barColors = colors
+            info.textColors = nil
+        elseif info.DisplayType == "Circle" then
+            info.ringColors = colors
+            info.textColors = nil
+        else
+            info.textColors = colors
+        end
+    end
     -- convert to booleans
     if info.TTS == "true" then info.TTS = true end
     if info.TTS == "false" then info.TTS = false end
@@ -103,29 +140,18 @@ function NSI:AddToReminder(info)
     end
 
     self.ProcessedReminder[info.encID][info.phase] = self.ProcessedReminder[info.encID][info.phase] or {}
-    table.insert(self.ProcessedReminder[info.encID][info.phase],
-    {
-        notsticky = info.notsticky,
-        BarOverwrite = info.BarOverwrite or info.Type == "Bar",
-        IconOverwrite = info.IconOverwrite or info.Type == "Icon",
-        TTSTimer = info.TTSTimer,
-        rawtext = info.rawtext,
-        phase = info.phase,
-        colors = info.colors,
-        id = #self.ProcessedReminder[info.encID][info.phase]+1,
-        countdown = info.countdown and tonumber(info.countdown),
-        glowunit = info.glowunit,
-        sound = info.sound,
-        time = info.time,
-        text = info.text,
-        TTS = info.TTS,
-        spellID = info.spellID and tonumber(info.spellID),
-        dur = info.dur or 8,
-        skipdur = info.skipdur, -- with this true there will be no cooldown edge shown for icons
-        IsAlert = info.IsAlert,
-        Ticks = info.Ticks,
-        skiptime = (info.spellID and NSRT.ReminderSettings.HideTimerText) or ((not info.spellID) and NSRT.ReminderSettings.HideTextTimerText),
-    })
+    info.name = info.name or info.internalID
+    info.id = #self.ProcessedReminder[info.encID][info.phase]+1
+    info.countdown = info.countdown and tonumber(info.countdown)
+    info.spellID = info.spellID and tonumber(info.spellID)
+    info.dur = info.dur or 8
+    if info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings[settingsRef[info.DisplayType]].HideTimerText end
+    info.id = #self.ProcessedReminder[info.encID][info.phase]+1
+    info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
+    info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
+    if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
+    if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
+    return info
 end
 
 function NSI:ProcessReminder()
@@ -164,7 +190,7 @@ function NSI:ProcessReminder()
         local mynickname = strlower(NSAPI:GetName("player", "GlobalNickNames"))
         local myname = strlower(UnitName("player"))
         local myrole = strlower(UnitGroupRolesAssigned("player"))
-        local myclass = select(2, UnitClass("player"))
+        local myclass = select(3, UnitClass("player"))
         pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
         local extranote = ""
         if not str:match('\n$') then
@@ -180,6 +206,7 @@ function NSI:ProcessReminder()
                 end
             end
             local tag = line:match("tag:([^;]+)")
+            local DisplayType = line:match("DisplayType:([^;]+)")
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
@@ -263,6 +290,9 @@ function NSI:ProcessReminder()
                     if colors then
                         displayLine = displayLine:gsub("colors:"..colors, "")
                     end
+                    if DisplayType then
+                        displayLine = displayLine:gsub("DisplayType:"..DisplayType, "")
+                    end
                     -- convert names to nicknames and color code them
                     local tagNames = ""
                     if not NSRT.ReminderSettings.HidePlayerNames then
@@ -302,7 +332,7 @@ function NSI:ProcessReminder()
                                 table.insert(personalremindertable, {str = displayLine, time = tonumber(time), phase = phase})
                             end
                         end
-                        self:AddToReminder({text = text, phase = phase, colors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID, Type = nil, notsticky = false})
+                        self:AddToReminder({DisplayType = DisplayType, text = text, phase = phase, textColors = colors, countdown = countdown, glowunit = glowunit, sound = sound, time = time, spellID = spellID, dur = dur, TTS = TTS, TTSTimer = TTSTimer, encID = encID})
                     end
                 end
             else
@@ -367,7 +397,12 @@ function NSI:ProcessReminder()
     end
 end
 
+local CircleTexture = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_white.png"
+
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
+    if self._uefPending then return end
+    self._uefPending = true
+    C_Timer.After(0, function() self._uefPending = false end)
     local parent = self.ReminderText or {}
     for i=1, #parent do
         local F = parent[i]
@@ -380,7 +415,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         end
     end
     self:ArrangeStates("Texts")
-    self:MoveFrameSettings(self.TextMover, NSRT.ReminderSettings.TextSettings, true)
+    self:MoveFrameSettings(self.TextMover, NSRT.ReminderSettings.TextSettings, true, true)
     parent = self.ReminderIcon or {}
     for i=1, #parent do
         local F = parent[i]
@@ -391,22 +426,22 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local z = ((s.Zoom) * 0.5) / 100
             F.Icon:SetTexCoord(z, 1 - z, z, 1 - z)
             F.Border:SetAllPoints(F)
-            local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
-            local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
+            local anchor = s.RightAlignedText and "RIGHT" or "LEFT"
+            local relativePoint = s.RightAlignedText and "LEFT" or "RIGHT"
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            if F.info and F.info.skiptime then
+            if s.HideTimerText then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
             end
-            F.TimerText:SetPoint("CENTER", F.Swipe, "CENTER", s.xTimer, s.yTimer)
+            F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
         end
     end
     self:ArrangeStates("Icons")
-    self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings)
+    self:MoveFrameSettings(self.IconMover, NSRT.ReminderSettings.IconSettings, nil, true)
     parent = self.UnitIcon or {}
     for i=1, #parent do
         local F = parent[i]
@@ -422,12 +457,13 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local s = NSRT.ReminderSettings.BarSettings
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            F:SetStatusBarColor(unpack(F.info.colors or s.colors))
+            F:SetStatusBarColor(unpack(s.barColors))
+            if F.Text then F.Text:SetTextColor(unpack(s.textColors)) end
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            if F.info and F.info.skiptime then
+            if s.HideTimerText then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -438,12 +474,32 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     end
     self:ArrangeStates("Bars")
     self:MoveFrameSettings(self.BarMover, NSRT.ReminderSettings.BarSettings, false, true)
+    parent = self.ReminderCircle or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F and F:IsShown() then
+            local s = NSRT.ReminderSettings.CircleSettings
+            F:SetSize(s.Size, s.Size)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetTextColor(unpack(s.textColors))
+        end
+    end
+    self:ArrangeStates("Circles")
+    if self.CircleMover then
+        self:MoveFrameSettings(self.CircleMover, NSRT.ReminderSettings.CircleSettings, nil, true)
+    end
 end
 
-function NSI:ArrangeStates(Type)
-    local F = (Type == "Texts" and self.ReminderText) or (Type == "Icons" and self.ReminderIcon) or (Type == "Bars" and self.ReminderBar)
+function NSI:ArrangeStates(DisplayType)
+    local F = (DisplayType == "Texts"   and self.ReminderText)
+           or (DisplayType == "Icons"   and self.ReminderIcon)
+           or (DisplayType == "Bars"    and self.ReminderBar)
+           or (DisplayType == "Circles" and self.ReminderCircle)
     if not F then return end
-    local s = (Type == "Texts" and NSRT.ReminderSettings.TextSettings) or (Type == "Icons" and NSRT.ReminderSettings.IconSettings) or (Type == "Bars" and NSRT.ReminderSettings.BarSettings)
+    local s = (DisplayType == "Texts"   and NSRT.ReminderSettings.TextSettings)
+           or (DisplayType == "Icons"   and NSRT.ReminderSettings.IconSettings)
+           or (DisplayType == "Bars"    and NSRT.ReminderSettings.BarSettings)
+           or (DisplayType == "Circles" and NSRT.ReminderSettings.CircleSettings)
     local pos = {}
     for i=1, #F do
         if F[i] and F[i]:IsShown() then
@@ -451,29 +507,57 @@ function NSI:ArrangeStates(Type)
         end
     end
     table.sort(pos, function(a, b)
-        if a.expires == b.expires then
-            return a.id < b.id
-        else
-            return a.expires < b.expires
-        end
+        if a.expires == b.expires then return a.id < b.id else return a.expires < b.expires end
     end)
+    local ANCHOR_PAD = 8
     for i, v in ipairs(pos) do
-        local diff = Type == "Texts" and v.Frame.Text and v.Frame.Text:GetStringHeight() or s.Height or 0
         local Spacing = s.Spacing or 0
-        local yoffset = (s.GrowDirection == "Up" and (i-1) * (diff+Spacing) or (s.GrowDirection == "Down" and -(i-1) * (diff+Spacing))) or 0
-        local xoffset = Type == "Icons" and ((s.GrowDirection == "Right" and (i-1) * (s.Width+Spacing)) or (s.GrowDirection == "Left" and -(i-1) * (s.Width+Spacing))) or 0
         v.Frame:ClearAllPoints()
-        if Type == "Texts" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + yoffset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + yoffset)
-        elseif Type == "Icons" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
-        elseif Type == "Bars" then
-            v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + yoffset)
-            v.Frame:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + yoffset)
+        if DisplayType == "Texts" then
+            local textHeight = issecretvalue(v.Frame.Text:GetStringHeight()) and (s.FontSize or 14) or v.Frame.Text:GetStringHeight()
+            -- Texts stretch to anchor width, so double-point from anchor edges = centered
+            local h = v.Frame.Text and textHeight or s.FontSize or 14
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "TOPLEFT",  0, ANCHOR_PAD + (i-1)*(h+Spacing))
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderTextMover", "TOPRIGHT", 0, ANCHOR_PAD + (i-1)*(h+Spacing) + h)
+            else -- Down
+                v.Frame:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT",  0, -(ANCHOR_PAD + (i-1)*(h+Spacing) + h))
+                v.Frame:SetPoint("TOPRIGHT",   "NSUIReminderTextMover", "BOTTOMRIGHT", 0, -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+            end
+        elseif DisplayType == "Icons" then
+            local w, h = s.Width, s.Height
+            v.Frame:SetSize(w, h)
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOM", "NSUIReminderIconMover", "TOP",    0,                           ANCHOR_PAD + (i-1)*(h+Spacing))
+            elseif s.GrowDirection == "Down" then
+                v.Frame:SetPoint("TOP",    "NSUIReminderIconMover", "BOTTOM", 0,                          -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+            elseif s.GrowDirection == "Right" then
+                v.Frame:SetPoint("LEFT",   "NSUIReminderIconMover", "RIGHT",  ANCHOR_PAD + (i-1)*(w+Spacing), 0)
+            elseif s.GrowDirection == "Left" then
+                v.Frame:SetPoint("RIGHT",  "NSUIReminderIconMover", "LEFT",  -(ANCHOR_PAD + (i-1)*(w+Spacing)), 0)
+            end
+        elseif DisplayType == "Bars" then
+            local w, h = s.Width, s.Height
+            v.Frame:SetSize(w, h)
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOM", "NSUIReminderBarMover", "TOP",    0,  ANCHOR_PAD + (i-1)*(h+Spacing))
+            else -- Down
+                v.Frame:SetPoint("TOP",    "NSUIReminderBarMover", "BOTTOM", 0, -(ANCHOR_PAD + (i-1)*(h+Spacing)))
+            end
+        elseif DisplayType == "Circles" then
+            local sz = s.Size or 80
+            v.Frame:SetSize(sz, sz)
+            if s.GrowDirection == "Up" then
+                v.Frame:SetPoint("BOTTOM", "NSUIReminderCircleMover", "TOP",    0,                            ANCHOR_PAD + (i-1)*(sz+Spacing))
+            elseif s.GrowDirection == "Down" then
+                v.Frame:SetPoint("TOP",    "NSUIReminderCircleMover", "BOTTOM", 0,                           -(ANCHOR_PAD + (i-1)*(sz+Spacing)))
+            elseif s.GrowDirection == "Right" then
+                v.Frame:SetPoint("LEFT",   "NSUIReminderCircleMover", "RIGHT",  ANCHOR_PAD + (i-1)*(sz+Spacing), 0)
+            elseif s.GrowDirection == "Left" then
+                v.Frame:SetPoint("RIGHT",  "NSUIReminderCircleMover", "LEFT",  -(ANCHOR_PAD + (i-1)*(sz+Spacing)), 0)
+            end
         else
-            print("RELOE PLS FIX (Reminder anchoring issue @ NSI:ArrangeStates)")
+            print("NSRT: Reminder anchoring issue @ NSI:ArrangeStates (unknown type: "..tostring(DisplayType)..")")
         end
     end
 end
@@ -485,14 +569,15 @@ function NSI:SetProperties(F, info, skipsound, s)
         self.elapsed = 0
         NSI:UpdateReminderDisplay(info, F, skipsound)
     end)
+    F.info = info
     F:SetScript("OnHide", function()
         if info.glowunit then
             self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
         end
-        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 then
+        if F.Swipe and info.DisplayType == "Icon" and NSRT.ReminderSettings.IconSettings.Glow > 0 then
             self:HideGlows(nil, nil, F)
         end
-        NSI:ArrangeStates(F.Type)
+        NSI:ArrangeStates(F.DisplayType)
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         if F.Ticks then
             for _, tick in ipairs(F.Ticks) do
@@ -500,40 +585,63 @@ function NSI:SetProperties(F, info, skipsound, s)
             end
         end
     end)
-    F.info = info
-    if not info.spellID then
-        F.Text:SetTextColor(unpack(info.colors or s.colors))
+    local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
+    if info.DisplayType == "Text" then
+        F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
+        F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         return
     end
-    local icon = C_Spell.GetSpellInfo(info.spellID).iconID
-    F.Icon:SetTexture(icon)
-    if F.Swipe then
-        if info.skipdur then
-            F.Swipe:SetCooldown(0, 0)
-            F.TimerText:Hide()
+    if info.DisplayType == "Circle" then
+        local s = NSRT.ReminderSettings.CircleSettings
+        local r, g, b, a = unpack(info.textColors or s.textColors)
+        F.Text:SetTextColor(r, g, b, a)
+        local showBg = (info.showBackground == nil) and s.showBackground or info.showBackground
+        if F.ring then
+            local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
+            F.ring:SetShown(shouldShow)
+        end
+        F.Swipe:SetCooldown(info.startTime, info.dur)
+        F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
+        F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
+    end
+    if info.DisplayType == "Icon" then
+        if not spellInfo then spellInfo = { iconID = 134400 } end
+        F.Icon:SetTexture(spellInfo.iconID)
+        if info.HideSwipe then
+            if F.Swipe then F.Swipe:SetCooldown(0, 0) end
         else
-            F.Swipe:SetCooldown(GetTime(), info.dur)
-            if F.TimerText then
-                F.TimerText:SetTextColor(1, 1, 0, 1)
-                if info.skiptime then
-                    F.TimerText:Hide()
-                else
-                    F.TimerText:Show()
-                end
+            if F.Swipe then F.Swipe:SetCooldown(GetTime(), info.dur) end
+        end
+        if F.TimerText then
+            F.TimerText:SetTextColor(1, 1, 0, 1)
+            if info.HideTimer then
+                F.TimerText:Hide()
+            else
+                F.TimerText:Show()
             end
         end
-        F.Text:SetTextColor(unpack(info.colors or s.colors))
-    elseif F:GetObjectType() == "StatusBar" then
-        F:SetStatusBarColor(unpack(info.colors or s.colors))
+        if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors)) end
+    elseif info.DisplayType == "Bar" then
+        if spellInfo then
+            F.Icon:SetTexture(spellInfo.iconID)
+            F.Icon:Show()
+        else
+            F.Icon:Hide()
+        end
+        if F.SetStatusBarColor then
+            F:SetStatusBarColor(unpack(info.barColors or s.barColors or {1,0,0,1}))
+        end
+        if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1})) end
         if F.TimerText then
-            F.TimerText:SetTextColor(1, 1, 1, 1)
-            if info.skiptime then
+            F.TimerText:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1}))
+            if info.HideTimer then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
             end
         end
     end
+    if info.ReloeReminder or not info.spellID then return end
     F:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
     F:SetScript("OnEvent", function(self, e, ...)
         -- only registered for player so spellID is never secret
@@ -558,27 +666,28 @@ function NSI:CreateText(info)
             return self.ReminderText[i]
         end
         if not self.ReminderText[i] then
-            self.ReminderText[i] = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
+            local F = CreateFrame("Frame", 'NSUIReminderText' .. i, UIParent, "BackdropTemplate")
             local offset = s.GrowDirection == "Up" and (i-1) * s.FontSize or -(i-1) * s.FontSize
-            self.ReminderText[i]:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderText[i]:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
-            self.ReminderText[i]:SetFrameStrata("HIGH")
-            self.ReminderText[i].Text = self.ReminderText[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderTextMover", "BOTTOMLEFT", 0, 0 + offset)
+            F:SetPoint("TOPRIGHT", "NSUIReminderTextMover", "TOPRIGHT", 0, 0 + offset)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             local anchor = s.CenterAligned and "CENTER" or "LEFT"
-            self.ReminderText[i].Text:SetPoint(anchor, self.ReminderText[i], anchor, 0, 0)
-            self.ReminderText[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.ReminderText[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.ReminderText[i].Text:SetShadowOffset(0, 0)
-            self.ReminderText[i].Text:SetTextColor(unpack(info.colors or s.colors))
-            self:SetProperties(self.ReminderText[i], info, false, s)
-            return self.ReminderText[i]
+            F.Text:SetPoint(anchor, F, anchor, 0, 0)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
+            self:SetProperties(F, info, false, s)
+            self.ReminderText[i] = F
+            return F
         end
     end
 end
 
 function NSI:CreateIcon(info)
     self.ReminderIcon = self.ReminderIcon or {}
-    local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     local s = NSRT.ReminderSettings.IconSettings
     for i=1, #self.ReminderIcon+1 do
         if self.ReminderIcon[i] and not self.ReminderIcon[i]:IsShown() then
@@ -586,45 +695,49 @@ function NSI:CreateIcon(info)
             return self.ReminderIcon[i]
         end
         if not self.ReminderIcon[i] then
-            self.ReminderIcon[i] = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
+            local F = CreateFrame("Frame", 'NSUIReminderIcon' .. i, UIParent, "BackdropTemplate")
             local yoffset = (s.GrowDirection == "Up" and (i-1) * s.Height) or (s.GrowDirection == "Down" and -(i-1) * s.Height) or 0
             local xoffset = (s.GrowDirection == "Right" and (i-1) * s.Width) or (s.GrowDirection == "Left" and -(i-1) * s.Width) or 0
-            self.ReminderIcon[i]:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
-            self.ReminderIcon[i]:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
-            self.ReminderIcon[i]:SetFrameStrata("HIGH")
-            self.ReminderIcon[i].Icon = self.ReminderIcon[i]:CreateTexture(nil, "ARTWORK")
-            self.ReminderIcon[i].Icon:SetAllPoints(self.ReminderIcon[i])
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderIconMover", "BOTTOMLEFT", 0 + xoffset, 0 + yoffset)
+            F:SetPoint("TOPRIGHT", "NSUIReminderIconMover", "TOPRIGHT", 0 + xoffset, 0 + yoffset)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+            F.Icon = F:CreateTexture(nil, "ARTWORK")
+            F.Icon:SetAllPoints(F)
             local z = ((s.Zoom) * 0.5) / 100
-            self.ReminderIcon[i].Icon:SetTexCoord(z, 1 - z, z, 1 - z)
-            self.ReminderIcon[i].Border = CreateFrame("Frame", nil, self.ReminderIcon[i], "BackdropTemplate")
-            self.ReminderIcon[i].Border:SetAllPoints(self.ReminderIcon[i])
-            self.ReminderIcon[i].Border:SetBackdrop({
+            F.Icon:SetTexCoord(z, 1 - z, z, 1 - z)
+            F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.Border:SetAllPoints(F)
+            F.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.ReminderIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self.ReminderIcon[i].Text = self.ReminderIcon[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
             local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
-            self.ReminderIcon[i].Text:SetPoint(anchor, self.ReminderIcon[i], relativePoint, s.xTextOffset, s.yTextOffset)
-            self.ReminderIcon[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.ReminderIcon[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.ReminderIcon[i].Text:SetShadowOffset(0, 0)
-            self.ReminderIcon[i].Text:SetTextColor(unpack(info.colors or s.colors))
-            self.ReminderIcon[i].Swipe = CreateFrame("Cooldown", nil, self.ReminderIcon[i], "CooldownFrameTemplate")
-            self.ReminderIcon[i].Swipe:SetAllPoints()
-            self.ReminderIcon[i].Swipe:SetDrawBling(false)
-            self.ReminderIcon[i].Swipe:SetDrawEdge(false)
-            self.ReminderIcon[i].Swipe:SetReverse(true)
-            self.ReminderIcon[i].Swipe:SetHideCountdownNumbers(true)
-            self.ReminderIcon[i].TimerText = self.ReminderIcon[i].Swipe:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderIcon[i].TimerText:SetPoint("CENTER", self.ReminderIcon[i].Swipe, "CENTER", s.xTimer, s.yTimer)
-            self.ReminderIcon[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            self.ReminderIcon[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.ReminderIcon[i].TimerText:SetShadowOffset(0, 0)
-            self.ReminderIcon[i].TimerText:SetDrawLayer("OVERLAY", 7)
-            self:SetProperties(self.ReminderIcon[i], info, false, s)
-            return self.ReminderIcon[i]
+            F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
+            F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
+            F.Swipe:SetAllPoints()
+            F.Swipe:SetDrawBling(false)
+            F.Swipe:SetDrawEdge(false)
+            F.Swipe:SetReverse(true)
+            F.Swipe:SetHideCountdownNumbers(true)
+            F.TimerOverlay = CreateFrame("Frame", nil, F)
+            F.TimerOverlay:SetAllPoints(F)
+            F.TimerOverlay:SetFrameLevel(F.Swipe:GetFrameLevel() + 1)
+            F.TimerText = F.TimerOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            F.TimerText:SetShadowColor(0, 0, 0, 1)
+            F.TimerText:SetShadowOffset(0, 0)
+            self:SetProperties(F, info, false, s)
+            self.ReminderIcon[i] = F
+            return F
         end
     end
 end
@@ -633,44 +746,44 @@ end
 
 function NSI:CreateUnitFrameIcon(info, name)
     self.UnitIcon = self.UnitIcon or {}
-    local icon = C_Spell.GetSpellInfo(info.spellID).iconID
+    local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
+    if not spellInfo then return end
     local unit = NSAPI:GetChar(name, true)
-    local i = UnitInRaid(unit)
-    if (not UnitExists(unit)) or (not i) then return end
-    local F = self.LGF.GetUnitFrame("raid"..i)
-    if not F then return end
+    if (not UnitExists(unit)) then return end
+    local UnitFrame = self.LGF.GetUnitFrame(unit)
+    if not UnitFrame then return end
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, #self.UnitIcon+1 do
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then
             self.UnitIcon[i]:ClearAllPoints()
-            self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
+            self.UnitIcon[i]:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
             self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i]
         end
         if not self.UnitIcon[i] then
-            self.UnitIcon[i] = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-            self.UnitIcon[i]:SetSize(s.Width, s.Height)
-            self.UnitIcon[i]:SetPoint(s.Position, F, s.Position, s.xOffset, s.yOffset)
-            self.UnitIcon[i].Icon = self.UnitIcon[i]:CreateTexture(nil, "ARTWORK")
-            self.UnitIcon[i].Icon:SetAllPoints(self.UnitIcon[i])
-            self.UnitIcon[i]:SetFrameStrata("TOOLTIP")
-            self.UnitIcon[i].Icon:SetTexture(icon)
-            self.UnitIcon[i].Border = CreateFrame("Frame", nil, self.UnitIcon[i], "BackdropTemplate")
-            self.UnitIcon[i].Border:SetAllPoints(self.UnitIcon[i])
-            self.UnitIcon[i].Border:SetBackdrop({
+            local F = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            F:SetSize(s.Width, s.Height)
+            F:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
+            F.Icon = F:CreateTexture(nil, "ARTWORK")
+            F.Icon:SetAllPoints(F)
+            F:SetFrameStrata("TOOLTIP")
+            F.Icon:SetTexture(spellInfo.iconID)
+            F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.Border:SetAllPoints(F)
+            F.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.UnitIcon[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self:SetProperties(self.UnitIcon[i], info, true, s)
-            return self.UnitIcon[i]
+            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            self:SetProperties(F, info, true, s)
+            self.UnitIcon[i] = F
+            return F
         end
     end
 end
 
 function NSI:CreateBar(info)
     self.ReminderBar = self.ReminderBar or {}
-    local icon = C_Spell.GetSpellInfo(info.spellID).iconID
     local s = NSRT.ReminderSettings.BarSettings
     for i=1, #self.ReminderBar+1 do
         if self.ReminderBar[i] and not self.ReminderBar[i]:IsShown() then
@@ -678,49 +791,99 @@ function NSI:CreateBar(info)
             return self.ReminderBar[i]
         end
         if not self.ReminderBar[i] then
-            self.ReminderBar[i] = CreateFrame("StatusBar", 'NSUIReminderBar' .. i, UIParent, "BackdropTemplate")
-            self.ReminderBar[i]:SetBackdrop({
+            local F = CreateFrame("StatusBar", 'NSUIReminderBar' .. i, UIParent, "BackdropTemplate")
+            F:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             tileSize = 0,
             })
-            self.ReminderBar[i]:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
-            self.ReminderBar[i]:SetStatusBarColor(unpack(info.colors or s.colors))
-            self.ReminderBar[i]:SetBackdropColor(0, 0, 0, 0.8)
+            F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
+            F:SetStatusBarColor(unpack(info.barColors or s.barColors))
+            F:SetBackdropColor(0, 0, 0, 0.8)
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
-            self.ReminderBar[i]:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
-            self.ReminderBar[i]:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
-            self.ReminderBar[i]:SetFrameStrata("HIGH")
-            self.ReminderBar[i].Border = CreateFrame("Frame", nil, self.ReminderBar[i], "BackdropTemplate")
-            self.ReminderBar[i].Border:SetAllPoints(self.ReminderBar[i])
-            self.ReminderBar[i].Border:SetBackdrop({
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
+            F:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+            F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
+            F.Border:SetAllPoints(F)
+            F.Border:SetBackdrop({
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            self.ReminderBar[i].Border:SetBackdropBorderColor(0, 0, 0, 1)
-            self.ReminderBar[i].Icon = self.ReminderBar[i]:CreateTexture(nil, "ARTWORK")
-            self.ReminderBar[i].Icon:SetPoint("RIGHT", self.ReminderBar[i], "LEFT", s.xIcon, s.yIcon)
-            self.ReminderBar[i].Icon:SetSize(s.Height, s.Height)
-            self.ReminderBar[i].Text = self.ReminderBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderBar[i].Text:SetPoint("LEFT", self.ReminderBar[i].Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
-            self.ReminderBar[i].Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            self.ReminderBar[i].Text:SetShadowColor(0, 0, 0, 1)
-            self.ReminderBar[i].Text:SetShadowOffset(0, 0)
-            self.ReminderBar[i].Text:SetTextColor(1, 1, 1, 1)
-            self.ReminderBar[i].TimerText = self.ReminderBar[i]:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            self.ReminderBar[i].TimerText:SetPoint("RIGHT", self.ReminderBar[i], "RIGHT", s.xTimer, s.yTimer)
-            self.ReminderBar[i].TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            self.ReminderBar[i].TimerText:SetShadowColor(0, 0, 0, 1)
-            self.ReminderBar[i].TimerText:SetShadowOffset(0, 0)
-            self:SetProperties(self.ReminderBar[i], info, false, s)
-            return self.ReminderBar[i]
+            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.Icon = F:CreateTexture(nil, "ARTWORK")
+            F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
+            F.Icon:SetSize(s.Height, s.Height)
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
+            F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            F.TimerText:SetShadowColor(0, 0, 0, 1)
+            F.TimerText:SetShadowOffset(0, 0)
+            self:SetProperties(F, info, false, s)
+            self.ReminderBar[i] = F
+            return F
+        end
+    end
+end
+
+function NSI:CreateCircle(info)
+    self.ReminderCircle = self.ReminderCircle or {}
+    local s = NSRT.ReminderSettings.CircleSettings
+    for i = 1, #self.ReminderCircle + 1 do
+        if self.ReminderCircle[i] and not self.ReminderCircle[i]:IsShown() then
+            self:SetProperties(self.ReminderCircle[i], info, false, s)
+            return self.ReminderCircle[i]
+        end
+        if not self.ReminderCircle[i] then
+            local F = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+            F.IsCircle = true
+            F:SetSize(s.Size, s.Size)
+            F:SetFrameStrata("HIGH")
+            F:SetFrameLevel(10)
+
+            F.ring = F:CreateTexture(nil, "ARTWORK")
+            F.ring:SetTexture(CircleTexture)
+            F.ring:SetAllPoints(F)
+            F.ring:SetVertexColor(0, 0, 0, 0.85)
+            local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
+            F.ring:SetShown(shouldShow)
+
+            F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
+            F.Swipe:SetAllPoints(F)
+            F.Swipe:SetDrawBling(false)
+            F.Swipe:SetDrawEdge(false)
+            F.Swipe:SetReverse(false)
+            F.Swipe:SetHideCountdownNumbers(true)
+            F.Swipe:SetSwipeTexture(CircleTexture)
+            F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
+
+            F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            F.Text:SetPoint("BOTTOM", F, "TOP", 0, 4)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetShadowColor(0, 0, 0, 1)
+            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
+            local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
+            local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
+            F:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "BOTTOMLEFT", xoff, yoff)
+            F:SetPoint("TOPRIGHT",   "NSUIReminderCircleMover", "TOPRIGHT",   xoff, yoff)
+            self.ReminderCircle[i] = F
+            self:SetProperties(F, info, false, s)
+            return F
         end
     end
 end
 
 function NSI:AddTickToBar(F, percent, HideTimer)
-    if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) then return end
+    if (not F) or F:GetObjectType() ~= "StatusBar" or (not percent) or percent > 1 or percent < 0 then return end
     local s = NSRT.ReminderSettings.BarSettings
-    local width = s.Width * (percent)
+    local width = s.Width * percent
     local height = s.Height
     F.Ticks = F.Ticks or {}
     for i=1, #F.Ticks+1 do
@@ -743,53 +906,83 @@ function NSI:AddTickToBar(F, percent, HideTimer)
     end
 end
 
-function NSI:DisplayReminder(info)
+function NSI:CheckReminderLogic(info)
+    if info.isConditional then
+        if self.EncounterAlertHandle[self.EncounterID] then
+            return self.EncounterAlertHandle[self.EncounterID](self, info)
+        else
+            return true
+        end
+    else
+        return true
+    end
+end
+
+function NSI:GetDisplayedText(rem, info, F)
+    local remString
+    if rem <= info.Decimals then
+        if rem < 0 then
+            remString = ""
+        else
+            rem = Round(rem * 10 + 0.5) / 10
+            remString = string.format("%.1f", rem)
+        end
+    else
+        remString = tostring(math.ceil(rem))
+    end
+    if info.DisplayType == "Text" or info.DisplayType == "Circle" then
+        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and (remString == "" and info.text or info.text.." ("..remString..")")) or remString
+        return (F and F.SpellText or "")..text
+    else
+        return info.text, remString
+    end
+end
+
+function NSI:DisplayReminder(info, bypass)
+    local isAllowed = self:CheckReminderLogic(info)
+    if not isAllowed then return end
     local now = GetTime()
     local dur = info.dur or 8
     info.startTime = now
     info.dur = dur
     info.expires = now + dur
     local rem = info.dur - (now - info.startTime)
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
+    if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
     end
-    local remString
-    if rem < 3 then
-        if rem < 0 then
-            remString = ""
-        else
-            rem = math.floor(rem * 10 + 0.5) / 10
-            remString = string.format("%.1f", rem)
-        end
-    else
-        remString = tostring(math.ceil(rem))
-    end
-    local remString = (rem % 1 == 0) and string.format("%.1f", rem) or rem
-    local text = info.text ~= "" and info.text or ""
     local F
-    if info.spellID then -- display icon if we have a spellID
-        if (NSRT.ReminderSettings.Bars or info.BarOverwrite) and not info.IconOverwrite then
+    local text, remString = self:GetDisplayedText(rem, info, F)
+    if info.DisplayType == "Circle" then
+        F = self:CreateCircle(info)
+        F.DisplayType = "Circles"
+        F.Text:SetText(text)
+        F:Show()
+        self:ArrangeStates("Circles")
+    elseif info.DisplayType == "Text" then
+        F = self:CreateText(info)
+        F.DisplayType = "Texts"
+        F.Text:SetText(text)
+        F:Show()
+        self:ArrangeStates("Texts")
+    else
+        if info.DisplayType == "Bar" then
             F = self:CreateBar(info)
             F:SetMinMaxValues(0, info.dur)
             F:SetValue(0)
             F:Show()
             self:ArrangeStates("Bars")
-            F.Type = "Bars"
-        else
+            F.DisplayType = "Bars"
+            F.Text:SetText(info.text)
+            F.TimerText:SetText(remString)
+            if not info.spellID then F.Icon:Hide() else F.Icon:Show() end
+        elseif info.DisplayType == "Icon" then
             F = self:CreateIcon(info)
             F:Show()
             self:ArrangeStates("Icons")
-            F.Type = "Icons"
+            F.DisplayType = "Icons"
+            F.Text:SetText(info.text)
+            F.TimerText:SetText(remString)
         end
-        F.Text:SetText(text)
-        F.TimerText:SetText(remString)
-    else
-        F = self:CreateText(info)
-        F.Type = "Texts"
-        text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
-        F.Text:SetText(text)
-        F:Show()
-        self:ArrangeStates("Texts")
     end
     if info.Ticks then
         for _, tick in ipairs(info.Ticks) do
@@ -799,7 +992,7 @@ function NSI:DisplayReminder(info)
     end
     if info.glowunit then
         for i, name in ipairs(info.glowunit) do
-            self:GlowFrame(name, "p"..info.phase.."id"..info.id)
+            self:GlowFrame(name, "p"..info.phase.."id"..info.id, nil, info.glowColors)
             if info.spellID then
                 local UnitIcon = self:CreateUnitFrameIcon(info, name)
                 if UnitIcon then UnitIcon:Show() end
@@ -811,55 +1004,51 @@ end
 
 function NSI:UpdateReminderDisplay(info, F, skipsound)
     local rem = info.dur - (GetTime() - info.startTime)
+    local encId = info.encID or 0
+    local phase = info.phase or 0
     local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
-    if rem <= SoundTimer and (not self.PlayedSound["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if rem <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
         self:PlayReminderSound(info)
-        self.PlayedSound["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
+        self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
-    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
         NSAPI:TTSCountdown(info.countdown)
-        self.StartedCountdown["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
+        self.StartedCountdown["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
-    if info.spellID and rem <= (0-NSRT.ReminderSettings.Sticky) or ((info.notsticky or not info.spellID) and rem <= 0) then
+    if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         F:Hide()
         return
     end
-    local remString
-    if rem < 3 then
-        if rem < 0 then
-            remString = ""
-        else
-            rem = math.floor(rem * 10 + 0.5) / 10
-            remString = string.format("%.1f", rem)
-        end
-    else
-        remString = tostring(math.ceil(rem))
-    end
-    if info.spellID and type(info.spellID) == "number" then
-        if F:GetObjectType() == "StatusBar" then
-            F:SetValue((GetTime()-info.startTime))
-            if F.Ticks then
-                for _, tick in ipairs(F.Ticks) do
-                    if tick.HideTimer and rem <= tick.HideTimer then
-                        tick:Hide()
-                        tick.HideTimer = nil
-                    end
+    local text, remString = self:GetDisplayedText(rem, info, F)
+    if info.DisplayType == "Circle" then
+        F.Text:SetText(text)
+        return
+    elseif info.DisplayType == "Text" then
+        F.Text:SetText(text)
+        return
+    elseif info.DisplayType == "Bar" then
+        if F.SetValue then F:SetValue((GetTime()-info.startTime)) end
+        if F.Ticks then
+            for _, tick in ipairs(F.Ticks) do
+                if tick.HideTimer and rem <= tick.HideTimer then
+                    tick:Hide()
+                    tick.HideTimer = nil
                 end
-            end
-        else
-            if rem <= 3 and F.TimerText then
-                F.TimerText:SetTextColor(1, 0, 0, 1)
-            end
-            if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] then
-                self.GlowStarted["enc"..(info.encID or 0).."ph"..info.phase.."id"..info.id] = true
-                self:GlowFrame(nil, nil, F)
             end
         end
         if F.TimerText then F.TimerText:SetText(remString) end
-    else
-        local text = (info.skiptime and info.text) or (info.text and info.text ~= "" and info.text.." - ("..remString..")") or remString
-        F.Text:SetText(text)
+        return
+    elseif info.DisplayType == "Icon" then
+        if rem <= 3 and F.TimerText then
+            F.TimerText:SetTextColor(1, 0, 0, 1)
+        end
+        if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["enc"..encId.."ph"..phase.."id"..info.id] then
+            self.GlowStarted["enc"..encId.."ph"..phase.."id"..info.id] = true
+            self:GlowFrame(nil, nil, F)
+        end
+        if F.TimerText then F.TimerText:SetText(remString) end
+        return
     end
 end
 
@@ -896,7 +1085,6 @@ function NSI:PlayReminderSound(info, default)
                 return
             end
         end
-
         -- No LSM match found, try to play it directly as a path
         local success = PlaySoundFile(sound, "Master")
         if success then return end
@@ -921,6 +1109,10 @@ function NSI:StartReminders(phase, testrun)
     self.AllGlows = {}
     self.ReminderTimer = {}
     if testrun then
+        if self:IsUsingTLReminders() then
+            print("You have selected to display Reminders through TimelineReminders, thus the test run of NSRT will not display anything.")
+            return
+        end
         if not self.ProcessedReminder then self:ProcessReminder() end
         if not self.ProcessedReminder then return end
         for encID, encData in pairs(self.ProcessedReminder) do
@@ -992,7 +1184,7 @@ function NSI:DelayAllReminders(delay)
     if not self.ProcessedReminder[self.EncounterID][phase] then return end
     local timediff = GetTime() - self.PhaseSwapTime -- time since phase change
 
-    local parents = {"ReminderText", "ReminderIcon", "ReminderBar", "UnitIcon"}
+    local parents = {"ReminderText", "ReminderIcon", "ReminderBar", "ReminderCircle", "UnitIcon"}
     for _, parentname in ipairs(parents) do
         if self[parentname] then
             for i=1, #self[parentname] do
@@ -1032,6 +1224,7 @@ function NSI:HideAllReminders(FullReset)
         for k, v in pairs(self.AllGlows) do
             self.LCG.PixelGlow_Stop(k, v)
         end
+        self.AllGlows = {}
     end
     local parent = self.ReminderText or {}
     for i=1, #parent do
@@ -1053,9 +1246,14 @@ function NSI:HideAllReminders(FullReset)
         local F = parent[i]
         if F then F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED") F:Hide() end
     end
+    parent = self.ReminderCircle or {}
+    for i=1, #parent do
+        local F = parent[i]
+        if F then F:Hide() end
+    end
     if not FullReset then return end
     self.ReminderTimer = nil
-    self.AllGlows = nil
+    self.AllGlows = {}
     self.Timelines = {}
     self.RemovedTimelines = {}
     self.CustomEvents = {}
@@ -1108,17 +1306,18 @@ end
 
 function NSI:SetReminder(name, personal, skipupdate, encIDHint)
     if personal then
+        local charkey = self:GetProfileKey()
         local encID = self:EncIDFromReminder(name, true) or encIDHint
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
             self.LoadedPersonalReminder = name
-            NSRT.StoredPersonalReminder = name
+            NSRT.StoredPersonalReminder[charkey] = name
             NSRT.ReminderSettings.PersNote = true
             if encID then self:GetActivePersonalReminders()[encID] = name end
         else
             self.PersonalReminder = ""
             self.LoadedPersonalReminder = nil
-            NSRT.StoredPersonalReminder = nil
+            NSRT.StoredPersonalReminder[charkey] = nil
             if encID then self:GetActivePersonalReminders()[encID] = nil end
         end
     elseif name and NSRT.Reminders[name] then
@@ -1239,7 +1438,7 @@ function NSI:InviteListFromReminder(str)
     return found and list or false
 end
 
-function NSI:GlowFrame(unit, id, F)
+function NSI:GlowFrame(unit, id, F, colors)
     if F then
         local s = NSRT.ReminderSettings.GlowSettings
         self.LCG.ButtonGlow_Start(F, nil, nil, 1000)
@@ -1248,7 +1447,7 @@ function NSI:GlowFrame(unit, id, F)
     local color = {0, 1, 0, 1}
     if not unit then return end
     unit = NSAPI:GetChar(unit, true)
-    local i = UnitInRaid(unit)
+    local i = UnitInRaid(unit) or UnitInParty(unit) or "player"
     if (not UnitExists(unit)) or (not i) then return end
     id = unit..id
     local F = self.LGF.GetUnitFrame(unit)
@@ -1256,7 +1455,7 @@ function NSI:GlowFrame(unit, id, F)
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows[F] = id
     local s = NSRT.ReminderSettings.GlowSettings
-    self.LCG.PixelGlow_Start(F, s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id, 1000)
+    self.LCG.PixelGlow_Start(F, colors or s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id, 1000)
 end
 
 function NSI:HideGlows(units, id, F)
@@ -1267,7 +1466,7 @@ function NSI:HideGlows(units, id, F)
     if not units then return end
     for i, unit in ipairs(units) do
         unit = NSAPI:GetChar(unit, true)
-        local i = UnitInRaid(unit)
+        local i = UnitInRaid(unit) or UnitInParty(unit) or "player"
         if (not UnitExists(unit)) or (not i) then return end
         local newid = unit..id
         local F = self.LGF.GetUnitFrame(unit)
@@ -1278,13 +1477,16 @@ function NSI:HideGlows(units, id, F)
 end
 
 function NSI:CreateMoveFrames()
-    self:CreateReminderMoverFrame("IconMover", NSRT.ReminderSettings.IconSettings, "IconSettings")
-    self:CreateReminderMoverFrame("BarMover", NSRT.ReminderSettings.BarSettings, "BarSettings")
-    self:CreateReminderMoverFrame("TextMover", NSRT.ReminderSettings.TextSettings, "TextSettings", true)
+    self:CreateReminderMoverFrame("IconMover",   NSRT.ReminderSettings.IconSettings,   "IconSettings")
+    self:CreateReminderMoverFrame("BarMover",    NSRT.ReminderSettings.BarSettings,    "BarSettings")
+    self:CreateReminderMoverFrame("TextMover",   NSRT.ReminderSettings.TextSettings,   "TextSettings", true)
+    self:CreateReminderMoverFrame("CircleMover", NSRT.ReminderSettings.CircleSettings, "CircleSettings")
     self:CreateNoteMoverFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, true, false, false)
     self:CreateNoteMoverFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, false, true, false)
     self:CreateNoteMoverFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, false, false, true)
 end
+
+local ANCHOR_TITLES = {IconMover="Icons", BarMover="Bars", TextMover="Texts", CircleMover="Circles"}
 
 function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
     if not self[Name] then
@@ -1296,9 +1498,47 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             self[Name].Text:SetPoint("LEFT", self[Name], "LEFT", 0, 0)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
-        self:MoveFrameSettings(self[Name], SettingsTable, IsText)
+        self:MoveFrameInit(self[Name], SettingsName)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText, true)
+
+        -- Title label (shown when unlocked)
+        local title = ANCHOR_TITLES[Name] or Name
+        local titleFrame = CreateFrame("Frame", 'NSUIReminderMoverTitle'..Name, self[Name])
+        titleFrame:SetAllPoints(self[Name])
+        titleFrame:SetFrameLevel(self[Name]:GetFrameLevel() + 1)
+        local titleLabel = titleFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleLabel:SetText(title)
+        titleLabel:SetPoint("CENTER", titleFrame, "CENTER", 0, 0)
+        titleLabel:SetTextColor(0, 1, 1, 1)
+        titleLabel:Hide()
+        self[Name].TitleLabel = titleLabel
+
+        -- Gear button
+        local gear = CreateFrame("Button", nil, self[Name])
+        gear:SetSize(18, 18)
+        gear:SetPoint("RIGHT", self[Name], "RIGHT", -2, 0)
+        local gearTexture = titleFrame:CreateTexture(nil, "OVERLAY")
+        gearTexture:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\settings.png]])
+        gearTexture:SetSize(20, 20)
+        gearTexture:SetAllPoints(gear)
+        gearTexture:SetParent(gear)
+        gear:Hide()
+        gear:SetScript("OnEnter", function(self) gearTexture:SetVertexColor(0, 0.8, 0.8, 1) end)
+        gear:SetScript("OnLeave", function(self) gearTexture:SetVertexColor(0.8, 0.8, 0.8, 1) end)
+        gear:SetScript("OnClick", function()
+            -- Close any other open windows first
+            for _, n in ipairs({"IconMover","BarMover","TextMover","CircleMover"}) do
+                if NSI[n] and NSI[n].SettingsWindow and NSI[n] ~= self[Name] then
+                    NSI[n].SettingsWindow:Hide()
+                end
+            end
+            if NSI.CreateAnchorSettingsWindow then
+                NSI:CreateAnchorSettingsWindow(self[Name], SettingsName)
+            end
+        end)
+        self[Name].GearButton = gear
     else
-        self:MoveFrameSettings(self[Name], SettingsTable, IsText)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText, true)
     end
     self[Name]:Show()
 end
@@ -1321,9 +1561,10 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
     self[Name.."Mover"]:Show()
 end
 
-function NSI:MoveFrameSettings(F, s, IsText)
-    local Width = (IsText and F.Text:GetStringWidth()) or s.Width
-    local Height = (IsText and F.Text:GetStringHeight()) or s.Height
+function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
+    if not F or not s then return end
+    local Width  = isAnchor and 300 or ((IsText and F.Text:GetStringWidth()) or s.Width or s.Size or 80)
+    local Height = isAnchor and 20  or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
     if IsText then
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
         F.Text:SetText("Personals - (10)")
@@ -1345,8 +1586,8 @@ function NSI:MoveFrameInit(F, s, ReminderColor)
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 2,
             })
-        if ReminderColor then F.Border:SetBackdropBorderColor(1, 1, 1, 0) else F.Border:SetBackdropBorderColor(1, 1, 1, 1) end
-        if ReminderColor then F.Border:SetBackdropColor(unpack(ReminderColor)) else F.Border:SetBackdropColor(0, 0, 0, 0) end
+        if ReminderColor then F.Border:SetBackdropBorderColor(1, 1, 1, 0) else F.Border:SetBackdropBorderColor(0, 0.8, 0.8, 1) end
+        if ReminderColor then F.Border:SetBackdropColor(unpack(ReminderColor)) else F.Border:SetBackdropColor(0.05, 0.05, 0.1, 0.85) end
         F.Border:Hide()
         F:SetFrameStrata("BACKGROUND")
         F.Border:SetFrameStrata("BACKGROUND")
@@ -1360,8 +1601,13 @@ function NSAPI:DebugNextPhase(num)
     end
 end
 
-function NSAPI:DebugEncounter(EncounterID)
+function NSAPI:DebugEncounter(EncounterID, Stop)
     if not NSRT.Settings["Debug"] then return end
+    if Stop then
+        NSI.EncounterAlertStop[EncounterID](NSI, 16)
+        NSI:EventHandler("ENCOUNTER_END", true, true, EncounterID)
+        return
+    end
     NSI.ProcessedReminder = nil
     NSI.Assignments = NSRT.AssignmentSettings
     NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
@@ -1373,7 +1619,7 @@ function NSAPI:DebugTimeline(e, dur)
     NSI:EventHandler(e, true, true, {duration = dur})
 end
 
-function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssignment)
+function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID) -- only used for Assignments now
     local id = self.DefaultAlertID or 10000
     self.DefaultAlertID = self.DefaultAlertID and self.DefaultAlertID + 1 or 10001
     local info =
@@ -1383,19 +1629,36 @@ function NSI:CreateDefaultAlert(text, Type, spellID, dur, phase, encID, IsAssign
         encID = encID,
         TTSTimer = dur, -- tts on show
         text = text,
-        TTS = (Type == "Text" and NSRT.ReminderSettings.TextTTS and text) or (Type ~= "Text" and NSRT.ReminderSettings.SpellTTS and text), -- use the user's settings
-        notsticky = true,
+        TTS = (DisplayType == "Text" and NSRT.ReminderSettings.TextTTS and text) or (DisplayType ~= "Text" and NSRT.ReminderSettings.SpellTTS and text), -- use the user's settings
+        sticky = 0,
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
         IsAssignment = IsAssignment,
-        IsAlert = not IsAssignment,
         countdown = false,
+        DisplayType = DisplayType,
     }
-    if Type == "Bar" then info.BarOverwrite = true
-    elseif Type == "Icon" then info.IconOverwrite = true
-    end
     return info
+end
+
+-- Iterates NSRT.EncounterAlerts[encID][id] and fires all enabled ReloeReminder alerts.
+-- loadConditions role filtering is handled at display time, not here.
+function NSI:FireEncounterAlerts(encID, id)
+    if self:IsUsingTLAlerts() then return end
+    if not NSRT.EncounterAlerts or not NSRT.EncounterAlerts[encID] then return end
+    local diffTable = NSRT.EncounterAlerts[encID][id]
+    if not diffTable then return end
+    local now = GetTime()
+    for _, entry in pairs(diffTable) do
+        if type(entry) == "table" and entry.enabled and not entry.isSpecialDisplay then
+            if self:EvaluateLoad(entry) then
+                local alert = CopyTable(entry)
+                alert.encID = encID
+                alert.phase = entry.phase or 1
+                self:AddRemindersFromTable(alert, entry.timers or {})
+            end
+        end
+    end
 end
 
 function NSI:UpdateReminderFrame(all, shared, personal, extra)
@@ -1481,6 +1744,7 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
 end
 
 function NSI:UpdateNoteFrame(Name, SettingsTable, text)
+    if not self[Name] then return end
     if SettingsTable.enabled then
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
@@ -1554,25 +1818,30 @@ function NSAPI:ToggleTLReminders()
     end
 end
 
+
 function NSI:IsUsingTLReminders()
     return NSRT.ReminderSettings.UseTLReminders and C_AddOns.IsAddOnLoaded("TimelineReminders")
 end
 
 function NSI:IsUsingTLAlerts()
-    return NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
+    local IsUsingAlerts = NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
+    if IsUsingAlerts then
+        local version = tonumber(C_AddOns.GetAddOnMetadata("TimelineReminders", "Version"):match("^v(.+)$"))
+        if version and version < 307 then -- outdated version check - only relevant for alerts since assignment use old system and reminders ist just the note.
+            if not self.HasTLWarning then
+                print("|cFF00FFFFNSRT:|r You have selected to use Timeline Reminders for NSRT Alerts but your version of Timeline Reminders is outdated and not compatible. NSRT will display these alerts instead until you update.")
+                self.HasTLWarning = true
+                C_Timer.After(60, function() self.HasTLWarning = nil end)
+            end
+            return false
+        end
+        return true
+    end
+    return false
 end
 
 function NSI:IsUsingTLAssignments()
     return NSRT.ReminderSettings.UseTLAssignments and C_AddOns.IsAddOnLoaded("TimelineReminders")
-end
-
-function NSAPI:GetAlerts(encounterID, id)
-    if C_InstanceEncounter.IsEncounterInProgress() then return end
-    NSI.TLAlerts = {}
-    if NSI.EncounterAlertStart[encounterID] and NSI:IsUsingTLAlerts() then NSI.EncounterAlertStart[encounterID](NSI, id) end
-    if NSI.AddAssignments[encounterID] and NSI:IsUsingTLAssignments() then NSI.AddAssignments[encounterID](NSI, id) end
-    if NSI.EncounterAlertStop[encounterID] and (NSI:IsUsingTLAlerts() or NSI:IsUsingTLAssignments()) then NSI.EncounterAlertStop[encounterID](NSI, true) end
-    return NSI.TLAlerts
 end
 
 function NSI:AddRemindersFromTable(Alert, timers)
@@ -1581,4 +1850,72 @@ function NSI:AddRemindersFromTable(Alert, timers)
         Alert.time = time
         self:AddToReminder(Alert)
      end
+end
+
+function NSI:GetRoleFromSpec()
+    local myspec = self:GetMySpecID()
+    if NSI.tanktable[myspec] then return "TANK" end
+    if NSI.healertable[myspec] then return "HEALER" end
+    if NSI.dpstable[myspec] then return "DAMAGER" end
+    return "NONE"
+end
+function NSI:EvaluateLoad(info)
+    local cond = info.loadConditions
+    if not cond then return true end
+    local shouldLoad = true
+    if cond.Roles and next(cond.Roles) then
+        shouldLoad = false
+        local myRole = UnitGroupRolesAssigned("player")
+        if myRole == "NONE" then
+            myRole = self:GetRoleFromSpec()
+        end
+        if cond.Roles[myRole] then return true end
+        local IsMelee = self:IsMelee("player")
+        if cond.Roles["MELEE"] and IsMelee then return true end
+        if cond.Roles["RANGED"] and not IsMelee then return true end
+    end
+    if cond.Classes and next(cond.Classes) then
+        shouldLoad = false
+        local myClass = select(2, UnitClass("player"))
+        if cond.Classes[myClass] then return true end
+    end
+    if cond.SpecIDs and next(cond.SpecIDs) then
+        shouldLoad = false
+        local mySpec = self:GetMySpecID()
+        if cond.SpecIDs[mySpec] then return true end
+    end
+    if cond.Names and next(cond.Names) then
+        shouldLoad = false
+        local myName = UnitName("player")
+        if cond.Names[myName] then return true end
+    end
+    return shouldLoad
+end
+
+function NSI:ImportReloeReminders(id)
+    if NSRT.Alerts.ReloeReminders then
+        if id then
+            if self.InitializeAlerts[id] then
+                self.InitializeAlerts[id](self)
+                self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
+            end
+            return
+        end
+        for key, encID in ipairs(NSI.CurrentEncounterIDs) do
+            if self.InitializeAlerts[encID] then
+                self.InitializeAlerts[encID](self)
+            end
+        end
+        self:FireCallback("NSRT_ALERT_FULL_UPDATE")
+    end
+end
+
+function NSI:DeleteReloeReminder(encID, diffID, alertKey)
+    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
+        NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
+    end
+end
+
+function NSAPI:GetAlerts()
+    return {}
 end

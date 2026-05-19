@@ -269,8 +269,7 @@ NSI.BossTimelineNames = {
     [3182] = "Belo'ren",
     [3183] = "Midnight Falls",
     [3306] = "Chimaerus",
-    [3134] = "Nexus King Saladhaar",
-    [3135] = "Dimensius the All Devouring",
+    [3159] = "Rotmire",
 }
 
 --------------------------------------------------------------------------------

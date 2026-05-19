@@ -35,7 +35,9 @@ end
 
 function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Returns color coded Name/Nickname
     if issecretvalue(unit) or not unit then return unit, "", "" end
-    local classFile = unit and select(2, UnitClass(unit))
+    local name = UnitName(unit)
+    if issecretvalue(name) then return unit, "", "" end
+    local classFile = select(2, UnitClass(unit))
     if specicon then
         local specid = 0
         if unit then specid = NSI:GetSpecs(unit) or 0 end
@@ -66,13 +68,12 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
         roleicon = ""
     end
     if classFile then -- basically "if unit found"
-        local name = UnitName(unit)
-        local color = GetClassColorObj(classFile)
-        name = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
+        local color = classFile == "PRIEST" and CreateColor(200/255, 200/255, 200/255) or GetClassColorObj(classFile)
+        local newname = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
         if color then -- should always be true anyway?
-            return combined and specicon..roleicon..color:WrapTextInColorCode(name) or color:WrapTextInColorCode(name), combined and "" or specicon, combined and "" or roleicon
+            return combined and specicon..roleicon..color:WrapTextInColorCode(newname) or color:WrapTextInColorCode(newname), combined and "" or specicon, combined and "" or roleicon
         else
-            return combined and specicon..roleicon..name or name, combined and "" or specicon, combined and "" or roleicon
+            return combined and specicon..roleicon..newname or newname, combined and "" or specicon, combined and "" or roleicon
         end
     else
         return unit, "", "" -- return input if nothing was found
@@ -319,6 +320,11 @@ function NSI:ApplyLocaleOverride()
             end
         end
     end
+    -- Refresh sidebar and header button labels to reflect the new locale
+    local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
+    if menu and menu.RefreshTabLabels then
+        menu:RefreshTabLabels()
+    end
 end
 
 function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettings", ...}
@@ -385,29 +391,34 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
             F.dragBorder:SetBackdropColor(0, 0, 0, 0)
             F.dragBorder:SetBackdropBorderColor(0.3, 0.67, 0.78, 1)
         end
-
         F:SetMovable(true)
         F:EnableMouse(true)
         F:RegisterForDrag("LeftButton")
         F:SetClampedToScreen(true)
         if not isNote then F:SetFrameStrata("DIALOG") end
-        if F.dragBorder then F.dragBorder:Show() end
-        if F.Border and isNote then F.Border:Show() end
-        if F.Text then F.Text:Show() end
         F:Show()
+        if F.Border and isNote then F.Border:Show() end
+        if F.dragBorder then F.dragBorder:Show() end
+        if F.Text then F.Text:Show() end
+        if F.TitleLabel then F.TitleLabel:Show() end
+        if F.GearButton then F.GearButton:Show() end
 
         F:SetScript("OnDragStart", function(f) f:StartMoving() end)
         F:SetScript("OnDragStop", function(f)
             self:StopFrameMove(f, settingsTable)
         end)
     else
+        if F.Border and isNote then F.Border:Hide() end
+        if F.dragBorder then F.dragBorder:Hide() end
+        if F.Text then F.Text:Hide() end
+        if F.TitleLabel then F.TitleLabel:Hide() end
+        if F.GearButton then F.GearButton:Hide() end
+        if F.SettingsWindow then F.SettingsWindow:Hide() end
+
         F:SetMovable(false)
         F:EnableMouse(false)
         F:SetScript("OnDragStart", nil)
         F:SetScript("OnDragStop",  nil)
-        if F.dragBorder then F.dragBorder:Hide() end
-        if F.Border and isNote then F.Border:Hide() end
-        if F.Text then F.Text:Hide() end
     end
 end
 
@@ -503,21 +514,59 @@ function NSI:GetMySpecID()
     return C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()) or 0
 end
 
-function NSI:EncounterRegister(event, enable, units, all)
-    if not self.EncounterFrame then
-        self.EncounterFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+function NSI:EncounterRegister(frameName, event, enable, units, all)
+    if not frameName then return end
+    if not self.EncounterFrames then
+        self.EncounterFrames = {}
     end
     if all then
-        self.EncounterFrame:UnregisterAllEvents()
+        for k, v in pairs(self.EncounterFrames) do
+            v:UnregisterAllEvents()
+        end
+        return
+    end
+    if event and not self.EncounterFrames[frameName] then
+        self.EncounterFrames[frameName] = CreateFrame("Frame", nil, self.NSRTFrame)
+    end
+    if event and type(event) == "table" then
+        for _, e in ipairs(event) do
+            self:EncounterRegister(frameName, e, enable, units)
+        end
         return
     end
     if enable then
         if units then
-            self.EncounterFrame:RegisterUnitEvent(event, unpack(units))
+            if type(units) == "table" then
+                self.EncounterFrames[frameName]:RegisterUnitEvent(event, units[1], units[2], units[3], units[4])
+            else
+                self.EncounterFrames[frameName]:RegisterUnitEvent(event, units)
+            end
         else
-            self.EncounterFrame:RegisterEvent(event)
+            self.EncounterFrames[frameName]:RegisterEvent(event)
         end
-    else
-        self.EncounterFrame:UnregisterEvent(event)
+    elseif event then
+        self.EncounterFrames[frameName]:UnregisterEvent(event)
     end
+end
+
+function NSI:EncounterFunction(frameName, func)
+    if self.EncounterFrames and self.EncounterFrames[frameName] then
+        self.EncounterFrames[frameName]:SetScript("OnEvent", func)
+    end
+end
+
+function NSI:IsInSameGuild(unit)
+    local name, realm = UnitName(unit)
+    if not realm then
+        realm = select(2, UnitFullName("player"))
+    end
+    if not name then return false end
+    local playerName = name.."-"..realm
+    for i=1, GetNumGuildMembers() do
+        local name = GetGuildRosterInfo(i)
+        if name == playerName then
+            return true
+        end
+    end
+    return false
 end

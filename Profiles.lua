@@ -20,7 +20,7 @@ function NSI:AddMissingDefaults()
         ActiveReminder = nil,
         ActivePersonalReminder = {},
         StoredSharedReminder = nil,
-        StoredPersonalReminder = nil,
+        StoredPersonalReminder = {},
 
         -- NSUI / timeline window
         NSUI = {
@@ -66,11 +66,15 @@ function NSI:AddMissingDefaults()
             },
         },
 
+        Alerts = {
+            ReloeReminders = false,
+            Groups = {},
+        },
+
         -- Reminder Settings
         ReminderSettings = {
             enabled = true,
             PersNote = true,
-            Sticky = 5,
             SpellTTS = true,
             TextTTS = true,
             SpellDuration = 10,
@@ -80,10 +84,10 @@ function NSI:AddMissingDefaults()
             SpellName = true,
             SpellTTSTimer = 5,
             TextTTSTimer = 5,
-            AutoShare = true,
+            AutoShare = false,
+            OnlyReceiveGuild = false,
             NoteCountdown = false,
-            HideTimerText = false,
-            HideTextTimerText = false,
+            ClearOnKill = true,
             PersonalReminderFrame = {
                 enabled = true,
                 Width = 500,
@@ -94,7 +98,7 @@ function NSI:AddMissingDefaults()
                 yOffset = 0,
                 Font = "Expressway",
                 FontSize = 14,
-                BGcolor = {0, 0, 0, 0.3},
+                BGcolor = { 0, 0, 0, 0.3 },
             },
             ReminderFrame = {
                 enabled = false,
@@ -106,7 +110,7 @@ function NSI:AddMissingDefaults()
                 yOffset = 0,
                 Font = "Expressway",
                 FontSize = 14,
-                BGcolor = {0, 0, 0, 0.3},
+                BGcolor = { 0, 0, 0, 0.3 },
             },
             ExtraReminderFrame = {
                 enabled = false,
@@ -118,13 +122,14 @@ function NSI:AddMissingDefaults()
                 yOffset = 0,
                 Font = "Expressway",
                 FontSize = 14,
-                BGcolor = {0, 0, 0, 0.3},
+                BGcolor = { 0, 0, 0, 0.3 },
             },
             IconSettings = {
                 GrowDirection = "Down",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
-                colors = {1, 1, 1, 1},
+                Sticky = 5,
+                textColors = { 1, 1, 1, 1 },
                 xOffset = -500,
                 yOffset = 400,
                 xTextOffset = 0,
@@ -139,16 +144,21 @@ function NSI:AddMissingDefaults()
                 Spacing = -1,
                 Glow = 0,
                 Zoom = 0,
+                HideTimerText = false,
+                HideSwipe = false,
+                Decimals = 3,
             },
             BarSettings = {
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
+                Sticky = 5,
                 Width = 300,
                 Height = 40,
                 xIcon = 0,
                 yIcon = 0,
-                colors = {1, 0, 0, 1},
+                textColors = { 1, 1, 1, 1 },
+                barColors = { 1, 0, 0, 1 },
                 Texture = "Atrocity",
                 xOffset = -400,
                 yOffset = 0,
@@ -160,17 +170,39 @@ function NSI:AddMissingDefaults()
                 FontSize = 22,
                 TimerFontSize = 22,
                 Spacing = -1,
+                HideTimerText = false,
+                Decimals = 3,
             },
             TextSettings = {
-                colors = {1, 1, 1, 1},
+                textColors = { 1, 1, 1, 1 },
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
+                Sticky = 5,
                 xOffset = 0,
                 yOffset = 200,
                 Font = "Expressway",
                 FontSize = 50,
                 Spacing = 1,
+                HideTimerText = false,
+                Decimals = 3,
+            },
+            CircleSettings = {
+                GrowDirection = "Up",
+                Anchor = "CENTER",
+                relativeTo = "CENTER",
+                Sticky = 5,
+                xOffset = 0,
+                yOffset = -200,
+                textColors = { 1, 1, 1, 1 },
+                ringColors = { 1, 1, 1, 1 },
+                Size = 80,
+                Font = "Expressway",
+                FontSize = 18,
+                Spacing = 5,
+                showBackground = false,
+                HideTimerText = false,
+                Decimals = 3,
             },
             UnitIconSettings = {
                 Position = "CENTER",
@@ -180,7 +212,7 @@ function NSI:AddMissingDefaults()
                 Height = 25,
             },
             GlowSettings = {
-                colors = {0, 1, 0, 1},
+                colors = { 0, 1, 0, 1 },
                 Lines = 10,
                 Frequency = 0.2,
                 Length = 10,
@@ -308,32 +340,20 @@ function NSI:AddMissingDefaults()
 
         -- Encounter Alerts
         EncounterAlerts = {
-            [3176] = {enabled = false},
-            [3177] = {enabled = false},
-            [3178] = {enabled = false, HealthDisplay = false},
-            [3179] = {enabled = false, CCAddsDisplay = false},
-            [3180] = {enabled = false, TauntAlerts = false, HealAbsorbTicks = false},
-            [3181] = {enabled = false},
-            [3182] = {enabled = false},
-            [3183] = {
-                enabled = false,
-                P3Side = "OFF",
-                RunesDisplay = false,
-                LuraDisplay = {
-                    Anchor = "TOPLEFT",
-                    relativeTo = "TOPLEFT",
-                    xOffset = 300,
-                    yOffset = -300,
-                    Color = {0.2, 0.2, 0.2, 0.9},
-                    Scale = 1,
-                },
-                InterruptDisplay = false,
-            },
-            [3306] = {enabled = false},
+            [3176] = {},
+            [3177] = {},
+            [3178] = {},
+            [3179] = {},
+            [3180] = {},
+            [3181] = {},
+            [3182] = {},
+            [3183] = {},
+            [3306] = {},
         },
 
         -- Interrupt Display
         InterruptSettings = {
+            ShowBar = false,
             Anchor = "CENTER",
             relativeTo = "CENTER",
             xOffset = -600,
@@ -355,17 +375,27 @@ function NSI:AddMissingDefaults()
             NameFontFlags = "OUTLINE",
             NameFontSize = 30,
             InterruptSound = "|cFF4BAAC8Interrupt|r",
+            InterruptNowColor = {0, 1, 0, 1},
+            InterruptNowTextColor = {1, 0, 0, 1},
+            InterruptNextColor = {1, 1, 0, 1},
+            InterruptNextTextColor = {1, 0, 0, 1},
+            InterruptDefaultColor = {1, 0, 0, 1},
+            InterruptDefaultTextColor = {1, 1, 1, 1},
         },
-
         Profiles = {},
         ProfileKeys = {},
         CurrentProfile = "default",
         MainProfile = "default",
 
         AutoLoadNote = {},
+        HasNewAlertStructure = true,
     }
     if not NSRT then
         NSRT = {}
+    end
+    if not NSRT.HasNewAlertStructure then
+        NSRT.HasNewAlertStructure = true
+        NSRT.EncounterAlerts = {}
     end
     for k, v in pairs(defaults) do
         if NSRT[k] == nil then
@@ -395,10 +425,11 @@ function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
 end
 
 local ignored = {
-    ["Profiles"] = true,
-    ["ProfileKeys"] = true,
-    ["CurrentProfile"] = true,
-    ["MainProfile"] = true,
+    ["Profiles"]         = true,
+    ["ProfileKeys"]      = true,
+    ["CurrentProfile"]   = true,
+    ["MainProfile"]      = true,
+    ["EncounterAlerts"]  = true,
 }
 
 function NSI:GetProfileKey()
@@ -438,7 +469,7 @@ function NSI:CreateProfile(name, init)
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder, true) end
+    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:SaveProfile()
 end
 
@@ -450,13 +481,13 @@ function NSI:LoadProfile(name, skipsave, init)
                 NSRT[k] = type(v) == "table" and CopyTable(v) or v
             end
         end
-    end
     local ProfileKey = self:GetProfileKey()
     NSRT.ProfileKeys[ProfileKey] = name
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder, true) end
+    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:AddMissingDefaults()
     self:SaveProfile()
+    end
 end
 
 function NSI:SaveProfile()
@@ -528,7 +559,7 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
     local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
         if NSRT.Profiles[name] then
-            name = name.." 2"
+            name = name .. " 2"
             return EnsureUniqueName(name)
         end
         return name
@@ -537,6 +568,218 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
     NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
     NSI:LoadProfile(name)
     return name
+end
+
+function NSI:ExportAlertsString(encID, diffID)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    local source = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
+    local encounterAlerts
+    if diffID then
+        encounterAlerts = {}
+        if encID then
+            local diffTable = source and source[diffID]
+            if diffTable then
+                encounterAlerts[encID] = { [diffID] = diffTable }
+            end
+        else
+            for eid, encTable in pairs(source or {}) do
+                if type(encTable) == "table" and encTable[diffID] then
+                    encounterAlerts[eid] = { [diffID] = encTable[diffID] }
+                end
+            end
+        end
+    else
+        encounterAlerts = source or {}
+    end
+    local exportTable = {
+        version         = 1,
+        type            = "alerts",
+        encID           = encID,
+        diffID          = diffID,
+        encounterAlerts = encounterAlerts,
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    return LibDeflate:EncodeForPrint(compressed)
+end
+
+function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    local exportTable = {
+        version   = 1,
+        type      = "single_alert",
+        alertType = alertType,
+        encID     = encID,
+        diffID    = diffID,
+        alertKey  = alertKey,
+        data      = data,
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    return LibDeflate:EncodeForPrint(compressed)
+end
+
+function NSI:ExportGroupString(encID, groupName, diffID)
+    if not encID or not groupName then return nil end
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate   = LibStub("LibDeflate")
+    local encounterAlerts = {}
+    local encTable = encID and NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+    if not encTable then return nil end
+    for did, diffTable in pairs(encTable) do
+        if (not diffID) or did == diffID then
+            for key, alert in pairs(diffTable or {}) do
+                if alert.group and alert.group == groupName then
+                    encounterAlerts[encID] = encounterAlerts[encID] or {}
+                    encounterAlerts[encID][did] = encounterAlerts[encID][did] or {}
+                    encounterAlerts[encID][did][key] = alert
+                end
+            end
+        end
+    end
+    local gk = tostring(encID) .. "|" .. groupName
+    local exportTable = {
+        version         = 1,
+        type            = "alert_group",
+        groupName       = groupName,
+        groupEncID      = encID,
+        diffID          = diffID,
+        groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
+        encounterAlerts = encounterAlerts,
+    }
+    local serialized = LibSerialize:Serialize(exportTable)
+    local compressed = LibDeflate:CompressDeflate(serialized)
+    return LibDeflate:EncodeForPrint(compressed)
+end
+
+function NSAPI:ImportAlertsString(importString)
+    local LibSerialize = LibStub("LibSerialize")
+    local LibDeflate = LibStub("LibDeflate")
+    if not importString or importString == "" then return nil end
+    local decoded = LibDeflate:DecodeForPrint(importString)
+    if not decoded then return nil end
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return nil end
+    local success, t = LibSerialize:Deserialize(decompressed)
+    if not success or type(t) ~= "table" then return nil end
+
+    if t.type == "alerts" then
+        local count = 0
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        if t.encID then
+            if t.encounterAlerts then
+                NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
+                for diffID, diffData in pairs(t.encounterAlerts[t.encID] or t.encounterAlerts or {}) do
+                    if (not t.diffID) or diffID == t.diffID then
+                        NSRT.EncounterAlerts[t.encID][diffID] = NSRT.EncounterAlerts[t.encID][diffID] or {}
+                        local destDiff = NSRT.EncounterAlerts[t.encID][diffID]
+                        for k, a in pairs(destDiff) do
+                            if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
+                        end
+                        for alertKey, alert in pairs(diffData) do
+                            if type(alert) == "table" then
+                                if alert.ReloeReminder then
+                                    destDiff[alertKey] = alert
+                                else
+                                    alert.ReloeReminder = nil
+                                    local newKey = NSI:UniqueAlertID(destDiff, false)
+                                    destDiff[newKey] = alert
+                                end
+                                count = count + 1
+                            end
+                        end
+                    end
+                end
+            end
+            NSI:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", t.encID)
+            return count
+        end
+        if t.encounterAlerts then
+            local overwritecount = 0
+            for encID, encData in pairs(t.encounterAlerts or {}) do
+                NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+                for diffID, diffData in pairs(encData) do
+                    if (not t.diffID) or diffID == t.diffID then
+                        NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                        local destDiff = NSRT.EncounterAlerts[encID][diffID]
+                        for k, a in pairs(destDiff) do
+                            if type(a) == "table" and a.ReloeReminder then destDiff[k] = nil end
+                        end
+                        for alertKey, alert in pairs(diffData) do
+                            if type(alert) == "table" then
+                                if alert.ReloeReminder then
+                                    destDiff[alertKey] = alert
+                                else
+                                    alert.ReloeReminder = nil
+                                    local newKey = NSI:UniqueAlertID(destDiff, false)
+                                    destDiff[newKey] = alert
+                                end
+                                count = count + 1
+                            end
+                        end
+                    end
+                end
+            end
+            NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+            return count, overwritecount
+        end
+        NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+        return count
+    elseif t.type == "single_alert" then
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        if t.encID and t.diffID then
+            NSRT.EncounterAlerts[t.encID] = NSRT.EncounterAlerts[t.encID] or {}
+            NSRT.EncounterAlerts[t.encID][t.diffID] = NSRT.EncounterAlerts[t.encID][t.diffID] or {}
+            local diffTable = NSRT.EncounterAlerts[t.encID][t.diffID]
+            local importKey
+            if t.alertKey then
+                -- Keep the original key for both Reloe and user alerts so re-imports update in place
+                importKey = t.alertKey
+            else
+                importKey = NSI:UniqueAlertID(diffTable, false)
+            end
+            if t.data then t.data.ReloeReminder = t.alertType == "encounter" and t.data.ReloeReminder or nil end
+            diffTable[importKey] = t.data
+            NSI:FireCallback("NSRT_ALERT_CHANGED", t.encID, t.diffID, importKey)
+            return 1
+        end
+    elseif t.type == "alert_group" then
+        local count = 0
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        NSRT.Alerts = NSRT.Alerts or {}
+        NSRT.Alerts.Groups = NSRT.Alerts.Groups or {}
+        if t.groupName then
+            NSRT.Alerts.Groups[t.groupName] = t.groupMeta or { collapsed = false }
+        end
+        local encID = t.groupEncID
+        local encData = encID and t.encounterAlerts and t.encounterAlerts[encID]
+        if encID and encData then
+            NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+            for diffID, diffData in pairs(encData) do
+                if (not t.diffID) or diffID == t.diffID then
+                    NSRT.EncounterAlerts[encID][diffID] = NSRT.EncounterAlerts[encID][diffID] or {}
+                    local destDiff = NSRT.EncounterAlerts[encID][diffID]
+                    for alertKey, alert in pairs(diffData) do
+                        if type(alert) == "table" then
+                            if alert.ReloeReminder then
+                                destDiff[alertKey] = alert
+                            else
+                                alert.ReloeReminder = nil
+                                local importKey = alertKey or NSI:UniqueAlertID(destDiff, false)
+                                destDiff[importKey] = alert
+                            end
+                            count = count + 1
+                        end
+                    end
+                end
+            end
+            NSI:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", encID)
+        end
+        return count
+    end
+    return nil
 end
 
 function NSI:LoadMyProfile()

@@ -71,12 +71,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         end
-        self:SetReminder(NSRT.StoredPersonalReminder, true, true) -- loading active personal reminder from last session
+        local charkey = self:GetProfileKey()
+        self:SetReminder(NSRT.StoredPersonalReminder[charkey], true, true) -- loading active personal reminder from last session
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end
+        self:ImportReloeReminders()
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
@@ -102,7 +104,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
-        self:LogTimeline(e, ...)
+        if internal then diff = 16 end
+        if not internal then self:LogTimeline(e, ...) end
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         self.EncounterID = ...
@@ -112,7 +115,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self.TestingReminder = false
         self.IsInPreview = false
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover"}) do
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
             self:MakeDraggable(self[v], nil, false)
         end
         self.Phase = 1
@@ -132,6 +135,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
+        self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartReminders(self.Phase)
         self:InitPrivateAuras()
         if NSRT.ReminderSettings.NoteCountdown then
@@ -155,8 +159,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:LogTimeline(e, ...)
         local encID, encounterName, _, _, kill = ...
         local diff = select(3, GetInstanceInfo()) or 0
+        if internal then diff = 16 end
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
+        self:EncounterRegister(nil, nil, nil, true)
         self:InitPrivateAuras()
         self:HideAllReminders(true)
         C_Timer.After(1, function()
@@ -176,9 +182,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        if kill then
+        if kill and kill ~= 0 then
             local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
-            if NoteName and NSRT.Reminders[NoteName] then
+            local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
+            if NSRT.ReminderSettings.ClearOnKill then
+                if not HasAutoLoadNote then NSI:SetReminder(nil) end
+                NSI:SetReminder(nil, true)
+            end
+            if HasAutoLoadNote then
                 C_Timer.After(2, function()
                     if self:Restricted() then return end
                     if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then
@@ -224,7 +235,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_REM_SHARE"  and internal then
         local unit, reminderstring, assigntable, skipcheck = ...
         if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck(14) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
-            if (NSRT.ReminderSettings.enabled or self:IsUsingTLReminders()) and reminderstring and type(reminderstring) == "string" and reminderstring ~= "" then
+            if reminderstring and type(reminderstring) == "string" and reminderstring ~= "" and ((not NSRT.ReminderSettings.OnlyReceiveGuild) or self:IsInSameGuild(unit)) then
                 self.Reminder = reminderstring
                 NSRT.StoredSharedReminder = reminderstring
                 self.ReminderReceivedTime = GetTime()
@@ -285,6 +296,18 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     text = SymbioticRelationship
                 else
                     text = text.."\n"..SymbioticRelationship
+                end
+            end
+        end
+        if NSRT.ReadyCheckSettings.DisplayGroupCheck and not self:Restricted() then
+            local groupNumber = self:GetSubGroup()
+
+            if groupNumber then
+                local groupText = "You are in group |cFF00FFFF" ..groupNumber .. "|r"
+                if text == "" then
+                    text = groupText
+                else
+                    text = text.."\n"..groupText
                 end
             end
         end
