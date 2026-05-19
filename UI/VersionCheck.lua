@@ -88,6 +88,15 @@ local function BuildVersionCheckUI(parent)
     local ignore_header = DF:CreateLabel(parent, "Ignore Check", 11)
     ignore_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
 
+    local function RebuildNameMap(scrollbox)
+        wipe(scrollbox.name_map)
+        for index, data in ipairs(scrollbox:GetData()) do
+            if data.name then
+                scrollbox.name_map[data.name] = index
+            end
+        end
+    end
+
     local function refresh(self, data, offset, totalLines)
         for i = 1, totalLines do
             local index = i + offset
@@ -145,6 +154,8 @@ local function BuildVersionCheckUI(parent)
                 line.name:SetText("")
                 line.version:SetText("")
                 line.ignorelist:SetText("")
+                line.version:SetTextColor(1, 1, 1, 1)
+                line.ignorelist:SetTextColor(1, 1, 1, 1)
                 line:SetScript("OnClick", nil)
             end
         end
@@ -152,7 +163,7 @@ local function BuildVersionCheckUI(parent)
 
     local function createLineFunc(self, index)
         local line = CreateFrame("button", "$parentLine" .. index, self, "BackdropTemplate")
-        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight+1)) - 1)
+        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * self.LineHeight) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
         DF:CreateHighlightTexture(line)
@@ -182,7 +193,7 @@ local function BuildVersionCheckUI(parent)
         return line
     end
 
-    local scrollLines = 19
+    local scrollLines = 22
     local sample_data = {
         { name = "Player1",  version = "1.0.0" },
         { name = "Player2",  version = "1.0.5" },
@@ -209,7 +220,6 @@ local function BuildVersionCheckUI(parent)
         content_width - 36,
         tab_content_height - 90, scrollLines, 20, createLineFunc)
     DF:ReskinSlider(version_check_scrollbox)
-    version_check_scrollbox.ReajustNumFrames = true
     version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -80)
     for i = 1, scrollLines do
         version_check_scrollbox:CreateLine(createLineFunc)
@@ -222,20 +232,14 @@ local function BuildVersionCheckUI(parent)
         if self.name_map[data.name] then
             if NSRT.Settings["VersionCheckRemoveResponse"] and currentData[1] and currentData[1].version and data.version and data.version == currentData[1].version and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing" and (not data.ignoreCheck) then
                 local removedIndex = self.name_map[data.name]
-                self.name_map[data.name] = nil
                 table.remove(currentData, removedIndex)
-                for k, v in pairs(self.name_map) do
-                    if v > removedIndex then
-                        self.name_map[k] = v - 1
-                    end
-                end
             else
                 currentData[self.name_map[data.name]] = data
             end
         else
-            self.name_map[data.name] = #currentData + 1
             tinsert(currentData, data)
         end
+        RebuildNameMap(self)
         self:Refresh()
     end
 
