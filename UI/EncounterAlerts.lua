@@ -136,6 +136,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local filterDiffID       = 16    -- default Mythic
     local searchText         = ""
     local groupsByEnc        = {}    -- [encID] = { [groupName] = true } — populated each RebuildScrollData
+    local copiedAlertSection = nil
 
     function NSI:SaveAlertData(alert, dataKey, newData)
         if alert then
@@ -155,6 +156,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- forward declarations
     local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupDD
+    local copySectionBtn, applySectionBtn
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -1289,14 +1291,139 @@ local function BuildEncounterAlertsUI(parentFrame)
     local tabBtnGap = 3
     local tabRowY   = -42
 
+    local function CopyValue(v)
+        return type(v) == "table" and CopyTable(v) or v
+    end
+
+    local SECTION_COPY_FIELDS = {
+        Display = {
+            "DisplayType", "text", "spellID", "customIcon", "dur", "sticky",
+            "HideTimer", "HideSwipe", "glowunit", "glowColors", "textColors",
+            "ringColors", "showBackground", "Ticks", "barColors",
+        },
+        Sound = { "TTS", "TTSTimer", "countdown", "sound" },
+        Load = { "loadConditions" },
+    }
+
+    local function GetSelectedAlert()
+        return selectedEncID and selectedDiffID and selectedKey
+            and NSRT.EncounterAlerts
+            and NSRT.EncounterAlerts[selectedEncID]
+            and NSRT.EncounterAlerts[selectedEncID][selectedDiffID]
+            and NSRT.EncounterAlerts[selectedEncID][selectedDiffID][selectedKey]
+    end
+
+    local function CanCopySection(sectionName, alert)
+        if not alert then return false end
+        if sectionName == "Options" then return false end
+        if sectionName == "Trigger" and alert.ReloeReminder then return false end
+        return sectionName == "Display" or sectionName == "Trigger" or sectionName == "Sound" or sectionName == "Load"
+    end
+
+    local function CopySection(sectionName)
+        local alert = GetSelectedAlert()
+        if not CanCopySection(sectionName, alert) then return end
+
+        local payload = {
+            section = sectionName,
+            encID = selectedEncID,
+            diffID = selectedDiffID,
+            entries = {},
+        }
+
+        if sectionName == "Trigger" then
+            payload.entries[#payload.entries + 1] = { key = "phase", value = CopyValue(alert.phase) }
+            payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
+        else
+            for _, key in ipairs(SECTION_COPY_FIELDS[sectionName] or {}) do
+                payload.entries[#payload.entries + 1] = { key = key, value = CopyValue(alert[key]) }
+            end
+        end
+
+        copiedAlertSection = payload
+        if applySectionBtn then applySectionBtn:Enable() end
+    end
+
+    local function ApplyCopiedSection()
+        local alert = GetSelectedAlert()
+        if not copiedAlertSection or not alert then return end
+        local sectionName = copiedAlertSection.section
+        if not CanCopySection(sectionName, alert) then return end
+
+        local oldEncID, oldDiffID, oldKey = selectedEncID, selectedDiffID, selectedKey
+
+        if sectionName == "Trigger" then
+            local newEncID = copiedAlertSection.encID or selectedEncID
+            local newDiffID = copiedAlertSection.diffID or selectedDiffID
+            if newEncID ~= selectedEncID or newDiffID ~= selectedDiffID then
+                local oldTable = NSRT.EncounterAlerts[selectedEncID] and NSRT.EncounterAlerts[selectedEncID][selectedDiffID]
+                if oldTable then oldTable[selectedKey] = nil end
+                NSRT.EncounterAlerts[newEncID] = NSRT.EncounterAlerts[newEncID] or {}
+                NSRT.EncounterAlerts[newEncID][newDiffID] = NSRT.EncounterAlerts[newEncID][newDiffID] or {}
+                local newTable = NSRT.EncounterAlerts[newEncID][newDiffID]
+                local newKey = (not newTable[selectedKey]) and selectedKey or NSI:UniqueAlertID(newTable, false)
+                newTable[newKey] = alert
+                selectedEncID, selectedDiffID, selectedKey = newEncID, newDiffID, newKey
+                filterDiffID = newDiffID
+                if filterEncID then filterEncID = newEncID end
+                if diffDD then diffDD:Refresh() end
+                if filterDD then filterDD:Refresh() end
+            end
+        end
+
+        for _, entry in ipairs(copiedAlertSection.entries or {}) do
+            alert[entry.key] = CopyValue(entry.value)
+        end
+
+        if sectionName == "Load" then
+            alert.loadConditions = alert.loadConditions or {}
+            alert.loadConditions.Classes = alert.loadConditions.Classes or {}
+            alert.loadConditions.SpecIDs = alert.loadConditions.SpecIDs or {}
+            alert.loadConditions.Roles = alert.loadConditions.Roles or {}
+            alert.loadConditions.Names = alert.loadConditions.Names or {}
+        end
+
+        NSI:FireCallback("NSRT_ALERT_CHANGED", oldEncID, oldDiffID, oldKey)
+        NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, selectedDiffID, selectedKey)
+        RebuildList()
+        SelectAlert(selectedKey, selectedDiffID, selectedEncID)
+    end
+
+    local function RefreshSectionCopyButtons()
+        if not copySectionBtn or not applySectionBtn then return end
+        local alert = GetSelectedAlert()
+        if CanCopySection(activeInnerTab, alert) then
+            copySectionBtn:Enable()
+        else
+            copySectionBtn:Disable()
+        end
+        if copiedAlertSection and copiedAlertSection.section == activeInnerTab and CanCopySection(activeInnerTab, alert) then
+            applySectionBtn:Enable()
+        else
+            applySectionBtn:Disable()
+        end
+    end
+
     for i, tabName in ipairs(INNER_TABS) do
         local btn = CreateSubButton(rightPanel, L[tabName], function()
             SelectInnerTab(tabName)
+            RefreshSectionCopyButtons()
         end, tabBtnW, "NSUIEncAlertInnerTab_" .. tabName)
         btn:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", (i - 1) * (tabBtnW + tabBtnGap), tabRowY)
         innerTabBtns[tabName] = btn
     end
     innerTabBtns["Options"].frame:Hide()
+
+    copySectionBtn = CreateSubButton(rightPanel, L["Copy"], function()
+        CopySection(activeInnerTab)
+        RefreshSectionCopyButtons()
+    end, 52, "NSUIEncAlertCopySection")
+    copySectionBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -202, tabRowY)
+
+    applySectionBtn = CreateSubButton(rightPanel, L["Apply"], function()
+        ApplyCopiedSection()
+    end, 58, "NSUIEncAlertApplySection")
+    applySectionBtn:SetPoint("LEFT", copySectionBtn.frame, "RIGHT", 4, 0)
 
     -- ── Preview button — right-aligned on the tab row ────────────────────────
     local previewBtn = CreateButton(rightPanel, L["Preview"], function() PreviewAlert() end, 80, 18,
@@ -2814,9 +2941,11 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         RebuildList()
         SelectInnerTab(activeInnerTab)
+        RefreshSectionCopyButtons()
     end
 
     SelectInnerTab("Display")
+    RefreshSectionCopyButtons()
 
     screen:SetScript("OnShow", function()
         RebuildList()
