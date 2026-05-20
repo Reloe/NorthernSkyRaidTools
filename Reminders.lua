@@ -397,7 +397,13 @@ function NSI:ProcessReminder()
     end
 end
 
-local CircleTexture = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_white.png"
+local DefaultCircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_2px.png]]
+
+local function GetCircleTexture(info)
+    if info and info.Texture then return info.Texture end
+    local s = NSRT.ReminderSettings and NSRT.ReminderSettings.CircleSettings
+    return (s and s.Texture) or DefaultCircleTexture
+end
 
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
     if self._uefPending then return end
@@ -479,9 +485,19 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         local F = parent[i]
         if F and F:IsShown() then
             local s = NSRT.ReminderSettings.CircleSettings
+            local info = F.info or {}
             F:SetSize(s.Size, s.Size)
+            local texture = GetCircleTexture(info)
+            if F.ring then
+                F.ring:SetTexture(texture)
+                F.ring:SetShown(info.showBackground == nil and s.showBackground or info.showBackground)
+            end
+            if F.Swipe then
+                F.Swipe:SetSwipeTexture(texture)
+                F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
+            end
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.Text:SetTextColor(unpack(s.textColors))
+            F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         end
     end
     self:ArrangeStates("Circles")
@@ -595,12 +611,14 @@ function NSI:SetProperties(F, info, skipsound, s)
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
         F.Text:SetTextColor(r, g, b, a)
-        local showBg = (info.showBackground == nil) and s.showBackground or info.showBackground
+        local texture = GetCircleTexture(info)
         if F.ring then
+            F.ring:SetTexture(texture)
             local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
             F.ring:SetShown(shouldShow)
         end
         F.Swipe:SetCooldown(info.startTime, info.dur)
+        F.Swipe:SetSwipeTexture(texture)
         F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
         F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
     end
@@ -847,8 +865,9 @@ function NSI:CreateCircle(info)
             F:SetFrameStrata("HIGH")
             F:SetFrameLevel(10)
 
+            local circleTexture = GetCircleTexture(info)
             F.ring = F:CreateTexture(nil, "ARTWORK")
-            F.ring:SetTexture(CircleTexture)
+            F.ring:SetTexture(circleTexture)
             F.ring:SetAllPoints(F)
             F.ring:SetVertexColor(0, 0, 0, 0.85)
             local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
@@ -860,7 +879,7 @@ function NSI:CreateCircle(info)
             F.Swipe:SetDrawEdge(false)
             F.Swipe:SetReverse(false)
             F.Swipe:SetHideCountdownNumbers(true)
-            F.Swipe:SetSwipeTexture(CircleTexture)
+            F.Swipe:SetSwipeTexture(circleTexture)
             F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
 
             F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")

@@ -197,6 +197,7 @@ function NSI:AddMissingDefaults()
                 textColors = { 1, 1, 1, 1 },
                 ringColors = { 1, 1, 1, 1 },
                 Size = 80,
+                Texture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]],
                 Font = "Expressway",
                 FontSize = 18,
                 Spacing = 5,

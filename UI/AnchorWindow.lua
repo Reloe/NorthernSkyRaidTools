@@ -33,6 +33,16 @@ local function MediaValuesFn(isTexture)
     end
 end
 
+local function CircleTextureValues()
+    return {
+        {label="2 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_2px.png]]},
+        {label="5 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_5px.png]]},
+        {label="8 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]]},
+        {label="10 px", value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_10px.png]]},
+        {label="15 px", value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_15px.png]]},
+    }
+end
+
 -- ---------------------------------------------------------------
 --  Returns the ordered widget-definition table for each type.
 --  All ranges and fields are aligned with Reminders.lua.
@@ -41,14 +51,17 @@ local function GetWidgetDefs(settingsName)
     local S = NSRT.ReminderSettings[settingsName]
 
     local function R(key) return S[key] end
+    local function RefreshFrames()
+        if NSI.IsInPreview then NSI:SpawnPreviewReminders() end
+        NSI:UpdateExistingFrames()
+    end
     local function W(key,v)
         S[key] = v
-        if NSI.IsInPreview then NSI:SpawnPreviewReminders() end
+        RefreshFrames()
     end
     local function WGrow(_, v)
         S.GrowDirection = v
-        if NSI.IsInPreview then NSI:SpawnPreviewReminders() end
-        NSI:ArrangeStates(TYPE_MAP[settingsName])
+        RefreshFrames()
     end
 
     -- Color helpers: storage is a {r,g,b,a} table; our ColorPicker needs 4 returns.
@@ -161,6 +174,7 @@ local function GetWidgetDefs(settingsName)
             DDGrow(true),
             Slider(L["Size"],               "Size",          40,  200),
             Slider(L["Spacing"],            "Spacing",       -50, 100),
+            DD    (L["Texture"],            "Texture",       CircleTextureValues),
             DD    (L["Font"],               "Font",          MediaValuesFn()),
             Slider(L["Font Size"],          "FontSize",      5,   80),
             Slider(L["Decimals Threshold"], "Decimals",      0,    10),

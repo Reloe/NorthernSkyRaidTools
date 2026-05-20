@@ -96,6 +96,7 @@ L["Move Text Display"] = true
 L["This lets you move the generic text display used for example the ready check module or the assignments on pull."] = true
 L["Setup Manager"] = true
 L["Default Arrangement"] = true
+L["Default"] = true
 L["Sorts groups into a default order (tanks - melee - ranged - healer)"] = true
 L["Split Groups"] = true
 L["Splits the group evenly into 2 groups. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs"] = true

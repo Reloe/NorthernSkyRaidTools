@@ -18,6 +18,27 @@ local CreateStyledFrame   = NSI.UI.Components.CreateFrame
 local BossData          = NSI.UI.BossData
 local L                 = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 
+local CIRCLE_TEXTURES = {
+    {label="2 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_2px.png]]},
+    {label="5 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_5px.png]]},
+    {label="8 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]]},
+    {label="10 px", value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_10px.png]]},
+    {label="15 px", value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_15px.png]]},
+}
+
+local function GetCircleTextureLabel(texture)
+    for _, option in ipairs(CIRCLE_TEXTURES) do
+        if option.value == texture then return option.label end
+    end
+    return texture and tostring(texture) or ""
+end
+
+local function GetDefaultCircleTextureLabel()
+    local texture = NSRT.ReminderSettings and NSRT.ReminderSettings.CircleSettings
+        and NSRT.ReminderSettings.CircleSettings.Texture
+    return L["Default"] .. " (" .. GetCircleTextureLabel(texture) .. ")"
+end
+
 
 
 
@@ -1299,7 +1320,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         Display = {
             "DisplayType", "text", "spellID", "customIcon", "dur", "sticky",
             "HideTimer", "HideSwipe", "glowunit", "glowColors", "textColors",
-            "ringColors", "showBackground", "Ticks", "barColors",
+            "ringColors", "showBackground", "Texture", "Ticks", "barColors",
         },
         Sound = { "TTS", "TTSTimer", "countdown", "sound" },
         Load = { "loadConditions" },
@@ -1719,24 +1740,63 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- ── Circle section (shown only when display type = "Circle") ────────
     local circleSection = CreateFrame("Frame", nil, dispF)
     circleSection:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -266)
-    circleSection:SetSize(rightW, 60)
+    circleSection:SetSize(rightW, 88)
     circleSection:Hide()
+
+    local circleTextureLbl = circleSection:CreateFontString(nil, "OVERLAY")
+    circleTextureLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    circleTextureLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    circleTextureLbl:SetText(L["Texture"])
+    circleTextureLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
+
+    local function BuildCircleTextureOptions()
+        local opts = {
+            {
+                label = GetDefaultCircleTextureLabel(),
+                value = nil,
+                onclick = function()
+                    if dispF._alert then NSI:SaveAlertData(dispF._alert, "Texture", nil) end
+                end,
+            },
+        }
+        for _, option in ipairs(CIRCLE_TEXTURES) do
+            local label, value = option.label, option.value
+            opts[#opts + 1] = {
+                label = label,
+                value = value,
+                onclick = function()
+                    if dispF._alert then NSI:SaveAlertData(dispF._alert, "Texture", value) end
+                end,
+            }
+        end
+        return opts
+    end
+
+    local function GetSelectedCircleTexture()
+        if not (dispF._alert and dispF._alert.Texture) then return GetDefaultCircleTextureLabel() end
+        return GetCircleTextureLabel(dispF._alert.Texture)
+    end
+
+    local circleTextureDD = CreateDropdown(circleSection, nil, BuildCircleTextureOptions,
+        GetSelectedCircleTexture, 200, 22, "NSUIEncAlertCircleTexture")
+    circleTextureDD:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 10)
+    dispF.circleTextureDD = circleTextureDD
 
     local ringColorsLbl = circleSection:CreateFontString(nil, "OVERLAY")
     ringColorsLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     ringColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     ringColorsLbl:SetText(L["Ring Color"])
-    ringColorsLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
+    ringColorsLbl:SetPoint("TOPLEFT", circleTextureDD.frame, "BOTTOMLEFT", 0, -8)
 
     local ringColorsPicker = CreateColorPicker(circleSection, nil,
         function()
-            local c = dispF._alert and dispF._alert.ringcolors
+            local c = dispF._alert and dispF._alert.ringColors
             if c then return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1 end
             return unpack(NSRT.ReminderSettings.CircleSettings.ringColors)
         end,
         function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "ringColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertRingColors")
-    ringColorsPicker:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
+    ringColorsPicker:SetPoint("TOPLEFT", ringColorsLbl, "BOTTOMLEFT", 0, 4)
     dispF.ringColorsPicker = ringColorsPicker
 
     local showBgCB = CreateCheckButton(circleSection, L["Show Background Ring"],
@@ -2907,6 +2967,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         dispF.showBgCB:SetValue(showBg ~= false)
         dispF.glowunitEntry:SetValue(entry.glowunit or "")
         dispF.colorsPicker:Refresh()
+        dispF.circleTextureDD:Refresh()
         dispF.ringColorsPicker:Refresh()
         dispF.barTextColorsPicker:Refresh()
         dispF.barFillColorsPicker:Refresh()
