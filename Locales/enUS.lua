@@ -23,7 +23,6 @@ L["Sync Nicknames"] = true
 L["%s is attempting to sync their nicknames with you."] = true
 L["Cancel"] = true
 L["Accept"] = true
-L["Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n"] = true
 
 -- ============================================================================
 -- UI/General.lua — Export/Import popups
@@ -35,7 +34,6 @@ L["Import"] = true
 L["Exporting profile: |cFF00FFFF%s|r"] = true
 L["Paste a profile string below and click Import."] = true
 L["Invalid import string. Please check and try again."] = true
-L["Imported profile '|cFFFFFFFF%s|r'."] = true
 
 -- ============================================================================
 -- UI/Reminders.lua — Reminder screens
@@ -45,15 +43,13 @@ L["Import Personal Reminder String"] = true
 L["Update"] = true
 L["|cFF00FFFFPersonal|r Reminders"] = true
 L["|cFF00FFFFShared|r Reminders"] = true
-L["|cFF00FFFFReceived:|r |cFF888888None|r"] = true
-L["|cFF00FFFFReceived:|r |cFFFFFFFF%s|r"] = true
-L["|cFF00FFFFReceived:|r |cFFFFFFFFActive Note|r"] = true
+L["Received:"] = true
+L["Active Note"] = true
 L["No Boss"] = true
 L["Normal"] = true
 L["Heroic"] = true
 L["Mythic"] = true
 L["All Bosses"] = true
-L["Encounter %s"] = true
 L["Confirm Deletion"] = true
 L["Delete \"%s\"?"] = true
 L["Confirm"] = true
@@ -73,7 +69,6 @@ L["New"] = true
 L["|cFF00FFFFReceived|r %ds ago"] = true
 L["|cFF00FFFFReceived|r %dm ago"] = true
 L["(No Enc)"] = true
-L["%s (%d notes)"] = true
 
 -- ============================================================================
 -- UI/Options/General.lua
@@ -173,14 +168,16 @@ L["Position"] = true
 L["position on the raidframe"] = true
 L["x-Offset"] = true
 L["y-Offset"] = true
+L["Icon-Width"] = true
+L["Width of the Icon"] = true
+L["Icon-Height"] = true
+L["Height of the Icon"] = true
 L["Glow-Color"] = true
 L["Color of Raidframe Glows"] = true
 
 -- UI/Options/Reminders.lua — Universal Settings
 L["Universal Settings"] = true
 L["Hide Timer Text"] = true
-L["Hides the Timer Text shown on either the Icon or the Bar"] = true
-L["Hides the Timer Text shown for Text-Reminders"] = true
 L["Play Sound instead of TTS"] = true
 L["This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work."] = true
 L["Ignore 'everyone' tags"] = true
@@ -246,6 +243,7 @@ L["Locks/Unlocks the Personal Reminders Note to be moved around"] = true
 L["Show Personal Reminder Note"] = true
 L["Whether you want to display the Note for Reminders only relevant to you"] = true
 L["Font-Size of the Personal Reminders Note"] = true
+L["Font-Size"] = true
 L["Font of the Personal Reminders Note"] = true
 L["Width of the Personal Reminders Note"] = true
 L["Height of the Personal Reminders Note"] = true
@@ -341,6 +339,7 @@ L["Checks if any piece needs repair"] = true
 L["Gateway Control Shard Check"] = true
 L["Checks if you have a Gateway Control Shard and whether or not it is located on your actionbars"] = true
 L["Gateway Control Shard Check"] = true
+L["Display Group Number"] = true
 L["Displays your raid group number on ready check."] = true
 L["Exceptions"] = true
 L["Skip Gateway Keybind-Check"] = true
@@ -477,7 +476,6 @@ L["Co-Tank Private Auras"] = true
 L["Whether Private Auras for Co-Tanks are enabled"] = true
 L["Preview Co-Tank Private Auras."] = true
 L["Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuff like the dispel icon."] = true
-L["This is the Grow-Direction used if there are more than 2 tanks. Rarely ever happens these days but has to be included."] = true
 
 -- ============================================================================
 -- UI/AnchorWindow.lua — Anchor settings popup
@@ -486,8 +484,14 @@ L["Up"] = true
 L["Down"] = true
 L["Left"] = true
 L["Right"] = true
+L["Icon Settings"] = true
+L["Bar Settings"] = true
+L["Grow Direction"] = true
+L["Spacing"] = true
 L["Sticky Duration"] = true
+L["Texture"] = true
 L["Font"] = true
+L["Font Size"] = true
 L["Timer Font Size"] = true
 L["Decimals Threshold"] = true
 L["Glow Threshold"] = true
@@ -497,6 +501,7 @@ L["Text Y Offset"] = true
 L["Timer X"] = true
 L["Timer Y"] = true
 L["Text Color"] = true
+L["Right-Aligned Text"] = true
 L["Hide Swipe"] = true
 L["Bar Fill Color"] = true
 L["Bar Text Color"] = true
@@ -518,8 +523,6 @@ L["Paladins Dispel Assign"] = true
 L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."] = true
 L["Alleria P1 Dmg Amp"] = true
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = true
-L["Belo'ren Feather Color"] = true
-L["Displays your Feather-Color on Belo'ren."] = true
 L["Lura Interrupts"] = true
 L["Interrupt WA for Lura P1."] = true
 
@@ -536,6 +539,7 @@ L["+ Create Alert"] = true
 L["Export"] = true
 L["Full Reset"] = true
 L["Reset"] = true
+L["Additional Options"] = true
 L["Enable Selected Boss Reminders"] = true
 L["Disable Selected Boss Reminders"] = true
 L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"] = true
@@ -563,7 +567,7 @@ L["Are you sure you want to delete this alert?"] = true
 -- Right panel header
 L["Alert Name"] = true
 L["Group"] = true
-L["- No Group -"] = true
+L["— No Group —"] = true
 -- Inner tabs
 L["Display"] = true
 L["Trigger"] = true

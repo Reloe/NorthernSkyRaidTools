@@ -822,9 +822,9 @@ local function BuildReminderScreen(personal, parentFrame)
                 local elapsed = GetTime() - NSI.ReminderReceivedTime
                 local txt
                 if elapsed < 60 then
-                    txt = string.format("|cFF00FFFFReceived|r %ds ago", math.floor(elapsed))
+                    txt = string.format(L["|cFF00FFFFReceived|r %ds ago"], math.floor(elapsed))
                 else
-                    txt = string.format("|cFF00FFFFReceived|r %dm ago", math.floor(elapsed / 60))
+                    txt = string.format(L["|cFF00FFFFReceived|r %dm ago"], math.floor(elapsed / 60))
                 end
                 recvTimeLabel:SetText(txt)
                 recvTimeLabel:Show()
@@ -875,7 +875,7 @@ local function BuildReminderScreen(personal, parentFrame)
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["Confirm Clear All"], "NSRTClearAllConfirm")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER")
-        local label = DF:CreateLabel(popup, "Delete ALL reminders?", 12, "orange")
+        local label = DF:CreateLabel(popup, L["Delete ALL reminders?"], 12, "orange")
         label:SetPoint("TOP", popup, "TOP", 0, -40)
         label:SetJustifyH("CENTER")
         local confirmBtn = CreateButton(popup, L["Confirm"], function()
