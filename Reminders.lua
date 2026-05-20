@@ -56,7 +56,7 @@ function NSI:CreateReminder(info, preview)
         table.insert(self.TLAlerts, info)
         return nil
     end
-    if (info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and (not (info.IsAlert or info.IsAssignment)) and (not preview)) then
+    if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not preview then
         return nil
     end
     info.spellID = info.spellID and tonumber(info.spellID)
