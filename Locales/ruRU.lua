@@ -421,7 +421,7 @@ L["Are you sure you want to wipe all nicknames?"] = "Вы уверены, что
 -- ============================================================================
 -- UI/Options/PrivateAuras.lua
 -- ============================================================================
-L["Personal Private Aura Settings"] = "Настройки личных приватных аур"
+L["Personal Private Aura Settings"] = "Персональные настройки личных аур"
 L["Enabled"] = "Включено"
 L["Preview/Unlock"] = "Предпросмотр/разблокировка"
 L["Width"] = "Ширина"
@@ -438,6 +438,10 @@ L["Y-Offset of the Private Aura Display"] = "Смещение по оси Y от
 L["Max-Icons"] = "Макс. иконок"
 L["Maximum number of icons to display"] = "Максимальное количество отображаемых иконок"
 L["Scale"] = "Масштаб"
+L["Anchor"] = "Крепление"
+L["The Anchor point of the Private Aura's"] = "Точка привязки личных аур"
+L["Relative To"] = "Относительно"
+L["The Anochr point the Private Aura's are anchored to."] = "Точка привязки, к которой прикреплены личные ауры."
 L["Text-Scale"] = "Масштаб текста"
 L["This will scale the size of Stacks and Duration text."] = "Изменяет размер шрифта для отображения количества стаков и длительности эффектов."
 L["Hide Border"] = "Скрыть границу"
