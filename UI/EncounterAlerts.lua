@@ -1531,7 +1531,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
     glowunitLbl:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
     glowunitLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    glowunitLbl:SetText(L["Glow Unit (player names, space seperated"])
+    glowunitLbl:SetText(L["Glow Unit (player names, space seperated)"])
     glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -178)
 
     local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
