@@ -199,11 +199,21 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     if colorSwap and ((colorSwap.enabled and self:EvaluateLoad(colorSwap) and not preview) or (preview and preview == "Color Swap")) then
         local s = NSRT.EncounterAlerts[encID][id]["Color Swap"]
 
+        if preview then
+            local light = math.random(1, 2) == 1
+            local iconFileID = light and secretwrap(7636520) or secretwrap(7636525)
+            local icon = "\124T"..iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
+            local text = string.format("%s %s %s", icon, s.text, icon)
+
+            local info = self:CreateReminder(CopyTable(s), true)
+            info.text = text
+
+            self:DisplayReminder(info)
+            return
+        end
+
         self.channeling = false
-
-        self:EncounterRegister("BelorenColorSwap", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP"}, true, "boss1")
-        self:EncounterRegister("BelorenColorSwap", "ENCOUNTER_WARNING", true)
-
+        local SwapInfo = self:CreateReminder(CopyTable(s), true)
         self:EncounterFunction("BelorenColorSwap", function(_, e, ...)
             if e == "UNIT_SPELLCAST_CHANNEL_START" then
                 self.channeling = true
@@ -216,25 +226,14 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 local encounterWarningInfo = ...
                 local icon = "\124T"..encounterWarningInfo.iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
                 local text = string.format("%s %s %s", icon, s.text, icon)
+                SwapInfo.text = text
 
-                local info = self:CreateReminder(CopyTable(s), true)
-                info.text = text
-
-                self:DisplayReminder(info)
+                self:DisplayReminder(SwapInfo)
             end
         end)
 
-        if preview then
-            local light = math.random(1, 2) == 1
-            local iconFileID = light and secretwrap(7636520) or secretwrap(7636525)
-            local icon = "\124T"..iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
-            local text = string.format("%s %s %s", icon, s.text, icon)
-
-            local info = self:CreateReminder(CopyTable(s), true)
-            info.text = text
-
-            self:DisplayReminder(info)
-        end
+        self:EncounterRegister("BelorenColorSwap", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_CHANNEL_STOP"}, true, "boss1")
+        self:EncounterRegister("BelorenColorSwap", "ENCOUNTER_WARNING", true)
     end
 end
 
