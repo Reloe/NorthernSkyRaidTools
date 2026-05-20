@@ -16,6 +16,7 @@ Libs\libs.xml
 Locales\enUS.lua
 Locales\koKR.lua
 Locales\ruRU.lua
+Locales\zhTW.lua
 
 # Main Files
 NorthernSkyRaidTools.lua
