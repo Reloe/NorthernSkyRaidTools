@@ -555,13 +555,15 @@ function NSI:EncounterFunction(frameName, func)
     end
 end
 
-function NSI:IsInSameGuild(unit)
-    local name, realm = UnitName(unit)
-    if not realm then
-        realm = select(2, UnitFullName("player"))
+function NSI:IsInSameGuild(unit, playerName)
+    if not playerName then
+        local name, realm = UnitName(unit)
+        if not realm then
+            realm = select(2, UnitFullName("player"))
+        end
+        if not name then return false end
+        playerName = name.."-"..realm
     end
-    if not name then return false end
-    local playerName = name.."-"..realm
     for i=1, GetNumGuildMembers() do
         local name = GetGuildRosterInfo(i)
         if name == playerName then
@@ -569,4 +571,8 @@ function NSI:IsInSameGuild(unit)
         end
     end
     return false
+end
+
+function NSAPI:IsInSameGuild(unit, playerName)
+    return NSI:IsInSameGuild(unit, playerName)
 end

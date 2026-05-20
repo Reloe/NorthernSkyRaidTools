@@ -190,7 +190,7 @@ function NSI:QoLEvents(e, ...)
                 end
             end
             -- unfortunately have to check guild roster because C_GuildInfo.MemberExistsByName is a security risk as it can't check the realm
-            if self:IsInSameGuild(playerName) then
+            if self:IsInSameGuild(nil, playerName) then
                 C_PartyInfo.InviteUnit(playerName)
             end
         end
