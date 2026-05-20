@@ -344,6 +344,9 @@ local function BuildReminderOptions()
             desc = L["Preview Reminders and unlock their anchors to move them around"],
             func = function(self)
                 if NSI.IsInPreview then return end
+                if NSI:IsUsingTLAlerts() or NSI:IsUsingTLReminders() then
+                    print("|cFF00FFFFNSRT:|r " .. L["You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."])
+                end
                 NSI:TogglePreviewMode()
             end,
             nocombat = true,
