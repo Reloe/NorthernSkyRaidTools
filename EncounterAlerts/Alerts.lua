@@ -126,14 +126,12 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         elseif ReloeReminder and existing then
             existing.timers = alertDef.timers
             existing.id = alertDef.id
-            existing.customIcon = alertDef.customIcon
             existing.isConditional = alertDef.isConditional
             existing.name = alertDef.name
             existing.extraOptions = alertDef.extraOptions
             existing.Preview = alertDef.Preview
             existing.phase = alertDef.phase
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
-            existing.customIcon = alertDef.customIcon
             return
         end
     end
