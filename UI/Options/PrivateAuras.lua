@@ -342,7 +342,7 @@ local function BuildPrivateAurasOptions()
         {
             type = "select",
             name = L["Relative To"],
-            desc = L["The Anochr point the Private Aura's are anchored to."],
+            desc = L["The Anchor point the Private Aura's are anchored to."],
             get = function() return NSRT.PARaidSettings.relativeTo end,
             values = function() return build_anchor_options("PARaidSettings", "relativeTo") end,
         },
