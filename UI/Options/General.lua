@@ -23,6 +23,7 @@ local function BuildGeneralOptions()
                     { label = L["English (enUS)"], value = "enUS" },
                     { label = L["Korean (koKR)"],  value = "koKR" },
                     { label = L["Russian (ruRU)"], value = "ruRU" },
+                    { label = L["Traditional Chinese (zhTW)"], value = "zhTW" },
                 }
                 for _, entry in ipairs(langs) do
                     local v = entry.value
