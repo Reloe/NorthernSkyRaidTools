@@ -46,6 +46,22 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3182][16]["Feather Color"].Size or 100 end]],
                 set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3182][i]["Feather Color"].Size = v end NSI.EncounterAlertStop[3182](NSI, true) NSI.EncounterAlertStart[3182](NSI, 16, "Feather Color") end]]
             },
+            {
+                Type = "Slider",
+                label = "X Offset",
+                min = -3000,
+                max = 3000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3182][16]["Feather Color"].xOffset or 0 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3182][i]["Feather Color"].xOffset = v end NSI.EncounterAlertStop[3182](NSI, true) NSI.EncounterAlertStart[3182](NSI, 16, "Feather Color") end]]
+            },
+            {
+                Type = "Slider",
+                label = "Y Offset",
+                min = -3000,
+                max = 3000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3182][16]["Feather Color"].yOffset or 0 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3182][i]["Feather Color"].yOffset = v end NSI.EncounterAlertStop[3182](NSI, true) NSI.EncounterAlertStart[3182](NSI, 16, "Feather Color") end]]
+            },
         },
     }
     self:AddEncounterAlert(data)
