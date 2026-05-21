@@ -1946,16 +1946,20 @@ function NSI:EvaluateLoad(info)
 end
 
 function NSI:ImportReloeReminders(id)
-    if NSRT.Alerts.ReloeReminders then
-        if id then
+    if id then
+        if NSRT.Alerts.ReloeReminders then
             if self.InitializeAlerts[id] then
                 self.InitializeAlerts[id](self)
-                self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
             end
-            return
         end
+        self.InitializeMandatoryAlerts[id](self)
+        self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
+    else
         for key, encID in ipairs(NSI.CurrentEncounterIDs) do
-            if self.InitializeAlerts[encID] then
+            if self.InitializeMandatoryAlerts[encID] then
+                self.InitializeMandatoryAlerts[encID](self)
+            end
+            if NSRT.Alerts.ReloeReminders and self.InitializeAlerts[encID] then
                 self.InitializeAlerts[encID](self)
             end
         end

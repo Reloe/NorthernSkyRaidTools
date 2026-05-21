@@ -47,3 +47,4 @@ NSI.ShowBossWhisperAlert = {}
 NSI.AddAssignments = {}
 NSI.DetectPhaseChange = {}
 NSI.InitializeAlerts = {}
+NSI.InitializeMandatoryAlerts = {}
