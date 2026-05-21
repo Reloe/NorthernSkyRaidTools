@@ -515,8 +515,6 @@ L["This is the Grow-Direction used if there are more than 2 tanks. Rarely ever h
 L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] = "한밤과 호환되는 위크오라 포크 버전이 필요합니다. 버튼을 누르면 각 위크오라의 Wago 링크가 제공됩니다."
 L["Heal Absorb WA"] = "치유 흡수량 위크오라"
 L["Link to a WA that shows the Heal Absorb on Raidframes."] = "레이드 프레임에 치유 흡수량을 표시하는 위크오라 링크입니다."
-L["Paladins Dispel Assign"] = "선봉대 성기사 해제 배정"
-L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."] = "응징의 방패 해제 배정 위크오라 링크 - 모든 힐러, 흑마법사, 드워프가 위크오라를 깔아놔야 합니다. 드워프는 배정 우선순위가 가장 낮습니다. 해제 가능한 수보다 디버프가 많으면 종족 특성을 사용하라고 나옵니다."
 L["Alleria P1 Dmg Amp"] = "알레리아 1페 뎀증"
 L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = "큰 쫄 3개의 이름표에 뎀증 디버프 중첩을 표시합니다. 완벽하지 않고 일부 상황에서는 표시되지 않을 수 있지만 없는 것보다는 낫습니다."
 L["Belo'ren Feather Color"] = "벨로렌 깃털색"

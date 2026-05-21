@@ -53,15 +53,6 @@ local function BuildWAImportsOptions()
         },
         {
             type = "button",
-            name = L["Paladins Dispel Assign"],
-            desc = L["Link to a WA that assigns avenger's shield dispels - All healers, warlocks and dwarfs should have this. Dwarfs get the lowest priority on getting assigned. They will be told to use their racial if there are more debuffs than dispellers available."],
-            func = function(self)
-                WAButton("Paladins Dispel Assign", "PaladinsDispelAssign", "https://wago.io/NspRXIk6n")
-            end,
-            nocombat = true
-        },
-        {
-            type = "button",
             name = L["Alleria P1 Dmg Amp"],
             desc = L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."],
             func = function(self)
