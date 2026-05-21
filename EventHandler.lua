@@ -14,6 +14,14 @@ f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_LOGOUT")
 
+function NSI:UpdateDebugLogEvents()
+    if NSRT.Settings.DebugLogs then
+        f:RegisterEvent("ENCOUNTER_WARNING")
+    else
+        f:UnregisterEvent("ENCOUNTER_WARNING")
+    end
+end
+
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
 end)
@@ -64,6 +72,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:AddPASound(spellID, info.sound)
             end
         end
+        self:UpdateDebugLogEvents()
         -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
         if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         if NSRT.StoredSharedReminder then
@@ -406,6 +415,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
+    elseif e == "ENCOUNTER_WARNING" and wowevent then
+        self:LogTimeline(e, ...)
     elseif e == "QoL_Comms" and internal then
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then

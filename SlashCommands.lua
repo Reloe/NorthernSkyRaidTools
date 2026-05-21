@@ -58,6 +58,7 @@ SlashCmdList["NSUI"] = function(msg)
         NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
     elseif msg == "debuglogs" then
         NSRT.Settings.DebugLogs = not NSRT.Settings.DebugLogs
+        NSI:UpdateDebugLogEvents()
         if NSRT.Settings.DebugLogs then
             print("|cFF00FFFFNSRT|r Debug logs are now enabled")
         else

@@ -522,17 +522,22 @@ function NSI:LogTimeline(e, ...)
             data.id = info
             local stateVal = C_EncounterTimeline.GetEventState(info)
             data.state = stateNames[stateVal] or tostring(stateVal)
+        elseif e == "ENCOUNTER_WARNING" then
+            data.id = "nil"
+            data.dur = info.duration
+            data.severity = info.severity
         else
             data.id = info
         end
         data.time = now - self.CurrentEncounterData.pullTime
-        tinsert(self.CurrentEncounterData.events, string.format("[%6.2f]  %-45s  id: %-10s%s%s%s",
+        tinsert(self.CurrentEncounterData.events, string.format("[%6.2f]  %-45s  id: %-10s%s%s%s%s",
             data.time,
             e,
             tostring(data.id or "nil"),
             data.dur and string.format("  dur: %-10.4f", data.dur) or "",
             data.Queue and string.format("  queue: %.4f", data.Queue) or "",
-            data.state and string.format("  state: %s", data.state) or ""
+            data.state and string.format("  state: %s", data.state) or "",
+            data.severity and string.format("  severity: %s", data.severity) or ""
         ))
     end
 end
