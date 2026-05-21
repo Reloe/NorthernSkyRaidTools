@@ -405,6 +405,28 @@ local function GetCircleTexture(info)
     return (s and s.Texture) or DefaultCircleTexture
 end
 
+local function PositionCircleText(text, F, s)
+    text:ClearAllPoints()
+    local position = s.TextPosition
+    local x, y = s.xTextOffset, s.yTextOffset
+    if position == "Bottom" then
+        text:SetPoint("TOP", F, "BOTTOM", x, y)
+        text:SetJustifyH("CENTER")
+    elseif position == "Center" then
+        text:SetPoint("CENTER", F, "CENTER", x, y)
+        text:SetJustifyH("CENTER")
+    elseif position == "Left" then
+        text:SetPoint("RIGHT", F, "LEFT", x, y)
+        text:SetJustifyH("RIGHT")
+    elseif position == "Right" then
+        text:SetPoint("LEFT", F, "RIGHT", x, y)
+        text:SetJustifyH("LEFT")
+    else
+        text:SetPoint("BOTTOM", F, "TOP", x, y)
+        text:SetJustifyH("CENTER")
+    end
+end
+
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
     if self._uefPending then return end
     self._uefPending = true
@@ -500,6 +522,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
                 F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
             end
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            PositionCircleText(F.Text, F, s)
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         end
     end
@@ -613,6 +636,8 @@ function NSI:SetProperties(F, info, skipsound, s)
     if info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
+        F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+        PositionCircleText(F.Text, F, s)
         F.Text:SetTextColor(r, g, b, a)
         local texture = GetCircleTexture(info)
         if F.ring then
@@ -891,7 +916,7 @@ function NSI:CreateCircle(info)
             F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
 
             F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-            F.Text:SetPoint("BOTTOM", F, "TOP", 0, 4)
+            PositionCircleText(F.Text, F, s)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
             F.Text:SetShadowColor(0, 0, 0, 1)
             F.Text:SetShadowOffset(0, 0)

@@ -43,6 +43,16 @@ local function CircleTextureValues()
     }
 end
 
+local function CircleTextPositionValues()
+    return {
+        {label=L["Top"], value="Top"},
+        {label=L["Bottom"], value="Bottom"},
+        {label=L["Center"], value="Center"},
+        {label=L["Left"], value="Left"},
+        {label=L["Right"], value="Right"},
+    }
+end
+
 -- ---------------------------------------------------------------
 --  Returns the ordered widget-definition table for each type.
 --  All ranges and fields are aligned with Reminders.lua.
@@ -190,6 +200,9 @@ local function GetWidgetDefs(settingsName)
             DD    (L["Texture"],            "Texture",       CircleTextureValues),
             DD    (L["Font"],               "Font",          MediaValuesFn()),
             Slider(L["Font Size"],          "FontSize",      5,   80),
+            DD    (L["Text Position"],       "TextPosition",  CircleTextPositionValues),
+            Slider(L["Text X Offset"],      "xTextOffset",   -500, 500),
+            Slider(L["Text Y Offset"],      "yTextOffset",   -500, 500),
             Slider(L["Decimals Threshold"], "Decimals",      0,    10),
             Slider(L["Sticky Duration"],    "Sticky",        0,   30),
             {Type="Color", label=L["Text Color"],  get=GetColor,     set=SetColor},
