@@ -432,6 +432,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local z = ((s.Zoom) * 0.5) / 100
             F.Icon:SetTexCoord(z, 1 - z, z, 1 - z)
             F.Border:SetAllPoints(F)
+            F.Border:SetBackdropBorderColor(unpack(s.borderColors))
             local anchor = s.RightAlignedText and "RIGHT" or "LEFT"
             local relativePoint = s.RightAlignedText and "LEFT" or "RIGHT"
             F.Text:ClearAllPoints()
@@ -464,6 +465,8 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F:SetSize(s.Width, s.Height)
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(s.barColors))
+            F:SetBackdropColor(unpack(s.backgroundColors))
+            F.Border:SetBackdropBorderColor(unpack(s.borderColors))
             if F.Text then F.Text:SetTextColor(unpack(s.textColors)) end
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
@@ -638,6 +641,7 @@ function NSI:SetProperties(F, info, skipsound, s)
                 F.TimerText:Show()
             end
         end
+        if F.Border and s.borderColors then F.Border:SetBackdropBorderColor(unpack(s.borderColors)) end
         if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors)) end
     elseif info.DisplayType == "Bar" then
         if spellInfo then
@@ -649,6 +653,10 @@ function NSI:SetProperties(F, info, skipsound, s)
         if F.SetStatusBarColor then
             F:SetStatusBarColor(unpack(info.barColors or s.barColors or {1,0,0,1}))
         end
+        if F.SetBackdropColor then
+            F:SetBackdropColor(unpack(s.backgroundColors))
+        end
+        if F.Border then F.Border:SetBackdropBorderColor(unpack(s.borderColors)) end
         if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1})) end
         if F.TimerText then
             F.TimerText:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1}))
@@ -730,7 +738,7 @@ function NSI:CreateIcon(info)
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.Border:SetBackdropBorderColor(unpack(s.borderColors))
             F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
             local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
@@ -816,7 +824,7 @@ function NSI:CreateBar(info)
             })
             F:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
             F:SetStatusBarColor(unpack(info.barColors or s.barColors))
-            F:SetBackdropColor(0, 0, 0, 0.8)
+            F:SetBackdropColor(unpack(s.backgroundColors))
             local offset = s.GrowDirection == "Up" and (i-1) * s.Height or -(i-1) * s.Height
             F:SetPoint("BOTTOMLEFT", "NSUIReminderBarMover", "BOTTOMLEFT", 0, 0 + offset)
             F:SetPoint("TOPRIGHT", "NSUIReminderBarMover", "TOPRIGHT", 0, 0 + offset)
@@ -828,7 +836,7 @@ function NSI:CreateBar(info)
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                 edgeSize = 1
             })
-            F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.Border:SetBackdropBorderColor(unpack(s.borderColors))
             F.Icon = F:CreateTexture(nil, "ARTWORK")
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)

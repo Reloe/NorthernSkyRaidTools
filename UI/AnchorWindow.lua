@@ -71,7 +71,12 @@ local function GetWidgetDefs(settingsName)
         if not c then return 1, 1, 1, 1 end
         return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
     end
+    local function GetBorderColor()
+        local c = S.borderColors
+        return c[1] or 0, c[2] or 0, c[3] or 0, c[4] or 1
+    end
     local function SetColor(_, r, g, b, a) W("textColors", {r, g, b, a}) end
+    local function SetBorderColor(_, r, g, b, a) W("borderColors", {r, g, b, a}) end
     -- Shorthand constructors
     -- Note: BuildWidgets calls get(NSI) and set(NSI, value), so closures accept _ for NSI.
     local function Slider(label, key, mn, mx)
@@ -116,6 +121,7 @@ local function GetWidgetDefs(settingsName)
             Slider(L["Timer X"],            "xTimer",        -100, 100),
             Slider(L["Timer Y"],            "yTimer",        -100, 100),
             {Type="Color", label=L["Text Color"], get=GetColor, set=SetColor},
+            {Type="Color", label=L["Border Color"], get=GetBorderColor, set=SetBorderColor},
             Chk   (L["Right-Aligned Text"], "RightAlignedText"),
             Chk   (L["Hide Timer Text"],    "HideTimerText"),
             Chk   (L["Hide Swipe"],         "HideSwipe"),
@@ -127,7 +133,12 @@ local function GetWidgetDefs(settingsName)
             if not c then return 1, 0, 0, 1 end
             return c[1] or 1, c[2] or 0, c[3] or 0, c[4] or 1
         end
+        local function GetBarBackgroundColor()
+            local c = S.backgroundColors
+            return c[1] or 0, c[2] or 0, c[3] or 0, c[4] or 0.8
+        end
         local function SetBarFillColor(_, r, g, b, a) W("barColors", {r, g, b, a}) end
+        local function SetBarBackgroundColor(_, r, g, b, a) W("backgroundColors", {r, g, b, a}) end
         return {
             DDGrow(false),
             Slider(L["Width"],              "Width",         80,   500),
@@ -140,7 +151,9 @@ local function GetWidgetDefs(settingsName)
             Slider(L["Timer Font Size"],    "TimerFontSize", 5,    200),
             Slider(L["Decimals Threshold"], "Decimals",      0,    10),
             {Type="Color", label=L["Bar Fill Color"],  get=GetBarFillColor, set=SetBarFillColor},
+            {Type="Color", label=L["Bar Background Color"], get=GetBarBackgroundColor, set=SetBarBackgroundColor},
             {Type="Color", label=L["Bar Text Color"],  get=GetColor,        set=SetColor},
+            {Type="Color", label=L["Border Color"], get=GetBorderColor, set=SetBorderColor},
             Slider(L["Icon X Offset"],      "xIcon",         -100, 100),
             Slider(L["Icon Y Offset"],      "yIcon",         -100, 100),
             Slider(L["Text X Offset"],      "xTextOffset",   -500, 500),
