@@ -1120,7 +1120,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
 
-    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import Reloe Reminders"],
+    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import Reloe Alerts"],
         function() return NSRT.Alerts.ReloeReminders end,
         function(_, v)
             NSRT.Alerts.ReloeReminders = v
@@ -1151,7 +1151,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local dialog = NSI.UI.Components.CreateDialog(
             "NSRTEncAlertFullReset",
             L["Full Reset"],
-            L["This will wipe all Encounter Alert data and re-import Reloe Reminders (if enabled). Continue?"],
+            L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"],
             L["Cancel"], nil, L["Reset"], DoReset, nil)
         dialog:Show()
     end, listW, 26)
@@ -1174,12 +1174,12 @@ local function BuildEncounterAlertsUI(parentFrame)
         RebuildList()
     end
 
-    local enableAllBtn = CreateButton(addOptFrame, L["Enable Selected Boss Reminders"], function()
+    local enableAllBtn = CreateButton(addOptFrame, L["Enable Selected Boss Alerts"], function()
         SetReloeAlertsEnabled(true)
     end, listW, 22)
     enableAllBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
 
-    local disableAllBtn = CreateButton(addOptFrame, L["Disable Selected Boss Reminders"], function()
+    local disableAllBtn = CreateButton(addOptFrame, L["Disable Selected Boss Alerts"], function()
         SetReloeAlertsEnabled(false)
     end, listW, 22)
     disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)

@@ -435,8 +435,8 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Import Reloe Reminders"],
-            desc = L["Automatically import all of Reloe's custom created reminders for the current tier's bosses. Display settings of these reminders can be edited."],
+            name = L["Import Reloe Alerts"],
+            desc = L["Automatically import all of Reloe's custom created Alerts for the current tier's bosses. Display settings of these Alerts can be edited."],
             get = function() return NSRT.Alerts.ReloeReminders end,
             set = function(self, fixedparam, value)
                 NSRT.Alerts.ReloeReminders = value
