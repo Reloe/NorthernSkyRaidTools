@@ -2033,8 +2033,10 @@ local function BuildEncounterAlertsUI(parentFrame)
             NSRT.EncounterAlerts[v][filterDiffID][foundKey] = trigF._alert
             selectedEncID = v
             selectedKey = foundKey
+            filterEncID = v
             NSI:FireCallback("NSRT_ALERT_CHANGED", oldEncID, filterDiffID, foundKey)
             NSI:FireCallback("NSRT_ALERT_CHANGED", v, filterDiffID, foundKey)
+            filterDD:Refresh()
             RebuildList()
         end, false)
     end
