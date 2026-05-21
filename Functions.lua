@@ -547,15 +547,15 @@ function NSI:GetMySpecID()
 end
 
 function NSI:EncounterRegister(frameName, event, enable, units, all)
-    if not frameName then return end
-    if not self.EncounterFrames then
-        self.EncounterFrames = {}
-    end
     if all then
         for k, v in pairs(self.EncounterFrames) do
             v:UnregisterAllEvents()
         end
         return
+    end
+    if not frameName then return end
+    if not self.EncounterFrames then
+        self.EncounterFrames = {}
     end
     if event and not self.EncounterFrames[frameName] then
         self.EncounterFrames[frameName] = CreateFrame("Frame", nil, self.NSRTFrame)
