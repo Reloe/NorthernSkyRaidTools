@@ -281,6 +281,15 @@ local function BuildReminderOptions()
             end,
             nocombat = true,
         },
+
+        {
+            type = "select",
+            name = L["Sound"],
+            desc = L["Sound"],
+            get = function() return NSRT.ReminderSettings.DefaultSound end,
+            values = function() return build_sound_dropdown() end,
+            nocombat = true,
+        },
         {
             type = "toggle",
             boxfirst = true,
@@ -317,15 +326,6 @@ local function BuildReminderOptions()
             end,
             min = 0,
             max = 30,
-            nocombat = true,
-        },
-
-        {
-            type = "select",
-            name = L["Sound"],
-            desc = L["Sound"],
-            get = function() return NSRT.ReminderSettings.DefaultSound end,
-            values = function() return build_sound_dropdown() end,
             nocombat = true,
         },
 

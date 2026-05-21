@@ -364,9 +364,8 @@ function NSI:ImportSettingsFromString(string)
     else return nil end
 end
 
-function NSI:StopFrameMove(F, SettingsTable)
-    if not F then return end
-    F:StopMovingOrSizing()
+function NSI:SaveFramePosition(F, SettingsTable)
+    if not F or not SettingsTable then return end
     local Anchor, _, relativeTo, xOffset, yOffset = F:GetPoint()
     xOffset = Round(xOffset)
     yOffset = Round(yOffset)
@@ -374,6 +373,12 @@ function NSI:StopFrameMove(F, SettingsTable)
     SettingsTable.yOffset = yOffset
     SettingsTable.Anchor = Anchor
     SettingsTable.relativeTo = relativeTo
+end
+
+function NSI:StopFrameMove(F, SettingsTable)
+    if not F then return end
+    F:StopMovingOrSizing()
+    self:SaveFramePosition(F, SettingsTable)
 end
 
 function NSI:MakeDraggable(F, settingsTable, enable, isNote)
@@ -403,8 +408,25 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         if F.TitleLabel then F.TitleLabel:Show() end
         if F.GearButton then F.GearButton:Show() end
 
-        F:SetScript("OnDragStart", function(f) f:StartMoving() end)
+        F:SetScript("OnDragStart", function(f)
+            f:StartMoving()
+            if settingsTable and not isNote then
+                f._nsrtDragSaveElapsed = 0
+                f._nsrtLiveSaveDrag = true
+                f:SetScript("OnUpdate", function(frame, elapsed)
+                    frame._nsrtDragSaveElapsed = (frame._nsrtDragSaveElapsed or 0) + elapsed
+                    if frame._nsrtDragSaveElapsed < 0.05 then return end
+                    frame._nsrtDragSaveElapsed = 0
+                    self:SaveFramePosition(frame, settingsTable)
+                end)
+            end
+        end)
         F:SetScript("OnDragStop", function(f)
+            if f._nsrtLiveSaveDrag then
+                f:SetScript("OnUpdate", nil)
+                f._nsrtLiveSaveDrag = nil
+                f._nsrtDragSaveElapsed = nil
+            end
             self:StopFrameMove(f, settingsTable)
         end)
     else
@@ -417,6 +439,11 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
 
         F:SetMovable(false)
         F:EnableMouse(false)
+        if F._nsrtLiveSaveDrag then
+            F:SetScript("OnUpdate", nil)
+            F._nsrtLiveSaveDrag = nil
+            F._nsrtDragSaveElapsed = nil
+        end
         F:SetScript("OnDragStart", nil)
         F:SetScript("OnDragStop",  nil)
     end

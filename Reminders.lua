@@ -1582,6 +1582,7 @@ end
 
 function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
     if not F or not s then return end
+    if F._nsrtLiveSaveDrag then return end
     local Width  = isAnchor and 300 or ((IsText and F.Text:GetStringWidth()) or s.Width or s.Size or 80)
     local Height = isAnchor and 20  or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
     if IsText then
