@@ -1947,12 +1947,14 @@ end
 
 function NSI:ImportReloeReminders(id)
     if id then
+        if self.InitializeMandatoryAlerts[id] then
+            self.InitializeMandatoryAlerts[id](self)
+        end
         if NSRT.Alerts.ReloeReminders then
             if self.InitializeAlerts[id] then
                 self.InitializeAlerts[id](self)
             end
         end
-        self.InitializeMandatoryAlerts[id](self)
         self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
     else
         for key, encID in ipairs(NSI.CurrentEncounterIDs) do
