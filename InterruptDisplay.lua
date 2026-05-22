@@ -123,7 +123,7 @@ function NSI:ReadInterruptNote(StartNumber)
     if not pers then pers = "" end
     if not shared then shared = "" end
     local MRT = C_AddOns.IsAddOnLoaded("MRT") and _G.VMRT.Note.Text1 or ""
-    local str = shared..pers..MRT
+    local str = shared.."\n"..pers.."\n"..MRT
     local count = StartNumber or 0
     self.Interrupts = self.Interrupts or {}
     self.Interrupts.assignTable = {}
