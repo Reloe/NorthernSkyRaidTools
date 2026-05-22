@@ -199,8 +199,10 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
             labelFrame:SetPoint("LEFT", iconFrame, "RIGHT", iconGap, 0)
         end
     else
-        labelFrame:SetSize(textWidth, btnHeight)
-        labelFrame:SetPoint("CENTER", btn, "CENTER", 0, 0)
+        -- Fixed-width buttons can change font or label text after creation.
+        -- Keep their label sized to the button instead of the initial text width.
+        labelFrame:SetPoint("TOPLEFT", btn, "TOPLEFT", padH, 0)
+        labelFrame:SetPoint("BOTTOMRIGHT", btn, "BOTTOMRIGHT", -padH, 0)
     end
     -- ---- mouse scripts ----------------------------------------
     btn:SetScript("OnEnter", function(self)
