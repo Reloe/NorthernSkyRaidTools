@@ -449,29 +449,6 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
     end
 end
 
-function NSI:IsMelee(unit)
-    local role = UnitGroupRolesAssigned(unit)
-    if unit == "player" then
-        local spec = self:GetMySpecID()
-        local melee = false
-        if self.meleetable[spec] or role == "TANK" then
-            melee = true
-        end
-        return melee
-    else
-        local spec = NSI:GetSpecs(unit) or 0
-        if spec and spec ~= 0 then
-            local melee = false
-            if self.meleetable[spec] or role == "TANK" then
-                melee = true
-            end
-            return melee
-        else
-            return role == "TANK"
-        end
-    end
-end
-
 function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
     local id = select(3, GetInstanceInfo())

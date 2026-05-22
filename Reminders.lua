@@ -1911,15 +1911,9 @@ function NSI:EvaluateLoad(info)
     local shouldLoad = true
     if cond.Roles and next(cond.Roles) then
         shouldLoad = false
-        local myRole = UnitGroupRolesAssigned("player")
-        if myRole == "NONE" then
-            self.LS = self.LS or LibStub("LibSpecialization", true)
-            myRole = self.LS and select(2, self.LS.MySpecialization()) or myRole
-        end
-        if cond.Roles[myRole] then return true end
-        local IsMelee = self:IsMelee("player")
-        if cond.Roles["MELEE"] and IsMelee then return true end
-        if cond.Roles["RANGED"] and not IsMelee then return true end
+        self.LS = self.LS or LibStub("LibSpecialization", true)
+        local myRole, myPos = select(2, self.LS.MySpecialization())
+        if cond.Roles[myRole] or cond.Roles[myPos] then return true end
     end
     if cond.Classes and next(cond.Classes) then
         shouldLoad = false
