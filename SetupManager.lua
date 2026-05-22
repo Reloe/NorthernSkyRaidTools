@@ -103,56 +103,6 @@ NSI.spectable = {
     [257]  = 40, -- Priest: Holy
 }
 
-NSI.healertable = {
-    [65]   = true, -- Paladin: Holy
-    [270]  = true, -- Monk: Mistweaver
-    [1468] = true, -- Evoker: Preservation
-    [105]  = true, -- Druid: Restoration
-    [264]  = true, -- Shaman: Restoration
-    [256]  = true, -- Priest: Discipline
-    [257]  = true, -- Priest: Holy
-}
-
-NSI.tanktable = {
-    [268]  = true, -- Brewmaster
-    [66]   = true, -- Prot Pally
-    [104]  = true, -- Guardian Druid
-    [73]   = true, -- Prot Warrior
-    [581]  = true, -- Veng DH
-    [250]  = true, -- Blood DK
-}
-
-NSI.dpstable = {
-    [263]  = true, -- Shaman: Enhancement
-    [255]  = true, -- Hunter: Survival
-    [251]  = true, -- Death Knight: Frost
-    [252]  = true, -- Death Knight: Unholy
-    [259]  = true, -- Rogue: Assassination
-    [260]  = true, -- Rogue: Outlaw
-    [261]  = true, -- Rogue: Subtlety
-    [71]   = true, -- Warrior: Arms
-    [72]   = true, -- Warrior: Fury
-    [103]  = true, -- Druid: Feral
-    [70]   = true, -- Paladin: Retribution
-    [269]  = true, -- Monk: Windwalker
-    [577]  = true, -- Demon Hunter: Havoc
-    [1480] = true, -- Demon Hunter: Devourer
-    [1473] = true, -- Evoker: Augmentation
-    [1467] = true, -- Evoker: Devastation
-    [262]  = true, -- Shaman: Elemental
-    [258]  = true, -- Priest: Shadow
-    [102]  = true, -- Druid: Balance
-    [265]  = true, -- Warlock: Affliction
-    [266]  = true, -- Warlock: Demonology
-    [267]  = true, -- Warlock: Destruction
-    [64]   = true, -- Mage: Frost
-    [62]   = true, -- Mage: Arcane
-    [63]   = true, -- Mage: Fire
-    [253]  = true, -- Hunter: Beast Mastery
-    [254]  = true, -- Hunter: Marksmanship
-
-}
-
 function NSI:GetSortedGroup(Flex, default, odds)
     local units = {}
     local lastgroup = Flex and 6 or 4
