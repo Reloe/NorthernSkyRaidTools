@@ -145,13 +145,14 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     labelFrame:EnableMouse(false)
 
     local label = labelFrame:CreateFontString(nil, "OVERLAY")
-    label:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), STYLE.text_size, NSRT.Settings.GlobalFontFlags)
+    local labelSize = textSize or STYLE.text_size
+    label:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), labelSize, NSRT.Settings.GlobalFontFlags)
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")
     label:SetJustifyH("CENTER")
     label:SetAllPoints(labelFrame)
-    labelRegistry[#labelRegistry + 1] = {label = label, size = fontSize}
+    labelRegistry[#labelRegistry + 1] = {label = label, size = labelSize}
 
     -- ---- compute final button width & lay out content ---------
     local iconSize  = 14
