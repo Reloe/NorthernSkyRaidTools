@@ -159,8 +159,6 @@ L["SpellName"] = "Название заклинания"
 L["Display the SpellName if no text is provided"] = "Отображать название заклинания, если текст не указан"
 L["SpellName TTS if empty"] = "TTS названия заклинания при пустом тексте"
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = "Позволяет названию заклинания всё равно воспроизводиться в TTS, даже если текст напоминания пуст (даже если отключена опция 'Название заклинания')."
-L["Bars"] = "Полосы"
-L["Show Progress Bars instead of icons"] = "Показывать полосы прогресса вместо иконок"
 
 -- UI/Options/Reminders.lua — Text Settings
 L["Text Settings"] = "Настройки текста"

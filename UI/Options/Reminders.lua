@@ -9,6 +9,22 @@ local build_growdirection_options = Core.build_growdirection_options
 local build_raidframeicon_options = Core.build_raidframeicon_options
 local build_sound_dropdown = Core.build_sound_dropdown
 
+local function BuildSpellDisplayOptions()
+    local options = {}
+    for _, displayType in ipairs({"Icon", "Bar", "Text", "Circle"}) do
+        local value = displayType
+        options[#options + 1] = {
+            label = value,
+            value = value,
+            onclick = function()
+                NSRT.ReminderSettings.SpellDisplayType = value
+                NSI:ProcessReminder()
+            end,
+        }
+    end
+    return options
+end
+
 local function BuildReminderOptions()
     return {
         {
@@ -106,14 +122,11 @@ local function BuildReminderOptions()
             nocombat = true,
         },
         {
-            type = "toggle",
-            boxfirst = true,
-            name = L["Bars"],
-            desc = L["Show Progress Bars instead of icons"],
-            get = function() return NSRT.ReminderSettings["Bars"] end,
-            set = function(self, fixedparam, value)
-                NSRT.ReminderSettings["Bars"] = value
-            end,
+            type = "select",
+            name = L["Default Spell Display"],
+            desc = L["Default display type for reminders with a spell ID. Reminders without a spell ID use text unless their display type is set explicitly."],
+            get = function() return NSRT.ReminderSettings.SpellDisplayType end,
+            values = BuildSpellDisplayOptions,
             nocombat = true,
         },
         {

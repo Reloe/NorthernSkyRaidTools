@@ -163,8 +163,6 @@ L["SpellName"] = "法術名稱"
 L["Display the SpellName if no text is provided"] = "若未提供文字，顯示法術名稱"
 L["SpellName TTS if empty"] = "文字為空時播放法術名稱 TTS"
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = "即使提醒文字為空，仍會將法術名稱以 TTS 播放（即使你取消勾選「法術名稱」）。"
-L["Bars"] = "進度條"
-L["Show Progress Bars instead of icons"] = "顯示進度條而非圖示"
 
 -- UI/Options/Reminders.lua — Text Settings
 L["Text Settings"] = "文字設定"

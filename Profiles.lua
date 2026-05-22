@@ -81,6 +81,7 @@ function NSI:AddMissingDefaults()
             TextDuration = 10,
             SpellCountdown = 0,
             TextCountdown = 0,
+            SpellDisplayType = "Icon",
             SpellName = true,
             SpellTTSTimer = 5,
             TextTTSTimer = 5,

@@ -156,8 +156,8 @@ L["SpellName"] = true
 L["Display the SpellName if no text is provided"] = true
 L["SpellName TTS if empty"] = true
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = true
-L["Bars"] = true
-L["Show Progress Bars instead of icons"] = true
+L["Default Spell Display"] = true
+L["Default display type for reminders with a spell ID. Reminders without a spell ID use text unless their display type is set explicitly."] = true
 
 -- UI/Options/Reminders.lua — Text Settings
 L["Text Settings"] = true

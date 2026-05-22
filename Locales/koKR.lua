@@ -160,8 +160,6 @@ L["SpellName"] = "주문 이름"
 L["Display the SpellName if no text is provided"] = "텍스트가 없을 때 주문 이름을 표시합니다"
 L["SpellName TTS if empty"] = "비어 있으면 주문 이름 TTS"
 L["This will make it so that the SpellName is still played as TTS even if the text of the reminder remains empty (so even if you have 'SpellName' unticked)."] = "리마인더 텍스트가 비어 있을땐 주문 이름을 TTS로 재생합니다. ('주문 이름' 옵션이 꺼져 있어도 동작)"
-L["Bars"] = "바"
-L["Show Progress Bars instead of icons"] = "아이콘 대신 진행 바를 표시합니다"
 L["Sticky"] = "유지"
 L["Keep Reminders shown for X seconds if the spell hasn't been pressed yet"] = "주문을 시전하지 않은 경우 X초 동안 리마인더를 유지합니다"
 

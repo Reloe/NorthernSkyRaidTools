@@ -61,7 +61,8 @@ function NSI:CreateReminder(info, preview)
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
-        info.DisplayType = info.spellID and (NSRT.ReminderSettings.Bars and "Bar" or "Icon") or "Text"
+        local spellDisplayType = NSRT.ReminderSettings.SpellDisplayType
+        info.DisplayType = info.spellID and spellDisplayType or "Text"
     end
     if info.textColors and type(info.textColors) == "string" then
         local colors = {}
