@@ -95,8 +95,9 @@ local CreateButton                 = NSI.UI.Components.CreateButton
 function NSUI:Init()
     NSI.IsBuilding = true
     -- Scale bar
-    DF:CreateScaleBar(NSUI, NSRT.NSUI)
-    local scale = math.max(NSRT.NSUI.scale, 0.6)
+    local scale = NSRT.NSUI.scale
+    NSRT.NSUI.scale = scale
+    DF:CreateScaleBar(NSUI, NSRT.NSUI, true)
     NSUI:SetScale(scale)
 
     -- Forward declaration – buttons below need to call SelectTab before it is defined
