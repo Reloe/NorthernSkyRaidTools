@@ -794,17 +794,27 @@ local function BuildReminderScreen(personal, parentFrame)
     table.insert(roleGatedButtons, DeleteButton)
 
     if not personal then
+        local function GetInviteReminderInput()
+            if screen.viewingReceivedNote then
+                SaveReceivedNote()
+                return NSI.Reminder
+            end
+            return screen.selectedName
+        end
+
         local InviteButton = CreateButton(screen, L["Invite"], function()
-            if screen.selectedName and NSRT.InviteList and NSRT.InviteList[screen.selectedName] then
-                NSI:InviteFromReminder(screen.selectedName, true)
+            local reminderInput = GetInviteReminderInput()
+            if reminderInput then
+                NSI:InviteFromReminder(reminderInput, true)
             end
         end, 80, 24)
         InviteButton:SetPoint("LEFT", DeleteButton.frame, "RIGHT", 5, 0)
         table.insert(roleGatedButtons, InviteButton)
 
         local ArrangeButton = CreateButton(screen, L["Arrange"], function()
-            if screen.selectedName and NSRT.InviteList and NSRT.InviteList[screen.selectedName] then
-                NSI:ArrangeFromReminder(screen.selectedName)
+            local reminderInput = GetInviteReminderInput()
+            if reminderInput then
+                NSI:ArrangeFromReminder(reminderInput)
             end
         end, 80, 24)
         ArrangeButton:SetPoint("LEFT", InviteButton.frame, "RIGHT", 5, 0)

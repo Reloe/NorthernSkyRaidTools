@@ -282,6 +282,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                 self.Groups.units[i].group = group
                 self.Groups.units[i].subgrouppos = subgrouppos
                 self.Groups.units[i].pos= ((group-1)*5)+subgrouppos
+                if self.Groups.units[i].processed then self.Groups.Processed = self.Groups.Processed+1 end
             end
         end
     end
@@ -297,7 +298,6 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
         postoindex[((subgroup-1)*5)+groupSize[subgroup]] = i
         indexlink[i] = {subgroup = subgroup, pos = ((subgroup-1)*5)+groupSize[subgroup]}
     end
-
     if self.Groups.Processed >= self.Groups.total then
         if finalcheck then
             local allprocessed = true
@@ -376,12 +376,21 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                             end
                         end
                     end
+                    if not found then -- lastly put them into any group that has a free spot
+                        for j=1, 8 do
+                            if indexlink[index].subgroup ~= j and groupSize[j] < 5 then
+                                SetRaidSubgroup(index, j)
+                                found = true
+                                break
+                            end
+                        end
+                    end
                     break
                 end
             else -- character is already in the correct position
                 v.processed = true
                 self.Groups.Processed = self.Groups.Processed+1
-                self:ArrangeGroups(false, finalcheck)
+                self:ArrangeGroups(false, true)
                 break
             end
         end
@@ -493,8 +502,19 @@ FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 
+function NSI:GetInviteListFromReminderInput(str)
+    if not str then return end
+    if NSRT.InviteList and NSRT.InviteList[str] then
+        return NSRT.InviteList[str]
+    end
+    if NSRT.Reminders and NSRT.Reminders[str] then
+        return self:InviteListFromReminder(NSRT.Reminders[str])
+    end
+    return self:InviteListFromReminder(str)
+end
+
 function NSI:InviteFromReminder(str, init)
-    local list = NSRT.InviteList[str]
+    local list = self:GetInviteListFromReminderInput(str)
     if list and not self:Restricted() then
         self.CurrentInviteList = list
         self.InviteInProgress = true
@@ -534,7 +554,7 @@ function NSI:ArrangeFromReminder(str)
         return
     end
     self.LastGroupSort = now
-    local list = NSRT.InviteList[str]
+    local list = self:GetInviteListFromReminderInput(str)
     self.Groups = {}
     self.Groups.Processing = false
     self.Groups.units = {}
@@ -559,9 +579,10 @@ function NSI:ArrangeFromReminder(str)
         end
         table.sort(self.Groups.units, function(a, b) return a.sort < b.sort end)
     end
-    if self.Groups.total ~= count then
+    if missingPlayers ~= "" then
         print("The following players are missing in the group. Arranging with all present players instead: "..missingPlayers)
     end
     self.Groups.units = self:ShiftLeader(self.Groups.units)
+    DevTool:AddData(self.Groups)
     self:ArrangeGroups(true)
 end
