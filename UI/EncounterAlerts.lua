@@ -1115,7 +1115,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Additional Options popup — positioned to the right of the main NSUI window
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2
-    local ADDOPT_H   = 158
+    local ADDOPT_H   = 190
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
@@ -1129,6 +1129,20 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         listW, 22, "NSUIEncAlertReloeImportCB")
     reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
+
+    local importSelectedBossBtn = CreateButton(addOptFrame, L["Import Selected Boss Alerts"], function()
+        local encID = filterEncID or selectedEncID
+        if not encID then
+            print("|cFF00FFFFNSRT:|r " .. L["Select a boss first."])
+            return
+        end
+        NSI:ImportReloeReminders(encID)
+        RebuildList()
+        if selectedEncID and selectedKey then
+            SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+        end
+    end, listW, 22)
+    importSelectedBossBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
 
     local fullResetBtn = CreateButton(addOptFrame, L["Full Reset"], function()
         local function DoReset()
@@ -1155,7 +1169,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             L["Cancel"], nil, L["Reset"], DoReset, nil)
         dialog:Show()
     end, listW, 26)
-    fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
+    fullResetBtn:SetPoint("TOPLEFT", importSelectedBossBtn.frame, "BOTTOMLEFT", 0, -8)
 
     local function SetReloeAlertsEnabled(enabled)
         for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
