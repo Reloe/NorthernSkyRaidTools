@@ -82,8 +82,8 @@ end
 function NSI:AddEncounterAlert(data)
     self.EncounterAlertID = self.EncounterAlertID or {}
     if data.difficulties and not data.timers then -- special case for alerts that don't use the actual reminder system but have their own display
-        local alertDef = self:MakeEncounterAlert(data)
         for _, diff in ipairs(data.difficulties) do
+            local alertDef = self:MakeEncounterAlert(data)
             alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
             self:InsertEncounterAlert(data.encID, diff, alertDef, true)
         end
@@ -121,6 +121,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     local Overwrite = existing and ((Vers and ((not existing.Version) or Vers > existing.Version)) or existing.Reset)
     if ReloeReminder then
         if Overwrite then
+            alertDef.enabled = existing.enabled
             diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
             return
         elseif ReloeReminder and existing then
