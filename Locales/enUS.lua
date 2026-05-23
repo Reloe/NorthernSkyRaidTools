@@ -55,6 +55,7 @@ L["Delete \"%s\"?"] = true
 L["Confirm"] = true
 L["Copy"] = true
 L["Apply"] = true
+L["Paste"] = true
 L["Delete"] = true
 L["Unload"] = true
 L["Delete All"] = true

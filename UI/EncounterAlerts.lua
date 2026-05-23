@@ -178,6 +178,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- forward declarations
     local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupDD
     local copySectionBtn, applySectionBtn
+    local CanCopySection, ApplyCopiedSectionTo, SECTION_COPY_FIELDS, CopyValue
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -976,6 +977,45 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 end })
                             end
 
+                            -- Copy... submenu
+                            local copySubItems = {}
+                            for _, tabName in ipairs({ "Display", "Trigger", "Sound", "Load" }) do
+                                local tn = tabName
+                                if CanCopySection(tn, alert) then
+                                    table.insert(copySubItems, { type = "button", label = L[tn], fnc = function()
+                                        local payload = {
+                                            section = tn,
+                                            encID   = eid,
+                                            diffID  = did,
+                                            entries = {},
+                                        }
+                                        if tn == "Trigger" then
+                                            payload.entries[#payload.entries + 1] = { key = "phase",  value = CopyValue(alert.phase) }
+                                            payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
+                                        else
+                                            for _, k in ipairs(SECTION_COPY_FIELDS[tn] or {}) do
+                                                payload.entries[#payload.entries + 1] = { key = k, value = CopyValue(alert[k]) }
+                                            end
+                                        end
+                                        copiedAlertSection = payload
+                                    end })
+                                end
+                            end
+                            if #copySubItems > 0 then
+                                table.insert(menuItems, { type = "submenu", label = L["Copy"] .. "...", items = copySubItems })
+                            end
+
+                            -- Paste option (only shown if a section was previously copied and is compatible)
+                            if copiedAlertSection then
+                                local sn = copiedAlertSection.section
+                                if CanCopySection(sn, alert) then
+                                    local pasteEid, pasteDid, pasteAkey = eid, did, akey
+                                    table.insert(menuItems, { type = "button",
+                                        label = L["Paste"] .. " (" .. (L[sn] or sn) .. ")",
+                                        fnc = function() ApplyCopiedSectionTo(pasteEid, pasteDid, pasteAkey) end })
+                                end
+                            end
+
                             if alert and alert.group then
                                 table.insert(menuItems, { type = "button", label = L["Remove from Group"], fnc = function()
                                     alert.group = nil
@@ -1312,11 +1352,11 @@ local function BuildEncounterAlertsUI(parentFrame)
     local tabBtnGap = 3
     local tabRowY   = -42
 
-    local function CopyValue(v)
+    CopyValue = function(v)
         return type(v) == "table" and CopyTable(v) or v
     end
 
-    local SECTION_COPY_FIELDS = {
+    SECTION_COPY_FIELDS = {
         Display = {
             "DisplayType", "text", "spellID", "customIcon", "dur", "sticky",
             "HideTimer", "HideSwipe", "glowunit", "glowColors", "textColors",
@@ -1334,7 +1374,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             and NSRT.EncounterAlerts[selectedEncID][selectedDiffID][selectedKey]
     end
 
-    local function CanCopySection(sectionName, alert)
+    CanCopySection = function(sectionName, alert)
         if not alert then return false end
         if sectionName == "Options" then return false end
         if sectionName == "Trigger" and alert.ReloeReminder then return false end
@@ -1365,30 +1405,36 @@ local function BuildEncounterAlertsUI(parentFrame)
         if applySectionBtn then applySectionBtn:Enable() end
     end
 
-    local function ApplyCopiedSection()
-        local alert = GetSelectedAlert()
+    ApplyCopiedSectionTo = function(targetEid, targetDid, targetAkey)
+        local alert = NSRT.EncounterAlerts and NSRT.EncounterAlerts[targetEid]
+                   and NSRT.EncounterAlerts[targetEid][targetDid]
+                   and NSRT.EncounterAlerts[targetEid][targetDid][targetAkey]
         if not copiedAlertSection or not alert then return end
         local sectionName = copiedAlertSection.section
         if not CanCopySection(sectionName, alert) then return end
 
-        local oldEncID, oldDiffID, oldKey = selectedEncID, selectedDiffID, selectedKey
+        local oldEncID, oldDiffID, oldKey = targetEid, targetDid, targetAkey
+        local curEncID, curDiffID, curKey = targetEid, targetDid, targetAkey
 
         if sectionName == "Trigger" then
-            local newEncID = copiedAlertSection.encID or selectedEncID
-            local newDiffID = copiedAlertSection.diffID or selectedDiffID
-            if newEncID ~= selectedEncID or newDiffID ~= selectedDiffID then
-                local oldTable = NSRT.EncounterAlerts[selectedEncID] and NSRT.EncounterAlerts[selectedEncID][selectedDiffID]
-                if oldTable then oldTable[selectedKey] = nil end
+            local newEncID = copiedAlertSection.encID or curEncID
+            local newDiffID = copiedAlertSection.diffID or curDiffID
+            if newEncID ~= curEncID or newDiffID ~= curDiffID then
+                local oldTable = NSRT.EncounterAlerts[curEncID] and NSRT.EncounterAlerts[curEncID][curDiffID]
+                if oldTable then oldTable[curKey] = nil end
                 NSRT.EncounterAlerts[newEncID] = NSRT.EncounterAlerts[newEncID] or {}
                 NSRT.EncounterAlerts[newEncID][newDiffID] = NSRT.EncounterAlerts[newEncID][newDiffID] or {}
                 local newTable = NSRT.EncounterAlerts[newEncID][newDiffID]
-                local newKey = (not newTable[selectedKey]) and selectedKey or NSI:UniqueAlertID(newTable, false)
+                local newKey = (not newTable[curKey]) and curKey or NSI:UniqueAlertID(newTable, false)
                 newTable[newKey] = alert
-                selectedEncID, selectedDiffID, selectedKey = newEncID, newDiffID, newKey
-                filterDiffID = newDiffID
-                if filterEncID then filterEncID = newEncID end
-                if diffDD then diffDD:Refresh() end
-                if filterDD then filterDD:Refresh() end
+                if selectedEncID == targetEid and selectedDiffID == targetDid and selectedKey == targetAkey then
+                    selectedEncID, selectedDiffID, selectedKey = newEncID, newDiffID, newKey
+                    filterDiffID = newDiffID
+                    if filterEncID then filterEncID = newEncID end
+                    if diffDD then diffDD:Refresh() end
+                    if filterDD then filterDD:Refresh() end
+                end
+                curEncID, curDiffID, curKey = newEncID, newDiffID, newKey
             end
         end
 
@@ -1405,9 +1451,18 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
 
         NSI:FireCallback("NSRT_ALERT_CHANGED", oldEncID, oldDiffID, oldKey)
-        NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, selectedDiffID, selectedKey)
+        if curEncID ~= oldEncID or curDiffID ~= oldDiffID or curKey ~= oldKey then
+            NSI:FireCallback("NSRT_ALERT_CHANGED", curEncID, curDiffID, curKey)
+        end
         RebuildList()
-        SelectAlert(selectedKey, selectedDiffID, selectedEncID)
+        if selectedEncID and selectedKey then
+            SelectAlert(selectedKey, selectedDiffID, selectedEncID)
+        end
+    end
+
+    local function ApplyCopiedSection()
+        if not copiedAlertSection then return end
+        ApplyCopiedSectionTo(selectedEncID, selectedDiffID, selectedKey)
     end
 
     local function RefreshSectionCopyButtons()
@@ -1440,11 +1495,13 @@ local function BuildEncounterAlertsUI(parentFrame)
         RefreshSectionCopyButtons()
     end, 52, "NSUIEncAlertCopySection")
     copySectionBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -202, tabRowY)
+    copySectionBtn.frame:Hide()
 
     applySectionBtn = CreateSubButton(rightPanel, L["Apply"], function()
         ApplyCopiedSection()
     end, 58, "NSUIEncAlertApplySection")
     applySectionBtn:SetPoint("LEFT", copySectionBtn.frame, "RIGHT", 4, 0)
+    applySectionBtn.frame:Hide()
 
     -- ── Preview button — right-aligned on the tab row ────────────────────────
     local previewBtn = CreateButton(rightPanel, L["Preview"], function() PreviewAlert() end, 80, 18,
