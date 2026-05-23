@@ -1960,6 +1960,8 @@ end
 
 function NSI:DeleteReloeReminder(encID, diffID, alertKey)
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
+        local alert = NSRT.EncounterAlerts[encID][diffID][alertKey]
+        if type(alert) == "table" and alert.MandatoryAlert then return end
         NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
     end
 end

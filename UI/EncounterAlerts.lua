@@ -178,7 +178,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- forward declarations
     local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupDD
     local copySectionBtn, applySectionBtn
-    local CanCopySection, ApplyCopiedSectionTo, SECTION_COPY_FIELDS, CopyValue
+    local RebuildList, CanCopySection, ApplyCopiedSectionTo, SECTION_COPY_FIELDS, CopyValue
 
     -- ================================================================
     -- Left Panel ── title, filter, list, create button
@@ -431,19 +431,44 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function DeleteGroupWithAlerts(encID, name)
         local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
         if enc then
-            for _, diffTable in pairs(enc) do
+            for diffID, diffTable in pairs(enc) do
                 for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
                     if type(alert) == "table" and alert.group == name then
-                        if alert.ReloeReminder then
+                        if alert.MandatoryAlert then
                             alert.group = nil
                         else
                             diffTable[key] = nil
+                            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, key)
                         end
                     end
                 end
             end
         end
         if NSRT.Alerts and NSRT.Alerts.Groups then NSRT.Alerts.Groups[GroupKey(encID, name)] = nil end
+    end
+
+    local function DeleteAlert(encID, diffID, alertKey)
+        local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+            and NSRT.EncounterAlerts[encID][diffID]
+        if diffTable and diffTable[alertKey] and diffTable[alertKey].MandatoryAlert then return end
+        if diffTable then
+            diffTable[alertKey] = nil
+            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, alertKey)
+        end
+        if selectedKey == alertKey and selectedEncID == encID then
+            selectedKey = nil
+            selectedEncID = nil
+            if rightPanel then rightPanel:Hide() end
+        end
+        RebuildList()
+    end
+
+    local function ConfirmDeleteAlert(encID, diffID, alertKey)
+        local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(alertKey),
+            L["Delete Alert"], L["Are you sure you want to delete this alert?"], L["Cancel"], nil, L["Delete"], function()
+                DeleteAlert(encID, diffID, alertKey)
+            end, nil)
+        deleteDialog:Show()
     end
 
     local function GetGroupsForEnc(eid)
@@ -596,7 +621,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         return t
     end
 
-    local function RebuildList()
+    RebuildList = function()
         local savedScroll = listScroll:GetVerticalScroll()
         local data = RebuildScrollData()
 
@@ -687,7 +712,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 local dlg = NSI.UI.Components.CreateDialog(
                                     "NSRTDeleteGroupAlerts",
                                     L["Delete Group with Alerts"],
-                                    string.format(L["Delete group '%s' and all its user-created alerts?\n(ReloeReminders will only be ungrouped.)"], gname),
+                                    string.format(L["Delete group '%s' and all deletable alerts?"], gname),
                                     L["Cancel"], nil, L["Delete"], function()
                                         DeleteGroupWithAlerts(gencID, gname)
                                         local still = selectedKey and NSRT.EncounterAlerts
@@ -724,6 +749,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row:Show()
 
                 local isReloe   = entry._isReloeCreated
+                local isMandatory = entry.data.MandatoryAlert == true
                 local isEnabled, icon, name
 
                 if filterEncID == nil or filterEncID == 0 then
@@ -809,9 +835,8 @@ local function BuildEncounterAlertsUI(parentFrame)
                     end)
                 end
 
-                -- Right-side button: ungroup (if grouped) > lock (reloe) > delete (user)
+                -- Right-side button: ungroup (if grouped) > delete
                 if entry._inGroup then
-                    row.lockIcon:Hide()
                     -- Ungroup always sits at far right when grouped
                     row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
                     row.ungroupBtn:Show()
@@ -824,33 +849,21 @@ local function BuildEncounterAlertsUI(parentFrame)
                         end
                         RebuildList()
                     end)
-                    if isReloe then
+                    if isMandatory then
                         row.deleteBtn:Hide()
                         row.deleteBtn:SetScript("OnClick", nil)
+                        row.lockIcon:ClearAllPoints()
+                        row.lockIcon:SetPoint("RIGHT", row.ungroupBtn, "LEFT", -4, 0)
+                        row.lockIcon:Show()
                     else
-                        -- trash bin sits just left of the ungroup arrow
-                        local akey     = entry.alertKey
+                        row.lockIcon:Hide()
+                        local akey = entry.alertKey
                         local ri_encID = entry.encID
+                        local ri_diffID = entry.diffID
                         row.deleteBtn:Show()
                         row.deleteBtn:SetPoint("RIGHT", row.ungroupBtn, "LEFT", -4, 0)
                         row.deleteBtn:SetScript("OnClick", function()
-                            local deleteFunc = function()
-                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[ri_encID]
-                                             and NSRT.EncounterAlerts[ri_encID][filterDiffID]
-                                if diffTable then
-                                    diffTable[akey] = nil
-                                    NSI:FireCallback("NSRT_ALERT_CHANGED", ri_encID, filterDiffID, akey)
-                                end
-                                if selectedKey == akey and selectedEncID == ri_encID then
-                                    selectedKey    = nil
-                                    selectedEncID  = nil
-                                    if rightPanel then rightPanel:Hide() end
-                                end
-                                RebuildList()
-                            end
-                            local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(akey),
-                                L["Delete Alert"], L["Are you sure you want to delete this alert?"], L["Cancel"], nil, L["Delete"], deleteFunc, nil)
-                            deleteDialog:Show()
+                            ConfirmDeleteAlert(ri_encID, ri_diffID, akey)
                         end)
                     end
                 else
@@ -858,33 +871,20 @@ local function BuildEncounterAlertsUI(parentFrame)
                     row.ungroupBtn:SetScript("OnClick", nil)
                     row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)  -- reset anchor
                     row.deleteBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)   -- reset anchor
-                    if isReloe then
+                    row.lockIcon:ClearAllPoints()
+                    row.lockIcon:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+                    if isMandatory then
                         row.deleteBtn:Hide()
                         row.deleteBtn:SetScript("OnClick", nil)
                         row.lockIcon:Show()
                     else
                         row.lockIcon:Hide()
                         row.deleteBtn:Show()
-                        local akey     = entry.alertKey
+                        local akey = entry.alertKey
                         local ri_encID = entry.encID
+                        local ri_diffID = entry.diffID
                         row.deleteBtn:SetScript("OnClick", function()
-                            local deleteFunc = function()
-                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[ri_encID]
-                                             and NSRT.EncounterAlerts[ri_encID][filterDiffID]
-                                if diffTable then
-                                    diffTable[akey] = nil
-                                    NSI:FireCallback("NSRT_ALERT_CHANGED", ri_encID, filterDiffID, akey)
-                                end
-                                if selectedKey == akey and selectedEncID == ri_encID then
-                                    selectedKey    = nil
-                                    selectedEncID  = nil
-                                    if rightPanel then rightPanel:Hide() end
-                                end
-                                RebuildList()
-                            end
-                            local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(akey),
-                                L["Delete Alert"], L["Are you sure you want to delete this alert?"], L["Cancel"], nil, L["Delete"], deleteFunc, nil)
-                            deleteDialog:Show()
+                            ConfirmDeleteAlert(ri_encID, ri_diffID, akey)
                         end)
                     end
                 end
@@ -1032,35 +1032,15 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     end
                                 end })
 
-                            if not isReloeRow then
+                            if not (alert and alert.MandatoryAlert) then
                                 table.insert(menuItems, { type = "separator" })
-
-                                table.insert(menuItems,
-                                    {
-                                        type = "button",
-                                        label = L["Delete"],
-                                        fnc = function()
-                                            local deleteFunc = function()
-                                                local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
-                                                    and NSRT.EncounterAlerts[eid][did]
-                                                if diffTable then
-                                                    diffTable[akey] = nil
-                                                    NSI:FireCallback("NSRT_ALERT_CHANGED", eid, did, akey)
-                                                end
-                                                if selectedKey == akey and selectedEncID == eid then
-                                                    selectedKey   = nil
-                                                    selectedEncID = nil
-                                                    if rightPanel then rightPanel:Hide() end
-                                                end
-                                                RebuildList()
-                                            end
-                                            local deleteDialog = NSI.UI.Components.CreateDialog(
-                                                "NSRTDeleteAlertConfirm" .. tostring(akey),
-                                                L["Delete Alert"], L["Are you sure you want to delete this alert?"],
-                                                L["Cancel"], nil, L["Delete"], deleteFunc, nil)
-                                            deleteDialog:Show()
-                                        end
-                                    })
+                                table.insert(menuItems, {
+                                    type = "button",
+                                    label = L["Delete"],
+                                    fnc = function()
+                                        ConfirmDeleteAlert(eid, did, akey)
+                                    end,
+                                })
                             end
                             ShowContextMenu(menuItems)
                         else
@@ -1155,12 +1135,12 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Additional Options popup — positioned to the right of the main NSUI window
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2
-    local ADDOPT_H   = 158
+    local ADDOPT_H   = 190
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
 
-    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import Reloe Alerts"],
+    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import All Reloe Alerts"],
         function() return NSRT.Alerts.ReloeReminders end,
         function(_, v)
             NSRT.Alerts.ReloeReminders = v
@@ -1169,6 +1149,20 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         listW, 22, "NSUIEncAlertReloeImportCB")
     reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
+
+    local importSelectedBossBtn = CreateButton(addOptFrame, L["Import Selected Boss Alerts"], function()
+        local encID = filterEncID or selectedEncID
+        if not encID then
+            print("|cFF00FFFFNSRT:|r " .. L["Select a boss first."])
+            return
+        end
+        NSI:ImportReloeReminders(encID)
+        RebuildList()
+        if selectedEncID and selectedKey then
+            SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+        end
+    end, listW, 22)
+    importSelectedBossBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
 
     local fullResetBtn = CreateButton(addOptFrame, L["Full Reset"], function()
         local function DoReset()
@@ -1195,7 +1189,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             L["Cancel"], nil, L["Reset"], DoReset, nil)
         dialog:Show()
     end, listW, 26)
-    fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
+    fullResetBtn:SetPoint("TOPLEFT", importSelectedBossBtn.frame, "BOTTOMLEFT", 0, -8)
 
     local function SetReloeAlertsEnabled(enabled)
         for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do

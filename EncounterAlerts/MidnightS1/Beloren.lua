@@ -3,7 +3,7 @@ local _, NSI = ... -- Internal namespace
 local encID = 3182
 -- /run NSAPI:DebugEncounter(3182)
 
-NSI.InitializeMandatoryAlerts[encID] = function(self)
+NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -89,12 +89,6 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
         Preview = ColorSwapPreview,
     }
     self:AddEncounterAlert(data)
-
-end
-
-NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {group = {nil, "Beloren P1", "Beloren P2"}, internalID = "Gateway", text = "Gateway", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 6.6, spellID = 311699,
     timers = {
