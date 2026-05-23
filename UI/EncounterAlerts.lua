@@ -1077,7 +1077,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
 
-    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import Reloe Alerts"],
+    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import All Reloe Alerts"],
         function() return NSRT.Alerts.ReloeReminders end,
         function(_, v)
             NSRT.Alerts.ReloeReminders = v
