@@ -303,7 +303,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
             local allprocessed = true
             for i=1, 40 do
                 local v = self.Groups.units[i]
-                if v then
+                if v and v.name then
                     local index = UnitInRaid(v.name)
                     if postoindex[v.pos] ~= index then
                         v.processed = false
@@ -324,7 +324,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
 
     for i=1, 40 do -- position in table is where the player should end up in
         local v = self.Groups.units[i]
-        if v and (not v.processed) and (not UnitAffectingCombat(v.name)) then
+        if v and (not v.processed) and v.name and (not UnitAffectingCombat(v.name)) then
             local index = UnitInRaid(v.name)
             local indexgoal = postoindex[v.pos]
             if indexgoal ~= index then -- check if player is already in correct spot
@@ -352,14 +352,14 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                 else -- the 2 players to swap are in the same group so we instead swap with someone else
                     local found = false
                     local u = self.Groups.units[indexlink[index].pos] -- first try to swap with the person who is meant to be in the position this player is in
-                    if u and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and u.pos == indexlink[index].pos and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
+                    if u and u.name and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and u.pos == indexlink[index].pos and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
                         SwapRaidSubgroup(UnitInRaid(u.name), index)
                         found = true
                     end
                     if not found then -- next try to swap with someone who is not in the correct position yet
                         for j=1, 40 do
                             local u = self.Groups.units[j]
-                            if u and (not u.processed) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
+                            if u and (not u.processed) and u.name and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
                                 SwapRaidSubgroup(UnitInRaid(u.name), index)
                                 found = true
                                 break
@@ -369,7 +369,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                     if not found then -- if we were somehow unable to find anyone we can swap this person with, swap them with someone who was already processed but not the raid leader
                         for j=1, 40 do
                             local u = self.Groups.units[j]
-                            if u and (not UnitIsGroupLeader(u.name)) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
+                            if u and u.name and (not UnitIsGroupLeader(u.name)) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
                                 SwapRaidSubgroup(UnitInRaid(u.name), index)
                                 found = true
                                 break
@@ -550,15 +550,17 @@ function NSI:ArrangeFromReminder(str)
         local role = unit and UnitGroupRolesAssigned(unit)
         count = count + 1
         if name and unit and role then
-            self.Groups.units[i] = {name = name, unitid = unit, role = role}
+            self.Groups.units[i] = {sort = i, name = name, unitid = unit, role = role}
             self.Groups.total = self.Groups.total + 1
         else
+            self.Groups.units[i] = {sort = (math.ceil(i/5)*5)+0.5, processed = true}
+            self.Groups.total = self.Groups.total + 1
             missingPlayers = missingPlayers..name.." "
         end
+        table.sort(self.Groups.units, function(a, b) return a.sort < b.sort end)
     end
     if self.Groups.total ~= count then
-        print("The following players are missing in the group and thus cannot be sorted: "..missingPlayers)
-        return
+        print("The following players are missing in the group. Arranging with all present players instead: "..missingPlayers)
     end
     self.Groups.units = self:ShiftLeader(self.Groups.units)
     self:ArrangeGroups(true)
