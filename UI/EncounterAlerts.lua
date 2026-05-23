@@ -434,8 +434,12 @@ local function BuildEncounterAlertsUI(parentFrame)
             for diffID, diffTable in pairs(enc) do
                 for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
                     if type(alert) == "table" and alert.group == name then
-                        diffTable[key] = nil
-                        NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, key)
+                        if alert.MandatoryAlert then
+                            alert.group = nil
+                        else
+                            diffTable[key] = nil
+                            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, key)
+                        end
                     end
                 end
             end
@@ -446,6 +450,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function DeleteAlert(encID, diffID, alertKey)
         local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
             and NSRT.EncounterAlerts[encID][diffID]
+        if diffTable and diffTable[alertKey] and diffTable[alertKey].MandatoryAlert then return end
         if diffTable then
             diffTable[alertKey] = nil
             NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, alertKey)
@@ -707,7 +712,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 local dlg = NSI.UI.Components.CreateDialog(
                                     "NSRTDeleteGroupAlerts",
                                     L["Delete Group with Alerts"],
-                                    string.format(L["Delete group '%s' and all its alerts?"], gname),
+                                    string.format(L["Delete group '%s' and all deletable alerts?"], gname),
                                     L["Cancel"], nil, L["Delete"], function()
                                         DeleteGroupWithAlerts(gencID, gname)
                                         local still = selectedKey and NSRT.EncounterAlerts
@@ -744,6 +749,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row:Show()
 
                 local isReloe   = entry._isReloeCreated
+                local isMandatory = entry.data.MandatoryAlert == true
                 local isEnabled, icon, name
 
                 if filterEncID == nil or filterEncID == 0 then
@@ -831,7 +837,6 @@ local function BuildEncounterAlertsUI(parentFrame)
 
                 -- Right-side button: ungroup (if grouped) > delete
                 if entry._inGroup then
-                    row.lockIcon:Hide()
                     -- Ungroup always sits at far right when grouped
                     row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
                     row.ungroupBtn:Show()
@@ -844,27 +849,44 @@ local function BuildEncounterAlertsUI(parentFrame)
                         end
                         RebuildList()
                     end)
-                    local akey = entry.alertKey
-                    local ri_encID = entry.encID
-                    local ri_diffID = entry.diffID
-                    row.deleteBtn:Show()
-                    row.deleteBtn:SetPoint("RIGHT", row.ungroupBtn, "LEFT", -4, 0)
-                    row.deleteBtn:SetScript("OnClick", function()
-                        ConfirmDeleteAlert(ri_encID, ri_diffID, akey)
-                    end)
+                    if isMandatory then
+                        row.deleteBtn:Hide()
+                        row.deleteBtn:SetScript("OnClick", nil)
+                        row.lockIcon:ClearAllPoints()
+                        row.lockIcon:SetPoint("RIGHT", row.ungroupBtn, "LEFT", -4, 0)
+                        row.lockIcon:Show()
+                    else
+                        row.lockIcon:Hide()
+                        local akey = entry.alertKey
+                        local ri_encID = entry.encID
+                        local ri_diffID = entry.diffID
+                        row.deleteBtn:Show()
+                        row.deleteBtn:SetPoint("RIGHT", row.ungroupBtn, "LEFT", -4, 0)
+                        row.deleteBtn:SetScript("OnClick", function()
+                            ConfirmDeleteAlert(ri_encID, ri_diffID, akey)
+                        end)
+                    end
                 else
                     row.ungroupBtn:Hide()
                     row.ungroupBtn:SetScript("OnClick", nil)
                     row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)  -- reset anchor
                     row.deleteBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)   -- reset anchor
-                    row.lockIcon:Hide()
-                    row.deleteBtn:Show()
-                    local akey = entry.alertKey
-                    local ri_encID = entry.encID
-                    local ri_diffID = entry.diffID
-                    row.deleteBtn:SetScript("OnClick", function()
-                        ConfirmDeleteAlert(ri_encID, ri_diffID, akey)
-                    end)
+                    row.lockIcon:ClearAllPoints()
+                    row.lockIcon:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+                    if isMandatory then
+                        row.deleteBtn:Hide()
+                        row.deleteBtn:SetScript("OnClick", nil)
+                        row.lockIcon:Show()
+                    else
+                        row.lockIcon:Hide()
+                        row.deleteBtn:Show()
+                        local akey = entry.alertKey
+                        local ri_encID = entry.encID
+                        local ri_diffID = entry.diffID
+                        row.deleteBtn:SetScript("OnClick", function()
+                            ConfirmDeleteAlert(ri_encID, ri_diffID, akey)
+                        end)
+                    end
                 end
 
                 -- Click to select (skip when clicking the enabled checkbox)
@@ -971,14 +993,16 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     end
                                 end })
 
-                            table.insert(menuItems, { type = "separator" })
-                            table.insert(menuItems, {
-                                type = "button",
-                                label = L["Delete"],
-                                fnc = function()
-                                    ConfirmDeleteAlert(eid, did, akey)
-                                end,
-                            })
+                            if not (alert and alert.MandatoryAlert) then
+                                table.insert(menuItems, { type = "separator" })
+                                table.insert(menuItems, {
+                                    type = "button",
+                                    label = L["Delete"],
+                                    fnc = function()
+                                        ConfirmDeleteAlert(eid, did, akey)
+                                    end,
+                                })
+                            end
                             ShowContextMenu(menuItems)
                         else
                             SelectAlert(akey, did, eid)

@@ -6,7 +6,7 @@ local encID = 3159
 NSI.InitializeMandatoryAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
+    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, MandatoryAlert = true,
     customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
     overrides = {BlockCopy = true},
     Preview = [[return function()

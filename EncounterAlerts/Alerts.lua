@@ -45,6 +45,7 @@ function NSI:MakeEncounterAlert(data, timers)
         HideTimer      = data.HideTimer,
         IsAlert        = true,
         ReloeReminder  = true,
+        MandatoryAlert = data.MandatoryAlert,
         enabled        = true,
         extraOptions   = data.extraOptions,
         Preview        = data.Preview,
@@ -132,6 +133,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             existing.Preview = alertDef.Preview
             existing.phase = alertDef.phase
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
+            existing.MandatoryAlert = alertDef.MandatoryAlert
             return
         end
     end
