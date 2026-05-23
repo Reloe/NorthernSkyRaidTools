@@ -207,7 +207,7 @@ L["Only receive Shared-reminders from guild members."] = true
 L["Automatically share the current active reminder on ready check if you are the raidleader. If you want to share a note as assist you can do so in the Shared Reminders-list"] = true
 L["Test Active Reminder"] = true
 L["Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test. This button does nothing if you are using TimelineReminders to display Reminders."] = true
-L["Import Reloe Alerts"] = true
+L["Import All Reloe Alerts"] = true
 L["Automatically import all of Reloe's custom created Alerts for the current tier's bosses. Display settings of these Alerts can be edited."] = true
 L["You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."] = true
 -- UI/Options/Reminders.lua — Reminder Note Options
@@ -560,7 +560,7 @@ L["Disable All"] = true
 L["Export Group"] = true
 L["Delete Group (keep alerts)"] = true
 L["Delete Group with Alerts"] = true
-L["Delete group '%s' and all its user-created alerts?\n(ReloeAlerts will only be ungrouped.)"] = true
+L["Delete group '%s' and all its alerts?"] = true
 L["New Group..."] = true
 L["Enter new group name:"] = true
 L["OK"] = true
