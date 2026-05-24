@@ -46,8 +46,9 @@ function NSI:SpawnPreviewReminders()
         TTS = false,
         countdown = false,
     }
+    local spellInfo = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203)
     local info4 = {
-        text = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203).name,
+        text = spellInfo and spellInfo.name or "",
         DisplayType = "Icon",
         dur = 8,
         spellID = 115203,

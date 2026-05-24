@@ -987,7 +987,7 @@ function NSI:GetDisplayedText(rem, info, F)
         local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and (remString == "" and info.text or info.text.." ("..remString..")")) or remString
         return (F and F.SpellText or "")..text
     else
-        return info.text, remString
+        return info.text or "", remString
     end
 end
 
@@ -1025,7 +1025,7 @@ function NSI:DisplayReminder(info, bypass)
             F:Show()
             self:ArrangeStates("Bars")
             F.DisplayType = "Bars"
-            F.Text:SetText(info.text)
+            F.Text:SetText(text)
             F.TimerText:SetText(remString)
             if not info.spellID then F.Icon:Hide() else F.Icon:Show() end
         elseif info.DisplayType == "Icon" then
@@ -1033,7 +1033,7 @@ function NSI:DisplayReminder(info, bypass)
             F:Show()
             self:ArrangeStates("Icons")
             F.DisplayType = "Icons"
-            F.Text:SetText(info.text)
+            F.Text:SetText(text)
             F.TimerText:SetText(remString)
         end
     end
