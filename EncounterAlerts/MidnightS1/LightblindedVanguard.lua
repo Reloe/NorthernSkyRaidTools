@@ -181,7 +181,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     for unit in self:IterateGroupMembers() do
         local specID = NSI:GetSpecs(unit) or 0
         local prio = self.spectable[specID]
-        local G = self.GUIDS and self.GUIDS[unit] or ""
+        local G = UnitGUID(unit)
         if UnitGroupRolesAssigned(unit) == "HEALER" then
             table.insert(healer, { unit = unit, prio = prio, GUID = G })
         else

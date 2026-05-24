@@ -82,7 +82,9 @@ end
 
 function NSI:GetSpecs(unit)
     if unit then
-        return self.specs[unit] or false -- return false if no information available for that unit so it goes to the next fallback
+        local G = UnitGUID(unit)
+        if issecretvalue(G) then return false end
+        return self.specs[G] or false -- return false if no information available for that unit so it goes to the next fallback
     else
         return self.specs -- if no unit is given then entire table is requested
     end
@@ -98,7 +100,6 @@ function NSI:UpdateLibSpecRegistration()
         local _, myrealm = UnitFullName("player")
         self.LS.RegisterGroup(self, function(specId, role, position, playerName)
             self.specs = self.specs or {}
-            self.GUIDS = self.GUIDS or {}
             local name, realm = strsplit("-", playerName)
             if (not realm) or (realm == "") then realm = myrealm end
             local u
@@ -111,10 +112,9 @@ function NSI:UpdateLibSpecRegistration()
                 end
             end
             if u then
-                self.specs[u] = specId
-                NSAPI.specs = self.specs
                 local G = UnitGUID(u)
-                self.GUIDS[u] = issecretvalue(G) and "" or G
+                self.specs[G] = specId
+                NSAPI.specs = self.specs
             end
         end)
     end
@@ -559,9 +559,12 @@ function NSI:EncounterRegister(frameName, event, enable, units, all)
 end
 
 function NSI:EncounterFunction(frameName, func)
-    if self.EncounterFrames and self.EncounterFrames[frameName] then
-        self.EncounterFrames[frameName]:SetScript("OnEvent", func)
+    if not frameName then return end
+    self.EncounterFrames = self.EncounterFrames or {}
+    if not self.EncounterFrames[frameName] then
+        self.EncounterFrames[frameName] = CreateFrame("Frame", nil, self.NSRTFrame)
     end
+    self.EncounterFrames[frameName]:SetScript("OnEvent", func)
 end
 
 function NSI:IsInSameGuild(unit, playerName)

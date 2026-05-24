@@ -35,10 +35,6 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         return unitname
     end
 
-    if not str then
-        error("NSAPI:GetName(str), str is nil")
-        return
-    end
     if UnitExists(str) then
         local name, realm = UnitFullName(str)
         if not realm then
