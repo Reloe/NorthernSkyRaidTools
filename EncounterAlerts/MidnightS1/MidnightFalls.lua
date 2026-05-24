@@ -67,7 +67,7 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
 
     local data = {
         internalID = "CrystalDropTimer",
-        name = "Crystal Drop Timer",
+        name = "Time to Pick Crystal",
         text = "PICK UP",
         DisplayType = "Bar",
         encID = encID,
@@ -79,7 +79,7 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
         customIcon = nil,
         difficulties = {14, 15, 16},
         timers = nil,
-        overrides = {pinned = true, BlockCopy = true},
+        overrides = {BlockCopy = true, enabled = false},
         HideTimer = false,
         MandatoryAlert = true,
     }
@@ -564,14 +564,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     end
 
     local crystalDropTimer = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].CrystalDropTimer
-    if crystalDropTimer and ((crystalDropTimer.enabled and self:EvaluateLoad(crystalDropTimer) and not preview) or (preview and preview == "Crystal Drop Timer")) then
+    if crystalDropTimer and crystalDropTimer.enabled and self:EvaluateLoad(crystalDropTimer) and not preview then
         local s = NSRT.EncounterAlerts[encID][id].CrystalDropTimer
 
         local info = self:CreateReminder(CopyTable(s), true)
-        if preview then
-            self:DisplayReminder(info)
-            return
-        end
 
         self:EncounterRegister("CrystalDropTimer", "UNIT_SPELLCAST_SUCCEEDED", true, "player")
         self:EncounterFunction("CrystalDropTimer", function(_, e, unit, ...)
