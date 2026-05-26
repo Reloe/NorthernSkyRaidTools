@@ -64,26 +64,6 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
     end]],
     }
     self:AddEncounterAlert(data)
-
-    local data = {
-        internalID = "CrystalDropTimer",
-        name = "Time to Pick Crystal",
-        text = "PICK UP",
-        DisplayType = "Bar",
-        encID = encID,
-        phase = nil,
-        TTS = false,
-        dur = 5,
-        id = 0.2,
-        spellID = 1253050,
-        customIcon = nil,
-        difficulties = {14, 15, 16},
-        timers = nil,
-        overrides = {BlockCopy = true, enabled = false},
-        HideTimer = false,
-        MandatoryAlert = true,
-    }
-    self:AddEncounterAlert(data)
 end
 
 NSI.InitializeAlerts[encID] = function(self)
@@ -353,6 +333,26 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local data = {
+        internalID = "CrystalDropTimer",
+        name = "Time to Pick Crystal",
+        text = "PICK UP",
+        DisplayType = "Bar",
+        encID = encID,
+        phase = nil,
+        TTS = false,
+        dur = 5,
+        id = 0.2,
+        spellID = 1253050,
+        customIcon = nil,
+        difficulties = {14, 15, 16},
+        timers = nil,
+        overrides = {BlockCopy = true, enabled = false},
+        HideTimer = false,
+        MandatoryAlert = true,
+    }
+    self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
@@ -566,9 +566,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     local crystalDropTimer = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].CrystalDropTimer
     if crystalDropTimer and crystalDropTimer.enabled and self:EvaluateLoad(crystalDropTimer) and not preview then
         local s = NSRT.EncounterAlerts[encID][id].CrystalDropTimer
-
         local info = self:CreateReminder(CopyTable(s), true)
-
         self:EncounterRegister("CrystalDropTimer", "UNIT_SPELLCAST_SUCCEEDED", true, "player")
         self:EncounterFunction("CrystalDropTimer", function(_, e, unit, ...)
             local castGUID, spellID, castBarID = ...
