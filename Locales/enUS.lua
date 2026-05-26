@@ -682,6 +682,7 @@ L["Color of the display box when it's your turn to interrupt"] = true
 L["Interrupt Next Color"] = true
 L["Color of the display box when you are up next to interrupt"] = true
 L["Interrupt Default Color"] = true
+L["The first line of a note will be assigned to interrupt the first relevant boss unit. For Lura this means it assigns boss2, then boss3, then boss4.\nThe note allows for colored name-strings as well as NSNickNames."] = true
 L["Color of the display box when it's not your turn to interrupt"] = true
 L["Interrupt Now Text Color"] = true
 L["Color of the number when it's your turn to interrupt"] = true
