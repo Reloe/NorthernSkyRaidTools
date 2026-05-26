@@ -583,6 +583,5 @@ function NSI:ArrangeFromReminder(str)
         print("The following players are missing in the group. Arranging with all present players instead: "..missingPlayers)
     end
     self.Groups.units = self:ShiftLeader(self.Groups.units)
-    DevTool:AddData(self.Groups)
     self:ArrangeGroups(true)
 end
