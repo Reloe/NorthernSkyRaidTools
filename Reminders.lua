@@ -632,7 +632,6 @@ function NSI:SetProperties(F, info, skipsound, s)
     if info.DisplayType == "Text" then
         F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
         F.Text:SetTextColor(unpack(info.textColors or s.textColors))
-        return
     end
     if info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
