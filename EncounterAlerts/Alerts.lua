@@ -30,6 +30,18 @@ function NSI:MakeEncounterAlert(data, timers)
     if group and type(group) == "table" then
         group = data.phase and group[data.phase]
     end
+    local isEnabled
+    if data.overrides and data.overrides.enabled ~= nil then
+        isEnabled = data.overrides.enabled
+    end
+    local defaultEnabled = isEnabled ~= false
+    if isEnabled == nil then
+        if data.MandatoryAlert then
+            isEnabled = true
+        else
+            isEnabled = NSRT.Alerts.ReloeReminders
+        end
+    end
     local a = {
         internalID     = data.internalID,
         name           = data.name or data.internalID,
@@ -46,7 +58,8 @@ function NSI:MakeEncounterAlert(data, timers)
         IsAlert        = true,
         ReloeReminder  = true,
         MandatoryAlert = data.MandatoryAlert,
-        enabled        = true,
+        enabled        = isEnabled,
+        DefaultEnabled = defaultEnabled,
         extraOptions   = data.extraOptions,
         Preview        = data.Preview,
         isSpecialDisplay = data.isSpecialDisplay,
@@ -122,7 +135,12 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     local Overwrite = existing and ((Vers and ((not existing.Version) or Vers > existing.Version)) or existing.Reset)
     if ReloeReminder then
         if Overwrite then
-            alertDef.enabled = existing.enabled
+            if self._ApplyReloeAutoEnable and not existing.UserModifiedEnabled then
+                alertDef.enabled = alertDef.DefaultEnabled ~= false
+            else
+                alertDef.enabled = existing.enabled
+            end
+            alertDef.UserModifiedEnabled = existing.UserModifiedEnabled
             diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
             return
         elseif ReloeReminder and existing then
@@ -134,6 +152,10 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             existing.phase = alertDef.phase
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
             existing.MandatoryAlert = alertDef.MandatoryAlert
+            existing.DefaultEnabled = alertDef.DefaultEnabled
+            if self._ApplyReloeAutoEnable and not existing.UserModifiedEnabled then
+                existing.enabled = alertDef.DefaultEnabled ~= false
+            end
             return
         end
     end

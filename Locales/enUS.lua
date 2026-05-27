@@ -208,8 +208,12 @@ L["Only receive Shared-reminders from guild members."] = true
 L["Automatically share the current active reminder on ready check if you are the raidleader. If you want to share a note as assist you can do so in the Shared Reminders-list"] = true
 L["Test Active Reminder"] = true
 L["Runs a test for the currently active reminder. This will only show phase 1 timers. Press again to cancel the test. This button does nothing if you are using TimelineReminders to display Reminders."] = true
-L["Import All Reloe Alerts"] = true
-L["Automatically import all of Reloe's custom created Alerts for the current tier's bosses. Display settings of these Alerts can be edited."] = true
+L["Automatically Enable New Alerts"] = true
+L["Automatically enables all future Alerts unless they are specifically marked as being default disabled."] = true
+L["Enable Reloe-Alerts"] = true
+L["Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."] = true
+L["Not Now"] = true
+L["Re-import"] = true
 L["You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."] = true
 -- UI/Options/Reminders.lua — Reminder Note Options
 L["This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 3 types of displays. The first one shows all reminders, the second one shows only those that will activate for you. And the third shows all text that is not a reminder."] = true

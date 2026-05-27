@@ -1933,15 +1933,15 @@ function NSI:EvaluateLoad(info)
     return shouldLoad
 end
 
-function NSI:ImportReloeReminders(id)
+function NSI:ImportReloeReminders(id, applyAutoEnable)
+    local previousAutoEnable = self._ApplyReloeAutoEnable
+    self._ApplyReloeAutoEnable = applyAutoEnable == true
     if id then
         if self.InitializeMandatoryAlerts[id] then
             self.InitializeMandatoryAlerts[id](self)
         end
-        if NSRT.Alerts.ReloeReminders then
-            if self.InitializeAlerts[id] then
-                self.InitializeAlerts[id](self)
-            end
+        if self.InitializeAlerts[id] then
+            self.InitializeAlerts[id](self)
         end
         self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
     else
@@ -1949,18 +1949,19 @@ function NSI:ImportReloeReminders(id)
             if self.InitializeMandatoryAlerts[encID] then
                 self.InitializeMandatoryAlerts[encID](self)
             end
-            if NSRT.Alerts.ReloeReminders and self.InitializeAlerts[encID] then
+            if self.InitializeAlerts[encID] then
                 self.InitializeAlerts[encID](self)
             end
         end
         self:FireCallback("NSRT_ALERT_FULL_UPDATE")
     end
+    self._ApplyReloeAutoEnable = previousAutoEnable
 end
 
 function NSI:DeleteReloeReminder(encID, diffID, alertKey)
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
         local alert = NSRT.EncounterAlerts[encID][diffID][alertKey]
-        if type(alert) == "table" and alert.MandatoryAlert then return end
+        if type(alert) == "table" and (alert.ReloeReminder or alert.MandatoryAlert) then return end
         NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
     end
 end

@@ -448,12 +448,15 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Import All Reloe Alerts"],
-            desc = L["Automatically import all of Reloe's custom created Alerts for the current tier's bosses. Display settings of these Alerts can be edited."],
+            name = L["Automatically Enable New Alerts"],
+            desc = L["Automatically enables all future Alerts unless they are specifically marked as being default disabled."],
             get = function() return NSRT.Alerts.ReloeReminders end,
             set = function(self, fixedparam, value)
+                local wasEnabled = NSRT.Alerts.ReloeReminders == true
                 NSRT.Alerts.ReloeReminders = value
-                NSI:ImportReloeReminders()
+                if value and not wasEnabled then
+                    NSI:PromptReloeReminderImport()
+                end
             end,
             nocombat = true,
         },

@@ -48,6 +48,22 @@ end
 local alertsExportPopup
 local alertsImportPopup
 
+function NSI:PromptReloeReminderImport(onImport)
+    local function DoImport()
+        self:ImportReloeReminders(nil, true)
+        local enc = NSUI and NSUI.encounters_frame
+        if enc and enc.RebuildList then enc.RebuildList() end
+        if enc and enc.RefreshSelected then enc.RefreshSelected() end
+        if onImport then onImport() end
+    end
+    local dialog = self.UI.Components.CreateDialog(
+        "NSRTReloeReminderImport",
+        L["Enable Reloe-Alerts"],
+        L["Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."],
+        L["Enable"], DoImport, L["Not Now"], nil)
+    dialog:Show()
+end
+
 local function ShowExportPopup(str, label)
     if not alertsExportPopup then
         alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. L["Export Alerts"] .. "|r",
@@ -434,7 +450,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             for diffID, diffTable in pairs(enc) do
                 for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
                     if type(alert) == "table" and alert.group == name then
-                        if alert.MandatoryAlert then
+                        if alert.ReloeReminder or alert.MandatoryAlert then
                             alert.group = nil
                         else
                             diffTable[key] = nil
@@ -450,7 +466,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function DeleteAlert(encID, diffID, alertKey)
         local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
             and NSRT.EncounterAlerts[encID][diffID]
-        if diffTable and diffTable[alertKey] and diffTable[alertKey].MandatoryAlert then return end
+        if diffTable and diffTable[alertKey] and (diffTable[alertKey].ReloeReminder or diffTable[alertKey].MandatoryAlert) then return end
         if diffTable then
             diffTable[alertKey] = nil
             NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, alertKey)
@@ -750,6 +766,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
                 local isReloe   = entry._isReloeCreated
                 local isMandatory = entry.data.MandatoryAlert == true
+                local canDelete = not isReloe and not isMandatory
                 local isEnabled, icon, name
 
                 if filterEncID == nil or filterEncID == 0 then
@@ -815,6 +832,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                    and NSRT.EncounterAlerts[eid][did][akey]
                         if e then
                             e.enabled = v
+                            e.UserModifiedEnabled = true
                             if selectedEncID == eid and selectedDiffID == did and selectedKey == akey then
                                 enabledCB:SetValue(v)
                             end
@@ -849,7 +867,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                         end
                         RebuildList()
                     end)
-                    if isMandatory then
+                    if not canDelete then
                         row.deleteBtn:Hide()
                         row.deleteBtn:SetScript("OnClick", nil)
                         row.lockIcon:ClearAllPoints()
@@ -873,7 +891,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     row.deleteBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)   -- reset anchor
                     row.lockIcon:ClearAllPoints()
                     row.lockIcon:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-                    if isMandatory then
+                    if not canDelete then
                         row.deleteBtn:Hide()
                         row.deleteBtn:SetScript("OnClick", nil)
                         row.lockIcon:Show()
@@ -1032,7 +1050,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     end
                                 end })
 
-                            if not (alert and alert.MandatoryAlert) then
+                            if not (alert and (alert.ReloeReminder or alert.MandatoryAlert)) then
                                 table.insert(menuItems, { type = "separator" })
                                 table.insert(menuItems, {
                                     type = "button",
@@ -1140,29 +1158,23 @@ local function BuildEncounterAlertsUI(parentFrame)
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
 
-    local reloeImportCB = CreateCheckButton(addOptFrame, L["Import All Reloe Alerts"],
+    local reloeImportCB = CreateCheckButton(addOptFrame, L["Automatically Enable New Alerts"],
         function() return NSRT.Alerts.ReloeReminders end,
         function(_, v)
+            local wasEnabled = NSRT.Alerts.ReloeReminders == true
             NSRT.Alerts.ReloeReminders = v
-            NSI:ImportReloeReminders()
+            if v and not wasEnabled then
+                NSI:PromptReloeReminderImport(function()
+                    RebuildList()
+                    if selectedEncID and selectedKey then
+                        SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+                    end
+                end)
+            end
             RebuildList()
         end,
         listW, 22, "NSUIEncAlertReloeImportCB")
     reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
-
-    local importSelectedBossBtn = CreateButton(addOptFrame, L["Import Selected Boss Alerts"], function()
-        local encID = filterEncID or selectedEncID
-        if not encID then
-            print("|cFF00FFFFNSRT:|r " .. L["Select a boss first."])
-            return
-        end
-        NSI:ImportReloeReminders(encID)
-        RebuildList()
-        if selectedEncID and selectedKey then
-            SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
-        end
-    end, listW, 22)
-    importSelectedBossBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
 
     local fullResetBtn = CreateButton(addOptFrame, L["Full Reset"], function()
         local function DoReset()
@@ -1189,7 +1201,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             L["Cancel"], nil, L["Reset"], DoReset, nil)
         dialog:Show()
     end, listW, 26)
-    fullResetBtn:SetPoint("TOPLEFT", importSelectedBossBtn.frame, "BOTTOMLEFT", 0, -8)
+    fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
 
     local function SetReloeAlertsEnabled(enabled)
         for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
@@ -1199,6 +1211,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     for akey, alert in pairs(diffTable) do
                         if type(alert) == "table" and alert.ReloeReminder then
                             alert.enabled = enabled
+                            alert.UserModifiedEnabled = true
                             NSI:FireCallback("NSRT_ALERT_CHANGED", encID, filterDiffID, akey)
                         end
                     end
@@ -2993,6 +3006,10 @@ local function BuildEncounterAlertsUI(parentFrame)
         enabledCB:SetOnChange(function(nsi, v)
             NSI:SaveAlertData(entry, "enabled", v)
             entry.enabled = v
+            if entry.ReloeReminder then
+                NSI:SaveAlertData(entry, "UserModifiedEnabled", true)
+                entry.UserModifiedEnabled = true
+            end
             RebuildList()
         end)
 
