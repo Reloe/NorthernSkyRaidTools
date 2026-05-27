@@ -17,7 +17,7 @@ local function build_anchor_options(settingsKey, key)
     for _, pt in ipairs(ANCHOR_POINTS) do
         t[#t + 1] = {
             value = pt,
-            label = pt,
+            label = L[pt],
             onclick = function()
                 NSRT[settingsKey][key] = pt
                 NSI:UpdatePADisplay(false)
