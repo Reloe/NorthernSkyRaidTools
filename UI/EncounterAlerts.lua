@@ -1152,7 +1152,8 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- Additional Options popup — positioned to the right of the main NSUI window
     local ADDOPT_PAD = 12
-    local ADDOPT_W   = listW + ADDOPT_PAD * 2
+    local ADDOPT_W   = listW + ADDOPT_PAD * 2 + 10
+    local ADDOPT_INNER_W = ADDOPT_W - ADDOPT_PAD * 2
     local ADDOPT_H   = 190
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
@@ -1173,7 +1174,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             RebuildList()
         end,
-        listW, 22, "NSUIEncAlertReloeImportCB")
+        ADDOPT_INNER_W, 22, "NSUIEncAlertReloeImportCB")
     reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
 
     local fullResetBtn = CreateButton(addOptFrame, L["Full Reset"], function()
@@ -1200,7 +1201,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"],
             L["Cancel"], nil, L["Reset"], DoReset, nil)
         dialog:Show()
-    end, listW, 26)
+    end, ADDOPT_INNER_W, 26)
     fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
 
     local function SetReloeAlertsEnabled(enabled)
@@ -1223,12 +1224,12 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local enableAllBtn = CreateButton(addOptFrame, L["Enable Selected Boss Alerts"], function()
         SetReloeAlertsEnabled(true)
-    end, listW, 22)
+    end, ADDOPT_INNER_W, 22)
     enableAllBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
 
     local disableAllBtn = CreateButton(addOptFrame, L["Disable Selected Boss Alerts"], function()
         SetReloeAlertsEnabled(false)
-    end, listW, 22)
+    end, ADDOPT_INNER_W, 22)
     disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)
 
     -- "Additional Options" button replaces the two rows that moved into the popup
