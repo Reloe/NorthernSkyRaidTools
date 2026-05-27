@@ -213,7 +213,7 @@ L["Automatically enables all future Alerts unless they are specifically marked a
 L["Enable Reloe-Alerts"] = true
 L["Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."] = true
 L["Not Now"] = true
-L["Re-import"] = true
+L["Enable"] = true
 L["You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."] = true
 -- UI/Options/Reminders.lua — Reminder Note Options
 L["This tab is purely for Settings to display Reminders as a Note on-screen. They have no effect on how the in-combat alerts work.\nThere are 3 types of displays. The first one shows all reminders, the second one shows only those that will activate for you. And the third shows all text that is not a reminder."] = true
