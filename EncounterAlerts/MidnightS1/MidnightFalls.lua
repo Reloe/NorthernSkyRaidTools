@@ -448,7 +448,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY)
                 self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "CENTER", posX, posY + 30)
             end
-            self.LuraRunesDisplay[pos]:SetFormattedText("|TInterface\\AddOns\\NorthernSkyRaidTools\\Media\\EncounterPics\\%s:48:48|t", text)
+            if runes.UseOldSystem then
+                self.LuraRunesDisplay[pos]:SetFormattedText("|T%s:48:48|t", text)
+            else
+                self.LuraRunesDisplay[pos]:SetFormattedText("|TInterface\\AddOns\\NorthernSkyRaidTools\\Media\\EncounterPics\\%s:48:48|t", text)
+            end
             self.LuraRunesDisplay[pos]:Show()
 
             local number = pos
