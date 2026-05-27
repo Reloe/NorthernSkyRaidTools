@@ -7,6 +7,7 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local data = {internalID = "CC Display", text = nil, DisplayType = "Text", timers = nil, encID = encID, phase = 1, TTS = false, dur = nil, spellID = nil,
+    MandatoryAlert = true,
     Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]],
     overrides = {BlockCopy = true},
     difficulties = {16},
