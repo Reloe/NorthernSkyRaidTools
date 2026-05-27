@@ -344,9 +344,11 @@ function NSI:ProcessReminder()
                     end)
                     local words = {}
                     for word in line:gmatch("[^%s]+") do
-                        if word:match("^%u%a+$") and #word >= 2 and #word <= 12 then
-                            local shortened = NSAPI:Shorten(NSAPI:GetChar(word, true), 12, false, "GlobalNickNames")
-                            table.insert(words, shortened)
+                        local prefix, core, suffix = word:match("^([%p]*)(.-)([%p]*)$")
+                        if core and core ~= "" and #core >= 2 and #core <= 36 then
+                            local unit = NSAPI:GetChar(core, true)
+                            local shortened = NSAPI:Shorten(unit, 12, false, "GlobalNickNames")
+                            table.insert(words, prefix .. shortened .. suffix)
                         else
                             table.insert(words, word)
                         end
