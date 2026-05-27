@@ -555,13 +555,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         self.AlertTimers[1] = C_Timer.NewTimer(70, function()
             if not self.AlertTimers then return end
             HideAllRunes()
-            self.AlertTimers[1] = nil
             self.LuraRunesCompleted = {}
         end)
         self.AlertTimers[2] = C_Timer.NewTimer(140, function()
             if not self.AlertTimers then return end
             HideAllRunes()
-            self.AlertTimers[2] = nil
             self.LuraRunesCompleted = {}
         end)
     end
@@ -600,7 +598,7 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
         end
         self.LuraRunesCompleted = {}
         if self.AlertTimers then
-            for i, v in ipairs(self.AlertTimers) do
+            for i, v in pairs(self.AlertTimers) do
                 if v and v.Cancel then
                     v:Cancel()
                 end
@@ -608,7 +606,7 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
             self.AlertTimers = nil
         end
         if self.LuraRuneTimers then
-            for i, v in ipairs(self.LuraRuneTimers) do
+            for i, v in pairs(self.LuraRuneTimers) do
                 if v and v.Cancel then
                     v:Cancel()
                 end
