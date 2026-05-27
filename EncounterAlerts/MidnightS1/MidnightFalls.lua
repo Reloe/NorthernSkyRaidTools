@@ -106,7 +106,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Lura P1 Transition", internalID = "Transition Beams", name = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
     timers = {
-            [16] = {10.7, 15.7, 20.7, 25.7, 30.7},
+            [16] = {10.7, 15.7, 20.7, 25.7, 30.7, 35.7},
         },
     }
     self:AddEncounterAlert(data)

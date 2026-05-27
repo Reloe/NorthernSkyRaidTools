@@ -56,7 +56,6 @@ NSI.InitializeMandatoryAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-
 end
 
 NSI.InitializeAlerts[encID] = function(self)
