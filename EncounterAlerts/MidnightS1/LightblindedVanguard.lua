@@ -6,7 +6,9 @@ local encID = 3180
 NSI.InitializeMandatoryAlerts[encID] = function(self)
     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local data = {internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil, id = 0, customIcon = 355,
+    local tankConditions = self:DefaultLoadConditions()
+    tankConditions.Roles.TANK = true
+    local data = {Version = 1, internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil, id = 0, customIcon = 355,
     overrides = {isSpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0, BlockCopy = true},
     MandatoryAlert = true,
     Preview = [[return function()
