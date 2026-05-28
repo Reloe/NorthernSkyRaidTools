@@ -48,7 +48,7 @@ function NSI:CreateReminder(info, preview)
     info = CopyTable(info)
     if preview or not info.encID then
         info.time = info.dur or 60
-        info.encID = 0
+        info.encID = info.encID or 0
     end
     self.ProcessedReminder = self.ProcessedReminder or {}
     self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}

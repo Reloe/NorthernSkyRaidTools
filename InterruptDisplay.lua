@@ -89,7 +89,7 @@ function NSI:ShowInterruptBar(info)
     info.DisplayType = "Bar"
     info.TTS = false
     info.text = "Interrupt"
-    local alert = self:CreateReminder(info)
+    local alert = self:CreateReminder(info, true)
     self.InterruptBar = self:DisplayReminder(alert)
 end
 
