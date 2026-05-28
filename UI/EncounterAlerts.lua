@@ -450,7 +450,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             for diffID, diffTable in pairs(enc) do
                 for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
                     if type(alert) == "table" and alert.group == name then
-                        if alert.ReloeReminder or alert.MandatoryAlert then
+                        if alert.ReloeReminder then
                             alert.group = nil
                         else
                             diffTable[key] = nil
@@ -466,7 +466,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function DeleteAlert(encID, diffID, alertKey)
         local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
             and NSRT.EncounterAlerts[encID][diffID]
-        if diffTable and diffTable[alertKey] and (diffTable[alertKey].ReloeReminder or diffTable[alertKey].MandatoryAlert) then return end
+        if diffTable and diffTable[alertKey] and diffTable[alertKey].ReloeReminder then return end
         if diffTable then
             diffTable[alertKey] = nil
             NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, alertKey)
@@ -765,8 +765,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row:Show()
 
                 local isReloe   = entry._isReloeCreated
-                local isMandatory = entry.data.MandatoryAlert == true
-                local canDelete = not isReloe and not isMandatory
+                local canDelete = not isReloe
                 local isEnabled, icon, name
 
                 if filterEncID == nil or filterEncID == 0 then
@@ -1050,7 +1049,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     end
                                 end })
 
-                            if not (alert and (alert.ReloeReminder or alert.MandatoryAlert)) then
+                            if not (alert and alert.ReloeReminder) then
                                 table.insert(menuItems, { type = "separator" })
                                 table.insert(menuItems, {
                                     type = "button",

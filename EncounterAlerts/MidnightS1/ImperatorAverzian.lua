@@ -4,7 +4,6 @@ local encID = 3176
 -- /run NSAPI:DebugEncounter(3176)
 
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local data = {internalID = "Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5.5, spellID = nil,
     timers = {

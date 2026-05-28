@@ -4,7 +4,6 @@ local encID = 3178
 -- /run NSAPI:DebugEncounter(3178)
 
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {internalID = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,

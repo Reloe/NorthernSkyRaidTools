@@ -3,7 +3,6 @@ local _, NSI = ... -- Internal namespace
 local encID = 3177
 -- /run NSAPI:DebugEncounter(3177)
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {internalID = "Knock", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,

@@ -3,21 +3,10 @@ local _, NSI = ... -- Internal namespace
 local encID = 3159
 -- /run NSAPI:DebugEncounter(3159)
 
-NSI.InitializeMandatoryAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, MandatoryAlert = true,
-    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
-    overrides = {BlockCopy = true},
-    Preview = [[return function()
-        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
-    end]],
-    }
-    self:AddEncounterAlert(data)
-
-end
 
 NSI.InitializeAlerts[encID] = function(self)
+    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+
     local data = {internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
         timers = {
             [16] = {23, 72, 159, 208, 295, 344, 431, 480},
@@ -28,6 +17,14 @@ NSI.InitializeAlerts[encID] = function(self)
         timers = {
             [16] = {120, 256, 392, 528},
         },
+    }
+    self:AddEncounterAlert(data)
+    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
+    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
+    overrides = {BlockCopy = true, enabled = true},
+    Preview = [[return function()
+        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
+    end]],
     }
     self:AddEncounterAlert(data)
 end

@@ -4,7 +4,6 @@ local encID = 3182
 -- /run NSAPI:DebugEncounter(3182)
 
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local FeatherColorIconPreview = [[

@@ -3,71 +3,7 @@ local _, NSI = ... -- Internal namespace
 local encID = 3183
 -- /run NSAPI:DebugEncounter(3183)
 
-NSI.InitializeMandatoryAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-
-    local LuraPreview = [[
-        return function(self, update)
-            if self.IsLuraPreview then
-                self.EncounterAlertStop[3183](self, true)
-                self.IsLuraPreview = false
-            else
-                self.EncounterAlertStart[3183](self, 16, "Runes Display")
-                self.IsLuraPreview = true
-            end
-        end
-    ]]
-
-    local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay", MandatoryAlert = true,
-    overrides = {pinned = true, BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
-    Preview = LuraPreview, customIcon = 1284980,
-    difficulties = {14, 15, 16},
-    extraOptions = {
-            { Type = "Label",    text = "Runes Display" },
-            { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,
-                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.Scale   or 1    end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.Scale    = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
-            { Type = "Slider",   label = "xOffset",        min = -2000, max = 2000,
-                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.xOffset  or 300  end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.xOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
-            { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000,
-                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.yOffset  or -300 end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.yOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
-            { Type = "Color",    label = "BackgroundColor",
-                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3183][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end]],
-                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
-            { Type = "Breakline" },
-            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
-            { Type = "Label",    text = "The Texture files are no longer required for most users. They are only required if you want to see these Icons in your Macros."},
-            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles", width = 150 },
-            { Type = "Button",   label = "Create Macros", width = 150,
-            func = [[return function(NSI)
-                local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
-                for i=1, 5 do
-                    local macroName = "NSRT_LURA_RUNE_"..i
-                    if not GetMacroInfo(macroName) then
-                        CreateMacro(macroName, iconIDs[i], "/raid "..iconIDs[i])
-                    end
-                end
-            end]]
-            }
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, MandatoryAlert = true,
-    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
-    overrides = {pinned = true, BlockCopy = true},
-    Preview = [[return function()
-        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
-    end]],
-    }
-    self:AddEncounterAlert(data)
-end
-
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local tankConditions = self:DefaultLoadConditions()
@@ -344,6 +280,64 @@ NSI.InitializeAlerts[encID] = function(self)
         timers = nil,
         overrides = {BlockCopy = true, enabled = false},
         HideTimer = false,
+    }
+    self:AddEncounterAlert(data)
+
+    local LuraPreview = [[
+        return function(self, update)
+            if self.IsLuraPreview then
+                self.EncounterAlertStop[3183](self, true)
+                self.IsLuraPreview = false
+            else
+                self.EncounterAlertStart[3183](self, 16, "Runes Display")
+                self.IsLuraPreview = true
+            end
+        end
+    ]]
+
+    local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
+    overrides = {enabled = true, pinned = true, BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
+    Preview = LuraPreview, customIcon = 1284980,
+    difficulties = {14, 15, 16},
+    extraOptions = {
+            { Type = "Label",    text = "Runes Display" },
+            { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.Scale   or 1    end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.Scale    = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
+            { Type = "Slider",   label = "xOffset",        min = -2000, max = 2000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.xOffset  or 300  end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.xOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
+            { Type = "Slider",   label = "yOffset",        min = -2000, max = 2000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.yOffset  or -300 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.yOffset  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
+            { Type = "Color",    label = "BackgroundColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3183][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
+            { Type = "Breakline" },
+            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
+            { Type = "Label",    text = "The Texture files are no longer required for most users. They are only required if you want to see these Icons in your Macros."},
+            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles", width = 150 },
+            { Type = "Button",   label = "Create Macros", width = 150,
+            func = [[return function(NSI)
+                local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
+                for i=1, 5 do
+                    local macroName = "NSRT_LURA_RUNE_"..i
+                    if not GetMacroInfo(macroName) then
+                        CreateMacro(macroName, iconIDs[i], "/raid "..iconIDs[i])
+                    end
+                end
+            end]]
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
+    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
+    overrides = {pinned = true, BlockCopy = true, enabled = true},
+    Preview = [[return function()
+        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
+    end]],
     }
     self:AddEncounterAlert(data)
 end

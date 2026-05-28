@@ -3,21 +3,7 @@ local _, NSI = ... -- Internal namespace
 local encID = 3179
 -- /run NSAPI:DebugEncounter(3179)
 
-NSI.InitializeMandatoryAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-    NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
-    local data = {internalID = "CC Display", text = nil, DisplayType = "Text", timers = nil, encID = encID, phase = 1, TTS = false, dur = nil, spellID = nil,
-    MandatoryAlert = true,
-    Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]],
-    overrides = {BlockCopy = true},
-    difficulties = {16},
-    }
-    self:AddEncounterAlert(data)
-end
-
-
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {internalID = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
@@ -40,6 +26,13 @@ NSI.InitializeAlerts[encID] = function(self)
         [14] = {20, 65, 141, 187, 263, 308},
         [15] = {20, 65, 141, 187, 263, 308},
         [16] = {27.6, 73, 150.8, 196.9, 272.4, 317.5},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {internalID = "CC Display", text = nil, DisplayType = "Text", timers = nil, encID = encID, phase = 1, TTS = false, dur = nil, spellID = nil,
+    Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]],
+    overrides = {enabled = true, BlockCopy = true},
+    difficulties = {16},
     }
     self:AddEncounterAlert(data)
 end

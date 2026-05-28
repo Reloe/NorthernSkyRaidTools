@@ -4,7 +4,6 @@ local encID = 3306
 -- /run NSAPI:DebugEncounter(3306)
 
 NSI.InitializeAlerts[encID] = function(self)
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local loadConditions = self:DefaultLoadConditions()

@@ -36,11 +36,7 @@ function NSI:MakeEncounterAlert(data, timers)
     end
     local defaultEnabled = isEnabled ~= false
     if isEnabled == nil then
-        if data.MandatoryAlert then
-            isEnabled = true
-        else
-            isEnabled = NSRT.Alerts.ReloeReminders
-        end
+        isEnabled = NSRT.Alerts.ReloeReminders
     end
     local a = {
         internalID     = data.internalID,
@@ -57,7 +53,6 @@ function NSI:MakeEncounterAlert(data, timers)
         HideTimer      = data.HideTimer,
         IsAlert        = true,
         ReloeReminder  = true,
-        MandatoryAlert = data.MandatoryAlert,
         enabled        = isEnabled,
         DefaultEnabled = defaultEnabled,
         extraOptions   = data.extraOptions,
@@ -151,7 +146,6 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             existing.Preview = alertDef.Preview
             existing.phase = alertDef.phase
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
-            existing.MandatoryAlert = alertDef.MandatoryAlert
             existing.DefaultEnabled = alertDef.DefaultEnabled
             if self._ApplyReloeAutoEnable and not existing.UserModifiedEnabled then
                 existing.enabled = alertDef.DefaultEnabled ~= false
