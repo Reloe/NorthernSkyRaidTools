@@ -589,7 +589,7 @@ L["Trigger"] = "트리거"
 L["Options"] = "옵션"
 -- Display tab
 L["Type"] = "유형"
-L["Display Text"] = "표시 텍스트"
+L["Display Text"] = "표시되는 텍스트"
 L["Spell ID"] = "주문 ID"
 L["Custom Icon (overrides icon in list)"] = "사용자 지정 아이콘 (목록의 아이콘보다 우선 적용)"
 L["Sticky duration (0 to disable)"] = "고정 지속시간 (0은 비활성화)"
