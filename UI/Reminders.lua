@@ -858,13 +858,16 @@ local function BuildReminderScreen(personal, parentFrame)
     -- Left Panel: Reminder List
     -- ====================================================================
 
+    local listButtonGap = 3
+    local listButtonWidth = (leftWidth - pad * 2 - listButtonGap * 2) / 3
+
     local ImportButton = CreateButton(screen, L["Import"], function()
         if personal then
             ImportPersonalReminderString(nil, false)
         else
             ImportReminderString(nil, false)
         end
-    end, 80, 22)
+    end, listButtonWidth, 22)
     ImportButton:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 22)
 
     local ClearButton = CreateButton(screen, L["Unload"], function()
@@ -879,8 +882,8 @@ local function BuildReminderScreen(personal, parentFrame)
         editor:SetText("")
         screen.scrollbox:MasterRefresh()
         if NSUI.Sidebar then NSUI.Sidebar:UpdateIcons() end
-    end, 60, 22)
-    ClearButton:SetPoint("LEFT", ImportButton.frame, "RIGHT", 3, 0)
+    end, listButtonWidth, 22)
+    ClearButton:SetPoint("LEFT", ImportButton.frame, "RIGHT", listButtonGap, 0)
 
     local DeleteAllButton = CreateButton(screen, L["Delete All"], function()
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, L["Confirm Clear All"], "NSRTClearAllConfirm")
@@ -904,8 +907,8 @@ local function BuildReminderScreen(personal, parentFrame)
         local cancelBtn = CreateButton(popup, L["Cancel"], function() popup:Hide() end, 100, 30)
         cancelBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
         popup:Show()
-    end, 80, 22)
-    DeleteAllButton:SetPoint("LEFT", ClearButton.frame, "RIGHT", 3, 0)
+    end, listButtonWidth, 22)
+    DeleteAllButton:SetPoint("LEFT", ClearButton.frame, "RIGHT", listButtonGap, 0)
 
     local function UpdateButtonAccess()
         local canEdit = UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"] or
