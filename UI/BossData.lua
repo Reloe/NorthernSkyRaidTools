@@ -1,5 +1,5 @@
 local _, NSI = ...
-
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 -- ============================================================================
 -- BossData
 -- Shared boss icon and dropdown helpers used by multiple UI modules so that
