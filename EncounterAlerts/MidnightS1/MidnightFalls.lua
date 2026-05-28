@@ -235,13 +235,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-
-    local data = {group = "Lura P3", internalID = "Crystal Use", text = "Crystal", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 5, spellID = nil,
-    timers = {
-            [16] = {22, 60, 98},
-        },
-    }
-    self:AddEncounterAlert(data)
+    self:RemoveEncounterAlert(encID, 16, "Crystal Use")
 
     local data = {group = "Lura P3", internalID = "HC Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 4, TTS = true, dur = 5, spellID = nil,
     timers = {

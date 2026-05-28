@@ -171,13 +171,8 @@ function NSI:GetEncounterAlertByName(encId, diffID, name)
     end
 end
 
-function NSI:RemoveEncounterAlert(encId, diffID, name)
-    local enc = NSRT.EncounterAlerts[encId]
-    if not enc or not enc[diffID] then return end
-    for k, entry in pairs(enc[diffID]) do
-        if type(entry) == "table" and entry.name == name then
-            enc[diffID][k] = nil
-            return
-        end
+function NSI:RemoveEncounterAlert(encID, diffID, internalID)
+    if NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
+        NSRT.EncounterAlerts[encID][diffID][internalID] = nil
     end
 end
