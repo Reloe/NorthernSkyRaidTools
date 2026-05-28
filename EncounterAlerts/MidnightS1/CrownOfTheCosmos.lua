@@ -38,7 +38,7 @@ NSI.InitializeAlerts[encID] = function(self)
         [269]  = true, -- Monk: Windwalker
         [577]  = true, -- Demon Hunter: Havoc
     }
-    local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Ranged Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Ranged Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {loadConditions = RangedObeliskConditions},
     timers = {
             [16] = {{5, 28.3, 54.9, 81.2, 104.5}, {}, {9.8, 34.8, 61.8, 86.8, 113.8, 138.8, 165.8}, {}, {10.8, 19.8, 54.8, 70.8, 79.8, 114.8, 130.8, 139.8, 174.8}},
@@ -46,7 +46,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Melee Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
+    local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Melee Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {loadConditions = MeleeObeliskConditions},
     timers = {
             [16] = {{7, 30.3, 56.9, 83.2, 106.5}, {}, {11.8, 36.8, 63.8, 88.8, 115.8, 140.8, 167.8}, {}, {12.8, 21.8, 56.8, 72.8, 81.8, 116.8, 132.8, 141.8, 176.8}},
