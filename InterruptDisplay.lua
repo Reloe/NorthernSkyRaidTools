@@ -97,7 +97,7 @@ function NSI:HideInterruptBar()
     if self.InterruptBar then
         self.InterruptBar:Hide()
         self.InterruptBar = nil
-        self:ArrangeStates("Bar")
+        self:ArrangeStates("Bars")
     end
 end
 

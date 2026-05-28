@@ -129,7 +129,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P2", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 5, spellID = 1253031,
-    overrides = {countdown = 3, enabled = false, barColors = {0, 1, 0, 1}},
+    overrides = {countdown = 3, barColors = {0, 1, 0, 1}, isConditional = true, enabled = true},
     timers = {
             [16] = {17.5, 25, 47.5, 55, 77.5, 85},
         },
@@ -340,6 +340,13 @@ NSI.InitializeAlerts[encID] = function(self)
     end]],
     }
     self:AddEncounterAlert(data)
+end
+
+NSI.EncounterAlertHandle[encID] = function(self, info)
+    if info and info.internalID == "Seed-Drop" then
+        return C_ActionBar.HasExtraActionBar()
+    end
+    return false
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
@@ -557,11 +564,20 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         local s = NSRT.EncounterAlerts[encID][id].CrystalDropTimer
         local info = self:CreateReminder(CopyTable(s), true)
         self:EncounterRegister("CrystalDropTimer", "UNIT_SPELLCAST_SUCCEEDED", true, "player")
+        self:EncounterRegister("CrystalDropTimer", "UPDATE_EXTRA_ACTIONBAR", true)
         self:EncounterFunction("CrystalDropTimer", function(_, e, unit, ...)
-            local castGUID, spellID, castBarID = ...
-            -- Dawn Crystal
-            if spellID == 1253050 then
-                self:DisplayReminder(info)
+            if e == "UPDATE_EXTRA_ACTIONBAR" then
+                if C_ActionBar.HasExtraActionBar() and self.CrystalDropTimer and self.CrystalDropTimer:IsShown() then
+                    self.CrystalDropTimer:Hide()
+                    self:ArrangeStates(self.CrystalDropTimer.DisplayType)
+                    self.CrystalDropTimer = nil
+                end
+            else
+                local castGUID, spellID, castBarID = ...
+                -- Dawn Crystal
+                if spellID == 1253050 then
+                    self.CrystalDropTimer = self:DisplayReminder(info)
+                end
             end
         end)
     end

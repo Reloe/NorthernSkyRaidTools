@@ -128,9 +128,10 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     local existing = diffTable[alertDef.internalID]
     local Vers = alertDef.Version
     local Overwrite = existing and ((Vers and ((not existing.Version) or Vers > existing.Version)) or existing.Reset)
+    local applyDefaultEnabled = self._ApplyReloeAutoEnable or (NSRT.Alerts and NSRT.Alerts.ReloeReminders)
     if ReloeReminder then
         if Overwrite then
-            if self._ApplyReloeAutoEnable and not existing.UserModifiedEnabled then
+            if applyDefaultEnabled and not existing.UserModifiedEnabled then
                 alertDef.enabled = alertDef.DefaultEnabled ~= false
             else
                 alertDef.enabled = existing.enabled
@@ -147,7 +148,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             existing.phase = alertDef.phase
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
             existing.DefaultEnabled = alertDef.DefaultEnabled
-            if self._ApplyReloeAutoEnable and not existing.UserModifiedEnabled then
+            if applyDefaultEnabled and not existing.UserModifiedEnabled then
                 existing.enabled = alertDef.DefaultEnabled ~= false
             end
             return
