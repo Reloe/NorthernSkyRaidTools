@@ -1,5 +1,5 @@
 local _, NSI = ...
-
+local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
 -- ============================================================================
 -- BossData
 -- Shared boss icon and dropdown helpers used by multiple UI modules so that
@@ -50,7 +50,7 @@ local function BuildBossDropdownOptions(onSelect, noBossLabel)
     for _, entry in ipairs(sorted) do
         local encID = entry.encID
         table.insert(options, {
-            label    = NSI.BossTimelineNames[encID] or ("Encounter " .. encID),
+            label    = L[NSI.BossTimelineNames[encID]] or ("Encounter " .. encID),
             value    = encID,
             icon     = BossIcons[encID],
             iconsize = { 16, 16 },
