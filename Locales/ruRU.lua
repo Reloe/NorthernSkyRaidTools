@@ -579,6 +579,7 @@ L["Are you sure you want to delete this alert?"] = "Вы уверены, что 
 -- Right panel header
 L["Alert Name"] = "Название оповещения"
 L["Group"] = "Группа"
+L["Condition"] = "Условие"
 L["— No Group —"] = "- Без группы -"
 -- Inner tabs
 L["Display"] = "Отображение"
