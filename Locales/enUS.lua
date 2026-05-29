@@ -80,6 +80,7 @@ L["Automatic"] = true
 L["English (enUS)"] = true
 L["Korean (koKR)"] = true
 L["Russian (ruRU)"] = true
+L["Simplified Chinese (zhCN)"] = true
 L["Traditional Chinese (zhTW)"] = true
 L["General Options"] = true
 L["Disable Minimap Button"] = true
