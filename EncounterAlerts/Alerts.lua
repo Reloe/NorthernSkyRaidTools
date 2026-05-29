@@ -58,6 +58,7 @@ function NSI:MakeEncounterAlert(data, timers)
         extraOptions   = data.extraOptions,
         Preview        = data.Preview,
         isSpecialDisplay = data.isSpecialDisplay,
+        isConditional  = data.isConditional,
         Version        = data.Version,
         sticky         = data.sticky or 0,
         group          = group,

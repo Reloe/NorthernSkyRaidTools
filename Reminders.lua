@@ -961,15 +961,25 @@ function NSI:AddTickToBar(F, percent, HideTimer)
 end
 
 function NSI:CheckReminderLogic(info)
-    if info.isConditional then
-        if self.EncounterAlertHandle[self.EncounterID] then
-            return self.EncounterAlertHandle[self.EncounterID](self, info)
-        else
-            return true
+    local condition = info and info.isConditional
+    if condition then
+        local func = type(condition) == "table" and condition.func or condition
+        if type(func) == "string" and func ~= "" then
+            local chunk = loadstring(func)
+            if not chunk then return false end
+
+            local success, result = pcall(chunk)
+            if not success then return false end
+
+            if type(result) == "function" then
+                success, result = pcall(result, self, info)
+                return success and result and true or false
+            end
+            return result and true or false
         end
-    else
-        return true
+        return false
     end
+    return true
 end
 
 function NSI:GetDisplayedText(rem, info, F)

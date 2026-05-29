@@ -10,24 +10,25 @@ NSI.InitializeAlerts[encID] = function(self)
     loadConditions.Roles.DAMAGER = true
     loadConditions.Roles.HEALER = true
     local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    overrides = {isConditional = "This Alert only shows if you are downstairs at the time", loadConditions = loadConditions},
+    overrides = {
+        isConditional = {
+            text = "This Alert only shows if you are downstairs at the time",
+            func = [[return function()
+                for j = 1, 40 do
+                    local u = "nameplate" .. j
+                    if UnitExists(u) and UnitLevel(u) == 92 then
+                        return true
+                    end
+                end
+                return false
+            end]],
+        },
+    loadConditions = loadConditions},
     timers = {
             [16] = {{39, 112}, {39, 112}},
         },
     }
     self:AddEncounterAlert(data)
-end
-
-NSI.EncounterAlertHandle[encID] = function(self, info)
-    if info and info.name and info.name == "Debuffs" then
-        for j = 1, 40 do
-            local u = "nameplate" .. j
-            if UnitExists(u) and UnitLevel(u) == 92 then
-                return true
-            end
-        end
-    end
-    return false
 end
 
 NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END

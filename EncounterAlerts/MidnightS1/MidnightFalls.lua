@@ -129,7 +129,12 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {Version = 1, group = "Lura P2", name = "Seed-Drop", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 3, spellID = 1253031,
-    overrides = {countdown = 3, barColors = {0, 1, 0, 1}, isConditional = "This Alert only shows if you are holding a crystal at that time.", enabled = true},
+    overrides = {countdown = 3, barColors = {0, 1, 0, 1},
+        isConditional = {
+            text = "This Alert only shows if you are holding a crystal at that time.",
+            func = [[return function() return C_ActionBar.HasExtraActionBar() end]],
+        },
+    enabled = true},
     timers = {
             [16] = {17.5, 25, 47.5, 55, 77.5, 85},
         },
@@ -348,13 +353,6 @@ NSI.InitializeAlerts[encID] = function(self)
     end]],
     }
     self:AddEncounterAlert(data)
-end
-
-NSI.EncounterAlertHandle[encID] = function(self, info)
-    if info and info.internalID == "Seed-Drop" then
-        return C_ActionBar.HasExtraActionBar()
-    end
-    return false
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START

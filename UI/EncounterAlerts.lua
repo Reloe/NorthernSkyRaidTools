@@ -3040,7 +3040,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local isReloe = entry.ReloeReminder == true
         rightPanel:Show()
         if isReloe then SetReloeCreatedMode() else SetCustomMode() end
-        PositionInnerTabLayout(type(entry.isConditional) == "string" and entry.isConditional or nil)
+        PositionInnerTabLayout(type(entry.isConditional) == "table" and entry.isConditional.text or nil)
 
         dispF._alert = entry; dispF._hardcodedEncID = nil
         trigF._alert = isReloe and nil or entry; trigF._hardcodedEncID = nil
