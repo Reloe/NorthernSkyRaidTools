@@ -68,7 +68,7 @@ local STYLE = {
 --    :Disable()       also dims label
 -- ============================================================
 -- Registry of every label created by this module so RefreshFonts() can
--- update them all in one call when the player changes the Global Font setting.
+-- update them all in one call when the player changes the addon language.
 -- Stored as {label = FontString, size = number} plain entries — buttons are
 -- never destroyed mid-session so no weak table needed.
 local labelRegistry = {}
@@ -93,10 +93,10 @@ local function ValidateFont(path)
 end
 
 local function RefreshFonts()
-    local rawPath = NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)
-    local fontPath = ValidateFont(rawPath)
+    local fontPath = ValidateFont(NSI:GetUIFontPath(true))
+    local fontFlags = NSI:GetUIFontFlags()
     for _, entry in ipairs(labelRegistry) do
-        entry.label:SetFont(fontPath, entry.size, NSRT.Settings.GlobalFontFlags)
+        entry.label:SetFont(fontPath, entry.size, fontFlags)
     end
 end
 
@@ -146,7 +146,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
 
     local label = labelFrame:CreateFontString(nil, "OVERLAY")
     local labelSize = textSize or STYLE.text_size
-    label:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), labelSize, NSRT.Settings.GlobalFontFlags)
+    label:SetFont(ValidateFont(NSI:GetUIFontPath(true)), labelSize, NSI:GetUIFontFlags())
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")
@@ -338,7 +338,7 @@ end
 
 local function MakeFontString(parent, size)
     local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), size, NSRT.Settings.GlobalFontFlags)
+    fs:SetFont(ValidateFont(NSI:GetUIFontPath(true)), size, NSI:GetUIFontFlags())
     fs:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[#labelRegistry + 1] = {label = fs, size = size}
     return fs
@@ -534,8 +534,9 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4,  -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
-    edit:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), 12, NSRT.Settings.GlobalFontFlags)
+    edit:SetFont(ValidateFont(NSI:GetUIFontPath(true)), 12, NSI:GetUIFontFlags())
     edit:SetTextColor(1, 1, 1, 1)
+    labelRegistry[#labelRegistry + 1] = {label = edit, size = 12}
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
     edit:SetMaxLetters(numeric and 8 or 200)
@@ -1797,9 +1798,9 @@ local function CtxMeasureText(text)
         _ctxMeasureFS:Hide()
     end
     _ctxMeasureFS:SetFont(
-        ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)),
+        ValidateFont(NSI:GetUIFontPath(true)),
         13,
-        NSRT.Settings.GlobalFontFlags or "")
+        NSI:GetUIFontFlags())
     _ctxMeasureFS:SetText(text or "")
     return _ctxMeasureFS:GetStringWidth()
 end
@@ -2140,9 +2141,9 @@ local function EnsureLinkPopup()
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4, -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
-    edit:SetFont(ValidateFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont)), 12,
-        NSRT.Settings.GlobalFontFlags or "")
+    edit:SetFont(ValidateFont(NSI:GetUIFontPath(true)), 12, NSI:GetUIFontFlags())
     edit:SetTextColor(1, 1, 1, 1)
+    labelRegistry[#labelRegistry + 1] = {label = edit, size = 12}
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
     edit:SetJustifyH("CENTER")

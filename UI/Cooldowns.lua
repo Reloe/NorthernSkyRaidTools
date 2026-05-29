@@ -244,7 +244,7 @@ local function BuildCooldownsEditUI()
     offset_header:SetPoint("LEFT", id_header, "RIGHT", 5, 0)
 
     cooldowns_edit_scrollbox:SetScript("OnShow", function(self)
-        selected_spec = GetSpecializationInfo(GetSpecialization())
+        selected_spec = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:MasterRefresh()
     end)
 
@@ -254,7 +254,7 @@ local function BuildCooldownsEditUI()
     new_spec_label:SetWidth(label_width)
 
     local new_spec_dropdown = DF:CreateDropDown(cooldowns_edit_frame, function() return build_spec_options() end,
-        GetSpecializationInfo(GetSpecialization()), 120)
+        C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization()), 120)
     new_spec_dropdown:SetPoint("LEFT", new_spec_label, "RIGHT", 10, 0)
     new_spec_dropdown:SetTemplate(options_dropdown_template)
 

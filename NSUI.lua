@@ -1,6 +1,10 @@
-local _, NSI = ...
+local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local L = DF.Language.GetLanguageTable(addonId)
+
+local function GetLocalizedText(key)
+    return DF.Language.GetText(addonId, key, true) or L[key] or key
+end
 
 -- Get references from Core module
 local Core = NSI.UI.Core
@@ -32,6 +36,7 @@ local BuildImportStringUI          = NSI.UI.General.BuildImportStringUI
 -- Get options builders from modules
 local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
 local BuildGeneralCallback         = NSI.UI.Options.General.BuildCallback
+local BuildLanguageSelector        = NSI.UI.Options.General.BuildLanguageSelector
 local BuildNicknamesOptions        = NSI.UI.Options.Nicknames.BuildOptions
 local BuildNicknamesCallback       = NSI.UI.Options.Nicknames.BuildCallback
 local BuildReminderOptions         = NSI.UI.Options.Reminders.BuildOptions
@@ -125,7 +130,8 @@ function NSUI:Init()
     function tabSystem:RefreshTabLabels()
         for _, btn in ipairs(self.AllButtons) do
             if btn._textKey then
-                btn:SetText(L[btn._textKey])
+                btn:SetText(GetLocalizedText(btn._textKey))
+                NSI:SetUIFont(btn, nil, NSRT.Settings.GlobalFontFlags)
             end
         end
     end
@@ -176,7 +182,7 @@ function NSUI:Init()
             -- Sidebar button
             local btn = CreateButton(
                 sidebarBg,
-                L[tab.textKey],
+                GetLocalizedText(tab.textKey),
                 function() SelectTab(tab.name) end,
                 SIDEBAR_BTN_WIDTH, SIDEBAR_BTN_HEIGHT,
                 "NSUITabBtn_" .. tab.name
@@ -225,11 +231,12 @@ function NSUI:Init()
         -- Persistent header button (lives on NSUI, always visible)
         local hdrBtn = CreateButton(
             NSUI,
-            L[nt.textKey],
+            GetLocalizedText(nt.textKey),
             function() SelectTab(nt.name) end,
             NOTES_HEADER_BTN_W, NOTES_HEADER_BTN_H,
             "NSUIHeaderBtn_" .. nt.name,
-            nt.icon
+            nt.icon,
+            18
         )
         hdrBtn:SetPoint(
             "TOPLEFT", NSUI, "TOPLEFT",
@@ -254,7 +261,7 @@ function NSUI:Init()
         "NSUIAnchorBtn",
         [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
         nil,  -- textSize
-        { title = L["Preview Alerts"], desc = L["Preview Reminders and unlock their anchors to move them around"] }
+        { title = GetLocalizedText("Preview Alerts"), desc = GetLocalizedText("Preview Reminders and unlock their anchors to move them around") }
     )
     anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
 
@@ -350,6 +357,23 @@ function NSUI:Init()
     local privateaura_options1_table     = BuildPrivateAurasOptions()
     local QoL_options1_table             = BuildQoLOptions()
     local WAImports_options1_table       = BuildWAImportsOptions()
+    local option_tables = {
+        general_options1_table,
+        nicknames_options1_table,
+        reminder_options1_table,
+        reminder_note_options1_table,
+        assignments_options1_table,
+        encounteralerts_options1_table,
+        interruptdisplay_options1_table,
+        readycheck_options1_table,
+        RaidBuffMenu,
+        privateaura_options1_table,
+        QoL_options1_table,
+        WAImports_options1_table,
+    }
+    for _, options in ipairs(option_tables) do
+        options.language_addonId = addonId
+    end
 
     -- --------------------------------------------------------
     -- Build callbacks
@@ -374,6 +398,7 @@ function NSUI:Init()
     DF:BuildMenu(general_tab, general_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         general_callback)
+    BuildLanguageSelector(general_tab)
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nicknames_callback)
@@ -406,6 +431,9 @@ function NSUI:Init()
     DF:BuildMenu(WAImports_tab, WAImports_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         WAImports_callback)
+    C_Timer.After(0.1, function()
+        NSI:ApplySelectedLanguage()
+    end)
     NSI.RaidBuffCheck:SetMovable(false)
     NSI.RaidBuffCheck:EnableMouse(false)
 
@@ -450,25 +478,25 @@ function NSUI:ToggleOptions()
 end
 
 function NSI:NickNamesSyncPopup(unit, nicknametable)
-    local popup = DF:CreateSimplePanel(UIParent, 300, 120, L["Sync Nicknames"], "SyncNicknamesPopup", {
+    local popup = DF:CreateSimplePanel(UIParent, 300, 120, GetLocalizedText("Sync Nicknames"), "SyncNicknamesPopup", {
         DontRightClickClose = true
     })
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
-    local label = DF:CreateLabel(popup, format(L["%s is attempting to sync their nicknames with you."], NSAPI:Shorten(unit)), 11)
+    local label = DF:CreateLabel(popup, format(GetLocalizedText("%s is attempting to sync their nicknames with you."), NSAPI:Shorten(unit)), 11)
 
     label:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
     label:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 40)
     label:SetJustifyH("CENTER")
 
-    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, L["Cancel"])
+    local cancel_button = DF:CreateButton(popup, function() popup:Hide() end, 130, 20, GetLocalizedText("Cancel"))
     cancel_button:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 10, 10)
     cancel_button:SetTemplate(options_button_template)
 
     local accept_button = DF:CreateButton(popup, function()
         NSI:SyncNickNamesAccept(nicknametable)
         popup:Hide()
-    end, 130, 20, L["Accept"])
+    end, 130, 20, GetLocalizedText("Accept"))
     accept_button:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -10, 10)
     accept_button:SetTemplate(options_button_template)
 

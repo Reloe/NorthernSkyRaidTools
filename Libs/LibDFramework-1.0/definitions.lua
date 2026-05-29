@@ -233,6 +233,8 @@ GameCooltipFrame2 = {}
 ---@field CreateStatusbarTextureListGenerator fun(self:table, callback:function) : function return a function which when called returns a table filled with all statusbar textures available and ready to be used on dropdowns
 ---@field CreateFrameStrataDropDown fun(self:table, parent:frame, callback:function, default:any, width:number?, height:number?, member:string?, name:string?, template:table?) : df_dropdown
 ---@field CreateFrameStrataListGenerator fun(self:table, callback:function) : function return a function which when called returns a table filled with all frame strata levels available and ready to be used on dropdowns
+---@field CreateBackgroundDropDown fun(self:table, parent:frame, callback:function, default:any, width:number?, height:number?, member:string?, name:string?, template:table?, bIncludeDefault:boolean?) : df_dropdown
+---@field CreateBackgroundListGenerator fun(self:table, callback:function, bIncludeDefault:boolean?) : function return a function which when called returns a table filled with all background textures available and ready to be used on dropdowns
 ---@field CreateFontDropDown fun(self:table, parent:frame, func:function, default:any, width:number?, height:number?, member:string?, name:string?, template:table?, bIncludeDefault:boolean?) : df_dropdown
 ---@field CreateColorDropDown fun(self:table, parent:frame, func:function, default:any, width:number?, height:number?, member:string?, name:string?, template:table?) : df_dropdown
 ---@field CreateOutlineDropDown fun(self:table, parent:frame, func:function, default:any, width:number?, height:number?, member:string?, name:string?, template:table?) : df_dropdown
@@ -277,6 +279,7 @@ GameCooltipFrame2 = {}
 ---@field CreateSimpleFrame fun(self:table, parent:frame, width:number?, height:number?, title:string?, frameName:string?, panelOptions:table?, savedVariableTable:table?) : simplepanel
 ---@field CreateAnts fun(self:table, parent:frame, antTable:df_anttable, leftOffset:number?, rightOffset:number?, topOffset:number?, bottomOffset:number?) : frame
 ---@field CreateBorder fun(self:table, parent:frame, alpha1:number?, alpha2:number?, alpha3:number?) : frame
+---@field CreateProfilePanel fun(self:table, addonObject:table, frameName:string, parentFrame:frame, options:table?) : df_profilepanel
 ---@field CreateMenuWithGridScrollBox fun(self:table, parent:frame, name:string?, refreshMeFunc:function, refreshButtonFunc:function, clickFunc:function, onCreateButton:function, gridScrollBoxOptions:df_gridscrollbox_options) : df_gridscrollbox create a scrollbox with a grid layout to be used as a menu
 ---@field CreateSearchBox fun(self:table, parent:frame, callback:function) : df_searchbox
 ---@field CreateHeader fun(self:table, parent:frame, headerTable:df_headercolumndata[], options:table?, frameName:string?) : df_headerframe

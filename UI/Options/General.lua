@@ -1,42 +1,29 @@
-local _, NSI = ...
+local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local L = DF.Language.GetLanguageTable(addonId)
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local LDBIcon = Core.LDBIcon
 local build_media_options = Core.build_media_options
 
+local function BuildLanguageSelector(parent)
+    local onLanguageChangedCallback = function(languageId)
+        NSRT.Settings.Language = languageId
+        NSI:ApplySelectedLanguage(true)
+    end
+
+    local selector = DF.Language.CreateLanguageSelector(addonId, parent, onLanguageChangedCallback, NSI:GetSelectedLanguage())
+    selector:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -20, -12)
+    parent.NSRTLanguageSelector = selector
+    return selector
+end
+
 local function BuildGeneralOptions()
     local tts_text_preview = ""
 
     return {
         { type = "label", get = function() return L["General Options"] end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
-        {
-            type = "select",
-            name = L["Addon Language"],
-            desc = L["Choose the language used by the addon UI. You will have to reload your UI for all changes to take effect. Automatic will take your client language."],
-            get = function() return NSRT.Settings.Language or "Auto" end,
-            values = function()
-                local langs = {
-                    { label = L["Automatic"],      value = "Auto" },
-                    { label = L["English (enUS)"], value = "enUS" },
-                    { label = L["Korean (koKR)"],  value = "koKR" },
-                    { label = L["Russian (ruRU)"], value = "ruRU" },
-                    { label = L["Simplified Chinese (zhCN)"], value = "zhCN" },
-                    { label = L["Traditional Chinese (zhTW)"], value = "zhTW" },
-                }
-                for _, entry in ipairs(langs) do
-                    local v = entry.value
-                    entry.onclick = function()
-                        NSRT.Settings.Language = v
-                        NSI:ApplyLocaleOverride()
-                    end
-                end
-                return langs
-            end,
-            nocombat = true,
-        },
         {
             type = "toggle",
             boxfirst = true,
@@ -53,17 +40,13 @@ local function BuildGeneralOptions()
             name = L["Global Font"],
             desc = L["This changes the Font for everything that doesn't have a specific setting for that. Mainly useful for language compatibility."],
             get = function() return NSRT.Settings.GlobalFont end,
-            set = function(self, fixedparam, value)
-                NSRT.Settings.GlobalFont = value
-                NSI.UI.Components.RefreshFonts()
-            end,
             values = function() return build_media_options(false, false, false, false, false, true) end,
             nocombat = true,
         },
         {
             type = "range",
-            name = L["Global Font-Size"],
-            desc = L["Size of the global font"],
+            name = "Global Font-Size",
+            desc = "Size of the global font",
             get = function() return NSRT.Settings["GlobalFontSize"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["GlobalFontSize"] = value
@@ -90,7 +73,7 @@ local function BuildGeneralOptions()
             get = function() return NSRT.Settings.GlobalFontFlags end,
             set = function(self, fixedparam, value)
                 NSRT.Settings.GlobalFontFlags = value
-                NSI.UI.Components.RefreshFonts()
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
             end,
             values = function()
                 local flags = {
@@ -109,7 +92,8 @@ local function BuildGeneralOptions()
                         value = v,
                         onclick = function()
                             NSRT.Settings.GlobalFontFlags = v
-                            NSI.UI.Components.RefreshFonts()
+                            NSI:ApplySelectedLanguage()
+                            NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
                         end,
                     })
                 end
@@ -424,4 +408,6 @@ NSI.UI.Options = NSI.UI.Options or {}
 NSI.UI.Options.General = {
     BuildOptions = BuildGeneralOptions,
     BuildCallback = BuildGeneralCallback,
+    BuildLanguageSelector = BuildLanguageSelector,
+    GetSelectedLanguage = function() return NSI:GetSelectedLanguage() end,
 }

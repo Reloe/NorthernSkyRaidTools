@@ -1,6 +1,6 @@
-local _, NSI = ...
+local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local L = DF.Language.GetLanguageTable(addonId)
 local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
 
 local wa_popup

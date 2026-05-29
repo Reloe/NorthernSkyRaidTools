@@ -1,5 +1,10 @@
-local _, NSI = ...
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local addonId, NSI = ...
+local DF = _G["DetailsFramework"]
+local L = DF.Language.GetLanguageTable(addonId)
+
+local function T(key)
+    return DF.Language.GetText(addonId, key, true) or L[key] or key
+end
 
 -- ============================================================
 --  Per-anchor-type settings windows
@@ -19,7 +24,7 @@ local TYPE_MAP = {
 local function GrowValues(withLR)
     local dirs = withLR and {"Up","Down","Left","Right"} or {"Up","Down"}
     local t = {}
-    for _, v in ipairs(dirs) do t[#t+1] = {label=L[v], value=v} end
+    for _, v in ipairs(dirs) do t[#t+1] = {label=T(v), value=v} end
     return t
 end
 
@@ -45,11 +50,11 @@ end
 
 local function CircleTextPositionValues()
     return {
-        {label=L["Top"], value="Top"},
-        {label=L["Bottom"], value="Bottom"},
-        {label=L["Center"], value="Center"},
-        {label=L["Left"], value="Left"},
-        {label=L["Right"], value="Right"},
+        {label=T("Top"), value="Top"},
+        {label=T("Bottom"), value="Bottom"},
+        {label=T("Center"), value="Center"},
+        {label=T("Left"), value="Left"},
+        {label=T("Right"), value="Right"},
     }
 end
 
@@ -107,7 +112,7 @@ local function GetWidgetDefs(settingsName)
                 values=valsFn}
     end
     local function DDGrow(withLR)
-        return {Type="Dropdown", label=L["Grow Direction"],
+        return {Type="Dropdown", label=T("Grow Direction"),
                 get=function() return R("GrowDirection") end,
                 set=WGrow,
                 values=GrowValues(withLR)}
@@ -116,25 +121,25 @@ local function GetWidgetDefs(settingsName)
     if settingsName == "IconSettings" then
         return {
             DDGrow(true),
-            Slider(L["Width"],              "Width",         20,   200),
-            Slider(L["Height"],             "Height",        20,   200),
-            Slider(L["Spacing"],            "Spacing",       -5,   20),
-            Slider(L["Sticky Duration"],    "Sticky",        0,    30),
-            DD    (L["Font"],               "Font",          MediaValuesFn()),
-            Slider(L["Font Size"],          "FontSize",      5,    200),
-            Slider(L["Timer Font Size"],    "TimerFontSize", 5,    200),
-            Slider(L["Decimals Threshold"], "Decimals",      0,    10),
-            Slider(L["Glow Threshold"],     "Glow",          0,    30),
-            Slider(L["Zoom"],               "Zoom",          0,    100),
-            Slider(L["Text X Offset"],      "xTextOffset",   -500, 500),
-            Slider(L["Text Y Offset"],      "yTextOffset",   -500, 500),
-            Slider(L["Timer X"],            "xTimer",        -100, 100),
-            Slider(L["Timer Y"],            "yTimer",        -100, 100),
-            {Type="Color", label=L["Text Color"], get=GetColor, set=SetColor},
-            {Type="Color", label=L["Border Color"], get=GetBorderColor, set=SetBorderColor},
-            Chk   (L["Right-Aligned Text"], "RightAlignedText"),
-            Chk   (L["Hide Timer Text"],    "HideTimerText"),
-            Chk   (L["Hide Swipe"],         "HideSwipe"),
+            Slider(T("Width"),              "Width",         20,   200),
+            Slider(T("Height"),             "Height",        20,   200),
+            Slider(T("Spacing"),            "Spacing",       -5,   20),
+            Slider(T("Sticky Duration"),    "Sticky",        0,    30),
+            DD    (T("Font"),               "Font",          MediaValuesFn()),
+            Slider(T("Font Size"),          "FontSize",      5,    200),
+            Slider(T("Timer Font Size"),    "TimerFontSize", 5,    200),
+            Slider(T("Decimals Threshold"), "Decimals",      0,    10),
+            Slider(T("Glow Threshold"),     "Glow",          0,    30),
+            Slider(T("Zoom"),               "Zoom",          0,    100),
+            Slider(T("Text X Offset"),      "xTextOffset",   -500, 500),
+            Slider(T("Text Y Offset"),      "yTextOffset",   -500, 500),
+            Slider(T("Timer X"),            "xTimer",        -100, 100),
+            Slider(T("Timer Y"),            "yTimer",        -100, 100),
+            {Type="Color", label=T("Text Color"), get=GetColor, set=SetColor},
+            {Type="Color", label=T("Border Color"), get=GetBorderColor, set=SetBorderColor},
+            Chk   (T("Right-Aligned Text"), "RightAlignedText"),
+            Chk   (T("Hide Timer Text"),    "HideTimerText"),
+            Chk   (T("Hide Swipe"),         "HideSwipe"),
         }
 
     elseif settingsName == "BarSettings" then
@@ -151,39 +156,39 @@ local function GetWidgetDefs(settingsName)
         local function SetBarBackgroundColor(_, r, g, b, a) W("backgroundColors", {r, g, b, a}) end
         return {
             DDGrow(false),
-            Slider(L["Width"],              "Width",         80,   500),
-            Slider(L["Height"],             "Height",        10,   100),
-            Slider(L["Spacing"],            "Spacing",       -5,   20),
-            Slider(L["Sticky Duration"],    "Sticky",        0,    30),
-            DD    (L["Texture"],            "Texture",       MediaValuesFn(true)),
-            DD    (L["Font"],               "Font",          MediaValuesFn()),
-            Slider(L["Font Size"],          "FontSize",      5,    200),
-            Slider(L["Timer Font Size"],    "TimerFontSize", 5,    200),
-            Slider(L["Decimals Threshold"], "Decimals",      0,    10),
-            {Type="Color", label=L["Bar Fill Color"],  get=GetBarFillColor, set=SetBarFillColor},
-            {Type="Color", label=L["Bar Background Color"], get=GetBarBackgroundColor, set=SetBarBackgroundColor},
-            {Type="Color", label=L["Bar Text Color"],  get=GetColor,        set=SetColor},
-            {Type="Color", label=L["Border Color"], get=GetBorderColor, set=SetBorderColor},
-            Slider(L["Icon X Offset"],      "xIcon",         -100, 100),
-            Slider(L["Icon Y Offset"],      "yIcon",         -100, 100),
-            Slider(L["Text X Offset"],      "xTextOffset",   -500, 500),
-            Slider(L["Text Y Offset"],      "yTextOffset",   -500, 500),
-            Slider(L["Timer X"],            "xTimer",        -100, 100),
-            Slider(L["Timer Y"],            "yTimer",        -100, 100),
-            Chk   (L["Hide Timer Text"],    "HideTimerText"),
+            Slider(T("Width"),              "Width",         80,   500),
+            Slider(T("Height"),             "Height",        10,   100),
+            Slider(T("Spacing"),            "Spacing",       -5,   20),
+            Slider(T("Sticky Duration"),    "Sticky",        0,    30),
+            DD    (T("Texture"),            "Texture",       MediaValuesFn(true)),
+            DD    (T("Font"),               "Font",          MediaValuesFn()),
+            Slider(T("Font Size"),          "FontSize",      5,    200),
+            Slider(T("Timer Font Size"),    "TimerFontSize", 5,    200),
+            Slider(T("Decimals Threshold"), "Decimals",      0,    10),
+            {Type="Color", label=T("Bar Fill Color"),  get=GetBarFillColor, set=SetBarFillColor},
+            {Type="Color", label=T("Bar Background Color"), get=GetBarBackgroundColor, set=SetBarBackgroundColor},
+            {Type="Color", label=T("Bar Text Color"),  get=GetColor,        set=SetColor},
+            {Type="Color", label=T("Border Color"), get=GetBorderColor, set=SetBorderColor},
+            Slider(T("Icon X Offset"),      "xIcon",         -100, 100),
+            Slider(T("Icon Y Offset"),      "yIcon",         -100, 100),
+            Slider(T("Text X Offset"),      "xTextOffset",   -500, 500),
+            Slider(T("Text Y Offset"),      "yTextOffset",   -500, 500),
+            Slider(T("Timer X"),            "xTimer",        -100, 100),
+            Slider(T("Timer Y"),            "yTimer",        -100, 100),
+            Chk   (T("Hide Timer Text"),    "HideTimerText"),
         }
 
     elseif settingsName == "TextSettings" then
         return {
             DDGrow(false),
-            DD    (L["Font"],               "Font",          MediaValuesFn()),
-            Slider(L["Font Size"],          "FontSize",      5,  200),
-            Slider(L["Decimals Threshold"], "Decimals",      0,    10),
-            {Type="Color", label=L["Text Color"], get=GetColor, set=SetColor},
-            Slider(L["Spacing"],            "Spacing",       -5, 20),
-            Slider(L["Sticky Duration"],    "Sticky",        0,  30),
-            Chk   (L["Center Aligned"],     "CenterAligned"),
-            Chk   (L["Hide Timer Text"],    "HideTimerText"),
+            DD    (T("Font"),               "Font",          MediaValuesFn()),
+            Slider(T("Font Size"),          "FontSize",      5,  200),
+            Slider(T("Decimals Threshold"), "Decimals",      0,    10),
+            {Type="Color", label=T("Text Color"), get=GetColor, set=SetColor},
+            Slider(T("Spacing"),            "Spacing",       -5, 20),
+            Slider(T("Sticky Duration"),    "Sticky",        0,  30),
+            Chk   (T("Center Aligned"),     "CenterAligned"),
+            Chk   (T("Hide Timer Text"),    "HideTimerText"),
         }
 
     elseif settingsName == "CircleSettings" then
@@ -195,20 +200,20 @@ local function GetWidgetDefs(settingsName)
         local function SetRingColor(_, r, g, b, a) W("ringColors", {r, g, b, a}) end
         return {
             DDGrow(true),
-            Slider(L["Size"],               "Size",          40,  200),
-            Slider(L["Spacing"],            "Spacing",       -50, 100),
-            DD    (L["Texture"],            "Texture",       CircleTextureValues),
-            DD    (L["Font"],               "Font",          MediaValuesFn()),
-            Slider(L["Font Size"],          "FontSize",      5,   80),
-            DD    (L["Text Position"],       "TextPosition",  CircleTextPositionValues),
-            Slider(L["Text X Offset"],      "xTextOffset",   -500, 500),
-            Slider(L["Text Y Offset"],      "yTextOffset",   -500, 500),
-            Slider(L["Decimals Threshold"], "Decimals",      0,    10),
-            Slider(L["Sticky Duration"],    "Sticky",        0,   30),
-            {Type="Color", label=L["Text Color"],  get=GetColor,     set=SetColor},
-            {Type="Color", label=L["Ring Color"],  get=GetRingColor, set=SetRingColor},
-            Chk   (L["Show Background Ring"], "showBackground"),
-            Chk   (L["Hide Timer Text"],    "HideTimerText"),
+            Slider(T("Size"),               "Size",          40,  200),
+            Slider(T("Spacing"),            "Spacing",       -50, 100),
+            DD    (T("Texture"),            "Texture",       CircleTextureValues),
+            DD    (T("Font"),               "Font",          MediaValuesFn()),
+            Slider(T("Font Size"),          "FontSize",      5,   80),
+            DD    (T("Text Position"),       "TextPosition",  CircleTextPositionValues),
+            Slider(T("Text X Offset"),      "xTextOffset",   -500, 500),
+            Slider(T("Text Y Offset"),      "yTextOffset",   -500, 500),
+            Slider(T("Decimals Threshold"), "Decimals",      0,    10),
+            Slider(T("Sticky Duration"),    "Sticky",        0,   30),
+            {Type="Color", label=T("Text Color"),  get=GetColor,     set=SetColor},
+            {Type="Color", label=T("Ring Color"),  get=GetRingColor, set=SetRingColor},
+            Chk   (T("Show Background Ring"), "showBackground"),
+            Chk   (T("Hide Timer Text"),    "HideTimerText"),
         }
     end
 
@@ -222,6 +227,7 @@ local DRAG_BORDER_INSET = 8
 local MIN_WIN_W         = 220
 local PAD_X             = 8
 local PAD_TOP           = 26   -- room for title + close button
+local anchorSettingsWindows = {}
 
 local function PositionSettingsWindow(win, moverFrame, settingsName)
     local gd = NSRT.ReminderSettings[settingsName]
@@ -238,6 +244,35 @@ local function GetAnchorWindowWidth(moverFrame)
     return math.max(MIN_WIN_W, moverFrame:GetWidth() + DRAG_BORDER_INSET * 2)
 end
 
+local function RebuildWindowContent(win, settingsName, rowW)
+    if win.Content then
+        win.Content:Hide()
+        win.Content:SetParent(nil)
+    end
+
+    if win.Title then
+        win.Title:SetText(T(settingsName:gsub("Settings", " Settings")))
+    end
+
+    local content = CreateFrame("Frame", nil, win)
+    content:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
+    content:SetWidth(rowW)
+
+    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), rowW)
+    content:SetHeight(contentH)
+    win:SetHeight(PAD_TOP + contentH + 8)
+    win.Content = content
+    win.LanguageId = NSI:GetSelectedLanguage()
+end
+
+function NSI:RefreshAnchorSettingsWindows()
+    for win in pairs(anchorSettingsWindows) do
+        if win and win.SettingsName and win.RowWidth then
+            RebuildWindowContent(win, win.SettingsName, win.RowWidth)
+        end
+    end
+end
+
 -- ---------------------------------------------------------------
 --  Creates (or shows/hides) the settings popup for a mover frame
 -- ---------------------------------------------------------------
@@ -248,6 +283,10 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
         else
             local win = moverFrame.SettingsWindow
             win:SetWidth(GetAnchorWindowWidth(moverFrame))
+            win.RowWidth = win:GetWidth() - PAD_X * 2
+            if win.LanguageId ~= NSI:GetSelectedLanguage() then
+                RebuildWindowContent(win, settingsName, win.RowWidth)
+            end
             PositionSettingsWindow(win, moverFrame, settingsName)
             win:Show()
         end
@@ -271,10 +310,11 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
 
     -- Title
     local title = win:CreateFontString(nil, "OVERLAY")
-    title:SetFont("Fonts\\FRIZQT__.TTF", 11, "")
+    NSI:SetUIFont(title, 11, "")
     title:SetTextColor(0, 1, 1, 0.85)
-    title:SetText(L[settingsName:gsub("Settings", " Settings")])
+    title:SetText(T(settingsName:gsub("Settings", " Settings")))
     title:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -7)
+    win.Title = title
 
     -- Close button
     local closeBtn = CreateFrame("Button", nil, win)
@@ -287,14 +327,10 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     closeBtn:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(0.7, 0.7, 0.7) end)
     closeBtn:SetScript("OnClick", function() win:Hide() end)
 
-    -- Content frame: shifted past the title so BuildWidgets starts from (0,0)
-    local content = CreateFrame("Frame", nil, win)
-    content:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
-    content:SetWidth(rowW)
-
-    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), rowW)
-    content:SetHeight(contentH)
-    win:SetHeight(PAD_TOP + contentH + 8)
+    win.SettingsName = settingsName
+    win.RowWidth = rowW
+    anchorSettingsWindows[win] = true
+    RebuildWindowContent(win, settingsName, rowW)
 
     PositionSettingsWindow(win, moverFrame, settingsName)
     win:Show()

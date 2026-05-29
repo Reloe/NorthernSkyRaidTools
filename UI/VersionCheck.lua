@@ -172,21 +172,21 @@ local function BuildVersionCheckUI(parent)
         local name = line:CreateFontString(nil, "OVERLAY")
         name:SetWidth(100)
         name:SetJustifyH("LEFT")
-        name:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "OUTLINE")
+        NSI:SetUIFont(name, 12, "OUTLINE")
         name:SetPoint("LEFT", line, "LEFT", 5, 0)
         line.name = name
 
         local version = line:CreateFontString(nil, "OVERLAY")
         version:SetWidth(100)
         version:SetJustifyH("LEFT")
-        version:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "OUTLINE")
+        NSI:SetUIFont(version, 12, "OUTLINE")
         version:SetPoint("LEFT", name, "RIGHT", 115, 0)
         line.version = version
 
         local ignorelist = line:CreateFontString(nil, "OVERLAY")
         ignorelist:SetWidth(100)
         ignorelist:SetJustifyH("LEFT")
-        ignorelist:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "OUTLINE")
+        NSI:SetUIFont(ignorelist, 12, "OUTLINE")
         ignorelist:SetPoint("LEFT", version, "RIGHT", 50, 0)
         line.ignorelist = ignorelist
 

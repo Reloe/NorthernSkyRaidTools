@@ -1,6 +1,6 @@
-local _, NSI = ...
+local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local L = DF.Language.GetLanguageTable(addonId)
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -26,7 +26,7 @@ local function BuildExportStringUI()
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
 
     popup.export_confirm_button = DF:CreateButton(popup, function()
         popup:Hide()
@@ -63,7 +63,7 @@ local function BuildImportStringUI()
     popup.test_string_text_box:SetScript("OnMouseDown", function(self)
         self:SetFocus()
     end)
-    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local importString = popup.test_string_text_box:GetText()

@@ -1,5 +1,6 @@
-local _, NSI = ...
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local addonId, NSI = ...
+local DF = _G["DetailsFramework"]
+local L = DF.Language.GetLanguageTable(addonId)
 -- ============================================================================
 -- BossData
 -- Shared boss icon and dropdown helpers used by multiple UI modules so that

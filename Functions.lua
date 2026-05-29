@@ -277,56 +277,6 @@ local Compress = LibStub("LibDeflate")
 -- Snapshot of the original locale strings before any override is applied.
 local _localeSnapshot = nil
 
--- Applies a user-selected language override by mutating the AceLocale table in-place.
--- Must be called after NSRT is loaded (ADDON_LOADED). The UI reads L lazily so
--- all strings will reflect the override the next time the options panel is opened.
-function NSI:ApplyLocaleOverride()
-    local lang = NSRT and NSRT.Settings and NSRT.Settings.Language
-    local aceL = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
-
-    -- Build a snapshot of the original (client) locale the first time we run.
-    if not _localeSnapshot then
-        _localeSnapshot = {}
-        for _, rawTable in pairs(NSI.RawLocales or {}) do
-            for k in pairs(rawTable) do
-                if _localeSnapshot[k] == nil then
-                    local v = rawget(aceL, k)
-                    _localeSnapshot[k] = (v == nil or v == true) and k or v
-                end
-            end
-        end
-    end
-
-    if not lang or lang == "Auto" then
-        -- Restore the original client locale strings.
-        for k, v in pairs(_localeSnapshot) do
-            rawset(aceL, k, v)
-        end
-        return
-    end
-
-    if lang == "enUS" then
-        -- Reset all known translated keys back to their English form (key == value in AceLocale)
-        for _, rawTable in pairs(NSI.RawLocales or {}) do
-            for k in pairs(rawTable) do
-                rawset(aceL, k, k)
-            end
-        end
-    else
-        local rawTable = NSI.RawLocales and NSI.RawLocales[lang]
-        if rawTable then
-            for k, v in pairs(rawTable) do
-                rawset(aceL, k, v)
-            end
-        end
-    end
-    -- Refresh sidebar and header button labels to reflect the new locale
-    local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
-    if menu and menu.RefreshTabLabels then
-        menu:RefreshTabLabels()
-    end
-end
-
 function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettings", ...}
     local str = ""
     local ExportTable = {}

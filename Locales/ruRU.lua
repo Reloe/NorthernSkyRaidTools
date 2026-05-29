@@ -1,9 +1,7 @@
 local _, NSI = ...
-NSI.RawLocales = NSI.RawLocales or {}
-local _raw = {}
-NSI.RawLocales["ruRU"] = _raw
-local _ace = LibStub("AceLocale-3.0"):NewLocale("NorthernSkyRaidTools", "ruRU")
-local L = setmetatable({}, { __newindex = function(_, k, v) _raw[k] = v; if _ace then _ace[k] = v end end })
+local addonId = ...
+local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "ruRU")
+local L = languageTable
 
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
@@ -80,10 +78,6 @@ L["(No Enc)"] = "(Нет сражения)"
 L["Addon Language"] = "Язык аддона"
 L["Choose the language used by the addon UI. You will have to reload your UI for all changes to take effect. Automatic will take your client language."] = "Выберите язык, используемый в интерфейсе аддона. Для вступления изменений в силу потребуется перезагрузить интерфейс. В режиме 'Автоматически' будет использоваться язык Вашего клиента."
 L["Automatic"] = "Автоматически"
-L["English (enUS)"] = "Английский"
-L["Korean (koKR)"] = "Корейский"
-L["Russian (ruRU)"] = "Русский"
-L["Traditional Chinese (zhTW)"] = "Традиционный китайский"
 L["General Options"] = "Общие настройки"
 L["Disable Minimap Button"] = "Отключить кнопку на миникарте"
 L["Hide the minimap button."] = "Скрыть кнопку на миникарте."

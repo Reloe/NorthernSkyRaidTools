@@ -46,7 +46,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self:GetProfileKey() then
                 self.LoadedProfile = true
                 self:LoadMyProfile()
-                self:ApplyLocaleOverride()
                 self:CreateMoveFrames()
             end
         end
@@ -54,7 +53,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not self.LoadedProfile then
             self.LoadedProfile = true
             self:LoadMyProfile()
-            self:ApplyLocaleOverride()
             self:CreateMoveFrames()
         end
         self.NSUI:Init()

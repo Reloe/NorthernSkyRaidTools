@@ -1,6 +1,6 @@
-local _, NSI = ...
+local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = LibStub("AceLocale-3.0"):GetLocale("NorthernSkyRaidTools")
+local L = DF.Language.GetLanguageTable(addonId)
 
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -23,7 +23,7 @@ function NSI:SpawnPreviewReminders()
     self.GlowStarted = {}
     self.LGF.GetUnitFrame("player")
     local info1 = {
-        text = "Personals",
+        text = L["Personals"],
         DisplayType = "Text",
         dur = 8,
         spellID = 22812,
@@ -31,14 +31,14 @@ function NSI:SpawnPreviewReminders()
         countdown = false,
     }
     local info2 = {
-        text = "Stack on |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
+        text = L["Stack on"].. " |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
         DisplayType = "Text",
         dur = 8,
         TTS = false,
         countdown = false,
     }
     local info3 = {
-        text = "Give Ironbark",
+        text = L["Give Ironbark"],
         DisplayType = "Icon",
         dur = 8,
         spellID = 102342,
@@ -56,20 +56,20 @@ function NSI:SpawnPreviewReminders()
         countdown = false,
     }
     local info5 = {
-        text = "Breath",
+        text = L["Breath"],
         DisplayType = "Bar",
         dur = 8,
         spellID = 1256855,
         TTS = false,
     }
     local info6 = {
-        text = "Dodge",
+        text = L["Dodge"],
         DisplayType = "Bar",
         dur = 8,
         TTS = false,
     }
     local info7 = {
-        text = "Dispel",
+        text = L["Dispel"],
         DisplayType = "Circle",
         dur = 8,
         spellID = 528,
@@ -191,7 +191,7 @@ local function ImportReminderString(name, IsUpdate)
             self:SetFocus()
         end)
     end
-    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
     popup.test_string_text_box:SetText(name and NSRT.Reminders[name] or "")
     popup.test_string_text_box:SetFocus()
     local importtext = IsUpdate and "Update" or "Import"
@@ -259,7 +259,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
             self:SetFocus()
         end)
     end
-    popup.test_string_text_box.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 13, "OUTLINE")
+    NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
     popup.test_string_text_box:SetText(name and NSRT.PersonalReminders[name] or "")
     popup.test_string_text_box:SetFocus()
     local importtext = IsUpdate and L["Update"] or L["Import"]
@@ -346,7 +346,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
     -- Title
     local title = screen:CreateFontString(nil, "OVERLAY")
-    title:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 16, "OUTLINE")
+    NSI:SetUIFont(title, 16, "OUTLINE")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
     title:SetText(titleText)
 
@@ -552,7 +552,7 @@ local function BuildReminderScreen(personal, parentFrame)
     local nameEntry = DF:CreateTextEntry(screen, function() end, nameEntryW, 22, nil, screenName .. "NameEntry", nil,
         options_dropdown_template)
     nameEntry:SetPoint("TOPLEFT", diffDropdown.widget, "TOPRIGHT", metaGap, 0)
-    nameEntry.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 14, "OUTLINE")
+    NSI:SetUIFont(nameEntry.editbox, 14, "OUTLINE")
     screen.nameEntry = nameEntry
 
     local function SaveNameEntryRename(editBox)
@@ -644,7 +644,7 @@ local function BuildReminderScreen(personal, parentFrame)
     screen.editor = editor
 
     local function UpdateEditorFont()
-        editor.editbox:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 14, "OUTLINE")
+        NSI:SetUIFont(editor.editbox, 14, "OUTLINE")
     end
 
     -- ====================================================================
@@ -823,7 +823,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
         -- "Received X ago" label – bottom-right of editor, visible only while viewing received note
         local recvTimeLabel = screen:CreateFontString(nil, "OVERLAY")
-        recvTimeLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 11, "")
+        NSI:SetUIFont(recvTimeLabel, 11, "")
         recvTimeLabel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -25, 14)
         recvTimeLabel:SetTextColor(0.55, 0.55, 0.55, 1)
         recvTimeLabel:Hide()
@@ -1108,7 +1108,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
         -- Name label (click line to select)
         line.nameLabel = line:CreateFontString(nil, "OVERLAY")
-        line.nameLabel:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 14, "")
+        NSI:SetUIFont(line.nameLabel, 14, "")
         line.nameLabel:SetPoint("LEFT", line, "LEFT", 4, 0)
         line.nameLabel:SetPoint("RIGHT", line, "RIGHT", -38, 0)
         line.nameLabel:SetJustifyH("LEFT")

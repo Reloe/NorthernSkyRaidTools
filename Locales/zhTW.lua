@@ -1,9 +1,6 @@
-local _, NSI = ...
-NSI.RawLocales = NSI.RawLocales or {}
-local _raw = {}
-NSI.RawLocales["zhTW"] = _raw
-local _ace = LibStub("AceLocale-3.0"):NewLocale("NorthernSkyRaidTools", "zhTW")
-local L = setmetatable({}, { __newindex = function(_, k, v) _raw[k] = v; if _ace then _ace[k] = v end end })
+local addonId = ...
+local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "zhTW")
+local L = languageTable
 
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
@@ -87,10 +84,6 @@ L["%s (%d notes)"] = "%s（%d 筆記）"
 L["Addon Language"] = "插件語言"
 L["Choose the language used by the addon UI. You will have to reload your UI for all changes to take effect. Automatic will take your client language."] = "選擇插件介面使用的語言。變更生效需要重新載入介面。自動模式會使用你的客戶端語言。"
 L["Automatic"] = "自動"
-L["English (enUS)"] = "英文"
-L["Korean (koKR)"] = "韓文"
-L["Russian (ruRU)"] = "俄文"
-L["Traditional Chinese (zhTW)"] = "繁體中文"
 L["General Options"] = "一般選項"
 L["Disable Minimap Button"] = "關閉小地圖按鈕"
 L["Hide the minimap button."] = "隱藏小地圖按鈕。"

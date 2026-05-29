@@ -1,10 +1,7 @@
 -- Credit by Elarfim
-local _, NSI = ...
-NSI.RawLocales = NSI.RawLocales or {}
-local _raw = {}
-NSI.RawLocales["koKR"] = _raw
-local _ace = LibStub("AceLocale-3.0"):NewLocale("NorthernSkyRaidTools", "koKR")
-local L = setmetatable({}, { __newindex = function(_, k, v) _raw[k] = v; if _ace then _ace[k] = v end end })
+local addonId = ...
+local languageTable = DetailsFramework.Language.RegisterLanguage(addonId, "koKR")
+local L = languageTable
 
 -- ============================================================================
 -- NSUI.lua — Tab names & misc
@@ -81,11 +78,6 @@ L["(No Enc)"] = "(보스전 없음)"
 L["Addon Language"] = "애드온 언어"
 L["Choose the language used by the addon UI. You will have to reload your UI for all changes to take effect. Automatic will take your client language."] = "애드온 UI에서 사용할 언어를 선택하세요. 변경한 사항이 적용되려면 UI 리로드를 해야하며, 자동 옵션은 클라이언트에서 사용하는 언어를 자동으로 감지합니다."
 L["Automatic"] = "자동"
-L["English (enUS)"] = "영어 (enUS)"
-L["Korean (koKR)"] = "한국어 (koKR)"
-L["Russian (ruRU)"] = "러시아어 (ruRU)"
-L["Simplified Chinese (zhCN)"] = "중국어 간체 (zhCN)"
-L["Traditional Chinese (zhTW)"] = "중국어 정체 (zhTW)"
 L["General Options"] = "일반 옵션"
 L["Disable Minimap Button"] = "미니맵 버튼 비활성화"
 L["Hide the minimap button."] = "미니맵 버튼을 숨깁니다."

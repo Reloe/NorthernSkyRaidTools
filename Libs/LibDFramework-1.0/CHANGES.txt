@@ -1,34 +1,20 @@
-tag 2aa79a916979aac48f84a72f443cea00cdd7978a v12.0.5.730
-Author:	Tercio Jose <terciob19@hotmail.com>
-Date:	Sun May 10 22:28:46 2026 -0300
+Changes since tag v12.0.5.730
 
-commit bc694f4624be6a30e3d543fa46428a1aac33642d
+commit 88d5bde12e3d4c81049fec6fe92206bff356b05b
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sun May 10 22:28:31 2026 -0300
+Date:   Wed May 20 19:08:02 2026 -0300
 
-    Editor updates
+    Update the profile management frame.
 
-commit 3823f4800191e8a38de1a30006695d36588223ec
-Author: cont1nuity <continuity@gmx.net>
-Date:   Fri May 8 21:28:41 2026 +0200
-
-    - base compat 5.5.4
-
-commit 390ac427f27d1a32a6e5bf6aa8a13af27e7775ce
+commit 263cd27c1c7d2955b6bae0c0a944d22df3e3106f
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed May 6 19:29:32 2026 -0300
+Date:   Sat May 16 13:07:34 2026 -0300
 
-    Fix demon hunter
+    Add snap system.
 
-commit fb3a0746990b0f3112b2a59237b4dc377935e483
+commit 59b3335b2813d1642dd2553ae46f3060d15b36b3
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed May 6 17:56:41 2026 -0300
+Date:   Thu May 14 00:50:17 2026 -0300
 
-    Allow scrollboxes to  accept key arrows to select options.
-
-commit a1038a780f816deb6bce5d161f578ff4a86b8c93
-Author: Lynn <kjarli@gmail.com>
-Date:   Sun May 3 00:58:50 2026 +0200
-
-    Set Devourer where needed (#27)
+    General fixes and documentation
 

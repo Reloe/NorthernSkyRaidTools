@@ -1,4 +1,4 @@
-local _, NSI = ...
+local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
 local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
@@ -27,6 +27,88 @@ local options_switch_template = DF:GetTemplate("switch", "OPTIONS_CHECKBOX_TEMPL
 local options_slider_template = DF:GetTemplate("slider", "OPTIONS_SLIDER_TEMPLATE")
 local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
 
+local supportedLanguages = {
+    enUS = true,
+    koKR = true,
+    ruRU = true,
+    zhCN = true,
+    zhTW = true,
+}
+
+function NSI:GetSelectedLanguage()
+    local languageId = NSRT and NSRT.Settings and NSRT.Settings.Language
+    if not languageId or languageId == "Auto" then
+        languageId = GetLocale()
+    end
+    if languageId == "enGB" then
+        languageId = "enUS"
+    end
+    if not supportedLanguages[languageId] then
+        languageId = "enUS"
+    end
+    return languageId
+end
+
+function NSI:GetUIFontPath(menuButton)
+    local languageId = self:GetSelectedLanguage()
+    local fontPath
+    if languageId == "enUS" then
+        fontPath = NSRT.Settings.GlobalFont
+    elseif languageId and DF.Language.GetFontForLanguageID then
+        fontPath = DF.Language.GetFontForLanguageID(languageId, addonId)
+    else
+        fontPath = DF:GetBestFontForLanguage()
+    end
+
+    if self.LSM then
+        local lsmFont = self.LSM:Fetch("font", fontPath, true)
+        if lsmFont then
+            return lsmFont
+        end
+    end
+    return fontPath
+end
+
+function NSI:GetUIFontFlags()
+    return ""
+end
+
+NSI.UIFontRegistry = NSI.UIFontRegistry or {}
+
+function NSI:SetUIFont(object, size, flags)
+    if not object or not object.SetFont then return end
+    flags = flags or self:GetUIFontFlags()
+    object:SetFont(self:GetUIFontPath(true), size, flags)
+    self.UIFontRegistry[object] = {size = size, flags = flags}
+end
+
+function NSI:RefreshUIFonts()
+    for object, info in pairs(self.UIFontRegistry) do
+        if object and object.SetFont then
+            object:SetFont(self:GetUIFontPath(true), info.size, info.flags or self:GetUIFontFlags())
+        else
+            self.UIFontRegistry[object] = nil
+        end
+    end
+end
+
+function NSI:ApplySelectedLanguage(skip)
+    local languageId = self:GetSelectedLanguage()
+    if not skip then DF.Language.SetCurrentLanguage(addonId, languageId) end
+
+    if self.UI and self.UI.Components and self.UI.Components.RefreshFonts then
+        self.UI.Components.RefreshFonts()
+    end
+    self:RefreshUIFonts()
+    if self.RefreshAnchorSettingsWindows then
+        self:RefreshAnchorSettingsWindows()
+    end
+    local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
+    if menu and menu.RefreshTabLabels then
+        menu:RefreshTabLabels()
+    end
+end
+
 -- Create main panel
 local NSUI_panel_options = {
     UseStatusBar = true
@@ -36,7 +118,7 @@ local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")
 NSUI:SetFrameLevel(1)
-DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, _, "x |cFF00FFFFbird|r")
+DF:BuildStatusbarAuthorInfo(NSUI.StatusBar, addonId, "x |cFF00FFFFbird|r")
 NSUI.StatusBar.discordTextEntry:SetText("https://discord.gg/3B6QHURmBy")
 
 -- Title bar icons
@@ -77,7 +159,9 @@ local function build_media_options(typename, settingname, isTexture, isReminder,
             onclick = function(_, _, value)
                 if GlobalFont then
                     NSRT.Settings.GlobalFont = list[value]
-                    NSI.UI.Components.RefreshFonts()
+                    NSI:ApplySelectedLanguage()
+                    NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
+                    NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
                     return
                 end
                 NSRT.ReminderSettings[typename][settingname] = list[value]
