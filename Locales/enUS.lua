@@ -581,6 +581,7 @@ L["Are you sure you want to delete this alert?"] = true
 -- Right panel header
 L["Alert Name"] = true
 L["Group"] = true
+L["Condition"] = true
 L["— No Group —"] = true
 -- Inner tabs
 L["Display"] = true

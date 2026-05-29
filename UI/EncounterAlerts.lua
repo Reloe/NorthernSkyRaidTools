@@ -193,7 +193,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- forward declarations
     local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupDD
-    local copySectionBtn, applySectionBtn
+    local copySectionBtn, applySectionBtn, previewBtn, tabSep, conditionHint
     local RebuildList, CanCopySection, ApplyCopiedSectionTo, SECTION_COPY_FIELDS, CopyValue
 
     -- ================================================================
@@ -1336,6 +1336,15 @@ local function BuildEncounterAlertsUI(parentFrame)
         function() return false end, nil, 90, 22, "NSUIEncAlertEnabled")
     enabledCB:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
 
+    conditionHint = rightPanel:CreateFontString(nil, "OVERLAY")
+    conditionHint:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), 12, "")
+    conditionHint:SetTextColor(0.9, 0.75, 0.2, 1)
+    conditionHint:SetJustifyH("LEFT")
+    conditionHint:SetJustifyV("TOP")
+    conditionHint:SetWidth(rightW)
+    conditionHint:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -40)
+    conditionHint:Hide()
+
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local INNER_TABS     = { "Display", "Trigger", "Sound", "Load", "Options" }
     local innerTabBtns   = {}
@@ -1359,6 +1368,54 @@ local function BuildEncounterAlertsUI(parentFrame)
     local tabBtnW   = 84
     local tabBtnGap = 3
     local tabRowY   = -42
+    local contentY  = tabRowY - 26
+
+    local function PositionInnerTabLayout(conditionText)
+        local hasCondition = type(conditionText) == "string" and conditionText ~= ""
+
+        if hasCondition then
+            conditionHint:SetText("|cFFFFD100" .. L["Condition"] .. ":|r " .. conditionText)
+            conditionHint:Show()
+            local hintHeight = math.max(conditionHint:GetStringHeight() or 16, 16)
+            conditionHint:SetHeight(hintHeight)
+            tabRowY = -(42 + hintHeight + 10)
+        else
+            conditionHint:SetText("")
+            conditionHint:Hide()
+            tabRowY = -42
+        end
+        contentY = tabRowY - 26
+
+        for i, tabName in ipairs(INNER_TABS) do
+            local btn = innerTabBtns[tabName]
+            if btn then
+                btn.frame:ClearAllPoints()
+                btn:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", (i - 1) * (tabBtnW + tabBtnGap), tabRowY)
+            end
+        end
+        if copySectionBtn then
+            copySectionBtn.frame:ClearAllPoints()
+            copySectionBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -202, tabRowY)
+        end
+        if applySectionBtn and copySectionBtn then
+            applySectionBtn.frame:ClearAllPoints()
+            applySectionBtn:SetPoint("LEFT", copySectionBtn.frame, "RIGHT", 4, 0)
+        end
+        if previewBtn then
+            previewBtn.frame:ClearAllPoints()
+            previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY)
+        end
+        if tabSep then
+            tabSep:ClearAllPoints()
+            tabSep:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  0, tabRowY - 20)
+            tabSep:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY - 20)
+        end
+        for _, f in pairs(innerTabFrames) do
+            f:ClearAllPoints()
+            f:SetPoint("TOPLEFT",     rightPanel, "TOPLEFT",     0, contentY)
+            f:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", 0, 0)
+        end
+    end
 
     CopyValue = function(v)
         return type(v) == "table" and CopyTable(v) or v
@@ -1512,18 +1569,16 @@ local function BuildEncounterAlertsUI(parentFrame)
     applySectionBtn.frame:Hide()
 
     -- ── Preview button — right-aligned on the tab row ────────────────────────
-    local previewBtn = CreateButton(rightPanel, L["Preview"], function() PreviewAlert() end, 80, 18,
+    previewBtn = CreateButton(rightPanel, L["Preview"], function() PreviewAlert() end, 80, 18,
         "NSUIEncAlertPreview")
     previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY)
 
     -- Separator below tabs
-    local tabSep = rightPanel:CreateTexture(nil, "ARTWORK")
+    tabSep = rightPanel:CreateTexture(nil, "ARTWORK")
     tabSep:SetColorTexture(0, 1, 1, 0.20)
     tabSep:SetHeight(1)
     tabSep:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  0, tabRowY - 20)
     tabSep:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY - 20)
-
-    local contentY = tabRowY - 26   -- -68
 
     for _, tabName in ipairs(INNER_TABS) do
         local f = CreateFrame("Frame", nil, rightPanel)
@@ -2985,6 +3040,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local isReloe = entry.ReloeReminder == true
         rightPanel:Show()
         if isReloe then SetReloeCreatedMode() else SetCustomMode() end
+        PositionInnerTabLayout(type(entry.isConditional) == "string" and entry.isConditional or nil)
 
         dispF._alert = entry; dispF._hardcodedEncID = nil
         trigF._alert = isReloe and nil or entry; trigF._hardcodedEncID = nil
