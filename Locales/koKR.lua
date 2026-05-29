@@ -84,6 +84,7 @@ L["Automatic"] = "자동"
 L["English (enUS)"] = "영어 (enUS)"
 L["Korean (koKR)"] = "한국어 (koKR)"
 L["Russian (ruRU)"] = "러시아어 (ruRU)"
+L["Simplified Chinese (zhCN)"] = "중국어 간체 (zhCN)"
 L["Traditional Chinese (zhTW)"] = "중국어 정체 (zhTW)"
 L["General Options"] = "일반 옵션"
 L["Disable Minimap Button"] = "미니맵 버튼 비활성화"
@@ -582,6 +583,7 @@ L["Are you sure you want to delete this alert?"] = "이 경고를 삭제할까�
 -- Right panel header
 L["Alert Name"] = "경고 이름"
 L["Group"] = "그룹"
+L["Condition"] = "조건"
 L["— No Group —"] = "— 그룹 없음 —"
 -- Inner tabs
 L["Display"] = "표시"
