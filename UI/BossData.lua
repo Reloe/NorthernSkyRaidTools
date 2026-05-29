@@ -1,6 +1,4 @@
 local addonId, NSI = ...
-local DF = _G["DetailsFramework"]
-local L = DF.Language.GetLanguageTable(addonId)
 -- ============================================================================
 -- BossData
 -- Shared boss icon and dropdown helpers used by multiple UI modules so that
@@ -34,7 +32,7 @@ local function BuildBossDropdownOptions(onSelect, noBossLabel)
 
     if noBossLabel ~= false then
         table.insert(options, {
-            label   = noBossLabel or "No Boss",
+            label   = noBossLabel or NSI:Loc("No Boss"),
             value   = 0,
             onclick = function(_, _, _)
                 if onSelect then onSelect(0) end
@@ -51,7 +49,7 @@ local function BuildBossDropdownOptions(onSelect, noBossLabel)
     for _, entry in ipairs(sorted) do
         local encID = entry.encID
         table.insert(options, {
-            label    = L[NSI.BossTimelineNames[encID]] or ("Encounter " .. encID),
+            label    = NSI:Loc(NSI.BossTimelineNames[encID] or ("Encounter " .. encID)),
             value    = encID,
             icon     = BossIcons[encID],
             iconsize = { 16, 16 },

@@ -333,6 +333,11 @@ local processLabelIcon = function(label, widgetTable, languageTable, textTemplat
         local fileSize = widgetTable.iconfilesize or {64, 64}
         local font, height, flags = label:GetFont()
         local iconSize = widgetTable.iconsize or {height, height}
+        local labelWidget = label.widget or label
+        labelWidget.__languageIconTexture = widgetTable.icontexture
+        labelWidget.__languageIconCoords = tc
+        labelWidget.__languageIconFileSize = fileSize
+        labelWidget.__languageIconSize = iconSize
 
         local bAddSpace = true
         local bAddAfterText = false

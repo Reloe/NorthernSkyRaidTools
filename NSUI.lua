@@ -1,9 +1,8 @@
 local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = DF.Language.GetLanguageTable(addonId)
 
 local function GetLocalizedText(key)
-    return DF.Language.GetText(addonId, key, true) or L[key] or key
+    return NSI:Loc(key)
 end
 
 -- Get references from Core module

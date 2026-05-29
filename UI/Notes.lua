@@ -12,6 +12,10 @@ local PAD     = 8    -- inner padding
 local ROW_H   = 24   -- height of each note-list row
 local ROW_GAP = 1
 
+local function SetLocalizedText(object, key)
+    NSI.UI.Components.RegisterLocalizedText(object, key)
+end
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- BuildNotesTabUI
 -- Populates `parent` (a tab content frame) with a Details-style split layout:
@@ -138,7 +142,7 @@ local function BuildNotesTabUI(parent, notesTable)
     local hdr = listBg:CreateFontString(nil, "overlay")
     NSI:SetUIFont(hdr, 14, "")
     hdr:SetTextColor(0, 1, 1, 1)
-    hdr:SetText("Notes")
+    SetLocalizedText(hdr, "Notes")
     hdr:SetPoint("TOPLEFT", listBg, "TOPLEFT", PAD, -PAD)
 
     local hdrSep = listBg:CreateTexture(nil, "artwork")
@@ -152,10 +156,11 @@ local function BuildNotesTabUI(parent, notesTable)
 
     local newBtn = DF:CreateButton(listBg, function()
         flushCurrent()
-        table.insert(notesTable, { name = "New Note", text = "" })
+        table.insert(notesTable, { name = NSI:Loc("New Note"), text = "" })
         rebuildList()
         selectNote(#notesTable)
-    end, btnW, 22, "New Note")
+    end, btnW, 22, NSI:Loc("New Note"))
+    SetLocalizedText(newBtn, "New Note")
     newBtn:SetTemplate(options_button_template)
     newBtn:SetPoint("BOTTOMLEFT", listBg, "BOTTOMLEFT", PAD, PAD)
 
@@ -166,7 +171,8 @@ local function BuildNotesTabUI(parent, notesTable)
         nameBox:SetText("")
         textBox:SetText("")
         rebuildList()
-    end, btnW, 22, "Delete")
+    end, btnW, 22, NSI:Loc("Delete"))
+    SetLocalizedText(delBtn, "Delete")
     delBtn:SetTemplate(options_button_template)
     delBtn:SetPoint("BOTTOMRIGHT", listBg, "BOTTOMRIGHT", -PAD, PAD)
 
@@ -259,7 +265,8 @@ local function BuildNotesTabUI(parent, notesTable)
     local saveBtn = DF:CreateButton(editorBg, function()
         flushCurrent()
         rebuildList()
-    end, 120, 22, "Save Note")
+    end, 120, 22, NSI:Loc("Save Note"))
+    SetLocalizedText(saveBtn, "Save Note")
     saveBtn:SetTemplate(options_button_template)
     saveBtn:SetPoint("BOTTOMRIGHT", editorBg, "BOTTOMRIGHT", -PAD, PAD)
 

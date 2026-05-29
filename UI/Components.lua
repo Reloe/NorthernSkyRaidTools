@@ -72,6 +72,7 @@ local STYLE = {
 -- Stored as {label = FontString, size = number} plain entries — buttons are
 -- never destroyed mid-session so no weak table needed.
 local labelRegistry = {}
+local localizedTextRegistry = {}
 
 local componentRegistry = {
     Slider    = {},
@@ -98,6 +99,23 @@ local function RefreshFonts()
     for _, entry in ipairs(labelRegistry) do
         entry.label:SetFont(fontPath, entry.size, fontFlags)
     end
+end
+
+local function RefreshLocalizedTexts()
+    for object, info in pairs(localizedTextRegistry) do
+        if object and object.SetText then
+            local text = info.formatter and info.formatter() or NSI:Loc(info.key)
+            object:SetText(text)
+        else
+            localizedTextRegistry[object] = nil
+        end
+    end
+end
+
+local function RegisterLocalizedText(object, key, formatter)
+    if not object or not object.SetText then return end
+    localizedTextRegistry[object] = {key = key, formatter = formatter}
+    object:SetText(formatter and formatter() or NSI:Loc(key))
 end
 
 local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip)
@@ -184,6 +202,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
         iconTex:SetTexCoord(0.1, 0.9, 0.09, 0.91)
         iconTex:SetVertexColor(1, 1, 1)
         btn.icon = iconTex
+        btn.iconFrame = iconFrame
 
         -- Centre [icon  gap  text] as a group inside the button.
         local groupLeft = (btnWidth - contentW) / 2
@@ -232,9 +251,13 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
         frame      = btn,
         label      = label,
         labelFrame = labelFrame,
+        iconFrame  = btn.iconFrame,
         hoverBg    = hoverBg,
         selectedBg = selectedBg,
         _selected  = false,
+        _iconSize  = iconSize,
+        _iconGap   = iconGap,
+        _padH      = padH,
     }
 
     -- Wire click after buttonObj exists so the callback receives it
@@ -244,6 +267,30 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
 
     function buttonObj:SetText(s)
         self.label:SetText(s)
+        if self.iconFrame then
+            local textWidth = math.max(self.label:GetStringWidth(), 1)
+            if textWidth <= 1 then
+                self.iconFrame:ClearAllPoints()
+                self.iconFrame:SetPoint("CENTER", self.frame, "CENTER", 0, 0)
+                self.labelFrame:Hide()
+                return
+            end
+
+            self.labelFrame:Show()
+            local buttonWidth = self.frame:GetWidth()
+            local contentW = self._iconSize + self._iconGap + textWidth
+            local groupLeft = math.max(self._padH, math.floor((buttonWidth - contentW) / 2))
+            self.iconFrame:ClearAllPoints()
+            self.iconFrame:SetPoint("LEFT", self.frame, "LEFT", groupLeft, 0)
+            self.labelFrame:ClearAllPoints()
+            self.labelFrame:SetPoint("LEFT", self.iconFrame, "RIGHT", self._iconGap, 0)
+            self.labelFrame:SetPoint("RIGHT", self.frame, "RIGHT", -self._padH, 0)
+            self.labelFrame:SetHeight(self.frame:GetHeight())
+        end
+    end
+
+    function buttonObj:SetLocaleKey(key, formatter)
+        RegisterLocalizedText(self, key, formatter)
     end
 
     function buttonObj:GetText()
@@ -310,6 +357,16 @@ end
 -- ============================================================
 local function CreateSubButton(parent, text, onClick, width, name)
     return CreateButton(parent, text, onClick, width, 18, name, nil, 12)
+end
+
+local function CreateLocalizedButton(parent, key, onClick, width, height, name, icon, textSize, tooltip)
+    local btn = CreateButton(parent, NSI:Loc(key), onClick, width, height, name, icon, textSize, tooltip)
+    btn:SetLocaleKey(key)
+    return btn
+end
+
+local function CreateLocalizedSubButton(parent, key, onClick, width, name)
+    return CreateLocalizedButton(parent, key, onClick, width, 18, name, nil, 12)
 end
 
 -- ============================================================
@@ -452,6 +509,10 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
 
     function obj:GetWidth() return self.frame:GetWidth() end
 
+    function obj:SetLocaleKey(key)
+        RegisterLocalizedText(self.label, key)
+    end
+
     componentRegistry.Checkbox[#componentRegistry.Checkbox + 1] = obj
     return obj
 end
@@ -579,6 +640,9 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     function obj:SetPoint(...) self.frame:SetPoint(...)                                      end
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)                                     end
     function obj:GetWidth()    return self.frame:GetWidth()                                  end
+    function obj:SetLocaleKey(key)
+        if self.label then RegisterLocalizedText(self.label, key) end
+    end
 
     componentRegistry.TextEntry[#componentRegistry.TextEntry + 1] = obj
     return obj
@@ -873,6 +937,9 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     function obj:SetPoint(...) self.frame:SetPoint(...)      end
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)     end
     function obj:GetWidth()    return self.frame:GetWidth()  end
+    function obj:SetLocaleKey(key)
+        if self.label then RegisterLocalizedText(self.label, key) end
+    end
 
     componentRegistry.Dropdown[#componentRegistry.Dropdown + 1] = obj
     return obj
@@ -1076,6 +1143,9 @@ local function CreateSlider(parent, label, getValue, setValue,
     function obj:SetPoint(...) self.frame:SetPoint(...)       end
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)      end
     function obj:GetWidth()    return self.frame:GetWidth()   end
+    function obj:SetLocaleKey(key)
+        RegisterLocalizedText(self.label, key)
+    end
 
     componentRegistry.Slider[#componentRegistry.Slider + 1] = obj
     return obj
@@ -1215,6 +1285,9 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
     function obj:SetPoint(...) self.frame:SetPoint(...)     end
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)    end
     function obj:GetWidth()    return self.frame:GetWidth() end
+    function obj:SetLocaleKey(key)
+        RegisterLocalizedText(self.label, key)
+    end
 
     componentRegistry.Color[#componentRegistry.Color + 1] = obj
     return obj
@@ -1260,6 +1333,9 @@ local function CreateLabel(parent, text, width, height, name)
     function obj:SetPoint(...) self.frame:SetPoint(...)      end
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)     end
     function obj:GetWidth()    return self.frame:GetWidth()  end
+    function obj:SetLocaleKey(key)
+        RegisterLocalizedText(self.label, key)
+    end
 
     componentRegistry.Label[#componentRegistry.Label + 1] = obj
     return obj
@@ -1533,7 +1609,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 local out = {}
                 for _, v in ipairs(vals) do
                     out[#out + 1] = {
-                        label   = v.label,
+                        label   = v.label and NSI:Loc(v.label) or nil,
                         value   = v.value,
                         onclick = function(_, _, val)
                             if resolvedSet then resolvedSet(NSI, val) end
@@ -1547,7 +1623,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 local vals = type(resolvedValues) == "function"
                     and resolvedValues(NSI) or (resolvedValues or {})
                 for _, v in ipairs(vals) do
-                    if v.value == cur then return v.label end
+                    if v.value == cur then return v.label and NSI:Loc(v.label) or "" end
                 end
                 return cur ~= nil and tostring(cur) or ""
             end
@@ -1584,6 +1660,11 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         end
 
         if ctrl then
+            if def.label and ctrl.SetLocaleKey then
+                ctrl:SetLocaleKey(def.label)
+            elseif def.text and ctrl.SetLocaleKey then
+                ctrl:SetLocaleKey(def.text)
+            end
             ctrl:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
             y = y + h + WIDGET_GAP
         end
@@ -2196,6 +2277,10 @@ NSI.UI = NSI.UI or {}
 NSI.UI.Components = {
     CreateButton        = CreateButton,
     CreateSubButton     = CreateSubButton,
+    CreateLocalizedButton = CreateLocalizedButton,
+    CreateLocalizedSubButton = CreateLocalizedSubButton,
+    RefreshLocalizedTexts = RefreshLocalizedTexts,
+    RegisterLocalizedText = RegisterLocalizedText,
     CreateCheckButton   = CreateCheckButton,
     CreateTextEntry     = CreateTextEntry,
     CreateDropdown      = CreateDropdown,

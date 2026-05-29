@@ -14,7 +14,7 @@ local function BuildSpellDisplayOptions()
     for _, displayType in ipairs({"Icon", "Bar", "Text", "Circle"}) do
         local value = displayType
         options[#options + 1] = {
-            label = L[value],
+            label = NSI:Loc(value),
             value = value,
             onclick = function()
                 NSRT.ReminderSettings.SpellDisplayType = value

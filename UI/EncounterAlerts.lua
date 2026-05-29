@@ -9,6 +9,8 @@ local tab_content_height        = Core.tab_content_height
 
 local CreateButton        = NSI.UI.Components.CreateButton
 local CreateSubButton     = NSI.UI.Components.CreateSubButton
+local CreateLocalizedButton = NSI.UI.Components.CreateLocalizedButton
+local CreateLocalizedSubButton = NSI.UI.Components.CreateLocalizedSubButton
 local CreateDropdown      = NSI.UI.Components.CreateDropdown
 local CreateTextEntry     = NSI.UI.Components.CreateTextEntry
 local CreateCheckButton   = NSI.UI.Components.CreateCheckButton
@@ -17,6 +19,10 @@ local ReskinScrollbar     = NSI.UI.Components.ReskinScrollbar
 local ShowContextMenu     = NSI.UI.Components.ShowContextMenu
 local CreateStyledFrame   = NSI.UI.Components.CreateFrame
 local BossData          = NSI.UI.BossData
+
+local function SetLocalizedText(object, key)
+    NSI.UI.Components.RegisterLocalizedText(object, key)
+end
 
 local CIRCLE_TEXTURES = {
     {label="2 px",  value=[[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_2px.png]]},
@@ -36,7 +42,7 @@ end
 local function GetDefaultCircleTextureLabel()
     local texture = NSRT.ReminderSettings and NSRT.ReminderSettings.CircleSettings
         and NSRT.ReminderSettings.CircleSettings.Texture
-    return L["Default"] .. " (" .. GetCircleTextureLabel(texture) .. ")"
+    return NSI:Loc("Default") .. " (" .. GetCircleTextureLabel(texture) .. ")"
 end
 
 
@@ -58,15 +64,15 @@ function NSI:PromptReloeReminderImport(onImport)
     end
     local dialog = self.UI.Components.CreateDialog(
         "NSRTReloeReminderImport",
-        L["Enable Reloe-Alerts"],
-        L["Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."],
-        L["Enable"], DoImport, L["Not Now"], nil)
+        NSI:Loc("Enable Reloe-Alerts"),
+        NSI:Loc("Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."),
+        NSI:Loc("Enable"), DoImport, NSI:Loc("Not Now"), nil)
     dialog:Show()
 end
 
 local function ShowExportPopup(str, label)
     if not alertsExportPopup then
-        alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. L["Export Alerts"] .. "|r",
+        alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r",
             "NSUIEncAlertExportString", { DontRightClickClose = true })
         alertsExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsExportPopup:SetFrameLevel(100)
@@ -85,7 +91,7 @@ local function ShowExportPopup(str, label)
         alertsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         NSI:SetUIFont(alertsExportPopup.textbox.editbox, 13, "OUTLINE")
 
-        local doneBtn = CreateButton(alertsExportPopup, L["Done"], function()
+        local doneBtn = CreateLocalizedButton(alertsExportPopup, "Done", function()
             alertsExportPopup:Hide()
         end, 280, 20)
         doneBtn:SetPoint("BOTTOM", alertsExportPopup, "BOTTOM", 0, 10)
@@ -99,7 +105,7 @@ end
 
 local function ShowImportPopup()
     if not alertsImportPopup then
-        alertsImportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. L["Import Alerts"] .. "|r",
+        alertsImportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
             "NSUIEncAlertImportString", { DontRightClickClose = true })
         alertsImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsImportPopup:SetFrameLevel(100)
@@ -107,7 +113,7 @@ local function ShowImportPopup()
         local statusLabel = alertsImportPopup:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(statusLabel, 13, "")
         statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
-        statusLabel:SetText(L["Paste an alerts export string below and click Import."])
+        SetLocalizedText(statusLabel, "Paste an alerts export string below and click Import.")
         statusLabel:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -30)
 
         alertsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsImportPopup, 280, 80, _,
@@ -119,7 +125,7 @@ local function ShowImportPopup()
         alertsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         NSI:SetUIFont(alertsImportPopup.textbox.editbox, 13, "OUTLINE")
 
-        local importBtn = CreateButton(alertsImportPopup, L["Import"], function()
+        local importBtn = CreateLocalizedButton(alertsImportPopup, "Import", function()
             local str = alertsImportPopup.textbox:GetText()
             local count, overwriteCount = NSAPI:ImportAlertsString(str)
             if count then
@@ -133,13 +139,13 @@ local function ShowImportPopup()
                 if enc and enc.RefreshSelected then enc.RefreshSelected() end
             else
                 statusLabel:SetText(
-                    "|cFFFF0000" .. L["Invalid import string. Please check and try again."] .. "|r")
+                    "|cFFFF0000" .. NSI:Loc("Invalid import string. Please check and try again.") .. "|r")
             end
         end, 280, 20)
         importBtn:SetPoint("BOTTOM", alertsImportPopup, "BOTTOM", 0, 10)
 
         alertsImportPopup:HookScript("OnShow", function()
-            statusLabel:SetText(L["Paste an alerts export string below and click Import."])
+            SetLocalizedText(statusLabel, "Paste an alerts export string below and click Import.")
             alertsImportPopup.textbox:SetText("")
             alertsImportPopup.textbox:SetFocus()
         end)
@@ -204,7 +210,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- ── Filter dropdown ─────────────────────────────────────────────────────
     local function BuildFilterOptions()
-        local opts = {{ label = L["All Bosses"], value = 0, onclick = function()
+        local opts = {{ label = NSI:Loc("All Bosses"), value = 0, onclick = function()
             filterEncID = nil
             if screen.RebuildList then screen.RebuildList() end
         end }}
@@ -223,7 +229,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local diffDDWidth = leftWidth - pad * 2 - bossDDWidth - 6   -- 80
 
     local function getFilterBossSelected()
-        if not filterEncID then return L["All Bosses"] end
+        if not filterEncID then return NSI:Loc("All Bosses") end
         for _, opt in ipairs(BossData.BuildBossDropdownOptions(nil, false)) do
             if opt.value == filterEncID then return opt.label end
         end
@@ -479,7 +485,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local function ConfirmDeleteAlert(encID, diffID, alertKey)
         local deleteDialog = NSI.UI.Components.CreateDialog("NSRTDeleteAlertConfirm" .. tostring(alertKey),
-            L["Delete Alert"], L["Are you sure you want to delete this alert?"], L["Cancel"], nil, L["Delete"], function()
+            NSI:Loc("Delete Alert"), NSI:Loc("Are you sure you want to delete this alert?"), NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
                 DeleteAlert(encID, diffID, alertKey)
             end, nil)
         deleteDialog:Show()
@@ -529,7 +535,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                             end
 
                             local isReloe     = entry.ReloeReminder == true
-                            local displayName = isReloe and ReloeAlertName(entry) or (entry.name or L["Unnamed"])
+                            local displayName = isReloe and ReloeAlertName(entry) or (entry.name or NSI:Loc("Unnamed"))
                             if searchText == "" or string.find(string.lower(displayName), string.lower(searchText), 1, true) then
                                 local item = {
                                     _type           = "alert",
@@ -686,12 +692,12 @@ local function BuildEncounterAlertsUI(parentFrame)
                     local gk      = entry.groupKey
                     if button == "RightButton" then
                         ShowContextMenu({
-                            { type = "button", label = L["Export Group"], fnc = function()
+                            { type = "button", label = NSI:Loc("Export Group"), fnc = function()
                                 local str = NSI:ExportGroupString(gencID, gname, filterDiffID)
                                 ShowExportPopup(str, "Group: " .. gname)
                             end },
                             { type = "separator" },
-                            { type = "button", label = L["Enable All"], fnc = function()
+                            { type = "button", label = NSI:Loc("Enable All"), fnc = function()
                                 local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[gencID]
                                               and NSRT.EncounterAlerts[gencID][filterDiffID]
                                 if diffTable then
@@ -704,7 +710,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 end
                                 RebuildList()
                             end },
-                            { type = "button", label = L["Disable All"], fnc = function()
+                            { type = "button", label = NSI:Loc("Disable All"), fnc = function()
                                 local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[gencID]
                                               and NSRT.EncounterAlerts[gencID][filterDiffID]
                                 if diffTable then
@@ -718,16 +724,16 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 RebuildList()
                             end },
                             { type = "separator" },
-                            { type = "button", label = L["Delete Group (keep alerts)"], fnc = function()
+                            { type = "button", label = NSI:Loc("Delete Group (keep alerts)"), fnc = function()
                                 DeleteGroup(gencID, gname)
                                 RebuildList()
                             end },
-                            { type = "button", label = L["Delete Group with Alerts"], fnc = function()
+                            { type = "button", label = NSI:Loc("Delete Group with Alerts"), fnc = function()
                                 local dlg = NSI.UI.Components.CreateDialog(
                                     "NSRTDeleteGroupAlerts",
-                                    L["Delete Group with Alerts"],
-                                    string.format(L["Delete group '%s' and all deletable alerts?"], gname),
-                                    L["Cancel"], nil, L["Delete"], function()
+                                    NSI:Loc("Delete Group with Alerts"),
+                                    string.format(NSI:Loc("Delete group '%s' and all deletable alerts?"), gname),
+                                    NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
                                         DeleteGroupWithAlerts(gencID, gname)
                                         local still = selectedKey and NSRT.EncounterAlerts
                                             and NSRT.EncounterAlerts[selectedEncID]
@@ -784,7 +790,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 end
 
                 isEnabled = entry.data.enabled
-                name      = isReloe and ReloeAlertName(entry.data) or (entry.data.name or L["Unnamed"])
+                name      = isReloe and ReloeAlertName(entry.data) or (entry.data.name or NSI:Loc("Unnamed"))
 
                 local willLoad = NSI:EvaluateLoad(entry.data)
 
@@ -914,7 +920,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                             local alert = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                       and NSRT.EncounterAlerts[eid][did]
                                       and NSRT.EncounterAlerts[eid][did][akey]
-                            local name = alert and (alert.name or alert.text or L["Unnamed"]) or L["Unnamed"]
+                            local name = alert and (alert.name or alert.text or NSI:Loc("Unnamed")) or NSI:Loc("Unnamed")
 
                             -- Group submenu (shared for all alert types)
                             local groupSubItems = {}
@@ -924,11 +930,11 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     if alert then alert.group = gn; EnsureGroup(eid, gn); RebuildList() end
                                 end })
                             end
-                            table.insert(groupSubItems, { type = "button", label = L["New Group..."], fnc = function()
+                            table.insert(groupSubItems, { type = "button", label = NSI:Loc("New Group..."), fnc = function()
                                 StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"] = {
-                                    text = L["Enter new group name:"],
-                                    button1 = L["OK"],
-                                    button2 = L["Cancel"],
+                                    text = NSI:Loc("Enter new group name:"),
+                                    button1 = NSI:Loc("OK"),
+                                    button2 = NSI:Loc("Cancel"),
                                     hasEditBox = true,
                                     timeout = 0,
                                     whileDead = true,
@@ -952,16 +958,16 @@ local function BuildEncounterAlertsUI(parentFrame)
 
                             -- Build menu conditionally
                             local menuItems = {
-                                { type = "button", label = L["Export Alert"], fnc = function()
+                                { type = "button", label = NSI:Loc("Export Alert"), fnc = function()
                                     local str = NSI:ExportSingleAlertString("encounter", eid, did, akey, alert)
                                     ShowExportPopup(str, name)
                                 end },
-                                { type = "submenu", label = alert and alert.group and L["Move to Group"] or L["Add to Group"],
+                                { type = "submenu", label = alert and alert.group and NSI:Loc("Move to Group") or NSI:Loc("Add to Group"),
                                   items = groupSubItems },
                             }
 
                             if isReloeRow then
-                                table.insert(menuItems, { type = "button", label = L["Reset"], fnc = function()
+                                table.insert(menuItems, { type = "button", label = NSI:Loc("Reset"), fnc = function()
                                     local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
                                     if diffTable then diffTable[akey] = nil end
                                     NSI:ImportReloeReminders(eid)
@@ -979,7 +985,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                             end
 
                             if not (isReloeRow and entry.data.BlockCopy) then
-                                table.insert(menuItems, { type = "button", label = L["Duplicate"], fnc = function()
+                                table.insert(menuItems, { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                                     NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
                                     NSRT.EncounterAlerts[eid] = NSRT.EncounterAlerts[eid] or {}
                                     NSRT.EncounterAlerts[eid][did] = NSRT.EncounterAlerts[eid][did] or {}
@@ -998,7 +1004,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                             for _, tabName in ipairs({ "Display", "Trigger", "Sound", "Load" }) do
                                 local tn = tabName
                                 if CanCopySection(tn, alert) then
-                                    table.insert(copySubItems, { type = "button", label = L[tn], fnc = function()
+                                    table.insert(copySubItems, { type = "button", label = NSI:Loc(tn), fnc = function()
                                         local payload = {
                                             section = tn,
                                             encID   = eid,
@@ -1018,7 +1024,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 end
                             end
                             if #copySubItems > 0 then
-                                table.insert(menuItems, { type = "submenu", label = L["Copy"] .. "...", items = copySubItems })
+                                table.insert(menuItems, { type = "submenu", label = NSI:Loc("Copy") .. "...", items = copySubItems })
                             end
 
                             -- Paste option (only shown if a section was previously copied and is compatible)
@@ -1027,20 +1033,20 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 if CanCopySection(sn, alert) then
                                     local pasteEid, pasteDid, pasteAkey = eid, did, akey
                                     table.insert(menuItems, { type = "button",
-                                        label = L["Paste"] .. " (" .. (L[sn] or sn) .. ")",
+                                        label = NSI:Loc("Paste") .. " (" .. NSI:Loc(sn) .. ")",
                                         fnc = function() ApplyCopiedSectionTo(pasteEid, pasteDid, pasteAkey) end })
                                 end
                             end
 
                             if alert and alert.group then
-                                table.insert(menuItems, { type = "button", label = L["Remove from Group"], fnc = function()
+                                table.insert(menuItems, { type = "button", label = NSI:Loc("Remove from Group"), fnc = function()
                                     alert.group = nil
                                     RebuildList()
                                 end })
                             end
 
                             table.insert(menuItems, { type = "button",
-                                label = (alert and alert.pinned) and L["Unpin"] or L["Pin to Top"],
+                                label = (alert and alert.pinned) and NSI:Loc("Unpin") or NSI:Loc("Pin to Top"),
                                 fnc = function()
                                     if alert then
                                         alert.pinned = not alert.pinned or nil
@@ -1052,7 +1058,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 table.insert(menuItems, { type = "separator" })
                                 table.insert(menuItems, {
                                     type = "button",
-                                    label = L["Delete"],
+                                    label = NSI:Loc("Delete"),
                                     fnc = function()
                                         ConfirmDeleteAlert(eid, did, akey)
                                     end,
@@ -1094,7 +1100,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     -- Create Alert button
-    local createBtn = CreateButton(screen, L["+ Create Alert"], function()
+    local createBtn = CreateLocalizedButton(screen, "+ Create Alert", function()
         -- Resolve which encID to create under: current filter or first available boss
         local createEncID = (filterEncID and filterEncID ~= 0) and filterEncID or (function()
             local opts = BossData.BuildBossDropdownOptions(nil, false)
@@ -1108,7 +1114,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local newKey = NSI:UniqueAlertID(diffTable, false)
         local s = NSRT.ReminderSettings
         diffTable[newKey] = {
-            name          = L["New Alert"],
+            name          = NSI:Loc("New Alert"),
             enabled       = true,
             phase         = 1,
             timers        = {},
@@ -1132,14 +1138,14 @@ local function BuildEncounterAlertsUI(parentFrame)
     local halfW = math.floor((listW - 4) / 2)
     local ioY   = 8 + 18 + 2
 
-    local importAlertsBtn = CreateButton(screen, L["Import"], function()
+    local importAlertsBtn = CreateLocalizedButton(screen, "Import", function()
         ShowImportPopup()
     end, halfW, 18)
     importAlertsBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, ioY)
 
-    local exportAlertsBtn = CreateButton(screen, L["Export"], function()
+    local exportAlertsBtn = CreateLocalizedButton(screen, "Export", function()
         local encFilter = filterEncID ~= 0 and filterEncID or nil
-        local label = L["All encounter alerts"]
+        local label = NSI:Loc("All encounter alerts")
         if encFilter then
             label = getFilterBossSelected()
         end
@@ -1157,7 +1163,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
 
-    local reloeImportCB = CreateCheckButton(addOptFrame, L["Automatically Enable New Alerts"],
+    local reloeImportCB = CreateCheckButton(addOptFrame, NSI:Loc("Automatically Enable New Alerts"),
         function() return NSRT.Alerts.ReloeReminders end,
         function(_, v)
             local wasEnabled = NSRT.Alerts.ReloeReminders == true
@@ -1173,9 +1179,10 @@ local function BuildEncounterAlertsUI(parentFrame)
             RebuildList()
         end,
         ADDOPT_INNER_W, 22, "NSUIEncAlertReloeImportCB")
+    reloeImportCB:SetLocaleKey("Automatically Enable New Alerts")
     reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
 
-    local fullResetBtn = CreateButton(addOptFrame, L["Full Reset"], function()
+    local fullResetBtn = CreateLocalizedButton(addOptFrame, "Full Reset", function()
         local function DoReset()
             -- Only wipe Reloe-created alerts; preserve user-created ones
             for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
@@ -1195,9 +1202,9 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
         local dialog = NSI.UI.Components.CreateDialog(
             "NSRTEncAlertFullReset",
-            L["Full Reset"],
-            L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"],
-            L["Cancel"], nil, L["Reset"], DoReset, nil)
+            NSI:Loc("Full Reset"),
+            NSI:Loc("This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"),
+            NSI:Loc("Cancel"), nil, NSI:Loc("Reset"), DoReset, nil)
         dialog:Show()
     end, ADDOPT_INNER_W, 26)
     fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
@@ -1220,19 +1227,19 @@ local function BuildEncounterAlertsUI(parentFrame)
         RebuildList()
     end
 
-    local enableAllBtn = CreateButton(addOptFrame, L["Enable Selected Boss Alerts"], function()
+    local enableAllBtn = CreateLocalizedButton(addOptFrame, "Enable Selected Boss Alerts", function()
         SetReloeAlertsEnabled(true)
     end, ADDOPT_INNER_W, 22)
     enableAllBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
 
-    local disableAllBtn = CreateButton(addOptFrame, L["Disable Selected Boss Alerts"], function()
+    local disableAllBtn = CreateLocalizedButton(addOptFrame, "Disable Selected Boss Alerts", function()
         SetReloeAlertsEnabled(false)
     end, ADDOPT_INNER_W, 22)
     disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)
 
     -- "Additional Options" button replaces the two rows that moved into the popup
     local addOptY = ioY + 18 + 2
-    local addOptBtn = CreateButton(screen, L["Additional Options"], function()
+    local addOptBtn = CreateLocalizedButton(screen, "Additional Options", function()
         if addOptFrame:IsShown() then
             addOptFrame:Hide()
         else
@@ -1253,7 +1260,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local nameLbl = rightPanel:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(nameLbl, 11, "")
     nameLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    nameLbl:SetText(L["Alert Name"])
+    SetLocalizedText(nameLbl, "Alert Name")
     nameLbl:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
 
     local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightW - 240, 22,
@@ -1263,7 +1270,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local groupLbl = rightPanel:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(groupLbl, 11, "")
     groupLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    groupLbl:SetText(L["Group"])
+    SetLocalizedText(groupLbl, "Group")
     groupLbl:SetPoint("BOTTOMLEFT", nameEntry.frame, "BOTTOMRIGHT", 12, 22)
 
     local function BuildGroupItems()
@@ -1276,7 +1283,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                   and NSRT.EncounterAlerts[eid][did]
                   and NSRT.EncounterAlerts[eid][did][akey]
         local items = {}
-        table.insert(items, { label = L["— No Group —"], onclick = function()
+        table.insert(items, { label = NSI:Loc("— No Group —"), onclick = function()
             if alert then alert.group = nil; RebuildList(); groupDD:Refresh() end
         end })
         for _, gname in ipairs(GetGroupsForEnc(eid or 0)) do
@@ -1285,11 +1292,11 @@ local function BuildEncounterAlertsUI(parentFrame)
                 if alert then alert.group = gn; EnsureGroup(eid, gn); RebuildList(); groupDD:Refresh() end
             end })
         end
-        table.insert(items, { label = L["New Group..."], onclick = function()
+        table.insert(items, { label = NSI:Loc("New Group..."), onclick = function()
             StaticPopupDialogs["NSRT_NEW_GROUP_INPUT"] = {
-                text = L["Enter new group name:"],
-                button1 = L["OK"],
-                button2 = L["Cancel"],
+                text = NSI:Loc("Enter new group name:"),
+                button1 = NSI:Loc("OK"),
+                button2 = NSI:Loc("Cancel"),
                 hasEditBox = true,
                 timeout = 0,
                 whileDead = true,
@@ -1323,15 +1330,16 @@ local function BuildEncounterAlertsUI(parentFrame)
                   and NSRT.EncounterAlerts[eid]
                   and NSRT.EncounterAlerts[eid][did]
                   and NSRT.EncounterAlerts[eid][did][akey]
-        return (alert and alert.group) or L["— No Group —"]
+        return (alert and alert.group) or NSI:Loc("— No Group —")
     end
 
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected,
         120, 22, "NSUIEncAlertGroupDD")
     groupDD:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
 
-    enabledCB = CreateCheckButton(rightPanel, L["Enabled"],
+    enabledCB = CreateCheckButton(rightPanel, NSI:Loc("Enabled"),
         function() return false end, nil, 90, 22, "NSUIEncAlertEnabled")
+    enabledCB:SetLocaleKey("Enabled")
     enabledCB:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
 
     conditionHint = rightPanel:CreateFontString(nil, "OVERLAY")
@@ -1372,7 +1380,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local hasCondition = type(conditionText) == "string" and conditionText ~= ""
 
         if hasCondition then
-            conditionHint:SetText("|cFFFFD100" .. L["Condition"] .. ":|r " .. conditionText)
+            conditionHint:SetText("|cFFFFD100" .. NSI:Loc("Condition") .. ":|r " .. conditionText)
             conditionHint:Show()
             local hintHeight = math.max(conditionHint:GetStringHeight() or 16, 16)
             conditionHint:SetHeight(hintHeight)
@@ -1544,7 +1552,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     for i, tabName in ipairs(INNER_TABS) do
-        local btn = CreateSubButton(rightPanel, L[tabName], function()
+        local btn = CreateLocalizedSubButton(rightPanel, tabName, function()
             SelectInnerTab(tabName)
             RefreshSectionCopyButtons()
         end, tabBtnW, "NSUIEncAlertInnerTab_" .. tabName)
@@ -1553,21 +1561,21 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
     innerTabBtns["Options"].frame:Hide()
 
-    copySectionBtn = CreateSubButton(rightPanel, L["Copy"], function()
+    copySectionBtn = CreateLocalizedSubButton(rightPanel, "Copy", function()
         CopySection(activeInnerTab)
         RefreshSectionCopyButtons()
     end, 52, "NSUIEncAlertCopySection")
     copySectionBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", -202, tabRowY)
     copySectionBtn.frame:Hide()
 
-    applySectionBtn = CreateSubButton(rightPanel, L["Apply"], function()
+    applySectionBtn = CreateLocalizedSubButton(rightPanel, "Apply", function()
         ApplyCopiedSection()
     end, 58, "NSUIEncAlertApplySection")
     applySectionBtn:SetPoint("LEFT", copySectionBtn.frame, "RIGHT", 4, 0)
     applySectionBtn.frame:Hide()
 
     -- ── Preview button — right-aligned on the tab row ────────────────────────
-    previewBtn = CreateButton(rightPanel, L["Preview"], function() PreviewAlert() end, 80, 18,
+    previewBtn = CreateLocalizedButton(rightPanel, "Preview", function() PreviewAlert() end, 80, 18,
         "NSUIEncAlertPreview")
     previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY)
 
@@ -1590,7 +1598,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- Helper: build a lock overlay for a tab frame
     -- transparent=true → invisible background (blocks clicks but content is visible)
     -- ================================================================
-    local function MakeLockOverlay(parent, message, transparent)
+    local function MakeLockOverlay(parent, messageKey, transparent)
         local ov = CreateFrame("Frame", nil, parent, "BackdropTemplate")
         ov:SetAllPoints(parent)
         ov:SetFrameLevel(parent:GetFrameLevel() + 10)
@@ -1601,7 +1609,9 @@ local function BuildEncounterAlertsUI(parentFrame)
             local badge = ov:CreateFontString(nil, "OVERLAY")
             NSI:SetUIFont(badge, 11, "")
             badge:SetTextColor(0.9, 0.75, 0.2, 0.85)
-            badge:SetText("|TInterface\\PetBattles\\PetBattle-LockIcon:12:12:0:-1|t Read-only")
+            NSI.UI.Components.RegisterLocalizedText(badge, "Read-only", function()
+                return "|TInterface\\PetBattles\\PetBattle-LockIcon:12:12:0:-1|t " .. NSI:Loc("Read-only")
+            end)
             badge:SetPoint("TOPRIGHT", ov, "TOPRIGHT", 0, 0)
         else
             DF:ApplyStandardBackdrop(ov)
@@ -1611,7 +1621,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             local lbl = ov:CreateFontString(nil, "OVERLAY")
             NSI:SetUIFont(lbl, 13, "")
             lbl:SetTextColor(0.55, 0.55, 0.55, 1)
-            lbl:SetText(message)
+            SetLocalizedText(lbl, messageKey)
             lbl:SetPoint("CENTER", ov, "CENTER", 0, 0)
             lbl:SetJustifyH("CENTER")
         end
@@ -1637,7 +1647,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local typeLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(typeLbl, 12, "")
     typeLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    typeLbl:SetText(L["Type"])
+    SetLocalizedText(typeLbl, "Type")
     typeLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -2)
 
     local TYPES    = { "Text", "Bar", "Icon", "Circle" }
@@ -1652,7 +1662,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     dispF.SetDisplayType = SetDisplayType
 
     for i, tn in ipairs(TYPES) do
-        local tb = CreateSubButton(dispF, tn, function()
+        local tb = CreateLocalizedSubButton(dispF, tn, function()
             if dispF._alert then NSI:SaveAlertData(dispF._alert, "DisplayType", tn) end
             SetDisplayType(tn)
         end, typeBtnW, "NSUIEncAlertType_" .. tn)
@@ -1663,7 +1673,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local textLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(textLbl, 12, "")
     textLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    textLbl:SetText(L["Display Text"])
+    SetLocalizedText(textLbl, "Display Text")
     textLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -46)
 
     local textEntry = CreateTextEntry(dispF, nil, nil, nil, rightW, 22,
@@ -1679,7 +1689,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local spellLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(spellLbl, 12, "")
     spellLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    spellLbl:SetText(L["Spell ID"])
+    SetLocalizedText(spellLbl, "Spell ID")
     spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -90)
 
     local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
@@ -1722,7 +1732,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local customIconLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(customIconLbl, 12, "")
     customIconLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    customIconLbl:SetText(L["Custom Icon (overrides icon in list)"])
+    SetLocalizedText(customIconLbl, "Custom Icon (overrides icon in list)")
     customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 162, -90)
 
     local customIconEntry = CreateTextEntry(dispF, nil, nil, nil, 180, 22,
@@ -1739,7 +1749,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local durLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(durLbl, 12, "")
     durLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    durLbl:SetText(L["Duration"])
+    SetLocalizedText(durLbl, "Duration")
     durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -134)
 
     local durEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
@@ -1755,7 +1765,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local stickyLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(stickyLbl, 12, "")
     stickyLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    stickyLbl:SetText(L["Sticky duration (0 to disable)"])
+    SetLocalizedText(stickyLbl, "Sticky duration (0 to disable)")
     stickyLbl:SetPoint("TOPLEFT", durLbl, "TOPRIGHT", 55, 0)
 
     local stickyEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
@@ -1768,7 +1778,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     stickyEntry.editBox:SetScript("OnEditFocusLost", SaveSticky)
     dispF.stickyEntry = stickyEntry
 
-    local hideTimerCB = CreateCheckButton(dispF, L["Hide Timer Text"],
+    local hideTimerCB = CreateCheckButton(dispF, NSI:Loc("Hide Timer Text"),
         function()
             if not dispF._alert then return false end
             if dispF._alert.HideTimer ~= nil then return dispF._alert.HideTimer end
@@ -1778,10 +1788,11 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideTimer", v or nil) end end,
         135, 22, "NSUIEncAlertHideTimer")
+    hideTimerCB:SetLocaleKey("Hide Timer Text")
     hideTimerCB:SetPoint("LEFT", stickyEntry.frame, "RIGHT", 14, 0)
     dispF.hideTimerCB = hideTimerCB
 
-    local hideSwipeCB = CreateCheckButton(dispF, L["Hide Swipe"],
+    local hideSwipeCB = CreateCheckButton(dispF, NSI:Loc("Hide Swipe"),
         function()
             if not dispF._alert then return false end
             if dispF._alert.HideSwipe ~= nil then return dispF._alert.HideSwipe end
@@ -1789,6 +1800,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideSwipe", v or nil) end end,
         110, 22, "NSUIEncAlertHideSwipe")
+    hideSwipeCB:SetLocaleKey("Hide Swipe")
     hideSwipeCB:SetPoint("LEFT", hideTimerCB.frame, "RIGHT", 20, 0)
     hideSwipeCB.frame:Hide()   -- only shown for Icon type
     dispF.hideSwipeCB = hideSwipeCB
@@ -1797,7 +1809,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local glowunitLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(glowunitLbl, 12, "")
     glowunitLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    glowunitLbl:SetText(L["Glow Unit (player names, space seperated)"])
+    SetLocalizedText(glowunitLbl, "Glow Unit (player names, space seperated)")
     glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -178)
 
     local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
@@ -1813,7 +1825,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local glowcolorlbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(glowcolorlbl, 12, "")
     glowcolorlbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    glowcolorlbl:SetText(L["Glow Color"])
+    SetLocalizedText(glowcolorlbl, "Glow Color")
     glowcolorlbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 265, -198)
     dispF.glowcolorlbl = glowcolorlbl
 
@@ -1834,7 +1846,13 @@ local function BuildEncounterAlertsUI(parentFrame)
     local colorsLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(colorsLbl, 12, "")
     colorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    colorsLbl:SetText(L["Color"])
+    NSI.UI.Components.RegisterLocalizedText(colorsLbl, "Color", function()
+        local t = dispF._alert and (dispF._alert.DisplayType or "Text")
+        if t == "Text" or t == "Icon" or t == "Circle" then
+            return NSI:Loc("Text Color")
+        end
+        return NSI:Loc("Color")
+    end)
     colorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
     dispF.colorsLbl = colorsLbl
 
@@ -1864,7 +1882,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local circleTextureLbl = circleSection:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(circleTextureLbl, 12, "")
     circleTextureLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    circleTextureLbl:SetText(L["Texture"])
+    SetLocalizedText(circleTextureLbl, "Texture")
     circleTextureLbl:SetPoint("TOPLEFT", circleSection, "TOPLEFT", 0, 26)
 
     local function BuildCircleTextureOptions()
@@ -1903,7 +1921,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ringColorsLbl = circleSection:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(ringColorsLbl, 12, "")
     ringColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    ringColorsLbl:SetText(L["Ring Color"])
+    SetLocalizedText(ringColorsLbl, "Ring Color")
     ringColorsLbl:SetPoint("TOPLEFT", circleTextureDD.frame, "BOTTOMLEFT", 0, -8)
 
     local ringColorsPicker = CreateColorPicker(circleSection, nil,
@@ -1917,7 +1935,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     ringColorsPicker:SetPoint("TOPLEFT", ringColorsLbl, "BOTTOMLEFT", 0, 4)
     dispF.ringColorsPicker = ringColorsPicker
 
-    local showBgCB = CreateCheckButton(circleSection, L["Show Background Ring"],
+    local showBgCB = CreateCheckButton(circleSection, NSI:Loc("Show Background Ring"),
         function()
             if not dispF._alert then return NSRT.ReminderSettings.CircleSettings.showBackground end
             if dispF._alert.showBackground ~= nil then return dispF._alert.showBackground ~= false end
@@ -1925,6 +1943,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "showBackground", v) end end,
         200, 22, "NSUIEncAlertShowBg")
+    showBgCB:SetLocaleKey("Show Background Ring")
     showBgCB:SetPoint("TOPLEFT", ringColorsPicker.frame, "BOTTOMLEFT", 0, -4)
     dispF.showBgCB = showBgCB
 
@@ -1937,7 +1956,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ticksLbl = barsSection:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(ticksLbl, 12, "")
     ticksLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    ticksLbl:SetText(L["Ticks (seconds into the display where ticks should appear)"])
+    SetLocalizedText(ticksLbl, "Ticks (seconds into the display where ticks should appear)")
     ticksLbl:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, 0)
 
     local ticksListH = 100
@@ -2015,7 +2034,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local addTickLbl = barsSection:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(addTickLbl, 11, "")
     addTickLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    addTickLbl:SetText(L["Add tick"])
+    SetLocalizedText(addTickLbl, "Add tick")
     addTickLbl:SetPoint("TOPLEFT", ticksScroll, "BOTTOMLEFT", 0, -4)
 
     local addTickEntry = CreateTextEntry(barsSection, nil, nil, nil, 90, 22,
@@ -2046,7 +2065,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         self:ClearFocus()
     end)
 
-    local addTickBtn = CreateSubButton(barsSection, L["Add"], DoAddTick, 54,
+    local addTickBtn = CreateLocalizedSubButton(barsSection, "Add", DoAddTick, 54,
         "NSUIEncAlertAddTickBtn")
     addTickBtn:SetPoint("LEFT", addTickEntry.frame, "RIGHT", 6, 0)
 
@@ -2055,7 +2074,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local barTextColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(barTextColorsLbl, 12, "")
     barTextColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    barTextColorsLbl:SetText(L["Bar Text Color"])
+    SetLocalizedText(barTextColorsLbl, "Bar Text Color")
     barTextColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -216)
     barTextColorsLbl:Hide()
 
@@ -2076,7 +2095,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local barFillColorsLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(barFillColorsLbl, 12, "")
     barFillColorsLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    barFillColorsLbl:SetText(L["Bar Fill Color"])
+    SetLocalizedText(barFillColorsLbl, "Bar Fill Color")
     barFillColorsLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -240)
     barFillColorsLbl:Hide()
 
@@ -2113,8 +2132,8 @@ local function BuildEncounterAlertsUI(parentFrame)
         -- HideSwipe only relevant for Icon type
         dispF.hideSwipeCB.frame:SetShown(t == "Icon")
         -- Label for the shared picker (used for non-Bar types)
-        local COLOR_LABELS = { Text=L["Text Color"], Icon=L["Text Color"], Circle=L["Text Color"] }
-        dispF.colorsLbl:SetText(COLOR_LABELS[t] or L["Color"])
+        local COLOR_LABELS = { Text=NSI:Loc("Text Color"), Icon=NSI:Loc("Text Color"), Circle=NSI:Loc("Text Color") }
+        dispF.colorsLbl:SetText(COLOR_LABELS[t] or NSI:Loc("Color"))
         if dispF.colorsPicker then dispF.colorsPicker:Refresh() end
     end
     dispF.SetDisplayType = SetDisplayType
@@ -2129,7 +2148,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local trigBossLbl = trigF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(trigBossLbl, 12, "")
     trigBossLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    trigBossLbl:SetText(L["Boss"])
+    SetLocalizedText(trigBossLbl, "Boss")
     trigBossLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -2)
 
     local function BuildTrigBossOptions()
@@ -2173,12 +2192,12 @@ local function BuildEncounterAlertsUI(parentFrame)
     trigF.bossDD = trigBossDD
 
     -- Difficulty dropdown — moves the alert to a different diff table on change
-    local TRIG_DIFF_NAMES = { [14] = L["Normal"], [15] = L["Heroic"], [16] = L["Mythic"] }
+    local TRIG_DIFF_NAMES = { [14] = NSI:Loc("Normal"), [15] = NSI:Loc("Heroic"), [16] = NSI:Loc("Mythic") }
 
     local trigDiffLbl = trigF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(trigDiffLbl, 12, "")
     trigDiffLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    trigDiffLbl:SetText(L["Difficulty"])
+    SetLocalizedText(trigDiffLbl, "Difficulty")
     trigDiffLbl:SetPoint("TOPLEFT", trigBossDD.frame, "TOPRIGHT", 6, 16)
 
     local function BuildTrigDiffOptions()
@@ -2229,7 +2248,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local phaseLbl = trigF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(phaseLbl, 12, "")
     phaseLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    phaseLbl:SetText(L["Phase"])
+    SetLocalizedText(phaseLbl, "Phase")
     phaseLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -50)
 
     local phaseEntry = CreateTextEntry(trigF, nil, nil, nil, 60, 22,
@@ -2246,7 +2265,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local timesLbl = trigF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(timesLbl, 12, "")
     timesLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    timesLbl:SetText(L["Trigger Times (seconds into phase)"])
+    SetLocalizedText(timesLbl, "Trigger Times (seconds into phase)")
     timesLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -98)
 
     -- Times list: native ScrollFrame
@@ -2328,7 +2347,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local addTimeLbl = trigF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(addTimeLbl, 11, "")
     addTimeLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    addTimeLbl:SetText(L["Add time (s)"])
+    SetLocalizedText(addTimeLbl, "Add time (s)")
     addTimeLbl:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -4)
 
     local addTimeEntry = CreateTextEntry(trigF, nil, nil, nil, 90, 22,
@@ -2360,7 +2379,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         self:ClearFocus()
     end)
 
-    local addTimeBtn = CreateSubButton(trigF, L["Add"], DoAddTime, 54,
+    local addTimeBtn = CreateLocalizedSubButton(trigF, "Add", DoAddTime, 54,
         "NSUIEncAlertAddTimeBtn")
     addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
 
@@ -2378,7 +2397,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     sndHint = sndF:CreateFontString(nil, "OVERLAY")
     sndHint:Hide()
 
-    local ttsCB = CreateCheckButton(sndF, L["Enable Text-to-Speech"],
+    local ttsCB = CreateCheckButton(sndF, NSI:Loc("Enable Text-to-Speech"),
         function() return false end,
         function(_, v)
             if not sndF._alert then return end
@@ -2386,13 +2405,14 @@ local function BuildEncounterAlertsUI(parentFrame)
             NSI:SaveAlertData(sndF._alert, "TTS", v and ((txt ~= "") and txt or true) or false)
         end,
         rightW, 22, "NSUIEncAlertTTSCB")
+    ttsCB:SetLocaleKey("Enable Text-to-Speech")
     ttsCB:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -4)
     sndF.ttsCB = ttsCB
 
     local ttsTextLbl = sndF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(ttsTextLbl, 12, "")
     ttsTextLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    ttsTextLbl:SetText(L["TTS Text (leave blank to speak the Display Text)"])
+    SetLocalizedText(ttsTextLbl, "TTS Text (leave blank to speak the Display Text)")
     ttsTextLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -34)
 
     local ttsTextEntry = CreateTextEntry(sndF, nil, nil, nil, rightW, 22,
@@ -2411,7 +2431,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ttsTimerLbl = sndF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(ttsTimerLbl, 12, "")
     ttsTimerLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    ttsTimerLbl:SetText(L["TTS Timer (seconds before the Alert expires)"])
+    SetLocalizedText(ttsTimerLbl, "TTS Timer (seconds before the Alert expires)")
     ttsTimerLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -82)
 
     local ttsTimerEntry = CreateTextEntry(sndF, nil, nil, nil, 80, 22,
@@ -2427,7 +2447,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local cdLbl = sndF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(cdLbl, 12, "")
     cdLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    cdLbl:SetText(L["Countdown for"])
+    SetLocalizedText(cdLbl, "Countdown for")
     cdLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -138)
     sndF.cdLbl = cdLbl
 
@@ -2445,13 +2465,13 @@ local function BuildEncounterAlertsUI(parentFrame)
     local cdSecLbl = sndF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(cdSecLbl, 12, "")
     cdSecLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    cdSecLbl:SetText(L["seconds"])
+    SetLocalizedText(cdSecLbl, "seconds")
     cdSecLbl:SetPoint("LEFT", cdEntry.frame, "RIGHT", 5, 0)
 
     local sndFileLbl = sndF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(sndFileLbl, 12, "")
     sndFileLbl:SetTextColor(0.6, 0.6, 0.6, 1)
-    sndFileLbl:SetText(L["Sound File"])
+    SetLocalizedText(sndFileLbl, "Sound File")
     sndFileLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -162)
 
     local soundGetItems, soundGetSelected = NSI:BuildSoundDropdown(
@@ -2660,8 +2680,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     -- Section header buttons (repositioned and arrow updated in RebuildLoadTab)
-    local classSecHdr = MakeSectionHdr(L["Classes (leave all unchecked for any class)"], "Classes")
-    local specSecHdr  = MakeSectionHdr(L["Specializations (leave all unchecked for any spec)"], "Specs")
+    local classSecHdr = MakeSectionHdr(NSI:Loc("Classes (leave all unchecked for any class)"), "Classes")
+    local specSecHdr  = MakeSectionHdr(NSI:Loc("Specializations (leave all unchecked for any spec)"), "Specs")
 
     -- Pre-create class rows (one per class, fixed set)
     local classRowFrames = {}
@@ -2705,7 +2725,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         RANGED  = { 0.9, 0.8, 0.2 },
     }
 
-    local rolesSecHdr = MakeSectionHdr(L["Roles (leave all unchecked for any role)"], "Roles")
+    local rolesSecHdr = MakeSectionHdr(NSI:Loc("Roles (leave all unchecked for any role)"), "Roles")
 
     local roleRowFrames = {}
     for i, rd in ipairs(ROLE_DATA) do
@@ -2722,7 +2742,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local namesHdrLbl = loadF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(namesHdrLbl, 11, "")
     namesHdrLbl:SetTextColor(0.55, 0.55, 0.55, 1)
-    namesHdrLbl:SetText(L["Character Names (no server name)"])
+    SetLocalizedText(namesHdrLbl, "Character Names (no server name)")
     namesHdrLbl:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 12)
 
     local nameAddEntry = CreateTextEntry(loadF, nil, nil, nil, 180, 22,
@@ -2730,7 +2750,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     nameAddEntry:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 36)
 
     local DoAddName  -- forward declaration so nameAddBtn closure can reference it
-    local nameAddBtn = CreateSubButton(loadF, L["Add"], function() if DoAddName then DoAddName() end end,
+    local nameAddBtn = CreateLocalizedSubButton(loadF, "Add", function() if DoAddName then DoAddName() end end,
         54, "NSUIEncAlertNameAddBtn")
     nameAddBtn:SetPoint("LEFT", nameAddEntry.frame, "RIGHT", 6, 0)
 
@@ -2935,11 +2955,11 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- Lock overlay for Load tab (reloeCreated alerts use built-in role field)
     loadF.lockOverlay = MakeLockOverlay(loadF,
-        L["Class / spec filters do not apply\nto addon-created alerts."])
+        "Class / spec filters do not apply\nto addon-created alerts.")
 
     -- Lock overlay for Sound tab (reloeCreated alerts — sound is managed by the addon)
     sndF.lockOverlay = MakeLockOverlay(sndF,
-        L["Sound settings are fixed\nfor addon-created alerts."])
+        "Sound settings are fixed\nfor addon-created alerts.")
     end -- LOAD TAB
 
     -- ================================================================

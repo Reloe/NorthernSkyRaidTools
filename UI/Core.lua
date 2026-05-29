@@ -49,7 +49,7 @@ function NSI:GetSelectedLanguage()
     return languageId
 end
 
-function NSI:GetUIFontPath(menuButton)
+function NSI:GetUIFontPath()
     local languageId = self:GetSelectedLanguage()
     local fontPath
     if languageId == "enUS" then
@@ -71,6 +71,19 @@ end
 
 function NSI:GetUIFontFlags()
     return ""
+end
+
+function NSI:Loc(key)
+    local languageId = self:GetSelectedLanguage()
+    local ok, languageTable = pcall(DF.Language.GetLanguageTable, addonId, languageId)
+    local text = ok and languageTable and languageTable[key]
+    if text == true then
+        return key
+    elseif text then
+        return text
+    end
+
+    return DF.Language.GetText(addonId, key, true) or key
 end
 
 NSI.UIFontRegistry = NSI.UIFontRegistry or {}
@@ -99,6 +112,9 @@ function NSI:ApplySelectedLanguage(skip)
     if self.UI and self.UI.Components and self.UI.Components.RefreshFonts then
         self.UI.Components.RefreshFonts()
     end
+    if self.UI and self.UI.Components and self.UI.Components.RefreshLocalizedTexts then
+        self.UI.Components.RefreshLocalizedTexts()
+    end
     self:RefreshUIFonts()
     if self.RefreshAnchorSettingsWindows then
         self:RefreshAnchorSettingsWindows()
@@ -106,6 +122,12 @@ function NSI:ApplySelectedLanguage(skip)
     local menu = NSI.UI and NSI.UI.Core and NSI.UI.Core.NSUI and NSI.UI.Core.NSUI.MenuFrame
     if menu and menu.RefreshTabLabels then
         menu:RefreshTabLabels()
+    end
+    if menu and menu.CurrentName and menu.AllFramesByName then
+        local frame = menu.AllFramesByName[menu.CurrentName]
+        if frame and frame.RefreshOptions then
+            frame:RefreshOptions()
+        end
     end
 end
 
@@ -181,7 +203,7 @@ local function build_growdirection_options(SettingName, Icons)
     local t = {}
     for i, v in ipairs(list) do
         tinsert(t, {
-            label = v,
+            label = NSI:Loc(v),
             value = i,
             onclick = function(_, _, value)
                 NSRT.ReminderSettings[SettingName]["GrowDirection"] = list[value]
@@ -197,7 +219,7 @@ local function build_PAgrowdirection_options(SettingName, SecondaryName)
     local t = {}
     for i, v in ipairs(list) do
         tinsert(t, {
-            label = v,
+            label = NSI:Loc(v),
             value = i,
             onclick = function(_, _, value)
                 NSRT[SettingName][SecondaryName] = list[value]
@@ -215,7 +237,7 @@ local function build_raidframeicon_options()
     local t = {}
     for i, v in ipairs(list) do
         tinsert(t, {
-            label = v,
+            label = NSI:Loc(v),
             value = i,
             onclick = function(_, _, value)
                 NSRT.ReminderSettings.UnitIconSettings.Position = list[value]

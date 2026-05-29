@@ -6,12 +6,12 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
 local function BuildNicknamesOptions()
-    local nickname_share_options = { L["Raid"], L["Guild"], L["Both"], L["None"] }
+    local nickname_share_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_share_options = function()
         local t = {}
         for i = 1, #nickname_share_options do
             tinsert(t, {
-                label = nickname_share_options[i],
+                label = NSI:Loc(nickname_share_options[i]),
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.Settings["ShareNickNames"] = value
@@ -21,12 +21,12 @@ local function BuildNicknamesOptions()
         return t
     end
 
-    local nickname_accept_options = { L["Raid"], L["Guild"], L["Both"], L["None"] }
+    local nickname_accept_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_accept_options = function()
         local t = {}
         for i = 1, #nickname_accept_options do
             tinsert(t, {
-                label = nickname_accept_options[i],
+                label = NSI:Loc(nickname_accept_options[i]),
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.Settings["AcceptNickNames"] = value
@@ -36,12 +36,12 @@ local function BuildNicknamesOptions()
         return t
     end
 
-    local nickname_syncaccept_options = { L["Raid"], L["Guild"], L["Both"], L["None"] }
+    local nickname_syncaccept_options = { "Raid", "Guild", "Both", "None" }
     local build_nickname_syncaccept_options = function()
         local t = {}
         for i = 1, #nickname_syncaccept_options do
             tinsert(t, {
-                label = nickname_syncaccept_options[i],
+                label = NSI:Loc(nickname_syncaccept_options[i]),
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.Settings["NickNamesSyncAccept"] = value
@@ -51,12 +51,12 @@ local function BuildNicknamesOptions()
         return t
     end
 
-    local nickname_syncsend_options = { L["Raid"], L["Guild"], L["None"]}
+    local nickname_syncsend_options = { "Raid", "Guild", "None"}
     local build_nickname_syncsend_options = function()
         local t = {}
         for i = 1, #nickname_syncsend_options do
             tinsert(t, {
-                label = nickname_syncsend_options[i],
+                label = NSI:Loc(nickname_syncsend_options[i]),
                 value = i,
                 onclick = function(_, _, value)
                     NSRT.Settings["NickNamesSyncSend"] = value
