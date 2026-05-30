@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: LGPL-2.1-or-later
 -- Details Framework (DetailsFramework-1.0) -- see Libs/DF/LICENSE
 
-local dversion = 739
+local dversion = 741
 local major, minor = "DetailsFramework-1.0", dversion
 local DF, oldminor = LibStub:NewLibrary(major, minor)
 
@@ -1777,7 +1777,7 @@ end
 ---@param textureInfo table
 ---@param bAddSpace any
 ---@param bAddAfterText any
----@return string
+---@return string, string
 function DF:AddTextureToText(text, textureInfo, bAddSpace, bAddAfterText)
 	local texture = textureInfo.texture
 	local textureWidth = textureInfo.width
@@ -1790,12 +1790,16 @@ function DF:AddTextureToText(text, textureInfo, bAddSpace, bAddAfterText)
 	top = top or 0
 	bottom = bottom or 1
 
+	local textureString = "|T" .. texture .. ":" .. textureHeight .. ":" .. textureWidth .. ":0:0:" .. imageWidth .. ":" .. imageHeight .. ":" .. (left * imageWidth) .. ":" .. (right * imageWidth) .. ":" .. (top * imageHeight) .. ":" .. (bottom * imageHeight) .. "|t"
+
 	if (bAddAfterText) then
-		local newString = text .. (bAddSpace and " " or "") .. "|T" .. texture .. ":" .. textureHeight .. ":" .. textureWidth .. ":0:0:" .. imageWidth .. ":" .. imageHeight .. ":" .. (left * imageWidth) .. ":" .. (right * imageWidth) .. ":" .. (top * imageHeight) .. ":" .. (bottom * imageHeight) .. "|t"
-		return newString
+		textureString = (bAddSpace and " " or "") .. textureString
+		local newString = text .. textureString
+		return newString, textureString
 	else
-		local newString = "|T" .. texture .. ":" .. textureHeight .. ":" .. textureWidth .. ":0:0:" .. imageWidth .. ":" .. imageHeight .. ":" .. (left * imageWidth) .. ":" .. (right * imageWidth) .. ":" .. (top * imageHeight) .. ":" .. (bottom * imageHeight) .. "|t" .. (bAddSpace and " " or "") .. text
-		return newString
+		textureString = textureString .. (bAddSpace and " " or "")
+		local newString = textureString .. text
+		return newString, textureString
 	end
 end
 
