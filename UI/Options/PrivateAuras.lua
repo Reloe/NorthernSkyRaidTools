@@ -1,7 +1,5 @@
 local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = DF.Language.GetLanguageTable(addonId)
-
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local build_PAgrowdirection_options = Core.build_PAgrowdirection_options
@@ -18,6 +16,7 @@ local function build_anchor_options(settingsKey, key)
         t[#t + 1] = {
             value = pt,
             label = NSI:Loc(pt),
+            phraseId = pt,
             onclick = function()
                 NSRT[settingsKey][key] = pt
                 NSI:UpdatePADisplay(false)
@@ -31,14 +30,14 @@ local function BuildPrivateAurasOptions()
     return {
         {
             type = "label",
-            get = function() return L["Personal Private Aura Settings"] end,
+            get = function() return "Personal Private Aura Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Enabled"],
-            desc = L["Whether Private Aura Display is enabled"],
+            name = "Enabled",
+            desc = "Whether Private Aura Display is enabled",
             get = function() return NSRT.PASettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.enabled = value
@@ -49,8 +48,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "button",
-            name = L["Preview/Unlock"],
-            desc = L["Preview Private Auras to move them around."],
+            name = "Preview/Unlock",
+            desc = "Preview Private Auras to move them around.",
             func = function(self)
                 NSI.IsPAPreview = not NSI.IsPAPreview
                 NSI:UpdatePADisplay(true)
@@ -59,15 +58,15 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "select",
-            name = L["Grow Direction"],
-            desc = L["Grow Direction"],
+            name = "Grow Direction",
+            desc = "Grow Direction",
             get = function() return NSRT.PASettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PASettings", "GrowDirection") end,
         },
         {
             type = "range",
-            name = L["Spacing"],
-            desc = L["Spacing of the Private Aura Display"],
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
             get = function() return NSRT.PASettings.Spacing end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.Spacing = value
@@ -79,8 +78,8 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "range",
-            name = L["Width"],
-            desc = L["Width of the Private Aura Display"],
+            name = "Width",
+            desc = "Width of the Private Aura Display",
             get = function() return NSRT.PASettings.Width end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.Width = value
@@ -91,8 +90,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Height"],
-            desc = L["Height of the Private Aura Display"],
+            name = "Height",
+            desc = "Height of the Private Aura Display",
             get = function() return NSRT.PASettings.Height end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.Height = value
@@ -104,8 +103,8 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "range",
-            name = L["X-Offset"],
-            desc = L["X-Offset of the Private Aura Display"],
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
             get = function() return NSRT.PASettings.xOffset end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.xOffset = value
@@ -116,8 +115,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Y-Offset"],
-            desc = L["Y-Offset of the Private Aura Display"],
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
             get = function() return NSRT.PASettings.yOffset end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.yOffset = value
@@ -128,8 +127,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Max-Icons"],
-            desc = L["Maximum number of icons to display"],
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
             get = function() return NSRT.PASettings.Limit end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.Limit = value
@@ -140,8 +139,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Text-Scale"],
-            desc = L["This will scale the size of Stacks and Duration text."],
+            name = "Text-Scale",
+            desc = "This will scale the size of Stacks and Duration text.",
             get = function() return NSRT.PASettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.StackScale = value
@@ -154,8 +153,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Border"],
-            desc = L["Hide the Blizzard-border around the Player Private Auras. This includes stuff like the dispel icon."],
+            name = "Hide Border",
+            desc = "Hide the Blizzard-border around the Player Private Auras. This includes stuff like the dispel icon.",
             get = function() return NSRT.PASettings.HideBorder end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.HideBorder = value
@@ -165,8 +164,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Disable Tooltip"],
-            desc = L["Hide tooltips on mouseover. The frame will be clickthrough regardless."],
+            name = "Disable Tooltip",
+            desc = "Hide tooltips on mouseover. The frame will be clickthrough regardless.",
             get = function() return NSRT.PASettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.HideTooltip = value
@@ -176,8 +175,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Duration Text"],
-            desc = L["Hide the duration text on the Private Auras."],
+            name = "Hide Duration Text",
+            desc = "Hide the duration text on the Private Auras.",
             get = function() return NSRT.PASettings.HideDurationText end,
             set = function(self, fixedparam, value)
                 NSRT.PASettings.HideDurationText = value
@@ -186,14 +185,14 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "label",
-            get = function() return L["Personal Private Aura Text-Warning"] end,
+            get = function() return "Personal Private Aura Text-Warning" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Enabled"],
-            desc = L["Whether Private Aura Text-Warning is enabled"],
+            name = "Enabled",
+            desc = "Whether Private Aura Text-Warning is enabled",
             get = function() return NSRT.PATextSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PATextSettings.enabled = value
@@ -202,8 +201,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Scale"],
-            desc = L["Scale of the Private Aura Text-Warning Anchor"],
+            name = "Scale",
+            desc = "Scale of the Private Aura Text-Warning Anchor",
             get = function() return NSRT.PATextSettings.Scale end,
             set = function(self, fixedparam, value)
                 NSRT.PATextSettings.Scale = value
@@ -218,14 +217,14 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "label",
-            get = function() return L["RaidFrame Private Aura Settings"] end,
+            get = function() return "RaidFrame Private Aura Settings" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Enabled"],
-            desc = L["Whether Private Aura on Raidframes are enabled"],
+            name = "Enabled",
+            desc = "Whether Private Aura on Raidframes are enabled",
             get = function() return NSRT.PARaidSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.enabled = value
@@ -236,8 +235,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "button",
-            name = L["Preview"],
-            desc = L["Preview Private Auras on your own Raidframe. This only works if you actually have a frame for yourself and you can't drag this one around, use the x/y offset instead."],
+            name = "Preview",
+            desc = "Preview Private Auras on your own Raidframe. This only works if you actually have a frame for yourself and you can't drag this one around, use the x/y offset instead.",
             func = function(self)
                 NSI.IsRaidPAPreview = not NSI.IsRaidPAPreview
                 NSI:UpdatePADisplay(false)
@@ -246,22 +245,22 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "select",
-            name = L["Grow Direction"],
-            desc = L["Grow Direction. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change."],
+            name = "Grow Direction",
+            desc = "Grow Direction. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change.",
             get = function() return NSRT.PARaidSettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PARaidSettings", "GrowDirection") end,
         },
         {
             type = "select",
-            name = L["Row-Grow Direction"],
-            desc = L["Row-Grow Direction for a Grid-Style. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change."],
+            name = "Row-Grow Direction",
+            desc = "Row-Grow Direction for a Grid-Style. If you select a conflicting grow direction(for example both right, or one right and the other left) the other grow option will automatically change.",
             get = function() return NSRT.PARaidSettings.RowGrowDirection end,
             values = function() return build_PAgrowdirection_options("PARaidSettings", "RowGrowDirection") end,
         },
         {
             type = "range",
-            name = L["Icons per Row"],
-            desc = L["How many Icons will be displayed per Row."],
+            name = "Icons per Row",
+            desc = "How many Icons will be displayed per Row.",
             get = function() return NSRT.PARaidSettings.PerRow end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.PerRow = value
@@ -272,8 +271,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Spacing"],
-            desc = L["Spacing of the Private Aura Display"],
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
             get = function() return NSRT.PARaidSettings.Spacing end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.Spacing = value
@@ -285,8 +284,8 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "range",
-            name = L["Width"],
-            desc = L["Width of the Private Aura Display"],
+            name = "Width",
+            desc = "Width of the Private Aura Display",
             get = function() return NSRT.PARaidSettings.Width end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.Width = value
@@ -297,8 +296,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Height"],
-            desc = L["Height of the Private Aura Display"],
+            name = "Height",
+            desc = "Height of the Private Aura Display",
             get = function() return NSRT.PARaidSettings.Height end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.Height = value
@@ -310,8 +309,8 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "range",
-            name = L["X-Offset"],
-            desc = L["X-Offset of the Private Aura Display"],
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
             get = function() return NSRT.PARaidSettings.xOffset end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.xOffset = value
@@ -322,8 +321,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Y-Offset"],
-            desc = L["Y-Offset of the Private Aura Display"],
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
             get = function() return NSRT.PARaidSettings.yOffset end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.yOffset = value
@@ -334,22 +333,22 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "select",
-            name = L["Anchor"],
-            desc = L["The Anchor point of the Private Aura's"],
+            name = "Anchor",
+            desc = "The Anchor point of the Private Aura's",
             get = function() return NSRT.PARaidSettings.Anchor end,
             values = function() return build_anchor_options("PARaidSettings", "Anchor") end,
         },
         {
             type = "select",
-            name = L["Relative To"],
-            desc = L["The Anchor point the Private Aura's are anchored to."],
+            name = "Relative To",
+            desc = "The Anchor point the Private Aura's are anchored to.",
             get = function() return NSRT.PARaidSettings.relativeTo end,
             values = function() return build_anchor_options("PARaidSettings", "relativeTo") end,
         },
         {
             type = "range",
-            name = L["Max-Icons"],
-            desc = L["Maximum number of icons to display"],
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
             get = function() return NSRT.PARaidSettings.Limit end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.Limit = value
@@ -360,8 +359,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Text-Scale"],
-            desc = L["This will scale the size of Stacks and Duration text."],
+            name = "Text-Scale",
+            desc = "This will scale the size of Stacks and Duration text.",
             get = function() return NSRT.PARaidSettings.StackScale or 1.1 end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.StackScale = value
@@ -375,8 +374,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Border"],
-            desc = L["Hide the Blizzard-border around the Raidframe Private Auras. This includes stuff like the dispel icon. (Tooltip is always disabled for Raidframes)"],
+            name = "Hide Border",
+            desc = "Hide the Blizzard-border around the Raidframe Private Auras. This includes stuff like the dispel icon. (Tooltip is always disabled for Raidframes)",
             get = function() return NSRT.PARaidSettings.HideBorder end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.HideBorder = value
@@ -386,8 +385,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Duration Text"],
-            desc = L["Hide the duration text on the Private Auras."],
+            name = "Hide Duration Text",
+            desc = "Hide the duration text on the Private Auras.",
             get = function() return NSRT.PARaidSettings.HideDurationText end,
             set = function(self, fixedparam, value)
                 NSRT.PARaidSettings.HideDurationText = value
@@ -400,8 +399,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Show Debuff-Type Indicator"],
-            desc = L["This will attach the Blizzard Debuff-Type Indicator to ALL Private Aura Displays. This only works if the Border is enabled. This is a global setting and it will apply to all private auras, regardless which addon is creating them."],
+            name = "Show Debuff-Type Indicator",
+            desc = "This will attach the Blizzard Debuff-Type Indicator to ALL Private Aura Displays. This only works if the Border is enabled. This is a global setting and it will apply to all private auras, regardless which addon is creating them.",
             get = function() return NSRT.PARaidSettings.DebuffTypeBorder end,
             set = function(self, fixedparam, value)
                 if NSI.IsBuilding then return end
@@ -411,13 +410,13 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "label",
-            get = function() return L["Private Aura Sounds"] end,
+            get = function() return "Private Aura Sounds" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "button",
-            name = L["Edit Sounds"],
-            desc = L["Open the Private Aura Sounds Editor"],
+            name = "Edit Sounds",
+            desc = "Open the Private Aura Sounds Editor",
             func = function()
                 if not NSUI.pasound_frame:IsShown() then
                     NSUI.pasound_frame:Show()
@@ -428,8 +427,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Use Default RAID Private Aura Sounds"],
-            desc = L["This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spellid's yourself previously this button will NOT overwrite that."],
+            name = "Use Default RAID Private Aura Sounds",
+            desc = "This applies Sounds to all Raid Private Auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spellid's yourself previously this button will NOT overwrite that.",
             get = function() return NSRT.PASounds.UseDefaultPASounds end,
             set = function(self, fixedparam, value)
                 NSRT.PASounds.UseDefaultPASounds = value
@@ -443,8 +442,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Use Default M+ Private Aura Sounds"],
-            desc = L["This will likely be less maintained than the Raid ones, otherwise it works the same as that one."],
+            name = "Use Default M+ Private Aura Sounds",
+            desc = "This will likely be less maintained than the Raid ones, otherwise it works the same as that one.",
             get = function() return NSRT.PASounds.UseDefaultMPlusPASounds end,
             set = function(self, fixedparam, value)
                 NSRT.PASounds.UseDefaultMPlusPASounds = value
@@ -460,14 +459,14 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "label",
-            get = function() return L["Co-Tank Private Auras"] end,
+            get = function() return "Co-Tank Private Auras" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
         },
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Enabled"],
-            desc = L["Whether Private Auras for Co-Tanks are enabled"],
+            name = "Enabled",
+            desc = "Whether Private Auras for Co-Tanks are enabled",
             get = function() return NSRT.PATankSettings.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.enabled = value
@@ -478,8 +477,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "button",
-            name = L["Preview/Unlock"],
-            desc = L["Preview Co-Tank Private Auras."],
+            name = "Preview/Unlock",
+            desc = "Preview Co-Tank Private Auras.",
             func = function(self)
                 NSI.IsTankPAPreview = not NSI.IsTankPAPreview
                 NSI:UpdatePADisplay(false, true)
@@ -488,15 +487,15 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "select",
-            name = L["Grow Direction"],
-            desc = L["Grow Direction"],
+            name = "Grow Direction",
+            desc = "Grow Direction",
             get = function() return NSRT.PATankSettings.GrowDirection end,
             values = function() return build_PAgrowdirection_options("PATankSettings", "GrowDirection") end,
         },
         {
             type = "range",
-            name = L["Spacing"],
-            desc = L["Spacing of the Private Aura Display"],
+            name = "Spacing",
+            desc = "Spacing of the Private Aura Display",
             get = function() return NSRT.PATankSettings.Spacing end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.Spacing = value
@@ -508,8 +507,8 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "range",
-            name = L["Width"],
-            desc = L["Width of the Private Aura Display"],
+            name = "Width",
+            desc = "Width of the Private Aura Display",
             get = function() return NSRT.PATankSettings.Width end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.Width = value
@@ -520,8 +519,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Height"],
-            desc = L["Height of the Private Aura Display"],
+            name = "Height",
+            desc = "Height of the Private Aura Display",
             get = function() return NSRT.PATankSettings.Height end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.Height = value
@@ -533,8 +532,8 @@ local function BuildPrivateAurasOptions()
 
         {
             type = "range",
-            name = L["X-Offset"],
-            desc = L["X-Offset of the Private Aura Display"],
+            name = "X-Offset",
+            desc = "X-Offset of the Private Aura Display",
             get = function() return NSRT.PATankSettings.xOffset end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.xOffset = value
@@ -545,8 +544,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Y-Offset"],
-            desc = L["Y-Offset of the Private Aura Display"],
+            name = "Y-Offset",
+            desc = "Y-Offset of the Private Aura Display",
             get = function() return NSRT.PATankSettings.yOffset end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.yOffset = value
@@ -557,8 +556,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Max-Icons"],
-            desc = L["Maximum number of icons to display"],
+            name = "Max-Icons",
+            desc = "Maximum number of icons to display",
             get = function() return NSRT.PATankSettings.Limit end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.Limit = value
@@ -569,8 +568,8 @@ local function BuildPrivateAurasOptions()
         },
         {
             type = "range",
-            name = L["Text-Scale"],
-            desc = L["This will scale the size of Stacks and Duration text."],
+            name = "Text-Scale",
+            desc = "This will scale the size of Stacks and Duration text.",
             get = function() return NSRT.PATankSettings.StackScale or 4 end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.StackScale = value
@@ -583,8 +582,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Border"],
-            desc = L["Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuff like the dispel icon."],
+            name = "Hide Border",
+            desc = "Hide the Blizzard-border around the Co-Tank Private Auras. This includes stuff like the dispel icon.",
             get = function() return NSRT.PATankSettings.HideBorder end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideBorder = value
@@ -594,8 +593,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Disable Tooltip"],
-            desc = L["Hide tooltips on mouseover. The frame will be clickthrough regardless."],
+            name = "Disable Tooltip",
+            desc = "Hide tooltips on mouseover. The frame will be clickthrough regardless.",
             get = function() return NSRT.PATankSettings.HideTooltip end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideTooltip = value
@@ -605,8 +604,8 @@ local function BuildPrivateAurasOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = L["Hide Duration Text"],
-            desc = L["Hide the duration text on the Private Auras."],
+            name = "Hide Duration Text",
+            desc = "Hide the duration text on the Private Auras.",
             get = function() return NSRT.PATankSettings.HideDurationText end,
             set = function(self, fixedparam, value)
                 NSRT.PATankSettings.HideDurationText = value

@@ -6,10 +6,23 @@ local NSUI = Core.NSUI
 local options_dropdown_template = Core.options_dropdown_template
 local options_button_template = Core.options_button_template
 
+local function T(key)
+    return NSI:Loc(key)
+end
+
+local function ApplyUIFont(object, size, flags)
+    if not object then return end
+    if object.GetFontString then
+        object = object:GetFontString()
+    end
+    NSI:SetUIFont(object, size or 11, flags or "")
+end
+
 local function BuildNicknameEditUI()
-    local nicknames_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Nicknames Management", "NicknamesEditFrame", {
+    local nicknames_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, T("Nicknames Management"), "NicknamesEditFrame", {
         DontRightClickClose = true
     })
+    ApplyUIFont(nicknames_edit_frame.Title, 12)
     nicknames_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
     local refresh_count = 0
@@ -95,24 +108,29 @@ local function BuildNicknameEditUI()
         nicknames_edit_scrollbox:CreateLine(createLineFunc)
     end
 
-    local player_name_header = DF:CreateLabel(nicknames_edit_frame, "Player Name", 11)
+    local player_name_header = DF:CreateLabel(nicknames_edit_frame, T("Player Name"), 11)
+    ApplyUIFont(player_name_header, 11)
     player_name_header:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 20, -30)
 
-    local nickname_header = DF:CreateLabel(nicknames_edit_frame, "Nickname", 11)
+    local nickname_header = DF:CreateLabel(nicknames_edit_frame, T("Nickname"), 11)
+    ApplyUIFont(nickname_header, 11)
     nickname_header:SetPoint("TOPLEFT", nicknames_edit_frame, "TOPLEFT", 200, -30)
 
     nicknames_edit_scrollbox:SetScript("OnShow", function(self)
+        nicknames_edit_frame:SetTitle(T("Nicknames Management"))
         self:MasterRefresh()
     end)
 
-    local new_player_label = DF:CreateLabel(nicknames_edit_frame, "New Player:", 11)
+    local new_player_label = DF:CreateLabel(nicknames_edit_frame, T("New Player:"), 11)
+    ApplyUIFont(new_player_label, 11)
     new_player_label:SetPoint("TOPLEFT", nicknames_edit_scrollbox, "BOTTOMLEFT", 0, -20)
 
     local new_player_entry = DF:CreateTextEntry(nicknames_edit_frame, function() end, 120, 20)
     new_player_entry:SetPoint("LEFT", new_player_label, "RIGHT", 10, 0)
     new_player_entry:SetTemplate(options_dropdown_template)
 
-    local new_nickname_label = DF:CreateLabel(nicknames_edit_frame, "Nickname:", 11)
+    local new_nickname_label = DF:CreateLabel(nicknames_edit_frame, T("Nickname:"), 11)
+    ApplyUIFont(new_nickname_label, 11)
     new_nickname_label:SetPoint("LEFT", new_player_entry, "RIGHT", 10, 0)
 
     local new_nickname_entry = DF:CreateTextEntry(nicknames_edit_frame, function() end, 120, 20)
@@ -132,18 +150,21 @@ local function BuildNicknameEditUI()
             new_nickname_entry:SetText("")
             nicknames_edit_scrollbox:MasterRefresh()
         end
-    end, 60, 20, "Add")
+    end, 60, 20, T("Add"))
+    ApplyUIFont(add_button, 12)
     add_button:SetPoint("LEFT", new_nickname_entry, "RIGHT", 10, 0)
     add_button:SetTemplate(options_button_template)
 
-    local sync_button = DF:CreateButton(nicknames_edit_frame, function() NSI:SyncNickNames() end, 225, 20, "Sync Nicknames")
+    local sync_button = DF:CreateButton(nicknames_edit_frame, function() NSI:SyncNickNames() end, 225, 20, T("Sync Nicknames"))
+    ApplyUIFont(sync_button, 12)
     sync_button:SetPoint("BOTTOMLEFT", nicknames_edit_frame, "BOTTOMLEFT", 10, 10)
     sync_button:SetTemplate(options_button_template)
 
     local function createImportPopup()
-        local popup = DF:CreateSimplePanel(nicknames_edit_frame, 300, 150, "Import Nicknames", "ImportPopup", {
+        local popup = DF:CreateSimplePanel(nicknames_edit_frame, 300, 150, T("Import Nicknames"), "ImportPopup", {
             DontRightClickClose = true
         })
+        ApplyUIFont(popup.Title, 12)
         popup:SetPoint("CENTER", nicknames_edit_frame, "CENTER", 0, 0)
         popup:SetFrameLevel(100)
 
@@ -160,7 +181,8 @@ local function BuildNicknameEditUI()
             popup.import_text_box:SetText("")
             popup:Hide()
             nicknames_edit_scrollbox:MasterRefresh()
-        end, 280, 20, "Import")
+        end, 280, 20, T("Import"))
+        ApplyUIFont(popup.import_confirm_button, 12)
         popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
         popup.import_confirm_button:SetTemplate(options_button_template)
 
@@ -171,9 +193,11 @@ local function BuildNicknameEditUI()
     local import_popup = createImportPopup()
     local import_button = DF:CreateButton(nicknames_edit_frame, function()
         if not import_popup:IsShown() then
+            import_popup:SetTitle(T("Import Nicknames"))
             import_popup:Show()
         end
-    end, 225, 20, "Import Nicknames")
+    end, 225, 20, T("Import Nicknames"))
+    ApplyUIFont(import_button, 12)
     import_button:SetPoint("BOTTOMRIGHT", nicknames_edit_frame, "BOTTOMRIGHT", -10, 10)
     import_button:SetTemplate(options_button_template)
 

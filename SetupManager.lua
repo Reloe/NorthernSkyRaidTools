@@ -1,5 +1,9 @@
 local _, NSI = ... -- Internal namespace
 
+local function L(key)
+    return NSI.Loc and NSI:Loc(key) or key
+end
+
 NSI.Groups = {}
 NSI.Groups.Processing = false
 
@@ -414,7 +418,7 @@ function NSI:SplitGroupInit(Flex, default, odds)
 end
 
 local DF = _G["DetailsFramework"]
-NSI.RaidBuffCheck = DF:CreateSimplePanel(UIParent, 300, 300, "[NSRT] Missing Raid Buffs",
+NSI.RaidBuffCheck = DF:CreateSimplePanel(UIParent, 300, 300, L("[NSRT] Missing Raid Buffs"),
         "NSIRaidBuffFrame", {
         })
 NSI.RaidBuffCheck:Hide()
@@ -429,6 +433,7 @@ function NSI:UpdateRaidBuffFrame()
         self.RaidBuffCheck:Hide()
         return
     end
+    self.RaidBuffCheck.Title:SetText(L("[NSRT] Missing Raid Buffs"))
     local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
     if PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == nil then -- first time opening PVE frame, tab info is not yet available
         C_Timer.After(0.1, function() NSI:UpdateRaidBuffFrame() end)
@@ -462,27 +467,27 @@ function NSI:UpdateRaidBuffFrame()
                 lustcount = lustcount + count[i]
             end
             if count[i] == 0 then
-                text = text..GetClassColorObj(className[i]):WrapTextInColorCode("Missing "..MissingTexts[i].."\n")
+                text = text..GetClassColorObj(className[i]):WrapTextInColorCode(format(L("Missing %s"), L(MissingTexts[i])).."\n")
             end
         end
         if resscount > 0 then
-            text = text.."Available Resses: "..resscount.."\n"
+            text = text..format(L("Available Resses: %d\n"), resscount)
         else
-            text = text.."|cFFFF0000No Resses Available\n|r"
+            text = text.."|cFFFF0000"..L("No Resses Available\n").."|r"
         end
         if lustcount > 0 then
-            text = text.."Available Lusts: "..lustcount.."\n"
+            text = text..format(L("Available Lusts: %d\n"), lustcount)
         else
-            text = text.."|cFFFF0000No Lusts Available\n|r"
+            text = text.."|cFFFF0000"..L("No Lusts Available\n").."|r"
         end
         if count[4] == 1 then
-            text = text..GetClassColorObj(className[4]):WrapTextInColorCode("Only 1 Rogue Poison\n")
+            text = text..GetClassColorObj(className[4]):WrapTextInColorCode(L("Only 1 Rogue Poison\n"))
         end
         if count[13] > 0 then
-            text = text..GetClassColorObj(className[13]):WrapTextInColorCode("Time Spirals: "..count[13].."\n")
+            text = text..GetClassColorObj(className[13]):WrapTextInColorCode(format(L("Time Spirals: %d\n"), count[13]))
         end
         if count[9] > 0 then
-            text = text..GetClassColorObj(className[9]):WrapTextInColorCode("Gateways: "..count[9].."\n")
+            text = text..GetClassColorObj(className[9]):WrapTextInColorCode(format(L("Gateways: %d\n"), count[9]))
         end
         MissingBuffLabel:SetText(text)
     else

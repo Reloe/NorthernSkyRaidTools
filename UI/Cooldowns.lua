@@ -6,13 +6,26 @@ local options_dropdown_template = Core.options_dropdown_template
 local options_slider_template = Core.options_slider_template
 local options_button_template = Core.options_button_template
 
+local function T(key)
+    return NSI:Loc(key)
+end
+
+local function ApplyUIFont(object, size, flags)
+    if not object then return end
+    if object.GetFontString then
+        object = object:GetFontString()
+    end
+    NSI:SetUIFont(object, size or 11, flags or "")
+end
+
 -- Cooldown type options
 local cooldown_types = { "Spell", "Item" }
 local function build_cooldown_type_options()
     local t = {}
     for i = 1, #cooldown_types do
         tinsert(t, {
-            label = cooldown_types[i],
+            label = T(cooldown_types[i]),
+            phraseId = cooldown_types[i],
             value = cooldown_types[i],
             onclick = function(_, _, value)
                 cooldown_type = value
@@ -43,9 +56,10 @@ local function build_spec_options()
 end
 
 local function BuildCooldownsEditUI()
-    local cooldowns_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, "Cooldowns Management", "CooldownsEditFrame", {
+    local cooldowns_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, T("Cooldowns Management"), "CooldownsEditFrame", {
         DontRightClickClose = true
     })
+    ApplyUIFont(cooldowns_edit_frame.Title, 12)
     cooldowns_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
 
     local function PrepareData(data)
@@ -228,28 +242,34 @@ local function BuildCooldownsEditUI()
         cooldowns_edit_scrollbox:CreateLine(createLineFunc)
     end
 
-    local spec_header = DF:CreateLabel(cooldowns_edit_frame, "Specialization", 11)
+    local spec_header = DF:CreateLabel(cooldowns_edit_frame, T("Specialization"), 11)
+    ApplyUIFont(spec_header, 11)
     spec_header:SetPoint("TOPLEFT", cooldowns_edit_frame, "TOPLEFT", 15, -30)
     spec_header:SetWidth(100)
 
-    local type_header = DF:CreateLabel(cooldowns_edit_frame, "Type", 11)
+    local type_header = DF:CreateLabel(cooldowns_edit_frame, T("Type"), 11)
+    ApplyUIFont(type_header, 11)
     type_header:SetPoint("LEFT", spec_header, "RIGHT", 5, 0)
     type_header:SetWidth(70)
 
-    local id_header = DF:CreateLabel(cooldowns_edit_frame, "Spell/Item ID", 11)
+    local id_header = DF:CreateLabel(cooldowns_edit_frame, T("Spell/Item ID"), 11)
+    ApplyUIFont(id_header, 11)
     id_header:SetWidth(120)
     id_header:SetPoint("LEFT", type_header, "RIGHT", 28, 0)
 
-    local offset_header = DF:CreateLabel(cooldowns_edit_frame, "Offset", 11)
+    local offset_header = DF:CreateLabel(cooldowns_edit_frame, T("Offset"), 11)
+    ApplyUIFont(offset_header, 11)
     offset_header:SetPoint("LEFT", id_header, "RIGHT", 5, 0)
 
     cooldowns_edit_scrollbox:SetScript("OnShow", function(self)
+        cooldowns_edit_frame:SetTitle(T("Cooldowns Management"))
         selected_spec = C_SpecializationInfo.GetSpecializationInfo(C_SpecializationInfo.GetSpecialization())
         self:MasterRefresh()
     end)
 
     local label_width = 80
-    local new_spec_label = DF:CreateLabel(cooldowns_edit_frame, "Specialization:", 11)
+    local new_spec_label = DF:CreateLabel(cooldowns_edit_frame, T("Specialization:"), 11)
+    ApplyUIFont(new_spec_label, 11)
     new_spec_label:SetPoint("TOPLEFT", cooldowns_edit_scrollbox, "BOTTOMLEFT", 0, -20)
     new_spec_label:SetWidth(label_width)
 
@@ -258,7 +278,8 @@ local function BuildCooldownsEditUI()
     new_spec_dropdown:SetPoint("LEFT", new_spec_label, "RIGHT", 10, 0)
     new_spec_dropdown:SetTemplate(options_dropdown_template)
 
-    local new_type_label = DF:CreateLabel(cooldowns_edit_frame, "Type:", 11)
+    local new_type_label = DF:CreateLabel(cooldowns_edit_frame, T("Type:"), 11)
+    ApplyUIFont(new_type_label, 11)
     new_type_label:SetPoint("LEFT", new_spec_dropdown, "RIGHT", 10, 0)
     new_type_label:SetWidth(label_width / 2)
 
@@ -267,7 +288,8 @@ local function BuildCooldownsEditUI()
     new_type_dropdown:SetPoint("LEFT", new_type_label, "RIGHT", 10, 0)
     new_type_dropdown:SetTemplate(options_dropdown_template)
 
-    local new_id_label = DF:CreateLabel(cooldowns_edit_frame, "Spell/Item ID:", 11)
+    local new_id_label = DF:CreateLabel(cooldowns_edit_frame, T("Spell/Item ID:"), 11)
+    ApplyUIFont(new_id_label, 11)
     new_id_label:SetPoint("BOTTOMLEFT", cooldowns_edit_frame, "BOTTOMLEFT", 10, 10)
     new_id_label:SetWidth(label_width)
 
@@ -275,7 +297,8 @@ local function BuildCooldownsEditUI()
     new_id_text_entry:SetPoint("LEFT", new_id_label, "RIGHT", 10, 0)
     new_id_text_entry:SetTemplate(options_dropdown_template)
 
-    local new_offset_label = DF:CreateLabel(cooldowns_edit_frame, "Offset:", 11)
+    local new_offset_label = DF:CreateLabel(cooldowns_edit_frame, T("Offset:"), 11)
+    ApplyUIFont(new_offset_label, 11)
     new_offset_label:SetPoint("LEFT", new_id_text_entry, "RIGHT", 10, 0)
     new_offset_label:SetWidth(label_width / 2)
 
@@ -294,7 +317,8 @@ local function BuildCooldownsEditUI()
             new_offset_slider:SetValue(0)
             cooldowns_edit_scrollbox:MasterRefresh()
         end
-    end, 60, 20, "Add")
+    end, 60, 20, T("Add"))
+    ApplyUIFont(add_button, 12)
     add_button:SetPoint("LEFT", new_type_dropdown, "RIGHT", 10, 0)
     add_button:SetTemplate(options_button_template)
 

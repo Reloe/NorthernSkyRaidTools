@@ -1,7 +1,5 @@
 local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = DF.Language.GetLanguageTable(addonId)
-
 local Core                      = NSI.UI.Core
 local NSUI                      = Core.NSUI
 local content_width             = Core.content_width
@@ -206,7 +204,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local title = screen:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 16, "OUTLINE")
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY)
-    title:SetText("|cFF00FFFFEncounter|r Alerts")
+    title:SetText(NSI:Loc("|cFF00FFFFEncounter|r Alerts"))
 
     -- ── Filter dropdown ─────────────────────────────────────────────────────
     local function BuildFilterOptions()
@@ -268,10 +266,10 @@ local function BuildEncounterAlertsUI(parentFrame)
     searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4)
 
     local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  Search...")
+    searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
     searchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
-    searchHint:SetFont(STANDARD_TEXT_FONT, 14, "")
+    NSI:SetUIFont(searchHint, 14, "")
 
     local function UpdateSearchHint(eb)
         searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus())

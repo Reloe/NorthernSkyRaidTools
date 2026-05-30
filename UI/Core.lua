@@ -204,9 +204,10 @@ local function build_growdirection_options(SettingName, Icons)
     for i, v in ipairs(list) do
         tinsert(t, {
             label = NSI:Loc(v),
-            value = i,
+            phraseId = v,
+            value = v,
             onclick = function(_, _, value)
-                NSRT.ReminderSettings[SettingName]["GrowDirection"] = list[value]
+                NSRT.ReminderSettings[SettingName]["GrowDirection"] = value
                 NSI:UpdateExistingFrames()
             end
         })
@@ -220,9 +221,10 @@ local function build_PAgrowdirection_options(SettingName, SecondaryName)
     for i, v in ipairs(list) do
         tinsert(t, {
             label = NSI:Loc(v),
-            value = i,
+            phraseId = v,
+            value = v,
             onclick = function(_, _, value)
-                NSRT[SettingName][SecondaryName] = list[value]
+                NSRT[SettingName][SecondaryName] = value
                 NSI:UpdatePADisplay(SettingName == "PASettings", SettingName == "PATankSettings")
 
                 if swapped then NSUI.MenuFrame:GetTabFrameByName("PrivateAura"):RefreshOptions() end
@@ -238,9 +240,10 @@ local function build_raidframeicon_options()
     for i, v in ipairs(list) do
         tinsert(t, {
             label = NSI:Loc(v),
-            value = i,
+            phraseId = v,
+            value = v,
             onclick = function(_, _, value)
-                NSRT.ReminderSettings.UnitIconSettings.Position = list[value]
+                NSRT.ReminderSettings.UnitIconSettings.Position = value
                 NSI:UpdateExistingFrames()
             end
         })

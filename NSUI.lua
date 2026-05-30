@@ -397,6 +397,9 @@ function NSUI:Init()
     DF:BuildMenu(general_tab, general_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         general_callback)
+    if general_tab.widgetids and general_tab.widgetids.current_profile_label then
+        NSI:SetUIFont(general_tab.widgetids.current_profile_label.widget, 10)
+    end
     BuildLanguageSelector(general_tab)
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,

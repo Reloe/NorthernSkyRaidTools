@@ -1,7 +1,5 @@
 local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
-local L = DF.Language.GetLanguageTable(addonId)
-
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
