@@ -256,6 +256,8 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
     if self.FeatherColorIconFrame then
         if preview and preview == "Feather Color" then
             self:MakeDraggable(self.FeatherColorIconFrame, nil, false)
+            NSRT.EncounterAlerts[encID][15]["Feather Color"] = NSRT.EncounterAlerts[encID][16]["Feather Color"]
+            NSRT.EncounterAlerts[encID][14]["Feather Color"] = NSRT.EncounterAlerts[encID][16]["Feather Color"]
         end
         self.FeatherColorIconFrame:Hide()
     end
