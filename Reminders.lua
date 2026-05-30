@@ -1004,7 +1004,7 @@ end
 
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
-    if not isAllowed then return end
+    if not isAllowed and not bypass then return end
     local now = GetTime()
     local dur = info.dur or 8
     info.startTime = now
