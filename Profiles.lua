@@ -405,6 +405,11 @@ function NSI:AddMissingDefaults()
         NSRT.HasNewAlertStructure = true
         NSRT.EncounterAlerts = {}
     end
+    for k, v in pairs(NSRT.EncounterAlerts or {}) do
+        if v.enabled ~= nil then
+            v.enabled = nil
+        end
+    end
     for k, v in pairs(defaults) do
         if NSRT[k] == nil then
             NSRT[k] = v
