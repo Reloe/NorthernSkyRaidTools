@@ -725,16 +725,6 @@ local setObject_Text = function(addonNamespaceTable, object, phraseInfoTable, te
     end
 
     local formattedText = getFormattedText(phraseInfoTable, text)
-    if (object.__languageIconTexture) then
-        local iconCoords = object.__languageIconCoords or {.1, .9, .1, .9}
-        local iconFileSize = object.__languageIconFileSize or {64, 64}
-        local iconSize = object.__languageIconSize
-        if (not iconSize) then
-            local font, height = object:GetFont()
-            iconSize = {height, height}
-        end
-        formattedText = DF:AddTextureToText(formattedText, DF:CreateTextureInfo(object.__languageIconTexture, iconSize[1], iconSize[2], iconCoords[1], iconCoords[2], iconCoords[3], iconCoords[4], iconFileSize[1], iconFileSize[2]), true, false)
-    end
 
     object:SetText(formattedText)
 end
