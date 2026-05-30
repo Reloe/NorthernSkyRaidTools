@@ -185,8 +185,13 @@ local function BuildInterruptDisplayOptions()
         },
         {
             type = "label",
-            get = function() return NSI:Loc("The first line of a note will be assigned to interrupt the first relevant boss unit. For Lura this means it assigns boss2, then boss3, then boss4.\nThe note allows for colored name-strings as well as NSNickNames.")
-                .."\nintstart\nNeykgreifen Hoori Fonkydan Nerdshockz\nGladrien Gy Cheb Evokimoz\nReloe Therzp Patrickwl Tizaxyr\nintend" end,
+            get = function() return L["The first line of a note will be assigned to interrupt the first relevant boss unit. For Lura this means it assigns boss2, then boss3, then boss4.\nThe note allows for colored name-strings as well as NSNickNames."] end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "label",
+            get = function() return "intstart\nNeykgreifen Hoori Fonkydan Nerdshockz\nGladrien Gy Cheb Evokimoz\nReloe Therzp Patrickwl Tizaxyr\nintend" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
 
