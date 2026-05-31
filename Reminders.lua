@@ -338,6 +338,8 @@ function NSI:ProcessReminder()
                 end
             else
                 if (not firstline) and (not line:find("invitelist:")) then
+                    -- Restore WoW color and icon escape sequences that get doubled when passing through an EditBox
+                    line = line:gsub("||c(%x%x%x%x%x%x%x%x)", "|c%1"):gsub("||r", "|r"):gsub("||T", "|T"):gsub("||t", "|t")
                     line = line:gsub("{(%a*%d*)}", function(token) -- convert {star}/{rt1} etc. to raid target icons
                         local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
                         if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
