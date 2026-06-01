@@ -83,18 +83,13 @@ local componentRegistry = {
     Label     = {},
     Breakline = {},
 }
-local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
 
 local function ValidateFont(path)
-    if not path or path == "" then return FALLBACK_FONT end
-    NSI.TestString = NSI.TestString or UIParent:CreateFontString(nil, "ARTWORK")
-    local ok = NSI.TestString:SetFont(path, 12, "")
-    NSI.TestString:Hide()
-    return ok and path or FALLBACK_FONT
+    return NSI:ValidateFontPath(path)
 end
 
 local function RefreshFonts()
-    local fontPath = ValidateFont(NSI:GetUIFontPath(true))
+    local fontPath = ValidateFont(NSI:GetUIFontPath())
     local fontFlags = NSI:GetUIFontFlags()
     for _, entry in ipairs(labelRegistry) do
         entry.label:SetFont(fontPath, entry.size, fontFlags)
@@ -164,7 +159,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
 
     local label = labelFrame:CreateFontString(nil, "OVERLAY")
     local labelSize = textSize or STYLE.text_size
-    label:SetFont(ValidateFont(NSI:GetUIFontPath(true)), labelSize, NSI:GetUIFontFlags())
+    label:SetFont(ValidateFont(NSI:GetUIFontPath()), labelSize, NSI:GetUIFontFlags())
     label:SetTextColor(unpack(STYLE.text_color))
     label:SetText(text or "")
     label:SetJustifyV("MIDDLE")
@@ -395,7 +390,7 @@ end
 
 local function MakeFontString(parent, size)
     local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(ValidateFont(NSI:GetUIFontPath(true)), size, NSI:GetUIFontFlags())
+    fs:SetFont(ValidateFont(NSI:GetUIFontPath()), size, NSI:GetUIFontFlags())
     fs:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[#labelRegistry + 1] = {label = fs, size = size}
     return fs
@@ -595,7 +590,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4,  -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
-    edit:SetFont(ValidateFont(NSI:GetUIFontPath(true)), 12, NSI:GetUIFontFlags())
+    edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
     edit:SetTextColor(1, 1, 1, 1)
     labelRegistry[#labelRegistry + 1] = {label = edit, size = 12}
     edit:SetAutoFocus(false)
@@ -1089,7 +1084,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     typeBox:SetAutoFocus(false)
     typeBox:SetNumeric(false)
     typeBox:SetMaxLetters(10)
-    typeBox:SetFont(FALLBACK_FONT, 11, "")
+    typeBox:SetFont(ValidateFont(NSI:GetFallbackUIFontPath()), 11, "")
     typeBox:SetTextColor(0, 1, 1, 1)
     typeBox:SetJustifyH("RIGHT")
     typeBox:SetBackdrop({bgFile=[[Interface\Buttons\WHITE8x8]], edgeFile=[[Interface\Buttons\WHITE8x8]], edgeSize=1})
@@ -1879,7 +1874,7 @@ local function CtxMeasureText(text)
         _ctxMeasureFS:Hide()
     end
     _ctxMeasureFS:SetFont(
-        ValidateFont(NSI:GetUIFontPath(true)),
+        ValidateFont(NSI:GetUIFontPath()),
         13,
         NSI:GetUIFontFlags())
     _ctxMeasureFS:SetText(text or "")
@@ -2222,7 +2217,7 @@ local function EnsureLinkPopup()
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4, -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
-    edit:SetFont(ValidateFont(NSI:GetUIFontPath(true)), 12, NSI:GetUIFontFlags())
+    edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
     edit:SetTextColor(1, 1, 1, 1)
     labelRegistry[#labelRegistry + 1] = {label = edit, size = 12}
     edit:SetAutoFocus(false)

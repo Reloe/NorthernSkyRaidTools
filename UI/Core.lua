@@ -35,6 +35,26 @@ local supportedLanguages = {
     zhTW = true,
 }
 
+local fontTestString
+
+function NSI:GetFallbackUIFontPath()
+    local gameFont = GameFontNormal and select(1, GameFontNormal:GetFont())
+    return gameFont or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+end
+
+function NSI:ValidateFontPath(path)
+    local fallback = self:GetFallbackUIFontPath()
+    if not path or path == "" then return fallback end
+
+    fontTestString = fontTestString or UIParent:CreateFontString(nil, "ARTWORK")
+    local ok, success = pcall(fontTestString.SetFont, fontTestString, path, 12, "")
+    fontTestString:Hide()
+    if ok and success then return path end
+
+    ok, success = pcall(fontTestString.SetFont, fontTestString, fallback, 12, "")
+    return (ok and success) and fallback or "Fonts\\FRIZQT__.TTF"
+end
+
 function NSI:GetSelectedLanguage()
     local languageId = NSRT and NSRT.Settings and NSRT.Settings.Language
     if not languageId or languageId == "Auto" then
@@ -63,14 +83,22 @@ function NSI:GetUIFontPath()
     if self.LSM then
         local lsmFont = self.LSM:Fetch("font", fontPath, true)
         if lsmFont then
-            return lsmFont
+            return self:ValidateFontPath(lsmFont)
         end
     end
-    return fontPath
+    return self:ValidateFontPath(fontPath)
 end
 
 function NSI:GetUIFontFlags()
     return ""
+end
+
+function NSI:GetGlobalFontPath()
+    local fontPath = NSRT and NSRT.Settings and NSRT.Settings.GlobalFont
+    if self.LSM then
+        fontPath = self.LSM:Fetch("font", fontPath, true) or fontPath
+    end
+    return self:ValidateFontPath(fontPath)
 end
 
 function NSI:Loc(key)
@@ -91,14 +119,25 @@ NSI.UIFontRegistry = NSI.UIFontRegistry or {}
 function NSI:SetUIFont(object, size, flags)
     if not object or not object.SetFont then return end
     flags = flags or self:GetUIFontFlags()
-    object:SetFont(self:GetUIFontPath(true), size, flags)
+    if not size and object.GetFont then
+        local ok, _, currentSize = pcall(object.GetFont, object)
+        if ok then size = currentSize end
+    end
+    size = size or 12
+    local ok = pcall(object.SetFont, object, self:GetUIFontPath(), size, flags)
+    if not ok then
+        pcall(object.SetFont, object, self:GetFallbackUIFontPath(), size, flags)
+    end
     self.UIFontRegistry[object] = {size = size, flags = flags}
 end
 
 function NSI:RefreshUIFonts()
     for object, info in pairs(self.UIFontRegistry) do
         if object and object.SetFont then
-            object:SetFont(self:GetUIFontPath(true), info.size, info.flags or self:GetUIFontFlags())
+            local ok = pcall(object.SetFont, object, self:GetUIFontPath(), info.size, info.flags or self:GetUIFontFlags())
+            if not ok then
+                pcall(object.SetFont, object, self:GetFallbackUIFontPath(), info.size, info.flags or self:GetUIFontFlags())
+            end
         else
             self.UIFontRegistry[object] = nil
         end
@@ -182,8 +221,8 @@ local function build_media_options(typename, settingname, isTexture, isReminder,
                 if GlobalFont then
                     NSRT.Settings.GlobalFont = list[value]
                     NSI:ApplySelectedLanguage()
-                    NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
-                    NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
+                    NSI.NSRTFrame.generic_display.Text:SetFont(NSI:GetGlobalFontPath(), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
+                    NSI.NSRTFrame.SecretDisplay.Text:SetFont(NSI:GetGlobalFontPath(), NSRT.Settings.GlobalEncounterFontSize, "OUTLINE")
                     return
                 end
                 NSRT.ReminderSettings[typename][settingname] = list[value]

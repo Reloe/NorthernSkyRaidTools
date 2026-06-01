@@ -48,7 +48,7 @@ local function BuildGeneralOptions()
             get = function() return NSRT.Settings["GlobalFontSize"] end,
             set = function(self, fixedparam, value)
                 NSRT.Settings["GlobalFontSize"] = value
-                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI:GetGlobalFontPath(), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
             end,
             min = 10,
             max = 100,
@@ -71,7 +71,7 @@ local function BuildGeneralOptions()
             get = function() return NSRT.Settings.GlobalFontFlags end,
             set = function(self, fixedparam, value)
                 NSRT.Settings.GlobalFontFlags = value
-                NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
+                NSI.NSRTFrame.generic_display.Text:SetFont(NSI:GetGlobalFontPath(), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
             end,
             values = function()
                 local flags = {
@@ -91,7 +91,7 @@ local function BuildGeneralOptions()
                         onclick = function()
                             NSRT.Settings.GlobalFontFlags = v
                             NSI:ApplySelectedLanguage()
-                            NSI.NSRTFrame.generic_display.Text:SetFont(NSI.LSM:Fetch("font", NSRT.Settings.GlobalFont), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
+                            NSI.NSRTFrame.generic_display.Text:SetFont(NSI:GetGlobalFontPath(), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
                         end,
                     })
                 end
