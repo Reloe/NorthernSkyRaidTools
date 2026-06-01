@@ -70,7 +70,7 @@ local function BuildVersionCheckUI(parent)
         component_name_entry.AddonAutoCompleteList = NSRT.NSUI.AutoComplete["Addon"] or {}
         local component_type = component_type_dropdown:GetValue()
         if component_type == "Addon" then
-            component_name_entry:SetAsAutoComplete("AddonAutoCompleteList", _, true)
+            component_name_entry:SetAsAutoComplete("AddonAutoCompleteList", nil, true)
         end
     end)
 

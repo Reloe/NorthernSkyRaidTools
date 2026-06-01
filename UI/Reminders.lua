@@ -183,7 +183,7 @@ local function ImportReminderString(name, IsUpdate)
     end
 
     if not popup.test_string_text_box then
-        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ReminderTextEdit", true, false, true)
+        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, nil, "ReminderTextEdit", true, false, true)
         popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
         popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
         DF:ApplyStandardBackdrop(popup.test_string_text_box)
@@ -251,7 +251,7 @@ local function ImportPersonalReminderString(name, IsUpdate)
     end
 
     if not popup.test_string_text_box then
-        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "PersonalReminderTextEdit", true, false, true)
+        popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, nil, "PersonalReminderTextEdit", true, false, true)
         popup.test_string_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
         popup.test_string_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
         DF:ApplyStandardBackdrop(popup.test_string_text_box)
@@ -645,7 +645,7 @@ local function BuildReminderScreen(personal, parentFrame)
             nameEntry.editbox:SetEnabled(true)
         end
     end
-    local editor = DF:NewSpecialLuaEditorEntry(screen, 600, 400, _, screenName .. "Editor", true, true, true)
+    local editor = DF:NewSpecialLuaEditorEntry(screen, 600, 400, nil, screenName .. "Editor", true, true, true)
     editor:SetPoint("TOPLEFT", screen, "TOPLEFT", editorLeft, topY - 26)
     editor:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -25, 45)
     DF:ApplyStandardBackdrop(editor)

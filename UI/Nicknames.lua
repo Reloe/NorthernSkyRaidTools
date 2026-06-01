@@ -168,7 +168,7 @@ local function BuildNicknameEditUI()
         popup:SetPoint("CENTER", nicknames_edit_frame, "CENTER", 0, 0)
         popup:SetFrameLevel(100)
 
-        popup.import_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, _, "ImportTextBox", true, false, true)
+        popup.import_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, nil, "ImportTextBox", true, false, true)
         popup.import_text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
         popup.import_text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -30, 40)
         DF:ApplyStandardBackdrop(popup.import_text_box)

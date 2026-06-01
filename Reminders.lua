@@ -1875,6 +1875,7 @@ function NSI:FlashNoteBackgrounds()
 end
 
 function NSAPI:ToggleTLReminders()
+    if not NSRT then return end
     NSRT.ReminderSettings.UseTLReminders = LiquidRemindersSaved.settings.timeline.nsrtNote
     NSRT.ReminderSettings.UseTLAssignments = LiquidRemindersSaved.settings.timeline.nsrtAssignments
     NSRT.ReminderSettings.UseTLAlerts = LiquidRemindersSaved.settings.timeline.nsrtAlerts
