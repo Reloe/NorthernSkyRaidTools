@@ -434,7 +434,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetTextColor(1, 1, 1)
 
                 self.LuraRunesNumbers[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
-                self.LuraRunesNumbers[pos]:SetFont(self.LSM:Fetch("font", NSRT.Settings.GlobalFont), 25, "OUTLINE")
+                self.LuraRunesNumbers[pos]:SetFont(self:GetGlobalFontPath(), 25, "OUTLINE")
                 self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
                 self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
             end

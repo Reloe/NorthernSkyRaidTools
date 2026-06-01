@@ -46,12 +46,12 @@ function NSI:ValidateFontPath(path)
     local fallback = self:GetFallbackUIFontPath()
     if not path or path == "" then return fallback end
 
-    fontTestString = fontTestString or UIParent:CreateFontString(nil, "ARTWORK")
-    local ok, success = pcall(fontTestString.SetFont, fontTestString, path, 12, "")
-    fontTestString:Hide()
+    NSI.fontTestString = NSI.fontTestString or UIParent:CreateFontString(nil, "ARTWORK")
+    local ok, success = pcall(NSI.fontTestString.SetFont, NSI.fontTestString, path, 12, "")
+    NSI.fontTestString:Hide()
     if ok and success then return path end
 
-    ok, success = pcall(fontTestString.SetFont, fontTestString, fallback, 12, "")
+    ok, success = pcall(NSI.fontTestString.SetFont, NSI.fontTestString, fallback, 12, "")
     return (ok and success) and fallback or "Fonts\\FRIZQT__.TTF"
 end
 
