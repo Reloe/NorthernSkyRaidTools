@@ -25,6 +25,7 @@ NSRT.EncounterAlerts = {
                 ringColors = nil,
                 Ticks = nil,           -- nil/table
                 ReloeReminder = true, -- bool (true when created in the code as a Reloe provided reminder)
+                Version = {versionNumber = 1, dur = 10}, -- optional; versionNumber controls whether the remaining fields overwrite existing saved values
                 enabled = true,        -- bool
                 loadConditions = {
                     ["Roles"] = {

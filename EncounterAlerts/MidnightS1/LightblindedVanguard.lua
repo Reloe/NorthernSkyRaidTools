@@ -42,7 +42,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = 1, internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil, id = 0, customIcon = 355,
+    local data = {Version = {versionNumber = 1, loadConditions = tankConditions}, internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil, id = 0, customIcon = 355,
     overrides = {enabled = true, isSpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0, BlockCopy = true},
     Preview = [[return function()
         print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")

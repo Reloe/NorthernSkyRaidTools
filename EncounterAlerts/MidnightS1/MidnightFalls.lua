@@ -128,7 +128,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = 1, group = "Lura P2", name = "Seed-Drop", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 3, spellID = 1253031,
+    local data = {Version = {versionNumber = 1, dur = 3}, group = "Lura P2", name = "Seed-Drop", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 3, spellID = 1253031,
     overrides = {countdown = 3, barColors = {0, 1, 0, 1},
         isConditional = {
             text = "This Alert only shows if you are holding a crystal at that time.",
@@ -141,7 +141,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = 1, group = "Lura P2", name = "non-conditional Seed-Drop", internalID = "Old-Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 5, spellID = 1253031,
+    local data = {Version = {versionNumber = 1}, group = "Lura P2", name = "non-conditional Seed-Drop", internalID = "Old-Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 5, spellID = 1253031,
     overrides = {countdown = 3, barColors = {0, 1, 0, 1}, enabled = false},
     timers = {
             [16] = {17.5, 25, 47.5, 55, 77.5, 85},

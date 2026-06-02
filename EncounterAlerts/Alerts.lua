@@ -80,6 +80,28 @@ function NSI:UniqueAlertID(diffTable, ReloeReminder, internalID)
     return id
 end
 
+local function GetAlertVersionNumber(version)
+    return version and type(version) == "table" and version.versionNumber or version
+end
+
+local function ShouldApplyVersionUpdate(existing, alertDef)
+    local newVersion = GetAlertVersionNumber(alertDef and alertDef.Version)
+    if not newVersion then return false end
+
+    local oldVersion = GetAlertVersionNumber(existing and existing.Version)
+    return not oldVersion or newVersion > oldVersion
+end
+
+local function ApplyVersionFieldUpdates(existing, alertDef)
+    local version = alertDef and alertDef.Version
+
+    for key, value in pairs(version) do
+        if key ~= "versionNumber" then
+            existing[key] = value
+        end
+    end
+end
+
 function NSI:GetEncounterAlertID(encID)
     self.EncounterAlertID = self.EncounterAlertID or {}
     if not self.EncounterAlertID[encID] then
@@ -127,11 +149,11 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     NSRT.EncounterAlerts[encId][diffID] = NSRT.EncounterAlerts[encId][diffID] or {}
     local diffTable = NSRT.EncounterAlerts[encId][diffID]
     local existing = diffTable[alertDef.internalID]
-    local Vers = alertDef.Version
-    local Overwrite = existing and ((Vers and ((not existing.Version) or Vers > existing.Version)) or existing.Reset)
+    local VersionUpdate = existing and ShouldApplyVersionUpdate(existing, alertDef)
+    local FullOverwrite = existing and existing.Reset
     local applyDefaultEnabled = self._ApplyReloeAutoEnable or (NSRT.Alerts and NSRT.Alerts.ReloeReminders)
     if ReloeReminder then
-        if Overwrite then
+        if FullOverwrite then
             if applyDefaultEnabled and not existing.UserModifiedEnabled then
                 alertDef.enabled = alertDef.DefaultEnabled ~= false
             else
@@ -150,8 +172,12 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             existing.isSpecialDisplay = alertDef.isSpecialDisplay
             existing.DefaultEnabled = alertDef.DefaultEnabled
             existing.BlockCopy = alertDef.BlockCopy
+            existing.Version = alertDef.Version
             if applyDefaultEnabled and not existing.UserModifiedEnabled then
                 existing.enabled = alertDef.DefaultEnabled ~= false
+            end
+            if VersionUpdate then
+                ApplyVersionFieldUpdates(existing, alertDef)
             end
             return
         end
