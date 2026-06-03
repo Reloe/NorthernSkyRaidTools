@@ -6,6 +6,8 @@ local encID = 3159
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+    local tankConditions = self:DefaultLoadConditions()
+    tankConditions.Roles.TANK = true
 
     local data = {internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = nil,
         timers = {
@@ -27,9 +29,9 @@ NSI.InitializeAlerts[encID] = function(self)
     end]],
     }
     self:AddEncounterAlert(data)
-    local data = {group = "Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = "Taunt", TTSTimer = 0, dur = 5, spellID = nil,
+    local data = {group = "Rotmire Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = "Taunt", TTSTimer = 0, dur = 5, spellID = nil,
     overrides =
-        {textColors = {0, 1, 0, 1},
+        {textColors = {0, 1, 0, 1}, loadConditions = tankConditions,
             isConditional = {
                 text = "This Alert only shows if you do not have threat on the Boss.",
                 func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
@@ -43,9 +45,9 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-    local data = {group = "Tanks", internalID = "Tankhits", text = "Tank-Hit", customIcon = 134201, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
+    local data = {group = "Rotmire Tanks", internalID = "Tankhits", text = "Tank-Hit", customIcon = 134201, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
     overrides =
-        {textColors = {1, 0, 0, 1},
+        {textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
             isConditional = {
                 text = "This Alert only shows if you have threat on the Boss.",
                 func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
