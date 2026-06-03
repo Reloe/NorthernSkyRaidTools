@@ -41,7 +41,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Ranged Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {loadConditions = RangedObeliskConditions},
     timers = {
-            [16] = {{5, 28.3, 54.9, 81.2, 104.5}, {}, {9.8, 34.8, 61.8, 86.8, 113.8, 138.8, 165.8}, {}, {10.8, 19.8, 54.8, 70.8, 79.8, 114.8, 130.8, 139.8, 174.8}},
+            [16] = {{5, 28.3, 54.9, 81.2, 104.5}, {}, {13.8, 38.8, 65.8, 90.8, 117.8, 142.8, 165.8, 190.8}, {}, {10.8, 19.8, 54.8, 70.8, 79.8, 114.8, 130.8, 139.8, 174.8}},
         },
     }
     self:AddEncounterAlert(data)
@@ -49,7 +49,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Melee Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
     overrides = {loadConditions = MeleeObeliskConditions},
     timers = {
-            [16] = {{7, 30.3, 56.9, 83.2, 106.5}, {}, {11.8, 36.8, 63.8, 88.8, 115.8, 140.8, 167.8}, {}, {12.8, 21.8, 56.8, 72.8, 81.8, 116.8, 132.8, 141.8, 176.8}},
+            [16] = {{7, 30.3, 56.9, 83.2, 106.5}, {}, {15.8, 40.8, 67.8, 92.8, 119.8, 144.8, 169.8, 194.8}, {}, {12.8, 21.8, 56.8, 72.8, 81.8, 116.8, 132.8, 141.8, 176.8}},
         },
     }
     self:AddEncounterAlert(data)
@@ -58,7 +58,7 @@ NSI.InitializeAlerts[encID] = function(self)
     overrides = {loadConditions = rangedConditions},
     timers = {
             [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
-            [16] = {{13, 53, 85.6, 112.6}, {}, {23, 48, 75, 100, 127, 152}, {}, {40, 100, 160}},
+            [16] = {{13, 53, 85.6, 112.6}, {}, {23, 48, 75, 100, 127, 152, 179}, {}, {40, 100, 160}},
         },
     }
     self:AddEncounterAlert(data)
