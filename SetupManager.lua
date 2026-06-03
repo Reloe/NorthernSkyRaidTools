@@ -590,3 +590,46 @@ function NSI:ArrangeFromReminder(str)
     self.Groups.units = self:ShiftLeader(self.Groups.units)
     self:ArrangeGroups(true)
 end
+
+function NSI:GetGroupExportString()
+    if not UnitInRaid("player") then return "" end
+    local function GetPlayerString(unit)
+        local name, realm = UnitName(unit)
+        if not realm then realm = GetNormalizedRealmName() end
+        local class = select(3, UnitClass(unit))
+        local spec = self:GetSpecs(unit) or 0
+        return name..", "..realm..", "..class..", "..spec
+    end
+    local groups = {}
+    local leadergroup = 0
+    local leaderunit
+    for i = 1, 40 do
+        local unit = "raid"..i
+        local name, _, subgroup = GetRaidRosterInfo(i)
+        if name and subgroup then
+            if not groups[subgroup] then groups[subgroup] = {} end
+            if UnitIsGroupLeader(unit) then
+                leadergroup = subgroup
+                leaderunit = unit
+            else
+                table.insert(groups[subgroup], unit)
+            end
+        else
+            break
+        end
+    end
+    local groupString = ""
+    for i=1, 8 do
+        if groups[i] then
+            if i == leadergroup then
+                if groupString ~= "" then groupString = groupString.."\n" end
+                groupString = groupString..GetPlayerString(leaderunit)
+            end
+            for _, unit in ipairs(groups[i]) do
+                if groupString ~= "" then groupString = groupString.."\n" end
+                groupString = groupString..GetPlayerString(unit)
+            end
+        end
+    end
+    return groupString
+end
