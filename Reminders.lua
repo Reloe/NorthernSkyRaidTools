@@ -316,6 +316,7 @@ function NSI:ProcessReminder()
                     tags[strtrim(name)] = true
                 end
                 specid = specid and tostring(specid)
+                myclass = myclass and strlower(myclass)
                 local mematch =
                 (tag == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
                 tags[myname] or
