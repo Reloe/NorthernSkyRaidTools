@@ -47,74 +47,61 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Lura Tanks", internalID = "P1 Tank-Hit First", name = "P1 TankHit - Starting Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
-    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
+    local oldTankAlertIDs = {
+        "P1 Tank-Hit First",
+        "P1 Tank-Hit Second",
+        "P2 Tank-Hit First",
+        "P2 Tank-Hit Second",
+        "P3 Tank-Hit",
+        "P1 Taunt First",
+        "P1 Taunt Second",
+        "P2 Taunts First",
+        "P2 Taunts Second",
+    }
+    for _, internalID in ipairs(oldTankAlertIDs) do
+        self:RemoveEncounterAlert(encID, 16, internalID)
+    end
+
+    local data = {group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Tank-Hits", name = {"P1 Tank-Hits", nil, "P2 Tank-Hits"}, text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+    overrides =
+        {textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
+            isConditional = {
+                text = "This Alert only shows if you have threat on the Boss.",
+                func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
+            },
+        },
     timers = {
-            [16] = {21.5, 61.5, 101.5, 141.5},
+            [16] = {
+                {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5},
+                {},
+                {21.5, 41.5, 61.5, 81.5},
+            },
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Lura Tanks", internalID = "P1 Tank-Hit Second", name = "P1 TankHit - Second Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
-    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
-    timers = {
-            [16] = {41.5, 81.5, 121.5, 161.5},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P2 Tank-Hit First", name = "P2 TankHit - Starting Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = nil,
-    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
-    timers = {
-            [16] =  {21.5, 61.5,},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P2 Tank-Hit Second", name = "P2 TankHit - Second Tank", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = nil,
-    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
-    timers = {
-            [16] = {41.5, 81.5},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P1 Taunt First", name = "P1 Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
-    timers = {
-            [16] = {45, 85, 125, 165},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P1 Taunt Second", name = "P1 Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
-    timers = {
-            [16] = {25, 65, 105, 145},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P2 Taunts First", name = "P2 Taunts - Starting Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
-    timers = {
-            [16] = {45, 85},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P2 Taunts Second", name = "P2 Taunts - Second Tank", text = "Taunt", DisplayType = "Text", encID = encID, phase = 3, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
-    overrides = {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, enabled = false},
-    timers = {
-            [16] =  {25, 65},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Lura Tanks", internalID = "P3 Tank-Hit", name = "P3 Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 6, spellID = nil,
+    local data = {group = "Lura Tanks", internalID = "Lura Tank-Hits_P4", name = "P3 Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 6, spellID = nil,
     overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
     timers = {
             [16] = {41.5, 71.5, 101.5, 131.5, 161.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
+    overrides =
+        {textColors = {0, 1, 0, 1}, loadConditions = tankConditions,
+            isConditional = {
+                text = "This Alert only shows if you do not have threat on the Boss.",
+                func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
+            },
+        },
+    timers = {
+            [16] = {
+                {25, 45, 65, 85, 105, 125, 145, 165},
+                {},
+                {25, 45, 65, 85},
+            },
         },
     }
     self:AddEncounterAlert(data)

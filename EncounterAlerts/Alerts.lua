@@ -30,6 +30,10 @@ function NSI:MakeEncounterAlert(data, timers)
     if group and type(group) == "table" then
         group = data.phase and group[data.phase]
     end
+    local name = data.name
+    if name and type(name) == "table" then
+        name = data.phase and name[data.phase]
+    end
     local isEnabled
     if data.overrides and data.overrides.enabled ~= nil then
         isEnabled = data.overrides.enabled
@@ -40,7 +44,7 @@ function NSI:MakeEncounterAlert(data, timers)
     end
     local a = {
         internalID     = data.internalID,
-        name           = data.name or data.internalID,
+        name           = name or data.internalID,
         text           = data.text,
         spellID        = data.spellID,
         customIcon     = data.customIcon,
