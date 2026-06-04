@@ -516,7 +516,7 @@ local function BuildReminderScreen(personal, parentFrame)
         for _, entry in ipairs(sorted) do
             local encID = entry.encID
             table.insert(options, {
-                label = NSI:Loc(NSI.BossTimelineNames[encID] or ("Encounter " .. encID)),
+                label = NSI:Loc(NSI.BossNames[encID] or ("Encounter " .. encID)),
                 value = encID,
                 icon = NSI.UI.BossData.BossIcons[encID],
                 iconsize = { 16, 16 },
@@ -967,7 +967,7 @@ local function BuildReminderScreen(personal, parentFrame)
                 seen[reminderData.hasencID] = true
                 local encIDStr = reminderData.hasencID
                 local encID = tonumber(encIDStr)
-                local bossName = NSI:Loc(NSI.BossTimelineNames[encID] or ("Encounter " .. encIDStr))
+                local bossName = NSI:Loc(NSI.BossNames[encID] or ("Encounter " .. encIDStr))
                 table.insert(options, {
                     label = bossName,
                     value = encID,

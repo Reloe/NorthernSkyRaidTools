@@ -452,7 +452,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             for diffID, diffTable in pairs(enc) do
                 for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
                     if type(alert) == "table" and alert.group == name then
-                        if alert.ReloeReminder then
+                        if not NSI:CanDeleteEncounterAlert(alert, encID) then
                             alert.group = nil
                         else
                             diffTable[key] = nil
@@ -468,7 +468,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function DeleteAlert(encID, diffID, alertKey)
         local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
             and NSRT.EncounterAlerts[encID][diffID]
-        if diffTable and diffTable[alertKey] and diffTable[alertKey].ReloeReminder then return end
+        if diffTable and diffTable[alertKey] and not NSI:CanDeleteEncounterAlert(diffTable[alertKey], encID) then return end
         if diffTable then
             diffTable[alertKey] = nil
             NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, alertKey)
@@ -767,7 +767,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row:Show()
 
                 local isReloe   = entry._isReloeCreated
-                local canDelete = not isReloe
+                local canDelete = NSI:CanDeleteEncounterAlert(entry.data, entry.encID)
                 local isEnabled, icon, name
 
                 if filterEncID == nil or filterEncID == 0 then
@@ -1052,7 +1052,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     end
                                 end })
 
-                            if not (alert and alert.ReloeReminder) then
+                            if NSI:CanDeleteEncounterAlert(alert, eid) then
                                 table.insert(menuItems, { type = "separator" })
                                 table.insert(menuItems, {
                                     type = "button",
@@ -1156,7 +1156,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2 + 10
     local ADDOPT_INNER_W = ADDOPT_W - ADDOPT_PAD * 2
-    local ADDOPT_H   = 190
+    local ADDOPT_H   = 250
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
@@ -1179,6 +1179,19 @@ local function BuildEncounterAlertsUI(parentFrame)
         ADDOPT_INNER_W, 22, "NSUIEncAlertReloeImportCB")
     reloeImportCB:SetLocaleKey("Automatically Enable New Alerts")
     reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
+
+    local importSelectedBossBtn = CreateLocalizedButton(addOptFrame, "Import Selected Boss Alerts", function()
+        if not filterEncID or filterEncID == 0 then
+            print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Select a boss first."))
+            return
+        end
+        NSI:ImportReloeReminders(filterEncID, true)
+        RebuildList()
+        if selectedEncID and selectedKey then
+            SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+        end
+    end, ADDOPT_INNER_W, 22)
+    importSelectedBossBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
 
     local fullResetBtn = CreateLocalizedButton(addOptFrame, "Full Reset", function()
         local function DoReset()
@@ -1205,7 +1218,24 @@ local function BuildEncounterAlertsUI(parentFrame)
             NSI:Loc("Cancel"), nil, NSI:Loc("Reset"), DoReset, nil)
         dialog:Show()
     end, ADDOPT_INNER_W, 26)
-    fullResetBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
+    fullResetBtn:SetPoint("TOPLEFT", importSelectedBossBtn.frame, "BOTTOMLEFT", 0, -8)
+
+    local deleteOldAlertsBtn = CreateLocalizedButton(addOptFrame, "Delete Old Alerts", function()
+        local function DoDeleteOldAlerts()
+            NSI:DeleteOldEncounterAlertData()
+            selectedKey = nil
+            selectedEncID = nil
+            if rightPanel then rightPanel:Hide() end
+            RebuildList()
+        end
+        local dialog = NSI.UI.Components.CreateDialog(
+            "NSRTEncAlertDeleteSeason1",
+            NSI:Loc("Delete old Alerts from previous Seasons"),
+            NSI:Loc("This will delete all Alerts from previous Seasons. Continue?"),
+            NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), DoDeleteOldAlerts, nil)
+        dialog:Show()
+    end, ADDOPT_INNER_W, 22)
+    deleteOldAlertsBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
 
     local function SetReloeAlertsEnabled(enabled)
         for encID, encTable in pairs(NSRT.EncounterAlerts or {}) do
@@ -1228,7 +1258,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local enableAllBtn = CreateLocalizedButton(addOptFrame, "Enable Selected Boss Alerts", function()
         SetReloeAlertsEnabled(true)
     end, ADDOPT_INNER_W, 22)
-    enableAllBtn:SetPoint("TOPLEFT", fullResetBtn.frame, "BOTTOMLEFT", 0, -8)
+    enableAllBtn:SetPoint("TOPLEFT", deleteOldAlertsBtn.frame, "BOTTOMLEFT", 0, -8)
 
     local disableAllBtn = CreateLocalizedButton(addOptFrame, "Disable Selected Boss Alerts", function()
         SetReloeAlertsEnabled(false)

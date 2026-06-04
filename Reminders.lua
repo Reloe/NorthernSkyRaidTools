@@ -1,18 +1,5 @@
 local _, NSI = ... -- Internal namespace
 
-NSI.EncounterOrder = {
-    [3176] = 1, -- Imperator
-    [3177] = 2, -- Vorasius
-    [3179] = 3, -- Fallen-King
-    [3178] = 4, -- Dragons
-    [3180] = 5, -- Lightblinded Vanguard
-    [3181] = 6, -- Crown of the Cosmos
-    [3306] = 7, -- Chimaerus
-    [3182] = 8, -- Belo'ren
-    [3183] = 9, -- Midnight Falls
-    [3159] = 10, -- Rotmire
-}
-
 local symbols = {
     star = 1,
     circle = 2,
@@ -1435,6 +1422,21 @@ function NSI:CleanUpAutoLoad(name)
     end
 end
 
+function NSI:DeleteOldEncounterAlertData()
+    for encID, _ in pairs(NSRT.EncounterAlerts) do
+        if not self.CurrentEncounterIDs[encID] then
+            NSRT.EncounterAlerts[encID] = nil
+            self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", encID)
+        end
+        for groupKey in pairs((NSRT.Alerts and NSRT.Alerts.Groups) or {}) do
+            local groupencID = tostring(groupKey):match("^(%d+)|")
+            if groupencID and groupencID == encID then
+                NSRT.Alerts.Groups[groupKey] = nil
+            end
+        end
+    end
+end
+
 function NSI:ImportFullReminderString(str, personal, IsUpdate, name)
     local name = ""
     local values = ""
@@ -1956,7 +1958,7 @@ function NSI:ImportReloeReminders(id, applyAutoEnable)
         end
         self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
     else
-        for key, encID in ipairs(NSI.CurrentEncounterIDs) do
+        for encID, _ in pairs(NSI.CurrentEncounterIDs) do
             if self.InitializeAlerts[encID] then
                 self.InitializeAlerts[encID](self)
             end
@@ -1969,7 +1971,7 @@ end
 function NSI:DeleteReloeReminder(encID, diffID, alertKey)
     if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
         local alert = NSRT.EncounterAlerts[encID][diffID][alertKey]
-        if type(alert) == "table" and alert.ReloeReminder then return end
+        if type(alert) == "table" and not self:CanDeleteEncounterAlert(alert, encID) then return end
         NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
     end
 end
