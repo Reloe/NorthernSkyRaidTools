@@ -49,6 +49,8 @@ NSI.LSM:Register("sound","|cFF4BAAC8HealAbsorb|r", [[Interface\Addons\NorthernSk
 NSI.LSM:Register("sound","|cFF4BAAC8Feather|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Feather.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Shroom|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Shroom.ogg]])
 NSI.LSM:Register("sound","|cFF4BAAC8Fung|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Fung.ogg]])
+NSI.LSM:Register("sound","|cFF4BAAC8Right|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Right.ogg]])
+NSI.LSM:Register("sound","|cFF4BAAC8Left|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Left.ogg]])
 --Fonts
 NSI.LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars
