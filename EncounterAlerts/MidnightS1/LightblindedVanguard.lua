@@ -124,6 +124,10 @@ NSI.EncounterAlertStart[encID] = function(self, id)
                 local threatLevel = UnitThreatSituation("player", u)
                 local isTanking = threatLevel and threatLevel >= 2
                 if isTanking then return end
+                local casting1 = UnitCastingInfo("boss1")
+                local casting2 = UnitCastingInfo("boss2")
+                local casting3 = UnitCastingInfo("boss3")
+                if casting3 and not (casting1 or casting2) then return end -- prevent senn taunts from triggering
                 self.TauntFrame:ClearAllPoints()
                 self.TauntFrame:SetPoint(info.Anchor, plate, info.relativeTo, info.xOffset, info.yOffset)
                 self.TauntFrame:Show()
