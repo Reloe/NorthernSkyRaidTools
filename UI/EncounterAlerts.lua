@@ -991,7 +991,6 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local newKey = NSI:UniqueAlertID(diffTable, false)
                                     local newData = CopyTable(entry.data)
                                     newData.ReloeReminder = nil
-                                    newData.isConditional = nil
                                     diffTable[newKey] = newData
                                     RebuildList()
                                 end })
@@ -1012,6 +1011,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                         if tn == "Trigger" then
                                             payload.entries[#payload.entries + 1] = { key = "phase",  value = CopyValue(alert.phase) }
                                             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
+                                            payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
                                         else
                                             for _, k in ipairs(SECTION_COPY_FIELDS[tn] or {}) do
                                                 payload.entries[#payload.entries + 1] = { key = k, value = CopyValue(alert[k]) }
@@ -1374,6 +1374,21 @@ local function BuildEncounterAlertsUI(parentFrame)
     local tabRowY   = -42
     local contentY  = tabRowY - 26
 
+    -- Pre-declarations for cross-tab upvalue references. Keep these before
+    -- helpers that need them; Lua locals are only visible after declaration.
+    local dispF, trigF, sndF, loadF
+    local dispHint, sndHint
+    local RebuildOptionsContent
+
+    local function GetConditionText(condition)
+        if type(condition) == "table" and type(condition.func) == "string" and condition.func ~= "" then
+            return (type(condition.text) == "string" and condition.text ~= "" and condition.text) or NSI:Loc("Custom Condition")
+        elseif type(condition) == "string" and condition ~= "" then
+            return NSI:Loc("Custom Condition")
+        end
+        return nil
+    end
+
     local function PositionInnerTabLayout(conditionText)
         local hasCondition = type(conditionText) == "string" and conditionText ~= ""
 
@@ -1421,6 +1436,119 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
     end
 
+    local DEFAULT_CONDITION_FUNC = "return function()\n    return true\nend"
+    local conditionEditPopup
+    local function OpenConditionEditor()
+        if not trigF or not trigF._alert then return end
+
+        if not conditionEditPopup then
+            conditionEditPopup = DF:CreateSimplePanel(NSUI, 820, 520,
+                "|cFF00FFFF" .. NSI:Loc("Custom Condition") .. "|r",
+                "NSUIEncAlertConditionEditor", { DontRightClickClose = true })
+            conditionEditPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+            conditionEditPopup:SetFrameLevel(100)
+
+            conditionEditPopup.nameLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
+            NSI:SetUIFont(conditionEditPopup.nameLabel, 12, "")
+            conditionEditPopup.nameLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+            SetLocalizedText(conditionEditPopup.nameLabel, "Condition Name")
+            conditionEditPopup.nameLabel:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -32)
+
+            conditionEditPopup.nameEntry = CreateTextEntry(conditionEditPopup, nil, nil, nil, 360, 22,
+                nil, nil, nil, "NSUIEncAlertConditionName")
+            conditionEditPopup.nameEntry:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -48)
+
+            conditionEditPopup.codeLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
+            NSI:SetUIFont(conditionEditPopup.codeLabel, 12, "")
+            conditionEditPopup.codeLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+            SetLocalizedText(conditionEditPopup.codeLabel, "Condition Function")
+            conditionEditPopup.codeLabel:SetPoint("TOPLEFT", conditionEditPopup.nameEntry.frame, "BOTTOMLEFT", 0, -12)
+
+            conditionEditPopup.helpLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
+            NSI:SetUIFont(conditionEditPopup.helpLabel, 11, "")
+            conditionEditPopup.helpLabel:SetTextColor(0.55, 0.55, 0.55, 1)
+            conditionEditPopup.helpLabel:SetJustifyH("LEFT")
+            conditionEditPopup.helpLabel:SetPoint("TOPLEFT", conditionEditPopup.codeLabel, "BOTTOMLEFT", 0, -2)
+            SetLocalizedText(conditionEditPopup.helpLabel, "Return a function which should return true when the alert should show.")
+
+            conditionEditPopup.editor = DF:NewSpecialLuaEditorEntry(conditionEditPopup, 280, 80, nil,
+                "NSUIEncAlertConditionEditorBox", false, true, true)
+            conditionEditPopup.editor:SetPoint("TOPLEFT", conditionEditPopup, "TOPLEFT", 10, -112)
+            conditionEditPopup.editor:SetPoint("BOTTOMRIGHT", conditionEditPopup, "BOTTOMRIGHT", -25, 48)
+            DF:ApplyStandardBackdrop(conditionEditPopup.editor)
+            DF:ReskinSlider(conditionEditPopup.editor.scroll)
+            conditionEditPopup.editor:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+            NSI:SetUIFont(conditionEditPopup.editor.editbox, 13, "OUTLINE")
+
+            conditionEditPopup.statusLabel = conditionEditPopup:CreateFontString(nil, "OVERLAY")
+            NSI:SetUIFont(conditionEditPopup.statusLabel, 11, "")
+            conditionEditPopup.statusLabel:SetTextColor(1, 0.35, 0.35, 1)
+            conditionEditPopup.statusLabel:SetPoint("BOTTOMLEFT", conditionEditPopup, "BOTTOMLEFT", 10, 14)
+            conditionEditPopup.statusLabel:SetWidth(430)
+            conditionEditPopup.statusLabel:SetJustifyH("LEFT")
+
+            conditionEditPopup.saveBtn = CreateLocalizedButton(conditionEditPopup, "Save", function()
+                local alert = conditionEditPopup._alert
+                if not alert then return end
+                local conditionName = conditionEditPopup.nameEntry:GetValue() or ""
+                local conditionFunc = conditionEditPopup.editor:GetText() or ""
+                conditionName = strtrim(conditionName)
+                conditionFunc = strtrim(conditionFunc)
+
+                if conditionName == "" and conditionFunc == "" then
+                    NSI:SaveAlertData(alert, "isConditional", nil)
+                    conditionEditPopup:Hide()
+                    PositionInnerTabLayout(nil)
+                    if trigF.conditionBtn then trigF.conditionBtn:SetText(NSI:Loc("Add Condition")) end
+                    RebuildList()
+                    return
+                end
+
+                if conditionFunc == "" then
+                    conditionEditPopup.statusLabel:SetText(NSI:Loc("Condition Function is required."))
+                    return
+                end
+
+                local chunk, err = loadstring(conditionFunc)
+                if not chunk then
+                    conditionEditPopup.statusLabel:SetText(err or NSI:Loc("Invalid condition function."))
+                    return
+                end
+
+                local condition = {
+                    text = conditionName ~= "" and conditionName or NSI:Loc("Custom Condition"),
+                    func = conditionFunc,
+                }
+                NSI:SaveAlertData(alert, "isConditional", condition)
+                conditionEditPopup:Hide()
+                PositionInnerTabLayout(condition.text)
+                if trigF.conditionBtn then trigF.conditionBtn:SetText(NSI:Loc("Edit Condition")) end
+                RebuildList()
+            end, 120, 22)
+            conditionEditPopup.saveBtn:SetPoint("BOTTOMRIGHT", conditionEditPopup, "BOTTOMRIGHT", -138, 12)
+
+            conditionEditPopup.clearBtn = CreateLocalizedButton(conditionEditPopup, "Clear", function()
+                conditionEditPopup.nameEntry:SetValue("")
+                conditionEditPopup.editor:SetText("")
+                conditionEditPopup.statusLabel:SetText("")
+            end, 120, 22)
+            conditionEditPopup.clearBtn:SetPoint("RIGHT", conditionEditPopup.saveBtn.frame, "LEFT", -8, 0)
+
+            conditionEditPopup.cancelBtn = CreateLocalizedButton(conditionEditPopup, "Cancel", function()
+                conditionEditPopup:Hide()
+            end, 120, 22)
+            conditionEditPopup.cancelBtn:SetPoint("LEFT", conditionEditPopup.saveBtn.frame, "RIGHT", 8, 0)
+        end
+
+        local condition = trigF._alert.isConditional
+        conditionEditPopup._alert = trigF._alert
+        conditionEditPopup.statusLabel:SetText("")
+        conditionEditPopup.nameEntry:SetValue(type(condition) == "table" and condition.text or "")
+        conditionEditPopup.editor:SetText(type(condition) == "table" and condition.func or DEFAULT_CONDITION_FUNC)
+        conditionEditPopup:Show()
+        conditionEditPopup.editor:SetFocus()
+    end
+
     CopyValue = function(v)
         return type(v) == "table" and CopyTable(v) or v
     end
@@ -1464,6 +1592,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         if sectionName == "Trigger" then
             payload.entries[#payload.entries + 1] = { key = "phase", value = CopyValue(alert.phase) }
             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
+            payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
         else
             for _, key in ipairs(SECTION_COPY_FIELDS[sectionName] or {}) do
                 payload.entries[#payload.entries + 1] = { key = key, value = CopyValue(alert[key]) }
@@ -1627,11 +1756,6 @@ local function BuildEncounterAlertsUI(parentFrame)
         ov:Hide()
         return ov
     end
-
-    -- ── Pre-declarations for cross-tab upvalue references ────────────────────
-    local dispF, trigF, sndF, loadF
-    local dispHint, sndHint
-    local RebuildOptionsContent
 
     -- ================================================================
     -- DISPLAY TAB
@@ -2381,6 +2505,11 @@ local function BuildEncounterAlertsUI(parentFrame)
         "NSUIEncAlertAddTimeBtn")
     addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
 
+    local conditionBtn = CreateLocalizedSubButton(trigF, "Add Condition", OpenConditionEditor, 130,
+        "NSUIEncAlertConditionBtn")
+    conditionBtn:SetPoint("TOPLEFT", addTimeEntry.frame, "BOTTOMLEFT", 0, -12)
+    trigF.conditionBtn = conditionBtn
+
     -- Lock overlay for Trigger tab (shown when ReloeReminder is selected)
     -- transparent=true so the triggers are still visible, just not interactable
     trigF.lockOverlay = MakeLockOverlay(trigF, nil, true)
@@ -3055,7 +3184,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local isReloe = entry.ReloeReminder == true
         rightPanel:Show()
         if isReloe then SetReloeCreatedMode() else SetCustomMode() end
-        PositionInnerTabLayout(type(entry.isConditional) == "table" and entry.isConditional.text or nil)
+        PositionInnerTabLayout(GetConditionText(entry.isConditional))
 
         dispF._alert = entry; dispF._hardcodedEncID = nil
         trigF._alert = isReloe and nil or entry; trigF._hardcodedEncID = nil
@@ -3120,6 +3249,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         trigF.trigDiffDD:Refresh()
         trigF.phaseEntry:SetValue(tostring(entry.phase or 1))
         trigF.RebuildTimeRows()
+        trigF.conditionBtn:SetText(NSI:Loc(entry.isConditional and "Edit Condition" or "Add Condition"))
 
         -- Sound tab
         local ttsActive = entry.TTS ~= false and entry.TTS ~= nil

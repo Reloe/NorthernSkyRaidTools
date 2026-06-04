@@ -968,15 +968,13 @@ function NSI:CheckReminderLogic(info)
     if condition then
         local func = type(condition) == "table" and condition.func or condition
         if type(func) == "string" and func ~= "" then
-            local chunk = loadstring(func)
-            if not chunk then return false end
+            local chunk, err = loadstring(func)
+            if not chunk then error(err) end
 
-            local success, result = pcall(chunk)
-            if not success then return false end
+            local result = chunk()
 
             if type(result) == "function" then
-                success, result = pcall(result, self, info)
-                return success and result and true or false
+                return result() and true or false
             end
             return result and true or false
         end
