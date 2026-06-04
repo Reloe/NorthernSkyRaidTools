@@ -57,16 +57,10 @@ NSI.BossNames = {
     [3159] = "Rotmire",
 }
 
-function NSI:IsCurrentSeasonEncounter(encID)
-    encID = tonumber(encID)
-    if not encID then return false end
-    return self.CurrentEncounterIDs[encID]
-end
-
 function NSI:CanDeleteEncounterAlert(alert, encID)
     if type(alert) ~= "table" then return true end
     if not alert.ReloeReminder then return true end
-    return not self:IsCurrentSeasonEncounter(encID)
+    return not self.CurrentEncounterIDs[encID]
 end
 -- Builds a DF dropdown options table sorted by encounter order.
 --

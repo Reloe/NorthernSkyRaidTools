@@ -596,45 +596,83 @@ local function BuildEncounterAlertsUI(parentFrame)
         end)
 
         local t = {}
+        local currentPinned, oldPinned = {}, {}
+        local currentGroups, oldGroups = {}, {}
+        local currentUngrouped, oldUngrouped = {}, {}
+
         SortAlerts(pinned)
         for _, item in ipairs(pinned) do
             item._pinned = true
-            table.insert(t, item)
+            if NSI.CurrentEncounterIDs[item.encID] then
+                table.insert(currentPinned, item)
+            else
+                table.insert(oldPinned, item)
+            end
         end
+
         for _, gk in ipairs(sortedGroupKeys) do
-            local gdata    = groupedAlerts[gk] or {}
-            local encID    = gdata.encID or (function()
+            local gdata = groupedAlerts[gk] or {}
+            local encID = gdata.encID or (function()
                 local sep = gk:find("|")
                 return sep and tonumber(gk:sub(1, sep - 1)) or 0
             end)()
-            local groupName = gdata.groupName or gk:sub((gk:find("|") or 0) + 1)
-            -- Gather members (skip the encID/groupName fields)
-            local members = {}
-            for _, item in ipairs(gdata) do table.insert(members, item) end
-            SortAlerts(members)
-            local gEntry = NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]
-            local collapsed = gEntry == nil or gEntry.collapsed
-            table.insert(t, {
-                _type      = "group_header",
-                groupKey   = gk,
-                groupName  = groupName,
-                groupEncID = encID,
-                _count     = #members,
-                _collapsed = collapsed,
-            })
-            if not collapsed then
-                for _, item in ipairs(members) do
-                    item._inGroup = true
-                    table.insert(t, item)
+            if NSI.CurrentEncounterIDs[encID] then
+                table.insert(currentGroups, gk)
+            else
+                table.insert(oldGroups, gk)
+            end
+        end
+
+        SortAlerts(ungrouped)
+        for _, item in ipairs(ungrouped) do
+            if NSI.CurrentEncounterIDs[item.encID] then
+                table.insert(currentUngrouped, item)
+            else
+                table.insert(oldUngrouped, item)
+            end
+        end
+
+        local function AppendAlerts(list)
+            for _, item in ipairs(list) do table.insert(t, item) end
+        end
+
+        local function AppendGroups(groupKeys)
+            for _, gk in ipairs(groupKeys) do
+                local gdata    = groupedAlerts[gk] or {}
+                local encID    = gdata.encID or (function()
+                    local sep = gk:find("|")
+                    return sep and tonumber(gk:sub(1, sep - 1)) or 0
+                end)()
+                local groupName = gdata.groupName or gk:sub((gk:find("|") or 0) + 1)
+                -- Gather members (skip the encID/groupName fields)
+                local members = {}
+                for _, item in ipairs(gdata) do table.insert(members, item) end
+                SortAlerts(members)
+                local gEntry = NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]
+                local collapsed = gEntry == nil or gEntry.collapsed
+                table.insert(t, {
+                    _type      = "group_header",
+                    groupKey   = gk,
+                    groupName  = groupName,
+                    groupEncID = encID,
+                    _count     = #members,
+                    _collapsed = collapsed,
+                })
+                if not collapsed then
+                    for _, item in ipairs(members) do
+                        item._inGroup = true
+                        table.insert(t, item)
+                    end
                 end
             end
         end
 
-        -- Ungrouped (non-pinned) alerts below groups
-        SortAlerts(ungrouped)
-        for _, item in ipairs(ungrouped) do
-            table.insert(t, item)
-        end
+        AppendAlerts(currentPinned)
+        AppendGroups(currentGroups)
+        AppendAlerts(currentUngrouped)
+        AppendAlerts(oldPinned)
+        AppendGroups(oldGroups)
+        AppendAlerts(oldUngrouped)
 
         return t
     end

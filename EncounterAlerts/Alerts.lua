@@ -156,35 +156,33 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     local VersionUpdate = existing and ShouldApplyVersionUpdate(existing, alertDef)
     local FullOverwrite = existing and existing.Reset
     local applyDefaultEnabled = self._ApplyReloeAutoEnable or (NSRT.Alerts and NSRT.Alerts.ReloeReminders)
-    if ReloeReminder then
-        if FullOverwrite then
-            if applyDefaultEnabled and not existing.UserModifiedEnabled then
-                alertDef.enabled = alertDef.DefaultEnabled ~= false
-            else
-                alertDef.enabled = existing.enabled
-            end
-            alertDef.UserModifiedEnabled = existing.UserModifiedEnabled
-            diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
-            return
-        elseif ReloeReminder and existing then
-            existing.timers = alertDef.timers
-            existing.id = alertDef.id
-            existing.isConditional = alertDef.isConditional
-            existing.extraOptions = alertDef.extraOptions
-            existing.Preview = alertDef.Preview
-            existing.phase = alertDef.phase
-            existing.isSpecialDisplay = alertDef.isSpecialDisplay
-            existing.DefaultEnabled = alertDef.DefaultEnabled
-            existing.BlockCopy = alertDef.BlockCopy
-            existing.Version = alertDef.Version
-            if applyDefaultEnabled and not existing.UserModifiedEnabled then
-                existing.enabled = alertDef.DefaultEnabled ~= false
-            end
-            if VersionUpdate then
-                ApplyVersionFieldUpdates(existing, alertDef)
-            end
-            return
+    if FullOverwrite then
+        if applyDefaultEnabled and not existing.UserModifiedEnabled then
+            alertDef.enabled = alertDef.DefaultEnabled ~= false
+        else
+            alertDef.enabled = existing.enabled
         end
+        alertDef.UserModifiedEnabled = existing.UserModifiedEnabled
+        diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
+        return
+    elseif existing then
+        existing.timers = alertDef.timers
+        existing.id = alertDef.id
+        existing.isConditional = alertDef.isConditional
+        existing.extraOptions = alertDef.extraOptions
+        existing.Preview = alertDef.Preview
+        existing.phase = alertDef.phase
+        existing.isSpecialDisplay = alertDef.isSpecialDisplay
+        existing.DefaultEnabled = alertDef.DefaultEnabled
+        existing.BlockCopy = alertDef.BlockCopy
+        existing.Version = alertDef.Version
+        if applyDefaultEnabled and not existing.UserModifiedEnabled then
+            existing.enabled = alertDef.DefaultEnabled ~= false
+        end
+        if VersionUpdate then
+            ApplyVersionFieldUpdates(existing, alertDef)
+        end
+        return
     end
     diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
 end
