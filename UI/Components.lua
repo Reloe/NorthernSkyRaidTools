@@ -40,15 +40,17 @@ local STYLE = {
 --  underlying WoW frame or FontString so nothing is hidden.
 --
 --  Params
---    parent  – WoW frame
---    text    – display string (nil or "" for icon-only buttons)
---    onClick – function(buttonObj) called on click; may be nil
---    width   – number (nil: text pixel width + 20px padding, icon included in content)
---    height  – number (default 26)
---    name    – optional global frame name string
---    icon    – optional lib icon name or full texture path
---    textSize– optional font size override
---    tooltip – optional tooltip: string (title only) or table {title=s, desc=s}
+--    parent    – WoW frame
+--    text      – display string (nil or "" for icon-only buttons)
+--    onClick   – function(buttonObj) called on click; may be nil
+--    width     – number (nil: text pixel width + 20px padding, icon included in content)
+--    height    – number (default 26)
+--    name      – optional global frame name string
+--    icon      – optional lib icon name or full texture path
+--    textSize  – optional font size override
+--    tooltip   – optional tooltip: string (title only) or table {title=s, desc=s}
+--    condition – optional function() → bool; button is enabled while true,
+--                disabled while false. Re-evaluated every ~0.5 s via OnUpdate.
 --
 --  Returned object fields & methods
 --    .frame           WoW Button frame (anchor, reparent, etc.)
@@ -65,7 +67,8 @@ local STYLE = {
 --    :Deselect()      clears selected background (fades out)
 --    :IsSelected() → bool
 --    :Enable()
---    :Disable()       also dims label
+--    :Disable()       also dims label and icon
+--    :RefreshCondition()  manually re-evaluates condition
 -- ============================================================
 -- Registry of every label created by this module so RefreshFonts() can
 -- update them all in one call when the player changes the addon language.
@@ -113,7 +116,7 @@ local function RegisterLocalizedText(object, key, formatter)
     object:SetText(formatter and formatter() or NSI:Loc(key))
 end
 
-local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip)
+local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip, condition)
     -- ---- base frame -------------------------------------------
     -- Width is resolved after measuring the label; start with a stub size.
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
@@ -333,11 +336,35 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     function buttonObj:Enable()
         self.frame:Enable()
         self.label:SetTextColor(unpack(STYLE.text_color))
+        if self.frame.icon then
+            self.frame.icon:SetVertexColor(1, 1, 1, 1)
+        end
     end
 
     function buttonObj:Disable()
         self.frame:Disable()
         self.label:SetTextColor(unpack(STYLE.text_disabled))
+        if self.frame.icon then
+            self.frame.icon:SetVertexColor(unpack(STYLE.text_disabled))
+        end
+    end
+
+    function buttonObj:RefreshCondition()
+        if condition then
+            if condition() then self:Enable() else self:Disable() end
+        end
+    end
+
+    if condition then
+        buttonObj:RefreshCondition()
+        local elapsed = 0
+        btn:SetScript("OnUpdate", function(_, dt)
+            elapsed = elapsed + dt
+            if elapsed >= 0.5 then
+                elapsed = 0
+                buttonObj:RefreshCondition()
+            end
+        end)
     end
 
     return buttonObj

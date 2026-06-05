@@ -31,6 +31,7 @@ local BuildCooldownsEditUI         = NSI.UI.Cooldowns.BuildCooldownsEditUI
 local BuildPASoundEditUI           = NSI.UI.PrivateAuras.BuildPASoundEditUI
 local BuildExportStringUI          = NSI.UI.General.BuildExportStringUI
 local BuildImportStringUI          = NSI.UI.General.BuildImportStringUI
+local BuildGroupExportUI           = NSI.UI.General.BuildGroupExportUI
 
 -- Get options builders from modules
 local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
@@ -264,6 +265,24 @@ function NSUI:Init()
     )
     anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
 
+    -- Export Group button (icon-only, immediately left of anchor button)
+    local exportGroupBtn = CreateButton(
+        NSUI,
+        "",  -- icon-only, no text
+        function()
+            if NSUI.group_export_popup then
+                NSUI.group_export_popup:Show()
+            end
+        end,
+        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+        "NSUIExportGroupBtn",
+        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\external-link.png]],
+        nil,  -- textSize
+        { title = GetLocalizedText("Export Group"), desc = GetLocalizedText("Export your current raid composition to use with wowutils.com") },
+        function() return not InCombatLockdown() and IsInGroup() end
+    )
+    exportGroupBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + ANCHOR_BTN_SIZE + 6), NOTES_HEADER_BTN_Y)
+
     -- --------------------------------------------------------
     -- Tab selection logic (matches Details' SelectOptionsSection)
     -- --------------------------------------------------------
@@ -451,6 +470,7 @@ function NSUI:Init()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()
+    NSUI.group_export_popup       = BuildGroupExportUI()
 
     -- --------------------------------------------------------
     -- Status bar text

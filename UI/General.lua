@@ -107,9 +107,47 @@ local function BuildImportStringUI()
     return popup
 end
 
+local function BuildGroupExportUI()
+    local popup = DF:CreateSimplePanel(NSUI, 800, 250, T("Export Group Composition"), "NSUIGroupExport", {
+        DontRightClickClose = true
+    })
+    ApplyUIFont(popup.Title, 12)
+    popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    popup:SetFrameLevel(100)
+
+    popup.text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, nil, "GroupExportTextEdit", true, false, true)
+    popup.text_box:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
+    popup.text_box:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -20, 40)
+    DF:ApplyStandardBackdrop(popup.text_box)
+    DF:ReskinSlider(popup.text_box.scroll)
+    popup.text_box:SetScript("OnMouseDown", function(self)
+        self:SetFocus()
+    end)
+    NSI:SetUIFont(popup.text_box.editbox, 13, "OUTLINE")
+
+    popup.done_button = DF:CreateButton(popup, function()
+        popup:Hide()
+    end, 280, 20, T("Done"))
+    ApplyUIFont(popup.done_button, 12)
+    popup.done_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
+    popup.done_button:SetTemplate(options_button_template)
+
+    popup:HookScript("OnShow", function()
+        popup:SetTitle(T("Export Group Composition"))
+        local exportString = NSI:GetGroupExportString()
+        popup.text_box:SetText(exportString or "")
+        popup.text_box:SetFocus()
+        popup.text_box:HighlightText()
+    end)
+
+    popup:Hide()
+    return popup
+end
+
 -- Export to namespace
 NSI.UI = NSI.UI or {}
 NSI.UI.General= {
-    BuildExportStringUI = BuildExportStringUI,
-    BuildImportStringUI = BuildImportStringUI,
+    BuildExportStringUI  = BuildExportStringUI,
+    BuildImportStringUI  = BuildImportStringUI,
+    BuildGroupExportUI   = BuildGroupExportUI,
 }
