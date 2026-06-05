@@ -8,3 +8,4 @@
 - Make Rotmire and Lura Tank Alerts only show when relevant (Taunt only showing without threat, Tank-Hit only showing with threat)
 - Allow deleting Alerts from previous Seasons (pointless now but preparing for S2)
 - Make Beloren Feather Color changes save for all 3 difficulties
+- Add Button to export Raid Comp to wowutils
