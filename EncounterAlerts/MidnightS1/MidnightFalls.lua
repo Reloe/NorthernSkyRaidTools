@@ -463,8 +463,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         if not self.LuraRunesFrame then
             self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
         end
+
+        local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
+
         self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
             if e == "CHAT_MSG_RAID" then
+                if not tContains(iconIDs, msg) then return end
                 self.LuraRunesFrame:Show()
                 if self.HideTimer then
                     self.HideTimer:Cancel()
@@ -484,6 +488,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesCompleted[pos] = true
                 DisplayRune(pos, msg, true)
             elseif e == "CHAT_MSG_RAID_LEADER" then
+                if not tContains(iconIDs, msg) then return end
                 self.LuraRunesFrame:Show()
                 if self.HideTimer then
                     self.HideTimer:Cancel()
@@ -520,7 +525,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.IsLuraPreview = true
             self:MakeDraggable(self.LuraRunesFrame, s, true)
             self.LuraRunesFrame:Show()
-            local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
             for i = 1, 5 do
                 DisplayRune(i, secretwrap(iconIDs[i]), false)
             end
