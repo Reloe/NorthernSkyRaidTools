@@ -80,6 +80,9 @@ L["Import"] = "Импорт"
 L["Exporting profile: |cFF00FFFF%s|r"] = "Экспорт профиля: |cFF00FFFF%s|r"
 L["Paste a profile string below and click Import."] = "Вставьте строку профиля ниже и нажмите 'Импорт'"
 L["Invalid import string. Please check and try again."] = "Неверная строка импорта. Проверьте и попробуйте снова."
+L["Export Group"] = "Экспортировать группу"
+L["Export your current raid composition to use with wowutils.com"] = "Экспортировать текущий состав рейда для использования на wowutils.com"
+L["Export Group Composition"] = "Экспортировать состав группы"
 
 -- ============================================================================
 -- UI/Reminders.lua — Reminder screens
