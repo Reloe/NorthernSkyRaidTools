@@ -78,6 +78,9 @@ L["Import"] = "导入"
 L["Exporting profile: |cFF00FFFF%s|r"] = "导出配置：|cFF00FFFF%s|r"
 L["Paste a profile string below and click Import."] = "在下方粘贴配置字符串并点击导入"
 L["Invalid import string. Please check and try again."] = "无效的导入字符串，请检查后重试"
+L["Export Group"] = "导出团队"
+L["Export your current raid composition to use with wowutils.com"] = "导出当前团队名单用于wowutils.com"
+L["Export Group Composition"] = "导出团队名单"
 -- ============================================================================
 -- UI/Reminders.lua — Reminder screens
 -- ============================================================================
