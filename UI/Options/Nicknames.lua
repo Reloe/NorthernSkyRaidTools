@@ -281,6 +281,18 @@ local function BuildNicknamesOptions()
             desc = "Enable Nicknames to be used with Unhalted Unit Frames. You can choose 'NSNickName' as a tag within UUF.",
             nocombat = true
         },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return NSRT.Settings["EUI"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["EUI"] = value
+                NSI:FireCallback("EUI_NICKNAME_TOGGLE", value)
+            end,
+            name = "Enable EllesmereUI Nicknames",
+            desc = "Enable Nicknames to be used with EllesmereUI unit frames.",
+            nocombat = true
+        },
 
         {
             type = "breakline"
