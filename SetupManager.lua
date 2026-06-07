@@ -599,7 +599,7 @@ function NSI:GetGroupExportString()
         local class = select(3, UnitClass(unit))
         local spec = self:GetSpecs(unit) or 0
         local role = UnitGroupRolesAssigned(unit) or "NONE"
-        return name..", "..realm..", "..class..", "..spec...", "..role
+        return name..", "..realm..", "..class..", "..spec..", "..role
     end
     local groups = {}
     local leadergroup = 0
