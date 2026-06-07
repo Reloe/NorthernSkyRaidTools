@@ -598,7 +598,8 @@ function NSI:GetGroupExportString()
         if not realm then realm = GetNormalizedRealmName() end
         local class = select(3, UnitClass(unit))
         local spec = self:GetSpecs(unit) or 0
-        return name..", "..realm..", "..class..", "..spec
+        local role = UnitGroupRolesAssigned(unit) or "NONE"
+        return name..", "..realm..", "..class..", "..spec...", "..role
     end
     local groups = {}
     local leadergroup = 0
