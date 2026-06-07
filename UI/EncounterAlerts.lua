@@ -449,17 +449,22 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function DeleteGroupWithAlerts(encID, name)
         local enc = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
         if enc then
+            local groupAlerts = {}
             for diffID, diffTable in pairs(enc) do
                 for key, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
                     if type(alert) == "table" and alert.group == name then
-                        if not NSI:CanDeleteEncounterAlert(alert, encID) then
-                            alert.group = nil
-                        else
-                            diffTable[key] = nil
-                            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, diffID, key)
-                        end
+                        table.insert(groupAlerts, { diffID = diffID, diffTable = diffTable, key = key, alert = alert })
                     end
                 end
+            end
+
+            for _, entry in ipairs(groupAlerts) do
+                if not NSI:CanDeleteEncounterAlert(entry.alert, encID) then
+                    entry.alert.group = nil
+                else
+                    entry.diffTable[entry.key] = nil
+                end
+                NSI:FireCallback("NSRT_ALERT_CHANGED", encID, entry.diffID, entry.key)
             end
         end
         if NSRT.Alerts and NSRT.Alerts.Groups then NSRT.Alerts.Groups[GroupKey(encID, name)] = nil end
@@ -765,8 +770,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 RebuildList()
                             end },
                             { type = "button", label = NSI:Loc("Delete Group with Alerts"), fnc = function()
+                                local dialogGroupName = tostring(gname):gsub("%W", "_")
                                 local dlg = NSI.UI.Components.CreateDialog(
-                                    "NSRTDeleteGroupAlerts",
+                                    "NSRTDeleteGroupAlerts" .. tostring(gencID) .. "_" .. dialogGroupName,
                                     NSI:Loc("Delete Group with Alerts"),
                                     string.format(NSI:Loc("Delete group '%s' and all deletable alerts?"), gname),
                                     NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
