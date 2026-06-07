@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: LGPL-2.1-or-later
 -- Details Framework (DetailsFramework-1.0) -- see Libs/DF/LICENSE
 
-local dversion = 741
+local dversion = 743
 local major, minor = "DetailsFramework-1.0", dversion
 local DF, oldminor = LibStub:NewLibrary(major, minor)
 
@@ -4332,7 +4332,7 @@ function DF:CreateGlowOverlay(parent, antsColor, glowColor)
 	end
 
 	local glowFrame
-	if (buildInfo >= 110107 or DF.IsTBCWow()) then --24-05-2025: in the 11.1.7 patch, the template used here does not exist anymore, replacement used
+	if (DF.IsMidnightWowAPI() or DF.IsTBCWow()) then --24-05-2025: in the 11.1.7 patch, the template used here does not exist anymore, replacement used
 		glowFrame = CreateFrame("frame", frameName, parent, "ActionButtonSpellAlertTemplate")
 	else
 		glowFrame = CreateFrame("frame", frameName, parent, "ActionBarButtonSpellActivationAlert")

@@ -1,5 +1,23 @@
 Changes since tag v12.0.5.730
 
+commit 661fb6fa576fa14047dc41bddd77c89d6453e62d
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Wed Jun 3 13:32:48 2026 -0300
+
+    Add languageId to widgets created in build menu.
+
+commit 1f82c1684dc75a9dbfbe0e74449236aafcc870a0
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Jun 3 11:33:07 2026 +0200
+
+    - version bump
+
+commit 0c7793f28de15917202d2f83a08ed9de56bb423a
+Author: cont1nuity <continuity@gmx.net>
+Date:   Wed Jun 3 11:29:41 2026 +0200
+
+    - fixing midnight api issues
+
 commit df904f960134ca2bad07c2103a71b39812aaeec0
 Author: Tercio Jose <terciob19@hotmail.com>
 Date:   Fri May 29 22:25:51 2026 -0300
