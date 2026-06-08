@@ -424,10 +424,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetTextColor(1, 1, 1)
 
                 self.LuraRunesNumbers[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
-                self.LuraRunesNumbers[pos]:SetFont(self:GetGlobalFontPath(), runes.ShowSenderNames and 16 or 25, "OUTLINE")
                 self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
                 self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
             end
+            self.LuraRunesNumbers[pos]:SetFont(self:GetGlobalFontPath(), runes.ShowSenderNames and 16 or 25, "OUTLINE")
             self.LuraRunesDisplay[pos]:ClearAllPoints()
             self.LuraRunesNumbers[pos]:ClearAllPoints()
             if self.Phase == 4 then
