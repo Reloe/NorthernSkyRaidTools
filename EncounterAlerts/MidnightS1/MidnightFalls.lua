@@ -296,8 +296,8 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
-    overrides = {enabled = true, pinned = true, BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, timers = nil,
-    Preview = LuraPreview, customIcon = 1284980,
+    overrides = {enabled = true, pinned = true, BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, ShowSenderNames = false,
+    timers = nil, Preview = LuraPreview, customIcon = 1284980,
     difficulties = {14, 15, 16},
     extraOptions = {
             { Type = "Label",    text = "Runes Display" },
@@ -313,6 +313,9 @@ NSI.InitializeAlerts[encID] = function(self)
             { Type = "Color",    label = "BackgroundColor",
                 get = [[return function(NSI) local c = NSRT.EncounterAlerts[3183][16].RunesDisplay.BackgroundColor or {0.2,0.2,0.2,1} return c[1],c[2],c[3],c[4] end]],
                 set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
+            { Type = "Checkbox", label = "ShowSenderNames",
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.ShowSenderNames  or false  end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.ShowSenderNames  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
             { Type = "Breakline" },
             { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
             { Type = "Label",    text = "The Texture files are no longer required for most users. They are only required if you want to see these Icons in your Macros."},
@@ -402,7 +405,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         local isTank = UnitGroupRolesAssigned("player") == "TANK"
         local XOffset = { 50, 60, 0, -60, -50 }
         local YOffset = { 50, -25, -70, -25, 50 }
-        local function DisplayRune(pos, text, isMythic)
+        local function DisplayRune(pos, text, isMythic, sender, senderGUID)
             if not isMythic then
                 pos = 1
                 for i = 2, 5 do
@@ -421,7 +424,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 self.LuraRunesDisplay[pos]:SetTextColor(1, 1, 1)
 
                 self.LuraRunesNumbers[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
-                self.LuraRunesNumbers[pos]:SetFont(self:GetGlobalFontPath(), 25, "OUTLINE")
+                self.LuraRunesNumbers[pos]:SetFont(self:GetGlobalFontPath(), runes.ShowSenderNames and 16 or 25, "OUTLINE")
                 self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
                 self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
             end
@@ -443,8 +446,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
             self.LuraRunesDisplay[pos]:Show()
 
-            local number = pos
-            self.LuraRunesNumbers[pos]:SetText(number)
+            if runes.ShowSenderNames and self.Phase ~= 4 then
+                -- UnitClassFromGUID accepts secret arguments, but UnitClass and UnitClassBase do not.
+                local senderNameClassColored = C_ColorUtil.WrapTextInColor(sender, C_ClassColor.GetClassColor(UnitClassFromGUID(senderGUID)))
+                self.LuraRunesNumbers[pos]:SetText(string.format("%d: %s", pos, senderNameClassColored))
+            else
+                self.LuraRunesNumbers[pos]:SetText(pos)
+            end
             self.LuraRunesNumbers[pos]:Show()
         end
         local function HideAllRunes()
@@ -463,8 +471,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         if not self.LuraRunesFrame then
             self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
         end
-        self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg)
+        self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg, ...)
             if e == "CHAT_MSG_RAID" then
+                local sender = select(1, ...)
+                local senderGUID = select(11, ...)
                 self.LuraRunesFrame:Show()
                 if self.HideTimer then
                     self.HideTimer:Cancel()
@@ -475,15 +485,17 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 end)
 
                 if id ~= 16 or self.Phase == 4 then
-                    DisplayRune(pos, msg, false)
+                    DisplayRune(pos, msg, false, sender, senderGUID)
                     return
                 end
                 local pos = 2
                 if self.LuraRunesCompleted[pos] then pos = 3 end
                 if self.LuraRunesCompleted[pos] then pos = 5 end
                 self.LuraRunesCompleted[pos] = true
-                DisplayRune(pos, msg, true)
+                DisplayRune(pos, msg, true, sender, senderGUID)
             elseif e == "CHAT_MSG_RAID_LEADER" then
+                local sender = select(1, ...)
+                local senderGUID = select(11, ...)
                 self.LuraRunesFrame:Show()
                 if self.HideTimer then
                     self.HideTimer:Cancel()
@@ -493,13 +505,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                     HideAllRunes()
                 end)
                 if id ~= 16 or self.Phase == 4 then
-                    DisplayRune(pos, msg, false)
+                    DisplayRune(pos, msg, false, sender, senderGUID)
                     return
                 end
                 local pos = 1
                 if self.LuraRunesCompleted[pos] then pos = 4 end
                 self.LuraRunesCompleted[pos] = true
-                DisplayRune(pos, msg, true)
+                DisplayRune(pos, msg, true, sender, senderGUID)
             end
         end)
         self.LuraRunesFrame:ClearAllPoints()
@@ -522,7 +534,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesFrame:Show()
             local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
             for i = 1, 5 do
-                DisplayRune(i, secretwrap(iconIDs[i]), false)
+                DisplayRune(i, secretwrap(iconIDs[i]), false, secretwrap(UnitName("player")), secretwrap(UnitGUID("player")))
             end
         end
         local timers = {
