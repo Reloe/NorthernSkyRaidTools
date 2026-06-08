@@ -25,6 +25,26 @@ local settingsRef = {
     Circle = "CircleSettings",
 }
 
+local ClassToTauntID = {
+    [1] = 355, -- Warrior
+    [2] = 62124, -- Paladin
+    [6] = 56222, -- Death Knight
+    [10] = 115546, -- Monk
+    [11] = 6795, -- Druid
+    [12] = 185245, -- Demon Hunter
+}
+
+local Taunts = {
+    [115546] = true, -- Provoke
+    [56222] = true, -- Dark Command
+    [185245] = true, -- Torrent
+    [6795] = true, -- Growl
+    [355]   = true, -- Taunt
+    [62124]  = true, -- Hand of Reckoning
+    [49576] = true, -- Death Grip
+}
+
+
 function NSI:AddToReminder(reminderInfo)
     local info = self:CreateReminder(reminderInfo)
     if not info then return end
@@ -45,6 +65,10 @@ function NSI:CreateReminder(info, preview)
     end
     if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not preview then
         return nil
+    end
+    if info.isTaunt then
+        local class = select(3, UnitClass("player"))
+        info.spellID = ClassToTauntID[class]
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
@@ -131,7 +155,6 @@ function NSI:CreateReminder(info, preview)
     info.name = info.name or info.internalID
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.countdown = info.countdown and tonumber(info.countdown)
-    info.spellID = info.spellID and tonumber(info.spellID)
     info.dur = info.dur or 8
     if info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings[settingsRef[info.DisplayType]].HideTimerText end
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
@@ -683,6 +706,17 @@ function NSI:SetProperties(F, info, skipsound, s)
                 F.TimerText:Show()
             end
         end
+    end
+    if info.isTaunt then
+        F:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+        F:SetScript("OnEvent", function(self, e, ...)
+            local _, _, spellID = ...
+            if Taunts[spellID] and self:IsShown() then
+                F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+                F:Hide()
+            end
+        end)
+        return
     end
     if info.ReloeReminder or not info.spellID then return end
     F:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")

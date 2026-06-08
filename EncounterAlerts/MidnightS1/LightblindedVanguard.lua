@@ -108,7 +108,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
             self.TauntFrame.Text:Hide()
         end
         local Taunts = {
-            [115546] = true, [56222] = true, [185245] = true, [2649] = true,
+            [115546] = true, [56222] = true, [185245] = true,
             [6795]   = true, [355]   = true, [62124]  = true, [49576] = true,
         }
         local blacklist = {}

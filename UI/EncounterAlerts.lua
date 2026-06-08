@@ -1629,7 +1629,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     SECTION_COPY_FIELDS = {
         Display = {
-            "DisplayType", "text", "spellID", "customIcon", "dur", "sticky",
+            "DisplayType", "text", "spellID", "isTaunt", "customIcon", "dur", "sticky",
             "HideTimer", "HideSwipe", "glowunit", "glowColors", "textColors",
             "ringColors", "showBackground", "Texture", "Ticks", "barColors",
         },
@@ -1925,15 +1925,30 @@ local function BuildEncounterAlertsUI(parentFrame)
     spellEntry.editBox:SetScript("OnEditFocusLost", SaveSpellID)
     dispF.spellEntry = spellEntry
 
+    local useTauntCB = CreateCheckButton(dispF, NSI:Loc("Use Taunt spellid"),
+        function()
+            return dispF._alert and dispF._alert.isTaunt == true or false
+        end,
+        function(_, v)
+            if dispF._alert then
+                NSI:SaveAlertData(dispF._alert, "isTaunt", v or nil)
+                RebuildList()
+            end
+        end,
+        150, 22, "NSUIEncAlertUseTauntSpellID")
+    useTauntCB:SetLocaleKey("Use Taunt spellid")
+    useTauntCB:SetPoint("TOPLEFT", dispF, "TOPLEFT", 164, -106)
+    dispF.useTauntCB = useTauntCB
+
     local customIconLbl = dispF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(customIconLbl, 12, "")
     customIconLbl:SetTextColor(0.6, 0.6, 0.6, 1)
     SetLocalizedText(customIconLbl, "Custom Icon (overrides icon in list)")
-    customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 162, -90)
+    customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -90)
 
     local customIconEntry = CreateTextEntry(dispF, nil, nil, nil, 180, 22,
         nil, nil, nil, "NSUIEncAlertCustomIcon")
-    customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 162, -106)
+    customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -106)
     local function SaveCustomIcon(self)
         local v = tonumber(self:GetText()) or nil
         if dispF._alert then NSI:SaveAlertData(dispF._alert, "customIcon", v) end
@@ -3292,6 +3307,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         dispF.SetDisplayType(entry.DisplayType or "Text")
         dispF.textEntry:SetValue(entry.text or "")
         dispF.spellEntry:SetValue(entry.spellID and tostring(entry.spellID) or "")
+        dispF.useTauntCB:SetValue(entry.isTaunt == true)
         do  -- sync spell icon preview
             local spell = entry.spellID and C_Spell.GetSpellInfo(entry.spellID)
             if spell and spell.iconID then

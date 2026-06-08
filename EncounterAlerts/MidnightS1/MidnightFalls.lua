@@ -88,9 +88,9 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
+    local data = {Version = {versionNumber = 1, isTaunt = true}, group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
     overrides =
-        {textColors = {0, 1, 0, 1}, loadConditions = tankConditions,
+        {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
             isConditional = {
                 text = "This Alert only shows if you do not have threat on the Boss.",
                 func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
