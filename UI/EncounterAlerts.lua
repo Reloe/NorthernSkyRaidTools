@@ -2467,7 +2467,12 @@ local function BuildEncounterAlertsUI(parentFrame)
     phaseEntry:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -66)
     phaseEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if trigF._alert then
-            NSI:SaveAlertData(trigF._alert, "phase", math.max(1, math.floor(tonumber(self:GetText()) or 1)))
+            local phase = tonumber(self:GetText())
+            if not phase then
+                phase = 1
+                self:SetText("1")
+            end
+            NSI:SaveAlertData(trigF._alert, "phase", math.max(1, phase))
             RebuildList()
         end
     end)

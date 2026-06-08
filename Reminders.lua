@@ -221,7 +221,7 @@ function NSI:ProcessReminder()
             local time = line:match("time:(%d*%.?%d+)")
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
-            local phase = line:match("ph:(%d+)")
+            local phase = line:match("ph:(%d*%.?%d+)")
             local dur = line:match("dur:(%d+)")
             local TTS = line:match("TTS:([^;]+)")
             local TTSTimer = line:match("TTSTimer:(%d+)")
@@ -243,11 +243,15 @@ function NSI:ProcessReminder()
             local colors = line:match("colors:([^;]+)")
             if time and tag and (text or spellID) and encID and encIDs ~= 0 and not firstline then
                 local displayLine = line
+                local phaseText = phase
                 phase = phase and tonumber(phase) or 1
                 local key = encID..phase..time..tag..(text or spellID)
                 if (pers or shared) and (spellID or not NSRT.ReminderSettings.OnlySpellReminders) then -- only insert this if it's a spell or user wants to see text-reminders as well
                     -- remove phase as we add it back later
-                    displayLine = displayLine:gsub("ph:"..phase, "")
+                    if phaseText then
+                        local phasePattern = phaseText:gsub("(%W)", "%%%1")
+                        displayLine = displayLine:gsub("ph:"..phasePattern, "")
+                    end
                     -- convert to MM:SS format
                     local timeNum = tonumber(time)
                     if timeNum then
@@ -1233,7 +1237,7 @@ function NSI:CountdownNoteFrame(frame)
     if not originalText:match('\n$') then originalText = originalText..'\n' end
     for line in originalText:gmatch('([^\n]*)\n') do
         local ShouldDelete = false
-        local phase = line:match("Phase (%d+)")
+        local phase = line:match("Phase (%d*%.?%d+)")
         curphase = phase and tonumber(phase) or curphase
         if curphase < self.Phase then
             ShouldDelete = true
