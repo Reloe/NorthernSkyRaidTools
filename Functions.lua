@@ -259,16 +259,16 @@ function NSI:FireCallback(event, ...)
     self.Callbacks:Fire(event, ...)
 end
 
-function NSAPI:RegisterCallback(event, callback, owner)
-    return NSI:RegisterCallback(event, callback, owner)
+function NSAPI.RegisterCallback(target, event, callback, owner)
+    return NSI.RegisterCallback(target, event, callback, owner)
 end
 
-function NSAPI:UnregisterCallback(event, callback, owner)
-    return NSI:UnregisterCallback(event, callback, owner)
+function NSAPI.UnregisterCallback(target, event)
+    return NSI.UnregisterCallback(target, event)
 end
 
-function NSAPI:UnregisterAllCallbacks(owner)
-    return NSI:UnregisterAllCallbacks(owner)
+function NSAPI.UnregisterAllCallbacks(target)
+    return NSI.UnregisterAllCallbacks(target)
 end
 
 local Serialize = LibStub("AceSerializer-3.0")
