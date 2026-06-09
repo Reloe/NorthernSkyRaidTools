@@ -162,7 +162,8 @@ local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
         local secret = issecretvalue(sound)
-        local handle = (not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
+        local forceTTS = NSRT.ReminderSettings and NSRT.ReminderSettings.TTSOverSoundfile
+        local handle = (not forceTTS and not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
         if handle then
             PlaySoundFile(path..sound..".ogg", "Master")
         else

@@ -284,6 +284,18 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = "TTS Over Soundfile",
+            desc = "Always use text-to-speech even if a soundfile with the same name is detected.",
+            get = function() return NSRT.ReminderSettings.TTSOverSoundfile end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.TTSOverSoundfile = value
+            end,
+            nocombat = true,
+        },
+
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Play Sound instead of TTS",
             desc = "This will play the selected sound for all reminders instead of using TTS as long as the TTS&Sound fields are empty. The time the sound is played at still uses the TTSTimer value. This also means that any setting that converts the spellName into TTS for example also needs to be disabled for this to work.",
             get = function() return NSRT.ReminderSettings["PlayDefaultSound"] end,

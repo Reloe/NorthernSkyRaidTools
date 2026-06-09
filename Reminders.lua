@@ -1183,7 +1183,7 @@ function NSI:PlayReminderSound(info, default)
     -- Fallback to TTS
     if info.TTS then
         local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext and info.rawtext ~= "" and info.rawtext) or ""
-        local sound = self.LSM:Fetch("sound", TTS)
+        local sound = (not NSRT.ReminderSettings.TTSOverSoundfile) and self.LSM:Fetch("sound", TTS)
         if sound and sound ~= 1 then
             PlaySoundFile(sound, "Master")
             return

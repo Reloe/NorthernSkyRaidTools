@@ -77,6 +77,7 @@ function NSI:AddMissingDefaults()
             PersNote = true,
             SpellTTS = true,
             TextTTS = true,
+            TTSOverSoundfile = false,
             SpellDuration = 10,
             TextDuration = 10,
             SpellCountdown = 0,
