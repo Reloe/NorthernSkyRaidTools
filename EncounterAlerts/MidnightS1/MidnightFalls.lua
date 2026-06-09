@@ -448,7 +448,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
             if runes.ShowSenderNames and self.Phase ~= 4 then
                 -- UnitClassFromGUID accepts secret arguments, but UnitClass and UnitClassBase do not.
-                local senderNameClassColored = C_ColorUtil.WrapTextInColor(sender, C_ClassColor.GetClassColor(UnitClassFromGUID(senderGUID)))
+                local senderNameClassColored = C_ColorUtil.WrapTextInColor(sender, C_ClassColor.GetClassColor(select(2, UnitClassFromGUID(senderGUID))))
                 self.LuraRunesNumbers[pos]:SetText(string.format("%d: %s", pos, senderNameClassColored))
             else
                 self.LuraRunesNumbers[pos]:SetText(pos)
