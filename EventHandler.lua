@@ -262,53 +262,25 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local diff = select(3, GetInstanceInfo()) or 0
         local text = ""
         if UnitLevel("player") < 90 then return end
+        self:CheckRaidBuff()
         if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
             local buff = self:BuffCheck()
             if buff and buff ~= "" then text = buff end
         end
         if NSRT.ReadyCheckSettings.SoulstoneCheck and not self:Restricted() then
-            local Soulstone = self:SoulstoneCheck()
-            if Soulstone and Soulstone ~= "" then
-                if text == "" then
-                    text = Soulstone
-                else
-                    text = text.."\n"..Soulstone
-                end
-            end
+            text = self:SoulstoneCheck(text)
         end
         if NSRT.ReadyCheckSettings.SourceOfMagicCheck and not self:Restricted() then
-            local SourceOfMagic = self:SourceOfMagicCheck()
-            if SourceOfMagic and SourceOfMagic ~= "" then
-                if text == "" then
-                    text = SourceOfMagic
-                else
-                    text = text.."\n"..SourceOfMagic
-                end
-            end
+            text = self:SourceOfMagicCheck(text)
         end
         if NSRT.ReadyCheckSettings.BlisteringScalesCheck and not self:Restricted() then
-            local BlisteringScales = self:BlisteringScalesCheck()
-            if BlisteringScales and BlisteringScales ~= "" then
-                if text == "" then
-                    text = BlisteringScales
-                else
-                    text = text.."\n"..BlisteringScales
-                end
-            end
+            text = self:BlisteringScalesCheck(text)
         end
         if NSRT.ReadyCheckSettings.SymbioticRelationshipCheck and not self:Restricted() then
-            local SymbioticRelationship = self:SymbioticRelationshipCheck()
-            if SymbioticRelationship and SymbioticRelationship ~= "" then
-                if text == "" then
-                    text = SymbioticRelationship
-                else
-                    text = text.."\n"..SymbioticRelationship
-                end
-            end
+            text = self:SymbioticRelationshipCheck(text)
         end
         if NSRT.ReadyCheckSettings.DisplayGroupCheck and not self:Restricted() then
             local groupNumber = self:GetSubGroup("player")
-
             if groupNumber then
                 local groupText = "You are in group |cFF00FFFF" ..groupNumber .. "|r"
                 if text == "" then
@@ -318,14 +290,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        local Gear = self:GearCheck()
-        if Gear and Gear ~= "" then
-            if text == "" then
-                text = Gear
-            else
-                text = text.."\n"..Gear
-            end
-        end
+        text = self:GearCheck(text)
         if text ~= "" then
             self:DisplayText(text)
         end

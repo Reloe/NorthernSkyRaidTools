@@ -449,6 +449,7 @@ L["Flex Raid"] = "Flex Raid"
 L["Check raid buffs up to Group 6 instead of only Group 4."] = "Check raid buffs up to Group 6 instead of only Group 4."
 L["Disable this Feature"] = "Disable this Feature"
 L["Disable the Missing Raid Buffs Feature. You can re-enable it in the Setup Manager Settings."] = "Disable the Missing Raid Buffs Feature. You can re-enable it in the Setup Manager Settings."
+L["MISSING WEEKLY-STACKING DAMAGE/HEALING RAIDBUFF"] = "MISSING WEEKLY-STACKING DAMAGE/HEALING RAIDBUFF"
 -- ============================================================================
 -- UI/Options/Nicknames.lua
 -- ============================================================================

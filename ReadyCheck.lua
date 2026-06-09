@@ -17,14 +17,56 @@ local buffrequired = {
     [8] = {2, 5, 7, 8, 9, 10, 11, 12, 13, 1480, 102, 105, 1467, 1468, 1473, 62, 63, 64, 270, 65, 256, 257, 258, 262, 264, 265, 266, 267}, -- Intellect
 }
 
-function NSI:SoulstoneCheck()
-    if self:Restricted() then return end
+local ZoneToRaidBuff = {
+    [2912] = 93922, -- Voidspire
+    [2913] = 93924, -- March on Queldanas
+    [2939] = 93923, -- Dreamrift
+}
+
+local function UpdateText(text, newString)
+    if text == "" then
+        text = newString
+    else
+        text = text.."\n"..newString
+    end
+    return text
+end
+
+function NSI:CheckRaidBuff(text)
+    if self:Restricted() then return text end
+    local zoneID = select(8, GetInstanceInfo())
+    local questID = zoneID and ZoneToRaidBuff[zoneID]
+    if not questID then return text end
+    local isCompleted = C_QuestLog.IsQuestFlaggedCompleted(questID)
+    if not isCompleted then
+        if not self.CheckRaidBuffText then
+            self.CheckRaidBuffText = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
+            self.CheckRaidBuffText:SetPoint("CENTER")
+            self.CheckRaidBuffText:SetFrameStrata("TOOLTIP")
+            self.CheckRaidBuffText.Text = self.CheckRaidBuffText:CreateFontString(nil, "OVERLAY")
+            self.CheckRaidBuffText.Text:SetPoint("CENTER")
+            self.CheckRaidBuffText.Text:SetFont(NSI:GetGlobalFontPath(), 40, "OUTLINE")
+        end
+        local text = self:Loc("MISSING WEEKLY-STACKING DAMAGE/HEALING RAIDBUFF")
+        self.CheckRaidBuffText.Text:SetText("|cFFFF0000"..text.."|r")
+        print("|cFF00FFFFNSRT:|r ".."|cFFFF0000"..text.."|r")
+        self.CheckRaidBuffText:SetSize(self.CheckRaidBuffText.Text:GetStringWidth(), self.CheckRaidBuffText.Text:GetStringHeight())
+        self.CheckRaidBuffText:Show()
+        if self.CheckRaidBuffHideTimer then
+            self.CheckRaidBuffHideTimer:Cancel()
+            self.CheckRaidBuffHideTimer = nil
+        end
+        self.CheckRaidBuffHideTimer = C_Timer.NewTimer(20, function() self.CheckRaidBuffText:Hide() end)
+    end
+end
+
+function NSI:SoulstoneCheck(text)
+    if self:Restricted() then return text end
     local class = select(3, UnitClass("player"))
-    if class ~= 9 then return end
+    if class ~= 9 then return text end
     local cooldown = C_Spell.GetSpellCooldown(20707)
     local timeRemaining = cooldown and cooldown.duration ~= 0 and cooldown.duration + cooldown.startTime - GetTime()
-    if timeRemaining and timeRemaining > 30 then return false end -- only check if soulstone is ready or about to be ready
-    local buffed = false
+    if timeRemaining and timeRemaining > 30 then return text end -- only check if soulstone is ready or about to be ready
     local refresh = false
     for unit in self:IterateGroupMembers() do
         if UnitGroupRolesAssigned(unit) == "HEALER" and UnitIsVisible(unit) then
@@ -34,8 +76,7 @@ function NSI:SoulstoneCheck()
                 if UnitExists(source) and UnitIsUnit("player", source) then
                     local expires = aura.expirationTime
                     if expires - GetTime() > 600 then
-                        buffed = true
-                        return false
+                        return text
                     else
                         refresh = true
                     end
@@ -44,16 +85,16 @@ function NSI:SoulstoneCheck()
         end
     end
     NSAPI:TTS("Soulstone")
-    return refresh and "Refresh Soulstone" or "|cFFFF0000Soulstone Missing|r"
+    return refresh and UpdateText(text, "Refresh Soulstone") or UpdateText(text, "|cFFFF0000Soulstone Missing|r")
 end
 
-function NSI:SourceOfMagicCheck()
-    if self:Restricted() then return end
+function NSI:SourceOfMagicCheck(text)
+    if self:Restricted() then return text end
     local class = select(3, UnitClass("player"))
-    if class ~= 13 then return end
+    if class ~= 13 then return text end
     local spellID = 369459
     local sourceTalented = C_SpellBook.IsSpellKnownOrInSpellBook(spellID, nil, true)
-    if not sourceTalented then return end
+    if not sourceTalented then return text end
     local refresh = false
     for unit in self:IterateGroupMembers() do
         if UnitGroupRolesAssigned(unit) == "HEALER" and UnitIsVisible(unit) and not UnitIsUnit(unit, "player") then
@@ -63,7 +104,7 @@ function NSI:SourceOfMagicCheck()
                 if UnitExists(source) and UnitIsUnit("player", source) then
                     local expires = aura.expirationTime
                     if expires and expires - GetTime() > 600 then
-                        return false
+                        return text
                     else
                         refresh = true
                     end
@@ -72,16 +113,16 @@ function NSI:SourceOfMagicCheck()
         end
     end
     NSAPI:TTS("Source of Magic")
-    return refresh and "Refresh Source of Magic" or "|cFFFF0000Source of Magic Missing|r"
+    return refresh and UpdateText(text, "Refresh Source of Magic") or UpdateText(text, "|cFFFF0000Source of Magic Missing|r")
 end
 
-function NSI:BlisteringScalesCheck()
-    if self:Restricted() then return end
+function NSI:BlisteringScalesCheck(text)
+    if self:Restricted() then return text end
     local spec = self:GetMySpecID()
-    if spec ~= 1473 then return end
+    if spec ~= 1473 then return text end
     local spellID = 360827
     local ScalesTalented = C_SpellBook.IsSpellKnownOrInSpellBook(spellID, nil, true)
-    if not ScalesTalented then return end
+    if not ScalesTalented then return text end
     local refresh = false
     for unit in self:IterateGroupMembers() do
         if UnitIsVisible(unit) and not UnitIsUnit(unit, "player") then
@@ -91,7 +132,7 @@ function NSI:BlisteringScalesCheck()
                 if UnitExists(source) and UnitIsUnit("player", source) then
                     local expires = aura.expirationTime
                     if expires and expires - GetTime() > 600 then
-                        return false
+                        return text
                     else
                         refresh = true
                     end
@@ -100,16 +141,16 @@ function NSI:BlisteringScalesCheck()
         end
     end
     NSAPI:TTS("Blistering Scales")
-    return refresh and "Refresh Blistering Scales" or "|cFFFF0000Blistering Scales Missing|r"
+    return refresh and UpdateText(text, "Refresh Blistering Scales") or UpdateText(text, "|cFFFF0000Blistering Scales Missing|r")
 end
 
-function NSI:SymbioticRelationshipCheck()
-    if self:Restricted() then return end
+function NSI:SymbioticRelationshipCheck(text)
+    if self:Restricted() then return text end
     local class = select(3, UnitClass("player"))
-    if class ~= 11 then return end
+    if class ~= 11 then return text end
     local spellID = 474750
     local SymbioticTalented = C_SpellBook.IsSpellKnownOrInSpellBook(spellID, nil, true)
-    if not SymbioticTalented then return end
+    if not SymbioticTalented then return text end
     local refresh = false
     for unit in self:IterateGroupMembers() do
         if UnitIsVisible(unit) and not UnitIsUnit(unit, "player") then
@@ -119,7 +160,7 @@ function NSI:SymbioticRelationshipCheck()
                 if UnitExists(source) and UnitIsUnit("player", source) then
                     local expires = aura.expirationTime
                     if expires and expires - GetTime() > 600 then
-                        return false
+                        return text
                     else
                         refresh = true
                     end
@@ -128,11 +169,11 @@ function NSI:SymbioticRelationshipCheck()
         end
     end
     NSAPI:TTS("Symbiotic Relationship")
-    return refresh and "Refresh Symbiotic Relationship" or "|cFFFF0000Symbiotic Relationship Missing|r"
+    return refresh and UpdateText(text, "Refresh Symbiotic Relationship") or UpdateText(text, "|cFFFF0000Symbiotic Relationship Missing|r")
 end
 
-function NSI:BuffCheck()
-    if self:Restricted() then return end
+function NSI:BuffCheck(text)
+    if self:Restricted() then return text end
     local class = select(3, UnitClass("player"))
     local spellID = buffs[class]
     if spellID then
@@ -154,7 +195,7 @@ function NSI:BuffCheck()
                         -- this means someone has the buff but it's from another player that is no longer in the raid so the buff would disappear on pull.
                         local name = C_Spell.GetSpellInfo(spellID).name
                         NSAPI:TTS("Rebuff "..name)
-                        return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
+                        return UpdateText(text, "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r")
                     end
                 elseif buffed ~= "" then
                     if type(spellID) == "table" then
@@ -163,12 +204,12 @@ function NSI:BuffCheck()
                     local spellInfo = C_Spell.GetSpellInfo(spellID)
                     local name = spellInfo and spellInfo.name or ""
                     NSAPI:TTS("Rebuff "..name)
-                    return "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r"
+                    return UpdateText(text, "|cFFFF0000Rebuff:|r |cFF00FF00"..name.."|r")
                 end
             end
         end
     end
-    return false
+    return text
 end
 
 local SlotName = {
@@ -247,7 +288,7 @@ local ArmorTypes = {
     [13] = 3, -- Evoker
 }
 
-function NSI:GearCheck()
+function NSI:GearCheck(text)
     local missing = {}
     local crafted = 0
     local tier = 0
@@ -323,11 +364,11 @@ function NSI:GearCheck()
             table.insert(missing, "|cFFFF0000Only 2pc equipped|r")
         end
     end
-    local text = ""
+    local newText = ""
     for i=1, #missing do
-        text = text..missing[i].."\n"
+        newText = newText..missing[i].."\n"
     end
-    return text
+    return UpdateText(text, newText)
 end
 
 function NSI:GatewayControlCheck()
@@ -347,16 +388,16 @@ function NSI:GatewayControlCheck()
                 end
                 bound = bound or (NSRT.ReadyCheckSettings.SkipGatewayKeybindCheck and onbar)
                 if bound then
-                    return false
+                    return text
                 elseif onbar then
-                    return "|cFF00FF00Gateway Control Shard|r Not Bound"
+                    return UpdateText(text, "|cFF00FF00Gateway Control Shard|r Not Bound")
                 else
-                    return "|cFF00FF00Gateway Control Shard|r Not on Actionbar"
+                    return UpdateText(text, "|cFF00FF00Gateway Control Shard|r Not on Actionbar")
                 end
             end
         end
     end
-    return "|cFF00FF00Gateway Control Shard|r Missing"
+    return UpdateText(text, "|cFF00FF00Gateway Control Shard|r Missing")
 end
 
 local keymapping = {
