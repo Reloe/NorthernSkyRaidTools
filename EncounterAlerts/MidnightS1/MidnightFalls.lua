@@ -323,10 +323,13 @@ NSI.InitializeAlerts[encID] = function(self)
             { Type = "Button",   label = "Create Macros", width = 150,
             func = [[return function(NSI)
                 local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
+                local names = {"T", "Circle", "Diamond", "Triangle", "Cross"}
                 for i=1, 5 do
                     local macroName = "NSRT_LURA_RUNE_"..i
                     if not GetMacroInfo(macroName) then
-                        CreateMacro(macroName, iconIDs[i], "/raid "..iconIDs[i])
+                        CreateMacro(macroName, iconIDs[i], "/raid "..names[i])
+                    else
+                        EditMacro(macroName, macroName, iconIDs[i], "/raid "..names[i])
                     end
                 end
             end]]
@@ -446,7 +449,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
             self.LuraRunesDisplay[pos]:Show()
 
-            if runes.ShowSenderNames and self.Phase ~= 4 then
+            if runes.ShowSenderNames and self.Phase ~= 4 and sender and senderGUID then
                 -- UnitClassFromGUID accepts secret arguments, but UnitClass and UnitClassBase do not.
                 local senderNameClassColored = C_ColorUtil.WrapTextInColor(sender, C_ClassColor.GetClassColor(select(2, UnitClassFromGUID(senderGUID))))
                 self.LuraRunesNumbers[pos]:SetText(string.format("%d: %s", pos, senderNameClassColored))
@@ -532,9 +535,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.IsLuraPreview = true
             self:MakeDraggable(self.LuraRunesFrame, s, true)
             self.LuraRunesFrame:Show()
-            local iconIDs = { "134635", "340528", "351033", "7242384", "236903" }
+            local names = {"T", "Circle", "Diamond", "Triangle", "Cross"}
             for i = 1, 5 do
-                DisplayRune(i, secretwrap(iconIDs[i]), false, secretwrap(UnitName("player")), secretwrap(UnitGUID("player")))
+                DisplayRune(i, secretwrap(names[i]), false, secretwrap(UnitName("player")), secretwrap(UnitGUID("player")))
             end
         end
         local timers = {
