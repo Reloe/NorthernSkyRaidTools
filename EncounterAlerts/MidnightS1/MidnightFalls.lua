@@ -408,7 +408,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
         local isTank = UnitGroupRolesAssigned("player") == "TANK"
         local XOffset = { 50, 60, 0, -60, -50 }
         local YOffset = { 50, -25, -70, -25, 50 }
-        local function DisplayRune(pos, text, isMythic, sender, senderGUID)
+        local function DisplayRune(pos, text, isMythic, sender, senderGUID, senderDisplayName)
             if not isMythic then
                 pos = 1
                 for i = 2, 5 do
@@ -449,11 +449,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             end
             self.LuraRunesDisplay[pos]:Show()
 
-            if runes.ShowSenderNames and self.Phase ~= 4 and sender and senderGUID then
+            if runes.ShowSenderNames and self.Phase ~= 4 and (senderDisplayName or (sender and senderGUID)) then
                 -- UnitClassFromGUID accepts secret arguments, but UnitClass and UnitClassBase do not.
-                local classFilename = select(2, UnitClassFromGUID(senderGUID))
+                local classFilename = senderGUID and select(2, UnitClassFromGUID(senderGUID))
                 local classColor = classFilename and C_ClassColor.GetClassColor(classFilename)
-                local senderNameClassColored = classColor and C_ColorUtil.WrapTextInColor(sender, classColor) or sender
+                local senderNameClassColored = senderDisplayName or (classColor and C_ColorUtil.WrapTextInColor(sender, classColor) or sender)
                 self.LuraRunesNumbers[pos]:SetText(string.format("%d: %s", pos, senderNameClassColored))
             else
                 self.LuraRunesNumbers[pos]:SetText(pos)
@@ -501,6 +501,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             elseif e == "CHAT_MSG_RAID_LEADER" then
                 local sender = select(1, ...)
                 local senderGUID = select(11, ...)
+                local senderDisplayName = UnitExists("raid1") and NSAPI:Shorten("raid1", 12, false, "GlobalNickNames") or nil
                 self.LuraRunesFrame:Show()
                 if self.HideTimer then
                     self.HideTimer:Cancel()
@@ -510,13 +511,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                     HideAllRunes()
                 end)
                 if id ~= 16 or self.Phase == 4 then
-                    DisplayRune(pos, msg, false, sender, senderGUID)
+                    DisplayRune(pos, msg, false, sender, senderGUID, senderDisplayName)
                     return
                 end
                 local pos = 1
                 if self.LuraRunesCompleted[pos] then pos = 4 end
                 self.LuraRunesCompleted[pos] = true
-                DisplayRune(pos, msg, true, sender, senderGUID)
+                DisplayRune(pos, msg, true, sender, senderGUID, senderDisplayName)
             end
         end)
         self.LuraRunesFrame:ClearAllPoints()
