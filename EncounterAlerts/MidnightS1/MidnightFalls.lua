@@ -428,6 +428,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
 
                 self.LuraRunesNumbers[pos] = self.LuraRunesFrame:CreateFontString(nil, "OVERLAY")
                 self.LuraRunesNumbers[pos]:SetTextColor(1, 1, 1)
+                self.LuraRunesNumbers[pos]:SetWidth(90)
+                self.LuraRunesNumbers[pos]:SetWordWrap(false)
                 self.LuraRunesNumbers[pos]:SetShadowColor(0, 0, 0, 1)
             end
             self.LuraRunesNumbers[pos]:SetFont(self:GetGlobalFontPath(), runes.ShowSenderNames and 16 or 25, "OUTLINE")
