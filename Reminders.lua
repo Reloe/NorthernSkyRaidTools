@@ -1195,6 +1195,7 @@ end
 
 function NSI:StartReminders(phase, testrun)
     if not testrun then self:LogTimeline("NSRT_PHASE", phase) end
+    self:FireCallback("NSRT_PHASE", phase, self.EncounterID, testrun)
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}
@@ -1342,6 +1343,7 @@ function NSI:HideAllReminders(FullReset)
         if F then F:Hide() end
     end
     if not FullReset then return end
+    self:FireCallback("NSRT_HIDE_REMINDERS")
     self.ReminderTimer = nil
     self.AllGlows = {}
     self.Timelines = {}
@@ -2004,14 +2006,6 @@ function NSI:ImportReloeReminders(id, applyAutoEnable)
         self:FireCallback("NSRT_ALERT_FULL_UPDATE")
     end
     self._ApplyReloeAutoEnable = previousAutoEnable
-end
-
-function NSI:DeleteReloeReminder(encID, diffID, alertKey)
-    if NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] then
-        local alert = NSRT.EncounterAlerts[encID][diffID][alertKey]
-        if type(alert) == "table" and not self:CanDeleteEncounterAlert(alert, encID) then return end
-        NSRT.EncounterAlerts[encID][diffID][alertKey] = nil
-    end
 end
 
 function NSAPI:GetAlerts()
