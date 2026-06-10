@@ -455,6 +455,7 @@ L["Flex Raid"] = "Гибкий рейд"
 L["Check raid buffs up to Group 6 instead of only Group 4."] = "Проверяет рейдовые баффы до 6-й группы включительно вместо 4-х групп."
 L["Disable this Feature"] = "Отключить эту функцию"
 L["Disable the Missing Raid Buffs Feature. You can re-enable it in the Setup Manager Settings."] = "Отключает функцию недостающих рейдовых баффов. Вы можете повторно включить эту функцию в настройках диспетчера установки."
+L["MISSING WEEKLY-STACKING DAMAGE/HEALING RAIDBUFF"] = "ОТСУТСТВУЕТ ЕЖЕНЕДЕЛЬНЫЙ СТАКАЮЩИЙСЯ РЕЙДОВЫЙ БАФФ НА УРОН/ЛЕЧЕНИЕ"
 
 -- ============================================================================
 -- UI/Options/Nicknames.lua
