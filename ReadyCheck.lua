@@ -24,6 +24,7 @@ local ZoneToRaidBuff = {
 }
 
 local function UpdateText(text, newString)
+    if not text then return newString end
     if text == "" then
         text = newString
     else
@@ -388,16 +389,16 @@ function NSI:GatewayControlCheck()
                 end
                 bound = bound or (NSRT.ReadyCheckSettings.SkipGatewayKeybindCheck and onbar)
                 if bound then
-                    return text
+                    return false
                 elseif onbar then
-                    return UpdateText(text, "|cFF00FF00Gateway Control Shard|r Not Bound")
+                    return "|cFF00FF00Gateway Control Shard|r Not Bound"
                 else
-                    return UpdateText(text, "|cFF00FF00Gateway Control Shard|r Not on Actionbar")
+                    return "|cFF00FF00Gateway Control Shard|r Not on Actionbar"
                 end
             end
         end
     end
-    return UpdateText(text, "|cFF00FF00Gateway Control Shard|r Missing")
+    return "|cFF00FF00Gateway Control Shard|r Missing"
 end
 
 local keymapping = {
