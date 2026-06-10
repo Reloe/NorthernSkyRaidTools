@@ -68,7 +68,7 @@ function NSI:CreateReminder(info, preview)
     end
     if info.isTaunt then
         local class = select(3, UnitClass("player"))
-        info.spellID = ClassToTauntID[class]
+        info.spellID = ClassToTauntID[class] or info.spellID
     end
     info.spellID = info.spellID and tonumber(info.spellID)
     if (info.DisplayType and not allowedTypes[info.DisplayType]) or not info.DisplayType then
