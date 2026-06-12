@@ -408,7 +408,8 @@ function NSI:SplitGroupInit(Flex, default, odds)
         if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
-            local difficultyID = select(3, GetInstanceInfo()) or 0
+            local _, instanceType, difficultyID = GetInstanceInfo()
+            difficultyID = (instanceType == "raid" and difficultyID) or GetRaidDifficultyID() or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
         else
