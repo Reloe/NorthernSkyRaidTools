@@ -102,11 +102,11 @@ NSI.EncounterAlertStart[encID] = function(self, id)
             self.TauntFrame = CreateFrame("Frame", nil, NSI.NSRTFrame, "BackdropTemplate")
             self.TauntFrame:SetSize(100, 30)
             self.TauntFrame.Text = self.TauntFrame.Text or self.TauntFrame:CreateFontString(nil, "OVERLAY")
-            self.TauntFrame.Text:SetFont(self.LSM:Fetch("font", info.Font), info.FontSize, "OUTLINE")
-            self.TauntFrame.Text:SetText(info.text)
             self.TauntFrame.Text:SetPoint("CENTER")
             self.TauntFrame.Text:Hide()
         end
+        self.TauntFrame.Text:SetFont(self.LSM:Fetch("font", info.Font), info.FontSize, "OUTLINE")
+        self.TauntFrame.Text:SetText(info.text)
         local Taunts = {
             [115546] = true, [56222] = true, [185245] = true,
             [6795]   = true, [355]   = true, [62124]  = true, [49576] = true,
