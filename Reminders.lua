@@ -1089,6 +1089,7 @@ function NSI:DisplayReminder(info, bypass)
             end
         end
     end
+    self:FireCallback("NSRT_REMINDER_SHOW", info, F)
     return F
 end
 
