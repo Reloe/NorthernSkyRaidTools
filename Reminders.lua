@@ -1658,7 +1658,7 @@ function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
         self:MoveFrameSettings(self[Name.."Mover"], SettingsTable)
         if SettingsTable.enabled and SettingsTable.Moveable then
             self:UpdateReminderFrame(false, Shared, Personal, Extra)
-            self:MakeDraggable(self[Name.."Mover"], SettingsTable, false, true)
+            self:MakeDraggable(self[Name.."Mover"], SettingsTable, true, true)
             self[Name.."Mover"].Resizer:Show()
             self[Name.."Mover"]:SetResizable(true)
             self[Name.."Mover"]:SetResizeBounds(100, 100, 2000, 2000)
