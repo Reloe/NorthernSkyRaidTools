@@ -15,7 +15,7 @@ local BossIcons = {
     [3306] = 7448202, -- Chimaerus
     [3182] = 7448203, -- Belo'ren
     [3183] = 7448204, -- Midnight Falls
-    [3159] = 1019378, -- Rotmire (Brackenspore Placeholder icon before .7 drops, real one is 7852823)
+    [3159] = 7852823, -- Rotmire
 }
 
 NSI.EncounterOrder = { -- list of encounters for sorting in alerts
