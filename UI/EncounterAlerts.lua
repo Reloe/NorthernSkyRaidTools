@@ -1889,7 +1889,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     spellLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -90)
 
     local spellEntry = CreateTextEntry(dispF, nil, nil, nil, 130, 22,
-        nil, nil, nil, "NSUIEncAlertSpellID")
+        nil, nil, nil, "NSUIEncAlertSpellID",
+        { title = "Spell ID", desc = "The icon of this spellid will be used for the in-combat display" })
     spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -106)
 
     -- Spell icon preview: shown immediately to the right of the entry
@@ -1935,7 +1936,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                 RebuildList()
             end
         end,
-        150, 22, "NSUIEncAlertUseTauntSpellID")
+        150, 22, "NSUIEncAlertUseTauntSpellID", {
+            title = "Use Taunt spellid",
+            desc = "Automatically uses the spellid for the taunt of your current class."
+        })
     useTauntCB:SetLocaleKey("Use Taunt spellid")
     useTauntCB:SetPoint("TOPLEFT", dispF, "TOPLEFT", 164, -106)
     dispF.useTauntCB = useTauntCB
@@ -1947,7 +1951,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     customIconLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -90)
 
     local customIconEntry = CreateTextEntry(dispF, nil, nil, nil, 180, 22,
-        nil, nil, nil, "NSUIEncAlertCustomIcon")
+        nil, nil, nil, "NSUIEncAlertCustomIcon",
+        { title = "Custom Icon", desc = "Uses the spellid's icon for display in the alert-list. Does NOT change the in-combat display" })
     customIconEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 330, -106)
     local function SaveCustomIcon(self)
         local v = tonumber(self:GetText()) or nil
@@ -1964,7 +1969,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     durLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -134)
 
     local durEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
-        nil, nil, nil, "NSUIEncAlertDuration")
+        nil, nil, nil, "NSUIEncAlertDuration",
+        { title = "Duration", desc = "How long before the specified time this alert should start showing up" })
     durEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -150)
     local function SaveDur(self)
         local v = tonumber(self:GetText())
@@ -1980,7 +1986,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     stickyLbl:SetPoint("TOPLEFT", durLbl, "TOPRIGHT", 55, 0)
 
     local stickyEntry = CreateTextEntry(dispF, nil, nil, nil, 80, 22,
-        nil, nil, nil, "NSUIEncAlertSticky")
+        nil, nil, nil, "NSUIEncAlertSticky",
+        { title = "Sticky duration", desc = "How long the alert should remain on screen when duration hits 0" })
     stickyEntry:SetPoint("TOPLEFT", durEntry.frame, "TOPRIGHT", 20, 0)
     local function SaveSticky(self)
         local v = tonumber(self:GetText())
@@ -1998,7 +2005,8 @@ local function BuildEncounterAlertsUI(parentFrame)
             return s and s.HideTimerText or false
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideTimer", v or nil) end end,
-        135, 22, "NSUIEncAlertHideTimer")
+        135, 22, "NSUIEncAlertHideTimer",
+        { title = "Hide Timer Text", desc = "Hides the remaining duration text of this alert" })
     hideTimerCB:SetLocaleKey("Hide Timer Text")
     hideTimerCB:SetPoint("LEFT", stickyEntry.frame, "RIGHT", 14, 0)
     dispF.hideTimerCB = hideTimerCB
@@ -2024,7 +2032,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     glowunitLbl:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -178)
 
     local glowunitEntry = CreateTextEntry(dispF, nil, nil, nil, 200, 22,
-        nil, nil, nil, "NSUIEncAlertGlowUnit")
+        nil, nil, nil, "NSUIEncAlertGlowUnit",
+        { title = "Glow unit", desc = "Creates a glow on these player's Raidframes" })
     glowunitEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -194)
     local function SaveGlowUnit(self)
         local v = self:GetText()
@@ -2143,7 +2152,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         end,
         function(_, r, g, b, a) if dispF._alert then NSI:SaveAlertData(dispF._alert, "ringColors", {r, g, b, a}) end end,
         200, 22, "NSUIEncAlertRingColors")
-    ringColorsPicker:SetPoint("TOPLEFT", ringColorsLbl, "BOTTOMLEFT", 0, 4)
+    ringColorsPicker:SetPoint("TOPLEFT", ringColorsLbl, "BOTTOMLEFT", 0, 12)
     dispF.ringColorsPicker = ringColorsPicker
 
     local showBgCB = CreateCheckButton(circleSection, NSI:Loc("Show Background Ring"),
@@ -2463,7 +2472,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     phaseLbl:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -50)
 
     local phaseEntry = CreateTextEntry(trigF, nil, nil, nil, 60, 22,
-        nil, nil, nil, "NSUIEncAlertPhase")
+        nil, nil, nil, "NSUIEncAlertPhase",
+        { title = "Phase", desc = "The phase number will often not be equal to what you see in the Dungeon Journal or what WCL shows. You can look at existing alerts to understand the phases, or look at wowutils to see where a new phase starts." })
     phaseEntry:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -66)
     phaseEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if trigF._alert then
@@ -2600,7 +2610,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
 
     local conditionBtn = CreateLocalizedSubButton(trigF, "Add Condition", OpenConditionEditor, 130,
-        "NSUIEncAlertConditionBtn")
+        "NSUIEncAlertConditionBtn",
+        { title = "Add/Edit Condition", desc = "Add/Edit the condition that needs to be fullfilled for this alert to show. This is only evaluated once at the time of the alert popping up" })
     conditionBtn:SetPoint("TOPLEFT", addTimeEntry.frame, "BOTTOMLEFT", 0, -12)
     trigF.conditionBtn = conditionBtn
 
@@ -2656,7 +2667,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     ttsTimerLbl:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -82)
 
     local ttsTimerEntry = CreateTextEntry(sndF, nil, nil, nil, 80, 22,
-        nil, nil, nil, "NSUIEncAlertTTSTimer")
+        nil, nil, nil, "NSUIEncAlertTTSTimer",
+        { title = "TTS Timer", desc = "Remaining duration at which the TTS or Sound should play" })
     ttsTimerEntry:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -98)
     local function SaveTTSTimer(self)
         local v = tonumber(self:GetText())
@@ -2673,7 +2685,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     sndF.cdLbl = cdLbl
 
     local cdEntry = CreateTextEntry(sndF, nil, nil, nil, 60, 22,
-        nil, nil, nil, "NSUIEncAlertCountdown")
+        nil, nil, nil, "NSUIEncAlertCountdown",
+        { title = "Countdown", desc = "At how many seconds remaining you would like to hear a TTS countdown" })
     cdEntry:SetPoint("LEFT", cdLbl, "RIGHT", 6, 0)
     cdEntry:SetPoint("TOP",  cdLbl, "TOP", 0, 6)
     local function SaveCountdown(self)
@@ -2700,7 +2713,8 @@ local function BuildEncounterAlertsUI(parentFrame)
         function(v) if sndF._alert then NSI:SaveAlertData(sndF._alert, "sound", v) end end
     )
     local soundDD = CreateDropdown(sndF, nil, soundGetItems, soundGetSelected,
-        rightW, 22, "NSUIEncAlertSound")
+        rightW, 22, "NSUIEncAlertSound",
+        { title = "Sound File", desc = "If you select a sound here it will take priority over any configured TTS. It will still use the TTS-Timer field to determine when to play" })
     soundDD:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -178)
     sndF.soundDD = soundDD
     end -- SOUND TAB

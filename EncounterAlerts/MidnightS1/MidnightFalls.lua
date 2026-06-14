@@ -315,11 +315,12 @@ NSI.InitializeAlerts[encID] = function(self)
                 set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
             { Type = "Checkbox", label = "ShowSenderNames",
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.ShowSenderNames  or false  end]],
-                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.ShowSenderNames  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]]},
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3183][i].RunesDisplay.ShowSenderNames  = v end NSI.EncounterAlertStop[3183](NSI, true) NSI.EncounterAlertStart[3183](NSI, 16, "Runes Display") end]],
+                tooltip = {title = "ShowSenderNames", desc = "Will show the Name of the sender to help you debug any possible issues or wrong macro presses"}},
             { Type = "Breakline" },
-            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ",width = 150 },
-            { Type = "Label",    text = "The Texture files are no longer required for most users. They are only required if you want to see these Icons in your Macros."},
-            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles", width = 150 },
+            { Type = "Link",     label = "Runes Guide",     url = "https://www.youtube.com/watch?v=yXNASNKxasQ", width = 150,},
+            { Type = "Link",     label = "Texture Files",   url = "https://github.com/Reloe/LuraMemoryFiles", width = 150,
+                tooltip = {title = "Texture Files", desc = "The Texture files are no longer required for most users. They are only required if you want to see these Icons in your Macros."}},
             { Type = "Button",   label = "Create Macros", width = 150,
             func = [[return function(NSI)
                 local iconIDs = {"7242384", "134635", "340528", "351033", "236903"}
@@ -332,8 +333,8 @@ NSI.InitializeAlerts[encID] = function(self)
                         EditMacro(macroName, macroName, iconIDs[i], "/raid "..names[i])
                     end
                 end
-            end]]
-            }
+            end]],
+            tooltip = {title = "Create Macros", desc = "Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"}},
         },
     }
     self:AddEncounterAlert(data)

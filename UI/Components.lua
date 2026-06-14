@@ -382,8 +382,8 @@ end
 --  controls (inner tab bars, type selectors, etc.).
 --  Defaults: height=18, font size=12, no icon support.
 -- ============================================================
-local function CreateSubButton(parent, text, onClick, width, name)
-    return CreateButton(parent, text, onClick, width, 18, name, nil, 12)
+local function CreateSubButton(parent, text, onClick, width, name, tooltip)
+    return CreateButton(parent, text, onClick, width, 18, name, nil, 12, tooltip)
 end
 
 local function CreateLocalizedButton(parent, key, onClick, width, height, name, icon, textSize, tooltip)
@@ -392,8 +392,8 @@ local function CreateLocalizedButton(parent, key, onClick, width, height, name, 
     return btn
 end
 
-local function CreateLocalizedSubButton(parent, key, onClick, width, name)
-    return CreateLocalizedButton(parent, key, onClick, width, 18, name, nil, 12)
+local function CreateLocalizedSubButton(parent, key, onClick, width, name, tooltip)
+    return CreateLocalizedButton(parent, key, onClick, width, 18, name, nil, 12, tooltip)
 end
 
 -- ============================================================
@@ -757,7 +757,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
     dropBtn:SetScript("OnEnter", function()
         UIFrameFadeIn(dropHover, STYLE.hover_in, dropHover:GetAlpha(), 1)
-        ShowTooltip(dropBtn, tooltip)
+        ShowTooltip(dropBtn, tooltip, "ANCHOR_TOPLEFT")
     end)
     dropBtn:SetScript("OnLeave", function()
         UIFrameFadeOut(dropHover, STYLE.hover_out, dropHover:GetAlpha(), 0)
