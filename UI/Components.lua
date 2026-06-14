@@ -116,9 +116,9 @@ local function RegisterLocalizedText(object, key, formatter)
     object:SetText(formatter and formatter() or NSI:Loc(key))
 end
 
-local function ShowTooltip(frame, tooltip)
+local function ShowTooltip(frame, tooltip, anchor)
     if not tooltip then return end
-    GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+    GameTooltip:SetOwner(frame, anchor or "ANCHOR_TOP")
     if type(tooltip) == "table" then
         GameTooltip:SetText(tooltip.title and NSI:Loc(tooltip.title) or "")
         if tooltip.desc then
@@ -515,7 +515,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     end)
     btn:SetScript("OnEnter", function()
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
-        ShowTooltip(btn, tooltip)
+        ShowTooltip(btn, tooltip, "ANCHOR_TOPLEFT")
     end)
     btn:SetScript("OnLeave", function()
         UIFrameFadeOut(hoverBg, STYLE.hover_out, hoverBg:GetAlpha(), 0)
@@ -1701,7 +1701,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
             local resolvedFunc = ResolveCallback(def.func)
             ctrl = C.CreateButton(parent, def.label, function()
                 if resolvedFunc then resolvedFunc(NSI) end
-            end, def.width or width, h, wName)
+            end, def.width or width, h, wName, nil, nil, def.tooltip)
         end
 
         if ctrl then
