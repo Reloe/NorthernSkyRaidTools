@@ -1695,7 +1695,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
             ctrl = C.CreateBreakline(parent, width, h, wName)
 
         elseif t == "Link" then
-            ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, wName)
+            ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, wName, def.tooltip)
 
         elseif t == "Button" then
             local resolvedFunc = ResolveCallback(def.func)
@@ -2243,6 +2243,26 @@ local function EnsureLinkPopup()
     f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     f:SetBackdropBorderColor(0, 1, 1, 0.7)
 
+    local closeBtn = CreateFrame("Button", nil, f)
+    closeBtn:SetSize(16, 16)
+    closeBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -LINK_PAD, -LINK_PAD)
+    closeBtn:SetFrameLevel(f:GetFrameLevel() + 2)
+    local closeText = MakeFontString(closeBtn, 12)
+    closeText:SetText("x")
+    closeText:SetTextColor(0.75, 0.75, 0.75, 1)
+    closeText:SetJustifyH("CENTER")
+    closeText:SetJustifyV("MIDDLE")
+    closeText:SetAllPoints(closeBtn)
+    closeBtn:SetScript("OnEnter", function()
+        closeText:SetTextColor(1, 1, 1, 1)
+    end)
+    closeBtn:SetScript("OnLeave", function()
+        closeText:SetTextColor(0.75, 0.75, 0.75, 1)
+    end)
+    closeBtn:SetScript("OnClick", function()
+        f:Hide()
+    end)
+
     -- Hint label
     local hint = MakeFontString(f, 11)
     hint:SetTextColor(0.45, 0.45, 0.45, 1)
@@ -2274,6 +2294,12 @@ local function EnsureLinkPopup()
     edit:SetMultiLine(false)
     edit:SetJustifyH("CENTER")
     edit:SetJustifyV("MIDDLE")
+    edit:SetScript("OnTextChanged", function(self, userInput)
+        if userInput then
+            self:SetText(f._linkUrl or "")
+            self:HighlightText()
+        end
+    end)
 
     edit:SetScript("OnEditFocusGained", function()
         edit:HighlightText()
@@ -2281,6 +2307,12 @@ local function EnsureLinkPopup()
     end)
     edit:SetScript("OnEditFocusLost", function()
         UIFrameFadeOut(focusBorder, STYLE.deselect_out, focusBorder:GetAlpha(), 0)
+        C_Timer.After(0, function()
+            if f:IsShown() then
+                edit:SetFocus()
+                edit:HighlightText()
+            end
+        end)
     end)
     edit:SetScript("OnEscapePressed", function() f:Hide() end)
     edit:SetScript("OnKeyDown", function(_, key)
@@ -2295,9 +2327,10 @@ end
 local function ShowLinkPopup(url, anchorFrame)
     EnsureLinkPopup()
 
-    linkPopup.edit:SetText(url or "")
+    local f = linkPopup.frame
+    f._linkUrl = url or ""
+    linkPopup.edit:SetText(f._linkUrl)
 
-    local f      = linkPopup.frame
     local anchor = (NSI.UI.Core and NSI.UI.Core.NSUI) or UIParent
     f:ClearAllPoints()
     f:SetPoint("CENTER", anchor, "CENTER")
@@ -2307,11 +2340,11 @@ local function ShowLinkPopup(url, anchorFrame)
     linkPopup.edit:HighlightText()
 end
 
-local function CreateLink(parent, label, url, width, height, name)
+local function CreateLink(parent, label, url, width, height, name, tooltip)
     local btn
     btn = CreateButton(parent, label, function()
         ShowLinkPopup(url, btn.frame)
-    end, width, height, name)
+    end, width, height, name, nil, nil, tooltip)
     return btn
 end
 
