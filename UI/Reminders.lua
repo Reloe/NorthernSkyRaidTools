@@ -665,8 +665,18 @@ local function BuildReminderScreen(personal, parentFrame)
 
     SaveCurrentNote = function()
         if not screen.selectedName then return end
+        local editorText = editor:GetText()
+        local pastedEncID, _, pastedDiff = ParseFirstLine(editorText)
+        if pastedEncID then
+            screen._metaBossEncID = pastedEncID
+            if screen.bossDropdown then screen.bossDropdown:Select(pastedEncID) end
+        end
+        if pastedDiff and pastedDiff ~= "" then
+            screen._metaDiff = pastedDiff
+            if screen.diffDropdown then screen.diffDropdown:Select(pastedDiff) end
+        end
         -- Strip any existing metadata first line from the editor, then rebuild from controls
-        local bodyText = StripFirstLine(editor:GetText())
+        local bodyText = StripFirstLine(editorText)
         local newName = screen.nameEntry and screen.nameEntry:GetText()
         if not newName or newName == "" then newName = screen.selectedName end
         -- Capture the old encID before we overwrite the stored note, so we can clear
@@ -734,7 +744,17 @@ local function BuildReminderScreen(personal, parentFrame)
     -- Does NOT touch NSRT.Reminders — this is only for iterating on a received note.
     SaveReceivedNote = function()
         if not screen.viewingReceivedNote then return end
-        local bodyText = StripFirstLine(editor:GetText())
+        local editorText = editor:GetText()
+        local pastedEncID, _, pastedDiff = ParseFirstLine(editorText)
+        if pastedEncID then
+            screen._metaBossEncID = pastedEncID
+            if screen.bossDropdown then screen.bossDropdown:Select(pastedEncID) end
+        end
+        if pastedDiff and pastedDiff ~= "" then
+            screen._metaDiff = pastedDiff
+            if screen.diffDropdown then screen.diffDropdown:Select(pastedDiff) end
+        end
+        local bodyText = StripFirstLine(editorText)
         local name = screen.nameEntry and screen.nameEntry:GetText() or ""
         if name == "" then
             local _, parsedName = ParseFirstLine(NSI.Reminder or "")
