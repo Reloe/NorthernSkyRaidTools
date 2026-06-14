@@ -116,6 +116,24 @@ local function RegisterLocalizedText(object, key, formatter)
     object:SetText(formatter and formatter() or NSI:Loc(key))
 end
 
+local function ShowTooltip(frame, tooltip)
+    if not tooltip then return end
+    GameTooltip:SetOwner(frame, "ANCHOR_TOP")
+    if type(tooltip) == "table" then
+        GameTooltip:SetText(tooltip.title and NSI:Loc(tooltip.title) or "")
+        if tooltip.desc then
+            GameTooltip:AddLine(NSI:Loc(tooltip.desc), 1, 1, 1, true)
+        end
+    else
+        GameTooltip:SetText(NSI:Loc(tooltip))
+    end
+    GameTooltip:Show()
+end
+
+local function HideTooltip(tooltip)
+    if tooltip then GameTooltip:Hide() end
+end
+
 local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip, condition)
     -- ---- base frame -------------------------------------------
     -- Width is resolved after measuring the label; start with a stub size.
@@ -224,24 +242,11 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     -- ---- mouse scripts ----------------------------------------
     btn:SetScript("OnEnter", function(self)
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
-        if tooltip then
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            if type(tooltip) == "table" then
-                GameTooltip:SetText(tooltip.title or "")
-                if tooltip.desc then
-                    GameTooltip:AddLine(tooltip.desc, 1, 1, 1, true)
-                end
-            else
-                GameTooltip:SetText(tooltip)
-            end
-            GameTooltip:Show()
-        end
+        ShowTooltip(self, tooltip)
     end)
     btn:SetScript("OnLeave", function()
         UIFrameFadeOut(hoverBg, STYLE.hover_out, hoverBg:GetAlpha(), 0)
-        if tooltip then
-            GameTooltip:Hide()
-        end
+        HideTooltip(tooltip)
     end)
 
     -- ---- public object ----------------------------------------
@@ -445,7 +450,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateCheckButton(parent, label, getValue, setValue, width, height, name)
+local function CreateCheckButton(parent, label, getValue, setValue, width, height, name, tooltip)
     local totalW = width  or 180
     local totalH = height or 22
     local BOX    = 14
@@ -510,9 +515,11 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     end)
     btn:SetScript("OnEnter", function()
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
+        ShowTooltip(btn, tooltip)
     end)
     btn:SetScript("OnLeave", function()
         UIFrameFadeOut(hoverBg, STYLE.hover_out, hoverBg:GetAlpha(), 0)
+        HideTooltip(tooltip)
     end)
 
     local obj = {frame = btn, label = lbl}
@@ -566,7 +573,7 @@ end
 --    :SetSize(w, h)
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
-                               width, height, numeric, minVal, maxVal, name)
+                               width, height, numeric, minVal, maxVal, name, tooltip)
     local totalW    = width or 220
     local totalH    = height or 22
     local BOX_W     = 60
@@ -654,6 +661,12 @@ local function CreateTextEntry(parent, label, getValue, setValue,
         UIFrameFadeOut(focusBorder, STYLE.deselect_out, focusBorder:GetAlpha(), 0)
         Commit()
     end)
+    edit:SetScript("OnEnter", function(self)
+        ShowTooltip(self, tooltip)
+    end)
+    edit:SetScript("OnLeave", function()
+        HideTooltip(tooltip)
+    end)
 
     local obj = {frame = container, editBox = edit, label = lbl}
 
@@ -692,7 +705,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height, name)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
@@ -744,9 +757,11 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
     dropBtn:SetScript("OnEnter", function()
         UIFrameFadeIn(dropHover, STYLE.hover_in, dropHover:GetAlpha(), 1)
+        ShowTooltip(dropBtn, tooltip)
     end)
     dropBtn:SetScript("OnLeave", function()
         UIFrameFadeOut(dropHover, STYLE.hover_out, dropHover:GetAlpha(), 0)
+        HideTooltip(tooltip)
     end)
 
     -- ---- Popup (parented to UIParent so it floats above everything) ----
@@ -995,7 +1010,7 @@ end
 --    :SetSize(w, h)
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
-                            width, height, minVal, maxVal, step, name)
+                            width, height, minVal, maxVal, step, name, tooltip)
     local totalW  = width  or 220
     local totalH  = height or 22
     local LABEL_W = math.floor(totalW * 0.38)
@@ -1084,8 +1099,14 @@ local function CreateSlider(parent, label, getValue, setValue,
         UpdateVisual(value)
         if initialized and not dragging and setValue then setValue(NSI, value) end
     end)
-    slider:SetScript("OnEnter", function() thumb:SetVertexColor(0.5, 1, 1, 1) end)
-    slider:SetScript("OnLeave", function() thumb:SetVertexColor(0,   1, 1, 1) end)
+    slider:SetScript("OnEnter", function(self)
+        thumb:SetVertexColor(0.5, 1, 1, 1)
+        ShowTooltip(self, tooltip)
+    end)
+    slider:SetScript("OnLeave", function()
+        thumb:SetVertexColor(0,   1, 1, 1)
+        HideTooltip(tooltip)
+    end)
 
     local initVal = (getValue and getValue(NSI)) or (minVal or 0)
     local mn, mx = minVal or 0, maxVal or 100
@@ -1195,7 +1216,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateColorPicker(parent, label, getValue, setValue, width, height, name)
+local function CreateColorPicker(parent, label, getValue, setValue, width, height, name, tooltip)
     local totalW   = width  or 220
     local totalH   = height or 22
     local SWATCH_W = 40
@@ -1238,9 +1259,11 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
 
     swatchBtn:SetScript("OnEnter", function()
         UIFrameFadeIn(swatchHover, STYLE.hover_in, swatchHover:GetAlpha(), 1)
+        ShowTooltip(swatchBtn, tooltip)
     end)
     swatchBtn:SetScript("OnLeave", function()
         UIFrameFadeOut(swatchHover, STYLE.hover_out, swatchHover:GetAlpha(), 0)
+        HideTooltip(tooltip)
     end)
 
     swatchBtn:SetScript("OnClick", function()
@@ -1619,7 +1642,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
                 ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.min, def.max, def.step, wName)
+                width, h, def.min, def.max, def.step, wName, def.tooltip)
 
         elseif t == "Dropdown" then
             local resolvedGet    = ResolveCallback(def.get)
@@ -1650,20 +1673,20 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 return cur ~= nil and tostring(cur) or ""
             end
             ctrl = C.CreateDropdown(parent, def.label,
-                getItems, getSelected, width, h, wName)
+                getItems, getSelected, width, h, wName, def.tooltip)
 
         elseif t == "Color" then
             ctrl = C.CreateColorPicker(parent, def.label,
-                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName)
+                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName, def.tooltip)
 
         elseif t == "Checkbox" then
             ctrl = C.CreateCheckButton(parent, def.label,
-                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName)
+                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName, def.tooltip)
 
         elseif t == "TextEntry" then
             ctrl = C.CreateTextEntry(parent, def.label,
                 ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.numeric, def.min, def.max, wName)
+                width, h, def.numeric, def.min, def.max, wName, def.tooltip)
 
         elseif t == "Label" then
             ctrl = C.CreateLabel(parent, def.text, width, h, wName)
