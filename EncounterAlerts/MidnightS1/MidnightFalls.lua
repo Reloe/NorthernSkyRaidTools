@@ -280,6 +280,7 @@ NSI.InitializeAlerts[encID] = function(self)
         timers = nil,
         overrides = {BlockCopy = true, enabled = false},
         HideTimer = false,
+        Version = {versionNumber = 1, dur = 6},
     }
     self:AddEncounterAlert(data)
 
