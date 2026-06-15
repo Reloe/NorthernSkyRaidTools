@@ -1,3 +1,3 @@
 ## Changelog
 
-- Add Tooltips to a bunch of Encounter Alert options
+- Fix Memory Game number position in P3
