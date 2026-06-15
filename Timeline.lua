@@ -539,6 +539,78 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
     }, encID, phases, difficulty
 end
 
+-- Return the phase number and its absolute start time for a given absolute time.
+-- Picks the greatest phase start <= absoluteTime.
+function NSI:PhaseFromTime(encID, absoluteTime, difficulty)
+    local bestPhase = 1
+    local bestStart = 0
+    if encID then
+        local timeline = self:GetBossTimeline(encID, difficulty)
+        if timeline and timeline.phases then
+            for ph, _ in pairs(timeline.phases) do
+                local phStart = self:GetPhaseStart(encID, ph, difficulty)
+                if phStart <= absoluteTime and phStart >= bestStart then
+                    bestStart = phStart
+                    bestPhase = ph
+                end
+            end
+        end
+    end
+    return bestPhase, bestStart
+end
+
+-- Replace a single raw line in a reminder string (personal or shared) by its 1-based index.
+-- Falls back to searching by srcRaw content if the line has shifted.
+function NSI:RewriteNoteLine(name, personal, srcLineIndex, srcRaw, newRaw)
+    local source = personal and NSRT.PersonalReminders or NSRT.Reminders
+    local str = source[name]
+    if not str then return end
+    local lines = {}
+    for line in str:gmatch('[^\r\n]+') do
+        table.insert(lines, line)
+    end
+    -- Verify index; fall back to content search
+    if lines[srcLineIndex] ~= srcRaw then
+        for i, l in ipairs(lines) do
+            if l == srcRaw then
+                srcLineIndex = i
+                break
+            end
+        end
+    end
+    if lines[srcLineIndex] ~= srcRaw then return end  -- not found
+    lines[srcLineIndex] = newRaw
+    local newStr = table.concat(lines, "\n") .. "\n"
+    self:ImportReminder(name, newStr, false, personal, true)
+end
+
+-- Remove a raw line from a reminder string by its 1-based index.
+function NSI:DeleteNoteLine(name, personal, srcLineIndex, srcRaw)
+    local source = personal and NSRT.PersonalReminders or NSRT.Reminders
+    local str = source[name]
+    if not str then return end
+    local lines = {}
+    for line in str:gmatch('[^\r\n]+') do table.insert(lines, line) end
+    if lines[srcLineIndex] ~= srcRaw then
+        for i, l in ipairs(lines) do
+            if l == srcRaw then srcLineIndex = i; break end
+        end
+    end
+    if lines[srcLineIndex] ~= srcRaw then return end
+    table.remove(lines, srcLineIndex)
+    local newStr = #lines > 0 and (table.concat(lines, "\n") .. "\n") or ""
+    self:ImportReminder(name, newStr, false, personal, true)
+end
+
+-- Append a new raw line to a reminder string.
+function NSI:AppendNoteLine(name, personal, newLine)
+    local source = personal and NSRT.PersonalReminders or NSRT.Reminders
+    local str = source[name]
+    if not str then return end
+    if not str:match('\n$') then str = str .. '\n' end
+    self:ImportReminder(name, str .. newLine .. "\n", false, personal, true)
+end
+
 -- Get timeline data from a reminder set (ALL reminders, for raid leaders)
 -- Returns data in DetailsFramework timeline format
 -- bossDisplayMode: "all", "important", or "combined" (see BossDisplayModes)
@@ -561,7 +633,9 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
     local maxTime = 0
     local discoveredPhases = {}
 
+    local srcLineIndex = 0
     for line in reminderStr:gmatch('[^\r\n]+') do
+        srcLineIndex = srcLineIndex + 1
         local tag = line:match("tag:([^;]+)")
         local time = line:match("time:(%d*%.?%d+)")
         local spellID = line:match("spellid:(%d+)")
@@ -633,6 +707,8 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                         phase = phase,
                         text = text, -- store text per entry for tooltips
                         glowUnit = glowUnitNames,
+                        srcLineIndex = srcLineIndex,
+                        srcRaw = line,
                     })
                 end
             end
@@ -713,7 +789,10 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                     true,           -- [3] isAura (shows duration bar)
                     entry.dur,      -- [4] auraDuration
                     spellID,        -- [5] blockSpellId
-                    payload = {phase = entry.phase, text = entry.text, glowUnit = entry.glowUnit}, -- use entry-specific text
+                    payload = {
+                        phase = entry.phase, text = entry.text, glowUnit = entry.glowUnit,
+                        srcLineIndex = entry.srcLineIndex, srcRaw = entry.srcRaw,
+                    },
                 })
             end
 
@@ -903,6 +982,8 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.mode = value
                     timelineWindow.reminderLabel:Hide()
                     timelineWindow.reminderDropdown:Hide()
+                    timelineWindow.editNoteLabel:Show()
+                    timelineWindow.editNoteDropdown:Show()
                     if timelineWindow.playButton then timelineWindow.playButton:Show() end
                     self:RefreshTimelineForMode()
                 end
@@ -914,6 +995,10 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.mode = value
                     timelineWindow.reminderLabel:Show()
                     timelineWindow.reminderDropdown:Show()
+                    timelineWindow.editNoteLabel:Hide()
+                    timelineWindow.editNoteDropdown:Hide()
+                    timelineWindow.editable = false
+                    timelineWindow.editNote = nil
                     if timelineWindow.playButton then
                             -- Stop preview and hide play button in "All Reminders" mode
                         if timelineWindow.previewActive then
@@ -993,6 +1078,10 @@ function NSI:CreateTimelineWindow()
     timelineWindow.reminderDropdown = reminderDropdown
     reminderDropdown:Hide() -- Hidden by default (My Reminders mode)
 
+    -- Edit mode state: which personal note is being edited
+    timelineWindow.editable = false
+    timelineWindow.editNote = nil  -- {name, personal=true}
+
     local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
     local playColor = { 20 / 255, 245 / 255, 87 / 255, 1 } -- {r,g,b,a}
     local stopColor = { 247 / 255, 32 / 255, 61 / 255, 1 } -- {r,g,b,a}
@@ -1023,6 +1112,46 @@ function NSI:CreateTimelineWindow()
         14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
     playButton:SetPoint("LEFT", modeDropdown, "RIGHT", 15, 0)
     timelineWindow.playButton = playButton
+
+    -- "Edit Note" dropdown - anchored right of the play button (created here so
+    -- the anchor reference is valid; was previously created before playButton).
+    local editNoteLabel = DF:CreateLabel(timelineWindow, "Edit Note:", 11, "white")
+    editNoteLabel:SetPoint("LEFT", playButton, "RIGHT", 20, 0)
+    timelineWindow.editNoteLabel = editNoteLabel
+    editNoteLabel:Show()
+
+    local function BuildEditNoteDropdownOptions()
+        local options = {}
+        table.insert(options, {
+            label = "None (Read Only)",
+            value = nil,
+            onclick = function()
+                timelineWindow.editNote = nil
+                timelineWindow.editable = false
+                self:RefreshTimelineForMode()
+            end,
+        })
+        local personalList = self:GetAllReminderNames(true)
+        for _, data in ipairs(personalList) do
+            table.insert(options, {
+                label = data.name .. " (Personal)",
+                value = {name = data.name, personal = true},
+                onclick = function(_, _, value)
+                    timelineWindow.editNote = value
+                    timelineWindow.editable = true
+                    self:SetReminder(value.name, true, true)
+                    self:RefreshTimelineForMode()
+                end,
+            })
+        end
+        return options
+    end
+
+    local editNoteDropdown = DF:CreateDropDown(timelineWindow, BuildEditNoteDropdownOptions, nil, 250)
+    editNoteDropdown:SetTemplate(options_dropdown_template)
+    editNoteDropdown:SetPoint("LEFT", editNoteLabel, "RIGHT", 5, 0)
+    timelineWindow.editNoteDropdown = editNoteDropdown
+    editNoteDropdown:Show()
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
@@ -1338,6 +1467,7 @@ function NSI:CreateTimelineWindow()
 
         -- Block hover tooltip
         block_on_enter = function(block)
+            if timelineWindow.draggingBlock then return end  -- suppress during drag
             if block.info and block.info.time then
                 GameTooltip:SetOwner(block, "ANCHOR_RIGHT")
                 local minutes = math.floor(block.info.time / 60)
@@ -1403,6 +1533,121 @@ function NSI:CreateTimelineWindow()
             if not block or not data then return end
 
             local payload = data.payload
+
+            -- Wire up drag-to-retime and right-click-add for personal-note blocks.
+            -- Guard: install once per block (blocks are pooled and reused).
+            if payload and payload.srcLineIndex and not block._dragHooksInstalled then
+                block._dragHooksInstalled = true
+                block:EnableMouse(true)
+
+                block:HookScript("OnMouseDown", function(self, button)
+                    if button == "LeftButton" then
+                        self._clickStartX, self._clickStartY = GetCursorPosition()
+                        if timelineWindow.editNote then
+                            timelineWindow.draggingBlock = self
+                            -- Record cursor Y within the body at drag-start for ghost icon placement.
+                            -- Use timelineWindow.timeline (not timelineFrame — that local is declared
+                            -- after timelineOptions so the closure would capture the global nil).
+                            local uiScale = UIParent:GetEffectiveScale()
+                            local _, rawY = GetCursorPosition()
+                            local tl = timelineWindow.timeline
+                            timelineWindow.draggingRowY = tl and tl.body and
+                                (tl.body:GetTop() - (rawY / uiScale) - 4) or nil
+                        end
+                    elseif button == "RightButton" then
+                        timelineWindow.blockRightClickRawX, timelineWindow.blockRightClickRawY = GetCursorPosition()
+                    end
+                end)
+
+                block:HookScript("OnMouseUp", function(self, button)
+                    if button == "LeftButton" then
+                        local wasDragging = timelineWindow.draggingBlock == self
+                        -- Detect click vs drag by movement distance
+                        local isClick = false
+                        if self._clickStartX then
+                            local curX, curY = GetCursorPosition()
+                            local ddx = curX - self._clickStartX
+                            local ddy = curY - self._clickStartY
+                            isClick = math.sqrt(ddx * ddx + ddy * ddy) < 4
+                            self._clickStartX = nil
+                        end
+
+                        if wasDragging then
+                            timelineWindow.draggingBlock = nil
+                            timelineWindow.draggingRowY   = nil
+                            local tl = timelineWindow.timeline
+                            if tl and tl.dragGhostLine then tl.dragGhostLine:Hide() end
+                            if tl and tl.dragGhostIcon then tl.dragGhostIcon:Hide() end
+                            if isClick then
+                                -- Minimal movement → open edit dialog instead of retiming
+                                local bd = self.blockData
+                                if bd and bd.payload and bd.payload.srcLineIndex then
+                                    NSI:ShowReminderDialog(timelineWindow, nil, self)
+                                end
+                            else
+                                -- Finalize drag: use the snapped time recorded by the last OnUpdate
+                                -- so the block lands exactly where the green ghost line was shown.
+                                local newAbsoluteTime = timelineWindow._lastSnappedTime
+                                timelineWindow._lastSnappedTime = nil
+                                if not newAbsoluteTime then
+                                    -- Fallback if OnUpdate hasn't fired yet (very fast click+release)
+                                    local uiScale = 1 / UIParent:GetEffectiveScale()
+                                    local cursorX = GetCursorPosition() * uiScale
+                                    local bodyLeft = tl and (tl.body:GetLeft() or 0) or 0
+                                    local scrollX = tl and tl.horizontalSlider and tl.horizontalSlider:GetValue() or 0
+                                    local pps = tl and ((tl.options.pixels_per_second or 15) * (tl.currentScale or 1)) or 15
+                                    newAbsoluteTime = math.max(0, math.floor((scrollX + cursorX - bodyLeft) / pps + 0.5))
+                                end
+                                local encID = timelineWindow.currentEncounterID
+                                local difficulty = timelineWindow.currentDifficulty
+                                local phase, phaseStart = NSI:PhaseFromTime(encID, newAbsoluteTime, difficulty)
+                                local newRelTime = math.max(0, newAbsoluteTime - phaseStart)
+                                local bd = self.blockData
+                                if bd and bd.payload and bd.payload.srcLineIndex and timelineWindow.editNote then
+                                    local p = bd.payload
+                                    local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
+                                    newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
+                                    NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
+                                    NSI:SetReminder(timelineWindow.editNote.name, true, true)
+                                    timelineWindow.preserveZoom = true
+                                    NSI:RefreshTimelineForMode()
+                                end
+                            end
+                        elseif isClick then
+                            -- Not in edit mode but clicked a reminder block → open edit/view dialog
+                            local bd = self.blockData
+                            if bd and bd.payload and bd.payload.srcLineIndex then
+                                NSI:ShowReminderDialog(timelineWindow, nil, self)
+                            end
+                        end
+                    elseif button == "RightButton" and timelineWindow.blockRightClickRawX then
+                        local curRawX, curRawY = GetCursorPosition()
+                        local dx = curRawX - timelineWindow.blockRightClickRawX
+                        local dy = curRawY - timelineWindow.blockRightClickRawY
+                        timelineWindow.blockRightClickRawX = nil
+                        if math.sqrt(dx * dx + dy * dy) < 4 then
+                            local bd = self.blockData
+                            local p = bd and bd.payload
+                            NSI.UI.Components.ShowContextMenu({
+                                {type = "button", label = "Edit Reminder", fnc = function()
+                                    if p and p.srcLineIndex then
+                                        NSI:ShowReminderDialog(timelineWindow, nil, self)
+                                    end
+                                end},
+                                {type = "separator"},
+                                {type = "button", label = "Delete Reminder", fnc = function()
+                                    if p and p.srcLineIndex and timelineWindow.editNote then
+                                        NSI:DeleteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw)
+                                        NSI:SetReminder(timelineWindow.editNote.name, true, true)
+                                        timelineWindow.preserveZoom = true
+                                        NSI:RefreshTimelineForMode()
+                                    end
+                                end},
+                            })
+                        end
+                    end
+                end)
+            end
 
             -- Hide category borders if this is not a boss ability (blocks are reused)
             if not payload or not payload.isBossAbility then
@@ -1674,16 +1919,36 @@ function NSI:CreateTimelineWindow()
     local isDraggingTimeline = false
     local dragStartMouseX = 0
     local dragStartScroll = 0
+    local rightClickStartRawX = 0
+    local rightClickStartRawY = 0
 
     local function startRightDrag()
         isDraggingTimeline = true
         local uiScale = 1 / UIParent:GetEffectiveScale()
         dragStartMouseX = GetCursorPosition() * uiScale
         dragStartScroll = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+        rightClickStartRawX, rightClickStartRawY = GetCursorPosition()
     end
 
     local function stopRightDrag()
         isDraggingTimeline = false
+        local curRawX, curRawY = GetCursorPosition()
+        local dx = curRawX - rightClickStartRawX
+        local dy = curRawY - rightClickStartRawY
+        if math.sqrt(dx * dx + dy * dy) < 4 then
+            local uiScale = 1 / UIParent:GetEffectiveScale()
+            local cursorX = curRawX * uiScale
+            local bodyLeft = timelineFrame.body:GetLeft() or 0
+            local mouseXInBody = cursorX - bodyLeft
+            local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+            local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
+            local absoluteTime = math.max(0, (scrollX + mouseXInBody) / pps)
+            NSI.UI.Components.ShowContextMenu({
+                {type = "button", label = "Add Reminder", fnc = function()
+                    NSI:ShowReminderDialog(timelineWindow, absoluteTime)
+                end},
+            })
+        end
     end
 
     timelineFrame:EnableMouse(true)
@@ -1701,6 +1966,27 @@ function NSI:CreateTimelineWindow()
         if button == "RightButton" then stopRightDrag() end
     end)
 
+    -- Ghost line + icon for block drag (snaps to whole seconds)
+    local dragGhostLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    dragGhostLine:SetWidth(2)
+    dragGhostLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 180)
+    dragGhostLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
+    dragGhostLine:SetBackdropColor(0.3, 1, 0.3, 0.9)
+    dragGhostLine:Hide()
+    -- Snap time label on the ghost line
+    local dragSnapLabel = dragGhostLine:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    dragSnapLabel:SetPoint("BOTTOM", dragGhostLine, "TOP", 0, 2)
+    dragSnapLabel:SetTextColor(0.4, 1, 0.4, 1)
+    dragGhostLine.snapLabel = dragSnapLabel
+    timelineFrame.dragGhostLine = dragGhostLine
+
+    -- Ghost icon that floats at the block's row when dragging
+    local dragGhostIcon = timelineFrame.body:CreateTexture(nil, "OVERLAY")
+    dragGhostIcon:SetSize(20, 20)
+    dragGhostIcon:SetAlpha(0.6)
+    dragGhostIcon:Hide()
+    timelineFrame.dragGhostIcon = dragGhostIcon
+
     -- Use OnUpdate for smooth cursor tracking and preview line animation
     local updateThrottle = 0
     timelineFrame.body:SetScript("OnUpdate", function(self, elapsed)
@@ -1716,6 +2002,56 @@ function NSI:CreateTimelineWindow()
             end
             if self:IsMouseOver() then
                 updateCursorLine()
+            end
+            -- Snapped ghost line + icon while dragging a block
+            if timelineWindow.draggingBlock then
+                local uiScale = 1 / UIParent:GetEffectiveScale()
+                local cursorX = GetCursorPosition() * uiScale
+                local bodyLeft = timelineFrame.body:GetLeft() or 0
+                local mouseXInBody = cursorX - bodyLeft
+                local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+                local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
+                local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
+
+                -- Snap to whole seconds; store for OnMouseUp so the drop always
+                -- lands exactly where the green ghost line is drawn.
+                local rawTime = (scrollX + mouseXInBody) / pps
+                local snappedTime = math.max(0, math.floor(rawTime + 0.5))
+                local snappedX = snappedTime * pps - scrollX
+                timelineWindow._lastSnappedTime = snappedTime
+
+                local mins = math.floor(snappedTime / 60)
+                local secs = snappedTime % 60
+                dragGhostLine.snapLabel:SetText(string.format("%d:%02d", mins, secs))
+
+                dragGhostLine:ClearAllPoints()
+                dragGhostLine:SetPoint("TOP", timelineFrame.body, "TOPLEFT", snappedX, -elapsedHeight)
+                dragGhostLine:SetPoint("BOTTOM", timelineFrame.body, "BOTTOMLEFT", snappedX, 0)
+                dragGhostLine:Show()
+
+                -- Ghost icon: left-aligned to snap line, same row as the dragging block.
+                -- Use the cursor Y captured at drag-start (draggingRowY) so the icon
+                -- always tracks the correct row even when block:GetTop() would be stale.
+                local block = timelineWindow.draggingBlock
+                local rowY  = timelineWindow.draggingRowY
+                if rowY then
+                    dragGhostIcon:ClearAllPoints()
+                    dragGhostIcon:SetPoint("TOPLEFT", timelineFrame.body, "TOPLEFT", snappedX, -rowY)
+                    if block.blockData and block.blockData[5] then
+                        local info = C_Spell.GetSpellInfo(block.blockData[5])
+                        if info and info.iconID then
+                            dragGhostIcon:SetTexture(info.iconID)
+                            dragGhostIcon:Show()
+                        else
+                            dragGhostIcon:Hide()
+                        end
+                    else
+                        dragGhostIcon:Hide()
+                    end
+                end
+            else
+                dragGhostLine:Hide()
+                dragGhostIcon:Hide()
             end
             if timelineWindow.previewActive and timelineWindow.previewStartTime then
                 local previewElapsed = GetTime() - timelineWindow.previewStartTime
@@ -1773,7 +2109,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Help text (positioned at bottom, below the sliders)
-    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical", 10, "gray")
+    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical | Edit mode: Right-click add, Left-drag retime", 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
     -- Handle window resize to update timeline dimensions
@@ -1877,6 +2213,20 @@ end
 -- Auto-fit timeline scale to show full duration (up to 600 seconds max)
 function NSI:AutoFitTimelineScale(timeline, dataLength)
     if not timeline then return end
+    -- Skip auto-fit when user has just dragged a block (preserves their zoom level)
+    if self.TimelineWindow and self.TimelineWindow.preserveZoom then
+        self.TimelineWindow.preserveZoom = nil
+        -- Still update the scale min so zoom-out limit stays correct
+        local visibleWidth = timeline:GetWidth() or 880
+        local pps = timeline.options.pixels_per_second or 15
+        local dur = math.min(dataLength or 300, 600)
+        local dynamicScaleMin = visibleWidth / (dur * pps)
+        if timeline.scaleSlider then
+            local _, scaleMax = timeline.scaleSlider:GetMinMaxValues()
+            timeline.scaleSlider:SetMinMaxValues(dynamicScaleMin, scaleMax or 2.0)
+        end
+        return
+    end
 
     local maxVisibleDuration = 600  -- 10 minutes max
     local targetDuration = math.min(dataLength or 300, maxVisibleDuration)
@@ -1912,6 +2262,25 @@ end
 -- Refresh timeline with player's own processed reminders (My Reminders mode)
 function NSI:RefreshMyRemindersTimeline()
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
+
+    -- Auto-select the currently loaded personal note as the edit target when none is set.
+    if not self.TimelineWindow.editNote and self.LoadedPersonalReminder
+       and NSRT.PersonalReminders[self.LoadedPersonalReminder] then
+        local autoNote = {name = self.LoadedPersonalReminder, personal = true}
+        self.TimelineWindow.editNote = autoNote
+        self.TimelineWindow.editable = true
+        if self.TimelineWindow.editNoteDropdown then
+            self.TimelineWindow.editNoteDropdown:Select(autoNote)
+        end
+    end
+
+    -- When an edit note is active, use GetAllTimelineData so every block carries
+    -- srcLineIndex/srcRaw and can be dragged/right-click-added.
+    local editNote = self.TimelineWindow.editNote
+    if editNote then
+        self:RefreshAllRemindersTimeline(editNote.name, true)
+        return
+    end
 
     local includeBossAbilities = self.TimelineWindow.showBossAbilities
     local bossDisplayMode = self.TimelineWindow.bossDisplayMode or self.BossDisplayModes.SHOW_ALL
@@ -2459,4 +2828,499 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
             marker.encID = encID
         end
     end
+end
+
+--------------------------------------------------------------------------------
+-- ADD / EDIT REMINDER DIALOG
+--------------------------------------------------------------------------------
+
+function NSI:ShowReminderDialog(window, absoluteTime, block)
+    local C = NSI.UI.Components
+    local isEdit = block ~= nil
+    local bd     = isEdit and block.blockData or nil
+    local payload = bd and bd.payload or nil
+    local srcRaw  = payload and payload.srcRaw or ""
+
+    -- Parse existing field values from the raw reminder line when editing
+    local existingSpellID  = (bd and bd[5]) and tostring(bd[5]) or ""
+    local existingText     = srcRaw:match("text:([^;]+)") or ""
+    local existingDur      = srcRaw:match("dur:(%d+)") or tostring(NSRT.ReminderSettings.SpellDuration or 5)
+    local existingGlowUnit = srcRaw:match("glowunit:([^;]+)") or ""
+
+    -- Derive absolute time from the block's stored phase/time when not supplied
+    if isEdit and not absoluteTime then
+        local phase   = tonumber(srcRaw:match("ph:(%d+)") or "1") or 1
+        local relTime = tonumber(srcRaw:match("time:(%d*%.?%d+)") or "0") or 0
+        local phStart = NSI:GetPhaseStart(window.currentEncounterID, phase, window.currentDifficulty) or 0
+        absoluteTime  = phStart + relTime
+    end
+    absoluteTime = absoluteTime or 0
+
+    -- ── Build popup (created once, reused) ──────────────────────────────────
+    if not self.ReminderDialogPopup then
+        local W = 380
+        local popup = C.CreateFrame(UIParent, W, 270, "NSRTReminderDialogPopup")
+        popup:SetFrameStrata("TOOLTIP")
+
+        -- Title font string (CreateStyledFrame doesn't add one)
+        local titleFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -10)
+        popup.titleFS = titleFS
+
+        -- Thin cyan separator below the title
+        local sep = popup:CreateTexture(nil, "ARTWORK")
+        sep:SetColorTexture(0, 1, 1, 0.20)
+        sep:SetHeight(1)
+        sep:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -28)
+        sep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -28)
+
+        -- Time info (read-only)
+        local timeLabel = C.CreateLabel(popup, "", W - 24, 16)
+        timeLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -36)
+        popup.timeLabel = timeLabel
+
+        -- ── Spell ID row ────────────────────────────────────────────────────
+        -- Entry uses built-in label; 160px container keeps the 60px input
+        -- right-aligned with room for the icon + Pick button beside it.
+        local spellEntry = C.CreateTextEntry(popup, "Spell ID",
+            function() return "" end, function() end,
+            160, 22, false, nil, nil, "NSRTReminderSpellID")
+        spellEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -60)
+        popup.spellEntry = spellEntry
+
+        -- Spell icon preview (right of the editBox)
+        local spellIcon = popup:CreateTexture(nil, "OVERLAY")
+        spellIcon:SetSize(20, 20)
+        spellIcon:SetPoint("LEFT", spellEntry.editBox, "RIGHT", 6, 0)
+        spellIcon:Hide()
+        popup.spellIcon = spellIcon
+
+        -- Pick Spell button (right of icon)
+        local pickBtn = C.CreateButton(popup, "Pick Spell", function()
+            NSI:ShowSpellbookPicker(popup)
+        end, 88, 20)
+        pickBtn:SetPoint("LEFT", spellIcon, "RIGHT", 6, 0)
+        popup.pickBtn = pickBtn
+
+        -- Live icon preview while typing a spell ID
+        spellEntry.editBox:HookScript("OnTextChanged", function(self)
+            local id = tonumber(self:GetText())
+            if id then
+                local info = C_Spell.GetSpellInfo(id)
+                if info and info.iconID then
+                    popup.spellIcon:SetTexture(info.iconID)
+                    popup.spellIcon:Show()
+                    return
+                end
+            end
+            popup.spellIcon:Hide()
+        end)
+
+        -- ── Text row ────────────────────────────────────────────────────────
+        local textLabel = C.CreateLabel(popup, "Text", W - 24, 14)
+        textLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -90)
+        local textEntry = C.CreateTextEntry(popup, nil,
+            function() return "" end, function() end,
+            W - 24, 22, false, nil, nil, "NSRTReminderText")
+        textEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -106)
+        popup.textEntry = textEntry
+
+        -- ── Duration row ────────────────────────────────────────────────────
+        local durEntry = C.CreateTextEntry(popup, "Duration (s)",
+            function() return "5" end, function() end,
+            200, 22, false, nil, nil, "NSRTReminderDur")
+        durEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -136)
+        popup.durEntry = durEntry
+
+        -- ── Glow Unit row ───────────────────────────────────────────────────
+        local glowLabel = C.CreateLabel(popup, "Glow Unit  (space-separated names)", W - 24, 14)
+        glowLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -166)
+        local glowEntry = C.CreateTextEntry(popup, nil,
+            function() return "" end, function() end,
+            W - 24, 22, false, nil, nil, "NSRTReminderGlow")
+        glowEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -182)
+        popup.glowEntry = glowEntry
+
+        -- ── Boss row (shown only when there is no boss context or edit note) ─
+        local bossRowLabel = C.CreateLabel(popup, "Boss", 60, 18)
+        bossRowLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -214)
+        popup.bossRowLabel = bossRowLabel
+
+        local selectedBossLabel = C.CreateLabel(popup, "None selected", W - 170, 18)
+        selectedBossLabel:SetPoint("LEFT", bossRowLabel.frame, "RIGHT", 6, 0)
+        popup.selectedBossLabel = selectedBossLabel
+
+        local function buildBossMenuItems()
+            local sorted = {}
+            for eid, order in pairs(NSI.EncounterOrder) do
+                table.insert(sorted, {encID = eid, order = order})
+            end
+            table.sort(sorted, function(a, b) return a.order < b.order end)
+            local items = {}
+            for _, entry in ipairs(sorted) do
+                local eid = entry.encID
+                items[#items + 1] = {
+                    type  = "button",
+                    label = NSI.BossNames[eid] or ("Encounter " .. eid),
+                    icon  = NSI.UI.BossData.BossIcons and NSI.UI.BossData.BossIcons[eid],
+                    fnc   = function()
+                        popup._pendingEncID = eid
+                        popup.selectedBossLabel.label:SetText(NSI.BossNames[eid] or ("Encounter " .. eid))
+                        popup.selectedBossLabel.label:SetTextColor(1, 1, 1, 1)
+                    end,
+                }
+            end
+            return items
+        end
+
+        local selectBossBtn = C.CreateButton(popup, "Pick Boss", function()
+            C.ShowContextMenu(buildBossMenuItems())
+        end, 88, 20)
+        selectBossBtn:SetPoint("RIGHT", popup, "RIGHT", -12, 0)
+        selectBossBtn.frame:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -12, -210)
+        popup.selectBossBtn = selectBossBtn
+
+        -- ── Bottom buttons ───────────────────────────────────────────────────
+        local confirmBtn = C.CreateButton(popup, "Add", function()
+            if popup._confirmAction then popup._confirmAction() end
+        end, 100, 24)
+        confirmBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 10)
+        popup.confirmBtn = confirmBtn
+
+        local cancelBtn = C.CreateButton(popup, "Cancel", function()
+            popup:Hide()
+        end, 80, 24)
+        cancelBtn:SetPoint("RIGHT", confirmBtn.frame, "LEFT", -6, 0)
+        popup.cancelBtn = cancelBtn
+
+        local deleteBtn = C.CreateButton(popup, "Delete", function()
+            if popup._deleteAction then popup._deleteAction() end
+        end, 80, 24)
+        deleteBtn:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 12, 10)
+        popup.deleteBtn = deleteBtn
+
+        popup:Hide()
+        self.ReminderDialogPopup = popup
+    end
+
+    -- ── Populate / refresh the popup ────────────────────────────────────────
+    local popup = self.ReminderDialogPopup
+    popup._window = window
+    popup._block  = block
+
+    -- Title
+    popup.titleFS:SetText(isEdit and "|cFF00FFFFEdit Reminder|r" or "|cFF00FFFFAdd Reminder|r")
+
+    -- Time info
+    local encID    = window.currentEncounterID
+    local difficulty = window.currentDifficulty
+    local phase, phaseStart = self:PhaseFromTime(encID, absoluteTime, difficulty)
+    local relTime  = math.max(0, math.floor(absoluteTime - phaseStart))
+    local minutes  = math.floor(absoluteTime / 60)
+    local seconds  = math.floor(absoluteTime % 60)
+    popup.timeLabel.label:SetText(string.format(
+        "|cff88ff88Time: %d:%02d  |  Phase %d  +%ds|r", minutes, seconds, phase, relTime))
+    popup._phase   = phase
+    popup._relTime = relTime
+    popup._pendingEncID = encID
+
+    -- Pre-fill fields
+    popup.spellEntry:SetValue(existingSpellID)
+    popup.textEntry:SetValue(existingText)
+    popup.durEntry:SetValue(existingDur)
+    popup.glowEntry:SetValue(existingGlowUnit)
+
+    -- Spell icon initial state
+    popup.spellIcon:Hide()
+    if existingSpellID ~= "" then
+        local sid = tonumber(existingSpellID)
+        if sid then
+            local info = C_Spell.GetSpellInfo(sid)
+            if info and info.iconID then
+                popup.spellIcon:SetTexture(info.iconID)
+                popup.spellIcon:Show()
+            end
+        end
+    end
+
+    -- Boss row visibility
+    local hasBossContext = encID ~= nil
+    local hasEditNote    = window.editNote ~= nil
+    local showBossRow    = not hasEditNote and not hasBossContext
+    popup.bossRowLabel.frame:SetShown(showBossRow)
+    popup.selectedBossLabel.frame:SetShown(showBossRow)
+    popup.selectBossBtn.frame:SetShown(showBossRow)
+    if showBossRow then
+        popup.selectedBossLabel.label:SetText("None selected")
+        popup.selectedBossLabel.label:SetTextColor(0.5, 0.5, 0.5, 1)
+        if not hasBossContext then popup._pendingEncID = nil end
+    end
+    popup:SetHeight(showBossRow and 300 or 260)
+
+    -- Delete button only in edit mode
+    popup.deleteBtn.frame:SetShown(isEdit)
+
+    -- Confirm button label
+    popup.confirmBtn:SetText(isEdit and "Save" or "Add")
+
+    -- ── Confirm action (add or save) ─────────────────────────────────────────
+    popup._confirmAction = function()
+        local editNote = popup._window and popup._window.editNote
+        if not editNote then
+            local eid = popup._pendingEncID
+            if not eid then
+                print("|cffff4444NSRT:|r Select a boss first, or open a note in the Edit Note dropdown.")
+                return
+            end
+            local bossName   = NSI.BossNames[eid] or ("Boss" .. eid)
+            local actualName = bossName .. " - Mythic"
+            if not NSRT.PersonalReminders[actualName] then
+                NSRT.PersonalReminders[actualName] = string.format(
+                    "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
+            end
+            NSI:SetReminder(actualName, true, true)
+            editNote = {name = actualName, personal = true}
+            if popup._window then
+                popup._window.editNote   = editNote
+                popup._window.editable   = true
+                if popup._window.editNoteDropdown then
+                    popup._window.editNoteDropdown:Select(editNote)
+                end
+            end
+        end
+
+        local spellID  = tonumber(popup.spellEntry:GetValue())
+        local text     = popup.textEntry:GetValue()
+        local dur      = tonumber(popup.durEntry:GetValue()) or NSRT.ReminderSettings.SpellDuration or 5
+        local glowUnit = popup.glowEntry:GetValue()
+
+        if isEdit and payload and payload.srcLineIndex then
+            -- Rebuild the line, preserving tag / time / ph; updating spell/text/dur/glowunit
+            local newRaw = srcRaw
+            -- spellid
+            if spellID then
+                if newRaw:find("spellid:%d+") then
+                    newRaw = newRaw:gsub("spellid:%d+", "spellid:" .. spellID)
+                else
+                    newRaw = newRaw:gsub(";ph:", ";spellid:" .. spellID .. ";ph:")
+                end
+            else
+                newRaw = newRaw:gsub(";spellid:%d+", "")
+            end
+            -- text
+            if text ~= "" then
+                if newRaw:find("text:[^;]+") then
+                    newRaw = newRaw:gsub("text:[^;]+", "text:" .. text)
+                else
+                    newRaw = newRaw:gsub(";ph:", ";text:" .. text .. ";ph:")
+                end
+            else
+                newRaw = newRaw:gsub(";text:[^;]+", "")
+            end
+            -- dur
+            if newRaw:find("dur:%d+") then
+                newRaw = newRaw:gsub("dur:%d+", "dur:" .. dur)
+            else
+                newRaw = newRaw .. ";dur:" .. dur
+            end
+            -- glowunit
+            if glowUnit ~= "" then
+                if newRaw:find("glowunit:[^;]+") then
+                    newRaw = newRaw:gsub("glowunit:[^;]+", "glowunit:" .. glowUnit)
+                else
+                    newRaw = newRaw:gsub(";ph:", ";glowunit:" .. glowUnit .. ";ph:")
+                end
+            else
+                newRaw = newRaw:gsub(";glowunit:[^;]+", "")
+            end
+            -- Tidy double semicolons introduced by removals
+            newRaw = newRaw:gsub(";;+", ";")
+            NSI:RewriteNoteLine(editNote.name, true, payload.srcLineIndex, srcRaw, newRaw)
+        else
+            -- Build a new line
+            local playerName = UnitName("player") or "Player"
+            local line = "tag:" .. playerName .. ";time:" .. relTime .. ";"
+            if spellID  then line = line .. "spellid:" .. spellID .. ";"  end
+            if text ~= ""     then line = line .. "text:" .. text .. ";"          end
+            if glowUnit ~= "" then line = line .. "glowunit:" .. glowUnit .. ";"  end
+            line = line .. "ph:" .. phase .. ";dur:" .. dur
+            NSI:AppendNoteLine(editNote.name, true, line)
+        end
+
+        NSI:SetReminder(editNote.name, true, true)
+        window.preserveZoom = true
+        NSI:RefreshTimelineForMode()
+        popup:Hide()
+    end
+
+    -- ── Delete action ────────────────────────────────────────────────────────
+    popup._deleteAction = function()
+        local editNote = popup._window and popup._window.editNote
+        if editNote and payload and payload.srcLineIndex then
+            NSI:DeleteNoteLine(editNote.name, true, payload.srcLineIndex, srcRaw)
+            NSI:SetReminder(editNote.name, true, true)
+            window.preserveZoom = true
+            NSI:RefreshTimelineForMode()
+            popup:Hide()
+        end
+    end
+
+    popup:SetPoint("CENTER", UIParent, "CENTER")
+    popup:Show()
+    popup.spellEntry.editBox:SetFocus()
+end
+
+--------------------------------------------------------------------------------
+-- SPELLBOOK PICKER
+--------------------------------------------------------------------------------
+
+function NSI:ShowSpellbookPicker(targetPopup)
+    if not self.SpellbookPickerPopup then
+        local picker = CreateFrame("Frame", "NSRTSpellbookPicker", UIParent, "BackdropTemplate")
+        picker:SetSize(300, 400)
+        picker:SetFrameStrata("TOOLTIP")
+        picker:SetMovable(true)
+        picker:SetClampedToScreen(true)
+        picker:EnableMouse(true)
+        picker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1})
+        picker:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+        picker:SetBackdropBorderColor(0, 1, 1, 0.7)
+
+        -- Title bar / drag handle
+        local titleBar = CreateFrame("Frame", nil, picker)
+        titleBar:SetHeight(22)
+        titleBar:SetPoint("TOPLEFT", picker, "TOPLEFT", 1, -1)
+        titleBar:SetPoint("TOPRIGHT", picker, "TOPRIGHT", -1, -1)
+        titleBar:EnableMouse(true)
+        titleBar:SetScript("OnMouseDown", function(_, b) if b == "LeftButton" then picker:StartMoving() end end)
+        titleBar:SetScript("OnMouseUp", function() picker:StopMovingOrSizing() end)
+        local titleFS = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleFS:SetText("|cFF00FFFFPick Spell|r")
+        titleFS:SetPoint("LEFT", titleBar, "LEFT", 8, 0)
+        local xBtn = CreateFrame("Button", nil, picker)
+        xBtn:SetSize(16, 16)
+        xBtn:SetPoint("TOPRIGHT", picker, "TOPRIGHT", -4, -4)
+        xBtn:SetFrameLevel(picker:GetFrameLevel() + 3)
+        xBtn:SetNormalFontObject("GameFontNormal")
+        xBtn:SetText("×")
+        xBtn:SetScript("OnClick", function() picker:Hide() end)
+
+        -- Filter box
+        local filterBox = DF:CreateTextEntry(picker, function() end, 250, 20, nil, "NSRTSpellPickerFilter")
+        filterBox:SetPoint("TOPLEFT", picker, "TOPLEFT", 10, -30)
+        picker.filterBox = filterBox
+
+        -- Scroll frame for spell list.
+        -- Anchored to picker with a fixed offset rather than to filterBox (a DF wrapper
+        -- table) because native SetPoint only accepts real WoW frame objects.
+        -- filterBox top = -30, height = 20, so its bottom is at y=-50; add 4px gap → -54.
+        local scrollFrame = CreateFrame("ScrollFrame", "NSRTSpellPickerScroll", picker, "UIPanelScrollFrameTemplate")
+        scrollFrame:SetPoint("TOPLEFT", picker, "TOPLEFT", 10, -54)
+        scrollFrame:SetPoint("BOTTOMRIGHT", picker, "BOTTOMRIGHT", -26, 10)
+        local scrollChild = CreateFrame("Frame", nil, scrollFrame)
+        scrollChild:SetWidth(260)
+        scrollChild:SetHeight(1)
+        scrollFrame:SetScrollChild(scrollChild)
+        picker.scrollChild = scrollChild
+        picker.scrollFrame = scrollFrame
+
+        -- Pool of row buttons (created lazily)
+        picker.rowPool = {}
+        picker.rows = {}
+
+        local function refreshList()
+            local filter = strlower(filterBox:GetText() or filterBox.editbox:GetText() or "")
+            -- Gather spells
+            local spells = {}
+            local numTabs = GetNumSpellTabs and GetNumSpellTabs() or 0
+            for t = 1, numTabs do
+                local _, _, offset, numSlots = GetSpellTabInfo(t)
+                for s = offset + 1, offset + numSlots do
+                    local sType, id = GetSpellBookItemInfo(s, BOOKTYPE_SPELL)
+                    if sType == "SPELL" and id then
+                        local info = C_Spell.GetSpellInfo(id)
+                        if info and info.name then
+                            if filter == "" or info.name:lower():find(filter, 1, true) then
+                                table.insert(spells, {name = info.name, id = id, icon = info.iconID})
+                            end
+                        end
+                    end
+                end
+            end
+            table.sort(spells, function(a, b) return a.name < b.name end)
+
+            -- Recycle rows
+            for _, row in ipairs(picker.rows) do row:Hide() end
+            picker.rows = {}
+
+            local rowHeight = 24
+            local y = 0
+            for i, spell in ipairs(spells) do
+                local row = picker.rowPool[i]
+                if not row then
+                    row = CreateFrame("Button", nil, scrollChild)
+                    row:SetHeight(rowHeight)
+                    row:EnableMouse(true)
+                    row:SetHighlightTexture("Interface\\Buttons\\UI-Listbox-Highlight", "ADD")
+                    -- Icon
+                    local icon = row:CreateTexture(nil, "ARTWORK")
+                    icon:SetSize(18, 18)
+                    icon:SetPoint("LEFT", row, "LEFT", 2, 0)
+                    row.icon = icon
+                    -- Name
+                    local nameFS = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+                    nameFS:SetPoint("LEFT", icon, "RIGHT", 4, 0)
+                    nameFS:SetPoint("RIGHT", row, "RIGHT", -2, 0)
+                    nameFS:SetJustifyH("LEFT")
+                    row.nameFS = nameFS
+                    picker.rowPool[i] = row
+                end
+                row:SetWidth(scrollChild:GetWidth())
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -y)
+                row.icon:SetTexture(spell.icon)
+                row.nameFS:SetText(string.format("|cffaaaaaa[%d]|r %s", spell.id, spell.name))
+                local spellID = spell.id
+                row:SetScript("OnClick", function()
+                    if picker._target then
+                        local target = picker._target
+                        -- Support Components textentry (.spellEntry / .editBox)
+                        -- and legacy DF textentry (.spellIDBox / .editbox)
+                        local entry = target.spellEntry or target.spellIDBox
+                        if entry then
+                            if entry.SetValue then
+                                entry:SetValue(tostring(spellID))
+                            elseif entry.SetText then
+                                entry:SetText(tostring(spellID))
+                            end
+                            local eb = entry.editBox or entry.editbox
+                            if eb then
+                                local fn = eb:GetScript("OnTextChanged")
+                                if fn then fn(eb) end
+                            end
+                        end
+                    end
+                    picker:Hide()
+                end)
+                row:Show()
+                table.insert(picker.rows, row)
+                y = y + rowHeight
+            end
+            scrollChild:SetHeight(math.max(1, y))
+        end
+
+        filterBox.editbox:SetScript("OnTextChanged", function() refreshList() end)
+        picker.refreshList = refreshList
+
+        picker:Hide()
+        self.SpellbookPickerPopup = picker
+    end
+
+    local picker = self.SpellbookPickerPopup
+    picker._target = targetPopup
+    picker.filterBox:SetText("")
+    picker.refreshList()
+    picker:SetPoint("LEFT", targetPopup, "RIGHT", 4, 0)
+    picker:Show()
+    picker.filterBox.editbox:SetFocus()
 end
