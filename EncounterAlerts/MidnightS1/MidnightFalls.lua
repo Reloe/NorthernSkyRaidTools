@@ -438,7 +438,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesNumbers[pos]:ClearAllPoints()
             if self.Phase == 4 then
                 self.LuraRunesDisplay[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos - 1) * 60, 0)
-                self.LuraRunesNumbers[pos]:SetPoint("LEFT", self.LuraRunesFrame, "LEFT", (pos - 1) * 60 + 22, 30)
+                self.LuraRunesNumbers[pos]:SetPoint("CENTER", self.LuraRunesFrame, "LEFT", (pos - 1) * 60 + 28, 30)
             else
                 local posX = isTank and XOffset[pos] * -1 or XOffset[pos]
                 local posY = isTank and YOffset[pos] * -1 or YOffset[pos]
