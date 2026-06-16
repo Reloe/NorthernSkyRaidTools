@@ -362,7 +362,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             if e == "UNIT_SPELLCAST_START" then
                 if self.Interrupts.myTrackedID and unit == "boss"..self.Interrupts.myTrackedID and UnitIsEnemy(unit, "player") then
                     local info = {spellID = 1284934, dur = 2}
-                    self:InterruptOnCastStart(info)
+                    self:InterruptOnCastStart(info, unit)
                     if self.ResetTimer then
                         self.ResetTimer:Cancel()
                     end

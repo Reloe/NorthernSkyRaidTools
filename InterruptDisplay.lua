@@ -73,9 +73,10 @@ function NSI:ResetInterrupts()
     self:HideInterruptBar()
 end
 
-function NSI:InterruptOnCastStart(info)
+function NSI:InterruptOnCastStart(info, unit)
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
+    if not UnitCastingInfo(unit) then return end
     self:DisplayInterrupt(true)
     if self.Interrupts.castCount == self.Interrupts.myKick then
         self:PlayInterruptSound()
