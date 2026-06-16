@@ -29,7 +29,7 @@ NSI.InitializeAlerts[encID] = function(self)
     end]],
     }
     self:AddEncounterAlert(data)
-    local data = {Version = {versionNumber = 1, isTaunt = true}, group = "Rotmire Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = "Taunt", TTSTimer = 0, dur = 5, spellID = nil,
+    local data = {Version = {versionNumber = 2, isTaunt = true, sticky = 3}, group = "Rotmire Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = "Taunt", TTSTimer = 0, dur = 5, spellID = nil,
     overrides =
         {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
             isConditional = {
