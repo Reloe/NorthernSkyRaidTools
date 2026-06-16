@@ -54,8 +54,8 @@ local SoundListRaid = {
 
     -- Sporefall
     [1222088] = "Spread", -- Festering Vines
-    [1221639] = "Shroom", -- Shroomling Fixate
-    [1299508] = "Fung", -- Fungling Fixate
+    [1221639] = "Boss", -- Shroomling Fixate
+    [1299508] = "Ranged", -- Fungling Fixate
 }
 
 local SoundListMPlus = {
