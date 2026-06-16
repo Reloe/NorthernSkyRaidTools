@@ -1102,7 +1102,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         self:PlayReminderSound(info)
         self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
-    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if info.countdown and rem-0.3 <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
         NSAPI:TTSCountdown(info.countdown)
         self.StartedCountdown["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
