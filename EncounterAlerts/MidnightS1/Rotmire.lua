@@ -21,6 +21,12 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+    local data = {internalID = "BurstingPustules", name = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+        timers = {
+            [16] = {10, 31, 80, 101, 150, 171, 220, 241, 290, 311, 360, 381, 430, 451},
+        },
+    }
+    self:AddEncounterAlert(data)
     local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
         customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
         BlockCopy = true, enabled = true,
