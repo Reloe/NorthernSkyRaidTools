@@ -1098,7 +1098,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     local encId = info.encID or 0
     local phase = info.phase or 0
     local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
-    if rem <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
+    if rem-0.3 <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
         self:PlayReminderSound(info)
         self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
