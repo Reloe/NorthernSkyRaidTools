@@ -88,7 +88,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 2, isTaunt = true, sticky = 3}, group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, spellID = nil,
+    local data = {Version = {versionNumber = 2, [1] = {isTaunt = true}, [2] = {sticky = 3}}, group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, sticky = 3, spellID = nil,
     overrides =
         {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
             isConditional = {
@@ -115,7 +115,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, dur = 3}, group = "Lura P2", name = "Seed-Drop", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 3, spellID = 1253031,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 3}}, group = "Lura P2", name = "Seed-Drop", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 3, spellID = 1253031,
     overrides = {countdown = 3, barColors = {0, 1, 0, 1},
         isConditional = {
             text = "This Alert only shows if you are holding a crystal at that time.",
@@ -272,7 +272,7 @@ NSI.InitializeAlerts[encID] = function(self)
         encID = encID,
         phase = nil,
         TTS = false,
-        dur = 5,
+        dur = 6,
         id = 0.2,
         spellID = 1253050,
         customIcon = nil,
@@ -280,7 +280,7 @@ NSI.InitializeAlerts[encID] = function(self)
         timers = nil,
         overrides = {BlockCopy = true, enabled = false},
         HideTimer = false,
-        Version = {versionNumber = 1, dur = 6},
+        Version = {versionNumber = 1, [1] = {dur = 6}},
     }
     self:AddEncounterAlert(data)
 
