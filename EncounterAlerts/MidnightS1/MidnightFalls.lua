@@ -159,7 +159,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Lura P2", internalID = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
     timers = {
-            [16] = {26.8, 56.8, 86.8, 105},
+            [16] = {27.8, 57.8, 87.8, 105},
         },
     }
     self:AddEncounterAlert(data)
