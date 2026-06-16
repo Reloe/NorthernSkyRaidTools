@@ -1,5 +1,3 @@
 ## Changelog
 
-- Add remaining Rotmire Timers
-- Make Taunt reminders sticky for 3s
-- Restructure some code how alerts are created
+- Make only interrupts count up on Rotmire (alert will still go off on the wrong cast)
