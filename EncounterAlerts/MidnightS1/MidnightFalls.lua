@@ -372,11 +372,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
                 end
             elseif e == "UNIT_SPELLCAST_INTERRUPTED" then
                 if self.Interrupts.myTrackedID and unit == "boss"..self.Interrupts.myTrackedID and UnitIsEnemy(unit, "player") then
-                    self:OnInterrupt()
+                    self:OnInterrupt(false)
                 end
             elseif e == "UNIT_SPELLCAST_STOP" then
                 if self.Interrupts.myTrackedID and unit == "boss"..self.Interrupts.myTrackedID and UnitIsEnemy(unit, "player") then
-                    self:OnCastStop()
+                    self:OnCastStop(true)
                 end
             elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
                 if UnitExists("boss2") and UnitIsEnemy("boss2", "player") then
