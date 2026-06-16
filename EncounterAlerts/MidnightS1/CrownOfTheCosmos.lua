@@ -11,7 +11,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local dpsConditions = self:DefaultLoadConditions()
     dpsConditions.Roles.DAMAGER = true
     local data = {group = "Alleria P1", internalID = "Stop Cast", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
-    overrides = {loadConditions = rangedConditions},
+    loadConditions = rangedConditions,
     timers = {
             [16] = {9.6, 30.4},
         },
@@ -39,24 +39,24 @@ NSI.InitializeAlerts[encID] = function(self)
         [577]  = true, -- Demon Hunter: Havoc
     }
     local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Ranged Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    overrides = {loadConditions = RangedObeliskConditions},
-    timers = {
+        loadConditions = RangedObeliskConditions,
+        timers = {
             [16] = {{5, 28.3, 54.9, 81.2, 104.5}, {}, {13.8, 38.8, 65.8, 90.8, 117.8, 142.8, 165.8, 190.8}, {}, {10.8, 19.8, 54.8, 70.8, 79.8, 114.8, 130.8, 139.8, 174.8}},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Melee Obelisk", text = "Obelisk", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    overrides = {loadConditions = MeleeObeliskConditions},
-    timers = {
+        loadConditions = MeleeObeliskConditions,
+        timers = {
             [16] = {{7, 30.3, 56.9, 83.2, 106.5}, {}, {15.8, 40.8, 67.8, 92.8, 119.8, 144.8, 169.8, 194.8}, {}, {12.8, 21.8, 56.8, 72.8, 81.8, 116.8, 132.8, 141.8, 176.8}},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
-    overrides = {loadConditions = rangedConditions},
-    timers = {
+        loadConditions = rangedConditions,
+        timers = {
             [15] = {{15, 63, 102}, {}, {19, 39, 61, 81, 103, 123, 145, 165, 187, 207}},
             [16] = {{13, 53, 85.6, 112.6}, {}, {23, 48, 75, 100, 127, 152, 179}, {}, {40, 100, 160}},
         },
@@ -64,23 +64,23 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Alleria P1", internalID = "Arrows", text = "Arrows", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
-    overrides = {loadConditions = dpsConditions},
-    timers = {
+        loadConditions = dpsConditions,
+        timers = {
             [16] = {20, 37.5, 56.8, 75.8, 93.5, 119.6},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = {"Alleria P1", nil, "Alleria P2", nil, "Alleria P3"}, internalID = "Explosion", text = "Explosion", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, TTSTimer = 4, dur = 12, spellID = 1233819,
-    overrides = {Ticks = {6}},
-    timers = {
+        Ticks = {6},
+        timers = {
             [16] = {{27, 67, 99.5, 126.6}, {}, {37, 62, 89, 114}, {}, {54, 114, 174}},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {internalID = "Boss-Immune", text = "Immune", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 10, spellID = nil,
-    timers = {
+        timers = {
             [14] = {25},
             [15] = {25},
             [16] = {25},
@@ -89,7 +89,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Alleria P3", internalID = "Tether", text = "Tether", DisplayType = "Text", encID = encID, phase = 5, TTS = false, dur = 6, spellID = nil,
-    timers = {
+        timers = {
             [16] = {9.5, 50.5, 69.5, 110.5, 129.5, 170.5},
         },
     }

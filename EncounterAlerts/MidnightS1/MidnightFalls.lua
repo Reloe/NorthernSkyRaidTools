@@ -10,7 +10,7 @@ NSI.InitializeAlerts[encID] = function(self)
     tankConditions.Roles.TANK = true
 
     local data = {group = "Lura P1", internalID = "MemoryGame", text = "Memory Game", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 4, spellID = nil,
-    timers = {
+        timers = {
             [15] = {10, 80, 150},
             [16] = {33, 95, 157},
         },
@@ -18,7 +18,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P1", internalID = "Glaives", text = "Glaives", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    timers = {
+        timers = {
             [15] = {38, 108, 178},
             [16] = {29, 91, 153},
         },
@@ -26,7 +26,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P1", internalID = "Interrupts", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    timers = {
+        timers = {
             [15] = {59, 129},
             [16] = {6.4, 68.4, 130.4},
         },
@@ -34,14 +34,14 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P1", internalID = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [16] = {57, 119},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P1 Transition", internalID = "Transition Beams", name = "Beams", text = "Beams", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
-    timers = {
+        timers = {
             [16] = {10.7, 15.7, 20.7, 25.7, 30.7, 35.7},
         },
     }
@@ -63,14 +63,12 @@ NSI.InitializeAlerts[encID] = function(self)
     end
 
     local data = {group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Tank-Hits", name = {"P1 Tank-Hits", nil, "P2 Tank-Hits"}, text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
-    overrides =
-        {textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
-            isConditional = {
-                text = "This Alert only shows if you have threat on the Boss.",
-                func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
-            },
+        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
+        isConditional = {
+            text = "This Alert only shows if you have threat on the Boss.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
-    timers = {
+        timers = {
             [16] = {
                 {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5},
                 {},
@@ -81,22 +79,20 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura Tanks", internalID = "Lura Tank-Hits_P4", name = "P3 Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 6, spellID = nil,
-    overrides = {textColors = {1, 0, 0, 1}, loadConditions = tankConditions},
-    timers = {
+        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
+        timers = {
             [16] = {41.5, 71.5, 101.5, 131.5, 161.5},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {Version = {versionNumber = 2, [1] = {isTaunt = true}, [2] = {sticky = 3}}, group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, sticky = 3, spellID = nil,
-    overrides =
-        {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
-            isConditional = {
-                text = "This Alert only shows if you do not have threat on the Boss.",
-                func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
-            },
+        textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
+        isConditional = {
+            text = "This Alert only shows if you do not have threat on the Boss.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
-    timers = {
+        timers = {
             [16] = {
                 {25, 45, 65, 85, 105, 125, 145, 165},
                 {},
@@ -108,36 +104,36 @@ NSI.InitializeAlerts[encID] = function(self)
 
 
     local data = {group = "Lura P1 Transition", internalID = "Full Blaze", text = "Full Blaze", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 3, spellID = nil,
-    overrides = {textColors = {1, 0, 0, 1}},
-    timers = {
+        textColors = {1, 0, 0, 1},
+        timers = {
             [16] = {37.7},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {Version = {versionNumber = 1, [1] = {dur = 3}}, group = "Lura P2", name = "Seed-Drop", internalID = "Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 3, spellID = 1253031,
-    overrides = {countdown = 3, barColors = {0, 1, 0, 1},
+        countdown = 3, barColors = {0, 1, 0, 1},
         isConditional = {
             text = "This Alert only shows if you are holding a crystal at that time.",
             func = [[return function() return C_ActionBar.HasExtraActionBar() end]],
         },
-    enabled = true},
-    timers = {
+        enabled = true,
+        timers = {
             [16] = {17.5, 25, 47.5, 55, 77.5, 85},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {Version = {versionNumber = 1}, group = "Lura P2", name = "non-conditional Seed-Drop", internalID = "Old-Seed-Drop", text = "Seed-Drop", DisplayType = "Bar", encID = encID, phase = 3, TTS = false, dur = 5, spellID = 1253031,
-    overrides = {countdown = 3, barColors = {0, 1, 0, 1}, enabled = false},
-    timers = {
+        countdown = 3, barColors = {0, 1, 0, 1}, enabled = false,
+        timers = {
             [16] = {17.5, 25, 47.5, 55, 77.5, 85},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P2 Soaks", internalID = "Galvanize", name = "Generic Soak", text = "Soaks", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 7, spellID = nil,
-    timers = {
+        timers = {
             [15] = {20, 50, 80},
             [16] = {19, 49, 79},
         },
@@ -148,9 +144,9 @@ NSI.InitializeAlerts[encID] = function(self)
     local numbers = {1, 2, 8, 7}
     for i=1, 4 do
         local data = {group = "Lura P2 Soaks", internalID = "Soak "..markers[i], name = markers[i].." Soak", text = "Soak {rt"..numbers[i].."}",
-        DisplayType = "Text", encID = encID, phase = 3, TTS = "Soak "..markers[i], dur = 7, spellID = nil,
-        overrides = {enabled = false},
-        timers = {
+            DisplayType = "Text", encID = encID, phase = 3, TTS = "Soak "..markers[i], dur = 7, spellID = nil,
+            enabled = false,
+            timers = {
                 [16] = {19, 49, 79},
             },
         }
@@ -158,14 +154,14 @@ NSI.InitializeAlerts[encID] = function(self)
     end
 
     local data = {group = "Lura P2", internalID = "Spread", text = "Spread", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [16] = {27.8, 57.8, 87.8, 105},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P2", internalID = "Orbs", text = "Orbs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [15] = {35.5, 65.5, 95.5},
             [16] = {35.5, 65.5, 95.5},
         },
@@ -174,22 +170,22 @@ NSI.InitializeAlerts[encID] = function(self)
     self:RemoveEncounterAlert(encID, 16, "Crystal Use")
 
     local data = {group = "Lura P3", internalID = "HC Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 4, TTS = true, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [15] = {31, 69, 107},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P3", internalID = "Move", text = "Move", DisplayType = "Text", encID = encID, phase = 4, TTS = true, TTSTimer = 0, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [15] = {65, 120},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P3 Left", internalID = "Left Memory Game", text = "Memory Game", DisplayType = "Text", encID = encID, phase = 4, TTS = true, dur = 5, spellID = nil,
-    overrides = {enabled = false},
-    timers = {
+        enabled = false,
+        timers = {
             [16] = {40, 75, 150},
         },
     }
@@ -202,8 +198,8 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P3 Left", internalID = "Left Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 4, TTS = true, TTSTimer = 2, dur = 5, spellID = nil,
-    overrides = {enabled = false},
-    timers = {
+        enabled = false,
+        timers = {
             [16] = {18.2, 90.2, 128.2},
         },
     }
@@ -216,8 +212,8 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P3 Left", internalID = "Left Soak-Time", text = "Soak-Time", DisplayType = "Bar", encID = encID, phase = 4, TTS = false, dur = 20, spellID = 1266897,
-    overrides = {enabled = false},
-    timers = {
+        enabled = false,
+        timers = {
             [16] = {38.7, 110.7, 148.7},
         },
     }
@@ -230,8 +226,8 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P3 Left", internalID = "Left Stars", text = "Stars", DisplayType = "Text", encID = encID, phase = 4, TTS = false, dur = 4, spellID = nil,
-    overrides = {enabled = false},
-    timers = {
+        enabled = false,
+        timers = {
             [16] = {20.4, 28.4, 36.4, 44.4, 52.4, 79.4, 87.4, 95.4, 103.4},
         },
     }
@@ -244,21 +240,21 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
     data.internalID = "Final Slice Stars"
     data.group = "Lura P3"
-    data.overrides = {}
+    data.enabled = nil
     data.timers = {
         [16] = {130.4, 137.2, 144.4, 150.2, 157.4, 164.2},
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P4", internalID = "Blazes", text = "Blazes", DisplayType = "Text", encID = encID, phase = 5, TTS = true, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [16] = {12.7, 32.7, 52.7, 72.7},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Lura P4", internalID = "P4 Move", name = "Move", text = "Move", DisplayType = "Text", encID = encID, phase = 5, TTS = true, TTSTimer = 0, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [16] = {19.8, 39.8, 59.8},
         },
     }
@@ -278,7 +274,8 @@ NSI.InitializeAlerts[encID] = function(self)
         customIcon = nil,
         difficulties = {14, 15, 16},
         timers = nil,
-        overrides = {BlockCopy = true, enabled = false},
+        BlockCopy = true,
+        enabled = false,
         HideTimer = false,
         Version = {versionNumber = 1, [1] = {dur = 6}},
     }
@@ -297,10 +294,10 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {internalID = "RunesDisplay", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil, id = 0, internalID = "RunesDisplay",
-    overrides = {enabled = true, pinned = true, BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}}, ShowSenderNames = false,
-    timers = nil, Preview = LuraPreview, customIcon = 1284980,
-    difficulties = {14, 15, 16},
-    extraOptions = {
+        enabled = true, pinned = true, BlockCopy = true, Scale = 1, Anchor = "TOPLEFT", relativeTo = "TOPLEFT", xOffset = 300, yOffset = -300, BackgroundColor = {0.2, 0.2, 0.2, 1}, ShowSenderNames = false,
+        timers = nil, Preview = LuraPreview, customIcon = 1284980,
+        difficulties = {14, 15, 16},
+        extraOptions = {
             { Type = "Label",    text = "Runes Display" },
             { Type = "Slider",   label = "Scale",          min = 0.5,   max = 2,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3183][16].RunesDisplay.Scale   or 1    end]],
@@ -341,11 +338,11 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
-    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
-    overrides = {pinned = true, BlockCopy = true, enabled = true},
-    Preview = [[return function()
-        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
-    end]],
+        customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
+        pinned = true, BlockCopy = true, enabled = true,
+        Preview = [[return function()
+            print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
+        end]],
     }
     self:AddEncounterAlert(data)
 end

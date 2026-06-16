@@ -10,8 +10,7 @@ NSI.InitializeAlerts[encID] = function(self)
     loadConditions.Roles.DAMAGER = true
     loadConditions.Roles.HEALER = true
     local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    overrides = {
-        isConditional = {
+    isConditional = {
             text = "This Alert only shows if you are downstairs at the time",
             func = [[return function()
                 for j = 1, 40 do
@@ -23,7 +22,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 return false
             end]],
         },
-    loadConditions = loadConditions},
+    loadConditions = loadConditions,
     timers = {
             [16] = {{39, 112}, {39, 112}},
         },
