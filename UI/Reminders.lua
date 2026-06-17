@@ -504,8 +504,8 @@ local function BuildReminderScreen(personal, parentFrame)
         local options = {
             { label = NSI:Loc("No Boss"), value = 0, onclick = function(_, _, _)
                 screen._metaBossEncID = nil
-                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote(true) end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote(true) end
             end },
         }
         local sorted = {}
@@ -523,8 +523,8 @@ local function BuildReminderScreen(personal, parentFrame)
                 texcoord = { 0.05, 0.95, 0.05, 0.95 },
                 onclick = function(_, _, v)
                     screen._metaBossEncID = v
-                    if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+                    if SaveCurrentNote and screen.selectedName then SaveCurrentNote(true) end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote(true) end
                 end,
             })
         end
@@ -540,18 +540,18 @@ local function BuildReminderScreen(personal, parentFrame)
         return {
             { label = NSI:Loc("Normal"), value = "Normal", onclick = function(_, _, v)
                 screen._metaDiff = v
-                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote(true) end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote(true) end
             end },
             { label = NSI:Loc("Heroic"), value = "Heroic", onclick = function(_, _, v)
                 screen._metaDiff = v
-                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote(true) end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote(true) end
             end },
             { label = NSI:Loc("Mythic"), value = "Mythic", onclick = function(_, _, v)
                 screen._metaDiff = v
-                if SaveCurrentNote and screen.selectedName then SaveCurrentNote() end
-                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote() end
+                if SaveCurrentNote and screen.selectedName then SaveCurrentNote(true) end
+                    if SaveReceivedNote and screen.viewingReceivedNote then SaveReceivedNote(true) end
             end },
         }
     end
@@ -663,17 +663,19 @@ local function BuildReminderScreen(personal, parentFrame)
     -- Action Buttons (below editor)
     -- ====================================================================
 
-    SaveCurrentNote = function()
+    SaveCurrentNote = function(useCurrentControls)
         if not screen.selectedName then return end
         local editorText = editor:GetText()
-        local pastedEncID, _, pastedDiff = ParseFirstLine(editorText)
-        if pastedEncID then
-            screen._metaBossEncID = pastedEncID
-            if screen.bossDropdown then screen.bossDropdown:Select(pastedEncID) end
-        end
-        if pastedDiff and pastedDiff ~= "" then
-            screen._metaDiff = pastedDiff
-            if screen.diffDropdown then screen.diffDropdown:Select(pastedDiff) end
+        if not useCurrentControls then
+            local pastedEncID, _, pastedDiff = ParseFirstLine(editorText)
+            if pastedEncID then
+                screen._metaBossEncID = pastedEncID
+                if screen.bossDropdown then screen.bossDropdown:Select(pastedEncID) end
+            end
+            if pastedDiff and pastedDiff ~= "" then
+                screen._metaDiff = pastedDiff
+                if screen.diffDropdown then screen.diffDropdown:Select(pastedDiff) end
+            end
         end
         -- Strip any existing metadata first line from the editor, then rebuild from controls
         local bodyText = StripFirstLine(editorText)
@@ -681,14 +683,14 @@ local function BuildReminderScreen(personal, parentFrame)
         if not newName or newName == "" then newName = screen.selectedName end
         -- Capture the old encID before we overwrite the stored note, so we can clear
         -- the ActivePersonalReminder slot if the boss assignment changes.
-        local oldEncID = personal and NSI:EncIDFromReminder(screen.selectedName, true) or nil
+        local store = NSRT[storeKey]
+        local oldEncID = ParseFirstLine((store and store[screen.selectedName]) or "")
         local firstLine = BuildFirstLine(screen._metaBossEncID, newName, screen._metaDiff)
         local fullText = firstLine and (firstLine .. "\n" .. bodyText) or bodyText
         -- Update the editor so the new first line is visible
         editor:SetText(fullText)
         local oldName = screen.selectedName
         if newName ~= oldName then
-            local store = NSRT[storeKey]
             if not store[newName] then
                 store[newName] = fullText
                 store[oldName] = nil
@@ -705,10 +707,6 @@ local function BuildReminderScreen(personal, parentFrame)
                     if NSI.LoadedPersonalReminder == oldName then NSI.LoadedPersonalReminder = newName end
                 else
                     if NSRT[activeKey] == oldName then NSRT[activeKey] = newName end
-                end
-                local saveEncID = screen._metaBossEncID
-                if saveEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[saveEncID] == oldName then
-                    NSRT.AutoLoadNote[saveEncID] = newName
                 end
                 screen.selectedName = newName
             else
@@ -731,6 +729,13 @@ local function BuildReminderScreen(personal, parentFrame)
             end
             isCurrentlyActive = newEncID and activeTable[newEncID] == screen.selectedName
         else
+            local newEncID = NSI:EncIDFromReminder(screen.selectedName, false)
+            if oldEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[oldEncID] == oldName then
+                NSRT.AutoLoadNote[oldEncID] = nil
+                if newEncID then
+                    NSRT.AutoLoadNote[newEncID] = screen.selectedName
+                end
+            end
             isCurrentlyActive = NSRT[activeKey] == screen.selectedName
         end
         if isCurrentlyActive then
@@ -742,17 +747,19 @@ local function BuildReminderScreen(personal, parentFrame)
 
     -- Updates NSI.Reminder in place from the current meta controls + editor body.
     -- Does NOT touch NSRT.Reminders — this is only for iterating on a received note.
-    SaveReceivedNote = function()
+    SaveReceivedNote = function(useCurrentControls)
         if not screen.viewingReceivedNote then return end
         local editorText = editor:GetText()
-        local pastedEncID, _, pastedDiff = ParseFirstLine(editorText)
-        if pastedEncID then
-            screen._metaBossEncID = pastedEncID
-            if screen.bossDropdown then screen.bossDropdown:Select(pastedEncID) end
-        end
-        if pastedDiff and pastedDiff ~= "" then
-            screen._metaDiff = pastedDiff
-            if screen.diffDropdown then screen.diffDropdown:Select(pastedDiff) end
+        if not useCurrentControls then
+            local pastedEncID, _, pastedDiff = ParseFirstLine(editorText)
+            if pastedEncID then
+                screen._metaBossEncID = pastedEncID
+                if screen.bossDropdown then screen.bossDropdown:Select(pastedEncID) end
+            end
+            if pastedDiff and pastedDiff ~= "" then
+                screen._metaDiff = pastedDiff
+                if screen.diffDropdown then screen.diffDropdown:Select(pastedDiff) end
+            end
         end
         local bodyText = StripFirstLine(editorText)
         local name = screen.nameEntry and screen.nameEntry:GetText() or ""

@@ -73,9 +73,10 @@ function NSI:ResetInterrupts()
     self:HideInterruptBar()
 end
 
-function NSI:InterruptOnCastStart(info)
+function NSI:InterruptOnCastStart(info, unit)
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
+    if not UnitCastingInfo(unit) then return end
     self:DisplayInterrupt(true)
     if self.Interrupts.castCount == self.Interrupts.myKick then
         self:PlayInterruptSound()
@@ -101,19 +102,27 @@ function NSI:HideInterruptBar()
     end
 end
 
-function NSI:OnInterrupt()
+function NSI:OnInterrupt(shouldCount)
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
+    if shouldCount then
+        self.Interrupts.castCount = self.Interrupts.castCount + 1
+        if self.Interrupts.castCount > self.Interrupts.max then
+            self.Interrupts.castCount = 1
+        end
+    end
     self:DisplayInterrupt()
     self:HideInterruptBar()
 end
 
-function NSI:OnCastStop()
+function NSI:OnCastStop(shouldCount)
     if not self.Interrupts or self.Interrupts.disabled then return end
     if self.Interrupts.myTrackedID == 0 then return end
-    self.Interrupts.castCount = self.Interrupts.castCount + 1
-    if self.Interrupts.castCount > self.Interrupts.max then
-        self.Interrupts.castCount = 1
+    if shouldCount then
+        self.Interrupts.castCount = self.Interrupts.castCount + 1
+        if self.Interrupts.castCount > self.Interrupts.max then
+            self.Interrupts.castCount = 1
+        end
     end
     self:DisplayInterrupt()
 end

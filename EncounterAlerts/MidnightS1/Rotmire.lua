@@ -21,21 +21,25 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
-    customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
-    overrides = {BlockCopy = true, enabled = true},
-    Preview = [[return function()
-        print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
-    end]],
+    local data = {internalID = "BurstingPustules", name = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
+        timers = {
+            [16] = {10, 31, 80, 146, 167, 216, 282, 303, 352, 418, 439, 488},
+        },
     }
     self:AddEncounterAlert(data)
-    local data = {Version = {versionNumber = 1, isTaunt = true}, group = "Rotmire Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = "Taunt", TTSTimer = 0, dur = 5, spellID = nil,
-    overrides =
-        {textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
-            isConditional = {
-                text = "This Alert only shows if you do not have threat on the Boss.",
-                func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
-            },
+    local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
+        customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
+        BlockCopy = true, enabled = true,
+        Preview = [[return function()
+            print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
+        end]],
+    }
+    self:AddEncounterAlert(data)
+    local data = {Version = {versionNumber = 2, [1] = {isTaunt = true}, [2] = {sticky = 3}}, group = "Rotmire Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = "Taunt", TTSTimer = 0, dur = 5, sticky = 3, spellID = nil,
+        textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
+        isConditional = {
+            text = "This Alert only shows if you do not have threat on the Boss.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
             [16] = {24.5, 36.5, 48.5, 60.5, 73.5, 85.5, 97.5, 109.5,
@@ -46,12 +50,10 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
     local data = {group = "Rotmire Tanks", internalID = "Tankhits", text = "Tank-Hit", customIcon = 134201, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = nil,
-    overrides =
-        {textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
-            isConditional = {
-                text = "This Alert only shows if you have threat on the Boss.",
-                func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
-            },
+        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
+        isConditional = {
+            text = "This Alert only shows if you have threat on the Boss.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
             [16] = {26, 38, 50, 62, 75, 87, 99, 111,
@@ -64,17 +66,18 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
-    local id = self:DifficultyCheck(16) or 0
+    local id = self:DifficultyCheck({16}) or 0
     local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay
     if interrupts and interrupts.enabled and self:EvaluateLoad(interrupts) and id == 16 then
         self:ReadInterruptNote(1)
-        if (not self.Interrupts.myTrackedID) or (not self.Interrupts.myTrackedID == 2) then return end
-        self:EncounterRegister("InterruptDisplay", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP", "INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, true, "boss2")
+        if (not self.Interrupts.myTrackedID) or (not self.Interrupts.myTrackedID ~= 2) then return end
+        self:EncounterRegister("InterruptDisplay", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, true, "boss2")
+        self:EncounterRegister("InterruptDisplay", {"INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, true)
         self:EncounterFunction("InterruptDisplay", function(_, e, unit, ...)
             if e == "UNIT_SPELLCAST_START" then
                 if UnitIsEnemy(unit, "player") then
                     local info = {spellID = 1221714, dur = 6}
-                    self:InterruptOnCastStart(info)
+                    self:InterruptOnCastStart(info, unit)
                     if self.ResetTimer then
                         self.ResetTimer:Cancel()
                     end
@@ -84,11 +87,11 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                 end
             elseif e == "UNIT_SPELLCAST_INTERRUPTED" then
                 if UnitIsEnemy(unit, "player") then
-                    self:OnInterrupt()
+                    self:OnInterrupt(true)
                 end
             elseif e == "UNIT_SPELLCAST_STOP" then
                 if UnitIsEnemy(unit, "player") then
-                    self:OnCastStop()
+                    self:OnCastStop(false)
                 end
             elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
                 if UnitExists("boss2") and UnitIsEnemy("boss2", "player") then

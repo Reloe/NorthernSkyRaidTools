@@ -24,8 +24,12 @@ end
 -- Builds a flat alert definition for use with AddEncounterAlert.
 -- displayType: "Text", "Bar", "Icon", or "Circle"
 -- timers: { [phase] = {times...} }
--- overrides: optional table of field overrides
 function NSI:MakeEncounterAlert(data, timers)
+    local a = {}
+    for k, v in pairs(data) do
+        a[k] = v
+    end
+
     local group = data.group
     if group and type(group) == "table" then
         group = data.phase and group[data.phase]
@@ -35,41 +39,25 @@ function NSI:MakeEncounterAlert(data, timers)
         name = data.phase and name[data.phase]
     end
     local isEnabled
-    if data.overrides and data.overrides.enabled ~= nil then
-        isEnabled = data.overrides.enabled
+    if data.enabled ~= nil then
+        isEnabled = data.enabled
     end
     local defaultEnabled = isEnabled ~= false
     if isEnabled == nil then
         isEnabled = NSRT.Alerts.ReloeReminders
     end
-    local a = {
-        internalID     = data.internalID,
-        name           = name or data.internalID,
-        text           = data.text,
-        spellID        = data.spellID,
-        customIcon     = data.customIcon,
-        TTS            = data.TTS,
-        TTSTimer       = data.TTSTimer or data.dur,
-        dur            = data.dur,
-        timers         = timers or data.timers or {},
-        phase          = data.phase,
-        DisplayType    = data.DisplayType,
-        HideTimer      = data.HideTimer,
-        IsAlert        = true,
-        ReloeReminder  = true,
-        enabled        = isEnabled,
-        DefaultEnabled = defaultEnabled,
-        extraOptions   = data.extraOptions,
-        Preview        = data.Preview,
-        isSpecialDisplay = data.isSpecialDisplay,
-        isConditional  = data.isConditional,
-        Version        = data.Version,
-        sticky         = data.sticky or 0,
-        group          = group,
-    }
-    if data.overrides then
-        for k, v in pairs(data.overrides) do a[k] = v end
+    a.name = name or data.internalID
+    a.group = group
+    a.TTSTimer = data.TTSTimer or data.dur
+    a.timers = timers or data.timers or {}
+    if data.loadConditions then
+        a.loadConditions = CopyTable(data.loadConditions)
     end
+    a.IsAlert = true
+    a.ReloeReminder = true
+    a.enabled = isEnabled
+    a.DefaultEnabled = defaultEnabled
+    a.sticky = data.sticky or 0
     return a
 end
 
@@ -88,6 +76,19 @@ local function GetAlertVersionNumber(version)
     return version and type(version) == "table" and version.versionNumber or version
 end
 
+local function GetVersionUpdateSteps(version)
+    if type(version) ~= "table" then return end
+    local steps
+    for versionNumber, updates in pairs(version) do
+        if type(versionNumber) == "number" and type(updates) == "table" then
+            steps = steps or {}
+            steps[#steps + 1] = versionNumber
+        end
+    end
+    if steps then table.sort(steps) end
+    return steps
+end
+
 local function ShouldApplyVersionUpdate(existing, alertDef)
     local newVersion = GetAlertVersionNumber(alertDef and alertDef.Version)
     if not newVersion then return false end
@@ -96,14 +97,38 @@ local function ShouldApplyVersionUpdate(existing, alertDef)
     return not oldVersion or newVersion > oldVersion
 end
 
-local function ApplyVersionFieldUpdates(existing, alertDef)
-    local version = alertDef and alertDef.Version
+local function ApplyVersionFields(target, updates)
+    if type(updates) ~= "table" then return end
+    for key, value in pairs(updates) do
+        target[key] = value
+    end
+end
+
+local function ApplyLegacyVersionFields(target, version)
+    if type(version) ~= "table" then return end
 
     for key, value in pairs(version) do
-        if key ~= "versionNumber" then
-            existing[key] = value
+        if key ~= "versionNumber" and type(key) ~= "number" then
+            target[key] = value
         end
     end
+end
+
+local function ApplyVersionFieldUpdates(existing, alertDef)
+    local version = alertDef and alertDef.Version
+    local steps = GetVersionUpdateSteps(version)
+    if steps then
+        local oldVersion = GetAlertVersionNumber(existing and existing.Version) or 0
+        local newVersion = GetAlertVersionNumber(version)
+        for _, versionNumber in ipairs(steps) do
+            if versionNumber > oldVersion and (not newVersion or versionNumber <= newVersion) then
+                ApplyVersionFields(existing, version[versionNumber])
+            end
+        end
+        return
+    end
+
+    ApplyLegacyVersionFields(existing, version)
 end
 
 function NSI:GetEncounterAlertID(encID)
@@ -153,7 +178,6 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
     NSRT.EncounterAlerts[encId][diffID] = NSRT.EncounterAlerts[encId][diffID] or {}
     local diffTable = NSRT.EncounterAlerts[encId][diffID]
     local existing = diffTable[alertDef.internalID]
-    local VersionUpdate = existing and ShouldApplyVersionUpdate(existing, alertDef)
     local FullOverwrite = existing and existing.Reset
     local applyDefaultEnabled = self._ApplyReloeAutoEnable or (NSRT.Alerts and NSRT.Alerts.ReloeReminders)
     if FullOverwrite then
@@ -175,13 +199,13 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         existing.isSpecialDisplay = alertDef.isSpecialDisplay
         existing.DefaultEnabled = alertDef.DefaultEnabled
         existing.BlockCopy = alertDef.BlockCopy
-        existing.Version = alertDef.Version
         if applyDefaultEnabled and not existing.UserModifiedEnabled then
             existing.enabled = alertDef.DefaultEnabled ~= false
         end
-        if VersionUpdate then
+        if ShouldApplyVersionUpdate(existing, alertDef) then
             ApplyVersionFieldUpdates(existing, alertDef)
         end
+        existing.Version = alertDef.Version
         return
     end
     diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef

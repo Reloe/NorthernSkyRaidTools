@@ -54,8 +54,8 @@ local SoundListRaid = {
 
     -- Sporefall
     [1222088] = "Spread", -- Festering Vines
-    [1221639] = "Shroom", -- Shroomling Fixate
-    [1299508] = "Fung", -- Fungling Fixate
+    [1221639] = "Boss", -- Shroomling Fixate
+    [1299508] = "Ranged", -- Fungling Fixate
 }
 
 local SoundListMPlus = {
@@ -564,8 +564,7 @@ function NSI:InitPrivateAuras(firstcall)
     self:RemoveAllPrivateAuraAnchors()
     self:InitTextPA()
     self:InitPrivateAuraDisplay("player", NSRT.PASettings)
-    local diff = select(3, GetInstanceInfo()) or 0
-    if diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
+    if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
         local tankUnit
         for u in self:IterateGroupMembers() do
             if UnitGroupRolesAssigned(u) == "TANK" and not UnitIsUnit("player", u) then

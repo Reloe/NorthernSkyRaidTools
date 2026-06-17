@@ -130,9 +130,10 @@ function NSI:GetNote() -- simply for note comparison now
     return _G.VMRT.Note.Text1 or ""
 end
 
-function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
-    local difficultyID = select(3, GetInstanceInfo()) or 0
-    return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or (NSRT.Settings["Debug"] and 16)
+function NSI:DifficultyCheck(diffs) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
+    local diff = select(3, GetInstanceInfo()) or 0
+    if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
+    return (tContains(diffs, diff) and diff) or (NSRT.Settings.Debug and 16)
 end
 
 function NSI:GetHash(text)
@@ -402,8 +403,8 @@ end
 
 function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
-    local id = select(3, GetInstanceInfo())
-    if id > 16 or id < 14 then return end
+    local id = self:DifficultyCheck({14, 15, 16})
+    if not id then return end
     if e == "ENCOUNTER_START" then
         local encID, encName, difficultyID, groupSize = ...
         local now = GetTime()

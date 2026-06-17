@@ -1,3 +1,3 @@
 ## Changelog
 
-- Fix Memory Game number position in P3
+- timer and interruput fixes for Rotmire

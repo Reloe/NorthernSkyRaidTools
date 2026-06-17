@@ -54,7 +54,7 @@ local function BuildQoLOptions()
             get = function() return NSRT.QoL.ResetBossDisplay end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.ResetBossDisplay = value
-                local diff = NSI:DifficultyCheck(14)
+                local diff = NSI:DifficultyCheck({14, 15, 16})
                 if diff or not value then NSI:UpdateQoLTextDisplay() end
                 local turnon = value and diff and not NSI:Restricted()
                 NSI:ToggleQoLEvent("UNIT_AURA", turnon)
@@ -74,7 +74,7 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.QoL.LootBossReminder = value
                 NSI:UpdateQoLTextDisplay()
-                local turnon = value and NSI:DifficultyCheck(14)
+                local turnon = value and NSI:DifficultyCheck({14, 15, 16})
                 NSI:ToggleQoLEvent("ENCOUNTER_END", turnon)
                 NSI:ToggleQoLEvent("LOOT_OPENED", turnon)
                 NSI:ToggleQoLEvent("CHAT_MSG_MONEY", turnon)

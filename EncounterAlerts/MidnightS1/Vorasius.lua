@@ -6,7 +6,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {internalID = "Knock", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = nil,
-    timers = {
+        timers = {
             [14] = {12, 132, 252},
             [15] = {12, 132, 252},
             [16] = {12, 132, 252},

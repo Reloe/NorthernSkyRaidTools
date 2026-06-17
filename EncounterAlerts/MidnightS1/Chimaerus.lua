@@ -10,8 +10,7 @@ NSI.InitializeAlerts[encID] = function(self)
     loadConditions.Roles.DAMAGER = true
     loadConditions.Roles.HEALER = true
     local data = {internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = nil,
-    overrides = {
-        isConditional = {
+    isConditional = {
             text = "This Alert only shows if you are downstairs at the time",
             func = [[return function()
                 for j = 1, 40 do
@@ -23,7 +22,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 return false
             end]],
         },
-    loadConditions = loadConditions},
+    loadConditions = loadConditions,
     timers = {
             [16] = {{39, 112}, {39, 112}},
         },
@@ -42,8 +41,8 @@ end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID]) then return end
-    local diff = id or select(3, GetInstanceInfo())
-    if diff < 14 or diff > 16 then return end
+    local diff = id or self:DifficultyCheck({14, 15, 16})
+    if not diff then return end
     if diff == 16 and self.Assignments[encID].Soaks then
         local subgroup = self:GetSubGroup("player")
         local Alert = self:CreateDefaultAlert("", "text", nil, nil, 1, encID)
@@ -98,7 +97,7 @@ local detectedDurations = {
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
-    local difficultyID = select(3, GetInstanceInfo()) or 0
+    local difficultyID = self:DifficultyCheck({14, 15, 16})
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][1]
     if phaseinfo and info.duration >= phaseinfo.time then

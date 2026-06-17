@@ -1098,11 +1098,11 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     local encId = info.encID or 0
     local phase = info.phase or 0
     local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
-    if rem <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
+    if rem-0.25 <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
         self:PlayReminderSound(info)
         self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
-    if info.countdown and rem <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
+    if info.countdown and rem-0.25 <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
         NSAPI:TTSCountdown(info.countdown)
         self.StartedCountdown["enc"..encId.."ph"..phase.."id"..info.id] = true
     end
@@ -1860,8 +1860,7 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
-        local diff = select(3, GetInstanceInfo()) or 0
-        if (diff > 17 or diff < 14) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
+        if self:DifficultyCheck({14, 15, 16}) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
             self[Name]:Hide()
         else
             self[Name]:Show()

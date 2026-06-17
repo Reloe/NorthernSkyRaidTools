@@ -29,12 +29,12 @@ NSI.InitializeAlerts[encID] = function(self)
     data.phase = nil
     data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end]]
     data.difficulties = {14, 15, 16}
-    data.overrides = {BlockCopy = true}
+    data.BlockCopy = true
     self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    local id = id or self:DifficultyCheck(14) or 0
+    local id = id or self:DifficultyCheck({14, 15, 16}) or 0
 
     local hpDisplay = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].HealthDisplay
     if hpDisplay and hpDisplay.enabled and self:EvaluateLoad(hpDisplay) then
@@ -73,7 +73,7 @@ end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID] and self.Assignments[encID].Soaks) then return end
-    if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
+    if (not (id and id == 16)) and not self:DifficultyCheck({16}) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     if not subgroup then return end
     if UnitGroupRolesAssigned("player") == "TANK" then return end
@@ -107,8 +107,8 @@ local detectedDurations = {
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
-    local difficultyID = select(3, GetInstanceInfo()) or 0
-    local phaseinfo = detectedDurations[difficultyID] and detectedDurations[difficultyID][self.Phase]
+    local difficultyID = self:DifficultyCheck({14, 15, 16})
+    local phaseinfo = difficultyID and detectedDurations[difficultyID] and detectedDurations[difficultyID][self.Phase]
     if phaseinfo and info.duration == phaseinfo.time then
         self.VaelgorPhaseTimer = nil
         self.VaelgorPhaseTimer = C_Timer.NewTimer(8, function()

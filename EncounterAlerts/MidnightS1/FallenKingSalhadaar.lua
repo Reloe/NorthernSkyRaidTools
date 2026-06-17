@@ -30,15 +30,16 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "CC Display", text = nil, DisplayType = "Text", timers = nil, encID = encID, phase = 1, TTS = false, dur = nil, spellID = nil,
-    Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]],
-    overrides = {enabled = true, BlockCopy = true},
-    difficulties = {16},
+        Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]],
+        enabled = true,
+        BlockCopy = true,
+        difficulties = {16},
     }
     self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck(14) or 0
+    id = id or self:DifficultyCheck({14, 15, 16}) or 0
 
     local ccEntry = id == 16 and NSI:GetEncounterAlertByName(encID, id, "CC Display")
     if ccEntry and ccEntry.enabled then
@@ -143,8 +144,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 NSI.EncounterAlertStop[encID] = function(self, id) -- on ENCOUNTER_END
-    local diffID = id or select(3, GetInstanceInfo()) or 0
-    local ccEntry = NSI:GetEncounterAlertByName(encID, diffID, "CC Display")
+    local difficultyID = id or self:DifficultyCheck({14, 15, 16}) or 0
+    local ccEntry = NSI:GetEncounterAlertByName(encID, difficultyID, "CC Display")
     if ccEntry and ccEntry.enabled then
         if self.plateframe then
             for i, v in ipairs(self.platetexts) do

@@ -107,9 +107,9 @@ NSI.spectable = {
     [257]  = 40, -- Priest: Holy
 }
 
-function NSI:GetSortedGroup(Flex, default, odds)
+function NSI:GetSortedGroup(Flex, default, odds, MythicFlex)
     local units = {}
-    local lastgroup = Flex and 6 or 4
+    local lastgroup = (MythicFlex and 5) or (Flex and 6) or 4
     local total = {["ALL"] = 0, ["TANK"] = 0, ["HEALER"] = 0, ["DAMAGER"] = 0}
     local poscount = {0, 0, 0, 0, 0}
     local groupSize = {}
@@ -401,7 +401,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
     end
 end
 
-function NSI:SplitGroupInit(Flex, default, odds)
+function NSI:SplitGroupInit(Flex, default, odds, MythicFlex)
     if C_ChatInfo.InChatMessagingLockdown() then print("Addon Messages are currently restricted and thus this action cannot be performed") return end
     if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
@@ -411,7 +411,8 @@ function NSI:SplitGroupInit(Flex, default, odds)
             local _, instanceType, difficultyID = GetInstanceInfo()
             difficultyID = (instanceType == "raid" and difficultyID) or GetRaidDifficultyID() or 0
             if difficultyID == 16 then Flex = false else Flex = true end
-            C_Timer.After(2, function() self:SortGroup(Flex, default, odds) end)
+            if difficultyID == 233 then MythicFlex = true end
+            C_Timer.After(2, function() self:SortGroup(Flex, default, odds, MythicFlex) end)
         else
             print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
         end
