@@ -349,7 +349,7 @@ end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
     local realpull = not id
-    id = id or self:DifficultyCheck(14) or 0
+    id = id or self:DifficultyCheck({14, 15, 16}) or 0
     if realpull and id == 16 then
         NSI.NSRTFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
@@ -659,7 +659,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         return
     end
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
-    local difficultyID = select(3, GetInstanceInfo()) or 0
+    local difficultyID = self:DifficultyCheck({14, 15, 16})
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
     if phaseinfo and ApproximatelyEqual(info.duration, phaseinfo.time, 0.2) then

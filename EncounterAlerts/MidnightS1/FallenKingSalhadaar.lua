@@ -39,7 +39,7 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck(14) or 0
+    id = id or self:DifficultyCheck({14, 15, 16}) or 0
 
     local ccEntry = id == 16 and NSI:GetEncounterAlertByName(encID, id, "CC Display")
     if ccEntry and ccEntry.enabled then
@@ -144,8 +144,8 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 NSI.EncounterAlertStop[encID] = function(self, id) -- on ENCOUNTER_END
-    local diffID = id or select(3, GetInstanceInfo()) or 0
-    local ccEntry = NSI:GetEncounterAlertByName(encID, diffID, "CC Display")
+    local difficultyID = id or self:DifficultyCheck({14, 15, 16}) or 0
+    local ccEntry = NSI:GetEncounterAlertByName(encID, difficultyID, "CC Display")
     if ccEntry and ccEntry.enabled then
         if self.plateframe then
             for i, v in ipairs(self.platetexts) do

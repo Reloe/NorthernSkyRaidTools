@@ -1860,9 +1860,7 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
-        local diff = select(3, GetInstanceInfo()) or 0
-        if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
-        if (diff > 17 or diff < 14) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
+        if self:DifficultyCheck({14, 15, 16}) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
             self[Name]:Hide()
         else
             self[Name]:Show()

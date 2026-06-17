@@ -77,7 +77,7 @@ function NSI:QoLEvents(e, ...)
                 self.QoLTextDisplays.ResetBoss = nil
                 self:ToggleQoLEvent("UNIT_AURA", false)
             else
-                local inRaid = self:DifficultyCheck(14)
+                local inRaid = self:DifficultyCheck({14, 15, 16})
                 if not inRaid then return end
                 self:ToggleQoLEvent("UNIT_AURA", inRaid, "player")
                 local debuffed = self:HasLustDebuff()
@@ -133,7 +133,7 @@ function NSI:QoLEvents(e, ...)
         end
     elseif e == "PLAYER_ENTERING_WORLD" then
         C_Timer.After(0.01, function()
-            if self:DifficultyCheck(14) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
+            if self:DifficultyCheck({14, 15, 16}) and NSRT.QoL.ResetBossDisplay and not self:Restricted() then
                 if self:HasLustDebuff() then
                     self.QoLTextDisplays.ResetBoss = {SettingsName = "ResetBossDisplay", text = TextDisplays.ResetBoss}
                     self:UpdateQoLTextDisplay()
@@ -141,7 +141,7 @@ function NSI:QoLEvents(e, ...)
             end
             self:QoLOnZoneSwap()
         end)
-    elseif e == "ENCOUNTER_END" and self:DifficultyCheck(14) then
+    elseif e == "ENCOUNTER_END" and self:DifficultyCheck({14, 15, 16}) then
         if NSRT.QoL.LootBossReminder then
             local success = select(5, ...)
             if success == 1 then
@@ -155,10 +155,10 @@ function NSI:QoLEvents(e, ...)
                 end)
             end
         end
-    elseif e == "ENCOUNTER_START" and self:DifficultyCheck(14) then
+    elseif e == "ENCOUNTER_START" and self:DifficultyCheck({14, 15, 16}) then
         self.QoLTextDisplays = {}
         self:UpdateQoLTextDisplay()
-    elseif self:DifficultyCheck(14) and (e == "LOOT_OPENED" or e == "CHAT_MSG_MONEY" or e == "ENCOUNTER_START") then
+    elseif self:DifficultyCheck({14, 15, 16}) and (e == "LOOT_OPENED" or e == "CHAT_MSG_MONEY" or e == "ENCOUNTER_START") then
         if NSRT.QoL.LootBossReminder and self.QoLTextDisplays.LootBoss then
             self.QoLTextDisplays.LootBoss = nil
             self:UpdateQoLTextDisplay()
@@ -227,7 +227,7 @@ function NSI:ToggleQoLEvent(event, enable, unit)
 end
 
 function NSI:QoLOnZoneSwap() -- only register events while player is in raid
-    local InRaid = self:DifficultyCheck(14)
+    local InRaid = self:DifficultyCheck({14, 15, 16})
     local InInstance = select(2, GetInstanceInfo()) == "party"
     if NSRT.QoL.ResetBossDisplay then
         self:ToggleQoLEvent("PLAYER_REGEN_ENABLED", true)
@@ -260,7 +260,7 @@ end
 
 function NSI:HasLustDebuff()
     if self:Restricted() then return false end
-    if not self:DifficultyCheck(14) then return false end
+    if not self:DifficultyCheck({14, 15, 16}) then return false end
     for _, spellID in ipairs(LustDebuffs) do
         local debuff = self:UnitAura("player", spellID)
         if (not issecretvalue(debuff)) and debuff then
@@ -279,7 +279,7 @@ function NSI:VantusRuneCheck()
     local name = C_Spell.GetSpellInfo(1276691).name
     local prefix = name:match("^([^:]+)") -- get localized name of vantus runes
     if issecretvalue(prefix) then return end
-    local maxgroup = self:DifficultyCheck(16) and 4 or 6 -- if outside raidlead checks this always goes to 6 but guess that'S fine
+    local maxgroup = self:DifficultyCheck({16}) and 4 or 6 -- if outside raidlead checks this always goes to 6 but guess that's fine
     local text = ""
     for i=1, 40 do
         local name, _, subgroup = GetRaidRosterInfo(i)

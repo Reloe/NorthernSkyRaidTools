@@ -135,7 +135,7 @@ local detectedDurations = { -- Death Drop
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
-    local difficultyID = select(3, GetInstanceInfo()) or 0
+    local difficultyID = self:DifficultyCheck({14, 15, 16, 233})
     if not difficultyID or not detectedDurations[difficultyID] then return end
     table.insert(self.Timelines, now)
     if self.Phase >= 2 and ApproximatelyEqual(info.duration, 40, 0.2) then
@@ -163,7 +163,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck(14) or 0
+    id = id or self:DifficultyCheck({14, 15, 16}) or 0
     local featherColor = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Feather Color"]
     local colorSwap = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id]["Color Swap"]
 

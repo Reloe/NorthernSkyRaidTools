@@ -66,7 +66,7 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
-    local id = self:DifficultyCheck(16) or 0
+    local id = self:DifficultyCheck({16}) or 0
     local interrupts = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].InterruptDisplay
     if interrupts and interrupts.enabled and self:EvaluateLoad(interrupts) and id == 16 then
         self:ReadInterruptNote(1)

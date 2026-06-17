@@ -94,7 +94,7 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id)
-    id = id or self:DifficultyCheck(14) or 0
+    id = id or self:DifficultyCheck({14, 15, 16}) or 0
     local info = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].TauntAlerts
     if info and info.enabled and self:EvaluateLoad(info) then
         if not self.TauntFrame then
@@ -175,7 +175,7 @@ end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     if not (self.Assignments and self.Assignments[encID] and self.Assignments[encID].Soaks) then return end
-    if (not (id and id == 16)) and not self:DifficultyCheck(16) then return end -- Mythic only
+    if (not (id and id == 16)) and not self:DifficultyCheck({16}) then return end -- Mythic only
     local subgroup = self:GetSubGroup("player")
     local Alert = self:CreateDefaultAlert("", "text", nil, 8, 1, encID) -- text, Type, spellID, dur, phase, encID
     local group = {}

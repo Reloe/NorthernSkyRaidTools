@@ -270,9 +270,8 @@ NSI.DifficultyNames = {
 
 -- Get current difficulty name, defaults to "Mythic" if unknown
 function NSI:GetCurrentDifficultyName()
-    local _, _, difficultyID = GetInstanceInfo()
-    if difficultyID == 233 then difficultyID = 16 end -- Just treat Flex myth as normal myth
-    return self.DifficultyNames[difficultyID] or "Mythic"
+    local diff = self:DifficultyCheck({14, 15, 16})
+    return self.DifficultyNames[diff] or "Mythic"
 end
 
 -- Get the timeline data for a specific encounter and difficulty

@@ -147,8 +147,8 @@ end
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    local difficultyID = select(3, GetInstanceInfo()) or 0
-    if difficultyID == 16 then
+    local difficultyID = self:DifficultyCheck({14, 15, 16})
+    if difficultyID and difficultyID == 16 then
         MythicPhaseDetect(self, e, info)
         return
     end
