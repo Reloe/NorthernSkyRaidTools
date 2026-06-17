@@ -23,7 +23,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
     local data = {internalID = "BurstingPustules", name = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
         timers = {
-            [16] = {10, 31, 80, 101, 150, 171, 220, 241, 290, 311, 360, 381, 430, 451},
+            [16] = {10, 31, 80, 150, 171, 220, 290, 311, 360, 430, 451},
         },
     }
     self:AddEncounterAlert(data)
