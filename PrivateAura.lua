@@ -565,6 +565,7 @@ function NSI:InitPrivateAuras(firstcall)
     self:InitTextPA()
     self:InitPrivateAuraDisplay("player", NSRT.PASettings)
     local diff = select(3, GetInstanceInfo()) or 0
+    if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
     if diff <= 17 and diff >= 14 and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
         local tankUnit
         for u in self:IterateGroupMembers() do

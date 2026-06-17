@@ -132,6 +132,7 @@ end
 
 function NSI:DifficultyCheck(num) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
     local difficultyID = select(3, GetInstanceInfo()) or 0
+    if difficultyID == 233 then difficultyID = 16 end -- Just treat Flex myth as normal myth
     return ((difficultyID >= num and difficultyID <= 16 and difficultyID)) or (NSRT.Settings["Debug"] and 16)
 end
 
@@ -403,7 +404,7 @@ end
 function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
     local id = select(3, GetInstanceInfo())
-    if id > 16 or id < 14 then return end
+    if (id > 16 or id < 14) and id ~= 233 then return end
     if e == "ENCOUNTER_START" then
         local encID, encName, difficultyID, groupSize = ...
         local now = GetTime()

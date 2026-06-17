@@ -271,6 +271,7 @@ NSI.DifficultyNames = {
 -- Get current difficulty name, defaults to "Mythic" if unknown
 function NSI:GetCurrentDifficultyName()
     local _, _, difficultyID = GetInstanceInfo()
+    if difficultyID == 233 then difficultyID = 16 end -- Just treat Flex myth as normal myth
     return self.DifficultyNames[difficultyID] or "Mythic"
 end
 

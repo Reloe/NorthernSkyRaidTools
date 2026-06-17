@@ -121,7 +121,7 @@ local function BuildGeneralOptions()
             name = "Default Arrangement",
             desc = "Sorts groups into a default order (tanks - melee - ranged - healer)",
             func = function(self)
-                NSI:SplitGroupInit(false, true, false)
+                NSI:SplitGroupInit(false, true, false, false)
             end,
             nocombat = true,
             spacement = true
@@ -131,7 +131,7 @@ local function BuildGeneralOptions()
             name = "Split Groups",
             desc = "Splits the group evenly into 2 groups. It will even out tanks, melee, ranged and healers, as well as trying to balance the groups by class and specs",
             func = function(self)
-                NSI:SplitGroupInit(false, false, false)
+                NSI:SplitGroupInit(false, false, false, false)
             end,
             nocombat = true,
             spacement = true
@@ -141,7 +141,7 @@ local function BuildGeneralOptions()
             name = "Split Evens/Odds",
             desc = "Same as the button above but using groups 1/3/5 and 2/4/6.",
             func = function(self)
-                NSI:SplitGroupInit(false, false, true)
+                NSI:SplitGroupInit(false, false, true, false)
             end,
             nocombat = true,
             spacement = true

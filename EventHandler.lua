@@ -101,6 +101,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local IsLogin, IsReload = ...
         C_Timer.After(0.01, function()
             local diff = select(3, GetInstanceInfo()) or 0
+            if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
             local ForceHide = diff > 17 or diff < 14
             if ForceHide then self:HideAllReminders(true) end
             if self.LoadedProfile then
@@ -111,6 +112,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
+        if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
@@ -166,7 +168,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:LogTimeline(e, ...)
         local encID, encounterName, _, _, kill = ...
         local diff = select(3, GetInstanceInfo()) or 0
-        if internal then diff = 16 end
+        if internal or diff == 233 then diff = 16 end
         self.CustomEvents = {}
         if (diff < 14 or diff > 17) and diff ~= 220 then return end
         self:EncounterRegister(nil, nil, nil, nil, true)
@@ -218,7 +220,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
-        local diff= select(3, GetInstanceInfo()) or 0
+        local diff = select(3, GetInstanceInfo()) or 0
+        if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
         if self:DifficultyCheck(14) or diff == 23 then
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
@@ -259,7 +262,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
         end
-        local diff = select(3, GetInstanceInfo()) or 0
         local text = ""
         if UnitLevel("player") < 90 then return end
         self:CheckRaidBuff()
