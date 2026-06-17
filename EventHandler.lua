@@ -112,8 +112,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end)
     elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
         local diff = select(3, GetInstanceInfo()) or 0
-        if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
-        if internal then diff = 16 end
+        if internal or diff == 233 then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
         if (diff < 14 or diff > 17) and diff ~= 220 and not NSRT.Settings["Debug"] then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
@@ -221,7 +220,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "READY_CHECK" and wowevent then
         self.ProcessDone = false
         local diff = select(3, GetInstanceInfo()) or 0
-        if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
         if self:DifficultyCheck(14) or diff == 23 then
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
