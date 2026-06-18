@@ -1860,10 +1860,10 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
-        if self:DifficultyCheck({14, 15, 16}) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
-            self[Name]:Hide()
-        else
+        if self:DifficultyCheck({14, 15, 16}) or NSRT.ReminderSettings.ShowOutsideOfRaid then
             self[Name]:Show()
+        else
+            self[Name]:Hide()
         end
     elseif self[Name] then
         self[Name]:Hide()
