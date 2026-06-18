@@ -633,13 +633,15 @@ function NSI:SetProperties(F, info, skipsound, s)
     end)
     F.info = info
     F:SetScript("OnHide", function()
-        if info.glowunit then
+        if not F.IsUnitFrameIcon and info.glowunit then
             self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
         end
         if F.Swipe and info.DisplayType == "Icon" and NSRT.ReminderSettings.IconSettings.Glow > 0 then
             self:HideGlows(nil, nil, F)
         end
-        NSI:ArrangeStates(F.DisplayType)
+        if not F.IsUnitFrameIcon then
+            NSI:ArrangeStates(F.DisplayType)
+        end
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         if F.Ticks then
             for _, tick in ipairs(F.Ticks) do
@@ -648,11 +650,12 @@ function NSI:SetProperties(F, info, skipsound, s)
         end
     end)
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
-    if info.DisplayType == "Text" then
+    if F.IsUnitFrameIcon then
+        F.Icon:SetTexture(spellInfo and spellInfo.iconID or 134400)
+    elseif info.DisplayType == "Text" then
         F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
         F.Text:SetTextColor(unpack(info.textColors or s.textColors))
-    end
-    if info.DisplayType == "Circle" then
+    elseif info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
@@ -668,8 +671,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         F.Swipe:SetSwipeTexture(texture)
         F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
         F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
-    end
-    if info.DisplayType == "Icon" then
+    elseif info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
         F.Icon:SetTexture(spellInfo.iconID)
         if info.HideSwipe then
@@ -838,6 +840,7 @@ function NSI:CreateUnitFrameIcon(info, name)
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then
             self.UnitIcon[i]:ClearAllPoints()
             self.UnitIcon[i]:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
+            self.UnitIcon[i].IsUnitFrameIcon = true
             self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i]
         end
@@ -856,6 +859,7 @@ function NSI:CreateUnitFrameIcon(info, name)
                 edgeSize = 1
             })
             F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.IsUnitFrameIcon = true
             self:SetProperties(F, info, true, s)
             self.UnitIcon[i] = F
             return F
@@ -1111,6 +1115,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         F:Hide()
         return
     end
+    if F.IsUnitFrameIcon then return end
     local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
         F.Text:SetText(text)
