@@ -17,6 +17,11 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
+function NSI:IsMidnightS2()
+    local build = select(4, GetBuildInfo())
+    return build >= 120100
+end
+
 function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end

@@ -16,33 +16,59 @@ local BossIcons = {
     [3182] = 7448203, -- Belo'ren
     [3183] = 7448204, -- Midnight Falls
     [3159] = 7852823, -- Rotmire
+
+    [3470] = 7966621, -- Nek'zali the Soulcoiler
+    [3445] = 7966620, -- Entombed Sentinels
+    [3455] = 7966618, -- Vashnik the Malignant
+    [3497] = 7966622, -- The Lost Explorers
+    [3420] = 7966619, -- Sszorak
+    [3421] = 7966623, -- The Twin Fangs
+    [3429] = 7966625, -- The Bargained Crown
+    [3492] = 7966624, -- Ula'tek
+    [3379] = 2828147, -- Nymrissa Wavecaller - placeholder iconid from Uu'nat since none exists yet?
 }
 
-NSI.EncounterOrder = { -- list of encounters for sorting in alerts
-    [3176] = 1, -- Imperator
-    [3177] = 2, -- Vorasius
-    [3179] = 3, -- Fallen-King
-    [3178] = 4, -- Dragons
-    [3180] = 5, -- Lightblinded Vanguard
-    [3181] = 6, -- Crown of the Cosmos
-    [3306] = 7, -- Chimaerus
-    [3182] = 8, -- Belo'ren
-    [3183] = 9, -- Midnight Falls
-    [3159] = 10, -- Rotmire
+local season1EncounterIDs = {
+    3176, -- Imperator Averzian
+    3177, -- Vorasius
+    3179, -- Fallen-King Salhadaar
+    3178, -- Vaelgor & Ezzorak
+    3180, -- Lightblinded Vanguard
+    3181, -- Crown of the Cosmos
+    3306, -- Chimaerus
+    3182, -- Belo'ren
+    3183, -- Midnight Falls
+    3159, -- Rotmire
 }
 
-NSI.CurrentEncounterIDs = { -- All Encounter ID's from the current season. ID's not in this list are deletable and will not auto import.
-    [3176] = true,
-    [3177] = true,
-    [3179] = true,
-    [3178] = true,
-    [3180] = true,
-    [3181] = true,
-    [3306] = true,
-    [3182] = true,
-    [3183] = true,
-    [3159] = true,
+local season2EncounterIDs = {
+    3470, -- Nek'zali the Soulcoiler
+    3445, -- Entombed Sentinels
+    3455, -- Vashnik the Malignant
+    3497, -- The Lost Explorers
+    3420, -- Sszorak
+    3421, -- The Twin Fangs
+    3429, -- The Bargained Crown
+    3492, -- Ula'tek
+    3379, -- Nymrissa Wavecaller
 }
+
+local isSeason2 = NSI:IsMidnightS2()
+local orderedSeasons = isSeason2 and {season2EncounterIDs, season1EncounterIDs} or {season1EncounterIDs}
+
+NSI.EncounterOrder = {}
+local encounterOrder = 0
+for _, season in ipairs(orderedSeasons) do
+    for _, encID in ipairs(season) do
+        encounterOrder = encounterOrder + 1
+        NSI.EncounterOrder[encID] = encounterOrder
+    end
+end
+
+NSI.CurrentEncounterIDs = {} -- Old-season Reloe alerts are deletable and are not imported automatically.
+for _, encID in ipairs(isSeason2 and season2EncounterIDs or season1EncounterIDs) do
+    NSI.CurrentEncounterIDs[encID] = true
+end
 
 NSI.BossNames = {
     [3176] = "Imperator Averzian",
@@ -55,6 +81,16 @@ NSI.BossNames = {
     [3182] = "Belo'ren",
     [3183] = "Midnight Falls",
     [3159] = "Rotmire",
+
+    [3470] = "Nek'zali the Soulcoiler",
+    [3445] = "Entombed Sentinels",
+    [3455] = "Vashnik the Malignant",
+    [3497] = "The Lost Explorers",
+    [3420] = "Sszorak",
+    [3421] = "The Twin Fangs",
+    [3429] = "The Bargained Crown",
+    [3492] = "Ula'tek",
+    [3379] = "Nymrissa Wavecaller",
 }
 
 function NSI:CanDeleteEncounterAlert(alert, encID)

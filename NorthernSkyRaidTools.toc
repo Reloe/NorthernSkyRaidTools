@@ -1,4 +1,4 @@
-## Interface: 120005, 120007
+## Interface: 120007, 120100
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
@@ -50,6 +50,14 @@ EncounterAlerts/MidnightS1/Chimaerus.lua
 EncounterAlerts/MidnightS1/Beloren.lua
 EncounterAlerts/MidnightS1/MidnightFalls.lua
 EncounterAlerts/MidnightS1/Rotmire.lua
+EncounterAlerts/MidnightS2/NekzaliTheSoulcoiler.lua
+EncounterAlerts/MidnightS2/EntombedSentinels.lua
+EncounterAlerts/MidnightS2/VashnikTheMalignant.lua
+EncounterAlerts/MidnightS2/TheLostExplorers.lua
+EncounterAlerts/MidnightS2/Sszorak.lua
+EncounterAlerts/MidnightS2/TheTwinFangs.lua
+EncounterAlerts/MidnightS2/TheBargainedCrown.lua
+EncounterAlerts/MidnightS2/Ulatek.lua
 
 # UI - Core (must load first to create NSUI panel and shared utilities)
 UI/Core.lua
