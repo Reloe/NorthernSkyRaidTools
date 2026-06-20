@@ -108,7 +108,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             end
         end)
-    elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode, only send spec info in mythic, heroic and normal raids
+    elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
@@ -165,7 +165,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:LogTimeline(e, ...)
         local encID, encounterName, _, _, kill = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
-        if internal or diff == 233 then diff = 16 end
+        if internal then diff = 16 end
         self.CustomEvents = {}
         if not diff then return end
         self:EncounterRegister(nil, nil, nil, nil, true)
@@ -345,7 +345,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
-        if not self:DifficultyCheck({14, 15, 16}) then return end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck({14, 15, 16}) then return end
         local info = ...
