@@ -304,7 +304,7 @@ L["Runs a test for the currently active reminder. This will only show phase 1 ti
 L["Automatically Enable New Alerts"] = "自动启用新预警"
 L["Automatically enables all future Alerts unless they are specifically marked as being default disabled."] = "自动启用未来添加的所有预警，除非明确标记为默认禁用。"
 L["Enable Reloe-Alerts"] = "启用Reloe预设预警"
-L["Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."] = "确定要启用Reloe预设预警吗？不会覆盖修改过的预警。"
+L["Do you want to enable Reloe-Alerts now? If you made manual changes to an alert already this won't overwrite that."] = "确定要启用Reloe预设预警？不会覆盖修改过的预警。"
 L["Not Now"] = "取消"
 L["Enable"] = "启用"
 L["You are displaying notes and/or alerts through Timelinereminders so this preview makes little senses for you as it won't change what you're seeing. Either change your settings in Timelinereminders instead or disable the settings in there."] = "正在通过TimelineReminders显示方案/预警，此预览无法改变看到的内容，作用有限。请在TimelineReminders中更改/禁用设置。"
