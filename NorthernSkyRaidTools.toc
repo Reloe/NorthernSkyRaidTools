@@ -50,13 +50,14 @@ EncounterAlerts/MidnightS1/Chimaerus.lua
 EncounterAlerts/MidnightS1/Beloren.lua
 EncounterAlerts/MidnightS1/MidnightFalls.lua
 EncounterAlerts/MidnightS1/Rotmire.lua
+EncounterAlerts/MidnightS2/NymrissaWavecaller.lua
 EncounterAlerts/MidnightS2/NekzaliTheSoulcoiler.lua
 EncounterAlerts/MidnightS2/EntombedSentinels.lua
 EncounterAlerts/MidnightS2/VashnikTheMalignant.lua
 EncounterAlerts/MidnightS2/TheLostExplorers.lua
 EncounterAlerts/MidnightS2/Sszorak.lua
 EncounterAlerts/MidnightS2/TheTwinFangs.lua
-EncounterAlerts/MidnightS2/TheBargainedCrown.lua
+EncounterAlerts/MidnightS2/TheCoiledAltar.lua
 EncounterAlerts/MidnightS2/Ulatek.lua
 
 # UI - Core (must load first to create NSUI panel and shared utilities)

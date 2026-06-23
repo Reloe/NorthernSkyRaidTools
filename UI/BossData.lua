@@ -17,15 +17,15 @@ local BossIcons = {
     [3183] = 7448204, -- Midnight Falls
     [3159] = 7852823, -- Rotmire
 
+    [3379] = 2828147, -- Nymrissa Wavecaller - placeholder iconid from Uu'nat since none exists yet?
     [3470] = 7966621, -- Nek'zali the Soulcoiler
     [3445] = 7966620, -- Entombed Sentinels
     [3455] = 7966618, -- Vashnik the Malignant
     [3497] = 7966622, -- The Lost Explorers
     [3420] = 7966619, -- Sszorak
     [3421] = 7966623, -- The Twin Fangs
-    [3429] = 7966625, -- The Bargained Crown
+    [3429] = 7966625, -- The Coiled Altar
     [3492] = 7966624, -- Ula'tek
-    [3379] = 2828147, -- Nymrissa Wavecaller - placeholder iconid from Uu'nat since none exists yet?
 }
 
 local season1EncounterIDs = {
@@ -42,15 +42,15 @@ local season1EncounterIDs = {
 }
 
 local season2EncounterIDs = {
+    3379, -- Nymrissa Wavecaller
     3470, -- Nek'zali the Soulcoiler
     3445, -- Entombed Sentinels
     3455, -- Vashnik the Malignant
     3497, -- The Lost Explorers
     3420, -- Sszorak
     3421, -- The Twin Fangs
-    3429, -- The Bargained Crown
+    3429, -- The Coiled Altar
     3492, -- Ula'tek
-    3379, -- Nymrissa Wavecaller
 }
 
 local isSeason2 = NSI:IsMidnightS2()
@@ -82,15 +82,15 @@ NSI.BossNames = {
     [3183] = "Midnight Falls",
     [3159] = "Rotmire",
 
+    [3379] = "Nymrissa Wavecaller",
     [3470] = "Nek'zali the Soulcoiler",
     [3445] = "Entombed Sentinels",
     [3455] = "Vashnik the Malignant",
     [3497] = "The Lost Explorers",
     [3420] = "Sszorak",
     [3421] = "The Twin Fangs",
-    [3429] = "The Bargained Crown",
+    [3429] = "The Coiled Altar",
     [3492] = "Ula'tek",
-    [3379] = "Nymrissa Wavecaller",
 }
 
 function NSI:CanDeleteEncounterAlert(alert, encID)
