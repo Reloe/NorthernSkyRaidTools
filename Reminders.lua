@@ -1174,6 +1174,7 @@ function NSI:CacheSounds()
                         :gsub("|r", "")
                         :match("^[%s|]*(.-)[%s|]*$")
         self.LSMSoundCache[clean] = lsmKey
+        self.LSMSoundCache[strlower(clean)] = lsmKey
         local numeric = tonumber(clean)
         if numeric then
             self.LSMSoundCache[tostring(numeric)] = lsmKey

@@ -168,7 +168,7 @@ local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
 local function GetTTSSoundFile(sound)
     if not NSI.LSM or not sound then return end
 
-    sound = tostring(sound)
+    sound = strtrim(tostring(sound))
     local soundPath = NSI.LSM:Fetch("sound", sound, true)
     if soundPath then return soundPath end
 
@@ -176,7 +176,20 @@ local function GetTTSSoundFile(sound)
         NSI:CacheSounds()
     end
 
-    local lsmKey = NSI.LSMSoundCache and NSI.LSMSoundCache[sound]
+    local numeric = tonumber(sound)
+    local function GetCachedKey()
+        local key = NSI.LSMSoundCache and (NSI.LSMSoundCache[sound] or NSI.LSMSoundCache[strlower(sound)])
+        if not key and numeric then
+            key = NSI.LSMSoundCache and NSI.LSMSoundCache[tostring(numeric)]
+        end
+        return key
+    end
+
+    local lsmKey = GetCachedKey()
+    if not lsmKey and NSI.CacheSounds then
+        NSI:CacheSounds()
+        lsmKey = GetCachedKey()
+    end
     return lsmKey and NSI.LSM:Fetch("sound", lsmKey, true)
 end
 
