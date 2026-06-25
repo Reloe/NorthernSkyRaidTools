@@ -287,6 +287,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
+        if self.ReadyCheckAssignments then
+            for _, assignText in ipairs(self.ReadyCheckAssignments) do
+                if text == "" then
+                    text = assignText
+                else
+                    text = text.."\n"..assignText
+                end
+            end
+        end
         text = self:GearCheck(text)
         if text ~= "" then
             self:DisplayText(text)
