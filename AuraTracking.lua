@@ -1,9 +1,9 @@
 local _, NSI = ...
 
 local AuraTrackingFilters = {
-    "RAID",
-    "RAID_IN_COMBAT",
-    "RAID_PLAYER_DISPELLABLE",
+    "HARMFUL|RAID",
+    "HARMFUL|RAID_IN_COMBAT",
+    "HARMFUL|RAID_PLAYER_DISPELLABLE",
 }
 
 local DebugShowAllAuraTrackingBuffs = false
