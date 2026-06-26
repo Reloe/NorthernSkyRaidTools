@@ -175,6 +175,8 @@ function NSI:ProcessReminder()
     self.DisplayedReminder = ""
     self.DisplayedPersonalReminder = ""
     self.DisplayedExtraReminder = ""
+    self.ReadyCheckAssignments = {}
+    self.ReadyCheckAssignmentMap = {}
     local pers = NSRT.ReminderSettings.PersonalReminderFrame.enabled
     local shared = NSRT.ReminderSettings.ReminderFrame.enabled
     -- self:IsUsingTLReminders() makes it process the note but then stops the display at a later point. This allows still displaying the note.
@@ -202,13 +204,45 @@ function NSI:ProcessReminder()
         local myname = strlower(UnitName("player"))
         local myrole = strlower(UnitGroupRolesAssigned("player"))
         local myclass = select(3, UnitClass("player"))
+        local specTag = specid and tostring(specid)
         pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
+        local function TagMatchesPlayer(tagText, requireTag)
+            if not tagText or tagText == "" then return not requireTag end
+            tagText = strlower(tagText)
+            local tags = {}
+            for name in tagText:gmatch("(%S+)") do
+                tags[strtrim(name)] = true
+            end
+            return (tagText == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
+                tags[myname] or
+                tags[mynickname] or
+                tags[myrole] or
+                tags[specTag] or
+                tags[myclass and tostring(myclass)] or
+                tags[subgroup] or
+                (pos and tags[pos])
+        end
         local extranote = ""
         if not str:match('\n$') then
             str = str..'\n'
         end
         for line in str:gmatch('([^\n]*)\n') do
             local firstline = false
+            local assignText = line:match("assign:([^;]+)")
+            if assignText then
+                assignText = assignText:gsub("||c(%x%x%x%x%x%x%x%x)", "|c%1"):gsub("||r", "|r"):gsub("||T", "|T"):gsub("||t", "|t")
+                assignText = assignText:gsub("{(%a*%d*)}", function(token)
+                    local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
+                    if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
+                end)
+                assignText = strtrim(assignText)
+                local assignTag = line:match("tag:([^;]+)")
+                if assignText ~= "" and TagMatchesPlayer(assignTag, true) and not self.ReadyCheckAssignmentMap[assignText] then
+                    table.insert(self.ReadyCheckAssignments, assignText)
+                    self.ReadyCheckAssignmentMap[assignText] = true
+                end
+                firstline = true
+            end
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
                 if encID then
@@ -324,22 +358,7 @@ function NSI:ProcessReminder()
                         addedreminders[key] = true
                     end
                 end
-                local tags = {}
-                tag = strlower(tag)
-                for name in tag:gmatch("(%S+)") do
-                    tags[strtrim(name)] = true
-                end
-                specid = specid and tostring(specid)
-                myclass = myclass and strlower(myclass)
-                local mematch =
-                (tag == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
-                tags[myname] or
-                tags[mynickname] or
-                tags[myrole] or
-                tags[specid] or
-                tags[myclass] or
-                tags[subgroup] or
-                (pos and tags[pos])
+                local mematch = TagMatchesPlayer(tag)
                 if NSRT.ReminderSettings.ShowAllReminders or mematch then
                     if not addedpersonalreminders[key] then
                         addedpersonalreminders[key] = true
@@ -1155,6 +1174,11 @@ function NSI:CacheSounds()
                         :gsub("|r", "")
                         :match("^[%s|]*(.-)[%s|]*$")
         self.LSMSoundCache[clean] = lsmKey
+        self.LSMSoundCache[strlower(clean)] = lsmKey
+        local numeric = tonumber(clean)
+        if numeric then
+            self.LSMSoundCache[tostring(numeric)] = lsmKey
+        end
     end
 end
 
@@ -1189,13 +1213,7 @@ function NSI:PlayReminderSound(info, default)
     -- Fallback to TTS
     if info.TTS then
         local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext and info.rawtext ~= "" and info.rawtext) or ""
-        local sound = (not NSRT.ReminderSettings.TTSOverSoundfile) and self.LSM:Fetch("sound", TTS)
-        if sound and sound ~= 1 then
-            PlaySoundFile(sound, "Master")
-            return
-        else
-            NSAPI:TTS(TTS)
-        end
+        NSAPI:TTS(TTS)
     end
 end
 

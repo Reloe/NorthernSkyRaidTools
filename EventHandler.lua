@@ -13,6 +13,7 @@ f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_LOGOUT")
+f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 function NSI:UpdateDebugLogEvents()
     if NSRT.Settings.DebugLogs then
@@ -61,7 +62,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
-        self:InitPrivateAuras(true)
+        self:InitAuraSystem(true)
         self:UpdateLibSpecRegistration()
         if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
         if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
@@ -143,7 +144,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartReminders(self.Phase)
-        self:InitPrivateAuras()
+        self:InitAuraSystem()
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
             for i, name in ipairs(frames) do
@@ -169,7 +170,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.CustomEvents = {}
         if not diff then return end
         self:EncounterRegister(nil, nil, nil, nil, true)
-        self:InitPrivateAuras()
+        self:InitAuraSystem()
         self:HideAllReminders(true)
         C_Timer.After(1, function()
             if self:Restricted() then return end
@@ -253,6 +254,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if assigntable then self.Assignments = assigntable end
         end
     elseif e == "NSI_READY_CHECK" and internal then
+        self:ApplyPendingAuraTracking()
         if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
@@ -284,6 +286,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                     text = groupText
                 else
                     text = text.."\n"..groupText
+                end
+            end
+        end
+        if self.ReadyCheckAssignments then
+            for _, assignText in ipairs(self.ReadyCheckAssignments) do
+                if text == "" then
+                    text = assignText
+                else
+                    text = text.."\n"..assignText
                 end
             end
         end
@@ -329,11 +340,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
         self.GroupUpdateTimer = C_Timer.After(2, function()
             self.GroupUpdateTimer = nil
-            self:InitPrivateAuras()
+            self:InitAuraSystem()
             self:UpdateRaidBuffFrame()
         end)
         if self:Restricted() then return end
-
         if self.InviteInProgress then
             if not UnitInRaid("player") then
                 C_PartyInfo.ConvertToRaid()
@@ -345,6 +355,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
+    elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
+        self:ApplyPendingAuraTracking()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck({14, 15, 16}) then return end
         local info = ...
