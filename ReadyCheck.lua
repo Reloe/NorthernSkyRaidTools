@@ -454,6 +454,21 @@ local validsets = {
     [1979] = true, -- Demon Hunter
     [1984] = true, -- Monk
     [1981] = true, -- Evoker
+
+    -- Midnight S2
+    [2055] = true, -- Death Knight
+    [2056] = true, -- Demon Hunter
+    [2057] = true, -- Druid
+    [2058] = true, -- Evoker
+    [2059] = true, -- Hunter
+    [2060] = true, -- Mage
+    [2061] = true, -- Monk
+    [2062] = true, -- Paladin
+    [2063] = true, -- Priest
+    [2064] = true, -- Rogue
+    [2065] = true, -- Shaman
+    [2066] = true, -- Warlock
+    [2067] = true, -- Warrior
 }
 
 function NSI:TierCheck(Slot)

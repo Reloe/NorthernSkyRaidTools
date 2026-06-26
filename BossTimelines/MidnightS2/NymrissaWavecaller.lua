@@ -1,6 +1,6 @@
 local _, NSI = ... -- Internal namespace
 
--- The Bargained Crown (3429)
+-- Nymrissa Wavecaller (3379)
 
 local heroicAbilities = {
 }
@@ -14,7 +14,7 @@ local mythicAbilities = {
 local mythicPhases = {
 }
 
-NSI.BossTimelines[3429] = {
+NSI.BossTimelines[3379] = {
     Heroic = {
         duration = 600,
         phases = heroicPhases,

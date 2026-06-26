@@ -165,13 +165,42 @@ function NSAPI:TTSCountdown(num)
 end
 
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
+local function GetTTSSoundFile(sound)
+    if not NSI.LSM or not sound then return end
+
+    sound = strtrim(tostring(sound))
+    local soundPath = NSI.LSM:Fetch("sound", sound, true)
+    if soundPath then return soundPath end
+
+    if not NSI.LSMSoundCache and NSI.CacheSounds then
+        NSI:CacheSounds()
+    end
+
+    local numeric = tonumber(sound)
+    local function GetCachedKey()
+        local key = NSI.LSMSoundCache and (NSI.LSMSoundCache[sound] or NSI.LSMSoundCache[strlower(sound)])
+        if not key and numeric then
+            key = NSI.LSMSoundCache and NSI.LSMSoundCache[tostring(numeric)]
+        end
+        return key
+    end
+
+    local lsmKey = GetCachedKey()
+    if not lsmKey and NSI.CacheSounds then
+        NSI:CacheSounds()
+        lsmKey = GetCachedKey()
+    end
+    return lsmKey and NSI.LSM:Fetch("sound", lsmKey, true)
+end
+
 function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
         local secret = issecretvalue(sound)
         local forceTTS = NSRT.ReminderSettings and NSRT.ReminderSettings.TTSOverSoundfile
-        local handle = (not forceTTS and not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
+        local soundFile = (not forceTTS and not secret) and (GetTTSSoundFile(sound) or path..sound..".ogg")
+        local handle = soundFile and select(2, PlaySoundFile(soundFile, "Master"))
         if handle then
-            PlaySoundFile(path..sound..".ogg", "Master")
+            return
         else
             sound = tostring(sound)
             local num = voice or NSRT.Settings["TTSVoice"]

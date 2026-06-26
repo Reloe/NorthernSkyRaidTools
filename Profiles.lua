@@ -1,5 +1,49 @@
 local _, NSI = ...
 
+local function CopyAuraTrackingSetting(source, target, key)
+    if source[key] ~= nil then
+        target[key] = source[key]
+    end
+end
+
+local function CopyPrivateAuraSettingsToAuraTracking(source, target)
+    if not source or not target then return end
+    for _, key in ipairs({
+        "Spacing",
+        "Limit",
+        "GrowDirection",
+        "enabled",
+        "Width",
+        "Height",
+        "Anchor",
+        "relativeTo",
+        "xOffset",
+        "yOffset",
+        "HideBorder",
+        "HideTooltip",
+        "HideDurationText",
+    }) do
+        CopyAuraTrackingSetting(source, target, key)
+    end
+
+    if source.StackScale then
+        local fontSize = math.max(6, math.floor((source.StackScale * 16) + 0.5))
+        target.DurationFontSize = fontSize
+        target.StackFontSize = fontSize
+    end
+end
+
+function NSI:ConvertPrivateAuraSettingsToAuraTracking()
+    if not self:IsMidnightS2() or NSRT.AuraTrackingSettingsConverted then return end
+    NSRT.AuraTrackingSettings = NSRT.AuraTrackingSettings or {}
+    NSRT.AuraTrackingSettings.Player = NSRT.AuraTrackingSettings.Player or {}
+    NSRT.AuraTrackingSettings.Tank = NSRT.AuraTrackingSettings.Tank or {}
+
+    CopyPrivateAuraSettingsToAuraTracking(NSRT.PASettings, NSRT.AuraTrackingSettings.Player)
+    CopyPrivateAuraSettingsToAuraTracking(NSRT.PATankSettings, NSRT.AuraTrackingSettings.Tank)
+    NSRT.AuraTrackingSettingsConverted = true
+end
+
 
 function NSI:AddMissingDefaults()
     local defaults = {
@@ -301,6 +345,63 @@ function NSI:AddMissingDefaults()
             Anchor = "TOP",
             relativeTo = "TOP",
         },
+        AuraTrackingSettings = {
+            Player = {
+                Spacing = -1,
+                Limit = 5,
+                GrowDirection = "RIGHT",
+                enabled = false,
+                Width = 100,
+                Height = 100,
+                Zoom = 0,
+                Anchor = "CENTER",
+                relativeTo = "CENTER",
+                xOffset = -450,
+                yOffset = -100,
+                HideBorder = false,
+                BorderSize = 1,
+                HideTooltip = false,
+                HideDurationText = false,
+                DurationColor = {1, 1, 0.25, 1},
+                StackColor = {1, 1, 1, 1},
+                DurationFontSize = 16,
+                StackFontSize = 16,
+                TextFont = "Expressway",
+                TextFontFlags = "OUTLINE",
+                DurationXOffset = 0,
+                DurationYOffset = 0,
+                StackXOffset = -1,
+                StackYOffset = 1,
+            },
+            Tank = {
+                Spacing = -1,
+                Limit = 5,
+                GrowDirection = "LEFT",
+                enabled = false,
+                Width = 100,
+                Height = 100,
+                Zoom = 0,
+                Anchor = "CENTER",
+                relativeTo = "CENTER",
+                xOffset = -549,
+                yOffset = -199,
+                HideBorder = false,
+                BorderSize = 1,
+                HideTooltip = false,
+                HideDurationText = false,
+                DurationColor = {1, 1, 0.25, 1},
+                StackColor = {1, 1, 1, 1},
+                DurationFontSize = 16,
+                StackFontSize = 16,
+                TextFont = "Expressway",
+                TextFontFlags = "OUTLINE",
+                DurationXOffset = 0,
+                DurationYOffset = 0,
+                StackXOffset = -1,
+                StackYOffset = 1,
+            },
+        },
+        AuraTrackingSettingsConverted = false,
 
         -- Ready Check Settings
         ReadyCheckSettings = {
@@ -422,6 +523,7 @@ function NSI:AddMissingDefaults()
             end
         end
     end
+    self:ConvertPrivateAuraSettingsToAuraTracking()
 end
 
 function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)

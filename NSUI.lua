@@ -54,6 +54,8 @@ local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
 local BuildPrivateAurasOptions     = NSI.UI.Options.PrivateAuras.BuildOptions
 local BuildPrivateAurasCallback    = NSI.UI.Options.PrivateAuras.BuildCallback
+local BuildAuraTrackingOptions     = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildOptions
+local BuildAuraTrackingCallback    = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildCallback
 local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
 local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
@@ -85,6 +87,9 @@ local TABS_GROUPS                  = {
         { name = "Versions",  textKey = "Version Check" },
     },
 }
+if NSI:IsMidnightS2() and BuildAuraTrackingOptions then
+    table.insert(TABS_GROUPS[3], 2, { name = "AuraTracking", textKey = "Aura Tracking" })
+end
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
@@ -334,6 +339,7 @@ function NSUI:Init()
     local interruptdisplay_tab    = tabSystem:GetTabFrameByName("InterruptDisplay")
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
     local privateaura_tab         = tabSystem:GetTabFrameByName("PrivateAura")
+    local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
     local QoL_tab                 = tabSystem:GetTabFrameByName("QoL")
     local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
 
@@ -373,6 +379,7 @@ function NSUI:Init()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = BuildRaidBuffMenu()
     local privateaura_options1_table     = BuildPrivateAurasOptions()
+    local auratracking_options1_table    = auratracking_tab and BuildAuraTrackingOptions and BuildAuraTrackingOptions()
     local QoL_options1_table             = BuildQoLOptions()
     local WAImports_options1_table       = BuildWAImportsOptions()
     local option_tables = {
@@ -389,6 +396,9 @@ function NSUI:Init()
         QoL_options1_table,
         WAImports_options1_table,
     }
+    if auratracking_options1_table then
+        table.insert(option_tables, auratracking_options1_table)
+    end
     for _, options in ipairs(option_tables) do
         options.language_addonId = addonId
     end
@@ -405,6 +415,7 @@ function NSUI:Init()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
     local privateaura_callback           = BuildPrivateAurasCallback()
+    local auratracking_callback          = auratracking_tab and BuildAuraTrackingCallback and BuildAuraTrackingCallback()
     local QoL_callback                   = BuildQoLCallback()
     local WAImports_callback             = BuildWACallback()
 
@@ -446,6 +457,11 @@ function NSUI:Init()
     DF:BuildMenu(privateaura_tab, privateaura_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
+    if auratracking_tab and auratracking_options1_table then
+        DF:BuildMenu(auratracking_tab, auratracking_options1_table, 10, -10, tab_content_height, false, options_text_template,
+            options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+            auratracking_callback)
+    end
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         QoL_callback)
