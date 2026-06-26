@@ -160,15 +160,13 @@ function NSI:AcquireAuraTrackingButton(state, index, width, height, settings)
         regions.icon:SetAllPoints(button)
         button:SetIcon(regions.icon)
 
-        if button.SetDurationCooldown then
-            regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-            regions.cooldown:SetAllPoints(regions.icon)
-            regions.cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
-            regions.cooldown:SetReverse(true)
-            regions.cooldown:SetDrawEdge(false)
-            regions.cooldown:SetHideCountdownNumbers(true)
-            button:SetDurationCooldown(regions.cooldown)
-        end
+        regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
+        regions.cooldown:SetAllPoints(regions.icon)
+        regions.cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
+        regions.cooldown:SetReverse(true)
+        regions.cooldown:SetDrawEdge(false)
+        regions.cooldown:SetHideCountdownNumbers(true)
+        button:SetDurationCooldown(regions.cooldown)
 
         regions.border = CreateAuraTrackingBorder(button)
 
@@ -194,31 +192,22 @@ function NSI:AcquireAuraTrackingButton(state, index, width, height, settings)
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
     UpdateAuraTrackingBorder(regions.border, button, settings.HideBorder, settings.BorderSize)
 
-    if regions.count then
-        regions.count:ClearAllPoints()
-        regions.count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
-        regions.count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
-        regions.count:SetTextColor(unpack(settings.StackColor))
-        button:SetApplicationCount(regions.count, {})
-    end
+    regions.count:ClearAllPoints()
+    regions.count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
+    regions.count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
+    regions.count:SetTextColor(unpack(settings.StackColor))
+    button:SetApplicationCount(regions.count, {})
 
-    if regions.duration then
-        regions.duration:ClearAllPoints()
-        regions.duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
-        regions.duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
-        regions.duration:SetTextColor(unpack(settings.DurationColor))
-    end
+    regions.duration:ClearAllPoints()
+    regions.duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
+    regions.duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
+    regions.duration:SetTextColor(unpack(settings.DurationColor))
 
-    if button.SetMouseMotionEnabled then
-        button:SetMouseMotionEnabled(not settings.HideTooltip)
-    end
-
-    if regions.duration and button.SetDurationText and button.ClearDurationText then
-        if settings.HideDurationText then
-            button:ClearDurationText()
-        else
-            button:SetDurationText(regions.duration, { formatter = GetAuraTrackingDurationFormatter() })
-        end
+    button:SetMouseMotionEnabled(not settings.HideTooltip)
+    if settings.HideDurationText then
+        button:ClearDurationText()
+    else
+        button:SetDurationText(regions.duration, { formatter = GetAuraTrackingDurationFormatter() })
     end
 
     return button
@@ -407,9 +396,6 @@ function NSI:PreviewAuraTracking(key, show)
     mover:Show()
 
     self:MakeDraggable(mover, settings, true)
-    mover:SetScript("OnDragStart", function(frame)
-        frame:StartMoving()
-    end)
     mover:SetScript("OnDragStop", function(frame)
         self:StopFrameMove(frame, settings)
         self.PendingAuraTrackingUpdate = true
