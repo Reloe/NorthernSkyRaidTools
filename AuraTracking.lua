@@ -78,6 +78,34 @@ local function UpdateAuraTrackingBorder(border, parent, hidden, size)
     border.right:SetWidth(size)
 end
 
+local function GetAuraTrackingUnitName(unit)
+    if not unit then return "" end
+    return NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or ""
+end
+
+local function PositionAuraTrackingUnitName(fontString, parent, settings)
+    if not fontString then return end
+    local position = settings.NamePosition or "TOP"
+    local xOffset = settings.NameXOffset or 0
+    local yOffset = settings.NameYOffset or 0
+
+    fontString:ClearAllPoints()
+    if position == "BOTTOM" then
+        fontString:SetPoint("TOP", parent, "BOTTOM", xOffset, yOffset)
+        fontString:SetJustifyH("CENTER")
+    elseif position == "LEFT" then
+        fontString:SetPoint("RIGHT", parent, "LEFT", xOffset, yOffset)
+        fontString:SetJustifyH("RIGHT")
+    elseif position == "RIGHT" then
+        fontString:SetPoint("LEFT", parent, "RIGHT", xOffset, yOffset)
+        fontString:SetJustifyH("LEFT")
+    else
+        fontString:SetPoint("BOTTOM", parent, "TOP", xOffset, yOffset)
+        fontString:SetJustifyH("CENTER")
+    end
+    fontString:SetJustifyV("MIDDLE")
+end
+
 function NSI:UseAuraTrackingContainers()
     if not self:IsMidnightS2() then return false end
     if self.AuraTrackingContainersAvailable ~= nil then return self.AuraTrackingContainersAvailable end
@@ -147,7 +175,7 @@ function NSI:AcquireAuraTrackingContainer(key)
     return state
 end
 
-function NSI:AcquireAuraTrackingButton(state, index, width, height, settings)
+function NSI:AcquireAuraTrackingButton(state, index, width, height, settings, unit, key)
     state.buttons = state.buttons or {}
     state.buttonRegions = state.buttonRegions or {}
     local fontPath = self:GetAuraTrackingFontPath(settings)
@@ -163,7 +191,7 @@ function NSI:AcquireAuraTrackingButton(state, index, width, height, settings)
         regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
         regions.cooldown:SetAllPoints(regions.icon)
         regions.cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
-        regions.cooldown:SetReverse(true)
+        regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
         regions.cooldown:SetDrawEdge(false)
         regions.cooldown:SetHideCountdownNumbers(true)
         button:SetDurationCooldown(regions.cooldown)
@@ -180,6 +208,9 @@ function NSI:AcquireAuraTrackingButton(state, index, width, height, settings)
 
         regions.duration = regions.textOverlay:CreateFontString(nil, "OVERLAY")
         regions.duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
+
+        regions.unitName = regions.textOverlay:CreateFontString(nil, "OVERLAY")
+        regions.unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
 
         state.buttons[index] = button
         state.buttonRegions[index] = regions
@@ -203,7 +234,14 @@ function NSI:AcquireAuraTrackingButton(state, index, width, height, settings)
     regions.duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
     regions.duration:SetTextColor(unpack(settings.DurationColor))
 
+    PositionAuraTrackingUnitName(regions.unitName, button, settings)
+    regions.unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
+    regions.unitName:SetText(GetAuraTrackingUnitName(unit))
+    regions.unitName:SetShown(key == "tank" and settings.NameEnabled)
+
     button:SetMouseMotionEnabled(not settings.HideTooltip)
+    regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
+    regions.cooldown:SetShown(settings.EnableCooldownSwipe)
     if settings.HideDurationText then
         button:ClearDurationText()
     else
@@ -233,7 +271,7 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
 
     AddAuraTrackingFilters(container, settings.Limit)
     for i = 1, settings.Limit do
-        local button = self:AcquireAuraTrackingButton(state, i, width, height, settings)
+        local button = self:AcquireAuraTrackingButton(state, i, width, height, settings, unit, key)
         button:ClearAllPoints()
         local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
         local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
@@ -253,7 +291,9 @@ function NSI:InitAuraTracking()
 
     self:ClearAuraTracking()
     self:InitAuraTrackingContainer("player", NSRT.AuraTrackingSettings.Player, "player")
-    if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
+    if DebugShowAllAuraTrackingBuffs then
+        self:InitAuraTrackingContainer("player", NSRT.AuraTrackingSettings.Tank, "tank")
+    elseif self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
         local tankUnit
         for unit in self:IterateGroupMembers() do
             if UnitGroupRolesAssigned(unit) == "TANK" and not UnitIsUnit("player", unit) then
@@ -332,10 +372,11 @@ function NSI:CreateAuraTrackingPreviewFrame(parent)
 
     frame.Stack = frame.TextOverlay:CreateFontString(nil, "OVERLAY")
     frame.Duration = frame.TextOverlay:CreateFontString(nil, "OVERLAY")
+    frame.UnitName = frame.TextOverlay:CreateFontString(nil, "OVERLAY")
     return frame
 end
 
-function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index)
+function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key)
     local fontPath = self:GetAuraTrackingFontPath(settings)
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
@@ -344,9 +385,10 @@ function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index)
     UpdateAuraTrackingBorder(frame.Border, frame, settings.HideBorder, settings.BorderSize)
 
     frame.Cooldown:SetCooldown(GetTime(), AURA_TRACKING_PREVIEW_DURATION)
-    frame.Cooldown:SetReverse(true)
+    frame.Cooldown:SetReverse(settings.InverseCooldownSwipe)
     frame.Cooldown:SetDrawEdge(false)
     frame.Cooldown:SetHideCountdownNumbers(true)
+    frame.Cooldown:SetShown(settings.EnableCooldownSwipe)
 
     frame.Stack:ClearAllPoints()
     frame.Stack:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
@@ -360,6 +402,11 @@ function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index)
     frame.Duration:SetTextColor(unpack(settings.DurationColor))
     frame.Duration:SetText(AURA_TRACKING_PREVIEW_DURATION)
     frame.Duration:SetShown(not settings.HideDurationText)
+
+    PositionAuraTrackingUnitName(frame.UnitName, frame, settings)
+    frame.UnitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
+    frame.UnitName:SetText(GetAuraTrackingUnitName("player"))
+    frame.UnitName:SetShown(key == "Tank" and settings.NameEnabled)
 end
 
 function NSI:PreviewAuraTracking(key, show)
@@ -414,7 +461,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            self:UpdateAuraTrackingPreviewFrame(icon, settings, texture, i)
+            self:UpdateAuraTrackingPreviewFrame(icon, settings, texture, i, key)
             icon:Show()
         else
             icon:Hide()

@@ -49,6 +49,22 @@ local function build_font_flag_options(settingsKey)
     return t
 end
 
+local function build_name_position_options(settingsKey)
+    local t = {}
+    for _, position in ipairs({"TOP", "BOTTOM", "LEFT", "RIGHT"}) do
+        t[#t + 1] = {
+            value = position,
+            label = NSI:Loc(position),
+            phraseId = position,
+            onclick = function()
+                NSRT.AuraTrackingSettings[settingsKey].NamePosition = position
+                NSI:UpdateAuraTrackingDisplay(settingsKey)
+            end,
+        }
+    end
+    return t
+end
+
 local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, iconTexture)
     local settings = NSRT.AuraTrackingSettings[settingsKey]
 
@@ -177,7 +193,26 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         set = function(_, _, value) settings.HideDurationText = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
         nocombat = true,
     }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Enable Cooldown Swipe",
+        desc = "Shows a cooldown swipe on tracked aura icons.",
+        get = function() return settings.EnableCooldownSwipe end,
+        set = function(_, _, value) settings.EnableCooldownSwipe = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+        nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Inverse Cooldown Swipe",
+        desc = "Reverses the cooldown swipe direction on tracked aura icons.",
+        get = function() return settings.InverseCooldownSwipe end,
+        set = function(_, _, value) settings.InverseCooldownSwipe = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+        nocombat = true,
+    }
 
+    options[#options + 1] = { type = "breakline" }
     options[#options + 1] = { type = "label", get = function() return "Aura Tracking Text Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
     options[#options + 1] = {
         type = "select",
@@ -261,6 +296,51 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         set = function(_, _, value) settings.StackYOffset = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
         min = -200, max = 200, step = 1, nocombat = true,
     }
+
+    if settingsKey == "Tank" then
+        options[#options + 1] = { type = "label", get = function() return "Co-Tank Name Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
+        options[#options + 1] = {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Co-Tank Name",
+            desc = "Shows the co-tank name attached to visible aura icons.",
+            get = function() return settings.NameEnabled end,
+            set = function(_, _, value) settings.NameEnabled = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+            nocombat = true,
+        }
+        options[#options + 1] = {
+            type = "select",
+            name = "Name Position",
+            desc = "Position of the co-tank name relative to the aura icon.",
+            get = function() return settings.NamePosition end,
+            values = function() return build_name_position_options(settingsKey) end,
+            nocombat = true,
+        }
+        options[#options + 1] = {
+            type = "range",
+            name = "Name X-Offset",
+            desc = "Horizontal offset of the co-tank name.",
+            get = function() return settings.NameXOffset end,
+            set = function(_, _, value) settings.NameXOffset = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+            min = -200, max = 200, step = 1, nocombat = true,
+        }
+        options[#options + 1] = {
+            type = "range",
+            name = "Name Y-Offset",
+            desc = "Vertical offset of the co-tank name.",
+            get = function() return settings.NameYOffset end,
+            set = function(_, _, value) settings.NameYOffset = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+            min = -200, max = 200, step = 1, nocombat = true,
+        }
+        options[#options + 1] = {
+            type = "range",
+            name = "Name Font Size",
+            desc = "Font size of the co-tank name.",
+            get = function() return settings.NameFontSize end,
+            set = function(_, _, value) settings.NameFontSize = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+            min = 6, max = 80, step = 1, nocombat = true,
+        }
+    end
 end
 
 local function BuildAuraTrackingOptions()
