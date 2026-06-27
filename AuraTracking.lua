@@ -7,6 +7,7 @@ local AuraTrackingFilters = {
 }
 
 local DebugShowAllAuraTrackingBuffs = false
+local DebugShowAllAuraTrackingDebuffs = false
 
 local AuraTrackingDurationFormatter
 local function GetAuraTrackingDurationFormatter()
@@ -32,6 +33,9 @@ local function AddAuraTrackingFilters(container, limit)
     container:ClearAuraFilters()
     if DebugShowAllAuraTrackingBuffs then
         container:AddAuraFilter("HELPFUL", { maxFrameCount = limit })
+        return
+    elseif DebugShowAllAuraTrackingDebuffs then
+        container:AddAuraFilter("HARMFUL", { maxFrameCount = limit })
         return
     end
     for _, filter in ipairs(AuraTrackingFilters) do
