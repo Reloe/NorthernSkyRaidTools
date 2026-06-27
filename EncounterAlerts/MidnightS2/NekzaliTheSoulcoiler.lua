@@ -25,11 +25,6 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end)
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    self.NekzaliCastStartTime = nil
-    self:EncounterRegister("NekzaliPhaseDetect", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_SUCCEEDED"}, false)
-end
-
 local detectedDurations = {
     [14] = { [1.5] = { time = 45, phase = function(num) return 2 end } },
     [15] = { [1.5] = { time = 45, phase = function(num) return 2 end } },

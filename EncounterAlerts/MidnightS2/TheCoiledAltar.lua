@@ -115,10 +115,6 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     end)
 end
 
-NSI.EncounterAlertStop[encID] = function(self) -- on ENCOUNTER_END
-    self:EncounterRegister("CoiledAltarPhaseDetect", "UNIT_SPELLCAST_CHANNEL_START", false)
-end
-
 local detectedDurations = {
     [14] = {
         [1] = { time = 70, phase = function() return 2 end },
