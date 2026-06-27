@@ -26,6 +26,33 @@ function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
 
+function NSI:GetPrimaryPhase(phase)
+    if type(phase) == "table" then
+        local primaryPhase
+        for _, value in ipairs(phase) do
+            value = tonumber(value)
+            if value and (not primaryPhase or value < primaryPhase) then
+                primaryPhase = value
+            end
+        end
+        return primaryPhase
+    end
+    return phase
+end
+
+function NSI:GetSortedPhaseKeys(phaseTimers)
+    local phases = {}
+    for phase, timers in pairs(phaseTimers or {}) do
+        if type(timers) == "table" then
+            phases[#phases + 1] = phase
+        end
+    end
+    table.sort(phases, function(a, b)
+        return (tonumber(a) or 0) < (tonumber(b) or 0)
+    end)
+    return phases
+end
+
 function NSI:SortTable(t, reversed)
     table.sort(t,
         function(a, b)

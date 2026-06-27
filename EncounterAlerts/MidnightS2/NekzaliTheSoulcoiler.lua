@@ -43,7 +43,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Nek'zali", internalID = "RestlessAmani", name = "Add-Spawn", text = "Adds", DisplayType = "Text", encID = encID, phase = {1, 2}, TTS = false, dur = 8, customIcon = 1295397,
-        timers = {
+        phaseTimers = {
             [15] = {
                 {45, 81.6, 118.3, 154.9, 191.5, 228.2},
                 {32, 82, 132, 182},

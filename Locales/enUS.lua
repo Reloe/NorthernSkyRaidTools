@@ -765,6 +765,8 @@ L["Add"] = "Add"
 L["Boss"] = "Boss"
 L["Difficulty"] = "Difficulty"
 L["Phase"] = "Phase"
+L["Phase-specific timers"] = "Phase-specific timers"
+L["When enabled, adding new timers will add them for the specified phase on the right."] = "When enabled, adding new timers will add them for the specified phase on the right."
 L["Trigger Times (seconds into phase)"] = "Trigger Times (seconds into phase)"
 L["Add time (s)"] = "Add time (s)"
 -- Sound tab

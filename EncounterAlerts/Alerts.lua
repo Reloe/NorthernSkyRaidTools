@@ -21,6 +21,15 @@ function NSI:DefaultLoadConditions()
     }
 end
 
+local function IsPhaseTimerTable(timerData)
+    for _, value in pairs(timerData or {}) do
+        if type(value) == "table" then
+            return true
+        end
+    end
+    return false
+end
+
 -- Builds a flat alert definition for use with AddEncounterAlert.
 -- displayType: "Text", "Bar", "Icon", or "Circle"
 -- timers: { [phase] = {times...} }
@@ -30,15 +39,21 @@ function NSI:MakeEncounterAlert(data, timers)
         a[k] = v
     end
 
+    a.phase = data.phases or data.phase
+    if not a.phase and data.phaseTimers then
+        a.phase = self:GetSortedPhaseKeys(data.phaseTimers)
+    end
+    a.phases = nil
+    local primaryPhase = self:GetPrimaryPhase(a.phase)
     local group = data.group
     if group and type(group) == "table" then
-        group = data.phase and group[data.phase]
+        group = primaryPhase and group[primaryPhase]
     end
     local name = data.name
     if name and type(name) == "table" then
-        name = data.phase and name[data.phase]
-    elseif data.phaseNames and data.phase then
-        name = "P"..data.phase.." "..name
+        name = primaryPhase and name[primaryPhase]
+    elseif data.phaseNames and primaryPhase and type(a.phase) ~= "table" then
+        name = "P"..primaryPhase.." "..name
     end
     local isEnabled
     if data.enabled ~= nil then
@@ -152,12 +167,36 @@ function NSI:AddEncounterAlert(data)
         end
         return
     end
+    if data.phaseTimers then
+        for diffID, phaseTimers in pairs(data.phaseTimers or {}) do
+            if IsPhaseTimerTable(phaseTimers) then
+                local phaseDataCopy = {}
+                for k, v in pairs(data) do
+                    phaseDataCopy[k] = v
+                end
+                phaseDataCopy.phase = data.phases or (type(data.phase) == "table" and data.phase) or self:GetSortedPhaseKeys(phaseTimers)
+                phaseDataCopy.phases = nil
+                phaseDataCopy.phaseTimers = phaseTimers
+                phaseDataCopy.timers = nil
+                local alertDef = self:MakeEncounterAlert(phaseDataCopy)
+                alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
+                self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
+            end
+        end
+        return
+    end
     for diffID, phaseData in pairs(data.timers or {}) do
-        if phaseData[1] and type(phaseData[1]) == "table" then -- multiple phases were provided
-            for phase, timers in ipairs(phaseData) do
+        if IsPhaseTimerTable(phaseData) then -- different timers were provided for multiple phases
+            for _, phase in ipairs(self:GetSortedPhaseKeys(phaseData)) do
+                local timers = phaseData[phase]
                 if next(timers) then
-                    data.phase = phase
-                    local alertDef = self:MakeEncounterAlert(data, timers)
+                    local phaseDataCopy = {}
+                    for k, v in pairs(data) do
+                        phaseDataCopy[k] = v
+                    end
+                    phaseDataCopy.phase = phase
+                    phaseDataCopy.phases = nil
+                    local alertDef = self:MakeEncounterAlert(phaseDataCopy, timers)
                     alertDef.internalID = data.internalID.."_P"..phase
                     alertDef.id = data.id or self:GetEncounterAlertID(data.encID)
                     self:InsertEncounterAlert(data.encID, diffID, alertDef, true)
@@ -193,6 +232,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         return
     elseif existing then
         existing.timers = alertDef.timers
+        existing.phaseTimers = alertDef.phaseTimers
         existing.id = alertDef.id
         existing.isConditional = alertDef.isConditional
         existing.extraOptions = alertDef.extraOptions

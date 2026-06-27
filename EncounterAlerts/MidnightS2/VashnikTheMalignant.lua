@@ -9,8 +9,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local data = {group = "Vashnik Tanks", internalID = "TankHits", name = "Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
-        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
+    local data = {group = "Vashnik", internalID = "TankHits", name = "Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+        textColors = {1, 0, 0, 1}, loadConditions = tankConditions, customIcon = 1280935,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
@@ -22,7 +22,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik Tanks", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6,
+    local data = {group = "Vashnik", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss1.",
@@ -35,7 +35,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+    local data = {group = "Vashnik", internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, customIcon = 1284663,
         timers = {
             [15] = {24.0, 108.0, 192.1, 276.1, 360.1, 444.1},
             [16] = {24.0, 108.0, 192.1, 276.1, 360.1, 444.1},
@@ -43,7 +43,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Infection", text = "Infection", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+    local data = {group = "Vashnik", internalID = "Infection", text = "Infection", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, customIcon = 1282114,
         timers = {
             [15] = {48.7, 72.7, 102.7, 132.7, 156.7, 186.7, 216.7, 240.7, 270.7, 300.7, 324.7, 354.7, 384.7, 408.7, 438.7},
             [15] = {48.7, 72.7, 102.7, 132.7, 156.7, 186.7, 216.7, 240.7, 270.7, 300.7, 324.7, 354.7, 384.7, 408.7, 438.7},
@@ -51,7 +51,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "Vashnik", internalID = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, customIcon = 1282516,
         timers = {
             [15] = {35.1, 79.0, 119.1, 163.1, 203.0, 247.0, 287.1, 331.0, 371.0, 415.0},
             [16] = {35.1, 79.0, 119.1, 163.1, 203.0, 247.0, 287.1, 331.0, 371.0, 415.0},
@@ -59,7 +59,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+    local data = {group = "Vashnik", internalID = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, customIcon = 1281908,
         timers = {
             [15] = {16.0, 46.0, 67.0, 98.1, 130.1, 151.1, 182.0, 214.1, 235.1, 266.1, 298.1, 319.1, 350.1, 382.1, 403.1},
             [16] = {16.0, 46.0, 67.0, 98.1, 130.1, 151.1, 182.0, 214.1, 235.1, 266.1, 298.1, 319.1, 350.1, 382.1, 403.1},

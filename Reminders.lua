@@ -1784,10 +1784,28 @@ function NSI:FireEncounterAlerts(encID, id)
     for _, entry in pairs(diffTable) do
         if type(entry) == "table" and entry.enabled and not entry.isSpecialDisplay then
             if self:EvaluateLoad(entry) then
-                local alert = CopyTable(entry)
-                alert.encID = encID
-                alert.phase = entry.phase or 1
-                self:AddRemindersFromTable(alert, entry.timers or {})
+                if entry.phaseTimers then
+                    for _, phase in ipairs(self:GetSortedPhaseKeys(entry.phaseTimers)) do
+                        local timers = entry.phaseTimers[phase]
+                        local alert = CopyTable(entry)
+                        alert.encID = encID
+                        alert.phase = tonumber(phase) or phase
+                        alert.phaseTimers = nil
+                        self:AddRemindersFromTable(alert, timers)
+                    end
+                else
+                    local alert = CopyTable(entry)
+                    alert.encID = encID
+                    if type(entry.phase) == "table" then
+                        for _, phase in ipairs(entry.phase) do
+                            alert.phase = phase
+                            self:AddRemindersFromTable(alert, entry.timers or {})
+                        end
+                    else
+                        alert.phase = entry.phase or 1
+                        self:AddRemindersFromTable(alert, entry.timers or {})
+                    end
+                end
             end
         end
     end
