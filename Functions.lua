@@ -489,6 +489,15 @@ function NSI:LogTimeline(e, ...)
             data.id = "nil"
             data.dur = info.duration
             data.severity = info.severity
+        elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+            local bossUnits = {}
+            for i = 1, 8 do
+                local unit = "boss" .. i
+                if UnitExists(unit) then
+                    bossUnits[#bossUnits + 1] = unit
+                end
+            end
+            data.id = #bossUnits > 0 and table.concat(bossUnits, ", ") or "none"
         else
             data.id = info
         end

@@ -1,5 +1,6 @@
 local _, NSI = ... -- Internal namespace
 local f = NSI.NSRTFrame
+local debugLogFrame = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("READY_CHECK")
@@ -17,14 +18,20 @@ f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 function NSI:UpdateDebugLogEvents()
     if NSRT.Settings.DebugLogs then
-        f:RegisterEvent("ENCOUNTER_WARNING")
+        debugLogFrame:RegisterEvent("ENCOUNTER_WARNING")
+        debugLogFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     else
-        f:UnregisterEvent("ENCOUNTER_WARNING")
+        debugLogFrame:UnregisterEvent("ENCOUNTER_WARNING")
+        debugLogFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
     end
 end
 
 f:SetScript("OnEvent", function(self, e, ...)
     NSI:EventHandler(e, true, false, ...)
+end)
+
+debugLogFrame:SetScript("OnEvent", function(self, e, ...)
+    NSI:LogTimeline(e, ...)
 end)
 
 function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether the event comes from addon comms. We don't want to allow blizzard events to be fired manually
@@ -386,8 +393,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
-    elseif e == "ENCOUNTER_WARNING" and wowevent then
-        self:LogTimeline(e, ...)
     elseif e == "QoL_Comms" and internal then
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
