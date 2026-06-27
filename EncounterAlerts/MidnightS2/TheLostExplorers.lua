@@ -15,7 +15,7 @@ local detectedDurations = {
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    if e ~= "ENCOUNTER_TIMELINE_EVENT_ADDED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
+    if e ~= "ENCOUNTER_TIMELINE_EVENT_ADDED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 80)) or (not self.EncounterID) or (not self.Phase) then return end
     local difficultyID = self:DifficultyCheck({14, 15, 16})
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
     local phaseinfo = detectedDurations[difficultyID][1]
