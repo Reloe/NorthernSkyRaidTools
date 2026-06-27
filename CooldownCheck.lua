@@ -167,14 +167,14 @@ function NSI:CheckCooldowns()
         end
         if highest.time > 0 then
             if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
-            SendChatMessage("NSRT: My "..highest.name.." is on cooldown for "..Round(highest.time).." seconds.", "RAID")
+            C_ChatInfo.SendChatMessage("NSRT: My "..highest.name.." is on cooldown for "..Round(highest.time).." seconds.", "RAID")
         end
     end
 end
 
 function NSI:AddTrackedCooldown(spec, id, type, offset)
-    spec = tonumber(spec)
-    id = tonumber(id)
+    spec = spec and tonumber(spec) or 0
+    id = id and tonumber(id) or 0
     offset = tonumber(offset)
     type = string.lower(type)
 
@@ -201,8 +201,8 @@ end
 
 
 function NSI:RemoveTrackedCooldown(spec, id, type)
-    spec = tonumber(spec)
-    id = tonumber(id)
+    spec = spec and tonumber(spec) or 0
+    id = id and tonumber(id) or 0
     type = string.lower(type)
     if NSRT.CooldownList[spec] and NSRT.CooldownList[spec][type] and NSRT.CooldownList[spec][type][id] then
         NSRT.CooldownList[spec][type][id] = nil

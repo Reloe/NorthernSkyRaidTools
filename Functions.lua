@@ -117,7 +117,7 @@ function NSI:UpdateLibSpecRegistration()
                 end
             end
             if u then
-                local G = UnitGUID(u)
+                local G = UnitGUID(u) or ""
                 self.specs[G] = specId
                 NSAPI.specs = self.specs
             end
