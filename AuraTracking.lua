@@ -121,12 +121,6 @@ function NSI:UseAuraTrackingContainers()
                 return false
             end
         end
-    elseif LoadAddOn and IsAddOnLoaded and not IsAddOnLoaded("Blizzard_AuraContainer") then
-        local loaded = LoadAddOn("Blizzard_AuraContainer")
-        if not loaded then
-            self.AuraTrackingContainersAvailable = false
-            return false
-        end
     end
 
     local containerOk, container = pcall(CreateFrame, "AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
