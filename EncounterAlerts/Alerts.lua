@@ -37,6 +37,8 @@ function NSI:MakeEncounterAlert(data, timers)
     local name = data.name
     if name and type(name) == "table" then
         name = data.phase and name[data.phase]
+    elseif data.phaseNames and data.phase then
+        name = "P"..data.phase.." "..name
     end
     local isEnabled
     if data.enabled ~= nil then

@@ -5,6 +5,137 @@ local encID = 3445
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+
+    local data = {group = "Sentinels Tank Hits", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+        textColors = {1, 0, 0, 1}, phaseNames = true,
+        isConditional = {
+            text = "This Alert only shows if you have threat on boss1.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
+        },
+        timers = {
+            [15] ={
+                {6, 28},
+                {6, 28, 49.9, 71.8},
+                {6, 28, 49.9, 71.8},
+                {6, 28, 49.9, 71.8},
+                {6, 28, 49.9, 71.8},
+            },
+            [16] ={
+                {6, 28},
+                {6, 28, 49.9, 71.8},
+                {6, 28, 49.9, 71.8},
+                {6, 28, 49.9, 71.8},
+                {6, 28, 49.9, 71.8},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+    local data = {group = "Sentinels Tank Hits", internalID = "BloodHits", name = "Blood Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+        textColors = {1, 0, 0, 1}, phaseNames = true,
+        isConditional = {
+            text = "This Alert only shows if you have threat on boss2.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
+        },
+        timers = {
+            [15] ={
+                {8.5, 30.4},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+            },
+            [16] ={
+                {8.5, 30.4},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Sentinels Blood Soak", internalID = "BloodSoak", name = "Blood Soak", text = "Blood-Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, phaseNames = true,
+        textColors = {1, 0.37, 0.25, 1},
+        timers = {
+            [15] ={
+                {26.25},
+                {26.25, 67.5},
+                {26.25, 67.5},
+                {26.25, 67.5},
+                {26.25, 67.5},
+            },
+            [16] ={
+                {26.25},
+                {26.25, 67.5},
+                {26.25, 67.5},
+                {26.25, 67.5},
+                {26.25, 67.5},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Sentinels Poison Add", internalID = "PoisonAdd", name = "Poison Add", text = "Poison Add", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+        textColors = {0.62, 1, 0.25, 1},
+        timers = {
+            [15] ={
+                {13.7},
+                {13.7, 67},
+                {13.7, 67},
+                {13.7, 67},
+                {13.7, 67},
+            },
+            [16] ={
+                {13.7},
+                {13.7, 67},
+                {13.7, 67},
+                {13.7, 67},
+                {13.7, 67},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Sentinels Orb Spawn", internalID = "OrbSpawn", name = "Orb Spawn", text = "Orbs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, phaseNames = true,
+        timers = {
+            [15] ={
+                {17.1},
+                {17.1, 50},
+                {17.1, 50},
+                {17.1, 50},
+                {17.1, 50},
+            },
+            [16] ={
+                {17.1},
+                {17.1, 50},
+                {17.1, 50},
+                {17.1, 50},
+                {17.1, 50},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Sentinels Transition Debuffs", internalID = "TransitionDebuffs", name = "Transition Debuffs", text = "Number Game", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 8, phaseNames = true,
+        timers = {
+            [15] ={
+                {46.2},
+                {91},
+                {91},
+                {91},
+                {91},
+            },
+            [16] ={
+                {46.2},
+                {91},
+                {91},
+                {91},
+                {91},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
 end
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
