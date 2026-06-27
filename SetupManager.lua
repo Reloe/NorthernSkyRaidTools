@@ -430,6 +430,45 @@ MissingBuffLabel:SetPoint("TOPLEFT", NSI.RaidBuffCheck, "TOPLEFT", 2, -60)
 
 local className = {"WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE", "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER"}
 local MissingTexts = {"Battle Shout", "Devotion Aura", "Hunter's Mark", "Rogue Poison", "Stamina", "Grip/AS Slow", "Skyfury", "Intellect", "Warlock", "Phys Debuff", "Mark of the Wild", "Magic Debuff", "Evoker"}
+local RaidBuffPanelHosts = {}
+
+function NSAPI:RegisterRaidBuffPanelHost(addonName, provider)
+    if type(addonName) ~= "string" or addonName == "" then return end
+    if provider == nil then
+        RaidBuffPanelHosts[addonName] = nil
+        NSI:UpdateRaidBuffFrame()
+        return
+    end
+    if type(provider) ~= "table" or type(provider.getParent) ~= "function" then return end
+    RaidBuffPanelHosts[addonName] = provider
+    NSI:UpdateRaidBuffFrame()
+end
+
+function NSAPI:UpdateRaidBuffPanel()
+    return NSI:UpdateRaidBuffFrame()
+end
+
+local function FindRegisteredRaidBuffPanelParent()
+    for _, provider in pairs(RaidBuffPanelHosts) do
+        local visible = true
+        if provider.isVisible then
+            local ok, result = pcall(provider.isVisible)
+            visible = ok and result
+        end
+        if visible then
+            local ok, parent = pcall(provider.getParent)
+            if ok and parent then
+                local height
+                if type(provider.getHeight) == "function" then
+                    local heightOk, result = pcall(provider.getHeight, parent)
+                    if heightOk then height = result end
+                end
+                return parent, height
+            end
+        end
+    end
+end
+
 function NSI:UpdateRaidBuffFrame()
     if not NSRT.Settings.MissingRaidBuffs or not UnitInRaid("player") or not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings.Debug) then
         self.RaidBuffCheck:Hide()
@@ -442,11 +481,12 @@ function NSI:UpdateRaidBuffFrame()
         return
     end
     local LFGFrame = PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == 1
-    local parent = (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
+    local parent, height = FindRegisteredRaidBuffPanelParent()
+    parent = parent or (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
     if parent then
         self.RaidBuffCheck:ClearAllPoints()
         self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)
-        self.RaidBuffCheck:SetHeight(parent:GetHeight()*parent:GetScale()-4)
+        self.RaidBuffCheck:SetHeight(height or (parent:GetHeight()*parent:GetScale()-4))
         self.RaidBuffCheck:Show()
         local count = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
         -- Automatically detect difficulty if player is zoned in a Raid, otherwise use the setting
