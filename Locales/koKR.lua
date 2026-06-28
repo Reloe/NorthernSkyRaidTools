@@ -761,6 +761,8 @@ L["Add"] = "추가"
 L["Boss"] = "보스"
 L["Difficulty"] = "난이도"
 L["Phase"] = "페이즈"
+L["Phase-specific timers"] = "페이즈별 타이머"
+L["When enabled, adding new timers will add them for the specified phase on the right."] = "활성화하면 새 타이머를 추가했을 때 오른쪽에 지정된 페이즈의 타이머로 추가됩니다."
 L["Trigger Times (seconds into phase)"] = "트리거 시간 (페이즈 시작 시점부터 초 단위로)"
 L["Add time (s)"] = "시간 추가 (초)"
 -- Sound tab
