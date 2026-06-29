@@ -470,6 +470,26 @@ function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
     local id = self:DifficultyCheck({14, 15, 16})
     if not id then return end
+    local function GetBossUnitState()
+        local bossUnits = {}
+        for i = 1, 8 do
+            local unit = "boss" .. i
+            if UnitExists(unit) then
+                local reaction = UnitReaction("player", unit)
+                local state = unit
+                if reaction then
+                    state = state .. ":r" .. reaction
+                end
+                if UnitCanAttack("player", unit) then
+                    state = state .. ":attack"
+                elseif UnitIsFriend("player", unit) then
+                    state = state .. ":friend"
+                end
+                bossUnits[#bossUnits + 1] = state
+            end
+        end
+        return #bossUnits > 0 and table.concat(bossUnits, ", ") or "none"
+    end
     if e == "ENCOUNTER_START" then
         local encID, encName, difficultyID, groupSize = ...
         local now = GetTime()
@@ -521,14 +541,10 @@ function NSI:LogTimeline(e, ...)
             data.dur = info.duration
             data.severity = info.severity
         elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
-            local bossUnits = {}
-            for i = 1, 8 do
-                local unit = "boss" .. i
-                if UnitExists(unit) then
-                    bossUnits[#bossUnits + 1] = unit
-                end
-            end
-            data.id = #bossUnits > 0 and table.concat(bossUnits, ", ") or "none"
+            data.id = GetBossUnitState()
+        elseif e == "UNIT_FACTION" or e == "UNIT_FLAGS" or e == "UNIT_TARGETABLE_CHANGED" then
+            data.id = info or "nil"
+            data.state = GetBossUnitState()
         else
             data.id = info
         end

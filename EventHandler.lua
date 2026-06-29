@@ -20,9 +20,15 @@ function NSI:UpdateDebugLogEvents()
     if NSRT.Settings.DebugLogs then
         debugLogFrame:RegisterEvent("ENCOUNTER_WARNING")
         debugLogFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+        debugLogFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
+        debugLogFrame:RegisterUnitEvent("UNIT_FACTION", "boss1", "boss2", "boss3", "boss4")
+        debugLogFrame:RegisterUnitEvent("UNIT_FLAGS", "boss1", "boss2", "boss3", "boss4")
     else
         debugLogFrame:UnregisterEvent("ENCOUNTER_WARNING")
         debugLogFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+        debugLogFrame:UnregisterEvent("UNIT_TARGETABLE_CHANGED")
+        debugLogFrame:UnregisterEvent("UNIT_FACTION")
+        debugLogFrame:UnregisterEvent("UNIT_FLAGS")
     end
 end
 
