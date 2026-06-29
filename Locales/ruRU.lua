@@ -787,6 +787,8 @@ L["Add"] = "Добавить"
 L["Boss"] = "Босс"
 L["Difficulty"] = "Сложность"
 L["Phase"] = "Фаза"
+L["Phase-specific timers"] = "Таймеры по фазам"
+L["When enabled, adding new timers will add them for the specified phase on the right."] = "При включении этой функции добавление новых таймеров будет происходить для указанной фазы справа."
 L["Trigger Times (seconds into phase)"] = "Время срабатывания (секунды от начала фазы)"
 L["Add time (s)"] = "Добавить время (сек.)"
 -- Sound tab
