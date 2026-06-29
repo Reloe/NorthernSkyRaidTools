@@ -104,14 +104,10 @@ end
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     self:EncounterRegister("CoiledAltarPhaseDetect", "UNIT_SPELLCAST_CHANNEL_START", true, "boss2")
     self:EncounterFunction("CoiledAltarPhaseDetect", function(_, e, unit)
-        if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self.Phase ~= 2 then return end
-        C_Timer.After(3.5, function()
-            if self.EncounterID ~= encID or self.Phase ~= 2 then return end
-            if not UnitChannelInfo("boss2") then return end
-            self.Phase = 2.5
-            self:StartReminders(self.Phase)
-            self.PhaseSwapTime = GetTime()
-        end)
+        if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self.Phase ~= 2 or self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
+        self.Phase = 2.5
+        self:StartReminders(self.Phase)
+        self.PhaseSwapTime = GetTime()
     end)
 end
 

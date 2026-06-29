@@ -53,6 +53,10 @@ function NSI:GetSortedPhaseKeys(phaseTimers)
     return phases
 end
 
+function NSI:GetActiveEncounterTimelineEventCount()
+    return C_EncounterTimeline and C_EncounterTimeline.GetEventCountBySource and C_EncounterTimeline.GetEventCountBySource(0) or 0
+end
+
 function NSI:SortTable(t, reversed)
     table.sort(t,
         function(a, b)
