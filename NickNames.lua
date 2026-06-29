@@ -439,7 +439,6 @@ function NSI:InitNickNames()
         end
     end
 
-    C_AddOns.LoadAddOn("UnhaltedUnitFrames")
     if UUFG then
         UUFG:AddTag("NSNickName", "UNIT_NAME_UPDATE", function(unit)
             local name = UnitName(unit)
@@ -447,7 +446,6 @@ function NSI:InitNickNames()
         end, "Name", "[NSRT] NickName")
     end
 
-    C_AddOns.LoadAddOn("VuhDo")
     self:VuhDoNickNameUpdated()
 end
 

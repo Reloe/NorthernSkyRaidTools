@@ -5,6 +5,7 @@
 ## Author: Reloe, Rav
 ## DefaultState: Enable
 ## SavedVariables: NSRT, NSRTTimelineData
+## OptionalDeps: Grid2, ElvUI, Cell, DandersFrames, VuhDo, UnhaltedUnitFrames, MRT, Blizzard_CompactRaidFrames
 ## Category: Dungeons & Raids
 ## Category-deDE: Dungeons & Schlachtzüge
 ## Category-esES: Mazmorras y bandas
