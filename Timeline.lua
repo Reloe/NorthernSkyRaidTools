@@ -1545,14 +1545,6 @@ function NSI:CreateTimelineWindow()
                         self._clickStartX, self._clickStartY = GetCursorPosition()
                         if timelineWindow.editNote then
                             timelineWindow.draggingBlock = self
-                            -- Record cursor Y within the body at drag-start for ghost icon placement.
-                            -- Use timelineWindow.timeline (not timelineFrame — that local is declared
-                            -- after timelineOptions so the closure would capture the global nil).
-                            local uiScale = UIParent:GetEffectiveScale()
-                            local _, rawY = GetCursorPosition()
-                            local tl = timelineWindow.timeline
-                            timelineWindow.draggingRowY = tl and tl.body and
-                                (tl.body:GetTop() - (rawY / uiScale) - 4) or nil
                         end
                     elseif button == "RightButton" then
                         timelineWindow.blockRightClickRawX, timelineWindow.blockRightClickRawY = GetCursorPosition()
@@ -1574,7 +1566,6 @@ function NSI:CreateTimelineWindow()
 
                         if wasDragging then
                             timelineWindow.draggingBlock = nil
-                            timelineWindow.draggingRowY   = nil
                             local tl = timelineWindow.timeline
                             if tl and tl.dragGhostLine then tl.dragGhostLine:Hide() end
                             if tl and tl.dragGhostIcon then tl.dragGhostIcon:Hide() end
@@ -1585,19 +1576,15 @@ function NSI:CreateTimelineWindow()
                                     NSI:ShowReminderDialog(timelineWindow, nil, self)
                                 end
                             else
-                                -- Finalize drag: use the snapped time recorded by the last OnUpdate
-                                -- so the block lands exactly where the green ghost line was shown.
-                                local newAbsoluteTime = timelineWindow._lastSnappedTime
+                                -- Recalculate snapped time live at release so any zoom/scroll changes
+                                -- during the drag are reflected — using _lastSnappedTime risks stale pps/scrollX.
                                 timelineWindow._lastSnappedTime = nil
-                                if not newAbsoluteTime then
-                                    -- Fallback if OnUpdate hasn't fired yet (very fast click+release)
-                                    local uiScale = 1 / UIParent:GetEffectiveScale()
-                                    local cursorX = GetCursorPosition() * uiScale
-                                    local bodyLeft = tl and (tl.body:GetLeft() or 0) or 0
-                                    local scrollX = tl and tl.horizontalSlider and tl.horizontalSlider:GetValue() or 0
-                                    local pps = tl and ((tl.options.pixels_per_second or 15) * (tl.currentScale or 1)) or 15
-                                    newAbsoluteTime = math.max(0, math.floor((scrollX + cursorX - bodyLeft) / pps + 0.5))
-                                end
+                                local uiScale = 1 / UIParent:GetEffectiveScale()
+                                local cursorX = GetCursorPosition() * uiScale
+                                local bodyLeft = tl and (tl.body:GetLeft() or 0) or 0
+                                local scrollX = tl and tl.horizontalSlider and tl.horizontalSlider:GetValue() or 0
+                                local pps = tl and ((tl.options.pixels_per_second or 15) * (tl.currentScale or 1)) or 15
+                                local newAbsoluteTime = math.max(0, math.floor((scrollX + cursorX - bodyLeft) / pps + 0.5))
                                 local encID = timelineWindow.currentEncounterID
                                 local difficulty = timelineWindow.currentDifficulty
                                 local phase, phaseStart = NSI:PhaseFromTime(encID, newAbsoluteTime, difficulty)
@@ -2003,6 +1990,50 @@ function NSI:CreateTimelineWindow()
             if self:IsMouseOver() then
                 updateCursorLine()
             end
+            -- If the left button was released while the block moved away during a zoom refresh,
+            -- OnMouseUp on the block never fired. Detect and finalize the orphaned drag here.
+            if timelineWindow.draggingBlock and not IsMouseButtonDown("LeftButton") then
+                local block = timelineWindow.draggingBlock
+                timelineWindow.draggingBlock = nil
+                dragGhostLine:Hide()
+                dragGhostIcon:Hide()
+                timelineWindow._lastSnappedTime = nil
+                local isClick = false
+                if block._clickStartX then
+                    local curX, curY = GetCursorPosition()
+                    local ddx = curX - block._clickStartX
+                    local ddy = curY - block._clickStartY
+                    isClick = math.sqrt(ddx * ddx + ddy * ddy) < 4
+                    block._clickStartX = nil
+                end
+                if isClick then
+                    local bd = block.blockData
+                    if bd and bd.payload and bd.payload.srcLineIndex then
+                        NSI:ShowReminderDialog(timelineWindow, nil, block)
+                    end
+                else
+                    local uiScale = 1 / UIParent:GetEffectiveScale()
+                    local cursorX = GetCursorPosition() * uiScale
+                    local bodyLeft = timelineFrame.body:GetLeft() or 0
+                    local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+                    local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
+                    local newAbsoluteTime = math.max(0, math.floor((scrollX + cursorX - bodyLeft) / pps + 0.5))
+                    local encID = timelineWindow.currentEncounterID
+                    local difficulty = timelineWindow.currentDifficulty
+                    local phase, phaseStart = NSI:PhaseFromTime(encID, newAbsoluteTime, difficulty)
+                    local newRelTime = math.max(0, newAbsoluteTime - phaseStart)
+                    local bd = block.blockData
+                    if bd and bd.payload and bd.payload.srcLineIndex and timelineWindow.editNote then
+                        local p = bd.payload
+                        local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
+                        newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
+                        NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
+                        NSI:SetReminder(timelineWindow.editNote.name, true, true)
+                        timelineWindow.preserveZoom = true
+                        NSI:RefreshTimelineForMode()
+                    end
+                end
+            end
             -- Snapped ghost line + icon while dragging a block
             if timelineWindow.draggingBlock then
                 local uiScale = 1 / UIParent:GetEffectiveScale()
@@ -2013,12 +2044,10 @@ function NSI:CreateTimelineWindow()
                 local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
                 local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
 
-                -- Snap to whole seconds; store for OnMouseUp so the drop always
-                -- lands exactly where the green ghost line is drawn.
+                -- Snap to whole seconds.
                 local rawTime = (scrollX + mouseXInBody) / pps
                 local snappedTime = math.max(0, math.floor(rawTime + 0.5))
                 local snappedX = snappedTime * pps - scrollX
-                timelineWindow._lastSnappedTime = snappedTime
 
                 local mins = math.floor(snappedTime / 60)
                 local secs = snappedTime % 60
@@ -2029,14 +2058,13 @@ function NSI:CreateTimelineWindow()
                 dragGhostLine:SetPoint("BOTTOM", timelineFrame.body, "BOTTOMLEFT", snappedX, 0)
                 dragGhostLine:Show()
 
-                -- Ghost icon: left-aligned to snap line, same row as the dragging block.
-                -- Use the cursor Y captured at drag-start (draggingRowY) so the icon
-                -- always tracks the correct row even when block:GetTop() would be stale.
+                -- Ghost icon: anchored to the block's line frame so it tracks that row
+                -- correctly through any zoom or vertical scroll that happens during the drag.
                 local block = timelineWindow.draggingBlock
-                local rowY  = timelineWindow.draggingRowY
-                if rowY then
+                local lineFrame = block:GetParent()
+                if lineFrame then
                     dragGhostIcon:ClearAllPoints()
-                    dragGhostIcon:SetPoint("TOPLEFT", timelineFrame.body, "TOPLEFT", snappedX, -rowY)
+                    dragGhostIcon:SetPoint("LEFT", lineFrame, "LEFT", snappedX, 0)
                     if block.blockData and block.blockData[5] then
                         local info = C_Spell.GetSpellInfo(block.blockData[5])
                         if info and info.iconID then
