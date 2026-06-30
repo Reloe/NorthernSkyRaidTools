@@ -9,7 +9,7 @@ NSI.InitializeAlerts[encID] = function(self)
     nonTankConditions.Roles.DAMAGER = true
     nonTankConditions.Roles.HEALER = true
 
-    local data = {group = "Nek'zali", internalID = "Barrage", name = "Barrage", text = "Frontal", DisplayType = "Text", encID = encID, phase = {1, 2}, TTS = false, dur = 8,
+    local data = {group = "Nek'zali", internalID = "Barrage", name = "Barrage", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
         textColors = {1, 0, 0, 1}, customIcon = 1284103,
         phaseTimers = {
             [15] ={
@@ -42,7 +42,15 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Nek'zali", internalID = "RestlessAmani", name = "Add-Spawn", text = "Adds", DisplayType = "Text", encID = encID, phase = {1, 2}, TTS = false, dur = 8, customIcon = 1295397,
+    local data = {group = "Nek'zali", internalID = "HungeringPyre", name = "Hungering Pyre", text = "Soak", DisplayType = "Text", encID = encID, phase = 1.5, TTS = true, dur = 7.5, customIcon = 1289855,
+        timers = {
+            [15] = {58.7, 102.7},
+            [16] = {58.7, 102.7},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Nek'zali", internalID = "RestlessAmani", name = "Add-Spawn", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, customIcon = 1295397,
         phaseTimers = {
             [15] = {
                 {45, 81.6, 118.3, 154.9, 191.5, 228.2},
