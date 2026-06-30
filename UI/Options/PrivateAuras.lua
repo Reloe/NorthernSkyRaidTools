@@ -401,10 +401,10 @@ local function BuildPrivateAurasOptions()
             boxfirst = true,
             name = "Show Debuff-Type Indicator",
             desc = "This will attach the Blizzard Debuff-Type Indicator to ALL Private Aura Displays. This only works if the Border is enabled. This is a global setting and it will apply to all private auras, regardless which addon is creating them.",
-            get = function() return NSRT.PARaidSettings.DebuffTypeBorder end,
+            get = function() return NSRT.PASettings.DebuffTypeBorder end,
             set = function(self, fixedparam, value)
                 if NSI.IsBuilding then return end
-                NSRT.PARaidSettings.DebuffTypeBorder = value
+                NSRT.PASettings.DebuffTypeBorder = value
                 C_UnitAuras.TriggerPrivateAuraShowDispelType(value)
             end,
         },
