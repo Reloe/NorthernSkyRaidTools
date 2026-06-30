@@ -44,6 +44,11 @@ local Taunts = {
     [49576] = true, -- Death Grip
 }
 
+local function RestoreWoWEscapeSequences(text)
+    if type(text) ~= "string" then return text end
+    return text:gsub("||c(%x%x%x%x%x%x%x%x)", "|c%1"):gsub("||r", "|r"):gsub("||T", "|T"):gsub("||t", "|t")
+end
+
 
 function NSI:AddToReminder(reminderInfo)
     local info = self:CreateReminder(reminderInfo)
@@ -117,6 +122,7 @@ function NSI:CreateReminder(info, preview)
     if info.countdown and info.countdown > info.time then info.countdown = info.time end -- same for countdown
     info.phase = info.phase and tonumber(info.phase)
     if not info.phase then info.phase = 1 end
+    info.text = RestoreWoWEscapeSequences(info.text)
     local rawtext = info.text
     if info.text then
         info.text = info.text:gsub("{(%a*%d*)}", function(token) -- convert {star}/{rt1} etc. to raid target icons
@@ -373,7 +379,7 @@ function NSI:ProcessReminder()
             else
                 if (not firstline) and (not line:find("invitelist:")) then
                     -- Restore WoW color and icon escape sequences that get doubled when passing through an EditBox
-                    line = line:gsub("||c(%x%x%x%x%x%x%x%x)", "|c%1"):gsub("||r", "|r"):gsub("||T", "|T"):gsub("||t", "|t")
+                    line = RestoreWoWEscapeSequences(line)
                     line = line:gsub("{(%a*%d*)}", function(token) -- convert {star}/{rt1} etc. to raid target icons
                         local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
                         if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
