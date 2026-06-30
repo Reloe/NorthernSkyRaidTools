@@ -564,7 +564,7 @@ function NSI:InitPrivateAuras(firstcall)
     self:RemoveAllPrivateAuraAnchors()
     self:InitTextPA()
     self:InitPrivateAuraDisplay("player", NSRT.PASettings)
-    if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in lfr, normal, heroic, mythic
+    if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then -- enabled in normal, heroic, mythic
         local tankUnit
         for u in self:IterateGroupMembers() do
             if UnitGroupRolesAssigned(u) == "TANK" and not UnitIsUnit("player", u) then

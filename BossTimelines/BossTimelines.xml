@@ -13,4 +13,15 @@
     <Script file="CrownOfTheCosmos.lua"/>
     <Script file="MidnightFalls.lua"/>
     <Script file="Rotmire.lua"/>
+
+    <!-- Midnight Season 2 -->
+    <Script file="MidnightS2/NymrissaWavecaller.lua"/>
+    <Script file="MidnightS2/NekzaliTheSoulcoiler.lua"/>
+    <Script file="MidnightS2/EntombedSentinels.lua"/>
+    <Script file="MidnightS2/VashnikTheMalignant.lua"/>
+    <Script file="MidnightS2/TheLostExplorers.lua"/>
+    <Script file="MidnightS2/Sszorak.lua"/>
+    <Script file="MidnightS2/TheTwinFangs.lua"/>
+    <Script file="MidnightS2/TheCoiledAltar.lua"/>
+    <Script file="MidnightS2/Ulatek.lua"/>
 </Ui>

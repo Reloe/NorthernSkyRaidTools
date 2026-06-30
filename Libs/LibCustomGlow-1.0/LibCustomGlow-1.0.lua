@@ -6,11 +6,18 @@ https://www.wowace.com/projects/libbuttonglow-1-0
 -- luacheck: globals CreateFromMixins ObjectPoolMixin CreateTexturePool CreateFramePool
 
 local MAJOR_VERSION = "LibCustomGlow-1.0"
-local MINOR_VERSION = 21
+local MINOR_VERSION = 25
 if not LibStub then error(MAJOR_VERSION .. " requires LibStub.") end
 local lib, oldversion = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 local Masque = LibStub("Masque", true)
+
+local function AnimateTextureCoords(texture, ...)
+    local animateTexCoords = (TextureUtil and TextureUtil.AnimateTexCoords) or AnimateTexCoords
+    if animateTexCoords then
+        animateTexCoords(texture, ...)
+    end
+end
 
 local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE
 local textureList = {
@@ -151,7 +158,12 @@ local function addFrameAndTex(r,color,name,key,N,xOffset,yOffset,texture,texCoor
                 f.textures[i]:SetBlendMode("ADD")
             end
         end
-        f.textures[i]:SetVertexColor(color[1],color[2],color[3],color[4])
+        -- Handle both array format {r,g,b,a} and Color objects (for WoW 12.0 secret values)
+        if type(color) == "table" and color.GetRGBA then
+            f.textures[i]:SetVertexColor(color:GetRGBA())
+        else
+            f.textures[i]:SetVertexColor(color[1],color[2],color[3],color[4])
+        end
         f.textures[i]:Show()
     end
     while #f.textures>N do
@@ -540,9 +552,10 @@ local function bgHide(self)
 end
 
 local function bgUpdate(self, elapsed)
-    AnimateTexCoords(self.ants, 256, 256, 48, 48, 22, elapsed, self.throttle);
+    AnimateTextureCoords(self.ants, 256, 256, 48, 48, 22, elapsed, self.throttle);
     local cooldown = self:GetParent().cooldown;
-    if(cooldown and cooldown:IsShown() and cooldown:GetCooldownDuration() > 3000) then
+    local duration = cooldown and cooldown:IsShown() and cooldown:GetCooldownDuration()
+    if((not issecretvalue or not issecretvalue(duration)) and duration and duration > 3000) then
         self:SetAlpha(0.5);
     else
         self:SetAlpha(1.0);
@@ -685,7 +698,12 @@ function lib.ButtonGlow_Start(r,color,frequency,frameLevel)
         else
             for texture in pairs(ButtonGlowTextures) do
                 f[texture]:SetDesaturated(1)
-                f[texture]:SetVertexColor(color[1],color[2],color[3])
+                if type(color) == "table" and color.GetRGBA then
+                    local r, g, b = color:GetRGBA()
+                    f[texture]:SetVertexColor(r, g, b)
+                else
+                    f[texture]:SetVertexColor(color[1],color[2],color[3])
+                end
                 local alpha = math.min(f[texture]:GetAlpha()/noZero(f.color and f.color[4] or 1)*color[4], 1)
                 f[texture]:SetAlpha(alpha)
                 updateAlphaAnim(f,color and color[4] or 1)
@@ -717,7 +735,12 @@ function lib.ButtonGlow_Start(r,color,frequency,frameLevel)
             f.color = color
             for texture in pairs(ButtonGlowTextures) do
                 f[texture]:SetDesaturated(1)
-                f[texture]:SetVertexColor(color[1],color[2],color[3])
+                if type(color) == "table" and color.GetRGBA then
+                    local r, g, b = color:GetRGBA()
+                    f[texture]:SetVertexColor(r, g, b)
+                else
+                    f[texture]:SetVertexColor(color[1],color[2],color[3])
+                end
             end
         end
         f.throttle = throttle

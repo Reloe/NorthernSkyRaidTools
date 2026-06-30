@@ -17,8 +17,44 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
+function NSI:IsMidnightS2()
+    local build = select(4, GetBuildInfo())
+    return build >= 120100
+end
+
 function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
+end
+
+function NSI:GetPrimaryPhase(phase)
+    if type(phase) == "table" then
+        local primaryPhase
+        for _, value in ipairs(phase) do
+            value = tonumber(value)
+            if value and (not primaryPhase or value < primaryPhase) then
+                primaryPhase = value
+            end
+        end
+        return primaryPhase
+    end
+    return phase
+end
+
+function NSI:GetSortedPhaseKeys(phaseTimers)
+    local phases = {}
+    for phase, timers in pairs(phaseTimers or {}) do
+        if type(timers) == "table" then
+            phases[#phases + 1] = phase
+        end
+    end
+    table.sort(phases, function(a, b)
+        return (tonumber(a) or 0) < (tonumber(b) or 0)
+    end)
+    return phases
+end
+
+function NSI:GetActiveEncounterTimelineEventCount()
+    return C_EncounterTimeline and C_EncounterTimeline.GetEventCountBySource and C_EncounterTimeline.GetEventCountBySource(0) or 0
 end
 
 function NSI:SortTable(t, reversed)
@@ -112,7 +148,7 @@ function NSI:UpdateLibSpecRegistration()
                 end
             end
             if u then
-                local G = UnitGUID(u)
+                local G = UnitGUID(u) or ""
                 self.specs[G] = specId
                 NSAPI.specs = self.specs
             end
@@ -160,13 +196,42 @@ function NSAPI:TTSCountdown(num)
 end
 
 local path = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Sounds\\"
+local function GetTTSSoundFile(sound)
+    if not NSI.LSM or not sound then return end
+
+    sound = strtrim(tostring(sound))
+    local soundPath = NSI.LSM:Fetch("sound", sound, true)
+    if soundPath then return soundPath end
+
+    if not NSI.LSMSoundCache and NSI.CacheSounds then
+        NSI:CacheSounds()
+    end
+
+    local numeric = tonumber(sound)
+    local function GetCachedKey()
+        local key = NSI.LSMSoundCache and (NSI.LSMSoundCache[sound] or NSI.LSMSoundCache[strlower(sound)])
+        if not key and numeric then
+            key = NSI.LSMSoundCache and NSI.LSMSoundCache[tostring(numeric)]
+        end
+        return key
+    end
+
+    local lsmKey = GetCachedKey()
+    if not lsmKey and NSI.CacheSounds then
+        NSI:CacheSounds()
+        lsmKey = GetCachedKey()
+    end
+    return lsmKey and NSI.LSM:Fetch("sound", lsmKey, true)
+end
+
 function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
     if NSRT.Settings["TTS"] then
         local secret = issecretvalue(sound)
         local forceTTS = NSRT.ReminderSettings and NSRT.ReminderSettings.TTSOverSoundfile
-        local handle = (not forceTTS and not secret) and select(2, PlaySoundFile(path..sound..".ogg", "Master"))
+        local soundFile = (not forceTTS and not secret) and (GetTTSSoundFile(sound) or path..sound..".ogg")
+        local handle = soundFile and select(2, PlaySoundFile(soundFile, "Master"))
         if handle then
-            PlaySoundFile(path..sound..".ogg", "Master")
+            return
         else
             sound = tostring(sound)
             local num = voice or NSRT.Settings["TTSVoice"]
@@ -405,6 +470,26 @@ function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
     local id = self:DifficultyCheck({14, 15, 16})
     if not id then return end
+    local function GetBossUnitState()
+        local bossUnits = {}
+        for i = 1, 8 do
+            local unit = "boss" .. i
+            if UnitExists(unit) then
+                local reaction = UnitReaction("player", unit)
+                local state = unit
+                if reaction then
+                    state = state .. ":r" .. reaction
+                end
+                if UnitCanAttack("player", unit) then
+                    state = state .. ":attack"
+                elseif UnitIsFriend("player", unit) then
+                    state = state .. ":friend"
+                end
+                bossUnits[#bossUnits + 1] = state
+            end
+        end
+        return #bossUnits > 0 and table.concat(bossUnits, ", ") or "none"
+    end
     if e == "ENCOUNTER_START" then
         local encID, encName, difficultyID, groupSize = ...
         local now = GetTime()
@@ -455,6 +540,11 @@ function NSI:LogTimeline(e, ...)
             data.id = "nil"
             data.dur = info.duration
             data.severity = info.severity
+        elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+            data.id = GetBossUnitState()
+        elseif e == "UNIT_FACTION" or e == "UNIT_FLAGS" or e == "UNIT_TARGETABLE_CHANGED" then
+            data.id = info or "nil"
+            data.state = GetBossUnitState()
         else
             data.id = info
         end

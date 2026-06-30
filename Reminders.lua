@@ -175,6 +175,8 @@ function NSI:ProcessReminder()
     self.DisplayedReminder = ""
     self.DisplayedPersonalReminder = ""
     self.DisplayedExtraReminder = ""
+    self.ReadyCheckAssignments = {}
+    self.ReadyCheckAssignmentMap = {}
     local pers = NSRT.ReminderSettings.PersonalReminderFrame.enabled
     local shared = NSRT.ReminderSettings.ReminderFrame.enabled
     -- self:IsUsingTLReminders() makes it process the note but then stops the display at a later point. This allows still displaying the note.
@@ -202,13 +204,45 @@ function NSI:ProcessReminder()
         local myname = strlower(UnitName("player"))
         local myrole = strlower(UnitGroupRolesAssigned("player"))
         local myclass = select(3, UnitClass("player"))
+        local specTag = specid and tostring(specid)
         pos = (self.meleetable[specid] or myrole == "tank") and "melee" or "ranged"
+        local function TagMatchesPlayer(tagText, requireTag)
+            if not tagText or tagText == "" then return not requireTag end
+            tagText = strlower(tagText)
+            local tags = {}
+            for name in tagText:gmatch("(%S+)") do
+                tags[strtrim(name)] = true
+            end
+            return (tagText == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
+                tags[myname] or
+                tags[mynickname] or
+                tags[myrole] or
+                tags[specTag] or
+                tags[myclass and tostring(myclass)] or
+                tags[subgroup] or
+                (pos and tags[pos])
+        end
         local extranote = ""
         if not str:match('\n$') then
             str = str..'\n'
         end
         for line in str:gmatch('([^\n]*)\n') do
             local firstline = false
+            local assignText = line:match("assign:([^;]+)")
+            if assignText then
+                assignText = assignText:gsub("||c(%x%x%x%x%x%x%x%x)", "|c%1"):gsub("||r", "|r"):gsub("||T", "|T"):gsub("||t", "|t")
+                assignText = assignText:gsub("{(%a*%d*)}", function(token)
+                    local id = symbols[token] or (token:match("^rt(%d)$") and tonumber(token:match("^rt(%d)$")))
+                    if id then return "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_"..id..":0|t" end
+                end)
+                assignText = strtrim(assignText)
+                local assignTag = line:match("tag:([^;]+)")
+                if assignText ~= "" and TagMatchesPlayer(assignTag, true) and not self.ReadyCheckAssignmentMap[assignText] then
+                    table.insert(self.ReadyCheckAssignments, assignText)
+                    self.ReadyCheckAssignmentMap[assignText] = true
+                end
+                firstline = true
+            end
             if line:find("EncounterID:") then
                 encID = line:match("EncounterID:(%d+)")
                 if encID then
@@ -324,22 +358,7 @@ function NSI:ProcessReminder()
                         addedreminders[key] = true
                     end
                 end
-                local tags = {}
-                tag = strlower(tag)
-                for name in tag:gmatch("(%S+)") do
-                    tags[strtrim(name)] = true
-                end
-                specid = specid and tostring(specid)
-                myclass = myclass and strlower(myclass)
-                local mematch =
-                (tag == "everyone" and not NSRT.ReminderSettings.IgnoreEveryone) or
-                tags[myname] or
-                tags[mynickname] or
-                tags[myrole] or
-                tags[specid] or
-                tags[myclass] or
-                tags[subgroup] or
-                (pos and tags[pos])
+                local mematch = TagMatchesPlayer(tag)
                 if NSRT.ReminderSettings.ShowAllReminders or mematch then
                     if not addedpersonalreminders[key] then
                         addedpersonalreminders[key] = true
@@ -633,13 +652,15 @@ function NSI:SetProperties(F, info, skipsound, s)
     end)
     F.info = info
     F:SetScript("OnHide", function()
-        if info.glowunit then
+        if not F.IsUnitFrameIcon and info.glowunit then
             self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
         end
         if F.Swipe and info.DisplayType == "Icon" and NSRT.ReminderSettings.IconSettings.Glow > 0 then
             self:HideGlows(nil, nil, F)
         end
-        NSI:ArrangeStates(F.DisplayType)
+        if not F.IsUnitFrameIcon then
+            NSI:ArrangeStates(F.DisplayType)
+        end
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         if F.Ticks then
             for _, tick in ipairs(F.Ticks) do
@@ -648,11 +669,12 @@ function NSI:SetProperties(F, info, skipsound, s)
         end
     end)
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
-    if info.DisplayType == "Text" then
+    if F.IsUnitFrameIcon then
+        F.Icon:SetTexture(spellInfo and spellInfo.iconID or 134400)
+    elseif info.DisplayType == "Text" then
         F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
         F.Text:SetTextColor(unpack(info.textColors or s.textColors))
-    end
-    if info.DisplayType == "Circle" then
+    elseif info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
@@ -668,8 +690,7 @@ function NSI:SetProperties(F, info, skipsound, s)
         F.Swipe:SetSwipeTexture(texture)
         F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
         F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
-    end
-    if info.DisplayType == "Icon" then
+    elseif info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
         F.Icon:SetTexture(spellInfo.iconID)
         if info.HideSwipe then
@@ -838,6 +859,7 @@ function NSI:CreateUnitFrameIcon(info, name)
         if self.UnitIcon[i] and not self.UnitIcon[i]:IsShown() then
             self.UnitIcon[i]:ClearAllPoints()
             self.UnitIcon[i]:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
+            self.UnitIcon[i].IsUnitFrameIcon = true
             self:SetProperties(self.UnitIcon[i], info, true, s)
             return self.UnitIcon[i]
         end
@@ -856,6 +878,7 @@ function NSI:CreateUnitFrameIcon(info, name)
                 edgeSize = 1
             })
             F.Border:SetBackdropBorderColor(0, 0, 0, 1)
+            F.IsUnitFrameIcon = true
             self:SetProperties(F, info, true, s)
             self.UnitIcon[i] = F
             return F
@@ -1111,6 +1134,7 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         F:Hide()
         return
     end
+    if F.IsUnitFrameIcon then return end
     local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
         F.Text:SetText(text)
@@ -1150,6 +1174,11 @@ function NSI:CacheSounds()
                         :gsub("|r", "")
                         :match("^[%s|]*(.-)[%s|]*$")
         self.LSMSoundCache[clean] = lsmKey
+        self.LSMSoundCache[strlower(clean)] = lsmKey
+        local numeric = tonumber(clean)
+        if numeric then
+            self.LSMSoundCache[tostring(numeric)] = lsmKey
+        end
     end
 end
 
@@ -1184,13 +1213,7 @@ function NSI:PlayReminderSound(info, default)
     -- Fallback to TTS
     if info.TTS then
         local TTS = (type(info.TTS) == "string" and info.TTS) or (info.rawtext and info.rawtext ~= "" and info.rawtext) or ""
-        local sound = (not NSRT.ReminderSettings.TTSOverSoundfile) and self.LSM:Fetch("sound", TTS)
-        if sound and sound ~= 1 then
-            PlaySoundFile(sound, "Master")
-            return
-        else
-            NSAPI:TTS(TTS)
-        end
+        NSAPI:TTS(TTS)
     end
 end
 
@@ -1561,6 +1584,7 @@ function NSI:GlowFrame(unit, id, F, colors)
     local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
+    self.AllGlows = self.AllGlows or {}
     self.AllGlows[F] = id
     local s = NSRT.ReminderSettings.GlowSettings
     self.LCG.PixelGlow_Start(F, colors or s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id, 1000)
@@ -1761,10 +1785,28 @@ function NSI:FireEncounterAlerts(encID, id)
     for _, entry in pairs(diffTable) do
         if type(entry) == "table" and entry.enabled and not entry.isSpecialDisplay then
             if self:EvaluateLoad(entry) then
-                local alert = CopyTable(entry)
-                alert.encID = encID
-                alert.phase = entry.phase or 1
-                self:AddRemindersFromTable(alert, entry.timers or {})
+                if entry.phaseTimers then
+                    for _, phase in ipairs(self:GetSortedPhaseKeys(entry.phaseTimers)) do
+                        local timers = entry.phaseTimers[phase]
+                        local alert = CopyTable(entry)
+                        alert.encID = encID
+                        alert.phase = tonumber(phase) or phase
+                        alert.phaseTimers = nil
+                        self:AddRemindersFromTable(alert, timers)
+                    end
+                else
+                    local alert = CopyTable(entry)
+                    alert.encID = encID
+                    if type(entry.phase) == "table" then
+                        for _, phase in ipairs(entry.phase) do
+                            alert.phase = phase
+                            self:AddRemindersFromTable(alert, entry.timers or {})
+                        end
+                    else
+                        alert.phase = entry.phase or 1
+                        self:AddRemindersFromTable(alert, entry.timers or {})
+                    end
+                end
             end
         end
     end
@@ -1860,10 +1902,10 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
-        if self:DifficultyCheck({14, 15, 16}) and not NSRT.ReminderSettings.ShowOutsideOfRaid then
-            self[Name]:Hide()
-        else
+        if self:DifficultyCheck({14, 15, 16}) or NSRT.ReminderSettings.ShowOutsideOfRaid then
             self[Name]:Show()
+        else
+            self[Name]:Hide()
         end
     elseif self[Name] then
         self[Name]:Hide()

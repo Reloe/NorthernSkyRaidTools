@@ -360,22 +360,7 @@ local function BuildReminderScreen(personal, parentFrame)
         -- Forward-declare so the callback closure can reference recvBtn
         local recvBtn
         recvBtn = CreateButton(screen, "|cFF00FFFF" .. NSI:Loc("Received:") .. "|r |cFF888888" .. NSI:Loc("None") .. "|r", function()
-            local content = NSI.Reminder
-            if content and content ~= "" and content ~= " " then
-                screen.viewingReceivedNote = true
-                screen.selectedName = nil
-                if screen.editor then screen.editor:SetText(content) end
-                recvBtn.frame:SetBackdropColor(0, 1, 0, 1)
-                -- Populate meta controls from the received note and lock them
-                local encID, name, diff = ParseFirstLine(content)
-                screen._metaBossEncID = encID
-                screen._metaDiff = diff
-                if screen.nameEntry then screen.nameEntry:SetText(name or "") end
-                if screen.diffDropdown and diff then screen.diffDropdown:Select(diff) end
-                if screen.bossDropdown then screen.bossDropdown:Select(encID or 0) end
-                if SetMetaReadOnly then SetMetaReadOnly(true) end
-                if screen.scrollbox then screen.scrollbox:Refresh() end
-            end
+            if screen.RefreshReceivedNote then screen.RefreshReceivedNote(true) end
         end, leftWidth - pad * 2, 22)
         recvBtn:SetLocaleKey("Received:", function()
             local content = NSI.Reminder
@@ -444,10 +429,41 @@ local function BuildReminderScreen(personal, parentFrame)
             end
         end
 
+        function screen.RefreshReceivedNote(selectReceived)
+            local content = NSI.Reminder
+            if not content or content == "" or content == " " then
+                if screen.UpdateReceivedBar then screen.UpdateReceivedBar() end
+                return
+            end
+            if selectReceived then
+                screen.viewingReceivedNote = true
+                screen.selectedName = nil
+            elseif not screen.viewingReceivedNote then
+                if screen.UpdateReceivedBar then screen.UpdateReceivedBar() end
+                return
+            end
+
+            if screen.editor then screen.editor:SetText(content) end
+            recvBtn.frame:SetBackdropColor(0, 1, 0, 1)
+            local encID, name, diff = ParseFirstLine(content)
+            screen._metaBossEncID = encID
+            screen._metaDiff = diff
+            if screen.nameEntry then screen.nameEntry:SetText(name or "") end
+            if screen.diffDropdown and diff then screen.diffDropdown:Select(diff) end
+            if screen.bossDropdown then screen.bossDropdown:Select(encID or 0) end
+            if SetMetaReadOnly then SetMetaReadOnly(true) end
+            if screen.UpdateReceivedBar then screen.UpdateReceivedBar() end
+            if screen.scrollbox then screen.scrollbox:Refresh() end
+        end
+
         -- Auto-refresh whenever the addon receives a broadcast reminder
         hooksecurefunc(NSI, "UpdateReminderFrame", function()
-            if screen.UpdateReceivedBar and screen:IsShown() then
-                screen.UpdateReceivedBar()
+            if screen:IsShown() then
+                if screen.RefreshReceivedNote then
+                    screen.RefreshReceivedNote(false)
+                elseif screen.UpdateReceivedBar then
+                    screen.UpdateReceivedBar()
+                end
             end
         end)
     end

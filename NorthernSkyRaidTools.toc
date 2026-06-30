@@ -1,11 +1,22 @@
-## Interface: 120005, 120007
+## Interface: 120007, 120100
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
 ## Author: Reloe, Rav
 ## DefaultState: Enable
 ## SavedVariables: NSRT, NSRTTimelineData
-## Category: Northern Sky
+## OptionalDeps: Grid2, ElvUI, Cell, DandersFrames, VuhDo, UnhaltedUnitFrames, MRT, Blizzard_CompactRaidFrames
+## Category: Dungeons & Raids
+## Category-deDE: Dungeons & Schlachtzüge
+## Category-esES: Mazmorras y bandas
+## Category-esMX: Calabozos y bandas
+## Category-frFR: Donjons et raids
+## Category-itIT: Spedizioni e incursioni
+## Category-koKR: 던전 및 공격대
+## Category-ptBR: Masmorras e Raides
+## Category-ruRU: Подземелья и рейды
+## Category-zhCN: 地下城和团队副本
+## Category-zhTW: 地城與團隊
 ## X-Curse-Project-ID: 954018
 ## X-Wago-ID: rN4VDdKD
 
@@ -34,6 +45,7 @@ SetupManager.lua
 CooldownCheck.lua
 ReadyCheck.lua
 PrivateAura.lua
+AuraTracking.lua
 QoL.lua
 Profiles.lua
 InterruptDisplay.lua
@@ -50,6 +62,15 @@ EncounterAlerts/MidnightS1/Chimaerus.lua
 EncounterAlerts/MidnightS1/Beloren.lua
 EncounterAlerts/MidnightS1/MidnightFalls.lua
 EncounterAlerts/MidnightS1/Rotmire.lua
+EncounterAlerts/MidnightS2/NymrissaWavecaller.lua
+EncounterAlerts/MidnightS2/NekzaliTheSoulcoiler.lua
+EncounterAlerts/MidnightS2/EntombedSentinels.lua
+EncounterAlerts/MidnightS2/VashnikTheMalignant.lua
+EncounterAlerts/MidnightS2/TheLostExplorers.lua
+EncounterAlerts/MidnightS2/Sszorak.lua
+EncounterAlerts/MidnightS2/TheTwinFangs.lua
+EncounterAlerts/MidnightS2/TheCoiledAltar.lua
+EncounterAlerts/MidnightS2/Ulatek.lua
 
 # UI - Core (must load first to create NSUI panel and shared utilities)
 UI/Core.lua
@@ -79,6 +100,7 @@ UI/Options/Assignments.lua
 UI/Options/InterruptDisplay.lua
 UI/Options/ReadyCheck.lua
 UI/Options/PrivateAuras.lua
+UI/Options/AuraTracking.lua
 UI/Options/QoL.lua
 UI/Options/WAImports.lua
 UI/AnchorWindow.lua

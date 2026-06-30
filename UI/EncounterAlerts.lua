@@ -43,7 +43,84 @@ local function GetDefaultCircleTextureLabel()
     return NSI:Loc("Default") .. " (" .. GetCircleTextureLabel(texture) .. ")"
 end
 
+local function FormatPhaseValue(phase)
+    if type(phase) == "table" then
+        local values = {}
+        for _, value in ipairs(phase) do
+            values[#values + 1] = tostring(value)
+        end
+        return table.concat(values, ",")
+    end
+    return tostring(phase or 1)
+end
 
+local function ParsePhaseValue(value)
+    local phases = {}
+    local seen = {}
+    for token in tostring(value or ""):gmatch("[^,%s]+") do
+        local phase = tonumber(token)
+        if phase and phase >= 1 and not seen[phase] then
+            seen[phase] = true
+            phases[#phases + 1] = phase
+        end
+    end
+    if #phases == 0 then
+        return 1
+    end
+    if #phases == 1 then
+        return phases[1]
+    end
+    table.sort(phases)
+    return phases
+end
+
+local function GetPhaseList(phase)
+    if type(phase) == "table" then
+        return phase
+    end
+    return {tonumber(phase) or 1}
+end
+
+local function InsertSortedTimer(timers, value)
+    timers = timers or {}
+    local inserted = false
+    for index, existing in ipairs(timers) do
+        if value < existing then
+            table.insert(timers, index, value)
+            inserted = true
+            break
+        end
+    end
+    if not inserted then
+        table.insert(timers, value)
+    end
+    return timers
+end
+
+local function FlattenPhaseTimers(phaseTimers)
+    local timers = {}
+    local seen = {}
+    for _, phase in ipairs(NSI:GetSortedPhaseKeys(phaseTimers)) do
+        for _, time in ipairs(phaseTimers[phase] or {}) do
+            if not seen[time] then
+                seen[time] = true
+                timers = InsertSortedTimer(timers, time)
+            end
+        end
+    end
+    return timers
+end
+
+local function BuildPhaseTimersFromFlatTimers(timers, phases)
+    local phaseTimers = {}
+    for _, phase in ipairs(phases) do
+        phaseTimers[phase] = {}
+        for _, time in ipairs(timers or {}) do
+            phaseTimers[phase] = InsertSortedTimer(phaseTimers[phase], time)
+        end
+    end
+    return phaseTimers
+end
 
 
 -- ============================================================================
@@ -548,7 +625,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     data            = entry,
                                     _isReloeCreated = isReloe,
                                     _enabled        = entry.enabled ~= false,
-                                    _phase          = entry.phase or 1,
+                                    _phase          = tonumber(NSI:GetPrimaryPhase(entry.phase)) or 1,
                                     _sortName       = displayName,
                                     _orderID        = isReloe and entry.id or nil,
                                     _group          = entry.group,
@@ -1055,6 +1132,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                         if tn == "Trigger" then
                                             payload.entries[#payload.entries + 1] = { key = "phase",  value = CopyValue(alert.phase) }
                                             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
+                                            payload.entries[#payload.entries + 1] = { key = "phaseTimers", value = CopyValue(alert.phaseTimers) }
                                             payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
                                         else
                                             for _, k in ipairs(SECTION_COPY_FIELDS[tn] or {}) do
@@ -1666,6 +1744,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         if sectionName == "Trigger" then
             payload.entries[#payload.entries + 1] = { key = "phase", value = CopyValue(alert.phase) }
             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
+            payload.entries[#payload.entries + 1] = { key = "phaseTimers", value = CopyValue(alert.phaseTimers) }
             payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
         else
             for _, key in ipairs(SECTION_COPY_FIELDS[sectionName] or {}) do
@@ -2465,6 +2544,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     trigDiffDD:SetPoint("TOPLEFT", trigBossDD.frame, "TOPRIGHT", 6, 0)
     trigF.trigDiffDD = trigDiffDD
 
+    local RebuildTimeRows
+
     local phaseLbl = trigF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(phaseLbl, 12, "")
     phaseLbl:SetTextColor(0.6, 0.6, 0.6, 1)
@@ -2473,16 +2554,13 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local phaseEntry = CreateTextEntry(trigF, nil, nil, nil, 60, 22,
         nil, nil, nil, "NSUIEncAlertPhase",
-        { title = "Phase", desc = "The phase number will often not be equal to what you see in the Dungeon Journal or what WCL shows. You can look at existing alerts to understand the phases, or look at wowutils to see where a new phase starts." })
+        { title = "Phase", desc = "The phase number will often not be equal to what you see in the Dungeon Journal or what WCL shows. Use a comma-separated list, like 1,2,3, when one alert should work in multiple phases." })
     phaseEntry:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -66)
     phaseEntry.editBox:SetScript("OnEditFocusLost", function(self)
         if trigF._alert then
-            local phase = tonumber(self:GetText())
-            if not phase then
-                phase = 1
-                self:SetText("1")
-            end
-            NSI:SaveAlertData(trigF._alert, "phase", math.max(1, phase))
+            local phase = ParsePhaseValue(self:GetText())
+            self:SetText(FormatPhaseValue(phase))
+            NSI:SaveAlertData(trigF._alert, "phase", phase)
             RebuildList()
         end
     end)
@@ -2517,11 +2595,23 @@ local function BuildEncounterAlertsUI(parentFrame)
     local timeRowH  = 22
     local timeRows  = {}
 
-    local function RebuildTimeRows()
+    RebuildTimeRows = function()
         for _, row in ipairs(timeRows) do row:Hide() end
         if not trigF._alert then return end
-        local times = trigF._alert.timers or {}
-        for i, t in ipairs(times) do
+        local rows = {}
+        if trigF._alert.phaseTimers then
+            for _, phase in ipairs(NSI:GetSortedPhaseKeys(trigF._alert.phaseTimers)) do
+                for timeIndex, time in ipairs(trigF._alert.phaseTimers[phase] or {}) do
+                    rows[#rows + 1] = {phase = phase, timeIndex = timeIndex, time = time}
+                end
+            end
+        else
+            for timeIndex, time in ipairs(trigF._alert.timers or {}) do
+                rows[#rows + 1] = {timeIndex = timeIndex, time = time}
+            end
+        end
+        for i, rowData in ipairs(rows) do
+            local t = rowData.time
             if not timeRows[i] then
                 timeRows[i] = CreateFrame("Frame", nil, timesChild)
                 timeRows[i]:SetSize(timesChild:GetWidth(), timeRowH)
@@ -2546,12 +2636,24 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
 
             NSI:SetUIFont(timeRows[i].tLbl, 13, "")
-            timeRows[i].tLbl:SetText(string.format("%.2f s", t))
+            if rowData.phase ~= nil then
+                timeRows[i].tLbl:SetText(string.format("P%s: %.2f s", tostring(rowData.phase), t))
+            else
+                timeRows[i].tLbl:SetText(string.format("%.2f s", t))
+            end
 
             timeRows[i].delBtn:SetScript("OnClick", function()
                 if trigF._alert then
-                    table.remove(trigF._alert.timers, i)
-                    NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
+                    if trigF._alert.phaseTimers and rowData.phase ~= nil then
+                        local phaseTimers = trigF._alert.phaseTimers[rowData.phase]
+                        if phaseTimers then
+                            table.remove(phaseTimers, rowData.timeIndex)
+                        end
+                        NSI:SaveAlertData(trigF._alert, "phaseTimers", trigF._alert.phaseTimers)
+                    else
+                        table.remove(trigF._alert.timers, rowData.timeIndex)
+                        NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
+                    end
                     RebuildTimeRows()
                 end
             end)
@@ -2559,7 +2661,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             timeRows[i]:Show()
         end
 
-        local totalH = math.max(#times * timeRowH, 1)
+        local totalH = math.max(#rows * timeRowH, 1)
         timesChild:SetHeight(totalH)
         local bar = _G["NSUIEncAlertTimesScrollScrollBar"]
         if bar then
@@ -2581,19 +2683,29 @@ local function BuildEncounterAlertsUI(parentFrame)
     addTimeEntry:SetPoint("TOPLEFT", timesScroll, "BOTTOMLEFT", 0, -20)
     trigF.addTimeEntry = addTimeEntry
 
+    local phaseSpecificCB
+    local phaseSpecificEntry
+    local function RefreshPhaseSpecificControls()
+        if phaseSpecificEntry then
+            phaseSpecificEntry.frame:SetShown(phaseSpecificCB and phaseSpecificCB:GetValue())
+        end
+    end
+    trigF.RefreshPhaseSpecificControls = RefreshPhaseSpecificControls
+
     local function DoAddTime()
         local v = tonumber(addTimeEntry:GetValue())
         if v and trigF._alert then
-            trigF._alert.timers = trigF._alert.timers or {}
-            local inserted = false
-            for i2, existing in ipairs(trigF._alert.timers) do
-                if v < existing then
-                    table.insert(trigF._alert.timers, i2, v)
-                    inserted = true
-                    break
+            if trigF._alert.phaseTimers then
+                trigF._alert.phaseTimers = trigF._alert.phaseTimers or {}
+                local phaseValue = phaseSpecificEntry and phaseSpecificEntry:GetValue() or trigF.phaseEntry:GetValue()
+                for _, phase in ipairs(GetPhaseList(ParsePhaseValue(phaseValue))) do
+                    trigF._alert.phaseTimers[phase] = InsertSortedTimer(trigF._alert.phaseTimers[phase], v)
                 end
+                NSI:SaveAlertData(trigF._alert, "phaseTimers", trigF._alert.phaseTimers)
+            else
+                trigF._alert.timers = InsertSortedTimer(trigF._alert.timers, v)
+                NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
             end
-            if not inserted then table.insert(trigF._alert.timers, v) end
             addTimeEntry:SetValue("")
             NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, filterDiffID, selectedKey)
             RebuildTimeRows()
@@ -2608,6 +2720,35 @@ local function BuildEncounterAlertsUI(parentFrame)
     local addTimeBtn = CreateLocalizedSubButton(trigF, "Add", DoAddTime, 54,
         "NSUIEncAlertAddTimeBtn")
     addTimeBtn:SetPoint("LEFT", addTimeEntry.frame, "RIGHT", 6, 0)
+
+    phaseSpecificCB = CreateCheckButton(trigF, NSI:Loc("Phase-specific timers"), nil, function(_, value)
+        if not trigF._alert then return end
+        if value then
+            local phaseValue = phaseSpecificEntry and phaseSpecificEntry:GetValue() or trigF.phaseEntry:GetValue()
+            local phases = GetPhaseList(ParsePhaseValue(phaseValue))
+            trigF._alert.phaseTimers = BuildPhaseTimersFromFlatTimers(trigF._alert.timers or {}, phases)
+            trigF._alert.timers = nil
+            NSI:SaveAlertData(trigF._alert, "phaseTimers", trigF._alert.phaseTimers)
+            NSI:SaveAlertData(trigF._alert, "timers", nil)
+        else
+            trigF._alert.timers = FlattenPhaseTimers(trigF._alert.phaseTimers)
+            trigF._alert.phaseTimers = nil
+            NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
+            NSI:SaveAlertData(trigF._alert, "phaseTimers", nil)
+        end
+        RefreshPhaseSpecificControls()
+        RebuildTimeRows()
+    end, 190, 22, "NSUIEncAlertPhaseSpecificTimers",
+        { title = "Phase-specific timers", desc = "When enabled, adding new timers will add them for the specified phase on the right." })
+    phaseSpecificCB:SetPoint("LEFT", addTimeBtn.frame, "RIGHT", 8, 0)
+    trigF.phaseSpecificCB = phaseSpecificCB
+
+    phaseSpecificEntry = CreateTextEntry(trigF, nil, nil, nil, 48, 22,
+        nil, nil, nil, "NSUIEncAlertPhaseSpecificTimerPhase")
+    phaseSpecificEntry:SetPoint("LEFT", phaseSpecificCB.frame, "RIGHT", 6, 0)
+    phaseSpecificEntry:SetValue("1")
+    phaseSpecificEntry.frame:Hide()
+    trigF.phaseSpecificEntry = phaseSpecificEntry
 
     local conditionBtn = CreateLocalizedSubButton(trigF, "Add Condition", OpenConditionEditor, 130,
         "NSUIEncAlertConditionBtn",
@@ -3356,7 +3497,10 @@ local function BuildEncounterAlertsUI(parentFrame)
         -- Trigger tab
         trigF.bossDD:Refresh()
         trigF.trigDiffDD:Refresh()
-        trigF.phaseEntry:SetValue(tostring(entry.phase or 1))
+        trigF.phaseEntry:SetValue(FormatPhaseValue(entry.phase))
+        trigF.phaseSpecificCB:SetValue(entry.phaseTimers ~= nil)
+        trigF.phaseSpecificEntry:SetValue(tostring(NSI:GetPrimaryPhase(entry.phase) or 1))
+        if trigF.RefreshPhaseSpecificControls then trigF.RefreshPhaseSpecificControls() end
         trigF.RebuildTimeRows()
         trigF.conditionBtn:SetText(NSI:Loc(entry.isConditional and "Edit Condition" or "Add Condition"))
 
