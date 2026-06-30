@@ -1584,6 +1584,7 @@ function NSI:GlowFrame(unit, id, F, colors)
     local F = self.LGF.GetUnitFrame(unit)
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
+    self.AllGlows = self.AllGlows or {}
     self.AllGlows[F] = id
     local s = NSRT.ReminderSettings.GlowSettings
     self.LCG.PixelGlow_Start(F, colors or s.colors, s.Lines, s.Frequency, s.Length, s.Thickness, s.xOffset, s.yOffset, true, id, 1000)
