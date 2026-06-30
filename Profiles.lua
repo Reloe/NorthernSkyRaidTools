@@ -295,8 +295,6 @@ function NSI:AddMissingDefaults()
             relativeTo = "CENTER",
             xOffset = -450,
             yOffset = -100,
-            PerRow = 10,
-            RowGrowDirection = "UP",
             DebuffTypeBorder = false,
             HideBorder = false,
             StackScale = 2,
@@ -306,7 +304,6 @@ function NSI:AddMissingDefaults()
         PATankSettings = {
             Spacing = -1,
             Limit = 5,
-            MultiTankGrowDirection = "UP",
             GrowDirection = "LEFT",
             enabled = false,
             Width = 100,
@@ -449,16 +446,6 @@ function NSI:AddMissingDefaults()
                 xOffset = 0,
                 yOffset = 0,
                 FontSize = 30,
-            },
-            IconDisplay = {
-                Anchor = "TOP",
-                relativeTo = "TOP",
-                GrowDirection = "DOWN",
-                Scpaing = 5,
-                xOffset = 0,
-                yOffset = -350,
-                Width = 40,
-                Height = 40,
             },
         },
 
