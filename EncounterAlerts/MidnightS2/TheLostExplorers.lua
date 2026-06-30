@@ -18,7 +18,7 @@ NSI.InitializeAlerts[encID] = function(self)
         func = [[return function() return NSAPI and NSAPI.ActiveBoss and NSAPI.ActiveBoss == "boss4" end]]
     }
 
-    local data = {group = "Scrollsage Abilities", internalID = "ShreddingShards", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "Scrollsage Abilities", internalID = "ShreddingShards", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         customIcon = 1295854,
         textColors = {1, 0, 0, 1},
         isConditional = {
@@ -42,7 +42,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Scrollsage Abilities", internalID = "BlinkNova", name = "Blink Nova", text = "Blink Nova", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "Scrollsage Abilities", internalID = "BlinkNova", name = "Blink Nova", text = "Blink Nova", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         customIcon = 1296021,
         phaseTimers = {
             [15] = {
@@ -61,7 +61,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Scrollsage Abilities", internalID = "FrostfireVolley", name = "Frostfire Volley", text = "Frostfire Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "Scrollsage Abilities", internalID = "FrostfireVolley", name = "Frostfire Volley", text = "Frostfire Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         isConditional = ScrollsageConditional, customIcon = 1295891,
         phaseTimers = {
             [15] = {
@@ -80,7 +80,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "First Mate Abilities", internalID = "ShellSpinNormal", name = "Shell Spin Normal", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "First Mate Abilities", internalID = "ShellSpinNormal", name = "Shell Spin Normal", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         customIcon = 1296062,
         phaseTimers = {
             [15] = {
@@ -99,7 +99,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "First Mate Abilities", internalID = "ShellSpinScroll", name = "Shell Spin - Scroll Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "First Mate Abilities", internalID = "ShellSpinScroll", name = "Shell Spin - Scroll Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         isConditional = ScrollsageConditional, customIcon = 1296062,
         phaseTimers = {
             [15] = {
@@ -117,7 +117,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
-    local data = {group = "First Mate Abilities", internalID = "ShellSpinTrader", name = "Shell Spin - Trader Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "First Mate Abilities", internalID = "ShellSpinTrader", name = "Shell Spin - Trader Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         isConditional = TraderConditional, customIcon = 1296062,
         phaseTimers = {
             [15] = {
@@ -136,7 +136,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "First Mate Abilities", internalID = "MightyThud", name = "Soaks", text = "Soaks", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 10, phaseNames = true,
+    local data = {group = "First Mate Abilities", internalID = "MightyThud", name = "Soaks", text = "Soaks", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 10,
         isConditional = FirstMateConditional, spellID = 1296133, Ticks = {6, 8},
         phaseTimers = {
             [15] = {
@@ -155,7 +155,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "Fish-Spawn", name = "Fish Spawn", text = "Fish Spawn", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, phaseNames = true,
+    local data = {group = "Trader Abilities", internalID = "Fish-Spawn", name = "Fish Spawn", text = "Fish Spawn", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         customIcon = 1295817,
         phaseTimers = {
             [15] = {
@@ -174,7 +174,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5, phaseNames = true,
+    local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, spellID = 1292105,
         phaseTimers = {
             [15] = {
@@ -193,7 +193,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5, phaseNames = true,
+    local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, customIcon = 1296249,
         phaseTimers = {
             [15] = {
@@ -212,7 +212,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5, phaseNames = true,
+    local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, customIcon = 1299855,
         phaseTimers = {
             [15] = {
@@ -226,6 +226,48 @@ NSI.InitializeAlerts[encID] = function(self)
                 {35, 67},
                 {35, 67},
                 {35, 67},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Trader Abilities", internalID = "TimeToThrow", name = "Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7, 
+        customIcon = 1295817,
+        isConditional = {
+            text = "This Alert only shows if you are holding the fish at the time.",
+            func = [[return function() return C_ActionBar.HasExtraActionBar() end]],
+        },
+        phaseTimers = {
+            [15] = {
+                {57},
+                {117},
+                {117},
+                {117},
+            },
+            [16] = {
+                {57},
+                {117},
+                {117},
+                {117},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Trader Abilities", internalID = "TimeToThrowNonConditional", name = "non-conditional Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7,
+        customIcon = 1295817, enabled = false,
+        phaseTimers = {
+            [15] = {
+                {57},
+                {117},
+                {117},
+                {117},
+            },
+            [16] = {
+                {57},
+                {117},
+                {117},
+                {117},
             }
         },
     }
