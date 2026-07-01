@@ -110,6 +110,57 @@ local function PositionAuraTrackingUnitName(fontString, parent, settings)
     fontString:SetJustifyV("MIDDLE")
 end
 
+local function GetAuraTrackingAnchorFrame(settings, fallback)
+    local frameName = settings and settings.CustomAnchorFrame
+    local frame = frameName and frameName ~= "" and _G[frameName]
+    if type(frame) == "table" and frame.GetCenter and frame.IsShown then
+        return frame
+    end
+    return fallback
+end
+
+function NSI:IsValidAuraTrackingAnchorFrame(frameName)
+    if not frameName or frameName == "" then return true end
+    local frame = _G[frameName]
+    return type(frame) == "table" and frame.GetCenter and frame.IsShown
+end
+
+local function SetAuraTrackingPoint(frame, settings, fallback)
+    local relativeFrame = GetAuraTrackingAnchorFrame(settings, fallback)
+    frame:ClearAllPoints()
+    local ok = pcall(frame.SetPoint, frame, settings.Anchor or "CENTER", relativeFrame or fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
+    if not ok and relativeFrame ~= fallback then
+        frame:ClearAllPoints()
+        pcall(frame.SetPoint, frame, settings.Anchor or "CENTER", fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
+    end
+end
+
+local function GetPointCoordinate(frame, point)
+    if not frame or not point then return end
+    local left, right, top, bottom = frame:GetLeft(), frame:GetRight(), frame:GetTop(), frame:GetBottom()
+    if not left or not right or not top or not bottom then return end
+
+    local x
+    if point:find("LEFT", 1, true) then
+        x = left
+    elseif point:find("RIGHT", 1, true) then
+        x = right
+    else
+        x = (left + right) / 2
+    end
+
+    local y
+    if point:find("TOP", 1, true) then
+        y = top
+    elseif point:find("BOTTOM", 1, true) then
+        y = bottom
+    else
+        y = (top + bottom) / 2
+    end
+
+    return x, y
+end
+
 function NSI:UseAuraTrackingContainers()
     if not self:IsMidnightS2() then return false end
     if self.AuraTrackingContainersAvailable ~= nil then return self.AuraTrackingContainersAvailable end
@@ -139,6 +190,51 @@ function NSI:UseAuraTrackingContainers()
     self.AuraTrackingButtonProbe = button
     self.AuraTrackingContainersAvailable = true
     return self.AuraTrackingContainersAvailable
+end
+
+function NSI:SaveAuraTrackingFramePosition(frame, settings)
+    if not frame or not settings then return end
+    local relativeFrame = GetAuraTrackingAnchorFrame(settings, self.NSRTFrame)
+    local point = settings.Anchor or "CENTER"
+    local relativePoint = settings.relativeTo or "CENTER"
+    local frameX, frameY = GetPointCoordinate(frame, point)
+    local relativeX, relativeY = GetPointCoordinate(relativeFrame, relativePoint)
+    if not frameX or not relativeX then
+        self:SaveFramePosition(frame, settings)
+        return
+    end
+
+    settings.Anchor = point
+    settings.relativeTo = relativePoint
+    settings.xOffset = Round(frameX - relativeX)
+    settings.yOffset = Round(frameY - relativeY)
+end
+
+function NSI:MakeAuraTrackingDraggable(frame, settings, enable)
+    if not frame then return end
+    if not enable then
+        self:MakeDraggable(frame, settings, false)
+        return
+    end
+
+    self:MakeDraggable(frame, nil, true)
+    frame:SetScript("OnDragStart", function(f)
+        f:StartMoving()
+        f._nsrtAuraTrackingDragElapsed = 0
+        f:SetScript("OnUpdate", function(updateFrame, elapsed)
+            updateFrame._nsrtAuraTrackingDragElapsed = (updateFrame._nsrtAuraTrackingDragElapsed or 0) + elapsed
+            if updateFrame._nsrtAuraTrackingDragElapsed < 0.05 then return end
+            updateFrame._nsrtAuraTrackingDragElapsed = 0
+            self:SaveAuraTrackingFramePosition(updateFrame, settings)
+        end)
+    end)
+    frame:SetScript("OnDragStop", function(f)
+        f:SetScript("OnUpdate", nil)
+        f._nsrtAuraTrackingDragElapsed = nil
+        f:StopMovingOrSizing()
+        self:SaveAuraTrackingFramePosition(f, settings)
+        self.PendingAuraTrackingUpdate = true
+    end)
 end
 
 function NSI:GetAuraTrackingFontPath(settings)
@@ -262,9 +358,8 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
 
     container:SetEnabled(false)
     container:RemoveAllAuraFrames()
-    container:ClearAllPoints()
     container:SetSize(width, height)
-    container:SetPoint(settings.Anchor, self.NSRTFrame, settings.relativeTo, settings.xOffset, settings.yOffset)
+    SetAuraTrackingPoint(container, settings, self.NSRTFrame)
     container:SetUnit(unit)
 
     AddAuraTrackingFilters(container, settings.Limit)
@@ -422,7 +517,7 @@ function NSI:PreviewAuraTracking(key, show)
     local mover = self[frameKey]
     if not show then
         self:StopAuraTrackingPreviewTimer(key)
-        self:MakeDraggable(mover, settings, false)
+        self:MakeAuraTrackingDraggable(mover, settings, false)
         mover:Hide()
         if self[iconKey] then
             for _, icon in ipairs(self[iconKey]) do
@@ -436,15 +531,10 @@ function NSI:PreviewAuraTracking(key, show)
     self:ClearAuraTracking()
     mover:SetSize(settings.Width, settings.Height)
     mover:SetScale(1)
-    mover:ClearAllPoints()
-    mover:SetPoint(settings.Anchor, self.NSRTFrame, settings.relativeTo, settings.xOffset, settings.yOffset)
+    SetAuraTrackingPoint(mover, settings, self.NSRTFrame)
     mover:Show()
 
-    self:MakeDraggable(mover, settings, true)
-    mover:SetScript("OnDragStop", function(frame)
-        self:StopFrameMove(frame, settings)
-        self.PendingAuraTrackingUpdate = true
-    end)
+    self:MakeAuraTrackingDraggable(mover, settings, true)
 
     if not self[iconKey] then self[iconKey] = {} end
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0

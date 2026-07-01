@@ -94,6 +94,23 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         nocombat = true,
         spacement = true,
     }
+    options[#options + 1] = { type = "label", get = function() return "Custom Anchor Frame" end }
+    options[#options + 1] = {
+        type = "textentry",
+        name = "",
+        desc = "Name of the frame this Aura Tracking display should anchor to. Leave empty to anchor to the default NSRT frame. You can use /fstack to find frame names.",
+        get = function() return settings.CustomAnchorFrame or "" end,
+        set = function(_, _, value)
+            if value ~= "" and not NSI:IsValidAuraTrackingAnchorFrame(value) then
+                print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Anchor frame not found."))
+                return
+            end
+            settings.CustomAnchorFrame = value ~= "" and value or ""
+            NSI:UpdateAuraTrackingDisplay(settingsKey)
+        end,
+        width = 240,
+        nocombat = true,
+    }
     options[#options + 1] = {
         type = "select",
         name = "Grow Direction",
