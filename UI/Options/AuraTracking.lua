@@ -108,7 +108,7 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
             settings.CustomAnchorFrame = value ~= "" and value or ""
             NSI:UpdateAuraTrackingDisplay(settingsKey)
         end,
-        width = 240,
+        width = 200,
         nocombat = true,
     }
     options[#options + 1] = {
