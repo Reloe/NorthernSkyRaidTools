@@ -404,8 +404,10 @@ local function BuildReminderOptions()
                 if not value then
                     NSI.PersonalReminder = ""
                     NSI.LoadedPersonalReminder = nil
-                    NSRT.StoredPersonalReminder[charkey] = nil
-                    NSRT.ActivePersonalReminder[charkey] = {}
+                    if charkey then
+                        NSRT.StoredPersonalReminder[charkey] = nil
+                        NSRT.ActivePersonalReminder[charkey] = {}
+                    end
                 end
             end,
             nocombat = true,

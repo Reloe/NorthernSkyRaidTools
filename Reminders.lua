@@ -1412,6 +1412,7 @@ end
 
 function NSI:GetActivePersonalReminders()
     local charKey = self:GetProfileKey()
+    if not charKey then return {} end
     NSRT.ActivePersonalReminder[charKey] = NSRT.ActivePersonalReminder[charKey] or {}
     return NSRT.ActivePersonalReminder[charKey]
 end
@@ -1433,13 +1434,17 @@ function NSI:SetReminder(name, personal, skipupdate, encIDHint)
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
             self.LoadedPersonalReminder = name
-            NSRT.StoredPersonalReminder[charkey] = name
+            if charkey then
+                NSRT.StoredPersonalReminder[charkey] = name
+            end
             NSRT.ReminderSettings.PersNote = true
             if encID then self:GetActivePersonalReminders()[encID] = name end
         else
             self.PersonalReminder = ""
             self.LoadedPersonalReminder = nil
-            NSRT.StoredPersonalReminder[charkey] = nil
+            if charkey then
+                NSRT.StoredPersonalReminder[charkey] = nil
+            end
             if encID then self:GetActivePersonalReminders()[encID] = nil end
         end
     elseif name and NSRT.Reminders[name] then

@@ -586,9 +586,11 @@ function NSI:CreateProfile(name, init)
     end
     self:AddMissingDefaults()
     local ProfileKey = self:GetProfileKey()
-    NSRT.ProfileKeys[ProfileKey] = name
+    if ProfileKey then
+        NSRT.ProfileKeys[ProfileKey] = name
+    end
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
+    if not init and ProfileKey then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:SaveProfile()
 end
 
@@ -601,9 +603,11 @@ function NSI:LoadProfile(name, skipsave, init)
             end
         end
     local ProfileKey = self:GetProfileKey()
-    NSRT.ProfileKeys[ProfileKey] = name
+    if ProfileKey then
+        NSRT.ProfileKeys[ProfileKey] = name
+    end
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
+    if not init and ProfileKey then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:AddMissingDefaults()
     self:SaveProfile()
     end
@@ -905,7 +909,7 @@ function NSI:LoadMyProfile()
     local ProfileKey = self:GetProfileKey()
     local ProfileToLoad = "default"
     self:AddMissingDefaults()
-    if NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
+    if ProfileKey and NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
         ProfileToLoad = NSRT.ProfileKeys[ProfileKey]
     elseif NSRT.MainProfile then
         ProfileToLoad = NSRT.MainProfile
