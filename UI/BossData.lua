@@ -17,7 +17,7 @@ local BossIcons = {
     [3183] = 7448204, -- Midnight Falls
     [3159] = 7852823, -- Rotmire
 
-    [3379] = 2828147, -- Nymrissa Wavecaller - placeholder iconid from Uu'nat since none exists yet?
+    [3379] = 3012069, -- Nymrissa Wavecaller
     [3470] = 7966621, -- Nek'zali the Soulcoiler
     [3445] = 7966620, -- Entombed Sentinels
     [3455] = 7966618, -- Vashnik the Malignant
