@@ -472,6 +472,10 @@ local function PositionCircleText(text, F, s)
     end
 end
 
+local function GetReminderFontFlags(settings)
+    return (settings and settings.FontFlags) or "OUTLINE"
+end
+
 function NSI:UpdateExistingFrames() -- called when user changes settings to not require a reload
     if self._uefPending then return end
     self._uefPending = true
@@ -481,7 +485,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         local F = parent[i]
         if F then
             local s = NSRT.ReminderSettings.TextSettings
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             local anchor = s.CenterAligned and "CENTER" or "LEFT"
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, anchor, 0, 0)
@@ -504,14 +508,14 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             local relativePoint = s.RightAlignedText and "LEFT" or "RIGHT"
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             if s.HideTimerText then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
             end
             F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
-            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
         end
     end
     self:ArrangeStates("Icons")
@@ -538,14 +542,14 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Icon:SetPoint("RIGHT", F, "LEFT", s.xIcon, s.yIcon)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             if s.HideTimerText then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
             end
             F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
-            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
         end
     end
     self:ArrangeStates("Bars")
@@ -566,7 +570,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
                 F.Swipe:SetSwipeTexture(texture)
                 F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
             end
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             PositionCircleText(F.Text, F, s)
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         end
@@ -683,7 +687,7 @@ function NSI:SetProperties(F, info, skipsound, s)
     elseif info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
-        F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+        F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
         PositionCircleText(F.Text, F, s)
         F.Text:SetTextColor(r, g, b, a)
         local texture = GetCircleTexture(info)
@@ -783,9 +787,7 @@ function NSI:CreateText(info)
             F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             local anchor = s.CenterAligned and "CENTER" or "LEFT"
             F.Text:SetPoint(anchor, F, anchor, 0, 0)
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.Text:SetShadowColor(0, 0, 0, 1)
-            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             self:SetProperties(F, info, false, s)
             self.ReminderText[i] = F
@@ -825,9 +827,7 @@ function NSI:CreateIcon(info)
             local anchor = NSRT.ReminderSettings.IconSettings.RightAlignedText and "RIGHT" or "LEFT"
             local relativePoint = NSRT.ReminderSettings.IconSettings.RightAlignedText and "LEFT" or "RIGHT"
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.Text:SetShadowColor(0, 0, 0, 1)
-            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
             F.Swipe:SetAllPoints()
@@ -840,9 +840,7 @@ function NSI:CreateIcon(info)
             F.TimerOverlay:SetFrameLevel(F.Swipe:GetFrameLevel() + 1)
             F.TimerText = F.TimerOverlay:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
-            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            F.TimerText:SetShadowColor(0, 0, 0, 1)
-            F.TimerText:SetShadowOffset(0, 0)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
             self:SetProperties(F, info, false, s)
             self.ReminderIcon[i] = F
             return F
@@ -926,15 +924,11 @@ function NSI:CreateBar(info)
             F.Icon:SetSize(s.Height, s.Height)
             F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.Text:SetShadowColor(0, 0, 0, 1)
-            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             F.TimerText = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
-            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, "OUTLINE")
-            F.TimerText:SetShadowColor(0, 0, 0, 1)
-            F.TimerText:SetShadowOffset(0, 0)
+            F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
             self:SetProperties(F, info, false, s)
             self.ReminderBar[i] = F
             return F
@@ -976,9 +970,7 @@ function NSI:CreateCircle(info)
 
             F.Text = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
             PositionCircleText(F.Text, F, s)
-            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
-            F.Text:SetShadowColor(0, 0, 0, 1)
-            F.Text:SetShadowOffset(0, 0)
+            F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
             local yoff = (s.GrowDirection == "Up"    and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Down"  and -(i-1)*(s.Size+s.Spacing)) or 0
@@ -1637,7 +1629,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         if IsText then
             self[Name].Text = self[Name]:CreateFontString(Name..'Text', "OVERLAY", "GameFontNormal")
             self[Name].Text:SetText("Personals - (10)")
-            self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
+            self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
             self[Name].Text:SetPoint("LEFT", self[Name], "LEFT", 0, 0)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
@@ -1710,7 +1702,7 @@ function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
     local Width  = isAnchor and 300 or ((IsText and F.Text:GetStringWidth()) or s.Width or s.Size or 80)
     local Height = isAnchor and 20  or ((IsText and F.Text:GetStringHeight()) or s.Height or s.Size or 80)
     if IsText then
-        F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, "OUTLINE")
+        F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
         F.Text:SetText("Personals - (10)")
     end
     F:SetSize(Width, Height)
@@ -1909,7 +1901,7 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
     if not self[Name] then return end
     if SettingsTable.enabled then
         self[Name]:SetAllPoints(self[Name.."Mover"])
-        self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, "OUTLINE")
+        self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
