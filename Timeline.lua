@@ -567,7 +567,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
         local spellID = line:match("spellid:(%d+)")
         local dur = line:match("dur:(%d+)")
         local text = line:match("text:([^;]+)")
-        local phase = line:match("ph:(%d+)") or "1"
+        local phase = line:match("ph:(%d*%.?%d+)") or "1"
         local glowUnit = line:match("glowunit:([^;]+)")
 
         local glowUnitNames = ""
