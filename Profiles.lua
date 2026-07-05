@@ -455,6 +455,7 @@ function NSI:AddMissingDefaults()
                 xOffset = 0,
                 yOffset = 0,
                 FontSize = 30,
+                FontFlags = "OUTLINE",
             },
         },
 
