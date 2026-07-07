@@ -77,8 +77,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitAuraSystem(true)
         self:UpdateLibSpecRegistration()
-        if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
-        if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
+        self:ApplyDefaultPASounds(false, false, NSRT.PASounds.UseDefaultPASounds)
+        self:ApplyDefaultPASounds(false, true, NSRT.PASounds.UseDefaultMPlusPASounds)
         for spellID, info in pairs(NSRT.PASounds) do
             if type(info) == "table" and info.sound then -- prevents user settings
                 self:AddPASound(spellID, info.sound)

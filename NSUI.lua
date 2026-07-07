@@ -32,6 +32,7 @@ local BuildPASoundEditUI           = NSI.UI.PrivateAuras.BuildPASoundEditUI
 local BuildExportStringUI          = NSI.UI.General.BuildExportStringUI
 local BuildImportStringUI          = NSI.UI.General.BuildImportStringUI
 local BuildGroupExportUI           = NSI.UI.General.BuildGroupExportUI
+local BuildAuraSoundsUI            = NSI.UI.PrivateAuras.BuildAuraSoundsUI
 
 -- Get options builders from modules
 local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
@@ -79,7 +80,7 @@ local TABS_GROUPS                  = {
         { name = "Assignments",      textKey = "Assignments" },
     },
     {
-        { name = "PrivateAura", textKey = "Private Auras" },
+        { name = "PrivateAura", textKey = NSI:IsMidnightS2() and "Aura Sounds" or "Private Auras" },
         { name = "WAImports",   textKey = "WA Imports" },
     },
     {
@@ -482,7 +483,11 @@ function NSUI:Init()
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
     NSUI.reminders_frame          = BuildRemindersEditUI(tabSystem:GetTabFrameByName("SharedNotes"))
-    NSUI.pasound_frame            = BuildPASoundEditUI()
+    if NSI:IsMidnightS2() and BuildAuraSoundsUI then
+        NSUI.aurasounds_frame     = BuildAuraSoundsUI(privateaura_tab)
+    else
+        NSUI.pasound_frame        = BuildPASoundEditUI()
+    end
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()
