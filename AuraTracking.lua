@@ -6,6 +6,17 @@ local AuraTrackingFilters = {
     "HARMFUL|RAID_PLAYER_DISPELLABLE",
 }
 
+local AuraTrackingSpellIDs = {
+    Player = {
+        -- [123456] = true,
+    },
+    Tank = {
+        -- [123456] = true,
+    },
+}
+
+NSI.AuraTrackingSpellIDs = AuraTrackingSpellIDs
+
 local DebugShowAllAuraTrackingBuffs = false
 local DebugShowAllAuraTrackingDebuffs = false
 
@@ -29,17 +40,27 @@ local function AuraTrackingUpdateLocked()
     return UnitAffectingCombat("player") or InCombatLockdown()
 end
 
-local function AddAuraTrackingFilters(container, limit)
-    container:ClearAuraFilters()
+local function TableHasEntries(t)
+    if not t then return false end
+    return next(t) ~= nil
+end
+
+local function GetAuraTrackingFilters(spellIDs)
     if DebugShowAllAuraTrackingBuffs then
-        container:AddAuraFilter("HELPFUL", { maxFrameCount = limit })
-        return
+        return {"HELPFUL"}
     elseif DebugShowAllAuraTrackingDebuffs then
-        container:AddAuraFilter("HARMFUL", { maxFrameCount = limit })
-        return
+        return {"HARMFUL"}
+    elseif TableHasEntries(spellIDs) then
+        return {"HARMFUL"}
     end
-    for _, filter in ipairs(AuraTrackingFilters) do
-        container:AddAuraFilter(filter, { maxFrameCount = limit })
+    return AuraTrackingFilters
+end
+
+local function ConfigureAuraTrackingGroupOptions(options, spellIDs)
+    if TableHasEntries(spellIDs) then
+        options.candidateFilters = {
+            includeSpellIDs = spellIDs,
+        }
     end
 end
 
@@ -180,14 +201,12 @@ function NSI:UseAuraTrackingContainers()
         return false
     end
 
-    local buttonOk, button = pcall(CreateFrame, "AuraButton", nil, container, "CustomAuraButtonTemplate")
-    if not buttonOk or not button then
+    if type(container.AddAuraGroup) ~= "function" then
         self.AuraTrackingContainersAvailable = false
         return false
     end
 
     self.AuraTrackingContainerProbe = container
-    self.AuraTrackingButtonProbe = button
     self.AuraTrackingContainersAvailable = true
     return self.AuraTrackingContainersAvailable
 end
@@ -250,7 +269,12 @@ function NSI:ClearAuraTracking()
     for _, state in pairs(self.AuraTrackingState) do
         if state.container then
             state.container:SetEnabled(false)
-            state.container:ClearAuraFilters()
+            state.container:Hide()
+            if state.container.ClearAuraGroups then
+                pcall(state.container.ClearAuraGroups, state.container)
+            else
+                state.container = nil
+            end
         end
     end
 end
@@ -263,19 +287,16 @@ function NSI:AcquireAuraTrackingContainer(key)
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
         state.container:SetFrameStrata("HIGH")
-        state.buttons = {}
         state.buttonRegions = {}
     end
     return state
 end
 
-function NSI:AcquireAuraTrackingButton(state, index, width, height, settings, unit, key)
-    state.buttons = state.buttons or {}
+function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
     state.buttonRegions = state.buttonRegions or {}
     local fontPath = self:GetAuraTrackingFontPath(settings)
 
-    if not state.buttons[index] or not state.buttonRegions[index] then
-        local button = CreateFrame("AuraButton", nil, state.container, "CustomAuraButtonTemplate")
+    if not state.buttonRegions[button] then
         local regions = {}
 
         regions.icon = button:CreateTexture(nil, "ARTWORK")
@@ -306,12 +327,10 @@ function NSI:AcquireAuraTrackingButton(state, index, width, height, settings, un
         regions.unitName = regions.textOverlay:CreateFontString(nil, "OVERLAY")
         regions.unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
 
-        state.buttons[index] = button
-        state.buttonRegions[index] = regions
+        state.buttonRegions[button] = regions
     end
 
-    local button = state.buttons[index]
-    local regions = state.buttonRegions[index]
+    local regions = state.buttonRegions[button]
     button:SetSize(width, height)
     local zoom = ((settings.Zoom or 0) * 0.5) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
@@ -355,23 +374,47 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
     local height = settings.Height
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
+    local groupKeyPrefix = "NSRT_" .. key
+    local spellIDs = AuraTrackingSpellIDs[key == "tank" and "Tank" or "Player"]
 
     container:SetEnabled(false)
-    container:RemoveAllAuraFrames()
+    container:Hide()
+    if container.ClearAuraGroups then
+        pcall(container.ClearAuraGroups, container)
+    end
     container:SetSize(width, height)
     SetAuraTrackingPoint(container, settings, self.NSRTFrame)
     container:SetUnit(unit)
 
-    AddAuraTrackingFilters(container, settings.Limit)
-    for i = 1, settings.Limit do
-        local button = self:AcquireAuraTrackingButton(state, i, width, height, settings, unit, key)
-        button:ClearAllPoints()
-        local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
-        local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
-        button:SetPoint("CENTER", button:GetParent(), "CENTER", xOffset, yOffset)
-        container:AddAuraFrame(button)
+    for index, filter in ipairs(GetAuraTrackingFilters(spellIDs)) do
+        local groupKey = groupKeyPrefix .. index
+        local options = {
+            maxFrameCount = settings.Limit,
+            initializeFrame = function(button)
+                self:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
+            end,
+        }
+        ConfigureAuraTrackingGroupOptions(options, spellIDs)
+
+        local added = pcall(container.AddAuraGroup, container, groupKey, filter, options)
+        if not added and options.candidateFilters then
+            options.candidateFilters = nil
+            pcall(container.AddAuraGroup, container, groupKey, filter, options)
+        end
+        if container.SetAuraGroupLayout then
+            pcall(container.SetAuraGroupLayout, container, groupKey, {
+                point = "CENTER",
+                relativePoint = "CENTER",
+                offsetX = 0,
+                offsetY = 0,
+                xOffset = (settings.Width + settings.Spacing) * xDirection,
+                yOffset = (settings.Height + settings.Spacing) * yDirection,
+                wrapAfter = settings.Limit,
+            })
+        end
     end
 
+    container:Show()
     container:SetEnabled(true)
 end
 
