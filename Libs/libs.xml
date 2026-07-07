@@ -6,6 +6,7 @@
 	<Include file="Libs\LibTranslit-1.0\LibTranslit-1.0.xml"/>
 	<Include file="Libs\LibCustomGlow-1.0\LibCustomGlow-1.0.xml"/>
 	<Include file="Libs\LibGetFrame-1.0\LibGetFrame-1.0.xml"/>
+	<Script file="Libs\LibRangeCheck-3.0\LibRangeCheck-3.0.lua"/>
 	<Include file="Libs\LibSerialize\lib.xml"/>
 	<Include file="Libs\LibDeflate\lib.xml"/>
 	<Include file="Libs\AceSerializer-3.0\AceSerializer-3.0.xml"/>
