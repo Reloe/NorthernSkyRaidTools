@@ -56,6 +56,51 @@ local SoundListRaid = {
     [1222088] = "Spread", -- Festering Vines
     [1221639] = "Boss", -- Shroomling Fixate
     [1299508] = "Ranged", -- Fungling Fixate
+
+    -- Nek'zali
+    [1306666] = "Targeted", -- Hungering Pyre
+    [1294933] = "Clear", --Slithering Flame
+    [1287434] = "Debuff", -- Essence Rend
+
+    -- Entombed Sentinels
+    [1288260] = "Targeted", -- Unstable Miasma
+    [1288297] = "DropPool", -- Clinging Murk
+    [1296880] = "Debuff", -- Shifting Protovenom
+
+    -- Vashnik
+    [1295224] = "Suck", -- Siphoning Infection
+    [1295173] = "RunOut", -- Exploding Infection
+    [1294994] = "HealAbsorb", -- Stygian Infusion
+    [1281908] = "Targeted", -- Plague Froth
+
+    -- Lost Explorers
+    [1295886] = "Fire", -- Frostfire Volley (Fire)
+    [1295935] = "Frost", -- Frostfire Volley (Frost)
+    [1297625] = "Targeted", -- Explosive Surprise
+    [1296092] = "Targeted", -- Mighty Thud
+
+    -- Sszorak
+    [1305963] = "Targeted", -- Venomous Surge
+    [1285453] = "North", -- Raging Crosswinds South Debuff (so we well player to go North)
+    [1285425] = "South", -- Raging Crosswinds North Debuff (so we tell player to go South)
+    [1305621] = "Fixate", -- Serpent's Fury
+    [1297707] = "DropPool", -- Virulence
+    [1299899] = "DropPool", -- Virulence (idk which one is real)
+
+    -- The Twin Fangs
+    [1293979] = "Targeted", -- Corrosive Spit
+    [1290814] = "Spread", -- Coiling Ichor
+
+    -- The Coiled Altar
+    [1283485] = "Targeted", -- Guillotine
+    [1282419] = "Orb", -- Volatile Venom
+    [1309956] = "Spread", -- Mutagenic Venom
+    [1309953] = "Spread", -- Mutagenic Venom
+    [1309758] = "Spread", -- Mutagenic Venom
+    [1309959] = "Spread", -- Mutagenic Venom (probably only one of these real)
+    [1286901] = "Bomb", -- Gloombomb
+    [1297445] = "MindControl", -- Dreadmarch
+    [1285911] = "Fixate", -- Unnerving Fixation
 }
 
 local SoundListMPlus = {
