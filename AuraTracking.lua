@@ -6,17 +6,6 @@ local AuraTrackingFilters = {
     "HARMFUL|RAID_PLAYER_DISPELLABLE",
 }
 
-local AuraTrackingSpellIDs = {
-    Player = {
-        -- [123456] = true,
-    },
-    Tank = {
-        -- [123456] = true,
-    },
-}
-
-NSI.AuraTrackingSpellIDs = AuraTrackingSpellIDs
-
 local DebugShowAllAuraTrackingBuffs = false
 local DebugShowAllAuraTrackingDebuffs = false
 
@@ -40,28 +29,13 @@ local function AuraTrackingUpdateLocked()
     return UnitAffectingCombat("player") or InCombatLockdown()
 end
 
-local function TableHasEntries(t)
-    if not t then return false end
-    return next(t) ~= nil
-end
-
-local function GetAuraTrackingFilters(spellIDs)
+local function GetAuraTrackingFilters()
     if DebugShowAllAuraTrackingBuffs then
         return {"HELPFUL"}
     elseif DebugShowAllAuraTrackingDebuffs then
         return {"HARMFUL"}
-    elseif TableHasEntries(spellIDs) then
-        return {"HARMFUL"}
     end
     return AuraTrackingFilters
-end
-
-local function ConfigureAuraTrackingGroupOptions(options, spellIDs)
-    if TableHasEntries(spellIDs) then
-        options.candidateFilters = {
-            includeSpellIDs = spellIDs,
-        }
-    end
 end
 
 local function CreateAuraTrackingBorder(parent)
@@ -375,7 +349,6 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
     local groupKeyPrefix = "NSRT_" .. key
-    local spellIDs = AuraTrackingSpellIDs[key == "tank" and "Tank" or "Player"]
 
     container:SetEnabled(false)
     container:Hide()
@@ -386,7 +359,7 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
     SetAuraTrackingPoint(container, settings, self.NSRTFrame)
     container:SetUnit(unit)
 
-    for index, filter in ipairs(GetAuraTrackingFilters(spellIDs)) do
+    for index, filter in ipairs(GetAuraTrackingFilters()) do
         local groupKey = groupKeyPrefix .. index
         local options = {
             maxFrameCount = settings.Limit,
@@ -394,13 +367,8 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
                 self:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
             end,
         }
-        ConfigureAuraTrackingGroupOptions(options, spellIDs)
 
-        local added = pcall(container.AddAuraGroup, container, groupKey, filter, options)
-        if not added and options.candidateFilters then
-            options.candidateFilters = nil
-            pcall(container.AddAuraGroup, container, groupKey, filter, options)
-        end
+        pcall(container.AddAuraGroup, container, groupKey, filter, options)
         if container.SetAuraGroupLayout then
             pcall(container.SetAuraGroupLayout, container, groupKey, {
                 point = "CENTER",
