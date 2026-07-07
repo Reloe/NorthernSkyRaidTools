@@ -1,13 +1,8 @@
 local _, NSI = ...
 
 local AuraTrackingFilters = {
-    "HARMFUL|RAID",
-    "HARMFUL|RAID_IN_COMBAT",
-    "HARMFUL|RAID_PLAYER_DISPELLABLE",
+    "HARMFUL|!PLAYER",
 }
-
-local DebugShowAllAuraTrackingBuffs = false
-local DebugShowAllAuraTrackingDebuffs = false
 
 local AuraTrackingDurationFormatter
 local function GetAuraTrackingDurationFormatter()
@@ -30,11 +25,6 @@ local function AuraTrackingUpdateLocked()
 end
 
 local function GetAuraTrackingFilters()
-    if DebugShowAllAuraTrackingBuffs then
-        return {"HELPFUL"}
-    elseif DebugShowAllAuraTrackingDebuffs then
-        return {"HARMFUL"}
-    end
     return AuraTrackingFilters
 end
 
@@ -366,6 +356,9 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
             initializeFrame = function(button)
                 self:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
             end,
+            candidateFilters = {
+                isFromPlayerOrPlayerPet = false,
+            },
         }
 
         pcall(container.AddAuraGroup, container, groupKey, filter, options)
@@ -395,9 +388,7 @@ function NSI:InitAuraTracking()
 
     self:ClearAuraTracking()
     self:InitAuraTrackingContainer("player", NSRT.AuraTrackingSettings.Player, "player")
-    if DebugShowAllAuraTrackingBuffs then
-        self:InitAuraTrackingContainer("player", NSRT.AuraTrackingSettings.Tank, "tank")
-    elseif self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
+    if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
         local tankUnit
         for unit in self:IterateGroupMembers() do
             if UnitGroupRolesAssigned(unit) == "TANK" and not UnitIsUnit("player", unit) then
