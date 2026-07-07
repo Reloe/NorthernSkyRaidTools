@@ -123,7 +123,7 @@ local function BuildPASoundEditUI()
             local newValue = soundlist[value]
             local oldValue = line.sound
 
-            if oldValue == newValue or not (C_UnitAuras.AuraIsPrivate(line.spellID)) then return end
+            if oldValue == newValue or not NSI:IsValidPASoundSpell(line.spellID) then return end
             NSI:SavePASound(tonumber(line.spellID), newValue)
 
             line.sound = newValue
@@ -207,7 +207,7 @@ local function BuildPASoundEditUI()
             NewSpellIDTextEntry:SetText("")
             NewSoundDropdown:SetValue(nil)
             spellID = tonumber(spellID)
-            if C_UnitAuras.AuraIsPrivate(spellID) then
+            if NSI:IsValidPASoundSpell(spellID) then
                 NSI:SavePASound(spellID, sound)
             else
                 print(T("Your entered spellID does not appear to be a Private Aura."))

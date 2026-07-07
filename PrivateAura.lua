@@ -113,20 +113,36 @@ local SoundListMPlus = {
     [1222098] = "Targeted", -- Nether Dash
 }
 
+function NSI:IsValidPASoundSpell(spellID)
+    if not spellID then return false end
+    if self:IsMidnightS2() then return true end
+    return C_UnitAuras.AuraIsPrivate and C_UnitAuras.AuraIsPrivate(spellID)
+end
+
+function NSI:GetAuraAppliedSoundAPI()
+    if self:IsMidnightS2() and C_UnitAuras.AddAuraAppliedSound and C_UnitAuras.RemoveAuraAppliedSound then
+        return C_UnitAuras.AddAuraAppliedSound, C_UnitAuras.RemoveAuraAppliedSound
+    end
+    return C_UnitAuras.AddPrivateAuraAppliedSound, C_UnitAuras.RemovePrivateAuraAppliedSound
+end
+
 function NSI:AddPASound(spellID, sound, unit)
     if self:Restricted() then return end
-    if (not spellID) or (not C_UnitAuras.AuraIsPrivate(spellID)) then return end
+    if not self:IsValidPASoundSpell(spellID) then return end
     if not unit then unit = "player" end
+    local addAuraSound, removeAuraSound = self:GetAuraAppliedSoundAPI()
+    if not addAuraSound or not removeAuraSound then return end
+
     if not self.PrivateAuraSoundIDs then self.PrivateAuraSoundIDs = {} end
     if not self.PrivateAuraSoundIDs[unit] then self.PrivateAuraSoundIDs[unit] = {} end
     if self.PrivateAuraSoundIDs[unit][spellID] then
-        C_UnitAuras.RemovePrivateAuraAppliedSound(self.PrivateAuraSoundIDs[unit][spellID])
+        removeAuraSound(self.PrivateAuraSoundIDs[unit][spellID])
         self.PrivateAuraSoundIDs[unit][spellID] = nil
     end
     if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
     local soundPath = NSI.LSM:Fetch("sound", sound)
     if soundPath and soundPath ~= 1 then
-        local soundID = C_UnitAuras.AddPrivateAuraAppliedSound({
+        local soundID = addAuraSound({
             unitToken = unit,
             spellID = spellID,
             soundFileName = soundPath,
@@ -144,7 +160,7 @@ function NSI:ApplyDefaultPASounds(changed, mplus) -- only apply sound if changed
             if sound == "empty" then -- if sound is "empty" in the table I have marked it to be removed to clean up the table from old content
                 NSRT.PASounds[spellID] = nil
                 if changed then self:AddPASound(spellID, nil) end
-            elseif C_UnitAuras.AuraIsPrivate(spellID) then
+            elseif self:IsValidPASoundSpell(spellID) then
                 sound = "|cFF4BAAC8"..sound.."|r"
                 NSRT.PASounds[spellID] = {sound = sound, edited = false}
                 if changed then self:AddPASound(spellID, sound) end
@@ -157,7 +173,7 @@ function NSI:SavePASound(spellID, sound)
     if (not spellID) then return end
     NSRT.PASounds[spellID] = {sound = sound, edited = true}
     self:AddPASound(spellID, sound)
-    if not (C_UnitAuras.AuraIsPrivate(spellID)) then
+    if not self:IsValidPASoundSpell(spellID) then
         NSRT.PASounds[spellID] = nil
     end
 end
