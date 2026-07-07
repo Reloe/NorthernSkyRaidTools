@@ -67,6 +67,12 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "Invoke", name = "Invoke", text = "Dodge", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 8, customIcon = 1299673,
         timers = {
             [15] = {22, 50, 72, 100, 122, 150, 172, 200, 222},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Nek'zali", internalID = "InvokeMythic", name = "Invoke", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 8, customIcon = 1299673,
+        timers = {
             [16] = {22, 50, 72, 100, 122, 150, 172, 200, 222},
         },
     }
