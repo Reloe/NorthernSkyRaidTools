@@ -4,6 +4,9 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
+-- Debug: set this to true to test AuraContainers without candidateFilters.
+local debug = false
+
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -52,7 +55,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         enabled = false,
         Width = 100,
         Height = 100,
-        Zoom = 0,
+        Zoom = 10,
         Anchor = "CENTER",
         relativeTo = "CENTER",
         CustomAnchorFrame = "",
@@ -707,7 +710,12 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
     container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
     container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
 
-    local filters = isExternal and {"HELPFUL|!PLAYER"} or GetAuraTrackingFilters()
+    local filters
+    if isExternal then
+        filters = {"HELPFUL"}
+    else
+        filters = GetAuraTrackingFilters()
+    end
     for index, filter in ipairs(filters) do
         local groupKey = groupKeyPrefix .. index
         local candidateFilters
@@ -720,6 +728,9 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
                 isBossOrRoleAura = true,
                 maxDuration = 86400,
             }
+        end
+        if debug and not isExternal then
+            candidateFilters = nil
         end
         local options = {
             maxFrameCount = settings.Limit,
@@ -808,7 +819,7 @@ local function BuildAuraTrackingPreviewEntries(settings)
     for i = 1, limit do
         entries[#entries + 1] = {
             index = i,
-            duration = math.random(4, 30),
+            duration = math.random(10, 30),
         }
     end
 
@@ -877,7 +888,7 @@ end
 function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key, duration)
     local fontPath = self:GetAuraTrackingFontPath(settings)
     local now = GetTime()
-    duration = duration or 4
+    duration = duration or 10
     frame.PreviewExpires = now + duration
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
