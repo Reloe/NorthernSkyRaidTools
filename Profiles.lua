@@ -352,7 +352,6 @@ function NSI:AddMissingDefaults()
         AuraTrackingSettings = {
             Player = self:CreateAuraTrackingSettingsDefaults(),
             Tank = self:CreateAuraTrackingSettingsDefaults({
-                Limit = 5,
                 GrowDirection = "LEFT",
                 xOffset = -549,
                 yOffset = -199,
