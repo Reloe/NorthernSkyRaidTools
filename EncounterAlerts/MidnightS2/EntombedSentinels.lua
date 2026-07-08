@@ -55,6 +55,31 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Sentinels", internalID = "BloodDropPool", name = "Blood Drop Pool", text = "Drop-Pool", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+        spellID = 1284487, isSpecialDisplay = true,
+        isConditional = {
+            text = "This Alert only shows if you do not have threat on Boss2.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss2") return (threat and threat < 2) or not threat end]],
+        },
+        phaseTimers = {
+            [15] ={
+                {8.5, 30.4},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+            },
+            [16] ={
+                {8.5, 30.4},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+                {8.5, 30.4, 52.3, 74.2},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Sentinels", internalID = "BloodSoak", name = "Blood Soak", text = "Blood-Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
         textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
         isConditional = {
@@ -152,6 +177,58 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 end
 
+local function ScheduleBloodHitThreatCheck(self)
+    if self.BloodHitThreatTimer then self.BloodHitThreatTimer:Cancel() end
+
+    local difficultyID = self:DifficultyCheck({15, 16})
+    local dropPoolAlert = difficultyID and NSRT.EncounterAlerts[encID][difficultyID] and NSRT.EncounterAlerts[encID][difficultyID].BloodDropPool
+    local timers = dropPoolAlert and dropPoolAlert.phaseTimers and dropPoolAlert.phaseTimers[self.Phase or 1]
+    local timetocheck = timers and timers[#timers] -- only check last timer
+    if not timetocheck then return end
+
+    self.BloodHitThreatTimer = C_Timer.NewTimer(timetocheck, function()
+        local threat = UnitThreatSituation("player", "boss2")
+        if threat and threat >= 2 then
+            self.BloodHitTimer = GetTime()
+        end
+    end)
+end
+
+local function AddBloodHitPoolTimer(self, now)
+    local bloodHitTimer = self.BloodHitTimer
+    self.BloodHitTimer = nil
+
+    local difficultyID = self:DifficultyCheck({15, 16})
+    local alert = difficultyID and NSRT.EncounterAlerts[encID][difficultyID] and NSRT.EncounterAlerts[encID][difficultyID].BloodDropPool
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+
+    if bloodHitTimer then
+        local diff = 40 - (now - bloodHitTimer)
+        if diff > 0 then
+            alert = CopyTable(alert)
+            alert.phase = self.Phase
+            alert.time = diff
+            alert.phaseTimers = nil
+            alert.isSpecialDisplay = nil
+            self:AddToReminder(alert)
+        end
+    end
+end
+
+NSI.EncounterAlertStart[encID] = function(self)
+    self.BloodHitTimer = nil
+    local id = self:DifficultyCheck({15, 16})
+    local DropPool = id and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].BloodDropPool
+    if DropPool and DropPool.enabled and self:EvaluateLoad(DropPool) then
+        ScheduleBloodHitThreatCheck(self)
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self)
+    if self.BloodHitThreatTimer then self.BloodHitThreatTimer:Cancel() end
+    self.BloodHitTimer = nil
+end
+
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e ~= "ENCOUNTER_TIMELINE_EVENT_ADDED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
@@ -164,7 +241,9 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     end
     if addedcount >= 8 then
         self.Phase = self.Phase + 1
+        AddBloodHitPoolTimer(self, now)
         self:StartReminders(self.Phase)
+        ScheduleBloodHitThreatCheck(self)
         self.Timelines = {}
         self.PhaseSwapTime = now
     end
