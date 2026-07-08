@@ -476,7 +476,7 @@ end
 GetAuraTrackingSelectionOptions = function()
     local options = {
         {
-            label = "Player Aura Tracking",
+            label = "Player Debuff Tracking",
             value = "Player",
             onclick = function()
                 NSRT.AuraTrackingSelected = "Player"
@@ -484,7 +484,7 @@ GetAuraTrackingSelectionOptions = function()
             end,
         },
         {
-            label = "Co-Tank Aura Tracking",
+            label = "CoTank Debuff Tracking",
             value = "Tank",
             onclick = function()
                 NSRT.AuraTrackingSelected = "Tank"
@@ -492,7 +492,7 @@ GetAuraTrackingSelectionOptions = function()
             end,
         },
         {
-            label = "External Buff Aura Tracking",
+            label = "External & Immunity Tracking",
             value = "External",
             onclick = function()
                 NSRT.AuraTrackingSelected = "External"
@@ -577,11 +577,11 @@ local function BuildAuraTrackingOptions()
     end
 
     if selected == "Player" then
-        AddAuraTrackingSection(options, selected, "Player Aura Tracking", "IsAuraTrackingPlayerPreview", 237555)
+        AddAuraTrackingSection(options, selected, "Player Debuff Tracking", "IsAuraTrackingPlayerPreview", 237555)
     elseif selected == "Tank" then
-        AddAuraTrackingSection(options, selected, "Co-Tank Aura Tracking", "IsAuraTrackingTankPreview", 236318)
+        AddAuraTrackingSection(options, selected, "CoTank Debuff Tracking", "IsAuraTrackingTankPreview", 236318)
     elseif selected == "External" then
-        AddAuraTrackingSection(options, selected, "External Buff Aura Tracking", "IsAuraTrackingExternalPreview", C_Spell.GetSpellTexture(6940) or 135966)
+        AddAuraTrackingSection(options, selected, "External & Immunity Tracking", "IsAuraTrackingExternalPreview", C_Spell.GetSpellTexture(6940) or 135966)
     else
         local customIndex = tostring(selected):match("^Custom:(%d+)$") or "1"
         local settings = NSI:GetAuraTrackingSettings(selected)
