@@ -4,6 +4,8 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
+local MAX_TRACKED_DEBUFF_DURATION = 24 * 60 * 60
+
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -47,7 +49,7 @@ NSI.DefaultExternalAuraTrackingSpellIDs = {
 function NSI:CreateAuraTrackingSettingsDefaults(overrides)
     local settings = {
         Spacing = -1,
-        Limit = 5,
+        Limit = 10,
         GrowDirection = "RIGHT",
         enabled = false,
         Width = 100,
@@ -82,6 +84,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         SpellIDs = {},
         SpellIDsEdited = false,
         PreviewSpellID = nil,
+        ReverseSort = false,
     }
     for key, value in pairs(overrides or {}) do
         settings[key] = value
@@ -251,6 +254,7 @@ end
 local AuraTrackingStyleKeys = {
     "Spacing",
     "Limit",
+    "ReverseSort",
     "GrowDirection",
     "CustomAnchorFrame",
     "xOffset",
@@ -677,9 +681,15 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
             candidateFilters = {
                 includeSpellIDs = spellIDMap,
             }
+        elseif not isExternal then
+            candidateFilters = {
+                maxDuration = MAX_TRACKED_DEBUFF_DURATION,
+            }
         end
         local options = {
             maxFrameCount = settings.Limit,
+            sortMethod = AuraContainerSortMethod.ExpirationOnly,
+            sortDirection = settings.ReverseSort and AuraContainerSortDirection.Reverse or AuraContainerSortDirection.Normal,
             initializeFrame = function(button)
                 self:ConfigureAuraTrackingButton(state, button, state.width, state.height, state.settings, state.unit, state.key)
             end,
@@ -696,7 +706,7 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
             container:SetAuraGroupMaxFrameCount(groupKey, options.maxFrameCount)
             container:SetAuraGroupCandidateFilters(groupKey, options.candidateFilters)
             container:SetAuraGroupLayout(groupKey, options.layout)
-            container:SetAuraGroupSortMethod(groupKey, AuraContainerSortMethod.Default, AuraContainerSortDirection.Normal)
+            container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
         else
             container:AddAuraGroup(groupKey, filter, options)
         end
