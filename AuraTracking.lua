@@ -212,6 +212,51 @@ function NSI:SetAuraTrackingCustomName(settingsKey, value)
     end
 end
 
+local AuraTrackingStyleKeys = {
+    "Spacing",
+    "Limit",
+    "GrowDirection",
+    "CustomAnchorFrame",
+    "xOffset",
+    "yOffset",
+    "Width",
+    "Height",
+    "Zoom",
+    "HideBorder",
+    "BorderSize",
+    "HideTooltip",
+    "HideDurationText",
+    "HideStackText",
+    "EnableCooldownSwipe",
+    "InverseCooldownSwipe",
+    "DurationColor",
+    "StackColor",
+    "DurationFontSize",
+    "StackFontSize",
+    "TextFont",
+    "TextFontFlags",
+    "DurationXOffset",
+    "DurationYOffset",
+    "StackXOffset",
+    "StackYOffset",
+}
+
+function NSI:CopyAuraTrackingStyle(sourceKey, targetKey)
+    local source = self:GetAuraTrackingSettings(sourceKey)
+    local target = self:GetAuraTrackingSettings(targetKey)
+    if not source or not target or source == target then return end
+
+    for _, key in ipairs(AuraTrackingStyleKeys) do
+        if type(source[key]) == "table" then
+            target[key] = CopyTable(source[key])
+        else
+            target[key] = source[key]
+        end
+    end
+
+    self:UpdateAuraTrackingDisplay(targetKey)
+end
+
 function NSI:AddCustomAuraTracking()
     NSRT.AuraTrackingSettings.Custom = NSRT.AuraTrackingSettings.Custom or {}
     local index = #NSRT.AuraTrackingSettings.Custom + 1

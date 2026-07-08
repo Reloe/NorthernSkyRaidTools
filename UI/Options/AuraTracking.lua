@@ -86,12 +86,23 @@ local function build_name_position_options(settingsKey)
     return t
 end
 
+local AddAuraTrackingTopControls
+local GetAuraTrackingSelectionOptions
+
 local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, iconTexture)
     local settings = NSI:GetAuraTrackingSettings(settingsKey)
     if not settings then return end
     local isCustom = tostring(settingsKey):match("^Custom:")
     local displayIconTexture = (isCustom and settings.PreviewSpellID and C_Spell.GetSpellTexture(settings.PreviewSpellID)) or iconTexture
 
+    options[#options + 1] = {
+        type = "select",
+        name = "Aura Tracking Display",
+        desc = "Select which Aura Tracking display you want to edit.",
+        get = function() return NSRT.AuraTrackingSelected or "Player" end,
+        values = GetAuraTrackingSelectionOptions,
+        nocombat = true,
+    }
     options[#options + 1] = { type = "label", get = function() return label end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
     options[#options + 1] = {
         type = "toggle",
@@ -273,6 +284,7 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
     }
 
     options[#options + 1] = { type = "breakline" }
+    AddAuraTrackingTopControls(options, settingsKey)
     options[#options + 1] = { type = "label", get = function() return "Aura Tracking Text Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
     options[#options + 1] = {
         type = "select",
@@ -452,7 +464,7 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
     end
 end
 
-local function GetAuraTrackingSelectionOptions()
+GetAuraTrackingSelectionOptions = function()
     local options = {
         {
             label = "Player Aura Tracking",
@@ -497,22 +509,23 @@ local function GetAuraTrackingSelectionOptions()
     return options
 end
 
-local function BuildAuraTrackingOptions()
+local function GetAuraTrackingCopySourceOptions(selected)
     local options = {}
-    local selected = NSRT.AuraTrackingSelected or "Player"
-    if not NSI:GetAuraTrackingSettings(selected) then
-        selected = "Player"
-        NSRT.AuraTrackingSelected = selected
+    for _, entry in ipairs(GetAuraTrackingSelectionOptions()) do
+        if entry.value ~= selected then
+            options[#options + 1] = {
+                label = entry.label,
+                value = entry.value,
+                onclick = function()
+                    NSRT.AuraTrackingStyleCopySource = entry.value
+                end,
+            }
+        end
     end
+    return options
+end
 
-    options[#options + 1] = {
-        type = "select",
-        name = "Aura Tracking Display",
-        desc = "Select which Aura Tracking display you want to edit.",
-        get = function() return NSRT.AuraTrackingSelected or "Player" end,
-        values = GetAuraTrackingSelectionOptions,
-        nocombat = true,
-    }
+AddAuraTrackingTopControls = function(options, selected)
     options[#options + 1] = {
         type = "button",
         name = "Add Custom Tracking",
@@ -523,6 +536,36 @@ local function BuildAuraTrackingOptions()
         nocombat = true,
         spacement = true,
     }
+    if NSRT.AuraTrackingStyleCopySource == selected or not NSI:GetAuraTrackingSettings(NSRT.AuraTrackingStyleCopySource) then
+        NSRT.AuraTrackingStyleCopySource = selected == "Player" and "Tank" or "Player"
+    end
+    options[#options + 1] = {
+        type = "select",
+        name = "Copy Style From",
+        desc = "Select another Aura Tracking display to copy visual settings from.",
+        get = function() return NSRT.AuraTrackingStyleCopySource end,
+        values = function() return GetAuraTrackingCopySourceOptions(selected) end,
+        nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "button",
+        name = "Copy Style",
+        desc = "Copies visual settings from the selected Aura Tracking display. This does not copy name, enabled state, spell IDs, or preview spell ID.",
+        func = function()
+            NSI:CopyAuraTrackingStyle(NSRT.AuraTrackingStyleCopySource, selected)
+        end,
+        nocombat = true,
+        spacement = true,
+    }
+end
+
+local function BuildAuraTrackingOptions()
+    local options = {}
+    local selected = NSRT.AuraTrackingSelected or "Player"
+    if not NSI:GetAuraTrackingSettings(selected) then
+        selected = "Player"
+        NSRT.AuraTrackingSelected = selected
+    end
 
     if selected == "Player" then
         AddAuraTrackingSection(options, selected, "Player Aura Tracking", "IsAuraTrackingPlayerPreview", 237555)

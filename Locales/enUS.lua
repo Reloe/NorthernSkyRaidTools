@@ -676,6 +676,10 @@ L["Aura Tracking Display"] = "Aura Tracking Display"
 L["Select which Aura Tracking display you want to edit."] = "Select which Aura Tracking display you want to edit."
 L["Add Custom Tracking"] = "Add Custom Tracking"
 L["Create a custom Aura Tracking display with its own helpful spell ID filter."] = "Create a custom Aura Tracking display with its own helpful spell ID filter."
+L["Copy Style From"] = "Copy Style From"
+L["Select another Aura Tracking display to copy visual settings from."] = "Select another Aura Tracking display to copy visual settings from."
+L["Copy Style"] = "Copy Style"
+L["Copies visual settings from the selected Aura Tracking display. This does not copy name, enabled state, spell IDs, or preview spell ID."] = "Copies visual settings from the selected Aura Tracking display. This does not copy name, enabled state, spell IDs, or preview spell ID."
 -- ============================================================================
 -- UI/AnchorWindow.lua — Anchor settings popup
 -- ============================================================================

@@ -373,6 +373,7 @@ function NSI:AddMissingDefaults()
         },
         AuraTrackingSettingsConverted = false,
         AuraTrackingSelected = "Player",
+        AuraTrackingStyleCopySource = "Player",
 
         -- Ready Check Settings
         ReadyCheckSettings = {
