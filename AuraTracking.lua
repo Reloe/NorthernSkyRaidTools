@@ -4,8 +4,6 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
-local MAX_TRACKED_DEBUFF_DURATION = 24 * 60 * 60
-
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -683,7 +681,8 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
             }
         elseif not isExternal then
             candidateFilters = {
-                maxDuration = MAX_TRACKED_DEBUFF_DURATION,
+                isBossOrRoleAura = true,
+                maxDuration = 86400,
             }
         end
         local options = {
@@ -757,8 +756,6 @@ function NSI:InitAuraSystem(firstcall)
     end
 end
 
-local AURA_TRACKING_PREVIEW_DURATION = 10
-
 function NSI:StopAuraTrackingPreviewTimer(key)
     local previewData = GetAuraTrackingPreviewData(key)
     if not previewData then return end
@@ -769,24 +766,47 @@ function NSI:StopAuraTrackingPreviewTimer(key)
     end
 end
 
+local function BuildAuraTrackingPreviewEntries(settings)
+    local entries = {}
+    local limit = math.min(settings.Limit or 1, 20)
+    for i = 1, limit do
+        entries[#entries + 1] = {
+            index = i,
+            duration = math.random(4, 30),
+        }
+    end
+
+    table.sort(entries, function(a, b)
+        if a.duration == b.duration then return a.index < b.index end
+        if settings.ReverseSort then
+            return a.duration > b.duration
+        end
+        return a.duration < b.duration
+    end)
+
+    return entries
+end
+
 function NSI:StartAuraTrackingPreviewTimer(key)
     self:StopAuraTrackingPreviewTimer(key)
     local previewData = GetAuraTrackingPreviewData(key)
     if not previewData then return end
     local timerKey = previewData.timerKey
-    local startedAt = GetTime()
     self[timerKey] = C_Timer.NewTicker(0.05, function()
-        local elapsed = GetTime() - startedAt
-        if elapsed >= AURA_TRACKING_PREVIEW_DURATION then
-            self:PreviewAuraTracking(key, true)
-            return
-        end
-
+        local now = GetTime()
         local iconKey = previewData.iconKey
         if not self[iconKey] then return end
-        local remaining = math.ceil(AURA_TRACKING_PREVIEW_DURATION - elapsed)
+
         for _, frame in ipairs(self[iconKey]) do
-            if frame:IsShown() and frame.Duration then
+            if frame:IsShown() and frame.PreviewExpires and now >= frame.PreviewExpires then
+                self:PreviewAuraTracking(key, true)
+                return
+            end
+        end
+
+        for _, frame in ipairs(self[iconKey]) do
+            if frame:IsShown() and frame.Duration and frame.PreviewExpires then
+                local remaining = math.max(0, math.ceil(frame.PreviewExpires - now))
                 frame.Duration:SetText(remaining)
             end
         end
@@ -818,15 +838,18 @@ function NSI:CreateAuraTrackingPreviewFrame(parent)
     return frame
 end
 
-function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key)
+function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key, duration)
     local fontPath = self:GetAuraTrackingFontPath(settings)
+    local now = GetTime()
+    duration = duration or 4
+    frame.PreviewExpires = now + duration
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
     local zoom = ((settings.Zoom or 0) * 0.5) / 100
     frame.Icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
     UpdateAuraTrackingBorder(frame.Border, frame, settings.HideBorder, settings.BorderSize)
 
-    frame.Cooldown:SetCooldown(GetTime(), AURA_TRACKING_PREVIEW_DURATION)
+    frame.Cooldown:SetCooldown(now, duration)
     frame.Cooldown:SetReverse(settings.InverseCooldownSwipe)
     frame.Cooldown:SetDrawEdge(false)
     frame.Cooldown:SetHideCountdownNumbers(true)
@@ -843,7 +866,7 @@ function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key
     frame.Duration:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
     frame.Duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
     frame.Duration:SetTextColor(unpack(settings.DurationColor))
-    frame.Duration:SetText(AURA_TRACKING_PREVIEW_DURATION)
+    frame.Duration:SetText(math.ceil(duration))
     frame.Duration:SetShown(not settings.HideDurationText)
 
     PositionAuraTrackingUnitName(frame.UnitName, frame, settings)
@@ -877,6 +900,7 @@ function NSI:PreviewAuraTracking(key, show)
         mover:Hide()
         if self[iconKey] then
             for _, icon in ipairs(self[iconKey]) do
+                icon.PreviewExpires = nil
                 icon:Hide()
             end
         end
@@ -895,19 +919,22 @@ function NSI:PreviewAuraTracking(key, show)
     if not self[iconKey] then self[iconKey] = {} end
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
-    for i = 1, 10 do
+    local entries = BuildAuraTrackingPreviewEntries(settings)
+    for i = 1, 20 do
         if not self[iconKey][i] then
             self[iconKey][i] = self:CreateAuraTrackingPreviewFrame(mover)
         end
         local icon = self[iconKey][i]
-        if settings.Limit >= i then
+        local entry = entries[i]
+        if entry then
             local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            self:UpdateAuraTrackingPreviewFrame(icon, settings, texture, i, key)
+            self:UpdateAuraTrackingPreviewFrame(icon, settings, texture, entry.index, key, entry.duration)
             icon:Show()
         else
+            icon.PreviewExpires = nil
             icon:Hide()
         end
     end
