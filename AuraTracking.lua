@@ -592,6 +592,16 @@ function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings,
 
         regions.border = CreateAuraTrackingBorder(button)
 
+        regions.dispelBorder = button:CreateTexture(nil, "OVERLAY")
+        regions.dispelBorder:SetAllPoints(button)
+        if button.SetAuraBorder then
+            button:SetAuraBorder(regions.dispelBorder, {
+                showIcon = true,
+                showWhenHarmful = true,
+                showWhenHelpful = false,
+            })
+        end
+
         regions.textOverlay = CreateFrame("Frame", nil, button)
         regions.textOverlay:SetAllPoints(button)
         regions.textOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
@@ -606,6 +616,17 @@ function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings,
         regions.unitName = regions.textOverlay:CreateFontString(nil, "OVERLAY")
         regions.unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
 
+        regions.dispelSymbol = regions.textOverlay:CreateFontString(nil, "OVERLAY")
+        regions.dispelSymbol:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+        regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
+        regions.dispelSymbol:SetTextColor(1, 1, 1, 1)
+        if button.SetAuraSymbol then
+            button:SetAuraSymbol(regions.dispelSymbol, {
+                showWhenHarmful = true,
+                showWhenHelpful = false,
+            })
+        end
+
         state.buttonRegions[button] = regions
     end
 
@@ -614,6 +635,13 @@ function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings,
     local zoom = ((settings.Zoom or 0) * 0.5) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
     UpdateAuraTrackingBorder(regions.border, button, settings.HideBorder, settings.BorderSize)
+    if button.SetAuraBorder then
+        button:SetAuraBorder(regions.dispelBorder, {
+            showIcon = true,
+            showWhenHarmful = true,
+            showWhenHelpful = false,
+        })
+    end
 
     regions.count:ClearAllPoints()
     regions.count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
@@ -632,6 +660,14 @@ function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings,
     regions.unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
     regions.unitName:SetText(GetAuraTrackingUnitName(unit))
     regions.unitName:SetShown(key == "tank" and settings.NameEnabled)
+
+    regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
+    if button.SetAuraSymbol then
+        button:SetAuraSymbol(regions.dispelSymbol, {
+            showWhenHarmful = true,
+            showWhenHelpful = false,
+        })
+    end
 
     button:SetMouseMotionEnabled(not settings.HideTooltip)
     regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
