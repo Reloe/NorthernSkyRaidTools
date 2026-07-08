@@ -7,7 +7,7 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
     local data = {group = "Sentinels", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        textColors = {1, 0, 0, 1}, customIcon = 1284458,
+        textColors = {1, 0, 0, 1}, spellID = 1284458,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
@@ -31,7 +31,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
     local data = {group = "Sentinels", internalID = "BloodHits", name = "Blood Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        textColors = {1, 0, 0, 1}, customIcon = 1284487,
+        textColors = {1, 0, 0, 1}, spellID = 1284487,
         isConditional = {
             text = "This Alert only shows if you have threat on boss2.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
@@ -56,7 +56,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Sentinels", internalID = "BloodSoak", name = "Blood Soak", text = "Blood-Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
-        textColors = {1, 0.37, 0.25, 1}, customIcon = 1288232,
+        textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss2.",
             func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss2") return minRange and minRange < 40 end]],
@@ -81,7 +81,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Sentinels", internalID = "PoisonAdd", name = "Poison Add", text = "Poison Add", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        textColors = {0.62, 1, 0.25, 1}, customIcon = 1284251,
+        textColors = {0.62, 1, 0.25, 1}, spellID = 1284251,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss1.",
             func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss1") return minRange and minRange < 40 end]],
@@ -106,7 +106,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Sentinels", internalID = "OrbSpawn", name = "Orb Spawn", text = "Orbs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
-        customIcon = 1284434,
+        spellID = 1284434,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss1.",
             func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss1") return minRange and minRange < 40 end]],
@@ -131,7 +131,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Sentinels", internalID = "TransitionDebuffs", name = "Transition Debuffs", text = "Number Game", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 8,
-        customIcon = 1284590,
+        spellID = 1284590,
         phaseTimers = {
             [15] ={
                 {46.2},
