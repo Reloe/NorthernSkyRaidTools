@@ -4,6 +4,105 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
+NSI.DefaultExternalAuraTrackingSpellIDs = {
+    6940, -- Blessing of Sacrifice
+}
+
+function NSI:CreateAuraTrackingSettingsDefaults(overrides)
+    local settings = {
+        Spacing = -1,
+        Limit = 5,
+        GrowDirection = "RIGHT",
+        enabled = false,
+        Width = 100,
+        Height = 100,
+        Zoom = 0,
+        Anchor = "CENTER",
+        relativeTo = "CENTER",
+        CustomAnchorFrame = "",
+        xOffset = -450,
+        yOffset = -100,
+        HideBorder = false,
+        BorderSize = 1,
+        HideTooltip = false,
+        HideDurationText = false,
+        HideStackText = false,
+        EnableCooldownSwipe = true,
+        InverseCooldownSwipe = true,
+        DurationColor = {1, 1, 0.25, 1},
+        StackColor = {1, 1, 1, 1},
+        DurationFontSize = 32,
+        StackFontSize = 32,
+        TextFont = "Expressway",
+        TextFontFlags = "OUTLINE",
+        DurationXOffset = 0,
+        DurationYOffset = 0,
+        StackXOffset = -1,
+        StackYOffset = 1,
+        NamePosition = "TOP",
+        NameXOffset = 0,
+        NameYOffset = 4,
+        NameFontSize = 30,
+        SpellIDs = {},
+        SpellIDsEdited = false,
+        PreviewSpellID = nil,
+    }
+    for key, value in pairs(overrides or {}) do
+        settings[key] = value
+    end
+    return settings
+end
+
+local AuraTrackingPreviewData = {
+    Player = {
+        frameKey = "AuraTrackingPlayerPreviewMover",
+        iconKey = "AuraTrackingPlayerPreviewIcons",
+        timerKey = "AuraTrackingPlayerPreviewTimer",
+        texture = 237555,
+        unit = "player",
+    },
+    Tank = {
+        frameKey = "AuraTrackingTankPreviewMover",
+        iconKey = "AuraTrackingTankPreviewIcons",
+        timerKey = "AuraTrackingTankPreviewTimer",
+        texture = 236318,
+        unit = "player",
+    },
+    External = {
+        frameKey = "AuraTrackingExternalPreviewMover",
+        iconKey = "AuraTrackingExternalPreviewIcons",
+        timerKey = "AuraTrackingExternalPreviewTimer",
+        texture = C_Spell.GetSpellTexture(6940) or 135966,
+        unit = "player",
+    },
+}
+
+local function GetAuraTrackingPreviewData(key)
+    if AuraTrackingPreviewData[key] then
+        return AuraTrackingPreviewData[key]
+    end
+
+    local customIndex = tostring(key or ""):match("^Custom:(%d+)$")
+    if customIndex then
+        return {
+            frameKey = "AuraTrackingCustom" .. customIndex .. "PreviewMover",
+            iconKey = "AuraTrackingCustom" .. customIndex .. "PreviewIcons",
+            timerKey = "AuraTrackingCustom" .. customIndex .. "PreviewTimer",
+            texture = 136076,
+            unit = "player",
+        }
+    end
+end
+
+function NSI:GetAuraTrackingSettings(settingsKey)
+    if not NSRT.AuraTrackingSettings then return end
+    local customIndex = tostring(settingsKey or ""):match("^Custom:(%d+)$")
+    if customIndex then
+        return NSRT.AuraTrackingSettings.Custom and NSRT.AuraTrackingSettings.Custom[tonumber(customIndex)]
+    end
+    return NSRT.AuraTrackingSettings[settingsKey]
+end
+
 local AuraTrackingDurationFormatter
 local function GetAuraTrackingDurationFormatter()
     if not AuraTrackingDurationFormatter then
@@ -26,6 +125,156 @@ end
 
 local function GetAuraTrackingFilters()
     return AuraTrackingFilters
+end
+
+local function GetAuraTrackingSettingsKeyFromRuntimeKey(key)
+    if key == "external" then return "External" end
+    local customIndex = tostring(key or ""):match("^custom(%d+)$")
+    if customIndex then return "Custom:" .. customIndex end
+end
+
+local function ParseAuraTrackingSpellIDs(value)
+    local spellIDs = {}
+    local seen = {}
+    if type(value) == "table" then
+        for _, spellID in ipairs(value) do
+            spellID = tonumber(spellID)
+            if spellID and not seen[spellID] then
+                spellIDs[#spellIDs + 1] = spellID
+                seen[spellID] = true
+            end
+        end
+    else
+        for token in tostring(value or ""):gmatch("%d+") do
+            local spellID = tonumber(token)
+            if spellID and not seen[spellID] then
+                spellIDs[#spellIDs + 1] = spellID
+                seen[spellID] = true
+            end
+        end
+    end
+    table.sort(spellIDs)
+    return spellIDs
+end
+
+local function GetAuraTrackingSpellIDs(settings, settingsKey)
+    if tostring(settingsKey or ""):match("^Custom:") then
+        return ParseAuraTrackingSpellIDs(settings and settings.SpellIDs)
+    end
+    return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+end
+
+local function GetAuraTrackingSpellIDMap(settings, settingsKey)
+    local spellIDs = GetAuraTrackingSpellIDs(settings, settingsKey)
+    if #spellIDs == 0 then return end
+
+    local map = {}
+    for _, spellID in ipairs(spellIDs) do
+        map[spellID] = true
+    end
+    return map
+end
+
+function NSI:GetAuraTrackingSpellIDString(settingsKey)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    return table.concat(GetAuraTrackingSpellIDs(settings, settingsKey), ", ")
+end
+
+function NSI:SetAuraTrackingSpellIDString(settingsKey, value)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if not settings then return end
+    settings.SpellIDs = ParseAuraTrackingSpellIDs(value)
+    settings.SpellIDsEdited = true
+    self:UpdateAuraTrackingDisplay(settingsKey)
+end
+
+function NSI:SetAuraTrackingPreviewSpellID(settingsKey, value)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if not settings then return end
+    settings.PreviewSpellID = tonumber(value) or nil
+    self:UpdateAuraTrackingDisplay(settingsKey)
+    if self.RebuildAuraTrackingOptionsMenu then
+        C_Timer.After(0, function()
+            self:RebuildAuraTrackingOptionsMenu()
+        end)
+    end
+end
+
+function NSI:SetAuraTrackingCustomName(settingsKey, value)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if not settings then return end
+    value = strtrim(tostring(value or ""))
+    settings.Name = value ~= "" and value or nil
+    if self.RebuildAuraTrackingOptionsMenu then
+        C_Timer.After(0, function()
+            self:RebuildAuraTrackingOptionsMenu()
+        end)
+    end
+end
+
+function NSI:AddCustomAuraTracking()
+    NSRT.AuraTrackingSettings.Custom = NSRT.AuraTrackingSettings.Custom or {}
+    local index = #NSRT.AuraTrackingSettings.Custom + 1
+    NSRT.AuraTrackingSettings.Custom[index] = self:CreateAuraTrackingSettingsDefaults({
+        Name = "Custom Aura Tracking " .. index,
+        xOffset = 0,
+        yOffset = 0,
+        HideStackText = true,
+        HideTooltip = true,
+        SpellIDsEdited = true,
+    })
+    NSRT.AuraTrackingSelected = "Custom:" .. index
+    if self.RebuildAuraTrackingOptionsMenu then
+        C_Timer.After(0, function()
+            self:RebuildAuraTrackingOptionsMenu()
+        end)
+    end
+end
+
+function NSI:StopAllAuraTrackingPreviews()
+    for _, key in ipairs({"Player", "Tank", "External"}) do
+        local previewData = GetAuraTrackingPreviewData(key)
+        self["IsAuraTracking" .. key .. "Preview"] = false
+        self:StopAuraTrackingPreviewTimer(key)
+        if previewData and self[previewData.frameKey] then
+            self[previewData.frameKey]:Hide()
+        end
+        if previewData and self[previewData.iconKey] then
+            for _, icon in ipairs(self[previewData.iconKey]) do
+                icon:Hide()
+            end
+        end
+    end
+
+    for index in ipairs((NSRT.AuraTrackingSettings and NSRT.AuraTrackingSettings.Custom) or {}) do
+        local key = "Custom:" .. index
+        local previewData = GetAuraTrackingPreviewData(key)
+        self["IsAuraTrackingCustom" .. index .. "Preview"] = false
+        self:StopAuraTrackingPreviewTimer(key)
+        if previewData and self[previewData.frameKey] then
+            self[previewData.frameKey]:Hide()
+        end
+        if previewData and self[previewData.iconKey] then
+            for _, icon in ipairs(self[previewData.iconKey]) do
+                icon:Hide()
+            end
+        end
+    end
+
+    self:InitAuraTracking()
+end
+
+function NSI:DeleteCustomAuraTracking(settingsKey)
+    local customIndex = tonumber(tostring(settingsKey or ""):match("^Custom:(%d+)$"))
+    if not customIndex or not NSRT.AuraTrackingSettings.Custom then return end
+    table.remove(NSRT.AuraTrackingSettings.Custom, customIndex)
+    NSRT.AuraTrackingSelected = "Player"
+    self:InitAuraTracking()
+    if self.RebuildAuraTrackingOptionsMenu then
+        C_Timer.After(0, function()
+            self:RebuildAuraTrackingOptionsMenu()
+        end)
+    end
 end
 
 local function CreateAuraTrackingBorder(parent)
@@ -305,6 +554,8 @@ function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings,
     regions.count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
     regions.count:SetTextColor(unpack(settings.StackColor))
     button:SetApplicationCount(regions.count, {})
+    regions.count:SetAlpha(settings.HideStackText and 0 or 1)
+    regions.count:SetShown(not settings.HideStackText)
 
     regions.duration:ClearAllPoints()
     regions.duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
@@ -331,6 +582,9 @@ end
 function NSI:InitAuraTrackingContainer(unit, settings, key)
     if not self:UseAuraTrackingContainers() then return end
     if not unit or not settings.enabled then return end
+    local isExternal = key == "external" or tostring(key):match("^custom")
+    local spellIDMap = isExternal and GetAuraTrackingSpellIDMap(settings, GetAuraTrackingSettingsKeyFromRuntimeKey(key)) or nil
+    if isExternal and not spellIDMap then return end
 
     local state = self:AcquireAuraTrackingContainer(key)
     local container = state.container
@@ -349,16 +603,21 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
     SetAuraTrackingPoint(container, settings, self.NSRTFrame)
     container:SetUnit(unit)
 
-    for index, filter in ipairs(GetAuraTrackingFilters()) do
+    local filters = isExternal and {"HELPFUL|!PLAYER"} or GetAuraTrackingFilters()
+    for index, filter in ipairs(filters) do
         local groupKey = groupKeyPrefix .. index
+        local candidateFilters = {
+            isFromPlayerOrPlayerPet = false,
+        }
+        if spellIDMap then
+            candidateFilters.spellIDs = spellIDMap
+        end
         local options = {
             maxFrameCount = settings.Limit,
             initializeFrame = function(button)
                 self:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
             end,
-            candidateFilters = {
-                isFromPlayerOrPlayerPet = false,
-            },
+            candidateFilters = candidateFilters,
         }
 
         pcall(container.AddAuraGroup, container, groupKey, filter, options)
@@ -388,6 +647,10 @@ function NSI:InitAuraTracking()
 
     self:ClearAuraTracking()
     self:InitAuraTrackingContainer("player", NSRT.AuraTrackingSettings.Player, "player")
+    self:InitAuraTrackingContainer("player", NSRT.AuraTrackingSettings.External, "external")
+    for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
+        self:InitAuraTrackingContainer("player", settings, "custom" .. index)
+    end
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
         local tankUnit
         for unit in self:IterateGroupMembers() do
@@ -417,7 +680,9 @@ end
 local AURA_TRACKING_PREVIEW_DURATION = 10
 
 function NSI:StopAuraTrackingPreviewTimer(key)
-    local timerKey = key == "Player" and "AuraTrackingPlayerPreviewTimer" or "AuraTrackingTankPreviewTimer"
+    local previewData = GetAuraTrackingPreviewData(key)
+    if not previewData then return end
+    local timerKey = previewData.timerKey
     if self[timerKey] then
         self[timerKey]:Cancel()
         self[timerKey] = nil
@@ -426,7 +691,9 @@ end
 
 function NSI:StartAuraTrackingPreviewTimer(key)
     self:StopAuraTrackingPreviewTimer(key)
-    local timerKey = key == "Player" and "AuraTrackingPlayerPreviewTimer" or "AuraTrackingTankPreviewTimer"
+    local previewData = GetAuraTrackingPreviewData(key)
+    if not previewData then return end
+    local timerKey = previewData.timerKey
     local startedAt = GetTime()
     self[timerKey] = C_Timer.NewTicker(0.05, function()
         local elapsed = GetTime() - startedAt
@@ -435,7 +702,7 @@ function NSI:StartAuraTrackingPreviewTimer(key)
             return
         end
 
-        local iconKey = key == "Player" and "AuraTrackingPlayerPreviewIcons" or "AuraTrackingTankPreviewIcons"
+        local iconKey = previewData.iconKey
         if not self[iconKey] then return end
         local remaining = math.ceil(AURA_TRACKING_PREVIEW_DURATION - elapsed)
         for _, frame in ipairs(self[iconKey]) do
@@ -490,6 +757,7 @@ function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key
     frame.Stack:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
     frame.Stack:SetTextColor(unpack(settings.StackColor))
     frame.Stack:SetText(index)
+    frame.Stack:SetShown(not settings.HideStackText)
 
     frame.Duration:ClearAllPoints()
     frame.Duration:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
@@ -500,16 +768,22 @@ function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key
 
     PositionAuraTrackingUnitName(frame.UnitName, frame, settings)
     frame.UnitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-    frame.UnitName:SetText(GetAuraTrackingUnitName("player"))
+    local previewData = GetAuraTrackingPreviewData(key)
+    frame.UnitName:SetText(GetAuraTrackingUnitName(previewData and previewData.unit or "player"))
     frame.UnitName:SetShown(key == "Tank" and settings.NameEnabled)
 end
 
 function NSI:PreviewAuraTracking(key, show)
     if self.IsBuilding then return end
-    local settings = NSRT.AuraTrackingSettings[key]
-    local frameKey = key == "Player" and "AuraTrackingPlayerPreviewMover" or "AuraTrackingTankPreviewMover"
-    local iconKey = key == "Player" and "AuraTrackingPlayerPreviewIcons" or "AuraTrackingTankPreviewIcons"
-    local texture = key == "Player" and 237555 or 236318
+    local settings = self:GetAuraTrackingSettings(key)
+    local previewData = GetAuraTrackingPreviewData(key)
+    if not settings or not previewData then return end
+    local frameKey = previewData.frameKey
+    local iconKey = previewData.iconKey
+    local texture = previewData.texture
+    if settings.PreviewSpellID then
+        texture = C_Spell.GetSpellTexture(settings.PreviewSpellID) or texture
+    end
 
     if not self[frameKey] then
         self[frameKey] = CreateFrame("Frame", nil, self.NSRTFrame)
@@ -562,10 +836,15 @@ end
 
 function NSI:UpdateAuraTrackingDisplay(key)
     if self.IsBuilding then return end
+    local customPreviewKey = tostring(key or ""):gsub(":", "")
     if key == "Player" and self.IsAuraTrackingPlayerPreview then
         self:PreviewAuraTracking("Player", true)
     elseif key == "Tank" and self.IsAuraTrackingTankPreview then
         self:PreviewAuraTracking("Tank", true)
+    elseif key == "External" and self.IsAuraTrackingExternalPreview then
+        self:PreviewAuraTracking("External", true)
+    elseif tostring(key or ""):match("^Custom:") and self["IsAuraTracking" .. customPreviewKey .. "Preview"] then
+        self:PreviewAuraTracking(key, true)
     else
         self:InitAuraTracking()
     end

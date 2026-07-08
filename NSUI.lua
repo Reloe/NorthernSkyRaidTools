@@ -459,9 +459,22 @@ function NSUI:Init()
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
     if auratracking_tab and auratracking_options1_table then
-        DF:BuildMenu(auratracking_tab, auratracking_options1_table, 10, -10, tab_content_height, false, options_text_template,
-            options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-            auratracking_callback)
+        function NSI:RebuildAuraTrackingOptionsMenu()
+            if NSUI.AuraTrackingOptionsFrame then
+                NSUI.AuraTrackingOptionsFrame:EnableMouse(false)
+                NSUI.AuraTrackingOptionsFrame:Hide()
+            end
+            NSUI.AuraTrackingOptionsFrameIndex = (NSUI.AuraTrackingOptionsFrameIndex or 0) + 1
+            NSUI.AuraTrackingOptionsFrame = CreateFrame("Frame", "NSUI_AuraTrackingOptionsFrame" .. NSUI.AuraTrackingOptionsFrameIndex, auratracking_tab, "BackdropTemplate")
+            NSUI.AuraTrackingOptionsFrame:SetAllPoints(auratracking_tab)
+            local options = BuildAuraTrackingOptions()
+            options.language_addonId = addonId
+            local callback = BuildAuraTrackingCallback()
+            DF:BuildMenu(NSUI.AuraTrackingOptionsFrame, options, 10, -10, tab_content_height, false, options_text_template,
+                options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+                callback)
+        end
+        NSI:RebuildAuraTrackingOptionsMenu()
     end
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
