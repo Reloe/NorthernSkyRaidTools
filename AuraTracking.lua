@@ -407,11 +407,7 @@ end
 local function SetAuraTrackingPoint(frame, settings, fallback)
     local relativeFrame = GetAuraTrackingAnchorFrame(settings, fallback)
     frame:ClearAllPoints()
-    local ok = pcall(frame.SetPoint, frame, settings.Anchor or "CENTER", relativeFrame or fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
-    if not ok and relativeFrame ~= fallback then
-        frame:ClearAllPoints()
-        pcall(frame.SetPoint, frame, settings.Anchor or "CENTER", fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
-    end
+    frame:SetPoint(settings.Anchor or "CENTER", relativeFrame or fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
 end
 
 local function GetPointCoordinate(frame, point)
@@ -443,27 +439,12 @@ end
 function NSI:UseAuraTrackingContainers()
     if not self:IsMidnightS2() then return false end
     if self.AuraTrackingContainersAvailable ~= nil then return self.AuraTrackingContainersAvailable end
-    if C_AddOns and C_AddOns.LoadAddOn and C_AddOns.IsAddOnLoaded then
-        if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
-            local loaded = C_AddOns.LoadAddOn("Blizzard_AuraContainer")
-            if not loaded then
-                self.AuraTrackingContainersAvailable = false
-                return false
-            end
-        end
+
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
 
-    local containerOk, container = pcall(CreateFrame, "AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-    if not containerOk or not container then
-        self.AuraTrackingContainersAvailable = false
-        return false
-    end
-
-    if type(container.AddAuraGroup) ~= "function" then
-        self.AuraTrackingContainersAvailable = false
-        return false
-    end
-
+    local container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
     self.AuraTrackingContainerProbe = container
     self.AuraTrackingContainersAvailable = true
     return self.AuraTrackingContainersAvailable
@@ -528,11 +509,7 @@ function NSI:ClearAuraTracking()
         if state.container then
             state.container:SetEnabled(false)
             state.container:Hide()
-            if state.container.ClearAuraGroups then
-                pcall(state.container.ClearAuraGroups, state.container)
-            else
-                state.container = nil
-            end
+            state.container:ClearAuraGroups()
         end
     end
 end
@@ -641,9 +618,7 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
 
     container:SetEnabled(false)
     container:Hide()
-    if container.ClearAuraGroups then
-        pcall(container.ClearAuraGroups, container)
-    end
+    container:ClearAuraGroups()
     container:SetSize(width, height)
     SetAuraTrackingPoint(container, settings, self.NSRTFrame)
     container:SetUnit(unit)
@@ -665,18 +640,16 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
             candidateFilters = candidateFilters,
         }
 
-        pcall(container.AddAuraGroup, container, groupKey, filter, options)
-        if container.SetAuraGroupLayout then
-            pcall(container.SetAuraGroupLayout, container, groupKey, {
-                point = "CENTER",
-                relativePoint = "CENTER",
-                offsetX = 0,
-                offsetY = 0,
-                xOffset = (settings.Width + settings.Spacing) * xDirection,
-                yOffset = (settings.Height + settings.Spacing) * yDirection,
-                wrapAfter = settings.Limit,
-            })
-        end
+        container:AddAuraGroup(groupKey, filter, options)
+        container:SetAuraGroupLayout(groupKey, {
+            point = "CENTER",
+            relativePoint = "CENTER",
+            offsetX = 0,
+            offsetY = 0,
+            xOffset = (settings.Width + settings.Spacing) * xDirection,
+            yOffset = (settings.Height + settings.Spacing) * yDirection,
+            wrapAfter = settings.Limit,
+        })
     end
 
     container:Show()
