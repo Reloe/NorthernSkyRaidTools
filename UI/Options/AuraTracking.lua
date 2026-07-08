@@ -218,7 +218,16 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         desc = "Maximum number of auras to display",
         get = function() return settings.Limit end,
         set = function(_, _, value) settings.Limit = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
-        min = 1, max = 10, step = 1, nocombat = true,
+        min = 1, max = 20, step = 1, nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Reverse Sort",
+        desc = "Show auras with the longest remaining duration first.",
+        get = function() return settings.ReverseSort end,
+        set = function(_, _, value) settings.ReverseSort = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+        nocombat = true,
     }
     options[#options + 1] = {
         type = "toggle",
