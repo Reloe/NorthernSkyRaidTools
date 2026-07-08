@@ -6,6 +6,18 @@ local AuraTrackingFilters = {
 
 NSI.DefaultExternalAuraTrackingSpellIDs = {
     6940, -- Blessing of Sacrifice
+    1022, -- Blessing of Protection
+    204018, -- Blessing of Spellwarding
+    47788, -- Guardian Spirit 1
+    255312, -- Guardian Spirit 2
+    102342, -- Ironbark
+    116849, -- Life Cocoon
+    357170, -- Time Dilation
+    642, -- Divine Shield
+    186265, -- Turtle
+    196555, -- Netherwalk
+    31224, -- Cloak of Shadows
+    45438, -- Ice Block
 }
 
 function NSI:CreateAuraTrackingSettingsDefaults(overrides)
