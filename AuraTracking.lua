@@ -4,6 +4,30 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
+local function GetAuraTrackingFlowDirections(growDirection)
+    local horizontal = AnchorUtil.FlowDirection.Right
+    local vertical = AnchorUtil.FlowDirection.Down
+
+    if growDirection == "LEFT" then
+        horizontal = AnchorUtil.FlowDirection.Left
+    elseif growDirection == "UP" then
+        vertical = AnchorUtil.FlowDirection.Up
+    end
+
+    return horizontal, vertical
+end
+
+local function GetAuraTrackingRowWidth(settings)
+    local width = settings.Width or 1
+    if settings.GrowDirection == "UP" or settings.GrowDirection == "DOWN" then
+        return width
+    end
+
+    local limit = settings.Limit or 1
+    local spacing = settings.Spacing or 0
+    return math.max(width, (width * limit) + (spacing * math.max(limit - 1, 0)))
+end
+
 NSI.DefaultExternalAuraTrackingSpellIDs = {
     6940, -- Blessing of Sacrifice
     1022, -- Blessing of Protection
@@ -521,7 +545,6 @@ function NSI:ClearAuraTracking()
         if state.container then
             state.container:SetEnabled(false)
             state.container:Hide()
-            state.container:ClearAuraGroups()
         end
     end
 end
@@ -537,6 +560,13 @@ function NSI:AcquireAuraTrackingContainer(key)
         state.buttonRegions = {}
     end
     return state
+end
+
+function NSI:RefreshAuraTrackingButtons(state, width, height, settings, unit, key)
+    if not state or not state.buttonRegions then return end
+    for button in pairs(state.buttonRegions) do
+        self:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
+    end
 end
 
 function NSI:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
@@ -624,45 +654,55 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
     local container = state.container
     local width = settings.Width
     local height = settings.Height
-    local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
-    local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
     local groupKeyPrefix = "NSRT_" .. key
+    state.settings = settings
+    state.unit = unit
+    state.key = key
+    state.width = width
+    state.height = height
 
     container:SetEnabled(false)
     container:Hide()
-    container:ClearAuraGroups()
     container:SetSize(width, height)
     SetAuraTrackingPoint(container, settings, self.NSRTFrame)
     container:SetUnit(unit)
+    container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
+    container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
 
     local filters = isExternal and {"HELPFUL|!PLAYER"} or GetAuraTrackingFilters()
     for index, filter in ipairs(filters) do
         local groupKey = groupKeyPrefix .. index
-        local candidateFilters = {
-            isFromPlayerOrPlayerPet = false,
-        }
+        local candidateFilters
         if spellIDMap then
-            candidateFilters.spellIDs = spellIDMap
+            candidateFilters = {
+                includeSpellIDs = spellIDMap,
+            }
         end
         local options = {
             maxFrameCount = settings.Limit,
             initializeFrame = function(button)
-                self:ConfigureAuraTrackingButton(state, button, width, height, settings, unit, key)
+                self:ConfigureAuraTrackingButton(state, button, state.width, state.height, state.settings, state.unit, state.key)
             end,
             candidateFilters = candidateFilters,
+            layout = {
+                elementWidth = width,
+                elementHeight = height,
+                elementSpacingX = settings.Spacing or 0,
+                elementSpacingY = settings.Spacing or 0,
+            },
         }
 
-        container:AddAuraGroup(groupKey, filter, options)
-        container:SetAuraGroupLayout(groupKey, {
-            point = "CENTER",
-            relativePoint = "CENTER",
-            offsetX = 0,
-            offsetY = 0,
-            xOffset = (settings.Width + settings.Spacing) * xDirection,
-            yOffset = (settings.Height + settings.Spacing) * yDirection,
-            wrapAfter = settings.Limit,
-        })
+        if container:HasAuraGroup(groupKey) then
+            container:SetAuraGroupMaxFrameCount(groupKey, options.maxFrameCount)
+            container:SetAuraGroupCandidateFilters(groupKey, options.candidateFilters)
+            container:SetAuraGroupLayout(groupKey, options.layout)
+            container:SetAuraGroupSortMethod(groupKey, AuraContainerSortMethod.Default, AuraContainerSortDirection.Normal)
+        else
+            container:AddAuraGroup(groupKey, filter, options)
+        end
     end
+
+    self:RefreshAuraTrackingButtons(state, width, height, settings, unit, key)
 
     container:Show()
     container:SetEnabled(true)
