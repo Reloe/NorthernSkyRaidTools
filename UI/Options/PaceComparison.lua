@@ -59,6 +59,18 @@ local function GetNewThreshold()
     return NSRT.PaceComparison.NewThreshold
 end
 
+local DEFAULT_PACE_COLORS = {
+    AheadColor = {0, 1, 0, 1},
+    CloseBehindColor = {1, 1, 0, 1},
+    BehindColor = {1, 0.5, 0, 1},
+    FarBehindColor = {1, 0, 0, 1},
+}
+
+local function GetDisplayColor(display, key)
+    display[key] = display[key] or DEFAULT_PACE_COLORS[key]
+    return unpack(display[key])
+end
+
 local function AddDisplayOptions(options)
     local display = NSRT.PaceComparison.Display
     options[#options + 1] = { type = "label", get = function() return "Pace Comparison Display" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
@@ -110,6 +122,50 @@ local function AddDisplayOptions(options)
         min = 0,
         max = 30,
         step = 1,
+    }
+    options[#options + 1] = {
+        type = "color",
+        name = "Ahead Color",
+        desc = "Color used when the boss HP is lower than expected.",
+        get = function() return GetDisplayColor(display, "AheadColor") end,
+        set = function(_, r, g, b, a)
+            display.AheadColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonDisplay()
+        end,
+        hasAlpha = true,
+    }
+    options[#options + 1] = {
+        type = "color",
+        name = "Close Behind Color",
+        desc = "Color used when the boss HP is at most 0.5% higher than expected.",
+        get = function() return GetDisplayColor(display, "CloseBehindColor") end,
+        set = function(_, r, g, b, a)
+            display.CloseBehindColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonDisplay()
+        end,
+        hasAlpha = true,
+    }
+    options[#options + 1] = {
+        type = "color",
+        name = "Behind Color",
+        desc = "Color used when the boss HP is between 0.5% and 1.5% higher than expected.",
+        get = function() return GetDisplayColor(display, "BehindColor") end,
+        set = function(_, r, g, b, a)
+            display.BehindColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonDisplay()
+        end,
+        hasAlpha = true,
+    }
+    options[#options + 1] = {
+        type = "color",
+        name = "Far Behind Color",
+        desc = "Color used when the boss HP is more than 1.5% higher than expected.",
+        get = function() return GetDisplayColor(display, "FarBehindColor") end,
+        set = function(_, r, g, b, a)
+            display.FarBehindColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonDisplay()
+        end,
+        hasAlpha = true,
     }
     options[#options + 1] = {
         type = "range",
