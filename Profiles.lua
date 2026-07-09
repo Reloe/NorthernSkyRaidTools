@@ -514,6 +514,7 @@ function NSI:AddMissingDefaults()
         end
     end
     self:ConvertPrivateAuraSettingsToAuraTracking()
+    self:MigrateAuraTrackingSettings()
     self:ApplyDefaultPaceComparisonData()
 end
 
