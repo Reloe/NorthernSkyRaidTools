@@ -7,7 +7,7 @@ NSI.PaceComparisonDefaults = {
     --         { phase = 1, time = 30, unit = "boss1", expected = 85 },
     --     },
     -- },
-    [3455] = { -- Vashnik the Malignant
+    [3421] = { -- Twin Fangs
         thresholds = {
             {phase = 1, time = 0, unit = "boss1", expected = 100},
             {phase = 1, time = 10, unit = "boss1", expected = 97},
