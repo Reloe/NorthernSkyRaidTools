@@ -156,6 +156,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
+        self:StartPaceComparison(self.EncounterID, diff)
         self:StartReminders(self.Phase)
         self:InitAuraSystem()
         if NSRT.ReminderSettings.NoteCountdown then
@@ -183,6 +184,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.CustomEvents = {}
         if not diff then return end
         self:EncounterRegister(nil, nil, nil, nil, true)
+        self:StopPaceComparison()
         self:InitAuraSystem()
         self:HideAllReminders(true)
         C_Timer.After(1, function()

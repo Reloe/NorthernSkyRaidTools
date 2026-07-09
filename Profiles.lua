@@ -373,6 +373,31 @@ function NSI:AddMissingDefaults()
         AuraTrackingSettingsConverted = false,
         AuraTrackingSelected = "Player",
         AuraTrackingStyleCopySource = "Player",
+        PaceComparison = {
+            SelectedBoss = 0,
+            NewThreshold = {
+                phase = 1,
+                time = 0,
+                unit = "boss1",
+                expected = 100,
+            },
+            Display = {
+                Anchor = "CENTER",
+                relativeTo = "CENTER",
+                xOffset = -400,
+                yOffset = 400,
+                Font = "Expressway",
+                FontSize = 28,
+                FontFlags = "OUTLINE",
+                LineSpacing = 4,
+                UpdateInterval = 0.2,
+                AheadColor = {0, 1, 0, 1},
+                CloseBehindColor = {1, 1, 0, 1},
+                BehindColor = {1, 0.5, 0, 1},
+                FarBehindColor = {1, 0, 0, 1},
+            },
+            Bosses = {},
+        },
 
         -- Ready Check Settings
         ReadyCheckSettings = {
@@ -486,6 +511,7 @@ function NSI:AddMissingDefaults()
         end
     end
     self:ConvertPrivateAuraSettingsToAuraTracking()
+    self:ApplyDefaultPaceComparisonData()
 end
 
 function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
