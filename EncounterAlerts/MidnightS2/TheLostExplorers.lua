@@ -281,16 +281,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     self:EncounterRegister("ExplorersBossDetect", "UNIT_FACTION", true, {"boss1", "boss3", "boss4"}) -- boss2 is the empower casting boss
     self:EncounterFunction("ExplorersBossDetect", function(_, e, unit)
         if not UnitIsEnemy("player", unit) then
-            local previousActiveBoss = NSAPI.ActiveBoss
             NSAPI.ActiveBoss = unit
-            if NSRT.Settings.DebugLogs and previousActiveBoss ~= NSAPI.ActiveBoss then
-                print(string.format("|cFF00FFFFNSRT Debug:|r Lost Explorers active boss changed to %s (%s)", UnitName(unit) or "unknown", unit))
-            end
             if self.ActiveBossResetTimer then self.ActiveBossResetTimer:Cancel() end
             self.ActiveBossResetTimer = C_Timer.NewTimer(60, function()
-                if NSRT.Settings.DebugLogs and NSAPI.ActiveBoss then
-                    print("|cFF00FFFFNSRT Debug:|r Lost Explorers active boss cleared")
-                end
                 NSAPI.ActiveBoss = nil
             end)
         end
