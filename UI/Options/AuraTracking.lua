@@ -137,7 +137,18 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
             NSI:StopAllAuraTrackingPreviews()
         end,
         nocombat = true,
-        spacement = true,
+    }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Track All non-Player Debuffs",
+        desc = "Tracks almost all debuffs, only debuffs applied by yourself will not be displayed. This will likely get removed later but might be necessary for raid testing",
+        get = function() return NSRT.AuraTrackingDebugDisableCandidateFilters end,
+        set = function(_, _, value)
+            NSRT.AuraTrackingDebugDisableCandidateFilters = value
+            NSI:InitAuraTracking()
+        end,
+        nocombat = true,
     }
     options[#options + 1] = { type = "label", get = function() return "Custom Anchor Frame" end }
     options[#options + 1] = {
@@ -264,6 +275,17 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         set = function(_, _, value) settings.HideDurationText = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
         nocombat = true,
     }
+    if settingsKey == "Player" or settingsKey == "Tank" then
+        options[#options + 1] = {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Long Duration Auras",
+            desc = "Hide auras with no duration or a duration longer than 24 hours. Effectively hiding 'Void-Zone' Debuffs.",
+            get = function() return settings.HideLongDurationAuras end,
+            set = function(_, _, value) settings.HideLongDurationAuras = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+            nocombat = true,
+        }
+    end
     options[#options + 1] = {
         type = "toggle",
         boxfirst = true,
@@ -564,7 +586,6 @@ AddAuraTrackingTopControls = function(options, selected)
             NSI:CopyAuraTrackingStyle(NSRT.AuraTrackingStyleCopySource, selected)
         end,
         nocombat = true,
-        spacement = true,
     }
 end
 

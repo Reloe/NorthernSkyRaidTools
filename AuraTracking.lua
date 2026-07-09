@@ -4,9 +4,6 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
--- Debug: set this to true to test AuraContainers without candidateFilters.
-local debug = false
-
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -65,6 +62,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         BorderSize = 1,
         HideTooltip = false,
         HideDurationText = false,
+        HideLongDurationAuras = true,
         HideStackText = false,
         EnableCooldownSwipe = true,
         InverseCooldownSwipe = true,
@@ -149,6 +147,18 @@ local function GetAuraTrackingDurationFormatter()
         AuraTrackingDurationFormatter = C_StringUtil.CreateNumericRuleFormatter()
         AuraTrackingDurationFormatter:SetBreakpoints({
             {
+                threshold = 60,
+                rounding = Enum.NumericRuleFormatRounding.Down,
+                format = "%dm",
+                components = {
+                    {
+                        div = 60,
+                        step = 1,
+                        rounding = Enum.NumericRuleFormatRounding.Down,
+                    },
+                },
+            },
+            {
                 threshold = 0,
                 step = 1,
                 rounding = Enum.NumericRuleFormatRounding.Up,
@@ -157,6 +167,14 @@ local function GetAuraTrackingDurationFormatter()
         })
     end
     return AuraTrackingDurationFormatter
+end
+
+local function FormatAuraTrackingDuration(seconds)
+    seconds = tonumber(seconds) or 0
+    if seconds >= 60 then
+        return string.format("%dm", math.max(1, math.floor(seconds / 60)))
+    end
+    return tostring(math.ceil(seconds))
 end
 
 local function AuraTrackingUpdateLocked()
@@ -267,6 +285,7 @@ local AuraTrackingStyleKeys = {
     "BorderSize",
     "HideTooltip",
     "HideDurationText",
+    "HideLongDurationAuras",
     "HideStackText",
     "EnableCooldownSwipe",
     "InverseCooldownSwipe",
@@ -724,13 +743,13 @@ function NSI:InitAuraTrackingContainer(unit, settings, key)
                 includeSpellIDs = spellIDMap,
             }
         elseif not isExternal then
-            candidateFilters = {
-                isBossOrRoleAura = true,
-                maxDuration = 86400,
-            }
-        end
-        if debug and not isExternal then
-            candidateFilters = nil
+            candidateFilters = {}
+            if settings.HideLongDurationAuras then
+                candidateFilters.maxDuration = 86400
+            end
+            if not NSRT.AuraTrackingDebugDisableCandidateFilters then
+                candidateFilters.isBossOrRoleAura = true
+            end
         end
         local options = {
             maxFrameCount = settings.Limit,
@@ -819,7 +838,7 @@ local function BuildAuraTrackingPreviewEntries(settings)
     for i = 1, limit do
         entries[#entries + 1] = {
             index = i,
-            duration = math.random(10, 30),
+            duration = math.random(10, 120),
         }
     end
 
@@ -853,8 +872,8 @@ function NSI:StartAuraTrackingPreviewTimer(key)
 
         for _, frame in ipairs(self[iconKey]) do
             if frame:IsShown() and frame.Duration and frame.PreviewExpires then
-                local remaining = math.max(0, math.ceil(frame.PreviewExpires - now))
-                frame.Duration:SetText(remaining)
+                local remaining = math.max(0, frame.PreviewExpires - now)
+                frame.Duration:SetText(FormatAuraTrackingDuration(remaining))
             end
         end
     end)
@@ -913,7 +932,7 @@ function NSI:UpdateAuraTrackingPreviewFrame(frame, settings, texture, index, key
     frame.Duration:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
     frame.Duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
     frame.Duration:SetTextColor(unpack(settings.DurationColor))
-    frame.Duration:SetText(math.ceil(duration))
+    frame.Duration:SetText(FormatAuraTrackingDuration(duration))
     frame.Duration:SetShown(not settings.HideDurationText)
 
     PositionAuraTrackingUnitName(frame.UnitName, frame, settings)
