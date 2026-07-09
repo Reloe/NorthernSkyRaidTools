@@ -212,6 +212,90 @@ local function ApplyUIFont(object, size, flags)
     end
 end
 
+local paceExportPopup
+local paceImportPopup
+
+local function ShowPaceComparisonExportPopup(text, label)
+    if not paceExportPopup then
+        paceExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r",
+            "NSUIPaceComparisonExportString", { DontRightClickClose = true })
+        paceExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        paceExportPopup:SetFrameLevel(100)
+
+        paceExportPopup.infoLabel = paceExportPopup:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(paceExportPopup.infoLabel, 13, "")
+        paceExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        paceExportPopup.infoLabel:SetPoint("TOPLEFT", paceExportPopup, "TOPLEFT", 10, -30)
+
+        paceExportPopup.textbox = DF:NewSpecialLuaEditorEntry(paceExportPopup, 280, 80, nil,
+            "PaceComparisonExportTextEdit", true, false, true)
+        paceExportPopup.textbox:SetPoint("TOPLEFT", paceExportPopup, "TOPLEFT", 10, -50)
+        paceExportPopup.textbox:SetPoint("BOTTOMRIGHT", paceExportPopup, "BOTTOMRIGHT", -25, 40)
+        DF:ApplyStandardBackdrop(paceExportPopup.textbox)
+        DF:ReskinSlider(paceExportPopup.textbox.scroll)
+        paceExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        NSI:SetUIFont(paceExportPopup.textbox.editbox, 13, "OUTLINE")
+
+        local doneBtn = DF:CreateButton(paceExportPopup, function()
+            paceExportPopup:Hide()
+        end, 280, 20, NSI:Loc("Done"))
+        doneBtn:SetPoint("BOTTOM", paceExportPopup, "BOTTOM", 0, 10)
+        doneBtn:SetTemplate(options_button_template)
+        ApplyUIFont(doneBtn, 11)
+    end
+
+    paceExportPopup.infoLabel:SetText(label or "")
+    paceExportPopup.textbox:SetText(text or "")
+    paceExportPopup.textbox:SetFocus()
+    paceExportPopup:Show()
+end
+
+local function ShowPaceComparisonImportPopup(onImport)
+    if not paceImportPopup then
+        paceImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
+            "NSUIPaceComparisonImportString", { DontRightClickClose = true })
+        paceImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        paceImportPopup:SetFrameLevel(100)
+
+        paceImportPopup.statusLabel = paceImportPopup:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(paceImportPopup.statusLabel, 13, "")
+        paceImportPopup.statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        paceImportPopup.statusLabel:SetText(NSI:Loc("Paste a Pace Comparison export below and click Import."))
+        paceImportPopup.statusLabel:SetPoint("TOPLEFT", paceImportPopup, "TOPLEFT", 10, -30)
+
+        paceImportPopup.textbox = DF:NewSpecialLuaEditorEntry(paceImportPopup, 280, 80, nil,
+            "PaceComparisonImportTextEdit", true, false, true)
+        paceImportPopup.textbox:SetPoint("TOPLEFT", paceImportPopup, "TOPLEFT", 10, -50)
+        paceImportPopup.textbox:SetPoint("BOTTOMRIGHT", paceImportPopup, "BOTTOMRIGHT", -25, 40)
+        DF:ApplyStandardBackdrop(paceImportPopup.textbox)
+        DF:ReskinSlider(paceImportPopup.textbox.scroll)
+        paceImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        NSI:SetUIFont(paceImportPopup.textbox.editbox, 13, "OUTLINE")
+
+        local importBtn = DF:CreateButton(paceImportPopup, function()
+            local success, bossCount, thresholdCount = NSI:ImportPaceComparisonString(paceImportPopup.textbox:GetText())
+            if success then
+                paceImportPopup:Hide()
+                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Pace Comparison boss(es) with %d threshold(s)."), bossCount, thresholdCount))
+                if paceImportPopup.onImport then
+                    paceImportPopup.onImport()
+                end
+            else
+                paceImportPopup.statusLabel:SetText("|cFFFF0000" .. NSI:Loc("Invalid Pace Comparison import string.") .. "|r")
+            end
+        end, 280, 20, NSI:Loc("Import"))
+        importBtn:SetPoint("BOTTOM", paceImportPopup, "BOTTOM", 0, 10)
+        importBtn:SetTemplate(options_button_template)
+        ApplyUIFont(importBtn, 11)
+    end
+
+    paceImportPopup.onImport = onImport
+    paceImportPopup.statusLabel:SetText(NSI:Loc("Paste a Pace Comparison export below and click Import."))
+    paceImportPopup.textbox:SetText("")
+    paceImportPopup.textbox:SetFocus()
+    paceImportPopup:Show()
+end
+
 local function GetUIObject(object)
     return object and (object.widget or object.label or object)
 end
@@ -283,12 +367,37 @@ local function BuildPaceComparisonEditorUI(parent)
         NSI:ResetPaceComparisonBoss(screen.selectedBoss)
         screen:Refresh()
     end, 125, 20, NSI:Loc("Reset Boss Defaults"))
-    resetButton:SetPoint("LEFT", GetUIObject(screen.enabledLabel), "RIGHT", 14, 0)
+    resetButton:SetPoint("TOPLEFT", GetUIObject(bossLabel), "BOTTOMLEFT", 0, -10)
     resetButton:SetTemplate(options_button_template)
     ApplyUIFont(resetButton, 11)
 
+    local importButton = DF:CreateButton(screen, function()
+        ShowPaceComparisonImportPopup(function()
+            screen.selectedBoss = GetSelectedBoss()
+            screen:Refresh()
+        end)
+    end, 70, 20, NSI:Loc("Import"))
+    importButton:SetPoint("LEFT", resetButton, "RIGHT", 8, 0)
+    importButton:SetTemplate(options_button_template)
+    ApplyUIFont(importButton, 11)
+
+    local exportBossButton = DF:CreateButton(screen, function()
+        local export = NSI:ExportPaceComparisonString(screen.selectedBoss)
+        ShowPaceComparisonExportPopup(export, NSI:Loc("Selected Boss"))
+    end, 95, 20, NSI:Loc("Export Boss"))
+    exportBossButton:SetPoint("LEFT", importButton, "RIGHT", 8, 0)
+    exportBossButton:SetTemplate(options_button_template)
+    ApplyUIFont(exportBossButton, 11)
+
+    local exportAllButton = DF:CreateButton(screen, function()
+        ShowPaceComparisonExportPopup(NSI:ExportAllPaceComparisonString(), NSI:Loc("All Bosses"))
+    end, 80, 20, NSI:Loc("Export All"))
+    exportAllButton:SetPoint("LEFT", exportBossButton, "RIGHT", 8, 0)
+    exportAllButton:SetTemplate(options_button_template)
+    ApplyUIFont(exportAllButton, 11)
+
     local addLabel = CreateEditorLabel(screen, "Add Threshold", 12, "orange")
-    addLabel:SetPoint("TOPLEFT", GetUIObject(bossLabel), "BOTTOMLEFT", 0, -20)
+    addLabel:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, -16)
 
     local newThreshold = GetNewThreshold()
     local phaseEntry = CreateTextEntry(screen, NSI:Loc("Phase"), function() return newThreshold.phase or 1 end, function(_, value) newThreshold.phase = tonumber(value) or 1 end, 105, 22, true, nil, nil, "NSUIPaceComparisonNewPhase")

@@ -75,6 +75,113 @@ local function CopyThresholds(thresholds)
     return copy
 end
 
+local function FormatPaceComparisonNumber(value, decimals)
+    value = tonumber(value) or 0
+    local formatted = string.format("%." .. decimals .. "f", value)
+    formatted = formatted:gsub("(%..-)0+$", "%1"):gsub("%.$", "")
+    return formatted
+end
+
+local function ParsePaceComparisonLine(line)
+    line = tostring(line or "")
+    local lowerLine = line:lower()
+    local phase = tonumber(lowerLine:match("phase%s*:%s*([%d%.]+)"))
+    local time = tonumber(lowerLine:match("time%s*:%s*([%d%.]+)"))
+    local expected = tonumber(lowerLine:match("hp%s*:%s*([%d%.]+)"))
+    if not phase or not time or not expected then
+        return
+    end
+
+    local unit = line:match("[Uu][Nn][Ii][Tt]%s*:%s*([^;]+)")
+    unit = unit and strtrim(unit) or "boss1"
+
+    return {
+        phase = phase,
+        time = time,
+        unit = unit ~= "" and unit or "boss1",
+        expected = math.max(0, math.min(expected, 100)),
+    }
+end
+
+function NSI:ExportPaceComparisonString(encID)
+    if not NSRT or not NSRT.PaceComparison then return "" end
+    encID = tonumber(encID)
+    local bossSettings = encID and NSRT.PaceComparison.Bosses and NSRT.PaceComparison.Bosses[encID]
+    if not encID or not bossSettings then return "" end
+
+    local lines = {"EncounterID:" .. encID}
+    for _, entry in ipairs(CopyThresholds(bossSettings.thresholds)) do
+        local line = "phase:" .. FormatPaceComparisonNumber(entry.phase, 1)
+            .. ";time:" .. FormatPaceComparisonNumber(entry.time, 1)
+            .. ";hp:" .. FormatPaceComparisonNumber(entry.expected, 1)
+        if entry.unit and entry.unit ~= "" and entry.unit ~= "boss1" then
+            line = line .. ";unit:" .. entry.unit
+        end
+        lines[#lines + 1] = line
+    end
+    return table.concat(lines, "\n")
+end
+
+function NSI:ExportAllPaceComparisonString()
+    if not NSRT or not NSRT.PaceComparison then return "" end
+    local encIDs = {}
+    for encID, bossSettings in pairs(NSRT.PaceComparison.Bosses or {}) do
+        if bossSettings.thresholds and #bossSettings.thresholds > 0 then
+            encIDs[#encIDs + 1] = tonumber(encID) or encID
+        end
+    end
+    table.sort(encIDs)
+
+    local exports = {}
+    for _, encID in ipairs(encIDs) do
+        exports[#exports + 1] = self:ExportPaceComparisonString(encID)
+    end
+    return table.concat(exports, "\n\n")
+end
+
+function NSI:ImportPaceComparisonString(text)
+    if not NSRT or not NSRT.PaceComparison then return end
+    local imported = {}
+    local currentEncID
+
+    for line in tostring(text or ""):gmatch("[^\r\n]+") do
+        line = strtrim(line)
+        if line ~= "" then
+            local encID = tonumber(line:lower():match("^encounterid%s*:%s*(%d+)"))
+            if encID then
+                if self.BossNames and self.BossNames[encID] then
+                    currentEncID = encID
+                    imported[currentEncID] = imported[currentEncID] or {}
+                else
+                    currentEncID = nil
+                end
+            elseif currentEncID then
+                local entry = ParsePaceComparisonLine(line)
+                if entry then
+                    imported[currentEncID][#imported[currentEncID] + 1] = entry
+                end
+            end
+        end
+    end
+
+    local bossCount, thresholdCount = 0, 0
+    for encID, thresholds in pairs(imported) do
+        if #thresholds > 0 then
+            local settings = GetPaceComparisonBossSettings(encID)
+            settings.enabled = true
+            settings.userModified = true
+            settings.thresholds = CopyThresholds(thresholds)
+            bossCount = bossCount + 1
+            thresholdCount = thresholdCount + #settings.thresholds
+        end
+    end
+
+    if bossCount == 0 then
+        return false, 0, 0
+    end
+    return true, bossCount, thresholdCount
+end
+
 function NSI:ApplyDefaultPaceComparisonData()
     if not NSRT or not NSRT.PaceComparison then
         return
