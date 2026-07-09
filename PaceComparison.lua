@@ -7,6 +7,27 @@ NSI.PaceComparisonDefaults = {
     --         { phase = 1, time = 30, unit = "boss1", expected = 85 },
     --     },
     -- },
+    [3455] = { -- Vashnik the Malignant
+        thresholds = {
+            {phase = 1, time = 0, unit = "boss1", expected = 100},
+            {phase = 1, time = 10, unit = "boss1", expected = 97},
+            {phase = 1, time = 20, unit = "boss1", expected = 91},
+            {phase = 1, time = 30, unit = "boss1", expected = 86},
+            {phase = 1, time = 40, unit = "boss1", expected = 82},
+            {phase = 1, time = 50, unit = "boss1", expected = 79},
+            {phase = 1, time = 60, unit = "boss1", expected = 77},
+            {phase = 1, time = 90, unit = "boss1", expected = 70},
+            {phase = 1, time = 120, unit = "boss1", expected = 62},
+            {phase = 1, time = 150, unit = "boss1", expected = 54},
+            {phase = 1, time = 180, unit = "boss1", expected = 47},
+            {phase = 1, time = 210, unit = "boss1", expected = 40},
+            {phase = 1, time = 240, unit = "boss1", expected = 33},
+            {phase = 1, time = 270, unit = "boss1", expected = 25},
+            {phase = 1, time = 300, unit = "boss1", expected = 18},
+            {phase = 1, time = 330, unit = "boss1", expected = 11},
+            {phase = 1, time = 360, unit = "boss1", expected = 4},
+        },
+    },
 }
 
 local DEFAULT_PACE_COLORS = {
