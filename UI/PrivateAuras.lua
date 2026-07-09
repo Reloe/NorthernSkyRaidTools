@@ -343,20 +343,10 @@ end
 local function GetAuraSoundCategoryIcon(categoryType, category)
     if categoryType == "Raid" and BossData and BossData.BossIcons then
         return BossData.BossIcons[category.key]
+    elseif categoryType == "Dungeons" and NSI.AuraSoundDungeonIcons then
+        return NSI.AuraSoundDungeonIcons[category.key]
     end
 end
-
-local midnightS2AuraSoundOrder = {
-    [3379] = 1,
-    [3470] = 2,
-    [3445] = 3,
-    [3455] = 4,
-    [3497] = 5,
-    [3420] = 6,
-    [3421] = 7,
-    [3429] = 8,
-    [3492] = 9,
-}
 
 local function GetAuraSoundCategories(categoryType)
     local categories = {}
@@ -365,9 +355,7 @@ local function GetAuraSoundCategories(categoryType)
     end
     if categoryType == "Raid" then
         table.sort(categories, function(a, b)
-            local aOrder = NSI:IsMidnightS2() and midnightS2AuraSoundOrder[a.key] or nil
-            local bOrder = NSI:IsMidnightS2() and midnightS2AuraSoundOrder[b.key] or nil
-            return (aOrder or 1000 + (NSI.EncounterOrder[a.key] or 9999)) < (bOrder or 1000 + (NSI.EncounterOrder[b.key] or 9999))
+            return (NSI.EncounterOrder[a.key] or 9999) < (NSI.EncounterOrder[b.key] or 9999)
         end)
     end
     return categories
@@ -619,6 +607,7 @@ local function BuildAuraSoundsUI(parent)
     categoryLabel:SetPoint("LEFT", GetUIObject(screen.typeDropdown), "RIGHT", 18, 0)
 
     screen.categoryDropdown = DF:CreateDropDown(screen, function() return BuildAuraSoundCategoryOptions(screen) end, nil, 230, 22, nil, "$parentCategoryDropdown", options_dropdown_template)
+    screen.categoryDropdown.realsizeH = 160
     screen.categoryDropdown:SetPoint("LEFT", GetUIObject(categoryLabel), "RIGHT", 10, 0)
     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
 
