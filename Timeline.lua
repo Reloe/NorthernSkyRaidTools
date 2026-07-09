@@ -983,7 +983,7 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.reminderLabel:Hide()
                     timelineWindow.reminderDropdown:Hide()
                     timelineWindow.editNoteLabel:Show()
-                    timelineWindow.editNoteDropdown:Show()
+                    timelineWindow.editNoteButton:Show()
                     if timelineWindow.playButton then timelineWindow.playButton:Show() end
                     self:RefreshTimelineForMode()
                 end
@@ -996,7 +996,7 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.reminderLabel:Show()
                     timelineWindow.reminderDropdown:Show()
                     timelineWindow.editNoteLabel:Hide()
-                    timelineWindow.editNoteDropdown:Hide()
+                    timelineWindow.editNoteButton:Hide()
                     timelineWindow.editable = false
                     timelineWindow.editNote = nil
                     if timelineWindow.playButton then
@@ -1113,45 +1113,82 @@ function NSI:CreateTimelineWindow()
     playButton:SetPoint("LEFT", modeDropdown, "RIGHT", 15, 0)
     timelineWindow.playButton = playButton
 
-    -- "Edit Note" dropdown - anchored right of the play button (created here so
+    -- "Edit Note" menu button - anchored right of the play button (created here so
     -- the anchor reference is valid; was previously created before playButton).
     local editNoteLabel = DF:CreateLabel(timelineWindow, "Edit Note:", 11, "white")
     editNoteLabel:SetPoint("LEFT", playButton, "RIGHT", 20, 0)
     timelineWindow.editNoteLabel = editNoteLabel
     editNoteLabel:Show()
 
-    local function BuildEditNoteDropdownOptions()
-        local options = {}
-        table.insert(options, {
+    -- Menu-bar style picker: top level is "None (Read Only)" plus one entry per
+    -- boss that has personal notes; hovering a boss opens its notes as a submenu
+    -- (same nested-menu component used by the right-click context menus).
+    local function BuildEditNoteMenuItems()
+        local items = {}
+        table.insert(items, {
+            type = "button",
             label = "None (Read Only)",
-            value = nil,
-            onclick = function()
+            fnc = function()
                 timelineWindow.editNote = nil
                 timelineWindow.editable = false
+                self:UpdateEditNoteButtonLabel(timelineWindow)
                 self:RefreshTimelineForMode()
             end,
         })
+
         local personalList = self:GetAllReminderNames(true)
-        for _, data in ipairs(personalList) do
-            table.insert(options, {
-                label = data.name .. " (Personal)",
-                value = {name = data.name, personal = true},
-                onclick = function(_, _, value)
-                    timelineWindow.editNote = value
-                    timelineWindow.editable = true
-                    self:SetReminder(value.name, true, true)
-                    self:RefreshTimelineForMode()
-                end,
-            })
+        if #personalList > 0 then
+            table.insert(items, {type = "separator"})
+
+            -- Group notes by boss (EncounterID tag), preserving encounter order;
+            -- notes without an EncounterID are grouped under "Other".
+            local groups, groupOrder = {}, {}
+            for _, data in ipairs(personalList) do
+                local encID = data.hasencID and tonumber(data.hasencID) or nil
+                local key = encID or "other"
+                if not groups[key] then
+                    groups[key] = {
+                        name = encID and (NSI.BossNames[encID] or ("Boss " .. encID)) or "Other",
+                        order = data.order,
+                        notes = {},
+                    }
+                    table.insert(groupOrder, key)
+                end
+                table.insert(groups[key].notes, data)
+            end
+            table.sort(groupOrder, function(a, b) return groups[a].order < groups[b].order end)
+
+            for _, key in ipairs(groupOrder) do
+                local group = groups[key]
+                local subItems = {}
+                for _, data in ipairs(group.notes) do
+                    table.insert(subItems, {
+                        type = "button",
+                        label = data.name,
+                        fnc = function()
+                            local value = {name = data.name, personal = true}
+                            timelineWindow.editNote = value
+                            timelineWindow.editable = true
+                            self:SetReminder(value.name, true, true)
+                            self:UpdateEditNoteButtonLabel(timelineWindow)
+                            self:RefreshTimelineForMode()
+                        end,
+                    })
+                end
+                table.insert(items, {type = "submenu", label = group.name, items = subItems})
+            end
         end
-        return options
+
+        return items
     end
 
-    local editNoteDropdown = DF:CreateDropDown(timelineWindow, BuildEditNoteDropdownOptions, nil, 250)
-    editNoteDropdown:SetTemplate(options_dropdown_template)
-    editNoteDropdown:SetPoint("LEFT", editNoteLabel, "RIGHT", 5, 0)
-    timelineWindow.editNoteDropdown = editNoteDropdown
-    editNoteDropdown:Show()
+    local editNoteButton = DF:CreateButton(timelineWindow, function()
+        NSI.UI.Components.ShowContextMenuAtFrame(BuildEditNoteMenuItems(), timelineWindow.editNoteButton, 250)
+    end, 250, 22, "None (Read Only)")
+    editNoteButton:SetTemplate(options_button_template)
+    editNoteButton:SetPoint("LEFT", editNoteLabel, "RIGHT", 5, 0)
+    timelineWindow.editNoteButton = editNoteButton
+    editNoteButton:Show()
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
@@ -1582,9 +1619,10 @@ function NSI:CreateTimelineWindow()
                                 local uiScale = 1 / UIParent:GetEffectiveScale()
                                 local cursorX = GetCursorPosition() * uiScale
                                 local bodyLeft = tl and (tl.body:GetLeft() or 0) or 0
-                                local scrollX = tl and tl.horizontalSlider and tl.horizontalSlider:GetValue() or 0
+                                -- tl.body is the scroll CHILD, not the viewport — its GetLeft() already
+                                -- shifts with scroll, so scrollX must NOT be added again here.
                                 local pps = tl and ((tl.options.pixels_per_second or 15) * (tl.currentScale or 1)) or 15
-                                local newAbsoluteTime = math.max(0, math.floor((scrollX + cursorX - bodyLeft) / pps + 0.5))
+                                local newAbsoluteTime = math.max(0, math.floor((cursorX - bodyLeft) / pps + 0.5))
                                 local encID = timelineWindow.currentEncounterID
                                 local difficulty = timelineWindow.currentDifficulty
                                 local phase, phaseStart = NSI:PhaseFromTime(encID, newAbsoluteTime, difficulty)
@@ -1851,13 +1889,14 @@ function NSI:CreateTimelineWindow()
 
         -- Check if cursor is within timeline body bounds
         if cursorX >= bodyLeft and cursorX <= bodyRight and cursorY >= bodyBottom and cursorY <= bodyTop then
+            -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts with
+            -- scroll, so mouseXInBody is already a scroll-independent content-space offset.
             local mouseXInBody = cursorX - bodyLeft
-            local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
             local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
             local currentScale = timelineFrame.currentScale or 1
 
             -- Calculate time at cursor position
-            local timeAtCursor = (scrollX + mouseXInBody) / (pixelsPerSecond * currentScale)
+            local timeAtCursor = mouseXInBody / (pixelsPerSecond * currentScale)
 
             -- Format time as M:SS
             local minutes = math.floor(timeAtCursor / 60)
@@ -1926,10 +1965,11 @@ function NSI:CreateTimelineWindow()
             local uiScale = 1 / UIParent:GetEffectiveScale()
             local cursorX = curRawX * uiScale
             local bodyLeft = timelineFrame.body:GetLeft() or 0
+            -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts with
+            -- scroll, so mouseXInBody is already a scroll-independent content-space offset.
             local mouseXInBody = cursorX - bodyLeft
-            local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
             local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
-            local absoluteTime = math.max(0, (scrollX + mouseXInBody) / pps)
+            local absoluteTime = math.max(0, mouseXInBody / pps)
             NSI.UI.Components.ShowContextMenu({
                 {type = "button", label = "Add Reminder", fnc = function()
                     NSI:ShowReminderDialog(timelineWindow, absoluteTime)
@@ -2015,9 +2055,10 @@ function NSI:CreateTimelineWindow()
                     local uiScale = 1 / UIParent:GetEffectiveScale()
                     local cursorX = GetCursorPosition() * uiScale
                     local bodyLeft = timelineFrame.body:GetLeft() or 0
-                    local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
+                    -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts
+                    -- with scroll, so scrollX must NOT be added again here.
                     local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
-                    local newAbsoluteTime = math.max(0, math.floor((scrollX + cursorX - bodyLeft) / pps + 0.5))
+                    local newAbsoluteTime = math.max(0, math.floor((cursorX - bodyLeft) / pps + 0.5))
                     local encID = timelineWindow.currentEncounterID
                     local difficulty = timelineWindow.currentDifficulty
                     local phase, phaseStart = NSI:PhaseFromTime(encID, newAbsoluteTime, difficulty)
@@ -2039,15 +2080,16 @@ function NSI:CreateTimelineWindow()
                 local uiScale = 1 / UIParent:GetEffectiveScale()
                 local cursorX = GetCursorPosition() * uiScale
                 local bodyLeft = timelineFrame.body:GetLeft() or 0
+                -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts with
+                -- scroll, so mouseXInBody is already a scroll-independent content-space offset.
                 local mouseXInBody = cursorX - bodyLeft
-                local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
                 local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
                 local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
 
                 -- Snap to whole seconds.
-                local rawTime = (scrollX + mouseXInBody) / pps
+                local rawTime = mouseXInBody / pps
                 local snappedTime = math.max(0, math.floor(rawTime + 0.5))
-                local snappedX = snappedTime * pps - scrollX
+                local snappedX = snappedTime * pps
 
                 local mins = math.floor(snappedTime / 60)
                 local secs = snappedTime % 60
@@ -2085,9 +2127,10 @@ function NSI:CreateTimelineWindow()
                 local previewElapsed = GetTime() - timelineWindow.previewStartTime
                 local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
                 local currentScale = timelineFrame.currentScale or 1
-                local scrollX = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
                 local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
-                local previewX = previewElapsed * pixelsPerSecond * currentScale - scrollX
+                -- Anchored to body (the scroll child), which already shifts with scroll —
+                -- do not also subtract scrollX here.
+                local previewX = previewElapsed * pixelsPerSecond * currentScale
                 local bodyWidth = timelineFrame.body:GetWidth() or 0
 
                 if previewX >= 0 and previewX <= bodyWidth then
@@ -2287,6 +2330,13 @@ function NSI:AutoFitTimelineScale(timeline, dataLength)
     end
 end
 
+-- Reflects window.editNote onto the "Edit Note" menu-bar button's label.
+function NSI:UpdateEditNoteButtonLabel(window)
+    if not window or not window.editNoteButton then return end
+    local editNote = window.editNote
+    window.editNoteButton.text = editNote and (editNote.name .. " (Personal)") or "None (Read Only)"
+end
+
 -- Refresh timeline with player's own processed reminders (My Reminders mode)
 function NSI:RefreshMyRemindersTimeline()
     if not self.TimelineWindow or not self.TimelineWindow.timeline then return end
@@ -2297,9 +2347,7 @@ function NSI:RefreshMyRemindersTimeline()
         local autoNote = {name = self.LoadedPersonalReminder, personal = true}
         self.TimelineWindow.editNote = autoNote
         self.TimelineWindow.editable = true
-        if self.TimelineWindow.editNoteDropdown then
-            self.TimelineWindow.editNoteDropdown:Select(autoNote)
-        end
+        self:UpdateEditNoteButtonLabel(self.TimelineWindow)
     end
 
     -- When an edit note is active, use GetAllTimelineData so every block carries
@@ -3097,7 +3145,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         if not editNote then
             local eid = popup._pendingEncID
             if not eid then
-                print("|cffff4444NSRT:|r Select a boss first, or open a note in the Edit Note dropdown.")
+                print("|cffff4444NSRT:|r Select a boss first, or open a note from the Edit Note menu.")
                 return
             end
             local bossName   = NSI.BossNames[eid] or ("Boss" .. eid)
@@ -3111,9 +3159,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
             if popup._window then
                 popup._window.editNote   = editNote
                 popup._window.editable   = true
-                if popup._window.editNoteDropdown then
-                    popup._window.editNoteDropdown:Select(editNote)
-                end
+                NSI:UpdateEditNoteButtonLabel(popup._window)
             end
         end
 

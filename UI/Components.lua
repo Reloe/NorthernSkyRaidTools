@@ -2198,6 +2198,23 @@ local function ShowContextMenu(items, width)
 end
 
 -- ============================================================
+--  ShowContextMenuAtFrame
+--
+--  Same styled menu as ShowContextMenu, but opens anchored below
+--  a frame (e.g. a menu-bar button) instead of at the cursor.
+--  Left edge aligns to the anchor's left edge normally, flipping
+--  to right-align against the anchor's right edge if it would
+--  otherwise run off the edge of the screen.
+-- ============================================================
+local function ShowContextMenuAtFrame(items, anchor, width)
+    EnsureCtxClickaway()
+    local left   = anchor:GetLeft() or 0
+    local right  = anchor:GetRight() or 0
+    local bottom = anchor:GetBottom() or 0
+    ShowContextAtLevel(items, 1, left, right, bottom, width)
+end
+
+-- ============================================================
 --  CreateLink
 --
 --  A button that opens a small copy-popup when clicked.
@@ -2373,6 +2390,7 @@ NSI.UI.Components = {
     CreateDialog        = CreateDialog,
     CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
+    ShowContextMenuAtFrame = ShowContextMenuAtFrame,
     CreateLink          = CreateLink,
     STYLE               = STYLE,
     registry            = componentRegistry,
