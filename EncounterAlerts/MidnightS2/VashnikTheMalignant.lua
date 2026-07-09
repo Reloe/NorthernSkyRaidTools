@@ -9,7 +9,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local data = {group = "Vashnik", internalID = "TankHits", name = "Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+    local data = {group = "Vashnik", internalID = "TankHits", name = "Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         textColors = {1, 0, 0, 1}, loadConditions = tankConditions, spellID = 1280935,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
@@ -59,7 +59,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1281908,
+    local data = {group = "Vashnik", internalID = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1281908,
         timers = {
             [15] = {16.0, 46.0, 67.0, 98.1, 130.1, 151.1, 182.0, 214.1, 235.1, 266.1, 298.1, 319.1, 350.1, 382.1, 403.1},
             [16] = {16.0, 46.0, 67.0, 98.1, 130.1, 151.1, 182.0, 214.1, 235.1, 266.1, 298.1, 319.1, 350.1, 382.1, 403.1},
