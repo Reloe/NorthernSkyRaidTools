@@ -19,11 +19,13 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
         "relativeTo",
         "xOffset",
         "yOffset",
-        "HideBorder",
         "HideTooltip",
         "HideDurationText",
     }) do
         CopyAuraTrackingSetting(source, target, key)
+    end
+    if source.HideBorder ~= nil then
+        target.ShowDispelBorder = not source.HideBorder
     end
 
     if source.StackScale then

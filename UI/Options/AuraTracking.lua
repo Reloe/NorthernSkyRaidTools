@@ -250,21 +250,21 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         nocombat = true,
     }
     options[#options + 1] = {
-        type = "toggle",
-        boxfirst = true,
-        name = "Hide Border",
-        desc = "Hide the 1 pixel black border around tracked aura icons.",
-        get = function() return settings.HideBorder end,
-        set = function(_, _, value) settings.HideBorder = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
-        nocombat = true,
-    }
-    options[#options + 1] = {
         type = "range",
         name = "Border Size",
-        desc = "Size of the black border around tracked aura icons.",
+        desc = "Size of the black border around tracked aura icons. Set to 0 to disable it.",
         get = function() return settings.BorderSize end,
         set = function(_, _, value) settings.BorderSize = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
-        min = 1, max = 10, step = 1, nocombat = true,
+        min = 0, max = 10, step = 1, nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Show Dispel Border",
+        desc = "Show Blizzard's dispel-type border and icon on tracked auras.",
+        get = function() return settings.ShowDispelBorder end,
+        set = function(_, _, value) settings.ShowDispelBorder = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+        nocombat = true,
     }
     options[#options + 1] = {
         type = "toggle",
