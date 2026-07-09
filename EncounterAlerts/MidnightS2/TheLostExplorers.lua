@@ -174,7 +174,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, spellID = 1292105,
         phaseTimers = {
             [15] = {
@@ -193,7 +193,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, spellID = 1296249,
         phaseTimers = {
             [15] = {
@@ -212,7 +212,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, spellID = 1299855,
         phaseTimers = {
             [15] = {
@@ -231,7 +231,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "TimeToThrow", name = "Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7, 
+    local data = {group = "Trader Abilities", internalID = "TimeToThrow", name = "Time to throw Fish", text = "Time to Throw", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 7,
         spellID = 1295817,
         isConditional = {
             text = "This Alert only shows if you are holding the fish at the time.",
@@ -254,7 +254,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "TimeToThrowNonConditional", name = "non-conditional Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7,
+    local data = {group = "Trader Abilities", internalID = "TimeToThrowNonConditional", name = "non-conditional Time to throw Fish", text = "Time to Throw", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 7,
         spellID = 1295817, enabled = false,
         phaseTimers = {
             [15] = {
