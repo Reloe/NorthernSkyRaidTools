@@ -334,20 +334,22 @@ function NSI:DuplicateCustomAuraTracking(settingsKey)
 end
 
 -- ── Section copy / paste ────────────────────────────────────────────────────
+-- Trigger/Sound/Load are copied via a small explicit allowlist (their fields
+-- are few and clearly scoped). "Display" is copied by EXCLUSION instead —
+-- every field on the entry except identity/Trigger/Sound/Load fields — so
+-- every current and future Display-tab setting (border, stack/duration text,
+-- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
+-- of relying on a hand-maintained list that can silently fall out of sync.
 local AuraTrackingSectionFields = {
-    Display = {
-        "GrowDirection", "Spacing", "Width", "Height", "Zoom", "Limit", "ReverseSort",
-        "Anchor", "relativeTo", "xOffset", "yOffset", "CustomAnchorFrame",
-        "BorderSize", "ShowDispelBorder", "EnableCooldownSwipe", "InverseCooldownSwipe",
-        "HideTooltip", "HideDurationText", "HideStackText", "HideLongDurationAuras",
-        "TextFont", "TextFontFlags", "DurationColor", "StackColor",
-        "DurationFontSize", "StackFontSize", "DurationXOffset", "DurationYOffset",
-        "StackXOffset", "StackYOffset",
-        "NameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
-    },
     Trigger = { "SpellIDs", "SpellIDsEdited", "Unit", "PreviewSpellID" },
     Sound   = { "Sound" },
     Load    = { "loadConditions" },
+}
+
+local AuraTrackingNonDisplayFields = {
+    Name = true, enabled = true, group = true, pinned = true, builtin = true,
+    SpellIDs = true, SpellIDsEdited = true, Unit = true, PreviewSpellID = true,
+    Sound = true, loadConditions = true,
 }
 
 local function CopyAuraTrackingValue(v)
@@ -357,11 +359,20 @@ end
 
 function NSI:CopyAuraTrackingSection(settingsKey, section)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    local fields = AuraTrackingSectionFields[section]
-    if not settings or not fields then return end
+    if not settings then return end
     local data = {}
-    for _, key in ipairs(fields) do
-        data[key] = CopyAuraTrackingValue(settings[key])
+    if section == "Display" then
+        for key, value in pairs(settings) do
+            if not AuraTrackingNonDisplayFields[key] then
+                data[key] = CopyAuraTrackingValue(value)
+            end
+        end
+    else
+        local fields = AuraTrackingSectionFields[section]
+        if not fields then return end
+        for _, key in ipairs(fields) do
+            data[key] = CopyAuraTrackingValue(settings[key])
+        end
     end
     self._AuraTrackingSectionClipboard = { section = section, data = data }
 end
