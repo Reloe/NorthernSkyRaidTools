@@ -32,6 +32,7 @@ local BuildPASoundEditUI           = NSI.UI.PrivateAuras.BuildPASoundEditUI
 local BuildExportStringUI          = NSI.UI.General.BuildExportStringUI
 local BuildImportStringUI          = NSI.UI.General.BuildImportStringUI
 local BuildGroupExportUI           = NSI.UI.General.BuildGroupExportUI
+local BuildAuraSoundsUI            = NSI.UI.PrivateAuras.BuildAuraSoundsUI
 
 -- Get options builders from modules
 local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
@@ -56,6 +57,8 @@ local BuildPrivateAurasOptions     = NSI.UI.Options.PrivateAuras.BuildOptions
 local BuildPrivateAurasCallback    = NSI.UI.Options.PrivateAuras.BuildCallback
 local BuildAuraTrackingOptions     = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildOptions
 local BuildAuraTrackingCallback    = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildCallback
+local BuildPaceComparisonOptions   = NSI.UI.Options.PaceComparison and NSI.UI.Options.PaceComparison.BuildOptions
+local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison and NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
 local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
@@ -79,7 +82,7 @@ local TABS_GROUPS                  = {
         { name = "Assignments",      textKey = "Assignments" },
     },
     {
-        { name = "PrivateAura", textKey = "Private Auras" },
+        { name = "PrivateAura", textKey = NSI:IsMidnightS2() and "Aura Sounds" or "Private Auras" },
         { name = "WAImports",   textKey = "WA Imports" },
     },
     {
@@ -89,6 +92,9 @@ local TABS_GROUPS                  = {
 }
 if NSI:IsMidnightS2() and BuildAuraTrackingOptions then
     table.insert(TABS_GROUPS[3], 2, { name = "AuraTracking", textKey = "Aura Tracking" })
+end
+if BuildPaceComparisonOptions then
+    table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
 end
 
 -- Sidebar visual constants
@@ -340,6 +346,7 @@ function NSUI:Init()
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
     local privateaura_tab         = tabSystem:GetTabFrameByName("PrivateAura")
     local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
+    local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = tabSystem:GetTabFrameByName("QoL")
     local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
 
@@ -380,6 +387,7 @@ function NSUI:Init()
     local RaidBuffMenu                   = BuildRaidBuffMenu()
     local privateaura_options1_table     = BuildPrivateAurasOptions()
     local auratracking_options1_table    = auratracking_tab and BuildAuraTrackingOptions and BuildAuraTrackingOptions()
+    local pacecomparison_options1_table  = pacecomparison_tab and BuildPaceComparisonOptions and BuildPaceComparisonOptions()
     local QoL_options1_table             = BuildQoLOptions()
     local WAImports_options1_table       = BuildWAImportsOptions()
     local option_tables = {
@@ -398,6 +406,9 @@ function NSUI:Init()
     }
     if auratracking_options1_table then
         table.insert(option_tables, auratracking_options1_table)
+    end
+    if pacecomparison_options1_table then
+        table.insert(option_tables, pacecomparison_options1_table)
     end
     for _, options in ipairs(option_tables) do
         options.language_addonId = addonId
@@ -458,9 +469,42 @@ function NSUI:Init()
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
     if auratracking_tab and auratracking_options1_table then
-        DF:BuildMenu(auratracking_tab, auratracking_options1_table, 10, -10, tab_content_height, false, options_text_template,
-            options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-            auratracking_callback)
+        function NSI:RebuildAuraTrackingOptionsMenu()
+            if NSUI.AuraTrackingOptionsFrame then
+                NSUI.AuraTrackingOptionsFrame:EnableMouse(false)
+                NSUI.AuraTrackingOptionsFrame:Hide()
+            end
+            NSUI.AuraTrackingOptionsFrameIndex = (NSUI.AuraTrackingOptionsFrameIndex or 0) + 1
+            NSUI.AuraTrackingOptionsFrame = CreateFrame("Frame", "NSUI_AuraTrackingOptionsFrame" .. NSUI.AuraTrackingOptionsFrameIndex, auratracking_tab, "BackdropTemplate")
+            NSUI.AuraTrackingOptionsFrame:SetAllPoints(auratracking_tab)
+            local options = BuildAuraTrackingOptions()
+            options.language_addonId = addonId
+            local callback = BuildAuraTrackingCallback()
+            DF:BuildMenu(NSUI.AuraTrackingOptionsFrame, options, 10, -10, tab_content_height, false, options_text_template,
+                options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+                callback)
+        end
+        NSI:RebuildAuraTrackingOptionsMenu()
+    end
+    if pacecomparison_tab and pacecomparison_options1_table then
+        function NSI:RebuildPaceComparisonOptionsMenu()
+            if NSUI.PaceComparisonOptionsFrame then
+                NSUI.PaceComparisonOptionsFrame:EnableMouse(false)
+                NSUI.PaceComparisonOptionsFrame:Hide()
+            end
+            NSUI.PaceComparisonOptionsFrameIndex = (NSUI.PaceComparisonOptionsFrameIndex or 0) + 1
+            NSUI.PaceComparisonOptionsFrame = CreateFrame("Frame", "NSUI_PaceComparisonOptionsFrame" .. NSUI.PaceComparisonOptionsFrameIndex, pacecomparison_tab, "BackdropTemplate")
+            NSUI.PaceComparisonOptionsFrame:SetAllPoints(pacecomparison_tab)
+            local options = BuildPaceComparisonOptions()
+            options.language_addonId = addonId
+            DF:BuildMenu(NSUI.PaceComparisonOptionsFrame, options, 10, -10, tab_content_height, false, options_text_template,
+                options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+                nil)
+        end
+        NSI:RebuildPaceComparisonOptionsMenu()
+        if BuildPaceComparisonEditorUI then
+            NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
+        end
     end
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
@@ -482,7 +526,11 @@ function NSUI:Init()
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
     NSUI.reminders_frame          = BuildRemindersEditUI(tabSystem:GetTabFrameByName("SharedNotes"))
-    NSUI.pasound_frame            = BuildPASoundEditUI()
+    if NSI:IsMidnightS2() and BuildAuraSoundsUI then
+        NSUI.aurasounds_frame     = BuildAuraSoundsUI(privateaura_tab)
+    else
+        NSUI.pasound_frame        = BuildPASoundEditUI()
+    end
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()

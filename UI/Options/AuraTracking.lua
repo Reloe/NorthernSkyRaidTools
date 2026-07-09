@@ -1,7 +1,28 @@
 local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
 
-local FONT_FLAGS = { "", "OUTLINE", "THICKOUTLINE", "MONOCHROME", "OUTLINE, MONOCHROME", "THICKOUTLINE, MONOCHROME" }
+local FONT_FLAGS = {
+    "",
+    "OUTLINE",
+    "THICKOUTLINE",
+    "MONOCHROME",
+    "OUTLINE, MONOCHROME",
+    "THICKOUTLINE, MONOCHROME",
+    "SLUG",
+    "SLUG, OUTLINE",
+    "SLUG, THICKOUTLINE",
+    "SLUG, MONOCHROME",
+    "SLUG, OUTLINE, MONOCHROME",
+    "SLUG, THICKOUTLINE, MONOCHROME",
+}
+
+local function RebuildAuraTrackingOptionsMenu()
+    if NSI.RebuildAuraTrackingOptionsMenu then
+        C_Timer.After(0, function()
+            NSI:RebuildAuraTrackingOptionsMenu()
+        end)
+    end
+end
 
 local function build_growdirection_options(settingsKey)
     local t = {}
@@ -11,7 +32,7 @@ local function build_growdirection_options(settingsKey)
             label = NSI:Loc(direction),
             phraseId = direction,
             onclick = function()
-                NSRT.AuraTrackingSettings[settingsKey].GrowDirection = direction
+                NSI:GetAuraTrackingSettings(settingsKey).GrowDirection = direction
                 NSI:UpdateAuraTrackingDisplay(settingsKey)
             end,
         }
@@ -26,7 +47,7 @@ local function build_font_options(settingsKey)
             label = name,
             value = name,
             onclick = function()
-                NSRT.AuraTrackingSettings[settingsKey].TextFont = name
+                NSI:GetAuraTrackingSettings(settingsKey).TextFont = name
                 NSI:UpdateAuraTrackingDisplay(settingsKey)
             end,
         }
@@ -41,7 +62,7 @@ local function build_font_flag_options(settingsKey)
             label = flags == "" and NSI:Loc("None") or flags,
             value = flags,
             onclick = function()
-                NSRT.AuraTrackingSettings[settingsKey].TextFontFlags = flags
+                NSI:GetAuraTrackingSettings(settingsKey).TextFontFlags = flags
                 NSI:UpdateAuraTrackingDisplay(settingsKey)
             end,
         }
@@ -57,7 +78,7 @@ local function build_name_position_options(settingsKey)
             label = NSI:Loc(position),
             phraseId = position,
             onclick = function()
-                NSRT.AuraTrackingSettings[settingsKey].NamePosition = position
+                NSI:GetAuraTrackingSettings(settingsKey).NamePosition = position
                 NSI:UpdateAuraTrackingDisplay(settingsKey)
             end,
         }
@@ -65,9 +86,23 @@ local function build_name_position_options(settingsKey)
     return t
 end
 
-local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, iconTexture)
-    local settings = NSRT.AuraTrackingSettings[settingsKey]
+local AddAuraTrackingTopControls
+local GetAuraTrackingSelectionOptions
 
+local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, iconTexture)
+    local settings = NSI:GetAuraTrackingSettings(settingsKey)
+    if not settings then return end
+    local isCustom = tostring(settingsKey):match("^Custom:")
+    local displayIconTexture = (isCustom and settings.PreviewSpellID and C_Spell.GetSpellTexture(settings.PreviewSpellID)) or iconTexture
+
+    options[#options + 1] = {
+        type = "select",
+        name = "Aura Tracking Display",
+        desc = "Select which Aura Tracking display you want to edit.",
+        get = function() return NSRT.AuraTrackingSelected or "Player" end,
+        values = GetAuraTrackingSelectionOptions,
+        nocombat = true,
+    }
     options[#options + 1] = { type = "label", get = function() return label end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
     options[#options + 1] = {
         type = "toggle",
@@ -79,7 +114,7 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
             settings.enabled = value
             NSI:InitAuraTracking()
         end,
-        icontexture = iconTexture,
+        icontexture = displayIconTexture,
         iconsize = {16, 16},
         nocombat = true,
     }
@@ -93,6 +128,27 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         end,
         nocombat = true,
         spacement = true,
+    }
+    options[#options + 1] = {
+        type = "button",
+        name = "Stop All Previews",
+        desc = "Hide all active Aura Tracking previews.",
+        func = function()
+            NSI:StopAllAuraTrackingPreviews()
+        end,
+        nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Track All non-Player Debuffs",
+        desc = "Tracks almost all debuffs, only debuffs applied by yourself will not be displayed. This will likely get removed later but might be necessary for raid testing",
+        get = function() return NSRT.AuraTrackingDebugDisableCandidateFilters end,
+        set = function(_, _, value)
+            NSRT.AuraTrackingDebugDisableCandidateFilters = value
+            NSI:InitAuraTracking()
+        end,
+        nocombat = true,
     }
     options[#options + 1] = { type = "label", get = function() return "Custom Anchor Frame" end }
     options[#options + 1] = {
@@ -173,7 +229,16 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         desc = "Maximum number of auras to display",
         get = function() return settings.Limit end,
         set = function(_, _, value) settings.Limit = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
-        min = 1, max = 10, step = 1, nocombat = true,
+        min = 1, max = 20, step = 1, nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Reverse Sort",
+        desc = "Show auras with the longest remaining duration first.",
+        get = function() return settings.ReverseSort end,
+        set = function(_, _, value) settings.ReverseSort = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+        nocombat = true,
     }
     options[#options + 1] = {
         type = "toggle",
@@ -210,6 +275,26 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         set = function(_, _, value) settings.HideDurationText = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
         nocombat = true,
     }
+    if settingsKey == "Player" or settingsKey == "Tank" then
+        options[#options + 1] = {
+            type = "toggle",
+            boxfirst = true,
+            name = "Hide Long Duration Auras",
+            desc = "Hide auras with no duration or a duration longer than 24 hours. Effectively hiding 'Void-Zone' Debuffs.",
+            get = function() return settings.HideLongDurationAuras end,
+            set = function(_, _, value) settings.HideLongDurationAuras = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+            nocombat = true,
+        }
+    end
+    options[#options + 1] = {
+        type = "toggle",
+        boxfirst = true,
+        name = "Hide Stack Text",
+        desc = "Hide the stack count text on tracked auras.",
+        get = function() return settings.HideStackText end,
+        set = function(_, _, value) settings.HideStackText = value; NSI:UpdateAuraTrackingDisplay(settingsKey) end,
+        nocombat = true,
+    }
     options[#options + 1] = {
         type = "toggle",
         boxfirst = true,
@@ -230,6 +315,7 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
     }
 
     options[#options + 1] = { type = "breakline" }
+    AddAuraTrackingTopControls(options, settingsKey)
     options[#options + 1] = { type = "label", get = function() return "Aura Tracking Text Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
     options[#options + 1] = {
         type = "select",
@@ -358,13 +444,171 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
             min = 6, max = 80, step = 1, nocombat = true,
         }
     end
+
+    if isCustom then
+        local customIndex = tostring(settingsKey):match("^Custom:(%d+)$") or "1"
+        options[#options + 1] = { type = "label", get = function() return "Custom Tracking Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
+        options[#options + 1] = {
+            type = "textentry",
+            name = "Name",
+            desc = "Name shown in the Aura Tracking selector.",
+            get = function() return settings.Name or ("Custom Aura Tracking " .. customIndex) end,
+            set = function(_, _, value)
+                NSI:SetAuraTrackingCustomName(settingsKey, value)
+            end,
+            width = 220,
+            nocombat = true,
+        }
+        options[#options + 1] = { type = "label", get = function() return "Tracked Spell IDs" end }
+        options[#options + 1] = {
+            type = "textentry",
+            name = "",
+            desc = "Comma or space separated list of helpful spell IDs to track on the player.",
+            get = function() return NSI:GetAuraTrackingSpellIDString(settingsKey) end,
+            set = function(_, _, value)
+                NSI:SetAuraTrackingSpellIDString(settingsKey, value)
+            end,
+            width = 220,
+            nocombat = true,
+        }
+        options[#options + 1] = {
+            type = "textentry",
+            name = "Preview Spell ID",
+            desc = "Spell ID used for the custom Aura Tracking preview icon.",
+            get = function() return settings.PreviewSpellID and tostring(settings.PreviewSpellID) or "" end,
+            set = function(_, _, value)
+                NSI:SetAuraTrackingPreviewSpellID(settingsKey, value)
+            end,
+            width = 120,
+            nocombat = true,
+        }
+        options[#options + 1] = {
+            type = "button",
+            name = "Delete Custom Tracking",
+            desc = "Delete this custom Aura Tracking display.",
+            func = function()
+                NSI:DeleteCustomAuraTracking(settingsKey)
+            end,
+            nocombat = true,
+            spacement = true,
+        }
+    end
+end
+
+GetAuraTrackingSelectionOptions = function()
+    local options = {
+        {
+            label = "Player Debuff Tracking",
+            value = "Player",
+            onclick = function()
+                NSRT.AuraTrackingSelected = "Player"
+                RebuildAuraTrackingOptionsMenu()
+            end,
+        },
+        {
+            label = "CoTank Debuff Tracking",
+            value = "Tank",
+            onclick = function()
+                NSRT.AuraTrackingSelected = "Tank"
+                RebuildAuraTrackingOptionsMenu()
+            end,
+        },
+        {
+            label = "External & Immunity Tracking",
+            value = "External",
+            onclick = function()
+                NSRT.AuraTrackingSelected = "External"
+                RebuildAuraTrackingOptionsMenu()
+            end,
+        },
+    }
+
+    for index in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
+        local settingsKey = "Custom:" .. index
+        local settings = NSI:GetAuraTrackingSettings(settingsKey)
+        local label = (settings and settings.Name) or ("Custom Aura Tracking " .. index)
+        options[#options + 1] = {
+            label = label,
+            value = settingsKey,
+            onclick = function()
+                NSRT.AuraTrackingSelected = settingsKey
+                RebuildAuraTrackingOptionsMenu()
+            end,
+        }
+    end
+
+    return options
+end
+
+local function GetAuraTrackingCopySourceOptions(selected)
+    local options = {}
+    for _, entry in ipairs(GetAuraTrackingSelectionOptions()) do
+        if entry.value ~= selected then
+            options[#options + 1] = {
+                label = entry.label,
+                value = entry.value,
+                onclick = function()
+                    NSRT.AuraTrackingStyleCopySource = entry.value
+                end,
+            }
+        end
+    end
+    return options
+end
+
+AddAuraTrackingTopControls = function(options, selected)
+    options[#options + 1] = {
+        type = "button",
+        name = "Add Custom Tracking",
+        desc = "Create a custom Aura Tracking display with its own helpful spell ID filter.",
+        func = function()
+            NSI:AddCustomAuraTracking()
+        end,
+        nocombat = true,
+        spacement = true,
+    }
+    if NSRT.AuraTrackingStyleCopySource == selected or not NSI:GetAuraTrackingSettings(NSRT.AuraTrackingStyleCopySource) then
+        NSRT.AuraTrackingStyleCopySource = selected == "Player" and "Tank" or "Player"
+    end
+    options[#options + 1] = {
+        type = "select",
+        name = "Copy Style From",
+        desc = "Select another Aura Tracking display to copy visual settings from.",
+        get = function() return NSRT.AuraTrackingStyleCopySource end,
+        values = function() return GetAuraTrackingCopySourceOptions(selected) end,
+        nocombat = true,
+    }
+    options[#options + 1] = {
+        type = "button",
+        name = "Copy Style",
+        desc = "Copies visual settings from the selected Aura Tracking display. This does not copy name, enabled state, spell IDs, or preview spell ID.",
+        func = function()
+            NSI:CopyAuraTrackingStyle(NSRT.AuraTrackingStyleCopySource, selected)
+        end,
+        nocombat = true,
+        spacement = true,
+    }
 end
 
 local function BuildAuraTrackingOptions()
     local options = {}
-    AddAuraTrackingSection(options, "Player", "Player Aura Tracking", "IsAuraTrackingPlayerPreview", 237555)
-    options[#options + 1] = { type = "breakline" }
-    AddAuraTrackingSection(options, "Tank", "Co-Tank Aura Tracking", "IsAuraTrackingTankPreview", 236318)
+    local selected = NSRT.AuraTrackingSelected or "Player"
+    if not NSI:GetAuraTrackingSettings(selected) then
+        selected = "Player"
+        NSRT.AuraTrackingSelected = selected
+    end
+
+    if selected == "Player" then
+        AddAuraTrackingSection(options, selected, "Player Debuff Tracking", "IsAuraTrackingPlayerPreview", 237555)
+    elseif selected == "Tank" then
+        AddAuraTrackingSection(options, selected, "CoTank Debuff Tracking", "IsAuraTrackingTankPreview", 236318)
+    elseif selected == "External" then
+        AddAuraTrackingSection(options, selected, "External & Immunity Tracking", "IsAuraTrackingExternalPreview", C_Spell.GetSpellTexture(6940) or 135966)
+    else
+        local customIndex = tostring(selected):match("^Custom:(%d+)$") or "1"
+        local settings = NSI:GetAuraTrackingSettings(selected)
+        AddAuraTrackingSection(options, selected, (settings and settings.Name) or ("Custom Aura Tracking " .. customIndex), "IsAuraTrackingCustom" .. customIndex .. "Preview", 136076)
+    end
     return options
 end
 
