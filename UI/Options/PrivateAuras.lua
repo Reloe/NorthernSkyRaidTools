@@ -27,6 +27,10 @@ local function build_anchor_options(settingsKey, key)
 end
 
 local function BuildPrivateAurasOptions()
+    if NSI:IsMidnightS2() then
+        return {}
+    end
+
     return {
         {
             type = "label",
@@ -432,10 +436,8 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PASounds.UseDefaultPASounds end,
             set = function(self, fixedparam, value)
                 NSRT.PASounds.UseDefaultPASounds = value
-                if NSRT.PASounds.UseDefaultPASounds then
-                    NSI:ApplyDefaultPASounds(true)
-                    NSI:RefreshPASoundEditUI()
-                end
+                NSI:ApplyDefaultPASounds(true, false, value)
+                NSI:RefreshPASoundEditUI()
             end,
         },
 
@@ -447,10 +449,8 @@ local function BuildPrivateAurasOptions()
             get = function() return NSRT.PASounds.UseDefaultMPlusPASounds end,
             set = function(self, fixedparam, value)
                 NSRT.PASounds.UseDefaultMPlusPASounds = value
-                if NSRT.PASounds.UseDefaultMPlusPASounds then
-                    NSI:ApplyDefaultPASounds(true, true)
-                    NSI:RefreshPASoundEditUI()
-                end
+                NSI:ApplyDefaultPASounds(true, true, value)
+                NSI:RefreshPASoundEditUI()
             end,
         },
         {

@@ -32,6 +32,7 @@ local BuildPASoundEditUI           = NSI.UI.PrivateAuras.BuildPASoundEditUI
 local BuildExportStringUI          = NSI.UI.General.BuildExportStringUI
 local BuildImportStringUI          = NSI.UI.General.BuildImportStringUI
 local BuildGroupExportUI           = NSI.UI.General.BuildGroupExportUI
+local BuildAuraSoundsUI            = NSI.UI.PrivateAuras.BuildAuraSoundsUI
 
 -- Get options builders from modules
 local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
@@ -81,7 +82,7 @@ local TABS_GROUPS                  = {
         { name = "Assignments",      textKey = "Assignments" },
     },
     {
-        { name = "PrivateAura", textKey = "Private Auras" },
+        { name = "PrivateAura", textKey = NSI:IsMidnightS2() and "Aura Sounds" or "Private Auras" },
         { name = "WAImports",   textKey = "WA Imports" },
     },
     {
@@ -468,9 +469,22 @@ function NSUI:Init()
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
     if auratracking_tab and auratracking_options1_table then
-        DF:BuildMenu(auratracking_tab, auratracking_options1_table, 10, -10, tab_content_height, false, options_text_template,
-            options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-            auratracking_callback)
+        function NSI:RebuildAuraTrackingOptionsMenu()
+            if NSUI.AuraTrackingOptionsFrame then
+                NSUI.AuraTrackingOptionsFrame:EnableMouse(false)
+                NSUI.AuraTrackingOptionsFrame:Hide()
+            end
+            NSUI.AuraTrackingOptionsFrameIndex = (NSUI.AuraTrackingOptionsFrameIndex or 0) + 1
+            NSUI.AuraTrackingOptionsFrame = CreateFrame("Frame", "NSUI_AuraTrackingOptionsFrame" .. NSUI.AuraTrackingOptionsFrameIndex, auratracking_tab, "BackdropTemplate")
+            NSUI.AuraTrackingOptionsFrame:SetAllPoints(auratracking_tab)
+            local options = BuildAuraTrackingOptions()
+            options.language_addonId = addonId
+            local callback = BuildAuraTrackingCallback()
+            DF:BuildMenu(NSUI.AuraTrackingOptionsFrame, options, 10, -10, tab_content_height, false, options_text_template,
+                options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+                callback)
+        end
+        NSI:RebuildAuraTrackingOptionsMenu()
     end
     if pacecomparison_tab and pacecomparison_options1_table then
         function NSI:RebuildPaceComparisonOptionsMenu()
@@ -512,7 +526,11 @@ function NSUI:Init()
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
     NSUI.reminders_frame          = BuildRemindersEditUI(tabSystem:GetTabFrameByName("SharedNotes"))
-    NSUI.pasound_frame            = BuildPASoundEditUI()
+    if NSI:IsMidnightS2() and BuildAuraSoundsUI then
+        NSUI.aurasounds_frame     = BuildAuraSoundsUI(privateaura_tab)
+    else
+        NSUI.pasound_frame        = BuildPASoundEditUI()
+    end
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()

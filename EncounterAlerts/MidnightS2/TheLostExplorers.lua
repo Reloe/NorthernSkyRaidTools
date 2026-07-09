@@ -19,7 +19,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
 
     local data = {group = "Scrollsage Abilities", internalID = "ShreddingShards", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        customIcon = 1295854,
+        spellID = 1295854,
         textColors = {1, 0, 0, 1},
         isConditional = {
             text = "This Alert only shows if you have threat on boss4.",
@@ -43,7 +43,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Scrollsage Abilities", internalID = "BlinkNova", name = "Blink Nova", text = "Blink Nova", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        customIcon = 1296021,
+        spellID = 1296021,
         phaseTimers = {
             [15] = {
                 {19, 50},
@@ -62,7 +62,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Scrollsage Abilities", internalID = "FrostfireVolley", name = "Frostfire Volley", text = "Frostfire Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        isConditional = ScrollsageConditional, customIcon = 1295891,
+        isConditional = ScrollsageConditional, spellID = 1295891,
         phaseTimers = {
             [15] = {
                 {},
@@ -81,7 +81,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "First Mate Abilities", internalID = "ShellSpinNormal", name = "Shell Spin Normal", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        customIcon = 1296062,
+        spellID = 1296062,
         phaseTimers = {
             [15] = {
                 {22, 38, 53},
@@ -100,7 +100,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "First Mate Abilities", internalID = "ShellSpinScroll", name = "Shell Spin - Scroll Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        isConditional = ScrollsageConditional, customIcon = 1296062,
+        isConditional = ScrollsageConditional, spellID = 1296062,
         phaseTimers = {
             [15] = {
                 {},
@@ -118,7 +118,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
     local data = {group = "First Mate Abilities", internalID = "ShellSpinTrader", name = "Shell Spin - Trader Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        isConditional = TraderConditional, customIcon = 1296062,
+        isConditional = TraderConditional, spellID = 1296062,
         phaseTimers = {
             [15] = {
                 {},
@@ -156,7 +156,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Trader Abilities", internalID = "Fish-Spawn", name = "Fish Spawn", text = "Fish Spawn", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        customIcon = 1295817,
+        spellID = 1295817,
         phaseTimers = {
             [15] = {
                 {32},
@@ -194,7 +194,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
-        isConditional = TraderConditional, customIcon = 1296249,
+        isConditional = TraderConditional, spellID = 1296249,
         phaseTimers = {
             [15] = {
                 {},
@@ -213,7 +213,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
-        isConditional = TraderConditional, customIcon = 1299855,
+        isConditional = TraderConditional, spellID = 1299855,
         phaseTimers = {
             [15] = {
                 {},
@@ -232,7 +232,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Trader Abilities", internalID = "TimeToThrow", name = "Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7, 
-        customIcon = 1295817,
+        spellID = 1295817,
         isConditional = {
             text = "This Alert only shows if you are holding the fish at the time.",
             func = [[return function() return C_ActionBar.HasExtraActionBar() end]],
@@ -255,7 +255,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Trader Abilities", internalID = "TimeToThrowNonConditional", name = "non-conditional Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7,
-        customIcon = 1295817, enabled = false,
+        spellID = 1295817, enabled = false,
         phaseTimers = {
             [15] = {
                 {57},
