@@ -784,7 +784,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         elseif not isExternal then
             candidateFilters = {}
             if settings.HideLongDurationAuras then
-                candidateFilters.maxDuration = 86400
+                candidateFilters.maxDuration = 540
             end
             if not NSRT.AuraTrackingDebugDisableCandidateFilters then
                 candidateFilters.isBossOrRoleAura = true
