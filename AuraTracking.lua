@@ -64,7 +64,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         ShowDispelBorder = true,
         HideTooltip = false,
         HideDurationText = false,
-        HideLongDurationAuras = true,
+        HideLongDurationAuras = false,
         HideStackText = false,
         EnableCooldownSwipe = true,
         InverseCooldownSwipe = true,
