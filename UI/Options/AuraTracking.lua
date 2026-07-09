@@ -586,6 +586,7 @@ AddAuraTrackingTopControls = function(options, selected)
             NSI:CopyAuraTrackingStyle(NSRT.AuraTrackingStyleCopySource, selected)
         end,
         nocombat = true,
+        spacement = true,
     }
 end
 
