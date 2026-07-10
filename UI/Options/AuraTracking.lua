@@ -441,7 +441,7 @@ local function BuildAuraTrackingUI(screen)
                 row:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -(slot - 1) * lineHeight)
                 row:SetWidth(listChild:GetWidth())
                 row.arrow:SetTexture(node.collapsed and CHEVRON_DOWN or CHEVRON_UP)
-                row.name:SetText(node.group)
+                row.name:SetText(node.group == NSI.AuraTrackingBuiltinGroup and NSI:Loc(node.group) or node.group)
                 row.count:SetText("(" .. node.count .. ")")
                 row:Show()
                 local gname = node.group
@@ -470,7 +470,7 @@ local function BuildAuraTrackingUI(screen)
 
                 row.icon:SetTexture(EntryIcon(item.settingsKey, settings))
                 row.icon:SetAlpha(willLoad and 1 or 0.35)
-                row.name:SetText(settings.Name or NSI:Loc("Unnamed"))
+                row.name:SetText(item.builtin and NSI:Loc(settings.Name or "Unnamed") or (settings.Name or NSI:Loc("Unnamed")))
                 row.name:SetTextColor(1, 1, 1, willLoad and (settings.enabled and 1 or 0.45) or 0.35)
                 row.pinIcon:SetShown(settings.pinned == true)
 
@@ -551,7 +551,7 @@ local function BuildAuraTrackingUI(screen)
     local function GetGroupSelected()
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         if not s then return "" end
-        if s.builtin then return NSI.AuraTrackingBuiltinGroup end
+        if s.builtin then return NSI:Loc(NSI.AuraTrackingBuiltinGroup) end
         return (s.group and s.group ~= "") and s.group or NSI:Loc("— No Group —")
     end
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
@@ -1141,7 +1141,7 @@ local function BuildAuraTrackingUI(screen)
         if not loadCollapsed.Roles then
             for _, rd in ipairs(ROLE_DATA) do
                 local k = rd.key; local c = ROLE_COLORS[k]
-                y = AddCheck(y, rd.label, cond.Roles[k], function() cond.Roles[k] = (not cond.Roles[k]) or nil end, c[1], c[2], c[3])
+                y = AddCheck(y, NSI:Loc(rd.label), cond.Roles[k], function() cond.Roles[k] = (not cond.Roles[k]) or nil end, c[1], c[2], c[3])
             end
         end
         -- Classes
@@ -1150,7 +1150,7 @@ local function BuildAuraTrackingUI(screen)
         if not loadCollapsed.Classes then
             for _, cd in ipairs(CLASS_DATA) do
                 local k = cd.key; local cr, cg, cb = ClassColor(k)
-                y = AddCheck(y, cd.label, cond.Classes[k], function() cond.Classes[k] = (not cond.Classes[k]) or nil end, cr, cg, cb)
+                y = AddCheck(y, NSI:Loc(cd.label), cond.Classes[k], function() cond.Classes[k] = (not cond.Classes[k]) or nil end, cr, cg, cb)
             end
         end
         -- Specs
@@ -1159,7 +1159,7 @@ local function BuildAuraTrackingUI(screen)
         if not loadCollapsed.Specs then
             for _, sd in ipairs(SPEC_DATA) do
                 local id = sd.id; local cr, cg, cb = ClassColor(sd.class)
-                y = AddCheck(y, sd.label .. " |cFF808080(" .. sd.class:sub(1, 3) .. ")|r", cond.SpecIDs[id],
+                y = AddCheck(y, NSI:Loc(sd.label) .. " |cFF808080(" .. sd.class:sub(1, 3) .. ")|r", cond.SpecIDs[id],
                     function() cond.SpecIDs[id] = (not cond.SpecIDs[id]) or nil end, cr * 0.8 + 0.2, cg * 0.8 + 0.2, cb * 0.8 + 0.2)
             end
         end
@@ -1198,7 +1198,7 @@ local function BuildAuraTrackingUI(screen)
         local settings = key and NSI:GetAuraTrackingSettings(key)
         if not settings then rightPanel:Hide(); RebuildList(); return end
         rightPanel:Show()
-        nameEntry:SetValue(settings.Name or "")
+        nameEntry:SetValue(settings.builtin and NSI:Loc(settings.Name or "") or (settings.Name or ""))
         nameEntry.editBox:SetEnabled(not settings.builtin)
         nameEntry.editBox:SetAlpha(settings.builtin and 0.5 or 1)
         anchorEntry:SetValue(settings.CustomAnchorFrame or "UIParent")
