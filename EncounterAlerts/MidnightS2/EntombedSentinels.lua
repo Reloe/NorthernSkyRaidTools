@@ -5,8 +5,10 @@ local encID = 3445
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+    local healerConditions = self:DefaultLoadConditions()
+    healerConditions.Roles.HEALER = true
 
-    local data = {group = "Sentinels", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "Sentinels", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         textColors = {1, 0, 0, 1}, spellID = 1284458,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
@@ -14,18 +16,18 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         phaseTimers = {
             [15] ={
-                {6, 28},
-                {6, 28, 49.9, 71.8},
-                {6, 28, 49.9, 71.8},
-                {6, 28, 49.9, 71.8},
-                {6, 28, 49.9, 71.8},
+                {5.4, 28.6},
+                {5.4, 28.6, 50.5, 72.4},
+                {5.4, 28.6, 50.5, 72.4},
+                {5.4, 28.6, 50.5, 72.4},
+                {5.4, 28.6, 50.5, 72.4},
             },
             [16] ={
                 {6, 28},
-                {6, 28, 49.9, 71.8},
-                {6, 28, 49.9, 71.8},
-                {6, 28, 49.9, 71.8},
-                {6, 28, 49.9, 71.8},
+                {5.4, 28.6, 50.5, 72.4},
+                {5.4, 28.6, 50.5, 72.4},
+                {5.4, 28.6, 50.5, 72.4},
+                {5.4, 28.6, 50.5, 72.4},
             }
         },
     }
@@ -38,18 +40,18 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         phaseTimers = {
             [15] ={
-                {8.5, 30.4},
-                {8.5, 30.4, 52.3, 74.2},
-                {8.5, 30.4, 52.3, 74.2},
-                {8.5, 30.4, 52.3, 74.2},
-                {8.5, 30.4, 52.3, 74.2},
+                {8.7, 31.4},
+                {8.7, 31.4, 53.7, 76.8},
+                {8.7, 31.4, 53.7, 76.8},
+                {8.7, 31.4, 53.7, 76.8},
+                {8.7, 31.4, 53.7, 76.8},
             },
             [16] ={
                 {8.5, 30.4},
-                {8.5, 30.4, 52.3, 74.2},
-                {8.5, 30.4, 52.3, 74.2},
-                {8.5, 30.4, 52.3, 74.2},
-                {8.5, 30.4, 52.3, 74.2},
+                {8.7, 31.4, 53.7, 76.8},
+                {8.7, 31.4, 53.7, 76.8},
+                {8.7, 31.4, 53.7, 76.8},
+                {8.7, 31.4, 53.7, 76.8},
             }
         },
     }
@@ -105,6 +107,31 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Sentinels", internalID = "BloodDispels", name = "Blood Dispels", text = "Dispels", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+        spellID = 1284471, loadConditions = healerConditions,
+        isConditional = {
+            text = "This Alert only shows if you are within 40y of boss2.",
+            func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss2") return minRange and minRange < 40 end]],
+        },
+        phaseTimers = {
+            [15] ={
+                {45},
+                {45},
+                {45},
+                {45},
+                {45},
+            },
+            [16] ={
+                {45},
+                {45},
+                {45},
+                {45},
+                {45},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Sentinels", internalID = "PoisonAdd", name = "Poison Add", text = "Poison Add", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         textColors = {0.62, 1, 0.25, 1}, spellID = 1284251,
         isConditional = {
@@ -130,26 +157,36 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Sentinels", internalID = "OrbSpawn", name = "Orb Spawn", text = "Orbs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+    local data = {group = "Sentinels", internalID = "OrbSpawn", name = "Orb Spawn", text = "Bait Orbs", DisplayType = "Text", encID = encID, phase = 1, TTS = "Bait", dur = 6,
         spellID = 1284434,
-        isConditional = {
-            text = "This Alert only shows if you are within 40y of boss1.",
-            func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss1") return minRange and minRange < 40 end]],
-        },
         phaseTimers = {
             [15] ={
-                {17.1},
-                {17.1, 50},
-                {17.1, 50},
-                {17.1, 50},
-                {17.1, 50},
+                {14.2},
+                {14.2, 47, 79.4},
+                {14.2, 47, 79.4},
+                {14.2, 47, 79.4},
+                {14.2, 47, 79.4},
             },
             [16] ={
-                {17.1},
-                {17.1, 50},
-                {17.1, 50},
-                {17.1, 50},
-                {17.1, 50},
+                {14.1},
+                {14.2, 47, 79.4},
+                {14.2, 47, 79.4},
+                {14.2, 47, 79.4},
+                {14.2, 47, 79.4},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Sentinels", internalID = "ShiftingProtovenom", name = "Shifting Protovenom", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 6,
+        spellID = 1296878,
+        phaseTimers = {
+            [16] ={
+                {37.2},
+                {42, 82},
+                {42, 82},
+                {42, 82},
+                {42, 82},
             }
         },
     }
