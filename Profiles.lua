@@ -19,11 +19,13 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
         "relativeTo",
         "xOffset",
         "yOffset",
-        "HideBorder",
         "HideTooltip",
         "HideDurationText",
     }) do
         CopyAuraTrackingSetting(source, target, key)
+    end
+    if source.HideBorder ~= nil then
+        target.ShowDispelBorder = not source.HideBorder
     end
 
     if source.StackScale then
@@ -44,8 +46,30 @@ function NSI:ConvertPrivateAuraSettingsToAuraTracking()
     NSRT.AuraTrackingSettingsConverted = true
 end
 
+function NSI:ResetSeason2EncounterAlertsToDefaults()
+    if not self:IsMidnightS2() then return end
+    if type(self.Season2EncounterIDs) ~= "table" then return end
 
-function NSI:AddMissingDefaults()
+    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+    for _, encID in ipairs(self.Season2EncounterIDs) do
+        NSRT.EncounterAlerts[encID] = nil
+        if self.InitializeAlerts and self.InitializeAlerts[encID] then
+            self.InitializeAlerts[encID](self)
+        end
+    end
+    self:FireCallback("NSRT_ALERT_FULL_UPDATE")
+end
+
+function NSI:RunProfileMigrations()
+    local profileVersion = tonumber(NSRT.ProfileVersion) or 0
+    if profileVersion < 1 then
+        self:ResetSeason2EncounterAlertsToDefaults()
+        NSRT.ProfileVersion = 1
+    end
+end
+
+
+function NSI:AddMissingDefaults(skipProfileMigrations)
     local defaults = {
         -- Saved data tables (user-populated, empty by default)
         NickNames = {},
@@ -367,13 +391,13 @@ function NSI:AddMissingDefaults()
                 StackFontSize = 50,
                 HideStackText = true,
                 HideTooltip = true,
+                ShowDispelBorder = false,
             }),
             Custom = {},
         },
         AuraTrackingSettingsConverted = false,
         AuraTrackingSelected = "Player",
         AuraTrackingStyleCopySource = "Player",
-        AuraTrackingDebugDisableCandidateFilters = false,
         PaceComparison = {
             SelectedBoss = 0,
             NewThreshold = {
@@ -484,6 +508,7 @@ function NSI:AddMissingDefaults()
         ProfileKeys = {},
         CurrentProfile = "default",
         MainProfile = "default",
+        ProfileVersion = 0,
 
         AutoLoadNote = {},
         HasNewAlertStructure = true,
@@ -512,7 +537,9 @@ function NSI:AddMissingDefaults()
         end
     end
     self:ConvertPrivateAuraSettingsToAuraTracking()
+    self:MigrateAuraTrackingSettings()
     self:ApplyDefaultPaceComparisonData()
+    self:RunProfileMigrations()
 end
 
 function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
@@ -894,7 +921,7 @@ end
 function NSI:LoadMyProfile()
     local ProfileKey = self:GetProfileKey()
     local ProfileToLoad = "default"
-    self:AddMissingDefaults()
+    NSRT = NSRT or {}
     if ProfileKey and NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
         ProfileToLoad = NSRT.ProfileKeys[ProfileKey]
     elseif NSRT.MainProfile then

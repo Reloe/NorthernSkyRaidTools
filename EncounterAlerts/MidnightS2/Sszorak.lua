@@ -8,6 +8,9 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
+    local nontankConditions = self:DefaultLoadConditions()
+    nontankConditions.Roles.HEALER = true
+    nontankConditions.Roles.DAMAGER = true
 
     local data = {group = "Sszorak", internalID = "TankCombo", name = "Tank Combo", text = "Tank Combo", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1277002,
         textColors = {1, 0, 0, 1},
@@ -35,14 +38,15 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Sszorak", internalID = "WindDebuffs", text = "Wind-Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1285419,
+    local data = {group = "Sszorak", internalID = "WindDebuffs", text = "Wind-Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1285419,
         timers = {
             [15] = {43.4, 95.5, 181.5, 233.7, 319.7, 371.9},
             [16] = {43.4, 95.5, 181.5, 233.7, 319.7, 371.9},
         },
     }
     self:AddEncounterAlert(data)
-    local data = {group = "Sszorak", internalID = "Debuffs", text = "Debuffs", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1305963, Ticks = {4},
+    local data = {group = "Sszorak", internalID = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1305963,
+        loadConditions = nontankConditions,
         timers = {
             [15] = {37.2, 89.5, 175.4, 227.6, 313.5, 365.8},
             [16] = {37.2, 89.5, 175.4, 227.6, 313.5, 365.8},

@@ -17,15 +17,16 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1290956,
         timers = {
             [15] = {52.3, 120.0, 221.7, 289.5, 391.2, 458.9},
-            [16] = {52.3, 120.0, 221.7, 289.5, 391.2, 458.9},
+            [16] = {46.9, 107.9, 199.5, 260.6, 352.1, 413.0},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Twin Fangs", internalID = "Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1290516,
+    local data = {group = "Twin Fangs", internalID = "Soak", text = "Soak", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1290516,
+    Ticks = {4.5, 6.5}, barColors = {1, 0, 0, 1},
         timers = {
             [15] = {67.9, 135.6, 237.3, 305.1, 406.8, 474.6},
-            [16] = {67.9, 135.6, 237.3, 305.1, 406.8, 474.6},
+            [16] = {64.7, 125.7, 213.6, 274.6, 366.1, 427.1},
         },
     }
     self:AddEncounterAlert(data)
@@ -34,7 +35,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1290809,
         timers = {
             [15] = {48.5, 116.2, 218.0, 285.7, 387.4, 455.1},
-            [16] = {48.5, 116.2, 218.0, 285.7, 387.4, 455.1},
+            [16] = {43.8, 104.8, 196.2, 257.1, 348.7, 409.6},
         },
     }
     self:AddEncounterAlert(data)
@@ -42,16 +43,15 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Twin Fangs", internalID = "WatchSide", name = "Watch Side", text = "Watch Side", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1294293,
         timers = {
             [15] = {150.5, 319.9},
-            [16] = {150.5, 319.9},
+            [16] = {135.5, 287.9},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Twin Fangs", internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = 1291404,
-        loadConditions = nonTankConditions,
         timers = {
             [15] = {39.7, 107.5, 209.2, 276.9, 378.6, 446.4},
-            [16] = {39.7, 107.5, 209.2, 276.9, 378.6, 446.4},
+            [16] = {35.8, 96.8, 188.3, 249.2, 340.7, 401.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -59,7 +59,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Twin Fangs", internalID = "Orbs", text = "Orbs", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = 1289994,
         timers = {
             [15] = {12.9, 80.7, 182.4, 250.2, 351.8, 419.6},
-            [16] = {12.9, 80.7, 182.4, 250.2, 351.8, 419.6},
+            [16] = {11.9, 72.9, 164.2, 225.2, 316.6, 377.6},
         },
     }
     self:AddEncounterAlert(data)
@@ -73,7 +73,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {32.5, 100.3, 202.0, 269.8, 371.4, 439.2},
-            [16] = {32.5, 100.3, 202.0, 269.8, 371.4, 439.2},
+            [16] = {30.3, 91.3, 181.8, 242.8, 334.3, 395.3},
         },
     }
     self:AddEncounterAlert(data)
@@ -87,7 +87,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {9.9, 77.7, 179.4, 247.2, 348.8, 416.6},
-            [16] = {9.9, 77.7, 179.4, 247.2, 348.8, 416.6},
+            [16] = {9, 70, 161.5, 222.5, 313.9, 374.9},
         },
     }
     self:AddEncounterAlert(data)

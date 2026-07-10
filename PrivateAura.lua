@@ -111,6 +111,28 @@ NSI.AuraSoundCategories = {
         } },
     },
     Dungeons = {
+        { key = "altar_of_fangs", label = "Altar of Fangs", entries = {
+        } },
+        { key = "temple_of_sethraliss", label = "Temple of Sethraliss", entries = {
+        } },
+        { key = "ruby_life_pools", label = "Ruby Life Pools", entries = {
+        } },
+        { key = "kings_rest", label = "King's Rest", entries = {
+        } },
+        { key = "voidscar_arena", label = "Voidscar Arena", entries = {
+        } },
+        { key = "blinding_vale", label = "Blinding Vale", entries = {
+            { spellID = 1237091, sound = "Fixate" }, -- Bloodthirsty Gaze
+            { spellID = 1261276, sound = "Targeted" }, -- Thornblade
+            { spellID = 1240222, sound = "Targeted" }, -- Pulverizing Strikes
+        } },
+        { key = "murder_row", label = "Murder Row", entries = {
+            { spellID = 1214352, sound = "Spread" }, -- Fire Bomb
+            { spellID = 474545, sound = "Targeted" }, -- Murder in a Row
+        } },
+        { key = "den_of_nalorakk", label = "Den of Nalorakk", entries = {
+            { spellID = 1242869, sound = "Spread" }, -- Echoing Maul
+        } },
         { key = "magisters_terrace", label = "Magister's Terrace", entries = {
             { spellID = 1225792, sound = "Debuff" }, -- Runic Mark
             { spellID = 1223958, sound = "Debuff" }, -- Cosmic Sting
@@ -159,32 +181,31 @@ NSI.AuraSoundCategories = {
             { spellID = 1253541, sound = "Debuff" }, -- Scorching Ray
             { spellID = 1249020, sound = "Spread" }, -- Eclipsing Step
         } },
-        { key = "den_of_nalorakk", label = "Den of Nalorakk", entries = {
-            { spellID = 1242869, sound = "Spread" }, -- Echoing Maul
-        } },
-        { key = "murder_row", label = "Murder Row", entries = {
-            { spellID = 1214352, sound = "Spread" }, -- Fire Bomb
-            { spellID = 474545, sound = "Targeted" }, -- Murder in a Row
-        } },
-        { key = "blinding_vale", label = "Blinding Vale", entries = {
-            { spellID = 1237091, sound = "Fixate" }, -- Bloodthirsty Gaze
-            { spellID = 1261276, sound = "Targeted" }, -- Thornblade
-            { spellID = 1240222, sound = "Targeted" }, -- Pulverizing Strikes
-        } },
-        { key = "voidscar_arena", label = "Voidscar Arena", entries = {
-        } },
-        { key = "kings_rest", label = "King's Rest", entries = {
-        } },
-        { key = "ruby_life_pools", label = "Ruby Life Pools", entries = {
-        } },
-        { key = "temple_of_sethraliss", label = "Temple of Sethraliss", entries = {
-        } },
-        { key = "altar_of_fangs", label = "Altar of Fangs", entries = {
+        { key = "algethar_academy", label = "Algethar Academy", entries = {
         } },
     },
     Custom = {
         { key = "custom", label = "Custom", entries = {} },
     },
+}
+
+NSI.AuraSoundDungeonIcons = {
+    altar_of_fangs = 7956175,
+    temple_of_sethraliss = 2011143,
+    ruby_life_pools = 4578416,
+    kings_rest = 2011123,
+    voidscar_arena = 7439626,
+    blinding_vale = 7354408,
+    murder_row = 7266213,
+    den_of_nalorakk = 7266214,
+    magisters_terrace = 7439625,
+    maisara_caverns = 7322719,
+    nexus_point = 7553062,
+    windrunners_spire = 7266215,
+    pit_of_saron = 343641,
+    seat_of_the_triumvirate = 1711340,
+    skyreach = 1002596,
+    algethar_academy = 4578414,
 }
 
 local function BuildAuraSoundDefaultList(categoryType)

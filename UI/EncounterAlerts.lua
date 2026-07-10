@@ -3066,7 +3066,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[cd.key]
         if cc then row.nameLbl:SetTextColor(cc.r, cc.g, cc.b, 1)
         else        row.nameLbl:SetTextColor(1, 1, 1, 1) end
-        row.nameLbl:SetText(cd.label)
+        row.nameLbl:SetText(NSI:Loc(cd.label))
         row._classKey = cd.key
         classRowFrames[i] = row
         row:Hide()
@@ -3079,7 +3079,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local cc = RAID_CLASS_COLORS and RAID_CLASS_COLORS[sd.class]
         if cc then row.nameLbl:SetTextColor(cc.r * 0.8 + 0.2, cc.g * 0.8 + 0.2, cc.b * 0.8 + 0.2, 1)
         else       row.nameLbl:SetTextColor(0.85, 0.85, 0.85, 1) end
-        row.nameLbl:SetText(sd.label)
+        row.nameLbl:SetText(NSI:Loc(sd.label))
         row._specID   = sd.id
         row._classKey = sd.class
         specRowFrames[i] = row
@@ -3108,7 +3108,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local row = MakeCheckRow(loadScrollChild)
         local rc = ROLE_COLORS[rd.key]
         row.nameLbl:SetTextColor(rc[1], rc[2], rc[3], 1)
-        row.nameLbl:SetText(rd.label)
+        row.nameLbl:SetText(NSI:Loc(rd.label))
         row._roleKey = rd.key
         roleRowFrames[i] = row
         row:Hide()
