@@ -751,22 +751,25 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Stack Y-Offset", "Vertical offset of the stack text"),
             get = function() return s.StackYOffset end, set = function(_, v) s.StackYOffset = v; apply(key) end })
 
-        if key == "Tank" then
-            add({ Type = "Label", text = "Co-Tank Name Settings" })
-            add({ Type = "Checkbox", label = "Show Co-Tank Name",
-                tooltip = tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons."),
+        if key == "Tank" or key == "External" or tostring(key):match("^Custom:") then
+            local isTank = key == "Tank"
+            add({ Type = "Label", text = isTank and "Co-Tank Name Settings" or "Source Name Settings" })
+            add({ Type = "Checkbox", label = isTank and "Show Co-Tank Name" or "Show Source Name",
+                tooltip = isTank
+                    and tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons.")
+                    or tip("Show Source Name", "Shows the source name attached to visible aura icons."),
                 get = function() return s.NameEnabled end, set = function(_, v) s.NameEnabled = v; apply(key) end })
             add({ Type = "Dropdown", label = "Name Position", values = NAME_POSITIONS,
-                tooltip = tip("Name Position", "Position of the co-tank name relative to the aura icon."),
+                tooltip = tip("Name Position", isTank and "Position of the co-tank name relative to the aura icon." or "Position of the source name relative to the aura icon."),
                 get = function() return s.NamePosition end, set = function(_, v) s.NamePosition = v; apply(key) end })
             add({ Type = "Slider", label = "Name X-Offset", min = -200, max = 200, step = 1,
-                tooltip = tip("Name X-Offset", "Horizontal offset of the co-tank name."),
+                tooltip = tip("Name X-Offset", isTank and "Horizontal offset of the co-tank name." or "Horizontal offset of the source name."),
                 get = function() return s.NameXOffset end, set = function(_, v) s.NameXOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Y-Offset", min = -200, max = 200, step = 1,
-                tooltip = tip("Name Y-Offset", "Vertical offset of the co-tank name."),
+                tooltip = tip("Name Y-Offset", isTank and "Vertical offset of the co-tank name." or "Vertical offset of the source name."),
                 get = function() return s.NameYOffset end, set = function(_, v) s.NameYOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
-                tooltip = tip("Name Font Size", "Font size of the co-tank name."),
+                tooltip = tip("Name Font Size", isTank and "Font size of the co-tank name." or "Font size of the source name."),
                 get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
         end
         return defs
