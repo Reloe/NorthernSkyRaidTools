@@ -17,6 +17,24 @@ NSI.InitializeAlerts[encID] = function(self)
         text = "This Alert only shows if Scrollsage Iku was empowered",
         func = [[return function() return NSAPI and NSAPI.ActiveBoss and NSAPI.ActiveBoss == "boss4" end]]
     }
+    local meleeNonTankConditions = self:DefaultLoadConditions()
+    meleeNonTankConditions.SpecIDs = {
+        [263] = true, -- Shaman: Enhancement
+        [255] = true, -- Hunter: Survival
+        [259] = true, -- Rogue: Assassination
+        [260] = true, -- Rogue: Outlaw
+        [261] = true, -- Rogue: Subtlety
+        [103] = true, -- Druid: Feral
+        [71] = true, -- Warrior: Arms
+        [72] = true, -- Warrior: Fury
+        [251] = true, -- Death Knight: Frost
+        [252] = true, -- Death Knight: Unholy
+        [577] = true, -- Demon Hunter: Havoc
+        [70] = true, -- Paladin: Retribution
+        [65] = true, -- Paladin: Holy
+        [269] = true, -- Monk: Windwalker
+        [270] = true, -- Monk: Mistweaver
+    }
 
     local data = {group = "Scrollsage Abilities", internalID = "ShreddingShards", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         spellID = 1295854,
@@ -28,21 +46,21 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {32},
-                {32, 102},
-                {32, 102},
-                {32, 102}
+                {32, 94},
+                {32, 94},
+                {32, 94}
             },
             [16] = {
                 {32},
-                {32, 102},
-                {32, 102},
-                {32, 102}
+                {32, 94},
+                {32, 94},
+                {32, 94}
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Scrollsage Abilities", internalID = "BlinkNova", name = "Blink Nova", text = "Blink Nova", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "Scrollsage Abilities", internalID = "BlinkNova", name = "Blink Nova", text = "Blink Nova", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 9,
         spellID = 1296021,
         phaseTimers = {
             [15] = {
@@ -80,64 +98,67 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "First Mate Abilities", internalID = "ShellSpinNormal", name = "Shell Spin Normal", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "First Mate Abilities", internalID = "ShellSpinNormal", name = "Shell Spin Normal", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
         spellID = 1296062,
+        loadConditions = meleeNonTankConditions,
         phaseTimers = {
             [15] = {
-                {22, 38, 53},
-                {82, 98, 113},
-                {82, 98, 113},
-                {82, 98, 113},
+                {18, 34, 49},
+                {78, 94, 109},
+                {78, 94, 109},
+                {78, 94, 109},
             },
             [16] = {
-                {32},
-                {82, 98, 113},
-                {82, 98, 113},
-                {82, 98, 113},
+                {18, 34, 49},
+                {78, 94, 109},
+                {78, 94, 109},
+                {78, 94, 109},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "First Mate Abilities", internalID = "ShellSpinScroll", name = "Shell Spin - Scroll Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "First Mate Abilities", internalID = "ShellSpinScroll", name = "Shell Spin - Scroll Empowered", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
         isConditional = ScrollsageConditional, spellID = 1296062,
+        loadConditions = meleeNonTankConditions,
         phaseTimers = {
             [15] = {
                 {},
-                {17, 35, 52},
-                {17, 35, 52},
-                {17, 35, 52},
+                {13, 31, 48},
+                {13, 31, 48},
+                {13, 31, 48},
             },
             [16] = {
                 {},
-                {17, 35, 52},
-                {17, 35, 52},
-                {17, 35, 52},
+                {13, 31, 48},
+                {13, 31, 48},
+                {13, 31, 48},
             }
         },
     }
     self:AddEncounterAlert(data)
-    local data = {group = "First Mate Abilities", internalID = "ShellSpinTrader", name = "Shell Spin - Trader Empowered", text = "Shells", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "First Mate Abilities", internalID = "ShellSpinTrader", name = "Shell Spin - Trader Empowered", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
         isConditional = TraderConditional, spellID = 1296062,
+        loadConditions = meleeNonTankConditions,
         phaseTimers = {
             [15] = {
                 {},
-                {15, 31, 46},
-                {15, 31, 46},
-                {15, 31, 46},
+                {10.9, 28.1, 43.2},
+                {10.9, 28.1, 43.2},
+                {10.9, 28.1, 43.2},
             },
             [16] = {
                 {},
-                {15, 31, 46},
-                {15, 31, 46},
-                {15, 31, 46},
+                {10.9, 28.1, 43.2},
+                {10.9, 28.1, 43.2},
+                {10.9, 28.1, 43.2},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "First Mate Abilities", internalID = "MightyThud", name = "Soaks", text = "Soaks", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 10,
-        isConditional = FirstMateConditional, spellID = 1296133, Ticks = {6, 8},
+    local data = {group = "First Mate Abilities", internalID = "MightyThud", name = "Soaks", text = "Soaks", DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 15.5,
+        isConditional = FirstMateConditional, spellID = 1296133, Ticks = {11.5, 13.5},
         phaseTimers = {
             [15] = {
                 {},
@@ -159,79 +180,79 @@ NSI.InitializeAlerts[encID] = function(self)
         spellID = 1295817,
         phaseTimers = {
             [15] = {
-                {32},
-                {92},
-                {92},
-                {92},
+                {34},
+                {94},
+                {94},
+                {94},
             },
             [16] = {
-                {32},
-                {92},
-                {92},
-                {92},
+                {34},
+                {94},
+                {94},
+                {94},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 7,
         isConditional = TraderConditional, spellID = 1292105,
         phaseTimers = {
             [15] = {
                 {},
-                {11, 43},
-                {11, 43},
-                {11, 43},
+                {10, 42},
+                {10, 42},
+                {10, 42},
             },
             [16] = {
                 {},
-                {11, 43},
-                {11, 43},
-                {11, 43},
+                {10, 42},
+                {10, 42},
+                {10, 42},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {group = "Trader Abilities", internalID = "ExplosiveSurprise", name = "Bomb Debuff", text = "Bomb inc", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, spellID = 1296249,
         phaseTimers = {
             [15] = {
                 {},
-                {13, 45},
-                {13, 45},
-                {13, 45},
+                {13, 45.5},
+                {13, 45.5},
+                {13, 45.5},
             },
             [16] = {
                 {},
-                {13, 45},
-                {13, 45},
-                {13, 45},
+                {13, 45.5},
+                {13, 45.5},
+                {13, 45.5},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {group = "Trader Abilities", internalID = "MushroomJump", name = "Mushroom Jump", text = "Jump", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         isConditional = TraderConditional, spellID = 1299855,
         phaseTimers = {
             [15] = {
                 {},
-                {35, 67},
-                {35, 67},
-                {35, 67},
+                {37, 67},
+                {37, 67},
+                {37, 67},
             },
             [16] = {
                 {},
-                {35, 67},
-                {35, 67},
-                {35, 67},
+                {37, 67},
+                {37, 67},
+                {37, 67},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "TimeToThrow", name = "Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7, 
+    local data = {group = "Trader Abilities", internalID = "TimeToThrow", name = "Time to throw Fish", text = "Time to Throw", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 7,
         spellID = 1295817,
         isConditional = {
             text = "This Alert only shows if you are holding the fish at the time.",
@@ -239,35 +260,35 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         phaseTimers = {
             [15] = {
-                {57},
-                {117},
-                {117},
-                {117},
+                {61},
+                {121},
+                {121},
+                {121},
             },
             [16] = {
-                {57},
-                {117},
-                {117},
-                {117},
+                {61},
+                {121},
+                {121},
+                {121},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Trader Abilities", internalID = "TimeToThrowNonConditional", name = "non-conditional Time to throw Fish", text = "Time to Throw", DisplayType = "text", encID = encID, phase = 1, TTS = false, dur = 7,
+    local data = {group = "Trader Abilities", internalID = "TimeToThrowNonConditional", name = "non-conditional Time to throw Fish", text = "Time to Throw", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 7,
         spellID = 1295817, enabled = false,
         phaseTimers = {
             [15] = {
-                {57},
-                {117},
-                {117},
-                {117},
+                {61},
+                {121},
+                {121},
+                {121},
             },
             [16] = {
-                {57},
-                {117},
-                {117},
-                {117},
+                {61},
+                {121},
+                {121},
+                {121},
             }
         },
     }
@@ -281,16 +302,9 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     self:EncounterRegister("ExplorersBossDetect", "UNIT_FACTION", true, {"boss1", "boss3", "boss4"}) -- boss2 is the empower casting boss
     self:EncounterFunction("ExplorersBossDetect", function(_, e, unit)
         if not UnitIsEnemy("player", unit) then
-            local previousActiveBoss = NSAPI.ActiveBoss
             NSAPI.ActiveBoss = unit
-            if NSRT.Settings.DebugLogs and previousActiveBoss ~= NSAPI.ActiveBoss then
-                print(string.format("|cFF00FFFFNSRT Debug:|r Lost Explorers active boss changed to %s (%s)", UnitName(unit) or "unknown", unit))
-            end
             if self.ActiveBossResetTimer then self.ActiveBossResetTimer:Cancel() end
-            self.ActiveBossResetTimer = C_Timer.NewTimer(60, function()
-                if NSRT.Settings.DebugLogs and NSAPI.ActiveBoss then
-                    print("|cFF00FFFFNSRT Debug:|r Lost Explorers active boss cleared")
-                end
+            self.ActiveBossResetTimer = C_Timer.NewTimer(80, function()
                 NSAPI.ActiveBoss = nil
             end)
         end
