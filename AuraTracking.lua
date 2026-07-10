@@ -4,8 +4,6 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
-local AURA_TRACKING_DISPEL_BORDER_SCALE = 1.25
-
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -56,6 +54,10 @@ NSI.DefaultExternalAuraTrackingSpellIDs = {
     45438, -- Ice Block
 }
 
+NSI.DefaultPlayerAuraTrackingSpellIDs = {
+    1310032, -- Spooky Mask
+}
+
 function NSI:CreateAuraTrackingSettingsDefaults(overrides)
     local settings = {
         Spacing = -1,
@@ -75,6 +77,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         HideTooltip = false,
         HideDurationText = false,
         HideLongDurationAuras = false,
+        ShowWhitelistedPlayerBuffs = false,
         HideStackText = false,
         EnableCooldownSwipe = true,
         InverseCooldownSwipe = true,
@@ -182,6 +185,9 @@ function NSI:MigrateAuraTrackingSettings()
                 entry.Name = info.name
             end
             NormalizeAuraTrackingEntry(entry)
+            if info.key == "Player" and entry.ShowWhitelistedPlayerBuffs == nil then
+                entry.ShowWhitelistedPlayerBuffs = true
+            end
         end
     end
 
@@ -502,7 +508,7 @@ end
 
 local function GetAuraTrackingSettingsKeyFromRuntimeKey(key)
     if key == "External" then return "External" end
-    local customIndex = tostring(key or ""):match("^custom(%d+)$")
+    local customIndex = tostring(key or ""):match("^[Cc]ustom(%d+)$")
     if customIndex then return "Custom:" .. customIndex end
 end
 
@@ -536,6 +542,9 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
     end
     if settingsKey == "External" then
         return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+    end
+    if settingsKey == "PlayerBuffWhitelist" then
+        return ParseAuraTrackingSpellIDs(NSI.DefaultPlayerAuraTrackingSpellIDs)
     end
     return {}
 end
@@ -658,6 +667,7 @@ function NSI:AddCustomAuraTracking(group)
         yOffset = 0,
         HideStackText = true,
         HideTooltip = true,
+        ShowDispelBorder = false,
         SpellIDsEdited = true,
         group = group,
     })
@@ -756,7 +766,14 @@ end
 local function SetAuraTrackingDispelBorderSize(border, relativeRegion, width, height)
     border:ClearAllPoints()
     border:SetPoint("CENTER", relativeRegion, "CENTER", 0, 0)
-    border:SetSize(width * AURA_TRACKING_DISPEL_BORDER_SCALE, height * AURA_TRACKING_DISPEL_BORDER_SCALE)
+    border:SetSize(width * 1.25, height * 1.25)
+end
+
+local function ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index)
+    if not AuraTrackingWantsDispelBorder(settings, key) then return false end
+    if index == 1 then return true end
+    if index == 2 then return false end
+    return random(2) == 1
 end
 
 local function PositionAuraTrackingUnitName(fontString, parent, settings)
@@ -842,18 +859,10 @@ local function GetPointCoordinate(frame, point)
     return x, y
 end
 
-local function UseAuraTrackingContainers(self)
-    if not self:IsMidnightS2() then return false end
-    if self.AuraTrackingContainersAvailable ~= nil then return self.AuraTrackingContainersAvailable end
-
+local function LoadAuraTrackingContainers()
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
         C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
-
-    local container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-    self.AuraTrackingContainerProbe = container
-    self.AuraTrackingContainersAvailable = true
-    return self.AuraTrackingContainersAvailable
 end
 
 local function SaveAuraTrackingFramePosition(self, frame, settings)
@@ -891,6 +900,10 @@ local function MakeAuraTrackingDraggable(self, frame, settings, enable, settings
     end
 
     self:MakeDraggable(frame, nil, true)
+    frame:SetFrameStrata("MEDIUM")
+    if frame.dragBorder then
+        frame.dragBorder:SetFrameStrata("MEDIUM")
+    end
     frame:SetScript("OnDragStart", function(f)
         f:StartMoving()
         f._nsrtAuraTrackingDragElapsed = 0
@@ -949,12 +962,12 @@ local function AcquireAuraTrackingContainer(self, key)
     local state = self.AuraTrackingState[key]
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-        state.container:SetFrameStrata("HIGH")
+        state.container:SetFrameStrata("MEDIUM")
         state.buttonRegions = {}
     end
     if not state.anchorFrame then
         state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
-        state.anchorFrame:SetFrameStrata("HIGH")
+        state.anchorFrame:SetFrameStrata("MEDIUM")
     end
     return state
 end
@@ -1018,9 +1031,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         })
     else
         HideAuraTrackingDispelRegions(regions)
-        if button.ClearAuraBorder then
-            button:ClearAuraBorder()
-        end
+        button:ClearAuraBorder()
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
@@ -1032,7 +1043,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
     end
 
-    if AuraTrackingWantsDispelBorder(settings, key) and button.SetAuraSymbol then
+    if AuraTrackingWantsDispelBorder(settings, key) then
         button:SetAuraSymbol(regions.dispelSymbol, {
             showWhenHarmful = true,
             showWhenHelpful = false,
@@ -1041,9 +1052,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if regions.dispelSymbol then
             regions.dispelSymbol:Hide()
         end
-        if button.ClearAuraSymbol then
-            button:ClearAuraSymbol()
-        end
+        button:ClearAuraSymbol()
     end
 
     if settings.HideStackText then
@@ -1139,7 +1148,7 @@ local function ResolveAuraTrackingUnit(self, settings)
 end
 
 local function InitAuraTrackingContainer(self, unit, settings, key)
-    if not UseAuraTrackingContainers(self) then return end
+    LoadAuraTrackingContainers()
     if not unit or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
     local isCustom = tostring(key):match("^Custom") and true or false
@@ -1175,23 +1184,43 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
     container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
 
-    local filters
+    local auraGroups = {}
     if isExternal then
-        filters = {"HELPFUL"}
+        auraGroups[#auraGroups + 1] = {
+            filter = "HELPFUL",
+            spellIDMap = spellIDMap,
+        }
     elseif isCustom then
         -- Friendly units can only spellID-filter buffs; enemy units debuffs.
-        filters = { self:IsAuraTrackingUnitFriendly(settings.Unit) and "HELPFUL" or "HARMFUL" }
+        auraGroups[#auraGroups + 1] = {
+            filter = self:IsAuraTrackingUnitFriendly(settings.Unit) and "HELPFUL" or "HARMFUL",
+            spellIDMap = spellIDMap,
+        }
     else
-        filters = AuraTrackingFilters
+        for _, filter in ipairs(AuraTrackingFilters) do
+            auraGroups[#auraGroups + 1] = {
+                filter = filter,
+                useLongDurationFilter = true,
+            }
+        end
+        if key == "Player" and settings.ShowWhitelistedPlayerBuffs then
+            local playerBuffSpellIDMap = GetAuraTrackingSpellIDMap(settings, "PlayerBuffWhitelist")
+            if playerBuffSpellIDMap then
+                auraGroups[#auraGroups + 1] = {
+                    filter = "HELPFUL",
+                    spellIDMap = playerBuffSpellIDMap,
+                }
+            end
+        end
     end
-    for index, filter in ipairs(filters) do
+    for index, group in ipairs(auraGroups) do
         local groupKey = groupKeyPrefix .. index
         local candidateFilters
-        if spellIDMap then
+        if group.spellIDMap then
             candidateFilters = {
-                includeSpellIDs = spellIDMap,
+                includeSpellIDs = group.spellIDMap,
             }
-        elseif not isExternal then
+        elseif group.useLongDurationFilter then
             candidateFilters = {}
             if settings.HideLongDurationAuras then
                 candidateFilters.maxDuration = 180
@@ -1219,7 +1248,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             container:SetAuraGroupLayout(groupKey, options.layout)
             container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
         else
-            container:AddAuraGroup(groupKey, filter, options)
+            container:AddAuraGroup(groupKey, group.filter, options)
         end
     end
 
@@ -1230,7 +1259,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 end
 
 function NSI:InitAuraTracking()
-    if self.IsBuilding or not self:IsMidnightS2() then return end
+    if self.IsBuilding then return end
     if self:Restricted() then
         self.PendingAuraTrackingUpdate = true
         return
@@ -1328,7 +1357,7 @@ end
 
 local function CreateAuraTrackingPreviewFrame(parent)
     local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata("HIGH")
+    frame:SetFrameStrata("MEDIUM")
     frame.Icon = frame:CreateTexture(nil, "ARTWORK")
     frame.Icon:SetAllPoints(frame)
     return frame
@@ -1364,7 +1393,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
     end
     UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize)
 
-    if AuraTrackingWantsDispelBorder(settings, key) then
+    if ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index) then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
@@ -1377,8 +1406,9 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
         frame.DispelOverlay:ClearAllPoints()
         frame.DispelOverlay:SetAllPoints(frame.Icon)
         SetAuraTrackingDispelBorderSize(frame.DispelBorder, frame.Icon, settings.Width, settings.Height)
-        frame.DispelBorder:Show()
         AuraUtil.SetAuraBorderAtlas(frame.DispelBorder, AuraTrackingPreviewDispelTypes[((index - 1) % #AuraTrackingPreviewDispelTypes) + 1], true)
+        frame.DispelOverlay:Show()
+        frame.DispelBorder:Show()
     else
         HideAuraTrackingPreviewDispelRegions(frame)
     end
@@ -1460,7 +1490,7 @@ function NSI:PreviewAuraTracking(key, show)
 
     if not self[frameKey] then
         self[frameKey] = CreateFrame("Frame", nil, self.NSRTFrame)
-        self[frameKey]:SetFrameStrata("HIGH")
+        self[frameKey]:SetFrameStrata("MEDIUM")
     end
 
     local mover = self[frameKey]
@@ -1501,7 +1531,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, entry.index, key, entry.duration)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, i, key, entry.duration)
             icon:Show()
         else
             icon.PreviewExpires = nil

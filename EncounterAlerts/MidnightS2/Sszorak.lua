@@ -53,4 +53,11 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local data = {group = "Sszorak", internalID = "SerpentsFury", name = "Serpent's Fury", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+        timers = {
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
 end
