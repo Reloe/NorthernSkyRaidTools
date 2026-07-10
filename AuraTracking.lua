@@ -4,8 +4,6 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
-local AURA_TRACKING_DISPEL_BORDER_SCALE = 1.25
-
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -669,6 +667,7 @@ function NSI:AddCustomAuraTracking(group)
         yOffset = 0,
         HideStackText = true,
         HideTooltip = true,
+        ShowDispelBorder = false,
         SpellIDsEdited = true,
         group = group,
     })
@@ -767,7 +766,7 @@ end
 local function SetAuraTrackingDispelBorderSize(border, relativeRegion, width, height)
     border:ClearAllPoints()
     border:SetPoint("CENTER", relativeRegion, "CENTER", 0, 0)
-    border:SetSize(width * AURA_TRACKING_DISPEL_BORDER_SCALE, height * AURA_TRACKING_DISPEL_BORDER_SCALE)
+    border:SetSize(width * 1.25, height * 1.25)
 end
 
 local function PositionAuraTrackingUnitName(fontString, parent, settings)
@@ -902,6 +901,10 @@ local function MakeAuraTrackingDraggable(self, frame, settings, enable, settings
     end
 
     self:MakeDraggable(frame, nil, true)
+    frame:SetFrameStrata("MEDIUM")
+    if frame.dragBorder then
+        frame.dragBorder:SetFrameStrata("MEDIUM")
+    end
     frame:SetScript("OnDragStart", function(f)
         f:StartMoving()
         f._nsrtAuraTrackingDragElapsed = 0
@@ -960,12 +963,12 @@ local function AcquireAuraTrackingContainer(self, key)
     local state = self.AuraTrackingState[key]
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-        state.container:SetFrameStrata("HIGH")
+        state.container:SetFrameStrata("MEDIUM")
         state.buttonRegions = {}
     end
     if not state.anchorFrame then
         state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
-        state.anchorFrame:SetFrameStrata("HIGH")
+        state.anchorFrame:SetFrameStrata("MEDIUM")
     end
     return state
 end
@@ -1359,7 +1362,7 @@ end
 
 local function CreateAuraTrackingPreviewFrame(parent)
     local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata("HIGH")
+    frame:SetFrameStrata("MEDIUM")
     frame.Icon = frame:CreateTexture(nil, "ARTWORK")
     frame.Icon:SetAllPoints(frame)
     return frame
@@ -1491,7 +1494,7 @@ function NSI:PreviewAuraTracking(key, show)
 
     if not self[frameKey] then
         self[frameKey] = CreateFrame("Frame", nil, self.NSRTFrame)
-        self[frameKey]:SetFrameStrata("HIGH")
+        self[frameKey]:SetFrameStrata("MEDIUM")
     end
 
     local mover = self[frameKey]
