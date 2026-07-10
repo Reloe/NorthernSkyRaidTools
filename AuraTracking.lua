@@ -769,6 +769,13 @@ local function SetAuraTrackingDispelBorderSize(border, relativeRegion, width, he
     border:SetSize(width * 1.25, height * 1.25)
 end
 
+local function ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index)
+    if not AuraTrackingWantsDispelBorder(settings, key) then return false end
+    if index == 1 then return true end
+    if index == 2 then return false end
+    return random(2) == 1
+end
+
 local function PositionAuraTrackingUnitName(fontString, parent, settings)
     if not fontString then return end
     local position = settings.NamePosition or "TOP"
@@ -852,18 +859,10 @@ local function GetPointCoordinate(frame, point)
     return x, y
 end
 
-local function UseAuraTrackingContainers(self)
-    if not self:IsMidnightS2() then return false end
-    if self.AuraTrackingContainersAvailable ~= nil then return self.AuraTrackingContainersAvailable end
-
+local function LoadAuraTrackingContainers()
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
         C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
-
-    local container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-    self.AuraTrackingContainerProbe = container
-    self.AuraTrackingContainersAvailable = true
-    return self.AuraTrackingContainersAvailable
 end
 
 local function SaveAuraTrackingFramePosition(self, frame, settings)
@@ -1032,9 +1031,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         })
     else
         HideAuraTrackingDispelRegions(regions)
-        if button.ClearAuraBorder then
-            button:ClearAuraBorder()
-        end
+        button:ClearAuraBorder()
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
@@ -1046,7 +1043,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
     end
 
-    if AuraTrackingWantsDispelBorder(settings, key) and button.SetAuraSymbol then
+    if AuraTrackingWantsDispelBorder(settings, key) then
         button:SetAuraSymbol(regions.dispelSymbol, {
             showWhenHarmful = true,
             showWhenHelpful = false,
@@ -1055,9 +1052,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if regions.dispelSymbol then
             regions.dispelSymbol:Hide()
         end
-        if button.ClearAuraSymbol then
-            button:ClearAuraSymbol()
-        end
+        button:ClearAuraSymbol()
     end
 
     if settings.HideStackText then
@@ -1153,7 +1148,7 @@ local function ResolveAuraTrackingUnit(self, settings)
 end
 
 local function InitAuraTrackingContainer(self, unit, settings, key)
-    if not UseAuraTrackingContainers(self) then return end
+    LoadAuraTrackingContainers()
     if not unit or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
     local isCustom = tostring(key):match("^Custom") and true or false
@@ -1264,7 +1259,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 end
 
 function NSI:InitAuraTracking()
-    if self.IsBuilding or not self:IsMidnightS2() then return end
+    if self.IsBuilding then return end
     if self:Restricted() then
         self.PendingAuraTrackingUpdate = true
         return
@@ -1398,7 +1393,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
     end
     UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize)
 
-    if AuraTrackingWantsDispelBorder(settings, key) then
+    if ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index) then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
@@ -1411,8 +1406,9 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
         frame.DispelOverlay:ClearAllPoints()
         frame.DispelOverlay:SetAllPoints(frame.Icon)
         SetAuraTrackingDispelBorderSize(frame.DispelBorder, frame.Icon, settings.Width, settings.Height)
-        frame.DispelBorder:Show()
         AuraUtil.SetAuraBorderAtlas(frame.DispelBorder, AuraTrackingPreviewDispelTypes[((index - 1) % #AuraTrackingPreviewDispelTypes) + 1], true)
+        frame.DispelOverlay:Show()
+        frame.DispelBorder:Show()
     else
         HideAuraTrackingPreviewDispelRegions(frame)
     end
@@ -1535,7 +1531,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, entry.index, key, entry.duration)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, i, key, entry.duration)
             icon:Show()
         else
             icon.PreviewExpires = nil
