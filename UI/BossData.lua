@@ -53,6 +53,8 @@ local season2EncounterIDs = {
     3492, -- Ula'tek
 }
 
+NSI.Season2EncounterIDs = season2EncounterIDs
+
 local isSeason2 = NSI:IsMidnightS2()
 local orderedSeasons = isSeason2 and {season2EncounterIDs, season1EncounterIDs} or {season1EncounterIDs}
 

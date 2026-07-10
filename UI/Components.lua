@@ -1010,7 +1010,7 @@ end
 --    :SetSize(w, h)
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
-                            width, height, minVal, maxVal, step, name, tooltip)
+                            width, height, minVal, maxVal, step, name, tooltip, liveDrag)
     local totalW  = width  or 220
     local totalH  = height or 22
     local LABEL_W = math.floor(totalW * 0.38)
@@ -1085,7 +1085,8 @@ local function CreateSlider(parent, label, getValue, setValue,
         fillTex:SetWidth(math.max(1, math.floor(pct * TRACK_W)))
     end
 
-    -- Fire setValue only on mouse release, not during drag.
+    -- Fire setValue only on mouse release, not during drag, unless liveDrag
+    -- is requested (e.g. a position slider paired with a live preview).
     -- Keyboard changes (arrow keys) are not dragging, so they fire immediately.
     local dragging    = false
     local initialized = false
@@ -1097,7 +1098,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     end)
     slider:SetScript("OnValueChanged", function(_, value)
         UpdateVisual(value)
-        if initialized and not dragging and setValue then setValue(NSI, value) end
+        if initialized and setValue and (liveDrag or not dragging) then setValue(NSI, value) end
     end)
     slider:SetScript("OnEnter", function(self)
         thumb:SetVertexColor(0.5, 1, 1, 1)
@@ -1642,7 +1643,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
                 ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.min, def.max, def.step, wName, def.tooltip)
+                width, h, def.min, def.max, def.step, wName, def.tooltip, def.liveDrag)
 
         elseif t == "Dropdown" then
             local resolvedGet    = ResolveCallback(def.get)
