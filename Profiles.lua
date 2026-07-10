@@ -397,7 +397,6 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
         AuraTrackingSettingsConverted = false,
         AuraTrackingSelected = "Player",
         AuraTrackingStyleCopySource = "Player",
-        AuraTrackingDebugDisableCandidateFilters = false,
         PaceComparison = {
             SelectedBoss = 0,
             NewThreshold = {

@@ -4,7 +4,7 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
-local AURA_TRACKING_DISPEL_BORDER_SCALE = 4 / 3
+local AURA_TRACKING_DISPEL_BORDER_SCALE = 1.2
 
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
@@ -784,10 +784,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         elseif not isExternal then
             candidateFilters = {}
             if settings.HideLongDurationAuras then
-                candidateFilters.maxDuration = 540
-            end
-            if not NSRT.AuraTrackingDebugDisableCandidateFilters then
-                candidateFilters.isBossOrRoleAura = true
+                candidateFilters.maxDuration = 180
             end
         end
         local options = {

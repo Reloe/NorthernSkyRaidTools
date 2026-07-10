@@ -138,18 +138,6 @@ local function AddAuraTrackingSection(options, settingsKey, label, previewFlag, 
         end,
         nocombat = true,
     }
-    options[#options + 1] = {
-        type = "toggle",
-        boxfirst = true,
-        name = "Track All non-Player Debuffs",
-        desc = "Tracks almost all debuffs, only debuffs applied by yourself will not be displayed. This will likely get removed later but might be necessary for raid testing",
-        get = function() return NSRT.AuraTrackingDebugDisableCandidateFilters end,
-        set = function(_, _, value)
-            NSRT.AuraTrackingDebugDisableCandidateFilters = value
-            NSI:InitAuraTracking()
-        end,
-        nocombat = true,
-    }
     options[#options + 1] = { type = "label", get = function() return "Custom Anchor Frame" end }
     options[#options + 1] = {
         type = "textentry",
