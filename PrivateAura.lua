@@ -85,12 +85,14 @@ NSI.AuraSoundCategories = {
             { spellID = 1296092, sound = "Targeted" }, -- Mighty Thud
         } },
         { key = 3420, entries = { -- Sszorak
-            { spellID = 1305963, sound = "Targeted" }, -- Venomous Surge
+            { spellID = 1305963, sound = "Debuff" }, -- Venomous Surge
             { spellID = 1285453, sound = "North" }, -- Raging Crosswinds South Debuff (so we tell player to go North)
             { spellID = 1285425, sound = "South" }, -- Raging Crosswinds North Debuff (so we tell player to go South)
-            { spellID = 1305621, sound = "Fixate" }, -- Serpent's Fury
+            { spellID = 1297096, sound = "West" }, -- Raging Crosswinds South Debuff (so we tell player to go East)
+            { spellID = 1297111, sound = "East" }, -- Raging Crosswinds North Debuff (so we tell player to go West)
+            { spellID = 1305621, sound = "Targeted" }, -- Serpent's Fury
             { spellID = 1297707, sound = "DropPool" }, -- Virulence
-            { spellID = 1299899, sound = "DropPool" }, -- Virulence (idk which one is real)
+            { spellID = 1299899, sound = "DropPool" }, -- Virulence - both debuffs are real, similar to Starsplinters
         } },
         { key = 3421, entries = { -- The Twin Fangs
             { spellID = 1293979, sound = "Targeted" }, -- Corrosive Spit
