@@ -374,7 +374,9 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
             relativeTo = "TOP",
         },
         AuraTrackingSettings = {
-            Player = self:CreateAuraTrackingSettingsDefaults(),
+            Player = self:CreateAuraTrackingSettingsDefaults({
+                ShowWhitelistedPlayerBuffs = true,
+            }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
                 GrowDirection = "LEFT",
                 xOffset = -549,

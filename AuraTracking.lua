@@ -56,6 +56,10 @@ NSI.DefaultExternalAuraTrackingSpellIDs = {
     45438, -- Ice Block
 }
 
+NSI.DefaultPlayerAuraTrackingSpellIDs = {
+    1310032, -- Spooky Mask
+}
+
 function NSI:CreateAuraTrackingSettingsDefaults(overrides)
     local settings = {
         Spacing = -1,
@@ -75,6 +79,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         HideTooltip = false,
         HideDurationText = false,
         HideLongDurationAuras = false,
+        ShowWhitelistedPlayerBuffs = false,
         HideStackText = false,
         EnableCooldownSwipe = true,
         InverseCooldownSwipe = true,
@@ -182,6 +187,9 @@ function NSI:MigrateAuraTrackingSettings()
                 entry.Name = info.name
             end
             NormalizeAuraTrackingEntry(entry)
+            if info.key == "Player" and entry.ShowWhitelistedPlayerBuffs == nil then
+                entry.ShowWhitelistedPlayerBuffs = true
+            end
         end
     end
 
@@ -502,7 +510,7 @@ end
 
 local function GetAuraTrackingSettingsKeyFromRuntimeKey(key)
     if key == "External" then return "External" end
-    local customIndex = tostring(key or ""):match("^custom(%d+)$")
+    local customIndex = tostring(key or ""):match("^[Cc]ustom(%d+)$")
     if customIndex then return "Custom:" .. customIndex end
 end
 
@@ -536,6 +544,9 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
     end
     if settingsKey == "External" then
         return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+    end
+    if settingsKey == "PlayerBuffWhitelist" then
+        return ParseAuraTrackingSpellIDs(NSI.DefaultPlayerAuraTrackingSpellIDs)
     end
     return {}
 end
@@ -1175,23 +1186,43 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
     container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
 
-    local filters
+    local auraGroups = {}
     if isExternal then
-        filters = {"HELPFUL"}
+        auraGroups[#auraGroups + 1] = {
+            filter = "HELPFUL",
+            spellIDMap = spellIDMap,
+        }
     elseif isCustom then
         -- Friendly units can only spellID-filter buffs; enemy units debuffs.
-        filters = { self:IsAuraTrackingUnitFriendly(settings.Unit) and "HELPFUL" or "HARMFUL" }
+        auraGroups[#auraGroups + 1] = {
+            filter = self:IsAuraTrackingUnitFriendly(settings.Unit) and "HELPFUL" or "HARMFUL",
+            spellIDMap = spellIDMap,
+        }
     else
-        filters = AuraTrackingFilters
+        for _, filter in ipairs(AuraTrackingFilters) do
+            auraGroups[#auraGroups + 1] = {
+                filter = filter,
+                useLongDurationFilter = true,
+            }
+        end
+        if key == "Player" and settings.ShowWhitelistedPlayerBuffs then
+            local playerBuffSpellIDMap = GetAuraTrackingSpellIDMap(settings, "PlayerBuffWhitelist")
+            if playerBuffSpellIDMap then
+                auraGroups[#auraGroups + 1] = {
+                    filter = "HELPFUL",
+                    spellIDMap = playerBuffSpellIDMap,
+                }
+            end
+        end
     end
-    for index, filter in ipairs(filters) do
+    for index, group in ipairs(auraGroups) do
         local groupKey = groupKeyPrefix .. index
         local candidateFilters
-        if spellIDMap then
+        if group.spellIDMap then
             candidateFilters = {
-                includeSpellIDs = spellIDMap,
+                includeSpellIDs = group.spellIDMap,
             }
-        elseif not isExternal then
+        elseif group.useLongDurationFilter then
             candidateFilters = {}
             if settings.HideLongDurationAuras then
                 candidateFilters.maxDuration = 180
@@ -1219,7 +1250,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             container:SetAuraGroupLayout(groupKey, options.layout)
             container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
         else
-            container:AddAuraGroup(groupKey, filter, options)
+            container:AddAuraGroup(groupKey, group.filter, options)
         end
     end
 

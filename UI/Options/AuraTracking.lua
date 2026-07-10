@@ -708,6 +708,11 @@ local function BuildAuraTrackingUI(screen)
                 tooltip = tip("Hide Long Duration Auras", "Hide auras with no duration or a duration longer than 3 minutes."),
                 get = function() return s.HideLongDurationAuras end, set = function(_, v) s.HideLongDurationAuras = v; apply(key) end })
         end
+        if key == "Player" then
+            add({ Type = "Checkbox", label = "Show Whitelisted Buffs",
+                tooltip = tip("Show Whitelisted Buffs", "Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters. One example would be the Haste-Buff on the Lost Explorers Encounter"),
+                get = function() return s.ShowWhitelistedPlayerBuffs end, set = function(_, v) s.ShowWhitelistedPlayerBuffs = v; apply(key) end })
+        end
 
         add({ Type = "Label", text = "Text Style" })
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
