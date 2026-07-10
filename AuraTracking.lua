@@ -4,28 +4,12 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
-local AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
-AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
-AuraTrackingUnitRefreshFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
-AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
-    if NSI.IsBuilding or not NSI.AuraTrackingState then return end
-    local refreshUnit
-    if event == "PLAYER_TARGET_CHANGED" then
-        refreshUnit = "target"
-    elseif event == "PLAYER_FOCUS_CHANGED" then
-        refreshUnit = "focus"
-    elseif event == "UPDATE_MOUSEOVER_UNIT" then
-        refreshUnit = "mouseover"
-    end
-    if not refreshUnit then return end
-
-    for _, state in pairs(NSI.AuraTrackingState) do
-        if type(state.unit) == "string" and string.lower(state.unit) == refreshUnit and state.container and state.container:IsShown() and state.container:IsEnabled() then
-            state.container:UpdateAllAuras()
-        end
-    end
-end)
+local AuraTrackingUnitRefreshFrame
+local AuraTrackingUnitRefreshStates = {
+    target = {},
+    focus = {},
+    mouseover = {},
+}
 
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
@@ -1319,6 +1303,59 @@ function NSI:InitAuraTracking()
             end
         end
         InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "Tank")
+    end
+
+    AuraTrackingUnitRefreshStates = {
+        target = {},
+        focus = {},
+        mouseover = {},
+    }
+
+    if self.AuraTrackingState then
+        for _, state in pairs(self.AuraTrackingState) do
+            if state.container and state.container:IsShown() and state.container:IsEnabled() and type(state.unit) == "string" then
+                local unit = string.lower(state.unit)
+                if unit == "target" or unit == "focus" or unit == "mouseover" then
+                    AuraTrackingUnitRefreshStates[unit][#AuraTrackingUnitRefreshStates[unit] + 1] = state
+                end
+            end
+        end
+    end
+
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 then
+        if not AuraTrackingUnitRefreshFrame then
+            AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
+            AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
+                if NSI.IsBuilding then return end
+                local states
+                if event == "PLAYER_TARGET_CHANGED" then
+                    states = AuraTrackingUnitRefreshStates.target
+                elseif event == "PLAYER_FOCUS_CHANGED" then
+                    states = AuraTrackingUnitRefreshStates.focus
+                elseif event == "UPDATE_MOUSEOVER_UNIT" then
+                    states = AuraTrackingUnitRefreshStates.mouseover
+                end
+                if not states then return end
+
+                for _, state in ipairs(states) do
+                    if state.container and state.container:IsShown() and state.container:IsEnabled() then
+                        state.container:UpdateAllAuras()
+                    end
+                end
+            end)
+        end
+        AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
+        if #AuraTrackingUnitRefreshStates.target > 0 then
+            AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+        end
+        if #AuraTrackingUnitRefreshStates.focus > 0 then
+            AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")
+        end
+        if #AuraTrackingUnitRefreshStates.mouseover > 0 then
+            AuraTrackingUnitRefreshFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+        end
+    elseif AuraTrackingUnitRefreshFrame then
+        AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
     end
 end
 
