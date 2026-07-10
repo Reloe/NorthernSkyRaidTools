@@ -38,6 +38,14 @@ local function GetAuraTrackingLayoutAnchorPoint(settings)
     return "TOPLEFT"
 end
 
+local function GetAuraTrackingFrameStrata(settings)
+    local strata = settings and settings.FrameStrata
+    if strata == "BACKGROUND" or strata == "LOW" or strata == "MEDIUM" or strata == "HIGH" or strata == "DIALOG" or strata == "FULLSCREEN" or strata == "FULLSCREEN_DIALOG" or strata == "TOOLTIP" then
+        return strata
+    end
+    return "MEDIUM"
+end
+
 NSI.DefaultExternalAuraTrackingSpellIDs = {
     6940, -- Blessing of Sacrifice
     1022, -- Blessing of Protection
@@ -72,6 +80,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         CustomAnchorFrame = "UIParent",
         xOffset = -450,
         yOffset = -100,
+        FrameStrata = "MEDIUM",
         BorderSize = 1,
         ShowDispelBorder = true,
         HideTooltip = false,
@@ -617,6 +626,7 @@ local AuraTrackingStyleKeys = {
     "CustomAnchorFrame",
     "xOffset",
     "yOffset",
+    "FrameStrata",
     "Width",
     "Height",
     "Zoom",
@@ -900,9 +910,9 @@ local function MakeAuraTrackingDraggable(self, frame, settings, enable, settings
     end
 
     self:MakeDraggable(frame, nil, true)
-    frame:SetFrameStrata("MEDIUM")
+    frame:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
     if frame.dragBorder then
-        frame.dragBorder:SetFrameStrata("MEDIUM")
+        frame.dragBorder:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
     end
     frame:SetScript("OnDragStart", function(f)
         f:StartMoving()
@@ -962,12 +972,10 @@ local function AcquireAuraTrackingContainer(self, key)
     local state = self.AuraTrackingState[key]
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-        state.container:SetFrameStrata("MEDIUM")
         state.buttonRegions = {}
     end
     if not state.anchorFrame then
         state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
-        state.anchorFrame:SetFrameStrata("MEDIUM")
     end
     return state
 end
@@ -1164,6 +1172,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     local height = settings.Height
     local groupKeyPrefix = "NSRT_" .. key
     local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
+    local frameStrata = GetAuraTrackingFrameStrata(settings)
     state.settings = settings
     state.unit = unit
     state.key = key
@@ -1172,6 +1181,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 
     container:SetEnabled(false)
     container:Hide()
+    container:SetFrameStrata(frameStrata)
+    anchorFrame:SetFrameStrata(frameStrata)
     anchorFrame:SetSize(width, height)
     SetAuraTrackingPoint(anchorFrame, settings, UIParent)
     anchorFrame:Show()
@@ -1355,9 +1366,9 @@ local function StartAuraTrackingPreviewTimer(self, key)
     end)
 end
 
-local function CreateAuraTrackingPreviewFrame(parent)
+local function CreateAuraTrackingPreviewFrame(parent, settings)
     local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata("MEDIUM")
+    frame:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
     frame.Icon = frame:CreateTexture(nil, "ARTWORK")
     frame.Icon:SetAllPoints(frame)
     return frame
@@ -1490,10 +1501,10 @@ function NSI:PreviewAuraTracking(key, show)
 
     if not self[frameKey] then
         self[frameKey] = CreateFrame("Frame", nil, self.NSRTFrame)
-        self[frameKey]:SetFrameStrata("MEDIUM")
     end
 
     local mover = self[frameKey]
+    mover:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
     if not show then
         StopAuraTrackingPreviewTimer(self, key)
         MakeAuraTrackingDraggable(self, mover, settings, false)
@@ -1522,9 +1533,10 @@ function NSI:PreviewAuraTracking(key, show)
     local entries = BuildAuraTrackingPreviewEntries(settings, key, texture)
     for i = 1, 20 do
         if not self[iconKey][i] then
-            self[iconKey][i] = CreateAuraTrackingPreviewFrame(mover)
+            self[iconKey][i] = CreateAuraTrackingPreviewFrame(mover, settings)
         end
         local icon = self[iconKey][i]
+        icon:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
         local entry = entries[i]
         if entry then
             local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
