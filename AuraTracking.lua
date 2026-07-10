@@ -30,6 +30,16 @@ local function GetAuraTrackingRowWidth(settings)
     return math.max(width, (width * limit) + (spacing * math.max(limit - 1, 0)))
 end
 
+local function GetAuraTrackingLayoutAnchorPoint(settings)
+    local growDirection = settings and settings.GrowDirection or "RIGHT"
+    if growDirection == "LEFT" then
+        return "TOPRIGHT"
+    elseif growDirection == "UP" then
+        return "BOTTOMLEFT"
+    end
+    return "TOPLEFT"
+end
+
 NSI.DefaultExternalAuraTrackingSpellIDs = {
     6940, -- Blessing of Sacrifice
     1022, -- Blessing of Protection
@@ -925,6 +935,9 @@ local function ClearAuraTracking(self)
             state.container:SetEnabled(false)
             state.container:Hide()
         end
+        if state.anchorFrame then
+            state.anchorFrame:Hide()
+        end
     end
 end
 
@@ -937,6 +950,10 @@ local function AcquireAuraTrackingContainer(self, key)
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
         state.container:SetFrameStrata("HIGH")
         state.buttonRegions = {}
+    end
+    if not state.anchorFrame then
+        state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+        state.anchorFrame:SetFrameStrata("HIGH")
     end
     return state
 end
@@ -1129,9 +1146,11 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 
     local state = AcquireAuraTrackingContainer(self, key)
     local container = state.container
+    local anchorFrame = state.anchorFrame
     local width = settings.Width
     local height = settings.Height
     local groupKeyPrefix = "NSRT_" .. key
+    local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
     state.settings = settings
     state.unit = unit
     state.key = key
@@ -1140,9 +1159,15 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 
     container:SetEnabled(false)
     container:Hide()
+    anchorFrame:SetSize(width, height)
+    SetAuraTrackingPoint(anchorFrame, settings, UIParent)
+    anchorFrame:Show()
+
+    container:ClearAllPoints()
     container:SetSize(width, height)
-    SetAuraTrackingPoint(container, settings, UIParent)
+    container:SetPoint(layoutAnchorPoint, anchorFrame, layoutAnchorPoint, 0, 0)
     container:SetUnit(unit)
+    container:SetAuraLayoutAnchorPoint(layoutAnchorPoint)
     container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
     container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
 
