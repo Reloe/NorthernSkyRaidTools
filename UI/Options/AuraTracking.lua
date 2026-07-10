@@ -34,6 +34,17 @@ local GROW_DIRECTIONS = {
     { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
 }
 
+local FRAME_STRATA = {
+    { label = "BACKGROUND", value = "BACKGROUND" },
+    { label = "LOW", value = "LOW" },
+    { label = "MEDIUM", value = "MEDIUM" },
+    { label = "HIGH", value = "HIGH" },
+    { label = "DIALOG", value = "DIALOG" },
+    { label = "FULLSCREEN", value = "FULLSCREEN" },
+    { label = "FULLSCREEN_DIALOG", value = "FULLSCREEN_DIALOG" },
+    { label = "TOOLTIP", value = "TOOLTIP" },
+}
+
 local NAME_POSITIONS = {
     { label = "TOP", value = "TOP" }, { label = "BOTTOM", value = "BOTTOM" },
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
@@ -661,6 +672,9 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Y-Offset", min = -3000, max = 3000, step = 1, liveDrag = true,
             tooltip = tip("Y-Offset", "Vertical offset of the Aura Tracking display"),
             get = function() return s.yOffset end, set = function(_, v) s.yOffset = v; applyPosition(key) end })
+        add({ Type = "Dropdown", label = "Frame Strata", values = FRAME_STRATA,
+            tooltip = tip("Frame Strata", "Controls whether this Aura Tracking display appears above or below other UI frames."),
+            get = function() return s.FrameStrata or "MEDIUM" end, set = function(_, v) s.FrameStrata = v; apply(key) end })
 
         add({ Type = "Label", text = "Layout" })
         add({ Type = "Dropdown", label = "Grow Direction", values = GROW_DIRECTIONS,
