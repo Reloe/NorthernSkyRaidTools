@@ -1590,6 +1590,8 @@ end
 --    {Type="TextEntry", label=s, get=fn, set=fn, numeric=bool, min=n, max=n}
 --    {Type="Label",     text=s}
 --    {Type="Breakline"}
+--    {Type="Custom",    build=fn}
+--       build(parent, width, wName) → frame, height
 --
 --    "Scale" is accepted as an alias for "Slider".
 --    Any descriptor may include height=n to override the default row height.
@@ -1703,6 +1705,14 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
             ctrl = C.CreateButton(parent, def.label, function()
                 if resolvedFunc then resolvedFunc(NSI) end
             end, def.width or width, h, wName, nil, nil, def.tooltip)
+
+        elseif t == "Custom" then
+            local resolvedBuild = ResolveCallback(def.build)
+            if resolvedBuild then
+                local builtHeight
+                ctrl, builtHeight = resolvedBuild(parent, width, wName)
+                h = builtHeight or h
+            end
         end
 
         if ctrl then
