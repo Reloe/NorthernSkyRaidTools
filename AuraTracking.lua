@@ -523,7 +523,31 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
     if tostring(settingsKey or ""):match("^Custom:") then
         return ParseAuraTrackingSpellIDs(settings and settings.SpellIDs)
     end
-    return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+    if settingsKey == "External" then
+        return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+    end
+    return {}
+end
+
+local function AuraTrackingAllowsDispelBorder(key)
+    return key ~= "external" and key ~= "External"
+end
+
+local function AuraTrackingWantsDispelBorder(settings, key)
+    return AuraTrackingAllowsDispelBorder(key) and settings and settings.ShowDispelBorder
+end
+
+local function HideAuraTrackingDispelRegions(regions)
+    if not regions then return end
+    if regions.dispelOverlay then regions.dispelOverlay:Hide() end
+    if regions.dispelBorder then regions.dispelBorder:Hide() end
+    if regions.dispelSymbol then regions.dispelSymbol:Hide() end
+end
+
+local function HideAuraTrackingPreviewDispelRegions(frame)
+    if not frame then return end
+    if frame.DispelOverlay then frame.DispelOverlay:Hide() end
+    if frame.DispelBorder then frame.DispelBorder:Hide() end
 end
 
 local function GetAuraTrackingSpellIDMap(settings, settingsKey)
@@ -935,20 +959,9 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         regions.icon:SetAllPoints(button)
         button:SetIcon(regions.icon)
 
-        regions.dispelOverlay = CreateFrame("Frame", nil, button)
-        regions.dispelOverlay:SetAllPoints(regions.icon)
-        regions.dispelOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
-
-        regions.dispelBorder = regions.dispelOverlay:CreateTexture(nil, "OVERLAY")
-
         regions.textOverlay = CreateFrame("Frame", nil, button)
         regions.textOverlay:SetAllPoints(button)
         regions.textOverlay:SetFrameLevel(button:GetFrameLevel() + 3)
-
-        regions.dispelSymbol = regions.textOverlay:CreateFontString(nil, "OVERLAY")
-        regions.dispelSymbol:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
-        regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
-        regions.dispelSymbol:SetTextColor(1, 1, 1, 1)
 
         state.buttonRegions[button] = regions
     end
@@ -957,24 +970,62 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     button:SetSize(width, height)
     local zoom = ((settings.Zoom or 0) * 0.5) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
-    regions.dispelOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
-    regions.dispelOverlay:ClearAllPoints()
-    regions.dispelOverlay:SetAllPoints(regions.icon)
-    SetAuraTrackingDispelBorderSize(regions.dispelBorder, regions.icon, width, height)
     regions.textOverlay:SetFrameLevel(button:GetFrameLevel() + 3)
     if (settings.BorderSize or 0) > 0 and not regions.border then
         regions.border = CreateAuraTrackingBorder(button)
     end
     UpdateAuraTrackingBorder(regions.border, button, settings.BorderSize)
-    if settings.ShowDispelBorder and button.SetAuraBorder then
+
+    if AuraTrackingWantsDispelBorder(settings, key) then
+        if not regions.dispelOverlay then
+            regions.dispelOverlay = CreateFrame("Frame", nil, button)
+            regions.dispelOverlay:SetAllPoints(regions.icon)
+            regions.dispelOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
+        end
+        if not regions.dispelBorder then
+            regions.dispelBorder = regions.dispelOverlay:CreateTexture(nil, "OVERLAY")
+        end
+        regions.dispelOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
+        regions.dispelOverlay:ClearAllPoints()
+        regions.dispelOverlay:SetAllPoints(regions.icon)
+        regions.dispelOverlay:Show()
+        SetAuraTrackingDispelBorderSize(regions.dispelBorder, regions.icon, width, height)
+    end
+
+    if AuraTrackingWantsDispelBorder(settings, key) and button.SetAuraBorder then
         button:SetAuraBorder(regions.dispelBorder, {
             showIcon = true,
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
-    elseif button.ClearAuraBorder then
-        button:ClearAuraBorder()
-        regions.dispelBorder:Hide()
+    else
+        HideAuraTrackingDispelRegions(regions)
+        if button.ClearAuraBorder then
+            button:ClearAuraBorder()
+        end
+    end
+
+    if AuraTrackingWantsDispelBorder(settings, key) then
+        if not regions.dispelSymbol then
+            regions.dispelSymbol = regions.textOverlay:CreateFontString(nil, "OVERLAY")
+            regions.dispelSymbol:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
+            regions.dispelSymbol:SetTextColor(1, 1, 1, 1)
+        end
+        regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
+    end
+
+    if AuraTrackingWantsDispelBorder(settings, key) and button.SetAuraSymbol then
+        button:SetAuraSymbol(regions.dispelSymbol, {
+            showWhenHarmful = true,
+            showWhenHelpful = false,
+        })
+    else
+        if regions.dispelSymbol then
+            regions.dispelSymbol:Hide()
+        end
+        if button.ClearAuraSymbol then
+            button:ClearAuraSymbol()
+        end
     end
 
     if settings.HideStackText then
@@ -1018,17 +1069,6 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     elseif regions.unitName then
         regions.unitName:SetText("")
         regions.unitName:Hide()
-    end
-
-    regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
-    if settings.ShowDispelBorder and button.SetAuraSymbol then
-        button:SetAuraSymbol(regions.dispelSymbol, {
-            showWhenHarmful = true,
-            showWhenHelpful = false,
-        })
-    elseif button.ClearAuraSymbol then
-        button:ClearAuraSymbol()
-        regions.dispelSymbol:Hide()
     end
 
     button:SetMouseMotionEnabled(not settings.HideTooltip)
@@ -1295,7 +1335,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
     end
     UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize)
 
-    if settings.ShowDispelBorder then
+    if AuraTrackingWantsDispelBorder(settings, key) then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
@@ -1310,8 +1350,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
         SetAuraTrackingDispelBorderSize(frame.DispelBorder, frame.Icon, settings.Width, settings.Height)
         frame.DispelBorder:Show()
         AuraUtil.SetAuraBorderAtlas(frame.DispelBorder, AuraTrackingPreviewDispelTypes[((index - 1) % #AuraTrackingPreviewDispelTypes) + 1], true)
-    elseif frame.DispelBorder then
-        frame.DispelBorder:Hide()
+    else
+        HideAuraTrackingPreviewDispelRegions(frame)
     end
 
     if settings.EnableCooldownSwipe then

@@ -391,6 +391,7 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 StackFontSize = 50,
                 HideStackText = true,
                 HideTooltip = true,
+                ShowDispelBorder = false,
             }),
             Custom = {},
         },

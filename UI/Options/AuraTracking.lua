@@ -689,9 +689,11 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
             tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
             get = function() return s.BorderSize end, set = function(_, v) s.BorderSize = v; apply(key) end })
-        add({ Type = "Checkbox", label = "Show Dispel Border",
-            tooltip = tip("Show Dispel Border", "Show Blizzard's dispel-type border and icon on tracked auras."),
-            get = function() return s.ShowDispelBorder end, set = function(_, v) s.ShowDispelBorder = v; apply(key) end })
+        if key ~= "External" then
+            add({ Type = "Checkbox", label = "Show Dispel Border",
+                tooltip = tip("Show Dispel Border", "Show Blizzard's dispel-type border and icon on tracked auras."),
+                get = function() return s.ShowDispelBorder end, set = function(_, v) s.ShowDispelBorder = v; apply(key) end })
+        end
         add({ Type = "Checkbox", label = "Enable Cooldown Swipe",
             tooltip = tip("Enable Cooldown Swipe", "Shows a cooldown swipe on tracked aura icons."),
             get = function() return s.EnableCooldownSwipe end, set = function(_, v) s.EnableCooldownSwipe = v; apply(key) end })
@@ -774,7 +776,7 @@ local function BuildAuraTrackingUI(screen)
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
                 and "This built-in display tracks a curated list of external/immunity buffs."
-                or  "This built-in display tracks all boss & role debuffs automatically." } }
+                or  "This built-in display tracks all relevant debuffs automatically." } }
         end
         local friendly = NSI:IsAuraTrackingUnitFriendly(s.Unit)
         return {
@@ -809,12 +811,29 @@ local function BuildAuraTrackingUI(screen)
 
     local DEF_BUILDERS = { Display = BuildDisplayDefs, Trigger = BuildTriggerDefs }
 
+    local function HideWidgetScroll(scrollObj)
+        if not scrollObj then return end
+        if scrollObj.scrollChild then
+            local children = { scrollObj.scrollChild:GetChildren() }
+            for _, child in ipairs(children) do
+                child:Hide()
+            end
+        end
+        if scrollObj.frame then
+            scrollObj.frame:Hide()
+        end
+    end
+
     local function RebuildWidgetTab()
         if not selectedKey then return end
         local settings = NSI:GetAuraTrackingSettings(selectedKey)
         if not settings then return end
         local container = tabFrames[activeTab]
-        if tabScroll[activeTab] then tabScroll[activeTab].frame:Hide(); tabScroll[activeTab] = nil end
+        container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
+        for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
+            HideWidgetScroll(scrollObj)
+        end
+        tabScroll[activeTab] = nil
         local topPad = (activeTab == "Display") and DISPLAY_TOP or 0
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
         local scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
@@ -823,15 +842,19 @@ local function BuildAuraTrackingUI(screen)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         scrollObj:UpdateScrollBar()
         tabScroll[activeTab] = scrollObj
+        container._auraTrackingWidgetScrolls[#container._auraTrackingWidgetScrolls + 1] = scrollObj
     end
 
     -- ========================================================================
     -- Load tab (hand-rolled, EncounterAlerts-style collapsible sections)
     -- ========================================================================
     local loadF = tabFrames["Load"]
+    local NAMES_SEC_H = 180
+    local namesListH = 112
+    local loadScrollH = tabContentH - NAMES_SEC_H - 4
     local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackLoadScroll", loadF, "UIPanelScrollFrameTemplate")
     loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
-    loadScroll:SetSize(tabScrollW, tabContentH)
+    loadScroll:SetSize(tabScrollW, loadScrollH)
     loadScroll:EnableMouseWheel(true)
     loadScroll:SetScript("OnMouseWheel", function(_, delta)
         local bar = _G["NSUIAuraTrackLoadScrollScrollBar"]
@@ -840,12 +863,13 @@ local function BuildAuraTrackingUI(screen)
     ReskinScrollbar(loadScroll)
     local loadChild = CreateFrame("Frame", nil, loadScroll, "BackdropTemplate")
     loadChild:SetSize(tabScrollW - 18, 1)
+    loadChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
+    loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
     loadScroll:SetScrollChild(loadChild)
 
-    local loadCollapsed = { Roles = false, Classes = true, Specs = true, Names = false }
+    local loadCollapsed = { Roles = true, Classes = true, Specs = true }
     local loadRowW = tabScrollW - 22
-    local hdrPool, chkPool, nameRowPool = {}, {}, {}
-    local nameInput  -- created lazily
+    local hdrPool, chkPool = {}, {}
 
     local function MakeLoadHeader()
         local btn = CreateFrame("Button", nil, loadChild, "BackdropTemplate")
@@ -854,53 +878,58 @@ local function BuildAuraTrackingUI(screen)
         btn:SetSize(loadRowW, 18)
         btn.arrow = btn:CreateTexture(nil, "OVERLAY")
         btn.arrow:SetSize(10, 10)
-        btn.arrow:SetPoint("LEFT", btn, "LEFT", 3, 0)
-        btn.arrow:SetVertexColor(0.4, 0.85, 1, 1)
+        btn.arrow:SetPoint("LEFT", btn, "LEFT", 2, 0)
+        btn.arrow:SetVertexColor(0.6, 0.6, 0.6, 1)
         btn.text = btn:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(btn.text, 12, "")
-        btn.text:SetTextColor(0.2, 0.85, 1, 1)
-        btn.text:SetPoint("LEFT", btn, "LEFT", 18, 0)
+        NSI:SetUIFont(btn.text, 11, "")
+        btn.text:SetTextColor(0.55, 0.55, 0.55, 1)
+        btn.text:SetPoint("LEFT", btn, "LEFT", 16, 0)
+        btn:SetScript("OnEnter", function() btn.text:SetTextColor(0.85, 0.85, 0.85, 1) end)
+        btn:SetScript("OnLeave", function() btn.text:SetTextColor(0.55, 0.55, 0.55, 1) end)
         btn:Hide()
         return btn
     end
 
     local function MakeCheckRow()
-        local row = CreateFrame("Button", nil, loadChild, "BackdropTemplate")
+        local row = CreateFrame("Button", nil, loadChild)
         row:SetSize(loadRowW, 20)
         row.bg = row:CreateTexture(nil, "BACKGROUND")
         row.bg:SetAllPoints()
+        local hoverBg = CreateFrame("Frame", nil, row)
+        hoverBg:SetAllPoints(row)
+        hoverBg:EnableMouse(false)
+        local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
+        hoverTex:SetAllPoints()
+        hoverTex:SetColorTexture(0, 1, 1, 0.13)
+        hoverBg:SetAlpha(0)
+        row.hoverBg = hoverBg
         row.box = CreateFrame("Frame", nil, row, "BackdropTemplate")
         row.box:SetSize(12, 12)
-        row.box:SetPoint("LEFT", row, "LEFT", 6, 0)
+        row.box:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.box:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
-        row.box:SetBackdropColor(0.05, 0.05, 0.05, 1)
+        row.box:SetBackdropColor(0.10, 0.10, 0.10, 0.9)
         row.box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
         row.fill = row.box:CreateTexture(nil, "ARTWORK")
         row.fill:SetPoint("TOPLEFT", row.box, "TOPLEFT", 2, -2)
         row.fill:SetPoint("BOTTOMRIGHT", row.box, "BOTTOMRIGHT", -2, 2)
-        row.fill:SetColorTexture(0, 1, 1, 0.9)
+        row.fill:SetColorTexture(0, 1, 1, 0.85)
         row.fill:Hide()
-        row.label = row:CreateFontString(nil, "OVERLAY")
+        local lblFrame = CreateFrame("Frame", nil, row)
+        lblFrame:EnableMouse(false)
+        lblFrame:SetPoint("LEFT", row, "LEFT", 22, 0)
+        lblFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+        lblFrame:SetHeight(20)
+        row.label = lblFrame:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.label, 12, "")
-        row.label:SetPoint("LEFT", row.box, "RIGHT", 8, 0)
+        row.label:SetAllPoints(lblFrame)
         row.label:SetJustifyH("LEFT")
-        row:Hide()
-        return row
-    end
-
-    local function MakeNameRow()
-        local row = CreateFrame("Frame", nil, loadChild)
-        row:SetSize(loadRowW, 20)
-        row.label = row:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(row.label, 12, "")
-        row.label:SetPoint("LEFT", row, "LEFT", 8, 0)
-        row.label:SetJustifyH("LEFT")
-        row.removeBtn = CreateFrame("Button", nil, row)
-        row.removeBtn:SetSize(14, 14)
-        row.removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.removeBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
-        row.removeBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
-        row.removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        row.label:SetJustifyV("MIDDLE")
+        row:SetScript("OnEnter", function()
+            UIFrameFadeIn(hoverBg, 0.12, hoverBg:GetAlpha(), 1)
+        end)
+        row:SetScript("OnLeave", function()
+            UIFrameFadeOut(hoverBg, 0.20, hoverBg:GetAlpha(), 0)
+        end)
         row:Hide()
         return row
     end
@@ -915,20 +944,166 @@ local function BuildAuraTrackingUI(screen)
         hdr:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 0, -y)
         hdr:SetWidth(loadRowW)
         hdr.arrow:SetTexture(loadCollapsed[sectionKey] and CHEVRON_DOWN or CHEVRON_UP)
-        hdr.text:SetText(count and (label .. "  |cFF808080(" .. count .. ")|r") or label)
+        hdr.text:SetText(label)
         hdr:SetScript("OnClick", function() loadCollapsed[sectionKey] = not loadCollapsed[sectionKey]; RebuildLoadTab() end)
         hdr:Show()
         return y + 20
     end
 
+    local namesLabel = loadF:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(namesLabel, 11, "")
+    namesLabel:SetTextColor(0.55, 0.55, 0.55, 1)
+    namesLabel:SetText(NSI:Loc("Character Names (no server name)"))
+    namesLabel:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 14)
+
+    local nameInput = CreateTextEntry(loadF, nil, nil, nil, loadRowW - 70, 20, nil, nil, nil, "NSUIAuraTrackNameInput")
+    nameInput:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 40)
+
+    local AddLoadName
+    local nameAddBtn = CreateLocalizedSubButton(loadF, "Add", function()
+        if AddLoadName then
+            AddLoadName()
+        end
+    end, 54, "NSUIAuraTrackNameAdd")
+    nameAddBtn:SetPoint("LEFT", nameInput.frame, "RIGHT", 6, 0)
+
+    local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackNamesScroll", loadF, "UIPanelScrollFrameTemplate")
+    namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
+    namesScroll:SetSize(loadRowW, namesListH)
+    namesScroll:EnableMouseWheel(true)
+    namesScroll:SetScript("OnMouseWheel", function(_, delta)
+        local bar = _G["NSUIAuraTrackNamesScrollScrollBar"]
+        if bar then
+            local cur = bar:GetValue()
+            local mn, mx = bar:GetMinMaxValues()
+            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24)))
+        end
+    end)
+    ReskinScrollbar(namesScroll)
+
+    local namesChild = CreateFrame("Frame", nil, namesScroll, "BackdropTemplate")
+    namesChild:SetSize(loadRowW - 18, 1)
+    namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
+    namesChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
+    namesScroll:SetScrollChild(namesChild)
+
+    local nameRowPool = {}
+    local function MakeNameRow()
+        local row = CreateFrame("Frame", nil, namesChild)
+        row:SetSize(loadRowW - 18, 20)
+        row.bg = row:CreateTexture(nil, "BACKGROUND")
+        row.bg:SetAllPoints()
+        row.label = row:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(row.label, 12, "")
+        row.label:SetPoint("LEFT", row, "LEFT", 8, 0)
+        row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
+        row.label:SetJustifyH("LEFT")
+        row.label:SetTextColor(1, 1, 1, 1)
+        row.removeBtn = CreateFrame("Button", nil, row)
+        row.removeBtn:SetSize(14, 14)
+        row.removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.removeBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+        row.removeBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+        row.removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        row:Hide()
+        return row
+    end
+
+    local function RebuildNameRows()
+        for _, row in ipairs(nameRowPool) do
+            row:Hide()
+        end
+
+        if not selectedKey then
+            namesChild:SetHeight(1)
+            return
+        end
+
+        local s = NSI:GetAuraTrackingSettings(selectedKey)
+        if not s then
+            namesChild:SetHeight(1)
+            return
+        end
+
+        s.loadConditions = s.loadConditions or {}
+        s.loadConditions.Names = s.loadConditions.Names or {}
+
+        local sortedNames = {}
+        for name in pairs(s.loadConditions.Names) do
+            sortedNames[#sortedNames + 1] = name
+        end
+        table.sort(sortedNames)
+
+        for i, name in ipairs(sortedNames) do
+            nameRowPool[i] = nameRowPool[i] or MakeNameRow()
+            local row = nameRowPool[i]
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", namesChild, "TOPLEFT", 0, -((i - 1) * 20))
+            row:SetWidth(loadRowW - 18)
+            row.bg:SetColorTexture(i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.12 or 0, i % 2 == 0 and 0.5 or 0)
+            row.label:SetText(name)
+            local rowName = name
+            row.removeBtn:SetScript("OnClick", function()
+                local currentSettings = NSI:GetAuraTrackingSettings(selectedKey)
+                if currentSettings and currentSettings.loadConditions and currentSettings.loadConditions.Names then
+                    currentSettings.loadConditions.Names[rowName] = nil
+                    NSI:InitAuraTracking()
+                    RebuildList()
+                    RebuildNameRows()
+                end
+            end)
+            row:Show()
+        end
+
+        local height = math.max(#sortedNames * 20, 1)
+        namesChild:SetHeight(height)
+        local bar = _G["NSUIAuraTrackNamesScrollScrollBar"]
+        if bar then
+            local maxScroll = math.max(0, height - namesScroll:GetHeight())
+            bar:SetMinMaxValues(0, maxScroll)
+            if bar:GetValue() > maxScroll then
+                bar:SetValue(0)
+            end
+        end
+    end
+
+    AddLoadName = function()
+        local name = strtrim(nameInput.editBox:GetText() or "")
+        if name == "" or not selectedKey then
+            return
+        end
+
+        local settings = NSI:GetAuraTrackingSettings(selectedKey)
+        if not settings then
+            return
+        end
+
+        settings.loadConditions = settings.loadConditions or {}
+        settings.loadConditions.Names = settings.loadConditions.Names or {}
+        settings.loadConditions.Names[name] = true
+        nameInput.editBox:SetText("")
+        NSI:InitAuraTracking()
+        RebuildList()
+        RebuildNameRows()
+    end
+
+    nameInput.editBox:SetScript("OnEnterPressed", function(self)
+        AddLoadName()
+        self:ClearFocus()
+    end)
+
     RebuildLoadTab = function()
         for _, h in ipairs(hdrPool) do h:Hide() end
         for _, r in ipairs(chkPool) do r:Hide() end
-        for _, r in ipairs(nameRowPool) do r:Hide() end
-        if nameInput then nameInput.frame:Hide(); nameInput.addBtn.frame:Hide() end
-        if not selectedKey then return end
+        if not selectedKey then
+            RebuildNameRows()
+            return
+        end
         local s = NSI:GetAuraTrackingSettings(selectedKey)
-        if not s then return end
+        if not s then
+            RebuildNameRows()
+            return
+        end
         s.loadConditions = s.loadConditions or {}
         local cond = s.loadConditions
         cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}
@@ -943,12 +1118,17 @@ local function BuildAuraTrackingUI(screen)
             row:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 0, -y)
             row:SetWidth(loadRowW)
             row.label:SetText(label)
+            row.label:SetTextColor(r or 1, g or 1, b or 1, 1)
             if checked then
                 row.fill:Show(); row.box:SetBackdropBorderColor(0, 1, 1, 0.9)
-                row.bg:SetColorTexture((r or 0) * 0.35, (g or 0) * 0.35, (b or 0) * 0.35, 0.85)
+                row.bg:SetColorTexture((r or 0) * 0.3, (g or 0) * 0.3, (b or 0) * 0.3, 0.85)
             else
                 row.fill:Hide(); row.box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
-                row.bg:SetColorTexture(0.1, 0.1, 0.1, (chkIdx % 2 == 0) and 0.4 or 0)
+                row.bg:SetColorTexture(
+                    chkIdx % 2 == 0 and 0.12 or 0,
+                    chkIdx % 2 == 0 and 0.12 or 0,
+                    chkIdx % 2 == 0 and 0.12 or 0,
+                    chkIdx % 2 == 0 and 0.5 or 0)
             end
             row:SetScript("OnClick", function() onToggle(); NSI:InitAuraTracking(); RebuildList(); RebuildLoadTab() end)
             row:Show()
@@ -966,7 +1146,7 @@ local function BuildAuraTrackingUI(screen)
         end
         -- Classes
         y = y + 4
-        y = LoadSection(y, "Classes", NSI:Loc("Classes"), CountSel(cond.Classes))
+        y = LoadSection(y, "Classes", NSI:Loc("Classes (leave all unchecked for any class)"), CountSel(cond.Classes))
         if not loadCollapsed.Classes then
             for _, cd in ipairs(CLASS_DATA) do
                 local k = cd.key; local cr, cg, cb = ClassColor(k)
@@ -975,60 +1155,19 @@ local function BuildAuraTrackingUI(screen)
         end
         -- Specs
         y = y + 4
-        y = LoadSection(y, "Specs", NSI:Loc("Specializations"), CountSel(cond.SpecIDs))
+        y = LoadSection(y, "Specs", NSI:Loc("Specializations (leave all unchecked for any spec)"), CountSel(cond.SpecIDs))
         if not loadCollapsed.Specs then
             for _, sd in ipairs(SPEC_DATA) do
                 local id = sd.id; local cr, cg, cb = ClassColor(sd.class)
                 y = AddCheck(y, sd.label .. " |cFF808080(" .. sd.class:sub(1, 3) .. ")|r", cond.SpecIDs[id],
-                    function() cond.SpecIDs[id] = (not cond.SpecIDs[id]) or nil end, cr, cg, cb)
-            end
-        end
-        -- Names
-        y = y + 4
-        local nameCount = 0; for _ in pairs(cond.Names) do nameCount = nameCount + 1 end
-        y = LoadSection(y, "Names", NSI:Loc("Player Names"), nameCount)
-        if not loadCollapsed.Names then
-            if not nameInput then
-                nameInput = CreateTextEntry(loadChild, nil, nil, nil, loadRowW - 60, 20, nil, nil, nil, "NSUIAuraTrackNameInput")
-                nameInput.addBtn = CreateButton(loadChild, "+", function()
-                    local nm = strtrim(nameInput.editBox:GetText() or "")
-                    if nm ~= "" and selectedKey then
-                        local cs = NSI:GetAuraTrackingSettings(selectedKey)
-                        if cs then cs.loadConditions.Names = cs.loadConditions.Names or {}; cs.loadConditions.Names[nm] = true
-                            nameInput.editBox:SetText(""); NSI:InitAuraTracking(); RebuildList(); RebuildLoadTab() end
-                    end
-                end, 44, 20, "NSUIAuraTrackNameAdd")
-            end
-            nameInput.frame:ClearAllPoints(); nameInput:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 0, -y)
-            nameInput.frame:Show()
-            nameInput.addBtn.frame:ClearAllPoints(); nameInput.addBtn:SetPoint("LEFT", nameInput.frame, "RIGHT", 8, 0)
-            nameInput.addBtn.frame:Show()
-            y = y + 24
-            local sortedNames = {}
-            for nm in pairs(cond.Names) do sortedNames[#sortedNames + 1] = nm end
-            table.sort(sortedNames)
-            local nIdx = 0
-            for _, nm in ipairs(sortedNames) do
-                nIdx = nIdx + 1
-                nameRowPool[nIdx] = nameRowPool[nIdx] or MakeNameRow()
-                local row = nameRowPool[nIdx]
-                row:ClearAllPoints(); row:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 0, -y)
-                row:SetWidth(loadRowW)
-                row.label:SetText(nm)
-                local nmCap = nm
-                row.removeBtn:SetScript("OnClick", function()
-                    local cs = NSI:GetAuraTrackingSettings(selectedKey)
-                    if cs and cs.loadConditions.Names then cs.loadConditions.Names[nmCap] = nil
-                        NSI:InitAuraTracking(); RebuildList(); RebuildLoadTab() end
-                end)
-                row:Show()
-                y = y + 20
+                    function() cond.SpecIDs[id] = (not cond.SpecIDs[id]) or nil end, cr * 0.8 + 0.2, cg * 0.8 + 0.2, cb * 0.8 + 0.2)
             end
         end
 
         loadChild:SetHeight(math.max(y, 1))
         local bar = _G["NSUIAuraTrackLoadScrollScrollBar"]
         if bar then local maxScroll = math.max(0, y - loadScroll:GetHeight()); bar:SetMinMaxValues(0, maxScroll); if bar:GetValue() > maxScroll then bar:SetValue(0) end end
+        RebuildNameRows()
     end
 
     -- ── Tab dispatch ─────────────────────────────────────────────────────────
