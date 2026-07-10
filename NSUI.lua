@@ -55,8 +55,7 @@ local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
 local BuildPrivateAurasOptions     = NSI.UI.Options.PrivateAuras.BuildOptions
 local BuildPrivateAurasCallback    = NSI.UI.Options.PrivateAuras.BuildCallback
-local BuildAuraTrackingOptions     = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildOptions
-local BuildAuraTrackingCallback    = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildCallback
+local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildUI
 local BuildPaceComparisonOptions   = NSI.UI.Options.PaceComparison and NSI.UI.Options.PaceComparison.BuildOptions
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison and NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
@@ -90,7 +89,7 @@ local TABS_GROUPS                  = {
         { name = "Versions",  textKey = "Version Check" },
     },
 }
-if NSI:IsMidnightS2() and BuildAuraTrackingOptions then
+if NSI:IsMidnightS2() and BuildAuraTrackingUI then
     table.insert(TABS_GROUPS[3], 2, { name = "AuraTracking", textKey = "Aura Tracking" })
 end
 if BuildPaceComparisonOptions then
@@ -386,7 +385,6 @@ function NSUI:Init()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = BuildRaidBuffMenu()
     local privateaura_options1_table     = BuildPrivateAurasOptions()
-    local auratracking_options1_table    = auratracking_tab and BuildAuraTrackingOptions and BuildAuraTrackingOptions()
     local pacecomparison_options1_table  = pacecomparison_tab and BuildPaceComparisonOptions and BuildPaceComparisonOptions()
     local QoL_options1_table             = BuildQoLOptions()
     local WAImports_options1_table       = BuildWAImportsOptions()
@@ -404,9 +402,6 @@ function NSUI:Init()
         QoL_options1_table,
         WAImports_options1_table,
     }
-    if auratracking_options1_table then
-        table.insert(option_tables, auratracking_options1_table)
-    end
     if pacecomparison_options1_table then
         table.insert(option_tables, pacecomparison_options1_table)
     end
@@ -426,7 +421,6 @@ function NSUI:Init()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
     local privateaura_callback           = BuildPrivateAurasCallback()
-    local auratracking_callback          = auratracking_tab and BuildAuraTrackingCallback and BuildAuraTrackingCallback()
     local QoL_callback                   = BuildQoLCallback()
     local WAImports_callback             = BuildWACallback()
 
@@ -468,23 +462,8 @@ function NSUI:Init()
     DF:BuildMenu(privateaura_tab, privateaura_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         privateaura_callback)
-    if auratracking_tab and auratracking_options1_table then
-        function NSI:RebuildAuraTrackingOptionsMenu()
-            if NSUI.AuraTrackingOptionsFrame then
-                NSUI.AuraTrackingOptionsFrame:EnableMouse(false)
-                NSUI.AuraTrackingOptionsFrame:Hide()
-            end
-            NSUI.AuraTrackingOptionsFrameIndex = (NSUI.AuraTrackingOptionsFrameIndex or 0) + 1
-            NSUI.AuraTrackingOptionsFrame = CreateFrame("Frame", "NSUI_AuraTrackingOptionsFrame" .. NSUI.AuraTrackingOptionsFrameIndex, auratracking_tab, "BackdropTemplate")
-            NSUI.AuraTrackingOptionsFrame:SetAllPoints(auratracking_tab)
-            local options = BuildAuraTrackingOptions()
-            options.language_addonId = addonId
-            local callback = BuildAuraTrackingCallback()
-            DF:BuildMenu(NSUI.AuraTrackingOptionsFrame, options, 10, -10, tab_content_height, false, options_text_template,
-                options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-                callback)
-        end
-        NSI:RebuildAuraTrackingOptionsMenu()
+    if auratracking_tab and BuildAuraTrackingUI then
+        NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
     end
     if pacecomparison_tab and pacecomparison_options1_table then
         function NSI:RebuildPaceComparisonOptionsMenu()

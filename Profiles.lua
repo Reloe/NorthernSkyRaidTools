@@ -391,6 +391,7 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 StackFontSize = 50,
                 HideStackText = true,
                 HideTooltip = true,
+                ShowDispelBorder = false,
             }),
             Custom = {},
         },
@@ -536,6 +537,7 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
         end
     end
     self:ConvertPrivateAuraSettingsToAuraTracking()
+    self:MigrateAuraTrackingSettings()
     self:ApplyDefaultPaceComparisonData()
     self:RunProfileMigrations()
 end
