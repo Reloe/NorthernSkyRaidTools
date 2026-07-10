@@ -88,6 +88,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         DurationYOffset = 0,
         StackXOffset = -1,
         StackYOffset = 1,
+        NameEnabled = false,
         NamePosition = "TOP",
         NameXOffset = 0,
         NameYOffset = 4,
@@ -500,7 +501,7 @@ local function FormatAuraTrackingDuration(seconds)
 end
 
 local function GetAuraTrackingSettingsKeyFromRuntimeKey(key)
-    if key == "external" then return "External" end
+    if key == "External" then return "External" end
     local customIndex = tostring(key or ""):match("^custom(%d+)$")
     if customIndex then return "Custom:" .. customIndex end
 end
@@ -540,7 +541,7 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
 end
 
 local function AuraTrackingAllowsDispelBorder(key)
-    return key ~= "external" and key ~= "External"
+    return key ~= "External"
 end
 
 local function AuraTrackingWantsDispelBorder(settings, key)
@@ -1009,7 +1010,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         SetAuraTrackingDispelBorderSize(regions.dispelBorder, regions.icon, width, height)
     end
 
-    if AuraTrackingWantsDispelBorder(settings, key) and button.SetAuraBorder then
+    if AuraTrackingWantsDispelBorder(settings, key) then
         button:SetAuraBorder(regions.dispelBorder, {
             showIcon = true,
             showWhenHarmful = true,
@@ -1076,8 +1077,11 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         duration:Show()
         button:SetDurationText(duration, { formatter = GetAuraTrackingDurationFormatter() })
     end
-
-    if key == "tank" and settings.NameEnabled then
+    --[[
+    local isCustom = tostring(key):match("^Custom") and true or false
+    if (key == "External" or isCustom) and settings.NameEnabled then]]
+    -- if blizzard adds this just need to support it here
+    if key == "Tank" and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
@@ -1138,8 +1142,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     if not UseAuraTrackingContainers(self) then return end
     if not unit or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
-    local isCustom = tostring(key):match("^custom") and true or false
-    local isExternal = key == "external"
+    local isCustom = tostring(key):match("^Custom") and true or false
+    local isExternal = key == "External"
     local isSpellFiltered = isExternal or isCustom
     local spellIDMap = isSpellFiltered and GetAuraTrackingSpellIDMap(settings, GetAuraTrackingSettingsKeyFromRuntimeKey(key)) or nil
     if isSpellFiltered and not spellIDMap then return end
@@ -1234,13 +1238,13 @@ function NSI:InitAuraTracking()
 
     ClearAuraTracking(self)
 
-    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "player")
+    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player")
 
-    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "external")
+    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External")
 
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
         local unit = ResolveAuraTrackingUnit(self, settings)
-        InitAuraTrackingContainer(self, unit, settings, "custom" .. index)
+        InitAuraTrackingContainer(self, unit, settings, "Custom" .. index)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
@@ -1251,7 +1255,7 @@ function NSI:InitAuraTracking()
                 break
             end
         end
-        InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "tank")
+        InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "Tank")
     end
 end
 
@@ -1424,7 +1428,15 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
         durationText:Show()
     end
 
-    if key == "Tank" and settings.NameEnabled then
+    local isCustom = tostring(key):match("^Custom") and true or false
+    if (key == "External" or isCustom) and settings.NameEnabled then
+        local unitName = EnsureAuraTrackingPreviewFontString(frame, "UnitName")
+        PositionAuraTrackingUnitName(unitName, frame, settings)
+        unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
+        local previewData = GetAuraTrackingPreviewData(key)
+        unitName:SetText(NSAPI:Shorten(previewData and previewData.unit or "player", nil, false, "GlobalNickNames") or "")
+        unitName:Show()
+    elseif key == "Tank" and settings.NameEnabled then
         local unitName = EnsureAuraTrackingPreviewFontString(frame, "UnitName")
         PositionAuraTrackingUnitName(unitName, frame, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
