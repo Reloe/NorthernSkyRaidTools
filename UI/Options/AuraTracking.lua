@@ -50,6 +50,12 @@ local NAME_POSITIONS = {
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
 }
 
+local UNIT_TYPES = {
+    { label = "Automatic", value = "Automatic" },
+    { label = "Enemy", value = "Enemy" },
+    { label = "Friendly", value = "Friendly" },
+}
+
 local ANCHOR_POINTS = {
     { label = "TOPLEFT", value = "TOPLEFT" }, { label = "TOP", value = "TOP" }, { label = "TOPRIGHT", value = "TOPRIGHT" },
     { label = "LEFT", value = "LEFT" }, { label = "CENTER", value = "CENTER" }, { label = "RIGHT", value = "RIGHT" },
@@ -800,7 +806,6 @@ local function BuildAuraTrackingUI(screen)
                 and "This built-in display tracks a curated list of external/immunity buffs."
                 or  "This built-in display tracks all relevant debuffs automatically." } }
         end
-        local friendly = NSI:IsAuraTrackingUnitFriendly(s.Unit)
         return {
             -- No inline `label` on these TextEntries: CreateTextEntry only
             -- reserves a fixed 60px input box when given a label (the rest of
@@ -819,9 +824,13 @@ local function BuildAuraTrackingUI(screen)
                     apply(key); RebuildCurrentTab()
                 end },
             { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40" },
-            { Type = "Label", text = friendly
-                and "|cFF88FF88Friendly unit:|r tracks matching |cFFFFFFFFbuffs|r."
-                or  "|cFFFF8888Enemy unit:|r tracks matching |cFFFFFFFFdebuffs|r." },
+            { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
+                tooltip = { title = "Unit Type", desc = "Automatic treats player, party and raid units as friendly. Other units are treated as enemy unless manually changed." },
+                get = function() return s.UnitType or "Automatic" end,
+                set = function(_, v)
+                    s.UnitType = v or "Automatic"
+                    apply(key)
+                end },
             { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." },
             { Type = "Label", text = "Preview Spell ID" },
             { Type = "TextEntry",

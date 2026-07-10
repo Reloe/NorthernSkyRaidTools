@@ -118,6 +118,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         PreviewSpellID = nil,
         ReverseSort = false,
         Unit = "player",
+        UnitType = "Automatic",
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
     }
     for key, value in pairs(overrides or {}) do
@@ -136,33 +137,32 @@ NSI.AuraTrackingBuiltins = {
     { key = "External", name = "External & Immunity" },
 }
 
--- Entries accept any free-typed unit token (player, cotank, target, focus,
--- boss1-8, party1-4, raid1-40, arena1-3, ...). friendly => track matching
--- buffs (HELPFUL), enemy => track matching debuffs (HARMFUL). This mirrors
--- Blizzard's includeSpellIDs restriction (buffs on friendly units, debuffs on
--- enemy units).
-local AuraTrackingFriendlyTokens = { player = true, pet = true, cotank = true }
-local AuraTrackingEnemyPrefixes = { "target", "focus", "boss", "arena" }
+local function ResolveAuraTrackingCustomUnitType(settings, unit)
+    local unitType = settings and settings.UnitType or "Automatic"
+    if unitType == "Friendly" or unitType == "Enemy" then
+        return unitType
+    end
 
-function NSI:IsAuraTrackingUnitFriendly(unit)
     unit = unit and strtrim(tostring(unit)) or "player"
     if unit == "" then unit = "player" end
     local lower = string.lower(unit)
-    if AuraTrackingFriendlyTokens[lower] then return true end
-    if lower:match("^party%d*$") or lower:match("^raid%d*$") then return true end
-
-    -- If the unit currently exists in-game, ask Blizzard directly — this is
-    -- authoritative and works for any unit token the player types.
-    if UnitExists(lower) then
-        return UnitIsFriend("player", lower) and true or false
+    if lower == "player" or lower == "pet" or lower == "cotank" or lower:match("^party%d*$") or lower:match("^raid%d*$") then
+        return "Friendly"
     end
+    return "Enemy"
+end
 
-    -- Otherwise (e.g. "boss3" before that boss exists) fall back to a
-    -- name-based guess so the filter is still sensible before the unit appears.
-    for _, prefix in ipairs(AuraTrackingEnemyPrefixes) do
-        if lower:find("^" .. prefix) then return false end
+local function GetAuraTrackingCustomFrameLimit(settings, unit)
+    local limit = settings and settings.Limit or 0
+    local wantedUnitType = ResolveAuraTrackingCustomUnitType(settings, unit)
+    unit = unit and strtrim(tostring(unit)) or ""
+    if unit ~= "" and UnitExists(unit) then
+        local currentUnitType = UnitCanAssist("player", unit) and "Friendly" or "Enemy"
+        if currentUnitType ~= wantedUnitType then
+            return 0
+        end
     end
-    return true
+    return limit
 end
 
 -- Fill any new per-entry fields that older saved entries may be missing.
@@ -368,13 +368,13 @@ end
 -- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
 -- of relying on a hand-maintained list that can silently fall out of sync.
 local AuraTrackingSectionFields = {
-    Trigger = { "SpellIDs", "SpellIDsEdited", "Unit", "PreviewSpellID" },
+    Trigger = { "SpellIDs", "SpellIDsEdited", "Unit", "UnitType", "PreviewSpellID" },
     Load    = { "loadConditions" },
 }
 
 local AuraTrackingNonDisplayFields = {
     Name = true, enabled = true, group = true, pinned = true, builtin = true,
-    SpellIDs = true, SpellIDsEdited = true, Unit = true, PreviewSpellID = true,
+    SpellIDs = true, SpellIDsEdited = true, Unit = true, UnitType = true, PreviewSpellID = true,
     loadConditions = true,
 }
 
@@ -1210,10 +1210,14 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             spellIDMap = spellIDMap,
         }
     elseif isCustom then
-        -- Friendly units can only spellID-filter buffs; enemy units debuffs.
+        local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
+        state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
+        state.customAuraGroupKeys = nil
         auraGroups[#auraGroups + 1] = {
-            filter = self:IsAuraTrackingUnitFriendly(settings.Unit) and "HELPFUL" or "HARMFUL",
+            filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
             spellIDMap = spellIDMap,
+            customGroup = true,
+            maxFrameCount = GetAuraTrackingCustomFrameLimit(settings, unit),
         }
     else
         for _, filter in ipairs(AuraTrackingFilters) do
@@ -1233,7 +1237,18 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         end
     end
     for index, group in ipairs(auraGroups) do
-        local groupKey = groupKeyPrefix .. index
+        local groupKey = group.customGroup and state.customAuraGroupKey or (groupKeyPrefix .. index)
+        if isCustom and group.customGroup then
+            if container:HasAuraGroup(groupKeyPrefix .. "1") then
+                container:SetAuraGroupMaxFrameCount(groupKeyPrefix .. "1", 0)
+            end
+            if container:HasAuraGroup(groupKeyPrefix .. "_helpful") then
+                container:SetAuraGroupMaxFrameCount(groupKeyPrefix .. "_helpful", 0)
+            end
+            if container:HasAuraGroup(groupKeyPrefix .. "_harmful") then
+                container:SetAuraGroupMaxFrameCount(groupKeyPrefix .. "_harmful", 0)
+            end
+        end
         local candidateFilters
         if group.spellIDMap then
             candidateFilters = {
@@ -1245,8 +1260,12 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
                 candidateFilters.maxDuration = 180
             end
         end
+        local maxFrameCount = group.maxFrameCount
+        if maxFrameCount == nil then
+            maxFrameCount = settings.Limit
+        end
         local options = {
-            maxFrameCount = settings.Limit,
+            maxFrameCount = maxFrameCount,
             sortMethod = AuraContainerSortMethod.ExpirationOnly,
             sortDirection = settings.ReverseSort and AuraContainerSortDirection.Reverse or AuraContainerSortDirection.Normal,
             initializeFrame = function(button)
@@ -1345,6 +1364,9 @@ function NSI:InitAuraTracking()
 
                 for _, state in ipairs(states) do
                     if state.container and state.container:IsShown() and state.container:IsEnabled() then
+                        if state.customAuraGroupKey then
+                            state.container:SetAuraGroupMaxFrameCount(state.customAuraGroupKey, GetAuraTrackingCustomFrameLimit(state.settings, state.unit))
+                        end
                         state.container:UpdateAllAuras()
                     end
                 end
