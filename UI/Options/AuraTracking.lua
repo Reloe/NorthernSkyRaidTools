@@ -45,12 +45,6 @@ local ANCHOR_POINTS = {
     { label = "BOTTOMLEFT", value = "BOTTOMLEFT" }, { label = "BOTTOM", value = "BOTTOM" }, { label = "BOTTOMRIGHT", value = "BOTTOMRIGHT" },
 }
 
-local SOUND_CHANNELS = {
-    { label = "Master", value = "Master" }, { label = "SFX", value = "SFX" },
-    { label = "Music", value = "Music" }, { label = "Ambience", value = "Ambience" },
-    { label = "Dialog", value = "Dialog" },
-}
-
 local ROLE_DATA = {
     { key = "TANK", label = "Tank" }, { key = "HEALER", label = "Healer" },
     { key = "DAMAGER", label = "DPS" }, { key = "MELEE", label = "Melee" }, { key = "RANGED", label = "Ranged" },
@@ -86,16 +80,11 @@ local SPEC_DATA = {
     { class="EVOKER", id=1467, label="Devastation" }, { class="EVOKER", id=1468, label="Preservation" }, { class="EVOKER", id=1473, label="Augmentation" },
 }
 
-local SECTIONS = { "Display", "Trigger", "Sound", "Load" }
+local SECTIONS = { "Display", "Trigger", "Load" }
 local DEFAULT_ICON = 136076
 local CHEVRON_DOWN = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]]
 local CHEVRON_UP   = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]]
 
-local function BuildSoundValues()
-    local t = {}
-    for _, name in ipairs(NSI.LSM:List("sound")) do t[#t + 1] = { label = name, value = name } end
-    return t
-end
 local function BuildFontValues()
     local t = {}
     for _, name in ipairs(NSI.LSM:List("font")) do t[#t + 1] = { label = name, value = name } end
@@ -634,14 +623,19 @@ local function BuildAuraTrackingUI(screen)
     local pickBtn = CreateLocalizedButton(displayF, "Pick", function() StartFramePicker() end, 100, 22, "NSUIAuraTrackPick")
     pickBtn:SetPoint("LEFT", anchorEntry.frame, "RIGHT", 8, 0)
 
-    -- ── Definition builders (Display / Trigger / Sound via BuildWidgets) ─────
+    -- ── Definition builders (Display / Trigger via BuildWidgets) ─────
     local function BuildDisplayDefs(s, key)
         local defs = {}
         local function add(d) defs[#defs + 1] = d end
+        local function tip(title, desc)
+            return { title = title, desc = desc }
+        end
         add({ Type = "Label", text = "Anchor Point" })
         add({ Type = "Dropdown", label = "Anchor Point", values = ANCHOR_POINTS,
+            tooltip = tip("Anchor Point", "Point on this Aura Tracking display that should be anchored."),
             get = function() return s.Anchor or "CENTER" end, set = function(_, v) s.Anchor = v; apply(key) end })
         add({ Type = "Dropdown", label = "Relative Point", values = ANCHOR_POINTS,
+            tooltip = tip("Relative Point", "Point on the anchor frame that this Aura Tracking display should attach to."),
             get = function() return s.relativeTo or "CENTER" end, set = function(_, v) s.relativeTo = v; apply(key) end })
         -- While a live preview is active, reposition it directly instead of
         -- going through apply()/PreviewAuraTracking on every slider tick —
@@ -662,79 +656,115 @@ local function BuildAuraTrackingUI(screen)
             end
         end
         add({ Type = "Slider", label = "X-Offset", min = -3000, max = 3000, step = 1, liveDrag = true,
+            tooltip = tip("X-Offset", "Horizontal offset of the Aura Tracking display"),
             get = function() return s.xOffset end, set = function(_, v) s.xOffset = v; applyPosition(key) end })
         add({ Type = "Slider", label = "Y-Offset", min = -3000, max = 3000, step = 1, liveDrag = true,
+            tooltip = tip("Y-Offset", "Vertical offset of the Aura Tracking display"),
             get = function() return s.yOffset end, set = function(_, v) s.yOffset = v; applyPosition(key) end })
 
         add({ Type = "Label", text = "Layout" })
         add({ Type = "Dropdown", label = "Grow Direction", values = GROW_DIRECTIONS,
+            tooltip = tip("Grow Direction", "Grow Direction"),
             get = function() return s.GrowDirection end, set = function(_, v) s.GrowDirection = v; apply(key) end })
         add({ Type = "Slider", label = "Spacing", min = -5, max = 20, step = 1,
+            tooltip = tip("Spacing", "Spacing between Aura Tracking icons"),
             get = function() return s.Spacing end, set = function(_, v) s.Spacing = v; apply(key) end })
         add({ Type = "Slider", label = "Width", min = 10, max = 500, step = 1,
+            tooltip = tip("Width", "Width of the Aura Tracking icons"),
             get = function() return s.Width end, set = function(_, v) s.Width = v; apply(key) end })
         add({ Type = "Slider", label = "Height", min = 10, max = 500, step = 1,
+            tooltip = tip("Height", "Height of the Aura Tracking icons"),
             get = function() return s.Height end, set = function(_, v) s.Height = v; apply(key) end })
         add({ Type = "Slider", label = "Zoom", min = 0, max = 100, step = 1,
+            tooltip = tip("Zoom", "Zooms the icon texture inwards"),
             get = function() return s.Zoom end, set = function(_, v) s.Zoom = v; apply(key) end })
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
+            tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
         add({ Type = "Checkbox", label = "Reverse Sort",
+            tooltip = tip("Reverse Sort", "Show auras with the longest remaining duration first."),
             get = function() return s.ReverseSort end, set = function(_, v) s.ReverseSort = v; apply(key) end })
 
         add({ Type = "Label", text = "Icon" })
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
+            tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
             get = function() return s.BorderSize end, set = function(_, v) s.BorderSize = v; apply(key) end })
         add({ Type = "Checkbox", label = "Show Dispel Border",
+            tooltip = tip("Show Dispel Border", "Show Blizzard's dispel-type border and icon on tracked auras."),
             get = function() return s.ShowDispelBorder end, set = function(_, v) s.ShowDispelBorder = v; apply(key) end })
         add({ Type = "Checkbox", label = "Enable Cooldown Swipe",
+            tooltip = tip("Enable Cooldown Swipe", "Shows a cooldown swipe on tracked aura icons."),
             get = function() return s.EnableCooldownSwipe end, set = function(_, v) s.EnableCooldownSwipe = v; apply(key) end })
         add({ Type = "Checkbox", label = "Inverse Cooldown Swipe",
+            tooltip = tip("Inverse Cooldown Swipe", "Reverses the cooldown swipe direction on tracked aura icons."),
             get = function() return s.InverseCooldownSwipe end, set = function(_, v) s.InverseCooldownSwipe = v; apply(key) end })
         add({ Type = "Checkbox", label = "Disable Tooltip",
+            tooltip = tip("Disable Tooltip", "Hide tooltips on mouseover. The frame will be clickthrough regardless."),
             get = function() return s.HideTooltip end, set = function(_, v) s.HideTooltip = v; apply(key) end })
         if key == "Player" or key == "Tank" then
             add({ Type = "Checkbox", label = "Hide Long Duration Auras",
+                tooltip = tip("Hide Long Duration Auras", "Hide auras with no duration or a duration longer than 3 minutes."),
                 get = function() return s.HideLongDurationAuras end, set = function(_, v) s.HideLongDurationAuras = v; apply(key) end })
         end
 
-        add({ Type = "Label", text = "Text" })
-        add({ Type = "Checkbox", label = "Hide Duration Text",
-            get = function() return s.HideDurationText end, set = function(_, v) s.HideDurationText = v; apply(key) end })
-        add({ Type = "Checkbox", label = "Hide Stack Text",
-            get = function() return s.HideStackText end, set = function(_, v) s.HideStackText = v; apply(key) end })
+        add({ Type = "Label", text = "Text Style" })
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
+            tooltip = tip("Text Font", "Font used for duration and stack text"),
             get = function() return s.TextFont end, set = function(_, v) s.TextFont = v; apply(key) end })
         add({ Type = "Dropdown", label = "Text Outline", values = FONT_FLAGS,
+            tooltip = tip("Text Outline", "Outline style used for duration and stack text"),
             get = function() return s.TextFontFlags end, set = function(_, v) s.TextFontFlags = v; apply(key) end })
+
+        add({ Type = "Label", text = "Duration Text" })
+        add({ Type = "Checkbox", label = "Hide Duration Text",
+            tooltip = tip("Hide Duration Text", "Hide the duration text on tracked auras."),
+            get = function() return s.HideDurationText end, set = function(_, v) s.HideDurationText = v; apply(key) end })
         add({ Type = "Color", label = "Duration Color",
+            tooltip = tip("Duration Color", "Color of the duration text"),
             get = function() return unpack(s.DurationColor) end, set = function(_, r, g, b, a) s.DurationColor = {r, g, b, a}; apply(key) end })
-        add({ Type = "Color", label = "Stack Color",
-            get = function() return unpack(s.StackColor) end, set = function(_, r, g, b, a) s.StackColor = {r, g, b, a}; apply(key) end })
         add({ Type = "Slider", label = "Duration Font Size", min = 6, max = 80, step = 1,
+            tooltip = tip("Duration Font Size", "Font size of the duration text"),
             get = function() return s.DurationFontSize end, set = function(_, v) s.DurationFontSize = v; apply(key) end })
-        add({ Type = "Slider", label = "Stack Font Size", min = 6, max = 80, step = 1,
-            get = function() return s.StackFontSize end, set = function(_, v) s.StackFontSize = v; apply(key) end })
         add({ Type = "Slider", label = "Duration X-Offset", min = -200, max = 200, step = 1,
+            tooltip = tip("Duration X-Offset", "Horizontal offset of the duration text"),
             get = function() return s.DurationXOffset end, set = function(_, v) s.DurationXOffset = v; apply(key) end })
         add({ Type = "Slider", label = "Duration Y-Offset", min = -200, max = 200, step = 1,
+            tooltip = tip("Duration Y-Offset", "Vertical offset of the duration text"),
             get = function() return s.DurationYOffset end, set = function(_, v) s.DurationYOffset = v; apply(key) end })
+
+        add({ Type = "Label", text = "Stack Text" })
+        add({ Type = "Checkbox", label = "Hide Stack Text",
+            tooltip = tip("Hide Stack Text", "Hide the stack count text on tracked auras."),
+            get = function() return s.HideStackText end, set = function(_, v) s.HideStackText = v; apply(key) end })
+        add({ Type = "Color", label = "Stack Color",
+            tooltip = tip("Stack Color", "Color of the stack text"),
+            get = function() return unpack(s.StackColor) end, set = function(_, r, g, b, a) s.StackColor = {r, g, b, a}; apply(key) end })
+        add({ Type = "Slider", label = "Stack Font Size", min = 6, max = 80, step = 1,
+            tooltip = tip("Stack Font Size", "Font size of the stack text"),
+            get = function() return s.StackFontSize end, set = function(_, v) s.StackFontSize = v; apply(key) end })
         add({ Type = "Slider", label = "Stack X-Offset", min = -200, max = 200, step = 1,
+            tooltip = tip("Stack X-Offset", "Horizontal offset of the stack text"),
             get = function() return s.StackXOffset end, set = function(_, v) s.StackXOffset = v; apply(key) end })
         add({ Type = "Slider", label = "Stack Y-Offset", min = -200, max = 200, step = 1,
+            tooltip = tip("Stack Y-Offset", "Vertical offset of the stack text"),
             get = function() return s.StackYOffset end, set = function(_, v) s.StackYOffset = v; apply(key) end })
 
         if key == "Tank" then
-            add({ Type = "Label", text = "Co-Tank Name" })
+            add({ Type = "Label", text = "Co-Tank Name Settings" })
             add({ Type = "Checkbox", label = "Show Co-Tank Name",
+                tooltip = tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons."),
                 get = function() return s.NameEnabled end, set = function(_, v) s.NameEnabled = v; apply(key) end })
             add({ Type = "Dropdown", label = "Name Position", values = NAME_POSITIONS,
+                tooltip = tip("Name Position", "Position of the co-tank name relative to the aura icon."),
                 get = function() return s.NamePosition end, set = function(_, v) s.NamePosition = v; apply(key) end })
             add({ Type = "Slider", label = "Name X-Offset", min = -200, max = 200, step = 1,
+                tooltip = tip("Name X-Offset", "Horizontal offset of the co-tank name."),
                 get = function() return s.NameXOffset end, set = function(_, v) s.NameXOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Y-Offset", min = -200, max = 200, step = 1,
+                tooltip = tip("Name Y-Offset", "Vertical offset of the co-tank name."),
                 get = function() return s.NameYOffset end, set = function(_, v) s.NameYOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
+                tooltip = tip("Name Font Size", "Font size of the co-tank name."),
                 get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
         end
         return defs
@@ -771,34 +801,13 @@ local function BuildAuraTrackingUI(screen)
             { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." },
             { Type = "Label", text = "Preview Spell ID" },
             { Type = "TextEntry",
+                tooltip = { title = "Preview Spell ID", desc = "Spell ID used for the custom Aura Tracking list icon." },
                 get = function() return s.PreviewSpellID and tostring(s.PreviewSpellID) or "" end,
                 set = function(_, v) NSI:SetAuraTrackingPreviewSpellID(key, v); RebuildList() end },
         }
     end
 
-    local function BuildSoundDefs(s, key)
-        s.Sound = s.Sound or { enabled = false, channel = "Master" }
-        local snd = s.Sound
-        return {
-            { Type = "Checkbox", label = "Play Sound on Appear",
-                get = function() return snd.enabled end, set = function(_, v) snd.enabled = v; NSI:InitAuraTracking() end },
-            { Type = "Dropdown", label = "Sound", values = BuildSoundValues,
-                get = function() return snd.sound end,
-                set = function(_, v)
-                    snd.sound = v
-                    local path = NSI.LSM:Fetch("sound", v, true)
-                    if path then PlaySoundFile(path, snd.channel or "Master") end
-                    NSI:InitAuraTracking()
-                end },
-            { Type = "Dropdown", label = "Channel", values = SOUND_CHANNELS,
-                get = function() return snd.channel or "Master" end, set = function(_, v) snd.channel = v end },
-            { Type = "Button", label = "Test Sound", width = 140, func = function()
-                if snd.sound then local path = NSI.LSM:Fetch("sound", snd.sound, true); if path then PlaySoundFile(path, snd.channel or "Master") end end
-            end },
-        }
-    end
-
-    local DEF_BUILDERS = { Display = BuildDisplayDefs, Trigger = BuildTriggerDefs, Sound = BuildSoundDefs }
+    local DEF_BUILDERS = { Display = BuildDisplayDefs, Trigger = BuildTriggerDefs }
 
     local function RebuildWidgetTab()
         if not selectedKey then return end

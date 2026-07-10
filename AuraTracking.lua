@@ -4,7 +4,7 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
-local AURA_TRACKING_DISPEL_BORDER_SCALE = 1.2
+local AURA_TRACKING_DISPEL_BORDER_SCALE = 1.25
 
 local function GetAuraTrackingFlowDirections(growDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
@@ -87,7 +87,6 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         PreviewSpellID = nil,
         ReverseSort = false,
         Unit = "player",
-        Sound = { enabled = false, sound = nil, channel = "Master" },
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
     }
     for key, value in pairs(overrides or {}) do
@@ -144,12 +143,6 @@ local function NormalizeAuraTrackingEntry(settings)
     -- is SetAllPoints(UIParent) — identical geometry, so this doesn't move anything).
     if settings.CustomAnchorFrame == nil or settings.CustomAnchorFrame == "" then
         settings.CustomAnchorFrame = "UIParent"
-    end
-    if type(settings.Sound) ~= "table" then
-        settings.Sound = { enabled = false, sound = nil, channel = "Master" }
-    else
-        if settings.Sound.enabled == nil then settings.Sound.enabled = false end
-        if settings.Sound.channel == nil then settings.Sound.channel = "Master" end
     end
     if type(settings.loadConditions) ~= "table" then
         settings.loadConditions = {}
@@ -334,22 +327,21 @@ function NSI:DuplicateCustomAuraTracking(settingsKey)
 end
 
 -- ── Section copy / paste ────────────────────────────────────────────────────
--- Trigger/Sound/Load are copied via a small explicit allowlist (their fields
+-- Trigger/Load are copied via a small explicit allowlist (their fields
 -- are few and clearly scoped). "Display" is copied by EXCLUSION instead —
--- every field on the entry except identity/Trigger/Sound/Load fields — so
+-- every field on the entry except identity/Trigger/Load fields — so
 -- every current and future Display-tab setting (border, stack/duration text,
 -- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
 -- of relying on a hand-maintained list that can silently fall out of sync.
 local AuraTrackingSectionFields = {
     Trigger = { "SpellIDs", "SpellIDsEdited", "Unit", "PreviewSpellID" },
-    Sound   = { "Sound" },
     Load    = { "loadConditions" },
 }
 
 local AuraTrackingNonDisplayFields = {
     Name = true, enabled = true, group = true, pinned = true, builtin = true,
     SpellIDs = true, SpellIDsEdited = true, Unit = true, PreviewSpellID = true,
-    Sound = true, loadConditions = true,
+    loadConditions = true,
 }
 
 local function CopyAuraTrackingValue(v)
@@ -562,7 +554,6 @@ function NSI:SetAuraTrackingPreviewSpellID(settingsKey, value)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings then return end
     settings.PreviewSpellID = tonumber(value) or nil
-    self:UpdateAuraTrackingDisplay(settingsKey)
     self:RefreshAuraTrackingUI()
 end
 
@@ -1169,78 +1160,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     container:SetEnabled(true)
 end
 
--- ── Sound-on-appear ────────────────────────────────────────────────────────
--- Auras are displayed through Blizzard's AuraContainer, which exposes no
--- "aura added" callback, so sound is driven independently off UNIT_AURA.
-local function PlayAuraTrackingSound(settings)
-    local sound = settings.Sound and settings.Sound.sound
-    if not sound then return end
-    local path = NSI.LSM and NSI.LSM:Fetch("sound", sound, true)
-    if path then
-        PlaySoundFile(path, (settings.Sound and settings.Sound.channel) or "Master")
-    end
-end
-
--- Register an enabled, load-passing entry whose Sound is enabled so its sound
--- plays when a matching aura appears on its unit.
-local function CollectAuraTrackingSound(self, settings, unit, key)
-    if not unit or not settings.enabled then return end
-    if not (settings.Sound and settings.Sound.enabled and settings.Sound.sound) then return end
-    if not self:EvaluateLoad(settings) then return end
-
-    local map
-    if key == "external" or tostring(key):match("^custom") then
-        map = GetAuraTrackingSpellIDMap(settings, GetAuraTrackingSettingsKeyFromRuntimeKey(key))
-        if not map then return end
-    end
-
-    self.AuraTrackingSoundEntries[#self.AuraTrackingSoundEntries + 1] = {
-        settings = settings,
-        matchUnit = unit,
-        map = map,
-    }
-end
-
-local function OnAuraTrackingUnitAura(self, unit, updateInfo)
-    local entries = self.AuraTrackingSoundEntries
-    if not entries or #entries == 0 then return end
-    if not updateInfo or updateInfo.isFullUpdate then return end
-    local added = updateInfo.addedAuras
-    if not added then return end
-
-    for _, entry in ipairs(entries) do
-        if entry.matchUnit and UnitIsUnit(entry.matchUnit, unit) then
-            for _, aura in ipairs(added) do
-                local matched
-                if entry.map then
-                    matched = aura.spellId and entry.map[aura.spellId] or false
-                else
-                    -- Built-in track-all displays: fire on boss debuffs.
-                    matched = (aura.isHarmful and aura.isBossAura) or false
-                end
-                if matched then
-                    PlayAuraTrackingSound(entry.settings)
-                    break
-                end
-            end
-        end
-    end
-end
-
-function NSI:UpdateAuraTrackingSoundRegistration()
-    if not self.AuraTrackingSoundFrame then
-        self.AuraTrackingSoundFrame = CreateFrame("Frame")
-        self.AuraTrackingSoundFrame:SetScript("OnEvent", function(_, _, unit, updateInfo)
-            OnAuraTrackingUnitAura(self, unit, updateInfo)
-        end)
-    end
-    if self.AuraTrackingSoundEntries and #self.AuraTrackingSoundEntries > 0 then
-        self.AuraTrackingSoundFrame:RegisterEvent("UNIT_AURA")
-    else
-        self.AuraTrackingSoundFrame:UnregisterEvent("UNIT_AURA")
-    end
-end
-
 function NSI:InitAuraTracking()
     if self.IsBuilding or not self:IsMidnightS2() then return end
     if self:Restricted() then
@@ -1249,18 +1168,14 @@ function NSI:InitAuraTracking()
     end
 
     ClearAuraTracking(self)
-    self.AuraTrackingSoundEntries = {}
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "player")
-    CollectAuraTrackingSound(self, NSRT.AuraTrackingSettings.Player, "player", "player")
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "external")
-    CollectAuraTrackingSound(self, NSRT.AuraTrackingSettings.External, "player", "external")
 
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
         local unit = ResolveAuraTrackingUnit(self, settings)
         InitAuraTrackingContainer(self, unit, settings, "custom" .. index)
-        CollectAuraTrackingSound(self, settings, unit, "custom" .. index)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
@@ -1272,10 +1187,7 @@ function NSI:InitAuraTracking()
             end
         end
         InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "tank")
-        CollectAuraTrackingSound(self, NSRT.AuraTrackingSettings.Tank, tankUnit, "tank")
     end
-
-    self:UpdateAuraTrackingSoundRegistration()
 end
 
 function NSI:ApplyPendingAuraTracking()
@@ -1292,13 +1204,19 @@ function NSI:InitAuraSystem(firstcall)
     end
 end
 
-local function BuildAuraTrackingPreviewEntries(settings)
+local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
     local entries = {}
     local limit = math.min(settings.Limit or 1, 20)
+    local spellIDs = GetAuraTrackingSpellIDs(settings, key)
     for i = 1, limit do
+        local texture = fallbackTexture
+        if #spellIDs > 0 then
+            texture = C_Spell.GetSpellTexture(spellIDs[math.random(1, #spellIDs)]) or fallbackTexture
+        end
         entries[#entries + 1] = {
             index = i,
             duration = math.random(10, 120),
+            texture = texture,
         }
     end
 
@@ -1462,9 +1380,6 @@ function NSI:PreviewAuraTracking(key, show)
     local frameKey = previewData.frameKey
     local iconKey = previewData.iconKey
     local texture = previewData.texture
-    if settings.PreviewSpellID then
-        texture = C_Spell.GetSpellTexture(settings.PreviewSpellID) or texture
-    end
 
     if not self[frameKey] then
         self[frameKey] = CreateFrame("Frame", nil, self.NSRTFrame)
@@ -1497,7 +1412,7 @@ function NSI:PreviewAuraTracking(key, show)
     if not self[iconKey] then self[iconKey] = {} end
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
-    local entries = BuildAuraTrackingPreviewEntries(settings)
+    local entries = BuildAuraTrackingPreviewEntries(settings, key, texture)
     for i = 1, 20 do
         if not self[iconKey][i] then
             self[iconKey][i] = CreateAuraTrackingPreviewFrame(mover)
@@ -1509,7 +1424,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, texture, entry.index, key, entry.duration)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, entry.index, key, entry.duration)
             icon:Show()
         else
             icon.PreviewExpires = nil
