@@ -9,6 +9,7 @@ local AuraTrackingUnitRefreshStates = {
     target = {},
     focus = {},
     mouseover = {},
+    boss = {},
 }
 
 local function GetAuraTrackingFlowDirections(growDirection)
@@ -1309,6 +1310,7 @@ function NSI:InitAuraTracking()
         target = {},
         focus = {},
         mouseover = {},
+        boss = {},
     }
 
     if self.AuraTrackingState then
@@ -1317,12 +1319,14 @@ function NSI:InitAuraTracking()
                 local unit = string.lower(state.unit)
                 if unit == "target" or unit == "focus" or unit == "mouseover" then
                     AuraTrackingUnitRefreshStates[unit][#AuraTrackingUnitRefreshStates[unit] + 1] = state
+                elseif unit == "boss1" or unit == "boss2" or unit == "boss3" or unit == "boss4" or unit == "boss5" then
+                    AuraTrackingUnitRefreshStates.boss[#AuraTrackingUnitRefreshStates.boss + 1] = state
                 end
             end
         end
     end
 
-    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 then
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 then
         if not AuraTrackingUnitRefreshFrame then
             AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
@@ -1334,6 +1338,8 @@ function NSI:InitAuraTracking()
                     states = AuraTrackingUnitRefreshStates.focus
                 elseif event == "UPDATE_MOUSEOVER_UNIT" then
                     states = AuraTrackingUnitRefreshStates.mouseover
+                elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+                    states = AuraTrackingUnitRefreshStates.boss
                 end
                 if not states then return end
 
@@ -1353,6 +1359,9 @@ function NSI:InitAuraTracking()
         end
         if #AuraTrackingUnitRefreshStates.mouseover > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("UPDATE_MOUSEOVER_UNIT")
+        end
+        if #AuraTrackingUnitRefreshStates.boss > 0 then
+            AuraTrackingUnitRefreshFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
         end
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
