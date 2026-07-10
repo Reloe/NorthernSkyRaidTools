@@ -17,7 +17,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1290956,
         timers = {
             [15] = {52.3, 120.0, 221.7, 289.5, 391.2, 458.9},
-            [16] = {52.3, 113.3, 199.5, 260.6, 352.1, 413.0},
+            [16] = {46.9, 107.9, 199.5, 260.6, 352.1, 413.0},
         },
     }
     self:AddEncounterAlert(data)
