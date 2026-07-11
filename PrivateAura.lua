@@ -101,10 +101,7 @@ NSI.AuraSoundCategories = {
         { key = 3429, entries = { -- The Coiled Altar
             { spellID = 1283485, sound = "Targeted" }, -- Guillotine
             { spellID = 1282419, sound = "Orb" }, -- Volatile Venom
-            { spellID = 1309956, sound = "Spread" }, -- Mutagenic Venom
-            { spellID = 1309953, sound = "Spread" }, -- Mutagenic Venom
-            { spellID = 1309758, sound = "Spread" }, -- Mutagenic Venom
-            { spellID = 1309959, sound = "Spread" }, -- Mutagenic Venom (probably only one of these real)
+            { spellID = 1310498, sound = "Spread" }, -- Mutagenic Venom
             { spellID = 1286901, sound = "Bomb" }, -- Gloombomb
             { spellID = 1297445, sound = "MindControl" }, -- Dreadmarch
             { spellID = 1285911, sound = "Fixate" }, -- Unnerving Fixation
