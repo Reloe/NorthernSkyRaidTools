@@ -116,7 +116,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         SpellIDs = {},
         SpellIDsEdited = false,
         PreviewSpellID = nil,
-        ReverseSort = false,
+        SortMode = "Default",
         Unit = "player",
         UnitType = "Automatic",
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
@@ -656,7 +656,7 @@ end
 local AuraTrackingStyleKeys = {
     "Spacing",
     "Limit",
-    "ReverseSort",
+    "SortMode",
     "GrowDirection",
     "CustomAnchorFrame",
     "xOffset",
@@ -1291,10 +1291,21 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         if maxFrameCount == nil then
             maxFrameCount = settings.Limit
         end
+        local sortMode = settings.SortMode or "Default"
+        local sortMethod = AuraContainerSortMethod.Default
+        local sortDirection = AuraContainerSortDirection.Normal
+        if sortMode == "LongDurationFirst" then
+            sortMethod = AuraContainerSortMethod.ExpirationOnly
+            sortDirection = AuraContainerSortDirection.Reverse
+        elseif sortMode == "ShortDurationFirst" then
+            sortMethod = AuraContainerSortMethod.ExpirationOnly
+            sortDirection = AuraContainerSortDirection.Normal
+        end
+
         local options = {
             maxFrameCount = maxFrameCount,
-            sortMethod = AuraContainerSortMethod.ExpirationOnly,
-            sortDirection = settings.ReverseSort and AuraContainerSortDirection.Reverse or AuraContainerSortDirection.Normal,
+            sortMethod = sortMethod,
+            sortDirection = sortDirection,
             initializeFrame = function(button)
                 ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
             end,
@@ -1447,13 +1458,17 @@ local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
         }
     end
 
-    table.sort(entries, function(a, b)
-        if a.duration == b.duration then return a.index < b.index end
-        if settings.ReverseSort then
+    if settings.SortMode == "LongDurationFirst" then
+        table.sort(entries, function(a, b)
+            if a.duration == b.duration then return a.index < b.index end
             return a.duration > b.duration
-        end
-        return a.duration < b.duration
-    end)
+        end)
+    elseif settings.SortMode == "ShortDurationFirst" then
+        table.sort(entries, function(a, b)
+            if a.duration == b.duration then return a.index < b.index end
+            return a.duration < b.duration
+        end)
+    end
 
     return entries
 end

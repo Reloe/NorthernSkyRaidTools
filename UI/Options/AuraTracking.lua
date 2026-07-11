@@ -56,6 +56,12 @@ local UNIT_TYPES = {
     { label = "Friendly", value = "Friendly" },
 }
 
+local SORT_MODES = {
+    { label = "Default", value = "Default" },
+    { label = "Long Duration first", value = "LongDurationFirst" },
+    { label = "Short Duration first", value = "ShortDurationFirst" },
+}
+
 local ANCHOR_POINTS = {
     { label = "TOPLEFT", value = "TOPLEFT" }, { label = "TOP", value = "TOP" }, { label = "TOPRIGHT", value = "TOPRIGHT" },
     { label = "LEFT", value = "LEFT" }, { label = "CENTER", value = "CENTER" }, { label = "RIGHT", value = "RIGHT" },
@@ -701,9 +707,9 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
             tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
-        add({ Type = "Checkbox", label = "Reverse Sort",
-            tooltip = tip("Reverse Sort", "Show auras with the longest remaining duration first."),
-            get = function() return s.ReverseSort end, set = function(_, v) s.ReverseSort = v; apply(key) end })
+        add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
+            tooltip = tip("Sort Order", "Default uses Blizzard's aura order. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
+            get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })
 
         add({ Type = "Label", text = "Icon" })
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
