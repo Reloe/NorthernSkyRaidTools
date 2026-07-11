@@ -836,14 +836,18 @@ local function BuildAuraTrackingUI(screen)
                 row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
                 row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
 
-                local icon = row:CreateTexture(nil, "ARTWORK")
-                icon:SetSize(16, 16)
-                icon:SetPoint("LEFT", row, "LEFT", 3, 0)
+                local iconFrame = CreateFrame("Frame", nil, row)
+                iconFrame:SetSize(16, 16)
+                iconFrame:SetPoint("LEFT", row, "LEFT", 3, 0)
+                iconFrame:EnableMouse(true)
+
+                local icon = iconFrame:CreateTexture(nil, "ARTWORK")
+                icon:SetAllPoints()
                 icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
                 local label = row:CreateFontString(nil, "OVERLAY")
                 NSI:SetUIFont(label, 12, "")
-                label:SetPoint("LEFT", icon, "RIGHT", 6, 0)
+                label:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
                 label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
                 label:SetJustifyH("LEFT")
                 label:SetWordWrap(false)
@@ -856,6 +860,18 @@ local function BuildAuraTrackingUI(screen)
                     icon:SetTexture(DEFAULT_ICON)
                     label:SetText("|cFFFF4040Unknown spell|r  |cFF808080(" .. spellID .. ")|r")
                 end
+
+                iconFrame:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:SetSpellByID(spellID)
+                    if GameTooltip:NumLines() == 0 then
+                        GameTooltip:SetText("Spell ID: " .. spellID)
+                    end
+                    GameTooltip:Show()
+                end)
+                iconFrame:SetScript("OnLeave", function()
+                    GameTooltip:Hide()
+                end)
 
                 local removeBtn = CreateFrame("Button", nil, row)
                 removeBtn:SetSize(14, 14)
