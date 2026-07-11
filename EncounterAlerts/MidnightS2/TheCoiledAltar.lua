@@ -17,6 +17,10 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
         textColors = {1, 0, 0, 1}, spellID = 1299684,
+        isConditional = {
+            text = "This Alert only shows if you are not a tank or have threat on boss1.",
+            func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
+        },
         timers = {
             [15] = {23.1, 40.0, 60.0, 77.1, 103.1, 120.0, 140.0, 157.1},
             [16] = {23.1, 40.0, 60.0, 77.1, 103.1, 120.0, 140.0, 157.1},
@@ -55,6 +59,10 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P2", internalID = "P2Frontal", name = "P2 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 2, TTS = true, dur = 6,
         textColors = {1, 0, 0, 1}, spellID = 1286620,
+        isConditional = {
+            text = "This Alert only shows if you are not a tank or have threat on boss2.",
+            func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
+        },
         timers = {
             [15] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
             [16] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
