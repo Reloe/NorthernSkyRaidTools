@@ -52,7 +52,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
             [15] = {7.2, 43.3, 92.3, 128.3, 177.3, 213.3},
-            [16] = {7.2, 43.3, 92.3, 128.3, 177.3, 213.3},
+            [16] = {8, 44.6, 93, 129.6, 178, 214.6},
         },
     }
     self:AddEncounterAlert(data)
@@ -65,7 +65,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
-            [16] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
+            [16] = {38, 69, 123, 154, 208, 239},
         },
     }
     self:AddEncounterAlert(data)
@@ -78,7 +78,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {38.2, 69.2, 123.3, 154.3, 208.3, 239.3},
-            [16] = {38.2, 69.2, 123.3, 154.3, 208.3, 239.3},
+            [16] = {38.5, 69.5, 123.5, 154.5, 208.5, 239.5},
         },
     }
     self:AddEncounterAlert(data)
@@ -87,7 +87,25 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
             [15] = {23.7, 61.7, 108.8, 146.8, 193.8, 231.8},
-            [16] = {23.7, 61.7, 108.8, 146.8, 193.8, 231.8},
+            [16] = {20, 55, 105, 140, 190, 225},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P2", internalID = "P2Shield", name = "P2 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+        spellID = 1286918,
+        timers = {
+            [15] = {70, 155},
+            [16] = {70, 155},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P2", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+        spellID = 1286399,
+        timers = {
+            [15] = {13, 46, 98, 131, 183, 216},
+            [16] = {13, 46, 98, 131, 183, 216},
         },
     }
     self:AddEncounterAlert(data)
