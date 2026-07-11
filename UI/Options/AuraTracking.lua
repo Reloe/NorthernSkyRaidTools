@@ -800,6 +800,91 @@ local function BuildAuraTrackingUI(screen)
         return defs
     end
 
+    -- Scrollbox-style Spell ID picker for the Trigger tab: an add-row (text
+    -- entry + button) followed by one row per tracked spell showing its
+    -- fetched icon/name, with an "x" to remove it. Rebuilt (via
+    -- RebuildCurrentTab) on every add/remove so the row count stays in sync.
+    local SPELL_ROW_H = 20
+    local function BuildSpellIDListWidget(key)
+        return { Type = "Custom", build = function(parent, width, wName)
+            local frame = CreateFrame("Frame", wName, parent)
+            frame:SetWidth(width)
+
+            local input = CreateTextEntry(frame, nil, nil, nil, width - 70, 22, nil, nil, nil,
+                wName and (wName .. "Input") or nil)
+            input:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+
+            local function AddFromInput()
+                local v = strtrim(input.editBox:GetText() or "")
+                if v == "" then return end
+                NSI:AddAuraTrackingSpellIDs(key, v)
+                input.editBox:SetText("")
+                RebuildList(); RebuildCurrentTab()
+            end
+            input.editBox:SetScript("OnEnterPressed", function(self) AddFromInput(); self:ClearFocus() end)
+
+            local addBtn = CreateLocalizedSubButton(frame, "Add", AddFromInput, 54,
+                wName and (wName .. "Add") or nil)
+            addBtn:SetPoint("LEFT", input.frame, "RIGHT", 6, 0)
+
+            local spellIDs = NSI:GetAuraTrackingSpellIDList(key)
+            local y = 30
+            for _, spellID in ipairs(spellIDs) do
+                local row = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+                row:SetSize(width, SPELL_ROW_H)
+                row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
+                row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
+                row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+
+                local icon = row:CreateTexture(nil, "ARTWORK")
+                icon:SetSize(16, 16)
+                icon:SetPoint("LEFT", row, "LEFT", 3, 0)
+                icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+
+                local label = row:CreateFontString(nil, "OVERLAY")
+                NSI:SetUIFont(label, 12, "")
+                label:SetPoint("LEFT", icon, "RIGHT", 6, 0)
+                label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
+                label:SetJustifyH("LEFT")
+                label:SetWordWrap(false)
+
+                local spell = C_Spell.GetSpellInfo(spellID)
+                if spell then
+                    icon:SetTexture(spell.iconID or DEFAULT_ICON)
+                    label:SetText(spell.name .. "  |cFF808080(" .. spellID .. ")|r")
+                else
+                    icon:SetTexture(DEFAULT_ICON)
+                    label:SetText("|cFFFF4040Unknown spell|r  |cFF808080(" .. spellID .. ")|r")
+                end
+
+                local removeBtn = CreateFrame("Button", nil, row)
+                removeBtn:SetSize(14, 14)
+                removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+                removeBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+                removeBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
+                removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+                removeBtn:SetScript("OnClick", function()
+                    NSI:RemoveAuraTrackingSpellID(key, spellID)
+                    RebuildList(); RebuildCurrentTab()
+                end)
+
+                y = y + SPELL_ROW_H
+            end
+
+            if #spellIDs == 0 then
+                local empty = frame:CreateFontString(nil, "OVERLAY")
+                NSI:SetUIFont(empty, 12, "")
+                empty:SetTextColor(0.5, 0.5, 0.5, 1)
+                empty:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -y - 2)
+                empty:SetText(NSI:Loc("No spell IDs added yet."))
+                y = y + SPELL_ROW_H
+            end
+
+            frame:SetHeight(y)
+            return frame, y
+        end }
+    end
+
     local function BuildTriggerDefs(s, key)
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
@@ -811,10 +896,8 @@ local function BuildAuraTrackingUI(screen)
             -- reserves a fixed 60px input box when given a label (the rest of
             -- the width goes to the label text), so a preceding standalone
             -- Label caption + a label-less full-width TextEntry is used instead.
-            { Type = "Label", text = "Spell IDs (comma or space separated)" },
-            { Type = "TextEntry",
-                get = function() return NSI:GetAuraTrackingSpellIDString(key) end,
-                set = function(_, v) NSI:SetAuraTrackingSpellIDString(key, v); RebuildList() end },
+            { Type = "Label", text = "Spell IDs" },
+            BuildSpellIDListWidget(key),
             { Type = "Label", text = "Unit" },
             { Type = "TextEntry",
                 get = function() return s.Unit or "player" end,

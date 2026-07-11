@@ -598,15 +598,42 @@ local function GetAuraTrackingSpellIDMap(settings, settingsKey)
     return map
 end
 
-function NSI:GetAuraTrackingSpellIDString(settingsKey)
+function NSI:GetAuraTrackingSpellIDList(settingsKey)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    return table.concat(GetAuraTrackingSpellIDs(settings, settingsKey), ", ")
+    return GetAuraTrackingSpellIDs(settings, settingsKey)
 end
 
-function NSI:SetAuraTrackingSpellIDString(settingsKey, value)
+-- Accepts a single spell ID or a comma/space separated list of spell IDs and
+-- merges any newly-valid ones into the entry's existing SpellIDs.
+function NSI:AddAuraTrackingSpellIDs(settingsKey, value)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings then return end
-    settings.SpellIDs = ParseAuraTrackingSpellIDs(value)
+    local newIDs = ParseAuraTrackingSpellIDs(value)
+    if #newIDs == 0 then return end
+    settings.SpellIDs = settings.SpellIDs or {}
+    local seen = {}
+    for _, id in ipairs(settings.SpellIDs) do seen[id] = true end
+    for _, id in ipairs(newIDs) do
+        if not seen[id] then
+            settings.SpellIDs[#settings.SpellIDs + 1] = id
+            seen[id] = true
+        end
+    end
+    table.sort(settings.SpellIDs)
+    settings.SpellIDsEdited = true
+    self:UpdateAuraTrackingDisplay(settingsKey)
+end
+
+function NSI:RemoveAuraTrackingSpellID(settingsKey, spellID)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if not settings or not settings.SpellIDs then return end
+    spellID = tonumber(spellID)
+    for i, id in ipairs(settings.SpellIDs) do
+        if id == spellID then
+            table.remove(settings.SpellIDs, i)
+            break
+        end
+    end
     settings.SpellIDsEdited = true
     self:UpdateAuraTrackingDisplay(settingsKey)
 end
