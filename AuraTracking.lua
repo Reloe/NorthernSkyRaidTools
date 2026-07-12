@@ -1436,6 +1436,16 @@ end
 
 function NSI:InitAuraSystem(firstcall)
     if self:IsMidnightS2() then
+        if firstcall then
+            self.PendingInitialAuraTracking = true
+            C_Timer.After(2, function()
+                if not self.PendingInitialAuraTracking then return end
+                self.PendingInitialAuraTracking = nil
+                self:InitAuraTracking()
+            end)
+            return
+        end
+        self.PendingInitialAuraTracking = nil
         self:InitAuraTracking()
     else
         self:InitPrivateAuras(firstcall)
