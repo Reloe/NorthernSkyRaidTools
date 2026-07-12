@@ -478,6 +478,28 @@ local function BuildReminderOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = "Overwrite Shared Notes on Import",
+            desc = "When importing a shared note, delete existing shared notes for the same boss first.",
+            get = function() return NSRT.ReminderSettings.OverwriteSharedNoteOnImport end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OverwriteSharedNoteOnImport = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Overwrite Personal Notes on Import",
+            desc = "When importing a personal note, delete existing personal notes for the same boss first.",
+            get = function() return NSRT.ReminderSettings.OverwritePersonalNoteOnImport end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OverwritePersonalNoteOnImport = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Automatically Enable New Alerts",
             desc = "Automatically enables all future Alerts unless they are specifically marked as being default disabled.",
             get = function() return NSRT.Alerts.ReloeReminders end,

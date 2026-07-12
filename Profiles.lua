@@ -156,6 +156,8 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
             TextTTSTimer = 5,
             AutoShare = false,
             OnlyReceiveGuild = false,
+            OverwriteSharedNoteOnImport = false,
+            OverwritePersonalNoteOnImport = false,
             NoteCountdown = false,
             ClearOnKill = true,
             PersonalReminderFrame = {

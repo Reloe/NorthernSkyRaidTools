@@ -1534,6 +1534,22 @@ end
 function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
     if not name then name = "Default Reminder" end
     local newname = diff and name.." - "..diff or name
+    local encID = values and values:match("EncounterID:(%d+)")
+    local overwriteSameBoss = personal and NSRT.ReminderSettings.OverwritePersonalNoteOnImport or NSRT.ReminderSettings.OverwriteSharedNoteOnImport
+    if encID and overwriteSameBoss and not IsUpdate then
+        local reminders = personal and NSRT.PersonalReminders or NSRT.Reminders
+        local toRemove = {}
+        encID = tonumber(encID)
+        for reminderName, reminderString in pairs(reminders) do
+            local reminderEncID = reminderString and reminderString:match("EncounterID:(%d+)")
+            if reminderEncID and tonumber(reminderEncID) == encID then
+                toRemove[#toRemove + 1] = reminderName
+            end
+        end
+        for _, reminderName in ipairs(toRemove) do
+            self:RemoveReminder(reminderName, personal)
+        end
+    end
     if personal then
         if NSRT.PersonalReminders[newname] and not IsUpdate then -- if name already exists we add a 2 at the end
             self:ImportReminder(name.." 2", values, activate, personal, IsUpdate, diff)
