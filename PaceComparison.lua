@@ -371,6 +371,7 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
     if not line.Deltas then return end
     local current = sample and sample.previewCurrent
     local roundedTenth = current and math.floor(((current - sample.expected) * 10) + 0.5)
+    local unitExists = sample and UnitExists(unit)
 
     for tenth = -50, 50 do
         local label = line.Deltas[tenth]
@@ -379,7 +380,7 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
                 local delta = tenth / 10
                 local color = NSI.PaceComparisonColorCache[GetPaceComparisonDeltaColorKey(delta)]
                 label:SetTextColor(color.r, color.g, color.b, roundedTenth == tenth and 1 or 0)
-            elseif UnitExists(unit) then
+            elseif unitExists then
                 local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonDeltaAlphaCurve(sample.expected, tenth))
                 if type(r) == "table" and r.GetRGBA then
                     label:SetTextColor(r:GetRGBA())
@@ -402,7 +403,7 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
             if isPreview and roundedTenth then
                 local visible = (data.IsBehind and roundedTenth > 50) or (not data.IsBehind and roundedTenth < -50)
                 label:SetTextColor(color.r, color.g, color.b, visible and 1 or 0)
-            elseif UnitExists(unit) then
+            elseif unitExists then
                 local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonOverflowAlphaCurve(sample.expected, data.IsBehind))
                 if type(r) == "table" and r.GetRGBA then
                     label:SetTextColor(r:GetRGBA())
@@ -494,8 +495,6 @@ function NSI:RefreshPaceComparisonDisplay()
     local frame = self:CreatePaceComparisonFrame()
     local state = self.PaceComparisonState
     if not state then return end
-
-    self:UpdatePaceComparisonFrameStyle()
 
     local display = NSRT.PaceComparison.Display
     local fontSize = display.FontSize
@@ -643,6 +642,7 @@ function NSI:StartPaceComparison(encID, diff)
     self:RefreshPaceComparisonColorCache()
 
     self:CreatePaceComparisonFrame():Show()
+    self:UpdatePaceComparisonFrameStyle()
     self:SchedulePaceComparisonPhase(self.Phase or 1, encID)
 end
 
@@ -682,6 +682,7 @@ function NSI:PreviewPaceComparison()
                 boss2 = CreatePaceComparisonSample("boss2", 65),
             },
         }
+        self:UpdatePaceComparisonFrameStyle()
         self:RefreshPaceComparisonDisplay()
         self:MakeDraggable(frame, NSRT.PaceComparison.Display, true)
     else
