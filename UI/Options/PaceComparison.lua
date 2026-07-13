@@ -134,6 +134,7 @@ local function AddDisplayOptions(options)
         get = function() return unpack(display.AheadColor) end,
         set = function(_, r, g, b, a)
             display.AheadColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonColorCache()
             NSI:RefreshPaceComparisonDisplay()
         end,
         hasAlpha = true,
@@ -145,6 +146,7 @@ local function AddDisplayOptions(options)
         get = function() return unpack(display.CloseBehindColor) end,
         set = function(_, r, g, b, a)
             display.CloseBehindColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonColorCache()
             NSI:RefreshPaceComparisonDisplay()
         end,
         hasAlpha = true,
@@ -156,6 +158,7 @@ local function AddDisplayOptions(options)
         get = function() return unpack(display.BehindColor) end,
         set = function(_, r, g, b, a)
             display.BehindColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonColorCache()
             NSI:RefreshPaceComparisonDisplay()
         end,
         hasAlpha = true,
@@ -167,6 +170,7 @@ local function AddDisplayOptions(options)
         get = function() return unpack(display.FarBehindColor) end,
         set = function(_, r, g, b, a)
             display.FarBehindColor = {r, g, b, a}
+            NSI:RefreshPaceComparisonColorCache()
             NSI:RefreshPaceComparisonDisplay()
         end,
         hasAlpha = true,

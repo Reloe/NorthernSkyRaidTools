@@ -230,9 +230,24 @@ function NSI:CreatePaceComparisonFrame()
     return frame
 end
 
-local function GetPaceComparisonColorWithAlpha(key, alpha)
-    local color = NSRT.PaceComparison.Display[key]
-    return CreateColor(color[1], color[2], color[3], alpha)
+local function BuildPaceComparisonColorCache()
+    local display = NSRT.PaceComparison.Display
+    local cache = {}
+    for _, key in ipairs({"AheadColor", "CloseBehindColor", "BehindColor", "FarBehindColor"}) do
+        local color = display[key]
+        cache[key] = {
+            r = color[1],
+            g = color[2],
+            b = color[3],
+            hidden = CreateColor(color[1], color[2], color[3], 0),
+            shown = CreateColor(color[1], color[2], color[3], 1),
+        }
+    end
+    return cache
+end
+
+function NSI:RefreshPaceComparisonColorCache()
+    self.PaceComparisonColorCache = BuildPaceComparisonColorCache()
 end
 
 local function GetPaceComparisonDeltaColorKey(delta)
@@ -264,8 +279,9 @@ local function GetPaceComparisonDeltaAlphaCurve(expected, tenth)
     local upper = (expected + delta + 0.05) / 100
     local colorKey = GetPaceComparisonDeltaColorKey(delta)
     local epsilon = 0.00001
-    local hidden = GetPaceComparisonColorWithAlpha(colorKey, 0)
-    local shown = GetPaceComparisonColorWithAlpha(colorKey, 1)
+    local color = NSI.PaceComparisonColorCache[colorKey]
+    local hidden = color.hidden
+    local shown = color.shown
     local curve = C_CurveUtil.CreateColorCurve()
 
     if upper <= 0 or lower >= 1 then
@@ -300,8 +316,9 @@ local function GetPaceComparisonOverflowAlphaCurve(expected, isBehind)
     expected = math.max(0, math.min(expected, 100))
     local epsilon = 0.00001
     local colorKey = isBehind and "FarBehindColor" or "AheadColor"
-    local hidden = GetPaceComparisonColorWithAlpha(colorKey, 0)
-    local shown = GetPaceComparisonColorWithAlpha(colorKey, 1)
+    local color = NSI.PaceComparisonColorCache[colorKey]
+    local hidden = color.hidden
+    local shown = color.shown
     local curve = C_CurveUtil.CreateColorCurve()
 
     if isBehind then
@@ -360,8 +377,8 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
         if sample then
             if isPreview and roundedTenth then
                 local delta = tenth / 10
-                local color = NSRT.PaceComparison.Display[GetPaceComparisonDeltaColorKey(delta)]
-                label:SetTextColor(color[1], color[2], color[3], roundedTenth == tenth and 1 or 0)
+                local color = NSI.PaceComparisonColorCache[GetPaceComparisonDeltaColorKey(delta)]
+                label:SetTextColor(color.r, color.g, color.b, roundedTenth == tenth and 1 or 0)
             elseif UnitExists(unit) then
                 local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonDeltaAlphaCurve(sample.expected, tenth))
                 if type(r) == "table" and r.GetRGBA then
@@ -381,10 +398,10 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
     for _, data in ipairs(line.OverflowDeltas) do
         local label = data.Label
         if sample then
-            local color = NSRT.PaceComparison.Display[data.ColorKey]
+            local color = NSI.PaceComparisonColorCache[data.ColorKey]
             if isPreview and roundedTenth then
                 local visible = (data.IsBehind and roundedTenth > 50) or (not data.IsBehind and roundedTenth < -50)
-                label:SetTextColor(color[1], color[2], color[3], visible and 1 or 0)
+                label:SetTextColor(color.r, color.g, color.b, visible and 1 or 0)
             elseif UnitExists(unit) then
                 local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonOverflowAlphaCurve(sample.expected, data.IsBehind))
                 if type(r) == "table" and r.GetRGBA then
@@ -393,7 +410,7 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
                     label:SetTextColor(r, g, b, a)
                 end
             else
-                label:SetTextColor(color[1], color[2], color[3], 0)
+                label:SetTextColor(color.r, color.g, color.b, 0)
             end
         else
             label:SetTextColor(1, 1, 1, 0)
@@ -471,7 +488,7 @@ function NSI:AcquirePaceComparisonLine(index)
 end
 
 function NSI:RefreshPaceComparisonDisplay()
-    if not self.PaceComparisonActive or not NSRT or not NSRT.PaceComparison then
+    if not self.PaceComparisonActive then
         return
     end
     local frame = self:CreatePaceComparisonFrame()
@@ -623,6 +640,7 @@ function NSI:StartPaceComparison(encID, diff)
         thresholds = thresholds,
         samples = {},
     }
+    self:RefreshPaceComparisonColorCache()
 
     self:CreatePaceComparisonFrame():Show()
     self:SchedulePaceComparisonPhase(self.Phase or 1, encID)
@@ -652,6 +670,7 @@ function NSI:PreviewPaceComparison()
     local frame = self:CreatePaceComparisonFrame()
     if self.PaceComparisonPreview then
         self.PaceComparisonActive = true
+        self:RefreshPaceComparisonColorCache()
         self.PaceComparisonState = {
             encID = NSRT.PaceComparison.SelectedBoss or 0,
             thresholds = {
