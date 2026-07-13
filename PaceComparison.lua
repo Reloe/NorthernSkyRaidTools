@@ -9,13 +9,6 @@ NSI.PaceComparisonDefaults = {
     -- },
 }
 
-local DEFAULT_PACE_COLORS = {
-    AheadColor = {0, 1, 0, 1},
-    CloseBehindColor = {1, 1, 0, 1},
-    BehindColor = {1, 0.5, 0, 1},
-    FarBehindColor = {1, 0, 0, 1},
-}
-
 local function SortThresholds(a, b)
     local phaseA = tonumber(a.phase) or 1
     local phaseB = tonumber(b.phase) or 1
@@ -59,27 +52,6 @@ local function FormatPaceComparisonNumber(value, decimals)
     local formatted = string.format("%." .. decimals .. "f", value)
     formatted = formatted:gsub("(%..-)0+$", "%1"):gsub("%.$", "")
     return formatted
-end
-
-local function ParsePaceComparisonLine(line)
-    line = tostring(line or "")
-    local lowerLine = line:lower()
-    local phase = tonumber(lowerLine:match("phase%s*:%s*([%d%.]+)"))
-    local time = tonumber(lowerLine:match("time%s*:%s*([%d%.]+)"))
-    local expected = tonumber(lowerLine:match("hp%s*:%s*([%d%.]+)"))
-    if not phase or not time or not expected then
-        return
-    end
-
-    local unit = line:match("[Uu][Nn][Ii][Tt]%s*:%s*([^;]+)")
-    unit = unit and strtrim(unit) or "boss1"
-
-    return {
-        phase = phase,
-        time = time,
-        unit = unit ~= "" and unit or "boss1",
-        expected = math.max(0, math.min(expected, 100)),
-    }
 end
 
 function NSI:ExportPaceComparisonString(encID)
@@ -135,9 +107,19 @@ function NSI:ImportPaceComparisonString(text)
                     currentEncID = nil
                 end
             elseif currentEncID then
-                local entry = ParsePaceComparisonLine(line)
-                if entry then
-                    imported[currentEncID][#imported[currentEncID] + 1] = entry
+                local lowerLine = line:lower()
+                local phase = tonumber(lowerLine:match("phase%s*:%s*([%d%.]+)"))
+                local time = tonumber(lowerLine:match("time%s*:%s*([%d%.]+)"))
+                local expected = tonumber(lowerLine:match("hp%s*:%s*([%d%.]+)"))
+                if phase and time and expected then
+                    local unit = line:match("[Uu][Nn][Ii][Tt]%s*:%s*([^;]+)")
+                    unit = unit and strtrim(unit) or "boss1"
+                    imported[currentEncID][#imported[currentEncID] + 1] = {
+                        phase = phase,
+                        time = time,
+                        unit = unit ~= "" and unit or "boss1",
+                        expected = math.max(0, math.min(expected, 100)),
+                    }
                 end
             end
         end
@@ -167,7 +149,7 @@ function NSI:ApplyDefaultPaceComparisonData()
     end
     NSRT.PaceComparison.Bosses = NSRT.PaceComparison.Bosses or {}
 
-    for encID, defaults in pairs(self.PaceComparisonDefaults or {}) do
+    for encID, defaults in pairs(self.PaceComparisonDefaults) do
         local settings = GetPaceComparisonBossSettings(encID)
         if settings and not settings.userModified then
             if defaults.enabled ~= nil then
@@ -221,14 +203,14 @@ end
 
 function NSI:ResetAllPaceComparisonBosses()
     if not NSRT or not NSRT.PaceComparison then return end
-    for encID in pairs(NSRT.PaceComparison.Bosses or {}) do
+    for encID in pairs(NSRT.PaceComparison.Bosses) do
         self:ResetPaceComparisonBoss(encID)
     end
     self:ApplyDefaultPaceComparisonData()
 end
 
 local function GetPaceComparisonFontPath(settings)
-    local font = settings and settings.Font
+    local font = settings.Font
     if NSI.LSM then
         font = NSI.LSM:Fetch("font", font, true) or font
     end
@@ -249,15 +231,8 @@ function NSI:CreatePaceComparisonFrame()
 end
 
 local function GetPaceComparisonColor(key)
-    local display = NSRT and NSRT.PaceComparison and NSRT.PaceComparison.Display
-    local color = display and display[key] or DEFAULT_PACE_COLORS[key]
-    return CreateColor(color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1)
-end
-
-local function GetPaceComparisonColorValues(key)
-    local display = NSRT and NSRT.PaceComparison and NSRT.PaceComparison.Display
-    local color = display and display[key] or DEFAULT_PACE_COLORS[key]
-    return color[1] or 1, color[2] or 1, color[3] or 1, color[4] or 1
+    local color = NSRT.PaceComparison.Display[key]
+    return CreateColor(color[1], color[2], color[3], color[4])
 end
 
 local function GetPaceComparisonColorCurve(expected)
@@ -289,20 +264,19 @@ local function GetPaceComparisonColorCurve(expected)
     return curve
 end
 
-local function GetPaceComparisonPreviewHealth(unit)
-    return unit == "boss1" and 78.5 or 66.0
-end
-
 local function SetPaceComparisonPreviewColor(sample, current, expected)
+    local colorKey
     if current < expected then
-        sample.r, sample.g, sample.b, sample.a = GetPaceComparisonColorValues("AheadColor")
+        colorKey = "AheadColor"
     elseif current <= expected + 0.5 then
-        sample.r, sample.g, sample.b, sample.a = GetPaceComparisonColorValues("CloseBehindColor")
+        colorKey = "CloseBehindColor"
     elseif current <= expected + 1.5 then
-        sample.r, sample.g, sample.b, sample.a = GetPaceComparisonColorValues("BehindColor")
+        colorKey = "BehindColor"
     else
-        sample.r, sample.g, sample.b, sample.a = GetPaceComparisonColorValues("FarBehindColor")
+        colorKey = "FarBehindColor"
     end
+    local color = NSRT.PaceComparison.Display[colorKey]
+    sample.r, sample.g, sample.b, sample.a = color[1], color[2], color[3], color[4]
 end
 
 local function CreatePaceComparisonSample(unit, expected)
@@ -319,7 +293,7 @@ local function CreatePaceComparisonSample(unit, expected)
             sample.r, sample.g, sample.b, sample.a = UnitHealthPercent(unit, true, GetPaceComparisonColorCurve(sample.expected))
         end
     else
-        local current = GetPaceComparisonPreviewHealth(unit)
+        local current = unit == "boss1" and 78.5 or 66.0
         sample.current = secretwrap(current)
         sample.previewCurrent = current
         SetPaceComparisonPreviewColor(sample, current, sample.expected)
@@ -333,8 +307,8 @@ function NSI:UpdatePaceComparisonFrameStyle()
     local frame = self:CreatePaceComparisonFrame()
     local settings = NSRT.PaceComparison.Display
     local fontPath = GetPaceComparisonFontPath(settings)
-    local fontSize = settings.FontSize or 28
-    local fontFlags = settings.FontFlags or "OUTLINE"
+    local fontSize = settings.FontSize
+    local fontFlags = settings.FontFlags
 
     frame:ClearAllPoints()
     frame:SetPoint(settings.Anchor, UIParent, settings.relativeTo, settings.xOffset, settings.yOffset)
@@ -366,19 +340,6 @@ function NSI:AcquirePaceComparisonLine(index)
     return line
 end
 
-local function GetTrackedPaceUnits(samples)
-    local seen = {}
-    local units = {}
-    for unit in pairs(samples or {}) do
-        if not seen[unit] then
-            seen[unit] = true
-            units[#units + 1] = unit
-        end
-    end
-    table.sort(units)
-    return units
-end
-
 function NSI:RefreshPaceComparisonDisplay()
     if not self.PaceComparisonActive or not NSRT or not NSRT.PaceComparison then
         return
@@ -391,10 +352,14 @@ function NSI:RefreshPaceComparisonDisplay()
 
     local display = NSRT.PaceComparison.Display
     local fontPath = GetPaceComparisonFontPath(display)
-    local fontSize = display.FontSize or 28
-    local fontFlags = display.FontFlags or "OUTLINE"
-    local lineSpacing = display.LineSpacing or 4
-    local units = GetTrackedPaceUnits(state.samples)
+    local fontSize = display.FontSize
+    local fontFlags = display.FontFlags
+    local lineSpacing = display.LineSpacing
+    local units = {}
+    for unit in pairs(state.samples) do
+        units[#units + 1] = unit
+    end
+    table.sort(units)
     local showUnitLabels = #units > 1
     local shown = 0
 
@@ -416,7 +381,7 @@ function NSI:RefreshPaceComparisonDisplay()
             end
 
             local expected = state.activeExpected[unit]
-            local sample = state.samples and state.samples[unit]
+            local sample = state.samples[unit]
             line.Label:SetText(showUnitLabels and (unit .. ":") or "")
             if sample then
                 if self.PaceComparisonPreview and sample.previewCurrent then
@@ -480,7 +445,7 @@ function NSI:SchedulePaceComparisonPhase(phase, encID)
         end
     end
 
-    for _, entry in ipairs(state.thresholds or {}) do
+    for _, entry in ipairs(state.thresholds) do
         if (tonumber(entry.phase) or 1) == phase then
             local entryTime = tonumber(entry.time) or 0
             local delay = entryTime - elapsed
