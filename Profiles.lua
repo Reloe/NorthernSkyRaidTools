@@ -423,7 +423,7 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 FontSize = 28,
                 FontFlags = "OUTLINE",
                 LineSpacing = 4,
-                UpdateInterval = 0.2,
+                RefreshInterval = 1,
                 AheadColor = {0, 1, 0, 1},
                 CloseBehindColor = {1, 1, 0, 1},
                 BehindColor = {1, 0.5, 0, 1},

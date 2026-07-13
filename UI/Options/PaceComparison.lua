@@ -112,6 +112,22 @@ local function AddDisplayOptions(options)
         step = 1,
     }
     options[#options + 1] = {
+        type = "range",
+        name = "Update Interval",
+        desc = "How often the Pace Comparison display updates, in seconds. Lower values update faster but have a higher performance cost.",
+        get = function() return display.RefreshInterval end,
+        set = function(_, _, value)
+            display.RefreshInterval = math.max(0.1, math.min(value, 1))
+            if NSI.PaceComparisonActive then
+                NSI:SchedulePaceComparisonPhase(NSI.Phase or 1, NSI.PaceComparisonState and NSI.PaceComparisonState.encID)
+            end
+        end,
+        min = 0.1,
+        max = 1,
+        step = 0.1,
+        usedecimals = true,
+    }
+    options[#options + 1] = {
         type = "color",
         name = "Ahead Color",
         desc = "Color used when the boss HP is lower than expected.",

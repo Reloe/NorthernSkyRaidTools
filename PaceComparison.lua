@@ -592,7 +592,7 @@ function NSI:SchedulePaceComparisonPhase(phase, encID)
     end
 
     RefreshPhaseSamples()
-    self.PaceComparisonTicker = C_Timer.NewTicker(1, RefreshPhaseSamples)
+    self.PaceComparisonTicker = C_Timer.NewTicker(NSRT.PaceComparison.Display.RefreshInterval, RefreshPhaseSamples)
 end
 
 function NSI:StartPaceComparison(encID, diff)
