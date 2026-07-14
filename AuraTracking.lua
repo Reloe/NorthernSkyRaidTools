@@ -566,12 +566,8 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
     return {}
 end
 
-local function AuraTrackingAllowsDispelBorder(key)
-    return key ~= "External"
-end
-
 local function AuraTrackingWantsDispelBorder(settings, key)
-    return AuraTrackingAllowsDispelBorder(key) and settings and settings.ShowDispelBorder
+    return key ~= "External" and settings and settings.ShowDispelBorder
 end
 
 local function HideAuraTrackingDispelRegions(regions)
@@ -904,12 +900,6 @@ local function GetPointCoordinate(frame, point)
     return x, y
 end
 
-local function LoadAuraTrackingContainers()
-    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
-        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
-    end
-end
-
 local function SaveAuraTrackingFramePosition(self, frame, settings)
     if not frame or not settings then return end
     local relativeFrame = GetAuraTrackingAnchorFrame(settings, UIParent)
@@ -1165,11 +1155,12 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     return button
 end
 
-local function RefreshAuraTrackingButtons(self, state, width, height, settings, unit, key)
-    if not state or not state.buttonRegions then return end
-    for button in pairs(state.buttonRegions) do
-        ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
-    end
+local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
+    if not state or not state.container or not groupKey then return end
+    state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
+    if state.currentMaxFrameCountByGroup[groupKey] == maxFrameCount then return end
+    state.container:SetAuraGroupMaxFrameCount(groupKey, maxFrameCount)
+    state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
 -- Resolve an entry's configured Unit into a concrete unit token.
@@ -1191,9 +1182,11 @@ local function ResolveAuraTrackingUnit(self, settings)
 end
 
 local function InitAuraTrackingContainer(self, unit, settings, key)
-    LoadAuraTrackingContainers()
-    if not unit or not settings.enabled then return end
+    if not unit or not settings or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    end
     local isCustom = tostring(key):match("^Custom") and true or false
     local isExternal = key == "External"
     local isSpellFiltered = isExternal or isCustom
@@ -1213,6 +1206,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     state.key = key
     state.width = width
     state.height = height
+    state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
 
     container:SetEnabled(false)
     container:Hide()
@@ -1239,7 +1233,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     elseif isCustom then
         local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
         state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
-        state.customAuraGroupKeys = nil
         auraGroups[#auraGroups + 1] = {
             filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
             spellIDMap = spellIDMap,
@@ -1267,13 +1260,13 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         local groupKey = group.customGroup and state.customAuraGroupKey or (groupKeyPrefix .. index)
         if isCustom and group.customGroup then
             if container:HasAuraGroup(groupKeyPrefix .. "1") then
-                container:SetAuraGroupMaxFrameCount(groupKeyPrefix .. "1", 0)
+                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "1", 0)
             end
             if container:HasAuraGroup(groupKeyPrefix .. "_helpful") then
-                container:SetAuraGroupMaxFrameCount(groupKeyPrefix .. "_helpful", 0)
+                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_helpful", 0)
             end
             if container:HasAuraGroup(groupKeyPrefix .. "_harmful") then
-                container:SetAuraGroupMaxFrameCount(groupKeyPrefix .. "_harmful", 0)
+                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_harmful", 0)
             end
         end
         local candidateFilters
@@ -1319,16 +1312,21 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         }
 
         if container:HasAuraGroup(groupKey) then
-            container:SetAuraGroupMaxFrameCount(groupKey, options.maxFrameCount)
+            SetAuraTrackingGroupMaxFrameCount(state, groupKey, options.maxFrameCount)
             container:SetAuraGroupCandidateFilters(groupKey, options.candidateFilters)
             container:SetAuraGroupLayout(groupKey, options.layout)
             container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
         else
             container:AddAuraGroup(groupKey, group.filter, options)
+            state.currentMaxFrameCountByGroup[groupKey] = options.maxFrameCount
         end
     end
 
-    RefreshAuraTrackingButtons(self, state, width, height, settings, unit, key)
+    if state.buttonRegions then
+        for button in pairs(state.buttonRegions) do
+            ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
+        end
+    end
 
     container:Show()
     container:SetEnabled(true)
@@ -1403,7 +1401,7 @@ function NSI:InitAuraTracking()
                 for _, state in ipairs(states) do
                     if state.container and state.container:IsShown() and state.container:IsEnabled() then
                         if state.customAuraGroupKey then
-                            state.container:SetAuraGroupMaxFrameCount(state.customAuraGroupKey, GetAuraTrackingCustomFrameLimit(state.settings, state.unit))
+                            SetAuraTrackingGroupMaxFrameCount(state, state.customAuraGroupKey, GetAuraTrackingCustomFrameLimit(state.settings, state.unit))
                         end
                         state.container:UpdateAllAuras()
                     end
