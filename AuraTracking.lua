@@ -70,9 +70,7 @@ NSI.DefaultExternalAuraTrackingSpellIDs = {
     45438, -- Ice Block
 }
 
-NSI.DefaultPlayerAuraTrackingSpellIDs = {
-    1310032, -- Spooky Mask
-}
+NSI.DefaultPlayerAuraTrackingSpellIDs = {}
 
 function NSI:CreateAuraTrackingSettingsDefaults(overrides)
     local settings = {

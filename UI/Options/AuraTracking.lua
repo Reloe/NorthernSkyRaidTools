@@ -736,7 +736,7 @@ local function BuildAuraTrackingUI(screen)
         end
         if key == "Player" then
             add({ Type = "Checkbox", label = "Show Whitelisted Buffs",
-                tooltip = tip("Show Whitelisted Buffs", "Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters. One example would be the Haste-Buff on the Lost Explorers Encounter"),
+                tooltip = tip("Show Whitelisted Buffs", "Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."),
                 get = function() return s.ShowWhitelistedPlayerBuffs end, set = function(_, v) s.ShowWhitelistedPlayerBuffs = v; apply(key) end })
         end
 
