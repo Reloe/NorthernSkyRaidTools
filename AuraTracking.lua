@@ -1322,7 +1322,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         end
     end
 
-    if state.buttonRegions then
+    if not self:Restricted() and state.buttonRegions then
         for button in pairs(state.buttonRegions) do
             ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
         end
@@ -1332,9 +1332,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     container:SetEnabled(true)
 end
 
-function NSI:InitAuraTracking()
+function NSI:InitAuraTracking(allowRestrictedCreate)
     if self.IsBuilding then return end
-    if self:Restricted() then
+    if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
         self.PendingAuraTrackingUpdate = true
         return
     end
@@ -1439,12 +1439,12 @@ function NSI:InitAuraSystem(firstcall)
             C_Timer.After(2, function()
                 if not self.PendingInitialAuraTracking then return end
                 self.PendingInitialAuraTracking = nil
-                self:InitAuraTracking()
+                self:InitAuraTracking(true)
             end)
             return
         end
         self.PendingInitialAuraTracking = nil
-        self:InitAuraTracking()
+        self:InitAuraTracking(true)
     else
         self:InitPrivateAuras(firstcall)
     end
