@@ -396,6 +396,7 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 HideStackText = true,
                 HideTooltip = true,
                 ShowDispelBorder = false,
+                IncludeImmunities = true,
                 NameEnabled = true,
                 NamePosition = "LEFT",
                 NameXOffset = 0,

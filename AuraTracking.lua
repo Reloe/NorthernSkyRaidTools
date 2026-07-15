@@ -56,13 +56,17 @@ end
 
 NSI.DefaultExternalAuraTrackingSpellIDs = {
     6940, -- Blessing of Sacrifice
-    1022, -- Blessing of Protection
-    204018, -- Blessing of Spellwarding
     47788, -- Guardian Spirit 1
     255312, -- Guardian Spirit 2
     102342, -- Ironbark
     116849, -- Life Cocoon
     357170, -- Time Dilation
+    53480, -- Roar of Sacrifice
+}
+
+NSI.DefaultExternalAuraTrackingImmunitySpellIDs = {
+    1022, -- Blessing of Protection
+    204018, -- Blessing of Spellwarding
     642, -- Divine Shield
     186265, -- Turtle
     196555, -- Netherwalk
@@ -180,6 +184,9 @@ local function NormalizeAuraTrackingEntry(settings)
     settings.loadConditions.Classes = settings.loadConditions.Classes or {}
     settings.loadConditions.SpecIDs = settings.loadConditions.SpecIDs or {}
     settings.loadConditions.Names   = settings.loadConditions.Names   or {}
+    if settings.builtin == "External" and settings.IncludeImmunities == nil then
+        settings.IncludeImmunities = true
+    end
 end
 
 -- One-time-safe migration: stamp built-in markers/names, ensure the Groups
@@ -556,7 +563,21 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
         return ParseAuraTrackingSpellIDs(settings and settings.SpellIDs)
     end
     if settingsKey == "External" then
-        return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+        local spellIDs = ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+        if not settings or settings.IncludeImmunities then
+            local seen = {}
+            for _, spellID in ipairs(spellIDs) do
+                seen[spellID] = true
+            end
+            for _, spellID in ipairs(ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingImmunitySpellIDs)) do
+                if not seen[spellID] then
+                    spellIDs[#spellIDs + 1] = spellID
+                    seen[spellID] = true
+                end
+            end
+            table.sort(spellIDs)
+        end
+        return spellIDs
     end
     if settingsKey == "PlayerBuffWhitelist" then
         return ParseAuraTrackingSpellIDs(NSI.DefaultPlayerAuraTrackingSpellIDs)

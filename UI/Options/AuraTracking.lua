@@ -739,6 +739,11 @@ local function BuildAuraTrackingUI(screen)
                 tooltip = tip("Show Whitelisted Buffs", "Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."),
                 get = function() return s.ShowWhitelistedPlayerBuffs end, set = function(_, v) s.ShowWhitelistedPlayerBuffs = v; apply(key) end })
         end
+        if key == "External" then
+            add({ Type = "Checkbox", label = "Include Immunities",
+                tooltip = tip("Include Immunities", "Also tracks hardcoded immunity buffs in this display."),
+                get = function() return s.IncludeImmunities end, set = function(_, v) s.IncludeImmunities = v; apply(key) end })
+        end
 
         add({ Type = "Label", text = "Text Style" })
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
