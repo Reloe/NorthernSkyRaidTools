@@ -671,6 +671,8 @@ L["Hide auras with no duration or a duration longer than 24 hours. Effectively h
 L["Hide auras with no duration or a duration longer than 3 minutes."] = "Скрывать ауры без длительности или с длительностью более 3-х минут."
 L["Show Whitelisted Buffs"] = "Показывать баффы из белого списка"
 L["Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."] = "Также показывает набор жёстко заданных разрешённых баффов, которые важны для некоторых сражений."
+L["Include Immunities"] = "Учитывать иммунитеты"
+L["Also tracks hardcoded immunity buffs in this display."] = "Также отслеживает жёстко заданные баффы иммунитета в этом отображении."
 L["Hide Stack Text"] = "Скрыть текст стаков"
 L["Hide the stack count text on tracked auras."] = "Скрыть текст количества стаков на отслеживаемых аурах."
 L["Enable Cooldown Swipe"] = "Включить затемнение перезарядки"
