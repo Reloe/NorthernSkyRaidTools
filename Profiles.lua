@@ -46,24 +46,24 @@ function NSI:ConvertPrivateAuraSettingsToAuraTracking()
     NSRT.AuraTrackingSettingsConverted = true
 end
 
-function NSI:ResetSeason2EncounterAlertsToDefaults()
-    if not self:IsMidnightS2() then return end
-    if type(self.Season2EncounterIDs) ~= "table" then return end
-
-    NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-    for _, encID in ipairs(self.Season2EncounterIDs) do
-        NSRT.EncounterAlerts[encID] = nil
-        if self.InitializeAlerts and self.InitializeAlerts[encID] then
-            self.InitializeAlerts[encID](self)
-        end
-    end
-    self:FireCallback("NSRT_ALERT_FULL_UPDATE")
-end
-
 function NSI:RunProfileMigrations()
     local profileVersion = tonumber(NSRT.ProfileVersion) or 0
     if profileVersion < 1 then
-        self:ResetSeason2EncounterAlertsToDefaults()
+        if not self:IsMidnightS2() then return end
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        for _, encID in ipairs(self.Season2EncounterIDs) do
+            NSRT.EncounterAlerts[encID] = nil
+            if self.InitializeAlerts and self.InitializeAlerts[encID] then
+                self.InitializeAlerts[encID](self)
+            end
+        end
+        self:FireCallback("NSRT_ALERT_FULL_UPDATE")
+        if NSRT.PaceComparison and NSRT.PaceComparison.Bosses then
+            for _, encID in ipairs(self.Season2EncounterIDs) do
+                NSRT.PaceComparison.Bosses[encID] = nil
+            end
+            self:ApplyDefaultPaceComparisonData()
+        end
         NSRT.ProfileVersion = 1
     end
 end
@@ -377,15 +377,21 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
         },
         AuraTrackingSettings = {
             Player = self:CreateAuraTrackingSettingsDefaults({
+                Name = "Player Debuffs",
+                builtin = "Player",
                 ShowWhitelistedPlayerBuffs = true,
             }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
+                Name = "Co-Tank Debuffs",
+                builtin = "Tank",
                 GrowDirection = "LEFT",
                 xOffset = -549,
                 yOffset = -199,
                 NameEnabled = true,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
+                Name = "External & Immunity",
+                builtin = "External",
                 Width = 120,
                 Height = 120,
                 GrowDirection = "UP",
@@ -396,12 +402,16 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 HideStackText = true,
                 HideTooltip = true,
                 ShowDispelBorder = false,
+                IncludeImmunities = true,
                 NameEnabled = true,
                 NamePosition = "LEFT",
                 NameXOffset = 0,
                 NameYOffset = 0,
             }),
             Custom = {},
+            Groups = {
+                ["Built-in"] = { collapsed = false },
+            },
         },
         AuraTrackingSettingsConverted = false,
         AuraTrackingSelected = "Player",
@@ -545,7 +555,6 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
         end
     end
     self:ConvertPrivateAuraSettingsToAuraTracking()
-    self:MigrateAuraTrackingSettings()
     self:ApplyDefaultPaceComparisonData()
     self:RunProfileMigrations()
 end

@@ -655,6 +655,8 @@ L["Hide auras with no duration or a duration longer than 24 hours. Effectively h
 L["Hide auras with no duration or a duration longer than 3 minutes."] = "Hide auras with no duration or a duration longer than 3 minutes."
 L["Show Whitelisted Buffs"] = "Show Whitelisted Buffs"
 L["Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."] = "Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."
+L["Include Immunities"] = "Include Immunities"
+L["Also tracks hardcoded immunity buffs in this display."] = "Also tracks hardcoded immunity buffs in this display."
 L["Hide Stack Text"] = "Hide Stack Text"
 L["Hide the stack count text on tracked auras."] = "Hide the stack count text on tracked auras."
 L["Enable Cooldown Swipe"] = "Enable Cooldown Swipe"
