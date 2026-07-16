@@ -17,8 +17,8 @@ NSI.InitializeAlerts[encID] = function(self)
                 {56.1, 106.1, 156.1, 205.1}
             },
             [16] ={
-                {35.1, 64.2, 116.9, 146, 198.8, 227.9},
-                {56.1, 106.1, 156.1, 205.1}
+                {34, 70},
+                {50, 78}
             }
         },
     }
@@ -26,9 +26,14 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nek'zali", internalID = "Debuffs", name = "Essence Rend", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
         loadConditions = nonTankConditions, spellID = 1287434,
-        timers = {
-            [15] = {18.3, 76.5, 100.1, 158.3, 181.9},
-            [16] = {18.3, 76.5, 100.1, 158.3, 181.9},
+        phaseTimers = {
+            [15] = {
+                {18.3, 76.5, 100.1, 158.3, 181.9},
+            },
+            [16] = {
+                {20, 60.5, 91},
+                {54},
+            },
         },
     }
     self:AddEncounterAlert(data)
@@ -37,7 +42,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1293664,
         timers = {
             [15] = {85.5, 167.35, 249.2},
-            [16] = {85.5, 167.35, 249.2},
+            [16] = {75.1},
         },
     }
     self:AddEncounterAlert(data)
@@ -45,7 +50,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "HungeringPyre", name = "Hungering Pyre", text = "Soak", DisplayType = "Text", encID = encID, phase = 1.5, TTS = true, dur = 7.5, spellID = 1289855,
         timers = {
             [15] = {58.7, 102.7},
-            [16] = {58.7, 102.7},
+            [16] = {41, 72},
         },
     }
     self:AddEncounterAlert(data)
@@ -57,8 +62,8 @@ NSI.InitializeAlerts[encID] = function(self)
                 {37, 87, 137, 187},
             },
             [16] = {
-                {45, 81.6, 118.3, 154.9, 191.5, 228.2},
-                {37, 87, 137, 187},
+                {45, 115},
+                {25, 65},
             },
         },
     }
@@ -73,24 +78,47 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nek'zali", internalID = "InvokeMythic", name = "Invoke", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 8, spellID = 1299673,
         timers = {
-            [16] = {22, 50, 72, 100, 122, 150, 172, 200, 222},
+            [16] = {15, 65, 95},
         },
     }
     self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
-    self:EncounterRegister("NekzaliPhaseDetect", "UNIT_SPELLCAST_CHANNEL_START", true, "boss1")
+    self.NekzaliBoss1SpellcastSucceededTimes = {}
+    self:EncounterRegister("NekzaliPhaseDetect", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_SUCCEEDED"}, true, "boss1")
     self:EncounterFunction("NekzaliPhaseDetect", function(_, e, unit)
+        local now = GetTime()
+        if e == "UNIT_SPELLCAST_SUCCEEDED" then
+            table.insert(self.NekzaliBoss1SpellcastSucceededTimes, now)
+            for i = #self.NekzaliBoss1SpellcastSucceededTimes, 1, -1 do
+                if now - self.NekzaliBoss1SpellcastSucceededTimes[i] > 2 then
+                    table.remove(self.NekzaliBoss1SpellcastSucceededTimes, i)
+                end
+            end
+            return
+        end
         if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
         local newPhase
         if self.Phase == 1 then
+            local hasSucceededInWindow = false
+            for _, timestamp in ipairs(self.NekzaliBoss1SpellcastSucceededTimes) do
+                local timeSinceSucceeded = now - timestamp
+                if timeSinceSucceeded >= 0.2 and timeSinceSucceeded <= 2 then
+                    hasSucceededInWindow = true
+                    break
+                end
+            end
+            if not hasSucceededInWindow then return end
             newPhase = 1.5
         elseif self.Phase == 1.5 then
             newPhase = 2
         end
         if not newPhase then return end
         self.Phase = newPhase
+        if newPhase == 1.5 then
+            self:EncounterRegister("NekzaliPhaseDetect", "UNIT_SPELLCAST_SUCCEEDED", false)
+        end
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
     end)
