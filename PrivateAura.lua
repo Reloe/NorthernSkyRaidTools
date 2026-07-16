@@ -88,8 +88,8 @@ NSI.AuraSoundCategories = {
             { spellID = 1305963, sound = "Debuff" }, -- Venomous Surge
             { spellID = 1285453, sound = "North" }, -- Raging Crosswinds South Debuff (so we tell player to go North)
             { spellID = 1285425, sound = "South" }, -- Raging Crosswinds North Debuff (so we tell player to go South)
-            { spellID = 1297096, sound = "West" }, -- Raging Crosswinds South Debuff (so we tell player to go East)
-            { spellID = 1297111, sound = "East" }, -- Raging Crosswinds North Debuff (so we tell player to go West)
+            { spellID = 1297096, sound = "West" }, -- Raging Crosswinds East Debuff (so we tell player to go West)
+            { spellID = 1297111, sound = "East" }, -- Raging Crosswinds West Debuff (so we tell player to go East)
             { spellID = 1305621, sound = "Targeted" }, -- Serpent's Fury
             { spellID = 1297707, sound = "Spread" }, -- Virulence
             { spellID = 1299899, sound = "Spread" }, -- Virulence - both debuffs are real, similar to Starsplinters
