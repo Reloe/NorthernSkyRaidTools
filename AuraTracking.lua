@@ -56,13 +56,17 @@ end
 
 NSI.DefaultExternalAuraTrackingSpellIDs = {
     6940, -- Blessing of Sacrifice
-    1022, -- Blessing of Protection
-    204018, -- Blessing of Spellwarding
     47788, -- Guardian Spirit 1
     255312, -- Guardian Spirit 2
     102342, -- Ironbark
     116849, -- Life Cocoon
     357170, -- Time Dilation
+    53480, -- Roar of Sacrifice
+}
+
+NSI.DefaultExternalAuraTrackingImmunitySpellIDs = {
+    1022, -- Blessing of Protection
+    204018, -- Blessing of Spellwarding
     642, -- Divine Shield
     186265, -- Turtle
     196555, -- Netherwalk
@@ -161,55 +165,6 @@ local function GetAuraTrackingCustomFrameLimit(settings, unit)
         end
     end
     return limit
-end
-
--- Fill any new per-entry fields that older saved entries may be missing.
--- Called for every entry (built-in and custom) during migration.
-local function NormalizeAuraTrackingEntry(settings)
-    if type(settings) ~= "table" then return end
-    if settings.Unit == nil then settings.Unit = "player" end
-    -- Anchor defaults to UIParent (empty previously meant the NSRT frame, which
-    -- is SetAllPoints(UIParent) — identical geometry, so this doesn't move anything).
-    if settings.CustomAnchorFrame == nil or settings.CustomAnchorFrame == "" then
-        settings.CustomAnchorFrame = "UIParent"
-    end
-    if type(settings.loadConditions) ~= "table" then
-        settings.loadConditions = {}
-    end
-    settings.loadConditions.Roles   = settings.loadConditions.Roles   or {}
-    settings.loadConditions.Classes = settings.loadConditions.Classes or {}
-    settings.loadConditions.SpecIDs = settings.loadConditions.SpecIDs or {}
-    settings.loadConditions.Names   = settings.loadConditions.Names   or {}
-end
-
--- One-time-safe migration: stamp built-in markers/names, ensure the Groups
--- table exists, and backfill new fields onto existing custom entries. Safe to
--- run every load (idempotent).
-function NSI:MigrateAuraTrackingSettings()
-    local root = NSRT and NSRT.AuraTrackingSettings
-    if not root then return end
-
-    root.Groups = root.Groups or {}
-    root.Groups[NSI.AuraTrackingBuiltinGroup] = root.Groups[NSI.AuraTrackingBuiltinGroup] or { collapsed = false }
-
-    for _, info in ipairs(NSI.AuraTrackingBuiltins) do
-        local entry = root[info.key]
-        if type(entry) == "table" then
-            entry.builtin = info.key
-            if entry.Name == nil or entry.Name == "" then
-                entry.Name = info.name
-            end
-            NormalizeAuraTrackingEntry(entry)
-            if info.key == "Player" and entry.ShowWhitelistedPlayerBuffs == nil then
-                entry.ShowWhitelistedPlayerBuffs = true
-            end
-        end
-    end
-
-    for _, entry in ipairs(root.Custom or {}) do
-        entry.builtin = nil
-        NormalizeAuraTrackingEntry(entry)
-    end
 end
 
 -- Canonical UI refresh hook. The Aura Tracking UI wires _RefreshAuraTrackingUI
@@ -556,7 +511,21 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
         return ParseAuraTrackingSpellIDs(settings and settings.SpellIDs)
     end
     if settingsKey == "External" then
-        return ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+        local spellIDs = ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingSpellIDs)
+        if not settings or settings.IncludeImmunities then
+            local seen = {}
+            for _, spellID in ipairs(spellIDs) do
+                seen[spellID] = true
+            end
+            for _, spellID in ipairs(ParseAuraTrackingSpellIDs(NSI.DefaultExternalAuraTrackingImmunitySpellIDs)) do
+                if not seen[spellID] then
+                    spellIDs[#spellIDs + 1] = spellID
+                    seen[spellID] = true
+                end
+            end
+            table.sort(spellIDs)
+        end
+        return spellIDs
     end
     if settingsKey == "PlayerBuffWhitelist" then
         return ParseAuraTrackingSpellIDs(NSI.DefaultPlayerAuraTrackingSpellIDs)
