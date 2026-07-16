@@ -474,10 +474,16 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             self.LuraRunesFrame:Hide()
         end
 
+        local validRuneTexts = {
+            T = true, Circle = true, Diamond = true, Triangle = true, Cross = true,
+            ["134635"] = true, ["236903"] = true, ["340528"] = true, ["351033"] = true, ["7242384"] = true,
+        }
+
         if not self.LuraRunesFrame then
             self.LuraRunesFrame = CreateFrame("Frame", "nil", self.NSRTFrame, "BackdropTemplate")
         end
         self.LuraRunesFrame:SetScript("OnEvent", function(_, e, msg, ...)
+            if not validRuneTexts[msg] then return end
             if e == "CHAT_MSG_RAID" then
                 local sender = select(1, ...)
                 local senderGUID = select(11, ...)
