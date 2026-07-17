@@ -35,6 +35,8 @@ NSI.InitializeAlerts[encID] = function(self)
         [269] = true, -- Monk: Windwalker
         [270] = true, -- Monk: Mistweaver
     }
+    local rangedConditions = self:DefaultLoadConditions()
+    rangedConditions.Roles.RANGED = true
 
     local data = {group = "Scrollsage Abilities", internalID = "ShreddingShards", name = "Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         spellID = 1295854,
@@ -45,16 +47,16 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         phaseTimers = {
             [15] = {
-                {32},
-                {32, 94},
-                {32, 94},
-                {32, 94}
+                {30},
+                {30.5, 90.5},
+                {30.5, 90.5},
+                {30.5, 90.5},
             },
             [16] = {
-                {32},
-                {32, 94},
-                {32, 94},
-                {32, 94}
+                {30},
+                {30.5, 90.5},
+                {30.5, 90.5},
+                {30.5, 90.5},
             }
         },
     }
@@ -64,16 +66,16 @@ NSI.InitializeAlerts[encID] = function(self)
         spellID = 1296021,
         phaseTimers = {
             [15] = {
-                {19, 50},
-                {79, 110},
-                {79, 110},
-                {79, 110},
+                {17, 48},
+                {77, 108},
+                {77, 108},
+                {77, 108},
             },
             [16] = {
-                {19, 50},
-                {79, 110},
-                {79, 110},
-                {79, 110},
+                {17, 48},
+                {77, 108},
+                {77, 108},
+                {77, 108},
             }
         },
     }
@@ -84,15 +86,15 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {5, 23, 38},
-                {5, 23, 38},
-                {5, 23, 38},
+                {8, 35},
+                {8, 35},
+                {8, 35},
             },
             [16] = {
                 {},
-                {5, 23, 38},
-                {5, 23, 38},
-                {5, 23, 38},
+                {8, 35},
+                {8, 35},
+                {8, 35},
             }
         },
     }
@@ -124,15 +126,15 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {13, 31, 48},
-                {13, 31, 48},
-                {13, 31, 48},
+                {17, 44},
+                {17, 44},
+                {17, 44},
             },
             [16] = {
                 {},
-                {13, 31, 48},
-                {13, 31, 48},
-                {13, 31, 48},
+                {17, 44},
+                {17, 44},
+                {17, 44},
             }
         },
     }
@@ -143,15 +145,15 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {10.9, 28.1, 43.2},
-                {10.9, 28.1, 43.2},
-                {10.9, 28.1, 43.2},
+                {7, 39},
+                {7, 39},
+                {7, 39},
             },
             [16] = {
                 {},
-                {10.9, 28.1, 43.2},
-                {10.9, 28.1, 43.2},
-                {10.9, 28.1, 43.2},
+                {7, 39},
+                {7, 39},
+                {7, 39},
             }
         },
     }
@@ -162,15 +164,15 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {17.6, 37.6, 56.6},
-                {17.6, 37.6, 56.6},
-                {17.6, 37.6, 56.6},
+                {17.6, 47.6},
+                {17.6, 47.6},
+                {17.6, 47.6},
             },
             [16] = {
                 {},
-                {17.6, 37.6, 56.6},
-                {17.6, 37.6, 56.6},
-                {17.6, 37.6, 56.6},
+                {17.6, 47.6},
+                {17.6, 47.6},
+                {17.6, 47.6},
             }
         },
     }
@@ -197,6 +199,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Trader Abilities", internalID = "MushroomBait", name = "Mushroom Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 7,
         isConditional = TraderConditional, spellID = 1292105,
+        loadConditions = rangedConditions,
         phaseTimers = {
             [15] = {
                 {},
@@ -238,15 +241,15 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {37, 67},
-                {37, 67},
-                {37, 67},
+                {36, 67},
+                {36, 67},
+                {36, 67},
             },
             [16] = {
                 {},
-                {37, 67},
-                {37, 67},
-                {37, 67},
+                {36, 67},
+                {36, 67},
+                {36, 67},
             }
         },
     }
@@ -263,11 +266,9 @@ NSI.InitializeAlerts[encID] = function(self)
                 {61},
                 {121},
                 {121},
-                {121},
             },
             [16] = {
                 {61},
-                {121},
                 {121},
                 {121},
             }
@@ -282,11 +283,9 @@ NSI.InitializeAlerts[encID] = function(self)
                 {61},
                 {121},
                 {121},
-                {121},
             },
             [16] = {
                 {61},
-                {121},
                 {121},
                 {121},
             }
@@ -328,7 +327,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     for _, timelineInfo in ipairs(self.Timelines) do
         if now < timelineInfo.timestamp + 0.3 then
             addedcount = addedcount + 1
-            if ApproximatelyEqual(timelineInfo.duration, 11, 0.2) or ApproximatelyEqual(timelineInfo.duration, 13, 0.2) then
+            if ApproximatelyEqual(timelineInfo.duration, 17, 0.2) or ApproximatelyEqual(timelineInfo.duration, 11, 0.2) or ApproximatelyEqual(timelineInfo.duration, 13, 0.2) then
                 hasRequiredDuration = true
             end
         end
