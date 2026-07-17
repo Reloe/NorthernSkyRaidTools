@@ -157,7 +157,6 @@ local function BuildAuraTrackingUI(screen)
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
     local nameEntry, groupDD, enabledCB, anchorEntry
-    local StartFramePicker
 
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
@@ -640,11 +639,8 @@ local function BuildAuraTrackingUI(screen)
             end
             s.CustomAnchorFrame = v; apply(selectedKey)
         end,
-        rightW - 120, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry")
+        rightW, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry")
     anchorEntry:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -18)
-
-    local pickBtn = CreateLocalizedButton(displayF, "Pick", function() StartFramePicker() end, 100, 22, "NSUIAuraTrackPick")
-    pickBtn:SetPoint("LEFT", anchorEntry.frame, "RIGHT", 8, 0)
 
     -- ── Definition builders (Display / Trigger via BuildWidgets) ─────
     local function BuildDisplayDefs(s, key)
@@ -1350,84 +1346,6 @@ local function BuildAuraTrackingUI(screen)
         enabledCB:SetValue(settings.enabled)
         SelectInnerTab(activeTab)
         RebuildList()
-    end
-
-    -- ========================================================================
-    -- Frame picker — live-updates the anchor text as you hover; click confirms.
-    -- ========================================================================
-    local pickerOverlay, pickerOriginal, pickerLastName
-    local function IsNSUIDescendant(f)
-        local cur = f
-        while cur do if cur == NSUI then return true end cur = cur:GetParent() end
-        return false
-    end
-    local function FrameUnderMouse()
-        local foci
-        if GetMouseFoci then foci = GetMouseFoci()
-        elseif GetMouseFocus then local f = GetMouseFocus(); foci = f and { f } or nil end
-        for _, f in ipairs(foci or {}) do
-            if f ~= pickerOverlay and f.GetName and f:GetName() and not IsNSUIDescendant(f) then
-                return f
-            end
-        end
-    end
-
-    StartFramePicker = function()
-        if not selectedKey then return end
-        local settings = NSI:GetAuraTrackingSettings(selectedKey)
-        if not settings then return end
-        pickerOriginal = settings.CustomAnchorFrame or "UIParent"
-        pickerLastName = nil
-
-        if not pickerOverlay then
-            pickerOverlay = CreateFrame("Button", "NSUIAuraTrackFramePicker", UIParent)
-            pickerOverlay:SetAllPoints(UIParent)
-            pickerOverlay:SetFrameStrata("FULLSCREEN_DIALOG")
-            pickerOverlay:EnableMouse(true)
-            pickerOverlay:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-            local bg = pickerOverlay:CreateTexture(nil, "BACKGROUND")
-            bg:SetAllPoints(); bg:SetColorTexture(0, 0.6, 1, 0.06)
-            pickerOverlay.label = pickerOverlay:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(pickerOverlay.label, 16, "OUTLINE")
-            pickerOverlay.label:SetPoint("CENTER", UIParent, "CENTER", 0, 220)
-            pickerOverlay.hint = pickerOverlay:CreateFontString(nil, "OVERLAY")
-            NSI:SetUIFont(pickerOverlay.hint, 13, "OUTLINE")
-            pickerOverlay.hint:SetTextColor(0.8, 0.8, 0.8, 1)
-            pickerOverlay.hint:SetPoint("TOP", pickerOverlay.label, "BOTTOM", 0, -6)
-            pickerOverlay.hint:SetText(NSI:Loc("Left-click to confirm, right-click or Escape to cancel."))
-        end
-
-        local function Finish() pickerOverlay:SetScript("OnUpdate", nil); pickerOverlay:EnableKeyboard(false); pickerOverlay:Hide() end
-        local function ApplyName(name)
-            local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
-            if not s then return end
-            s.CustomAnchorFrame = name
-            anchorEntry:SetValue(name)
-            apply(selectedKey)
-        end
-
-        pickerOverlay:SetScript("OnUpdate", function()
-            local f = FrameUnderMouse()
-            local n = f and f:GetName()
-            if n and n ~= pickerLastName then
-                pickerLastName = n
-                ApplyName(n)
-                pickerOverlay.label:SetText("|cFF00FFFF" .. n .. "|r")
-            elseif not n then
-                pickerOverlay.label:SetText(NSI:Loc("Hover over a frame..."))
-            end
-        end)
-        pickerOverlay:SetScript("OnClick", function(_, button)
-            if button == "RightButton" then ApplyName(pickerOriginal) end
-            Finish()
-        end)
-        pickerOverlay:SetScript("OnKeyDown", function(self, key)
-            if key == "ESCAPE" then self:SetPropagateKeyboardInput(false); ApplyName(pickerOriginal); Finish()
-            else self:SetPropagateKeyboardInput(true) end
-        end)
-        pickerOverlay:EnableKeyboard(true)
-        pickerOverlay:SetPropagateKeyboardInput(true)
-        pickerOverlay:Show()
     end
 
     -- ========================================================================
