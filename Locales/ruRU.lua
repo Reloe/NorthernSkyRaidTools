@@ -663,6 +663,7 @@ L["Default uses Blizzard's aura order. Long Duration first shows the longest rem
 L["Hide tooltips on mouseover. The frame will be clickthrough regardless."] = "Скрывать подсказки при наведении мыши. Фрейм в любом случае будет кликабельным насквозь."
 L["Border Size"] = "Размер рамки"
 L["Size of the black border around tracked aura icons. Set to 0 to disable it."] = "Размер чёрной рамки вокруг иконок отслеживаемых аур. Установите 0, чтобы отключить её."
+L["Color of the border around tracked aura icons."] = "Цвет границы вокруг отслеживаемых иконок ауры."
 L["Show Dispel Border"] = "Показывать границу рассеивания"
 L["Show Blizzard's dispel-type border and icon on tracked auras."] = "Показывать границу и иконку типа рассеивания Blizzard на отслеживаемых аурах."
 L["Hide the duration text on tracked auras."] = "Скрыть текст длительности на отслеживаемых аурах."
