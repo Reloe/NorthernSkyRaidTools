@@ -647,6 +647,7 @@ L["Default uses Blizzard's aura order. Long Duration first shows the longest rem
 L["Hide tooltips on mouseover. The frame will be clickthrough regardless."] = "隐藏鼠标悬停时的提示信息（此框体将始终可以点击穿透）。"
 L["Border Size"] = "边框尺寸"
 L["Size of the black border around tracked aura icons. Set to 0 to disable it."] = "设置光环追踪图标的黑色边框尺寸（0 = 禁用）。"
+L["Color of the border around tracked aura icons."] = "选择光环追踪图标的边框颜色。"
 L["Show Dispel Border"] = "显示驱散边框"
 L["Show Blizzard's dispel-type border and icon on tracked auras."] = "显示光环追踪的暴雪驱散类型边框和图标。"
 L["Hide the duration text on tracked auras."] = "隐藏光环追踪的持续时间文本。"
