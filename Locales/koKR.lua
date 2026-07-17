@@ -643,6 +643,7 @@ L["Default uses Blizzard's aura order. Long Duration first shows the longest rem
 L["Hide tooltips on mouseover. The frame will be clickthrough regardless."] = "마우스를 올렸을 때 툴팁을 보이지 않습니다. 프레임은 클릭 방지 상태가 됩니다."
 L["Border Size"] = "테두리 크기"
 L["Size of the black border around tracked aura icons. Set to 0 to disable it."] = "추적된 오라 아이콘을 감싸는 검은색 테두리의 크기입니다. 0으로 설정하면 비활성화됩니다."
+L["Color of the border around tracked aura icons."] = "추적된 오라 아이콘을 감싸는 테두리의 색상입니다."
 L["Show Dispel Border"] = "해제 유형 테두리 표시"
 L["Show Blizzard's dispel-type border and icon on tracked auras."] = "추적된 오라 아이콘에 블리자드 기본 해제 유형 테두리를 표시합니다."
 L["Hide the duration text on tracked auras."] = "추적된 오라에 지속시간 텍스트를 숨깁니다."
