@@ -476,7 +476,7 @@ function NSI:UpdateRaidBuffFrame()
     end
     self.RaidBuffCheck.Title:SetText(L("[NSRT] Missing Raid Buffs"))
     local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
-    local SocialRaidFrame = self:IsMidnightS2() and SocialUIFrame and SocialUIFrame.RaidFrame and SocialUIFrame.RaidFrame:IsShown()
+    local SocialRaidFrame = self:IsMidnightS2() and SocialUIFrame and SocialUIFrame.RaidFrame and SocialUIFrame.RaidFrame:IsShown() and SocialUIFrame.RaidFrame
     if PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == nil then -- first time opening PVE frame, tab info is not yet available
         C_Timer.After(0.1, function() NSI:UpdateRaidBuffFrame() end)
         return
