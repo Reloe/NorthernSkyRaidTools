@@ -15,15 +15,15 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
+    local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8,
         textColors = {1, 0, 0, 1}, spellID = 1299684,
         isConditional = {
             text = "This Alert only shows if you are not a tank or have threat on boss1.",
             func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {23.1, 40.0, 60.0, 77.1, 103.1, 120.0, 140.0, 157.1},
-            [16] = {23.1, 40.0, 60.0, 77.1, 103.1, 120.0, 140.0, 157.1},
+            [15] = {23, 40.0, 60.0, 77.1, 108.1, 125, 145, 162.1},
+            [16] = {23, 40.0, 60.0, 77.1, 108.1, 125, 145, 162.1},
         },
     }
     self:AddEncounterAlert(data)
@@ -35,16 +35,16 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {23.6, 40.5, 60.5, 77.6, 103.6, 120.5, 140.5, 157.6},
-            [16] = {23.6, 40.5, 60.5, 77.6, 103.6, 120.5, 140.5, 157.6},
+            [15] = {23.6, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
+            [16] = {23.6, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P1", internalID = "P1Soak", name = "P1 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1283489,
         timers = {
-            [15] = {48.0, 128.0},
-            [16] = {48.0, 128.0},
+            [15] = {48.0, 133.0},
+            [16] = {48.0, 133.0},
         },
     }
     self:AddEncounterAlert(data)
@@ -101,11 +101,11 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+    local data = {group = "Coiled Altar P2", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         spellID = 1286399,
         timers = {
-            [15] = {13, 46, 98, 131, 183, 216},
-            [16] = {13, 46, 98, 131, 183, 216},
+            [15] = {18, 51, 103, 136, 188, 221},
+            [16] = {18, 51, 103, 136, 188, 221},
         },
     }
     self:AddEncounterAlert(data)
