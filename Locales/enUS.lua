@@ -647,6 +647,7 @@ L["Default uses Blizzard's aura order. Long Duration first shows the longest rem
 L["Hide tooltips on mouseover. The frame will be clickthrough regardless."] = "Hide tooltips on mouseover. The frame will be clickthrough regardless."
 L["Border Size"] = "Border Size"
 L["Size of the black border around tracked aura icons. Set to 0 to disable it."] = "Size of the black border around tracked aura icons. Set to 0 to disable it."
+L["Color of the border around tracked aura icons."] = "Color of the border around tracked aura icons."
 L["Show Dispel Border"] = "Show Dispel Border"
 L["Show Blizzard's dispel-type border and icon on tracked auras."] = "Show Blizzard's dispel-type border and icon on tracked auras."
 L["Hide the duration text on tracked auras."] = "Hide the duration text on tracked auras."

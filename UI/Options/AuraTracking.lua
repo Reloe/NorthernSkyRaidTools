@@ -715,6 +715,9 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
             tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
             get = function() return s.BorderSize end, set = function(_, v) s.BorderSize = v; apply(key) end })
+        add({ Type = "Color", label = "Border Color",
+            tooltip = tip("Border Color", "Color of the border around tracked aura icons."),
+            get = function() return unpack(s.BorderColor) end, set = function(_, r, g, b, a) s.BorderColor = {r, g, b, a}; apply(key) end })
         if key ~= "External" then
             add({ Type = "Checkbox", label = "Show Dispel Border",
                 tooltip = tip("Show Dispel Border", "Show Blizzard's dispel-type border and icon on tracked auras."),

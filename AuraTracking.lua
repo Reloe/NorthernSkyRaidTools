@@ -92,6 +92,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         yOffset = -100,
         FrameStrata = "MEDIUM",
         BorderSize = 1,
+        BorderColor = {0, 0, 0, 1},
         ShowDispelBorder = true,
         HideTooltip = false,
         HideDurationText = false,
@@ -629,6 +630,7 @@ local AuraTrackingStyleKeys = {
     "Height",
     "Zoom",
     "BorderSize",
+    "BorderColor",
     "ShowDispelBorder",
     "HideTooltip",
     "HideDurationText",
@@ -738,18 +740,17 @@ local function CreateAuraTrackingBorder(parent)
         left = parent:CreateTexture(nil, "OVERLAY"),
         right = parent:CreateTexture(nil, "OVERLAY"),
     }
-    for _, texture in pairs(border) do
-        texture:SetColorTexture(0, 0, 0, 1)
-    end
     return border
 end
 
-local function UpdateAuraTrackingBorder(border, parent, size)
+local function UpdateAuraTrackingBorder(border, parent, size, color)
     if not border then return end
     size = size or 1
+    color = color or {0, 0, 0, 1}
     local hidden = size <= 0
     for _, texture in pairs(border) do
         texture:ClearAllPoints()
+        texture:SetColorTexture(unpack(color))
         texture:SetShown(not hidden)
     end
     if hidden then return end
@@ -1005,7 +1006,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     if (settings.BorderSize or 0) > 0 and not regions.border then
         regions.border = CreateAuraTrackingBorder(button)
     end
-    UpdateAuraTrackingBorder(regions.border, button, settings.BorderSize)
+    UpdateAuraTrackingBorder(regions.border, button, settings.BorderSize, settings.BorderColor)
 
     if AuraTrackingWantsDispelBorder(settings, key) then
         if not regions.dispelOverlay then
@@ -1510,7 +1511,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
     if (settings.BorderSize or 0) > 0 and not frame.Border then
         frame.Border = CreateAuraTrackingBorder(frame)
     end
-    UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize)
+    UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize, settings.BorderColor)
 
     if ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index) then
         if not frame.DispelOverlay then
