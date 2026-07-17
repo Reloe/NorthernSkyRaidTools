@@ -58,12 +58,14 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "RestlessAmani", name = "Add-Spawn", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1295397,
         phaseTimers = {
             [15] = {
-                {45, 81.6, 118.3, 154.9, 191.5, 228.2},
-                {37, 87, 137, 187},
+                [1] = {43, 113},
+                [1.5] = {38, 68},
+                [2] = {23, 63},
             },
             [16] = {
-                {45, 115},
-                {25, 65},
+                [1] = {43, 113},
+                [1.5] = {38, 68},
+                [2] = {23, 63},
             },
         },
     }
