@@ -70,7 +70,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Waves", name = "Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1281908,
+    local data = {group = "Vashnik", internalID = "Waves", name = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1281908,
         timers = {
             [15] = {21.1, 62.1, 98.1, 146.1, 182.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
             [16] = {21.1, 62.1, 98.1, 146.1, 182.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
