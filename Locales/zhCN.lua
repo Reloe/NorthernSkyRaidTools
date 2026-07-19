@@ -881,7 +881,7 @@ L["You will need to get a compatible WA fork for this yourself. The buttons prov
 L["Heal Absorb WA"] = "治疗吸收"
 L["Link to a WA that shows the Heal Absorb on Raidframes."] = "在团队框体上显示治疗吸收量。"
 L["Alleria P1 Dmg Amp"] = "奥蕾莉亚P1伤害加成"
-L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = "在3个大怪的姓名板上显示伤害加成debuff的层数。某些情况下可能显示错误/不显示。"
+L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = "在3个大怪的姓名板上显示伤害加成debuff的层数。某些情况下可能会显示错误或不显示。"
 L["Lura Interrupts"] = "鲁拉打断"
 L["Interrupt WA for Lura P1."] = "鲁拉P1阶段打断。"
 -- ============================================================================
