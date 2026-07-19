@@ -35,20 +35,6 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
 end
 
 function NSI:ConvertPrivateAuraSettingsToAuraTracking()
-    NSRT.AuraTrackingSettings = NSRT.AuraTrackingSettings or {}
-    NSRT.AuraTrackingSettings.Player = NSRT.AuraTrackingSettings.Player or self:CreateAuraTrackingSettingsDefaults({
-        Name = "Player Debuffs",
-        builtin = "Player",
-        ShowWhitelistedPlayerBuffs = true,
-    })
-    NSRT.AuraTrackingSettings.Tank = NSRT.AuraTrackingSettings.Tank or self:CreateAuraTrackingSettingsDefaults({
-        Name = "Co-Tank Debuffs",
-        builtin = "Tank",
-        GrowDirection = "LEFT",
-        xOffset = -549,
-        yOffset = -199,
-        NameEnabled = true,
-    })
     if NSRT.PASounds then
         if NSRT.PASounds.UseDefaultPASounds ~= nil then
             NSRT.AuraSounds.UseDefaultRaidAuraSounds = NSRT.PASounds.UseDefaultPASounds
@@ -69,26 +55,12 @@ end
 function NSI:RunProfileMigrations()
     local profileVersion = tonumber(NSRT.ProfileVersion) or 0
     if profileVersion < 2 then
-        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-        for _, encID in ipairs(self.CurrentEncounterIDList) do
-            NSRT.EncounterAlerts[encID] = nil
-            if self.InitializeAlerts and self.InitializeAlerts[encID] then
-                self.InitializeAlerts[encID](self)
-            end
-        end
-        self:FireCallback("NSRT_ALERT_FULL_UPDATE")
-        if NSRT.PaceComparison and NSRT.PaceComparison.Bosses then
-            for _, encID in ipairs(self.CurrentEncounterIDList) do
-                NSRT.PaceComparison.Bosses[encID] = nil
-            end
-        end
-        NSRT.AuraSounds = {}
         self:ConvertPrivateAuraSettingsToAuraTracking()
         NSRT.ProfileVersion = 2
     end
 end
 
-function NSI:AddMissingDefaults(skipProfileMigrations)
+function NSI:AddMissingDefaults()
     local defaults = {
         -- Saved data tables (user-populated, empty by default)
         NickNames = {},
