@@ -476,7 +476,7 @@ function NSI:UpdateRaidBuffFrame()
     end
     self.RaidBuffCheck.Title:SetText(L("[NSRT] Missing Raid Buffs"))
     local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
-    local SocialRaidFrame = self:IsMidnightS2() and SocialUIFrame and SocialUIFrame.RaidFrame and SocialUIFrame.RaidFrame:IsShown() and SocialUIFrame.RaidFrame
+    local SocialRaidFrame = SocialUIFrame and SocialUIFrame.RaidFrame and SocialUIFrame.RaidFrame:IsShown() and SocialUIFrame.RaidFrame
     if PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == nil then -- first time opening PVE frame, tab info is not yet available
         C_Timer.After(0.1, function() NSI:UpdateRaidBuffFrame() end)
         return
@@ -543,7 +543,7 @@ PVEFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-if NSI:IsMidnightS2() and SocialUIFrame and SocialUIFrame.RaidFrame then
+if SocialUIFrame and SocialUIFrame.RaidFrame then
     SocialUIFrame.RaidFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
     SocialUIFrame.RaidFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
 else

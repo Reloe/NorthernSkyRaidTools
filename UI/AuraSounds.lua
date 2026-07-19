@@ -41,240 +41,6 @@ local function build_sound_dropdown()
     return t
 end
 
-local function BuildPASoundEditUI()
-    local PASound_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, T("Private Aura Sounds"), "PASoundEditFrame", {
-        DontRightClickClose = true
-    })
-    ApplyUIFont(PASound_edit_frame.Title, 12)
-    PASound_edit_frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-
-    local function PrepareData(data)
-        local data = {}
-        for spellID, info in pairs(NSRT.PASounds) do
-            if spellID and type(info) == "table" and info.sound then
-                local spell = C_Spell.GetSpellInfo(spellID)
-                if spell then
-                    tinsert(data, {sound = info.sound, spellID = spellID, name = spell.name})
-                end
-            end
-        end
-        table.sort(data, function(a, b)
-            return a.name < b.name
-        end)
-        return data
-    end
-
-    local function MasterRefresh(self)
-        local data = PrepareData()
-        self:SetData(data)
-        self:Refresh()
-    end
-
-    function NSI:RefreshPASoundEditUI()
-        PASound_edit_frame.scrollbox:MasterRefresh()
-    end
-
-    local function refresh(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local index = i + offset
-            local Data = data[index]
-            if Data and Data.sound then
-                local line = self:GetLine(i)
-
-                line.name.text = Data.name
-                line.spellID = Data.spellID
-                line.spellIDText.text = Data.spellID
-                line.sound = Data.sound
-                line.texture = C_Spell.GetSpellTexture(line.spellID)
-                line.sounddropdown:Select(line.sound)
-                line.spellIcon:SetTexture(line.texture)
-            end
-        end
-    end
-
-    local function createLineFunc(self, index)
-        local parent = self
-        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
-        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
-        line:SetSize(self:GetWidth() - 2, self.LineHeight)
-        DF:ApplyStandardBackdrop(line)
-
-        line.spellIcon = DF:CreateTexture(line, 134400, 18, 18)
-        line.spellIcon:SetPoint("LEFT", line, "LEFT", 5, 0)
-        line.spellIcon:SetScript("OnEnter", function(self)
-            local parent = self:GetParent()
-            if parent.spellID then
-                GameTooltip:SetOwner(self, "ANCHOR_CURSOR_RIGHT")
-                GameTooltip:SetSpellByID(parent.spellID)
-                GameTooltip:Show()
-            end
-        end)
-        line.spellIcon:SetScript("OnLeave", function()
-            GameTooltip:Hide()
-        end)
-
-        line.name = DF:CreateLabel(line, "")
-        line.name:SetPoint("LEFT", line.spellIcon, "RIGHT", 5, 0)
-        line.name:SetWidth(150)
-
-        line.spellIDText = DF:CreateLabel(line, "")
-        line.spellIDText:SetPoint("LEFT", line.name, "RIGHT", 5, 0)
-        line.spellIDText:SetWidth(60)
-
-        line.sounddropdown = DF:CreateDropDown(line, function() return build_sound_dropdown() end,
-            nil, 170)
-        line.sounddropdown:SetTemplate(options_dropdown_template)
-        line.sounddropdown:SetPoint("LEFT", line.spellIDText, "RIGHT", 5, 0)
-        line.sounddropdown:SetHook("OnOptionSelected", function(self, _, value)
-            local newValue = soundlist[value]
-            local oldValue = line.sound
-
-            if oldValue == newValue or not NSI:IsValidPASoundSpell(line.spellID) then return end
-            NSI:SavePASound(tonumber(line.spellID), newValue)
-
-            line.sound = newValue
-            parent:MasterRefresh()
-        end)
-
-        line.deleteButton = DF:CreateButton(line, function()
-            NSI:SavePASound(tonumber(line.spellID), nil)
-            self:SetData(NSRT.PASounds)
-            self:MasterRefresh()
-        end, 12, 12)
-        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-
-        line.deleteButton:GetNormalTexture():SetDesaturated(true)
-        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
-        line.deleteButton:GetPushedTexture():SetDesaturated(true)
-        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
-
-        return line
-    end
-
-    local scrollLines = 15
-    local PASound_edit_scrollbox = DF:CreateScrollBox(PASound_edit_frame, "$parentPASoundsEditScrollBox", refresh,
-        {},
-        445, 300, scrollLines, 20, createLineFunc)
-    PASound_edit_frame.scrollbox = PASound_edit_scrollbox
-    PASound_edit_scrollbox:SetPoint("TOPLEFT", PASound_edit_frame, "TOPLEFT", 10, -50)
-    PASound_edit_scrollbox.MasterRefresh = MasterRefresh
-    DF:ReskinSlider(PASound_edit_scrollbox)
-
-    for i = 1, scrollLines do
-        PASound_edit_scrollbox:CreateLine(createLineFunc)
-    end
-
-    local SpellName = DF:CreateLabel(PASound_edit_frame, T("Spell Name"), 11)
-    ApplyUIFont(SpellName, 11)
-    SpellName:SetPoint("TOPLEFT", PASound_edit_frame, "TOPLEFT", 40, -30)
-    SpellName:SetWidth(100)
-
-    local SpellID = DF:CreateLabel(PASound_edit_frame, T("Spell-ID"), 11)
-    ApplyUIFont(SpellID, 11)
-    SpellID:SetPoint("LEFT", SpellName, "RIGHT", 55, 0)
-    SpellID:SetWidth(70)
-
-    local Sound = DF:CreateLabel(PASound_edit_frame, T("Sound"), 11)
-    ApplyUIFont(Sound, 11)
-    Sound:SetWidth(120)
-    Sound:SetPoint("LEFT", SpellID, "RIGHT", 0, 0)
-
-    PASound_edit_scrollbox:SetScript("OnShow", function(self)
-        PASound_edit_frame:SetTitle(T("Private Aura Sounds"))
-        self:MasterRefresh()
-    end)
-
-    local label_width = 80
-    local NewSpellID = DF:CreateLabel(PASound_edit_frame, T("SpellID:"), 11)
-    ApplyUIFont(NewSpellID, 11)
-    NewSpellID:SetPoint("BOTTOMLEFT", PASound_edit_frame, "BOTTOMLEFT", 10, 50)
-    NewSpellID:SetWidth(label_width)
-
-    local NewSpellIDTextEntry = DF:CreateTextEntry(PASound_edit_frame, function() end, 120, 20)
-    NewSpellIDTextEntry:SetPoint("LEFT", NewSpellID, "RIGHT", -10, 0)
-    NewSpellIDTextEntry:SetTemplate(options_dropdown_template)
-
-    local NewSound = DF:CreateLabel(PASound_edit_frame, T("Sound:"), 11)
-    ApplyUIFont(NewSound, 11)
-    NewSound:SetPoint("LEFT", NewSpellIDTextEntry, "RIGHT", 10, 0)
-    NewSound:SetWidth(label_width)
-
-    local NewSoundDropdown = DF:CreateDropDown(PASound_edit_frame, function() return build_sound_dropdown() end,
-        nil, 120)
-    NewSoundDropdown:SetPoint("LEFT", NewSound, "RIGHT", -10, 0)
-    NewSoundDropdown:SetTemplate(options_dropdown_template)
-
-    local add_button = DF:CreateButton(PASound_edit_frame, function()
-        local spellID = NewSpellIDTextEntry:GetText()
-        local sound = soundlist[NewSoundDropdown:GetValue()]
-        if spellID and sound ~= "" then
-            NewSpellIDTextEntry:SetText("")
-            NewSoundDropdown:SetValue(nil)
-            spellID = tonumber(spellID)
-            if NSI:IsValidPASoundSpell(spellID) then
-                NSI:SavePASound(spellID, sound)
-            else
-                print(T("Your entered spellID does not appear to be a Private Aura."))
-            end
-            PASound_edit_scrollbox:MasterRefresh()
-
-        end
-    end, 60, 20, T("Add"))
-    ApplyUIFont(add_button, 12)
-    add_button:SetPoint("LEFT", NewSoundDropdown, "RIGHT", 10, 0)
-    add_button:SetTemplate(options_button_template)
-
-    local function DeleteAllPASounds(self)
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, T("Confirm Deleting ALL Private Aura Sounds"), "NSRTDeleteALLPASoundsPopup")
-        ApplyUIFont(popup.Title, 12)
-        popup:SetFrameStrata("FULLSCREEN_DIALOG")
-        popup:SetPoint("CENTER", UIParent, "CENTER")
-
-        local text = DF:CreateLabel(popup,
-            T("Are you sure you want to delete all \nPrivate Aura Sounds?"), 12, "orange")
-        ApplyUIFont(text, 12)
-        text:SetPoint("TOP", popup, "TOP", 0, -30)
-        text:SetJustifyH("CENTER")
-
-        local confirmButton = DF:CreateButton(popup, function()
-            for spellID, info in pairs(NSRT.PASounds) do
-                if info and type(info) == "table" and info.sound then
-                    NSI:AddPASound(spellID, nil)
-                end
-            end
-            NSRT.PASounds = {
-                UseDefaultPASounds = NSRT.PASounds.UseDefaultPASounds,
-                UseDefaultMPlusPASounds = NSRT.PASounds.UseDefaultMPlusPASounds
-            }
-            PASound_edit_scrollbox:MasterRefresh()
-            popup:Hide()
-        end, 100, 30, T("Confirm"))
-        ApplyUIFont(confirmButton, 12)
-        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
-        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
-        local cancelButton = DF:CreateButton(popup, function()
-            popup:Hide()
-        end, 100, 30, T("Cancel"))
-        ApplyUIFont(cancelButton, 12)
-        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
-        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
-        popup:Show()
-    end
-
-    local delete_all_button = DF:CreateButton(PASound_edit_frame, function()
-        DeleteAllPASounds(self)
-        PASound_edit_scrollbox:MasterRefresh()
-    end, 60, 20, T("Delete ALL"))
-    ApplyUIFont(delete_all_button, 12)
-    delete_all_button:SetPoint("BOTTOMRIGHT", PASound_edit_frame, "BOTTOMRIGHT", -10, 10)
-    delete_all_button:SetTemplate(options_button_template)
-
-    PASound_edit_frame:Hide()
-    return PASound_edit_frame
-end
-
 local function StripSoundColor(sound)
     if type(sound) ~= "string" then return sound end
     return sound:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
@@ -369,6 +135,22 @@ local function FindAuraSoundCategory(categoryType, categoryKey)
     end
 end
 
+local function GetAuraSoundDefaultEntryKey(spellID)
+    return NSI:GetAuraSoundKey(spellID, "player")
+end
+
+local function GetAuraSoundEntryInfo(entry)
+    local spellID = tonumber(type(entry) == "table" and entry.spellID or entry)
+    if not spellID then return end
+    local entryKey = type(entry) == "table" and entry.key or GetAuraSoundDefaultEntryKey(spellID)
+    local defaultSound = type(entry) == "table" and entry.sound or NSI:GetAuraSoundDefault(spellID)
+    return entryKey, spellID, defaultSound
+end
+
+local function CreateCustomAuraSoundKey(spellID)
+    return NSI:GetAuraSoundKey(spellID, "player")
+end
+
 local function BuildAuraSoundCategoryOptions(screen)
     local options = {}
     local categoryType = screen.categoryType or "Raid"
@@ -405,35 +187,42 @@ local function PrepareAuraSoundData(screen)
 
     if category then
         for _, entry in ipairs(category.entries or {}) do
-            local spellID = type(entry) == "table" and entry.spellID or entry
-            local saved = NSRT.PASounds[spellID]
-            local defaultSound = type(entry) == "table" and entry.sound or NSI:GetAuraSoundDefault(spellID)
-            local useDefaultSounds = screen.categoryType == "Dungeons" and NSRT.PASounds.UseDefaultMPlusPASounds or NSRT.PASounds.UseDefaultPASounds
-            local sound = useDefaultSounds and defaultSound or nil
-            if type(saved) == "table" then
-                sound = saved.edited and saved.sound or sound
+            local rawSpellID = tonumber(type(entry) == "table" and entry.spellID or entry)
+            if rawSpellID then
+                local entryKey, spellID, defaultSound = GetAuraSoundEntryInfo(entry)
+                if entryKey then
+                    local saved = NSRT.AuraSounds[entryKey]
+                    local useDefaultSounds = screen.categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
+                    local sound = useDefaultSounds and defaultSound or nil
+                    if type(saved) == "table" and saved.edited then
+                        sound = saved.sound
+                    end
+                    local spell = C_Spell.GetSpellInfo(spellID)
+                    data[#data + 1] = {
+                        key = entryKey,
+                        spellID = spellID,
+                        name = spell and spell.name or ("Spell " .. spellID),
+                        sound = StripSoundColor(sound),
+                        defaultSound = StripSoundColor(defaultSound),
+                        isDefault = defaultSound ~= nil,
+                        edited = type(saved) == "table" and saved.edited,
+                        deleted = type(saved) == "table" and saved.edited and not saved.sound,
+                    }
+                    seen[entryKey] = true
+                end
             end
-            local spell = C_Spell.GetSpellInfo(spellID)
-            data[#data + 1] = {
-                spellID = spellID,
-                name = spell and spell.name or ("Spell " .. spellID),
-                sound = StripSoundColor(sound),
-                defaultSound = StripSoundColor(defaultSound),
-                isDefault = defaultSound ~= nil,
-                edited = type(saved) == "table" and saved.edited,
-                deleted = type(saved) == "table" and saved.edited and not saved.sound,
-            }
-            seen[spellID] = true
         end
     end
 
-    for spellID, info in pairs(NSRT.PASounds) do
+    for key, info in pairs(NSRT.AuraSounds) do
         if type(info) == "table" then
+            local spellID = tonumber(info.spellID)
             local uncategorizedCustom = screen.categoryType == "Custom" and screen.categoryKey == "custom" and not info.categoryType and not NSI:GetAuraSoundDefault(spellID)
             local matchesCategory = info.categoryType == screen.categoryType and info.categoryKey == screen.categoryKey
-            if (matchesCategory or uncategorizedCustom) and not seen[spellID] then
+            if spellID and (matchesCategory or uncategorizedCustom) and not seen[key] then
                 local spell = C_Spell.GetSpellInfo(spellID)
                 data[#data + 1] = {
+                    key = key,
                     spellID = spellID,
                     name = spell and spell.name or ("Spell " .. spellID),
                     sound = StripSoundColor(info.sound),
@@ -459,20 +248,20 @@ local function BuildAuraSoundsUI(parent)
     local firstRaidCategory = GetAuraSoundCategories("Raid")[1]
     screen.categoryKey = firstRaidCategory and firstRaidCategory.key
 
-    local function ResetSpellToDefault(spellID, defaultSound)
+    local function ResetSpellToDefault(entryKey, spellID, defaultSound)
         if not spellID then return end
-        NSRT.PASounds[spellID] = nil
-        local enabled = screen.categoryType == "Dungeons" and NSRT.PASounds.UseDefaultMPlusPASounds or NSRT.PASounds.UseDefaultPASounds
-        NSI:AddPASound(spellID, enabled and defaultSound or nil)
+        NSRT.AuraSounds[entryKey] = nil
+        local enabled = screen.categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
+        NSI:AddAuraSound(spellID, enabled and defaultSound or nil, entryKey)
     end
 
-    local function DeleteAuraSound(spellID, defaultSound)
+    local function DeleteAuraSound(entryKey, spellID, defaultSound)
         if not spellID then return end
         if defaultSound then
-            NSI:SavePASound(spellID, nil, screen.categoryType, screen.categoryKey)
+            NSI:SaveAuraSound(entryKey, spellID, nil, screen.categoryType, screen.categoryKey)
         else
-            NSRT.PASounds[spellID] = nil
-            NSI:AddPASound(spellID, nil)
+            NSRT.AuraSounds[entryKey] = nil
+            NSI:AddAuraSound(spellID, nil, entryKey)
         end
     end
 
@@ -482,22 +271,25 @@ local function BuildAuraSoundsUI(parent)
 
         if category then
             for _, entry in ipairs(category.entries or {}) do
-                local spellID = type(entry) == "table" and entry.spellID or entry
-                local defaultSound = type(entry) == "table" and entry.sound or NSI:GetAuraSoundDefault(spellID)
-                if spellID then
-                    categoryDefaults[spellID] = true
-                    ResetSpellToDefault(spellID, defaultSound)
+                local rawSpellID = tonumber(type(entry) == "table" and entry.spellID or entry)
+                if rawSpellID then
+                    local entryKey, spellID, defaultSound = GetAuraSoundEntryInfo(entry)
+                    if spellID then
+                        categoryDefaults[entryKey] = true
+                        ResetSpellToDefault(entryKey, spellID, defaultSound)
+                    end
                 end
             end
         end
 
-        for spellID, info in pairs(NSRT.PASounds) do
+        for key, info in pairs(NSRT.AuraSounds) do
             if type(info) == "table" then
+                local spellID = info.spellID
                 local uncategorizedCustom = screen.categoryType == "Custom" and screen.categoryKey == "custom" and not info.categoryType and not NSI:GetAuraSoundDefault(spellID)
                 local matchesCategory = info.categoryType == screen.categoryType and info.categoryKey == screen.categoryKey
-                if (matchesCategory or uncategorizedCustom) and not categoryDefaults[spellID] then
-                    NSRT.PASounds[spellID] = nil
-                    NSI:AddPASound(spellID, nil)
+                if spellID and (matchesCategory or uncategorizedCustom) and not categoryDefaults[key] then
+                    NSRT.AuraSounds[key] = nil
+                    NSI:AddAuraSound(spellID, nil, key)
                 end
             end
         end
@@ -506,14 +298,14 @@ local function BuildAuraSoundsUI(parent)
     end
 
     local function ResetAllAuraSounds()
-        for spellID, info in pairs(NSRT.PASounds) do
+        for key, info in pairs(NSRT.AuraSounds) do
             if type(info) == "table" then
-                NSRT.PASounds[spellID] = nil
-                NSI:AddPASound(spellID, nil)
+                NSRT.AuraSounds[key] = nil
+                NSI:AddAuraSound(info.spellID, nil, key)
             end
         end
-        NSI:ApplyDefaultPASounds(true, false, NSRT.PASounds.UseDefaultPASounds)
-        NSI:ApplyDefaultPASounds(true, true, NSRT.PASounds.UseDefaultMPlusPASounds)
+        NSI:ApplyDefaultAuraSounds(true, false, NSRT.AuraSounds.UseDefaultRaidAuraSounds)
+        NSI:ApplyDefaultAuraSounds(true, true, NSRT.AuraSounds.UseDefaultDungeonAuraSounds)
         screen.scrollbox:MasterRefresh()
     end
 
@@ -612,10 +404,10 @@ local function BuildAuraSoundsUI(parent)
     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
 
     local raidDefaultsCB = CreateCheckButton(screen, T("Use Default Raid Aura Sounds"), function()
-        return NSRT.PASounds.UseDefaultPASounds
+        return NSRT.AuraSounds.UseDefaultRaidAuraSounds
     end, function(_, value)
-        NSRT.PASounds.UseDefaultPASounds = value
-        NSI:ApplyDefaultPASounds(true, false, value)
+        NSRT.AuraSounds.UseDefaultRaidAuraSounds = value
+        NSI:ApplyDefaultAuraSounds(true, false, value)
         if screen.scrollbox then
             screen.scrollbox:MasterRefresh()
         end
@@ -627,10 +419,10 @@ local function BuildAuraSoundsUI(parent)
     NSI:SetUIFont(raidDefaultsCB.label, 11, "")
 
     local dungeonDefaultsCB = CreateCheckButton(screen, T("Use Default Dungeon Aura Sounds"), function()
-        return NSRT.PASounds.UseDefaultMPlusPASounds
+        return NSRT.AuraSounds.UseDefaultDungeonAuraSounds
     end, function(_, value)
-        NSRT.PASounds.UseDefaultMPlusPASounds = value
-        NSI:ApplyDefaultPASounds(true, true, value)
+        NSRT.AuraSounds.UseDefaultDungeonAuraSounds = value
+        NSI:ApplyDefaultAuraSounds(true, true, value)
         if screen.scrollbox then
             screen.scrollbox:MasterRefresh()
         end
@@ -651,13 +443,38 @@ local function BuildAuraSoundsUI(parent)
     resetAllButton:SetPoint("LEFT", GetUIObject(resetCategoryButton), "RIGHT", 8, 0)
     resetAllButton:SetTemplate(options_button_template)
 
-    local function refresh(scrollbox, data, offset, totalLines)
-        for i = 1, totalLines do
+    local scrollLines = 18
+
+    local function ClearLine(line)
+        if not line then return end
+        line.entryKey = nil
+        line.spellID = nil
+        line.defaultSound = nil
+        line.isDefault = nil
+        line.isActive = false
+        if line.name then line.name.text = "" end
+        if line.spellIDText then line.spellIDText.text = "" end
+        if line.defaultText then line.defaultText.text = "" end
+        if line.icon then line.icon:SetTexture(nil) end
+        line:Hide()
+    end
+
+    local function ShowLine(line)
+        line:Show()
+        line.isActive = true
+    end
+
+    local function refresh(scrollbox, data, offset)
+        for _, line in ipairs(scrollbox.Frames or {}) do
+            ClearLine(line)
+        end
+        for i = 1, scrollLines do
             local index = i + offset
             local rowData = data[index]
             if rowData then
                 local line = scrollbox:GetLine(i)
-                line:Show()
+                ShowLine(line)
+                line.entryKey = rowData.key
                 line.spellID = rowData.spellID
                 line.defaultSound = rowData.defaultSound
                 line.isDefault = rowData.isDefault
@@ -704,13 +521,15 @@ local function BuildAuraSoundsUI(parent)
         line.soundDropdown = DF:CreateDropDown(line, BuildAuraSoundDropdown, nil, 170, 20, nil, "$parentSoundDropdown", options_dropdown_template)
         line.soundDropdown:SetPoint("LEFT", GetUIObject(line.defaultText), "RIGHT", 5, 0)
         line.soundDropdown:SetHook("OnOptionSelected", function(_, _, value)
+            if not line.isActive or not line.entryKey or not line.spellID then return end
             local sound = value ~= "__NONE__" and value or nil
-            NSI:SavePASound(line.spellID, sound, screen.categoryType, screen.categoryKey)
+            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey)
             scrollbox:MasterRefresh()
         end)
 
         line.resetButton = DF:CreateButton(line, function()
-            ResetSpellToDefault(line.spellID, line.defaultSound)
+            if not line.isActive or not line.entryKey or not line.spellID then return end
+            ResetSpellToDefault(line.entryKey, line.spellID, line.defaultSound)
             scrollbox:MasterRefresh()
         end, 48, 18, T("Reset"))
         ApplyUIFont(line.resetButton, 11)
@@ -718,7 +537,8 @@ local function BuildAuraSoundsUI(parent)
         line.resetButton:SetTemplate(options_button_template)
 
         line.deleteButton = DF:CreateButton(line, function()
-            DeleteAuraSound(line.spellID, line.defaultSound)
+            if not line.isActive or not line.entryKey or not line.spellID then return end
+            DeleteAuraSound(line.entryKey, line.spellID, line.defaultSound)
             scrollbox:MasterRefresh()
         end, 52, 18, T("Delete"))
         ApplyUIFont(line.deleteButton, 11)
@@ -728,7 +548,6 @@ local function BuildAuraSoundsUI(parent)
         return line
     end
 
-    local scrollLines = 18
     local scrollbox = DF:CreateScrollBox(screen, "$parentAuraSoundScrollBox", refresh, {}, 820, 360, scrollLines, 20, createLine)
     screen.scrollbox = scrollbox
     scrollbox:SetPoint("TOPLEFT", GetUIObject(typeLabel), "BOTTOMLEFT", 0, -36)
@@ -738,7 +557,7 @@ local function BuildAuraSoundsUI(parent)
         self:Refresh()
     end
     for i = 1, scrollLines do
-        scrollbox:CreateLine(createLine)
+        ClearLine(scrollbox:CreateLine(createLine))
     end
 
     local newSpellLabel = DF:CreateLabel(screen, T("SpellID:"), 11)
@@ -761,7 +580,8 @@ local function BuildAuraSoundsUI(parent)
         local value = newSoundDropdown:GetValue()
         local sound = value ~= "__NONE__" and value or nil
         if not spellID or not sound then return end
-        NSI:SavePASound(spellID, sound, screen.categoryType, screen.categoryKey)
+        local entryKey = CreateCustomAuraSoundKey(spellID)
+        NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey)
         newSpellEntry:SetText("")
         newSoundDropdown:SetValue(nil)
         scrollbox:MasterRefresh()
@@ -776,7 +596,6 @@ end
 
 -- Export to namespace
 NSI.UI = NSI.UI or {}
-NSI.UI.PrivateAuras = {
-    BuildPASoundEditUI = BuildPASoundEditUI,
+NSI.UI.AuraSounds = {
     BuildAuraSoundsUI = BuildAuraSoundsUI,
 }

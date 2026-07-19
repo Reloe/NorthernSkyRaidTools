@@ -14,7 +14,7 @@
     <Script file="MidnightFalls.lua"/>
     <Script file="Rotmire.lua"/>
 
-    <!-- Midnight Season 2 -->
+    <!-- Midnight current raid -->
     <Script file="MidnightS2/NymrissaWavecaller.lua"/>
     <Script file="MidnightS2/NekzaliTheSoulcoiler.lua"/>
     <Script file="MidnightS2/EntombedSentinels.lua"/>

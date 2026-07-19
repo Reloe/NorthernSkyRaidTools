@@ -44,7 +44,7 @@ VersionCheck.lua
 SetupManager.lua
 CooldownCheck.lua
 ReadyCheck.lua
-PrivateAura.lua
+AuraSounds.lua
 AuraTracking.lua
 PaceComparison.lua
 QoL.lua
@@ -89,7 +89,7 @@ UI/Nicknames.lua
 UI/Reminders.lua
 UI/EncounterAlerts.lua
 UI/Cooldowns.lua
-UI/PrivateAuras.lua
+UI/AuraSounds.lua
 UI/General.lua
 UI/QoL.lua
 
@@ -100,7 +100,6 @@ UI/Options/Reminders.lua
 UI/Options/Assignments.lua
 UI/Options/InterruptDisplay.lua
 UI/Options/ReadyCheck.lua
-UI/Options/PrivateAuras.lua
 UI/Options/AuraTracking.lua
 UI/Options/PaceComparison.lua
 UI/Options/QoL.lua

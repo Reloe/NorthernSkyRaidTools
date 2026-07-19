@@ -17,11 +17,6 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
-function NSI:IsMidnightS2()
-    local build = select(4, GetBuildInfo())
-    return build >= 120100
-end
-
 function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
@@ -353,7 +348,7 @@ local Compress = LibStub("LibDeflate")
 -- Snapshot of the original locale strings before any override is applied.
 local _localeSnapshot = nil
 
-function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", "PASettings", ...}
+function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", ...}
     local str = ""
     local ExportTable = {}
     for k, Settings in pairs(SettingsTable) do

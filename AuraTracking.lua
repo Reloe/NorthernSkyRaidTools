@@ -688,7 +688,8 @@ function NSI:AddCustomAuraTracking(group)
         NSRT.AuraTrackingSettings.Groups[group] = NSRT.AuraTrackingSettings.Groups[group] or { collapsed = false }
     end
     local settingsKey = "Custom:" .. index
-    NSRT.AuraTrackingSelected = settingsKey
+    NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+    NSRT.AuraTrackingSettings.UI.Selected = settingsKey
     self:RefreshAuraTrackingUI()
     return settingsKey
 end
@@ -730,7 +731,8 @@ function NSI:DeleteCustomAuraTracking(settingsKey)
     local customIndex = tonumber(tostring(settingsKey or ""):match("^Custom:(%d+)$"))
     if not customIndex or not NSRT.AuraTrackingSettings.Custom then return end
     table.remove(NSRT.AuraTrackingSettings.Custom, customIndex)
-    NSRT.AuraTrackingSelected = "Player"
+    NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+    NSRT.AuraTrackingSettings.UI.Selected = "Player"
     self:InitAuraTracking()
     self:RefreshAuraTrackingUI()
 end
@@ -1521,21 +1523,17 @@ function NSI:ApplyPendingAuraTracking()
 end
 
 function NSI:InitAuraSystem(firstcall)
-    if self:IsMidnightS2() then
-        if firstcall then
-            self.PendingInitialAuraTracking = true
-            C_Timer.After(2, function()
-                if not self.PendingInitialAuraTracking then return end
-                self.PendingInitialAuraTracking = nil
-                self:InitAuraTracking(true)
-            end)
-            return
-        end
-        self.PendingInitialAuraTracking = nil
-        self:InitAuraTracking(true)
-    else
-        self:InitPrivateAuras(firstcall)
+    if firstcall then
+        self.PendingInitialAuraTracking = true
+        C_Timer.After(2, function()
+            if not self.PendingInitialAuraTracking then return end
+            self.PendingInitialAuraTracking = nil
+            self:InitAuraTracking(true)
+        end)
+        return
     end
+    self.PendingInitialAuraTracking = nil
+    self:InitAuraTracking(true)
 end
 
 local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)

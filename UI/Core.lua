@@ -280,25 +280,6 @@ local function build_fontflag_options()
     return t
 end
 
-local function build_PAgrowdirection_options(SettingName, SecondaryName)
-    local list = {"LEFT", "RIGHT", "UP", "DOWN"}
-    local t = {}
-    for i, v in ipairs(list) do
-        tinsert(t, {
-            label = NSI:Loc(v),
-            phraseId = v,
-            value = v,
-            onclick = function(_, _, value)
-                NSRT[SettingName][SecondaryName] = value
-                NSI:UpdatePADisplay(SettingName == "PASettings", SettingName == "PATankSettings")
-
-                if swapped then NSUI.MenuFrame:GetTabFrameByName("PrivateAura"):RefreshOptions() end
-            end
-        })
-    end
-    return t
-end
-
 local function build_raidframeicon_options()
     local list = {"TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT"}
     local t = {}
@@ -355,7 +336,6 @@ NSI.UI.Core = {
     build_media_options = build_media_options,
     build_growdirection_options = build_growdirection_options,
     build_fontflag_options = build_fontflag_options,
-    build_PAgrowdirection_options = build_PAgrowdirection_options,
     build_raidframeicon_options = build_raidframeicon_options,
     build_sound_dropdown = build_sound_dropdown,
     LDBIcon = LDBIcon,

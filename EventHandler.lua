@@ -77,16 +77,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitAuraSystem(true)
         self:UpdateLibSpecRegistration()
-        self:ApplyDefaultPASounds(false, false, NSRT.PASounds.UseDefaultPASounds)
-        self:ApplyDefaultPASounds(false, true, NSRT.PASounds.UseDefaultMPlusPASounds)
-        for spellID, info in pairs(NSRT.PASounds) do
-            if type(info) == "table" and info.sound then -- prevents user settings
-                self:AddPASound(spellID, info.sound)
-            end
-        end
+        self:RebuildAuraSounds(true)
         self:UpdateDebugLogEvents()
-        -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
-        if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         if NSRT.StoredSharedReminder then
             self.Reminder = NSRT.StoredSharedReminder
         else
@@ -270,6 +262,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "NSI_READY_CHECK" and internal then
         self:ApplyPendingAuraTracking()
+        self:RebuildAuraSounds()
         if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
             self:ProcessReminder()
             self:UpdateReminderFrame(true)

@@ -230,7 +230,13 @@ local function BuildAuraTrackingUI(screen)
     -- frame's right edge) stays inside the NSUI window instead of spilling past it.
     local tabScrollW  = rightW - 14
 
-    local selectedKey = nil
+    NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+    local selectedKey = NSRT.AuraTrackingSettings.UI.Selected
+    local function SetSelectedKey(key)
+        selectedKey = key
+        NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+        NSRT.AuraTrackingSettings.UI.Selected = key
+    end
     local searchText  = ""
 
     -- forward declarations
@@ -270,7 +276,7 @@ local function BuildAuraTrackingUI(screen)
             if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then
                 SelectEntry(selectedKey)
             else
-                selectedKey = nil
+                SetSelectedKey(nil)
                 rightPanel:Hide()
             end
         end)
@@ -464,7 +470,7 @@ local function BuildAuraTrackingUI(screen)
                     NSI:Loc("Delete Group with Auras"),
                     string.format(NSI:Loc("Delete group '%s' and all its auras?"), groupName),
                     NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
-                        selectedKey = nil; rightPanel:Hide()
+                        SetSelectedKey(nil); rightPanel:Hide()
                         NSI:DeleteAuraTrackingGroup(groupName, false)
                     end)
                 dlg:Show()
@@ -480,7 +486,7 @@ local function BuildAuraTrackingUI(screen)
                 NSI:DeleteCustomAuraTracking(settingsKey)
                 -- Custom entries are index-keyed; a delete reindexes later ones,
                 -- so drop the selection to avoid editing a stale entry.
-                selectedKey = nil; rightPanel:Hide(); RebuildList()
+                SetSelectedKey(nil); rightPanel:Hide(); RebuildList()
             end)
         dlg:Show()
     end
@@ -1432,9 +1438,9 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── SelectEntry ─────────────────────────────────────────────────────────
     SelectEntry = function(key)
-        selectedKey = key
+        SetSelectedKey(key)
         local settings = key and NSI:GetAuraTrackingSettings(key)
-        if not settings then rightPanel:Hide(); RebuildList(); return end
+        if not settings then SetSelectedKey(nil); rightPanel:Hide(); RebuildList(); return end
         rightPanel:Show()
         nameEntry:SetValue(settings.builtin and NSI:Loc(settings.Name or "") or (settings.Name or ""))
         nameEntry.editBox:SetEnabled(not settings.builtin)
@@ -1455,7 +1461,7 @@ local function BuildAuraTrackingUI(screen)
             if anchorEntry then anchorEntry:SetValue(NSI:GetAuraTrackingSettings(selectedKey).CustomAnchorFrame or "UIParent") end
             RebuildCurrentTab()
         elseif rightPanel then
-            selectedKey = nil; rightPanel:Hide()
+            SetSelectedKey(nil); rightPanel:Hide()
         end
     end
 
@@ -1471,6 +1477,9 @@ local function BuildAuraTrackingUI(screen)
     end
 
     RebuildList()
+    if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then
+        SelectEntry(selectedKey)
+    end
     return { screen = screen, RebuildList = RebuildList, SelectEntry = SelectEntry }
 end
 
