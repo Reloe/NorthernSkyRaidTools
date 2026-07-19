@@ -132,6 +132,77 @@ local detectedDurations = { -- Death Drop
     [16] = { { time = 6, phase = function(num) return num + 1 end } },
 }
 
+local function InitFeatherColorContainer(self, settings)
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    end
+
+    if not self.FeatherColorAuraContainer then
+        self.FeatherColorAuraContainer = CreateFrame("AuraContainer", "NSRTFeatherColorAuraContainer", self.NSRTFrame, "CustomAuraContainerTemplate")
+        self.FeatherColorAuraButtonRegions = {}
+    end
+
+    local container = self.FeatherColorAuraContainer
+    local groupKey = "NSRTBelorenFeatherColor"
+    local size = settings.Size or 100
+    local layout = {
+        elementWidth = size,
+        elementHeight = size,
+        elementSpacingX = 0,
+        elementSpacingY = 0,
+    }
+
+    container:SetEnabled(false)
+    container:Hide()
+    container:ClearAllPoints()
+    container:SetPoint(settings.Anchor or "CENTER", self.NSRTFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
+    container:SetSize(size, size)
+    container:SetUnit("player")
+    container:SetAuraLayoutAnchorPoint("CENTER")
+    container:SetAuraLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Down)
+    container:SetAuraLayoutRowWidth(size)
+
+    if container:HasAuraGroup(groupKey) then
+        container:SetAuraGroupMaxFrameCount(groupKey, 1)
+        container:SetAuraGroupLayout(groupKey, layout)
+        container:SetAuraGroupSortMethod(groupKey, AuraContainerSortMethod.ExpirationOnly, AuraContainerSortDirection.Reverse)
+    else
+        container:AddAuraGroup(groupKey, "HARMFUL|!PLAYER", {
+            maxFrameCount = 1,
+            sortMethod = AuraContainerSortMethod.ExpirationOnly,
+            sortDirection = AuraContainerSortDirection.Reverse,
+            initializeFrame = function(button)
+                self.FeatherColorAuraButtonRegions = self.FeatherColorAuraButtonRegions or {}
+                if not self.FeatherColorAuraButtonRegions[button] then
+                    local icon = button:CreateTexture(nil, "ARTWORK")
+                    icon:SetAllPoints(button)
+                    button:SetIcon(icon)
+                    self.FeatherColorAuraButtonRegions[button] = icon
+                end
+                button:SetSize(size, size)
+                button:ClearApplicationCount()
+                button:ClearDurationText()
+                button:ClearDurationCooldown()
+                button:ClearAuraBorder()
+                button:ClearAuraSymbol()
+                button:SetMouseMotionEnabled(false)
+            end,
+            layout = layout,
+        })
+    end
+
+    if not self:Restricted() and self.FeatherColorAuraButtonRegions then
+        for button, icon in pairs(self.FeatherColorAuraButtonRegions) do
+            button:SetSize(size, size)
+            icon:ClearAllPoints()
+            icon:SetAllPoints(button)
+        end
+    end
+
+    container:Show()
+    container:SetEnabled(true)
+end
+
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
     if e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) or (not self.EncounterID) or (not self.Phase) then return end
@@ -189,33 +260,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
             return
         end
 
-        self:EncounterRegister("BelorenFeather", "UNIT_AURA", true, "player")
-        self:EncounterFunction("BelorenFeather", function(_, e, unit, ...)
-            if e == "UNIT_AURA" then
-                local info = ...
-                if not info.addedAuras then return end
-
-                self.FeatherColorIconFrame:Hide()
-
-                -- all debuff aura instance IDs on us that we applied ourselves
-                local playerCastAuraInstanceIDsTest = {}
-                local playerCastAuraInstanceIDs = C_UnitAuras.GetUnitAuraInstanceIDs("player", "HARMFUL|PLAYER")
-                for _, auraInstanceID in ipairs(playerCastAuraInstanceIDs) do
-                    playerCastAuraInstanceIDsTest[auraInstanceID] = true
-                end
-
-                -- all debuff aura instance IDs on us, sorted by duration (infinite duration first)
-                local auras = C_UnitAuras.GetUnitAuras("player", "HARMFUL", 10, Enum.UnitAuraSortRule.ExpirationOnly, Enum.UnitAuraSortDirection.Reverse)
-                for _, aura in ipairs(auras) do
-                    -- first debuff we see that we didn't apply ourselves is probably the feather
-                    if not playerCastAuraInstanceIDsTest[aura.auraInstanceID] then
-                        self.FeatherColorIconFrame.texture:SetTexture(aura.icon)
-                        self.FeatherColorIconFrame:Show()
-                        return
-                    end
-                end
-            end
-        end)
+        self.FeatherColorIconFrame:Hide()
+        InitFeatherColorContainer(self, s)
     end
 
     if colorSwap and ((colorSwap.enabled and self:EvaluateLoad(colorSwap) and not preview) or (preview and preview == "Color Swap")) then
@@ -267,5 +313,9 @@ NSI.EncounterAlertStop[encID] = function(self, preview) -- on ENCOUNTER_END
             NSRT.EncounterAlerts[encID][14]["Feather Color"] = NSRT.EncounterAlerts[encID][16]["Feather Color"]
         end
         self.FeatherColorIconFrame:Hide()
+    end
+    if self.FeatherColorAuraContainer then
+        self.FeatherColorAuraContainer:SetEnabled(false)
+        self.FeatherColorAuraContainer:Hide()
     end
 end
