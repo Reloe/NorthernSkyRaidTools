@@ -1,4 +1,4 @@
-## Interface: 120007, 120100
+## Interface: 120100
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
