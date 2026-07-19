@@ -1,4 +1,6 @@
 local _, NSI = ...
+local LibSerialize = LibStub("AceSerializer-3.0")
+local LibDeflate = LibStub("LibDeflate")
 
 local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
@@ -731,6 +733,124 @@ function NSI:DeleteCustomAuraTracking(settingsKey)
     NSRT.AuraTrackingSelected = "Player"
     self:InitAuraTracking()
     self:RefreshAuraTrackingUI()
+end
+
+local AuraTrackingBuiltinKeys = {
+    Player = true,
+    Tank = true,
+    External = true,
+}
+
+local function EncodeAuraTrackingExport(payload)
+    local serialized = LibSerialize:Serialize(payload)
+    local compressed = serialized and LibDeflate:CompressDeflate(serialized)
+    return compressed and LibDeflate:EncodeForPrint(compressed) or ""
+end
+
+local function DecodeAuraTrackingExport(text)
+    local decoded = LibDeflate:DecodeForPrint(text or "")
+    local decompressed = decoded and LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return end
+    local success, data = LibSerialize:Deserialize(decompressed)
+    if success and type(data) == "table" then
+        return data
+    end
+end
+
+local function NormalizeAuraTrackingImport(settings, builtinKey, groupName)
+    if type(settings) ~= "table" then return end
+    local data = CopyTable(settings)
+    data.builtin = builtinKey or nil
+    data.group = builtinKey and nil or groupName or data.group
+    if builtinKey then
+        for _, info in ipairs(NSI.AuraTrackingBuiltins) do
+            if info.key == builtinKey then
+                data.Name = data.Name or info.name
+                break
+            end
+        end
+    else
+        data.Name = data.Name or "Imported Aura Tracking"
+    end
+    return NSI:CreateAuraTrackingSettingsDefaults(data)
+end
+
+function NSI:ExportAuraTrackingEntry(settingsKey)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if not settings then return "" end
+    local builtinKey = AuraTrackingBuiltinKeys[settingsKey] and settingsKey or nil
+    return EncodeAuraTrackingExport({
+        type = "NSRT_AURA_TRACKING",
+        version = 1,
+        entries = {
+            {
+                builtin = builtinKey,
+                settings = CopyTable(settings),
+            },
+        },
+    })
+end
+
+function NSI:ExportAuraTrackingGroup(groupName)
+    if not groupName then return "" end
+    local entries = {}
+    for _, item in ipairs(self:IterateAuraTrackingEntries()) do
+        if item.group == groupName then
+            entries[#entries + 1] = {
+                builtin = item.builtin,
+                settings = CopyTable(item.settings),
+            }
+        end
+    end
+    if #entries == 0 then return "" end
+    return EncodeAuraTrackingExport({
+        type = "NSRT_AURA_TRACKING",
+        version = 1,
+        group = groupName,
+        entries = entries,
+    })
+end
+
+function NSI:ImportAuraTrackingString(text)
+    local payload = DecodeAuraTrackingExport(text)
+    if not payload or payload.type ~= "NSRT_AURA_TRACKING" or type(payload.entries) ~= "table" then
+        return false
+    end
+
+    NSRT.AuraTrackingSettings = NSRT.AuraTrackingSettings or {}
+    local root = NSRT.AuraTrackingSettings
+    root.Custom = root.Custom or {}
+    root.Groups = root.Groups or {}
+
+    self:StopAllAuraTrackingPreviews()
+
+    local groupName = payload.group and strtrim(tostring(payload.group)) or nil
+    if groupName == "" or groupName == NSI.AuraTrackingBuiltinGroup then
+        groupName = nil
+    end
+
+    if groupName then
+        root.Groups[groupName] = root.Groups[groupName] or { collapsed = false }
+    end
+
+    local imported = 0
+    for _, entry in ipairs(payload.entries) do
+        local builtinKey = AuraTrackingBuiltinKeys[entry.builtin] and entry.builtin or nil
+        local settings = NormalizeAuraTrackingImport(entry.settings, builtinKey, groupName)
+        if settings then
+            if builtinKey then
+                root[builtinKey] = settings
+            else
+                root.Custom[#root.Custom + 1] = settings
+            end
+            imported = imported + 1
+        end
+    end
+
+    if imported == 0 then return false end
+    self:InitAuraTracking()
+    self:RefreshAuraTrackingUI()
+    return true, imported
 end
 
 local function CreateAuraTrackingBorder(parent)
