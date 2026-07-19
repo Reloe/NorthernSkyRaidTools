@@ -232,16 +232,61 @@ local function BuildAuraTrackingUI(screen)
 
     NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
     local selectedKey = NSRT.AuraTrackingSettings.UI.Selected
+    local autoPreviewKey
     local function SetSelectedKey(key)
         selectedKey = key
         NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
         NSRT.AuraTrackingSettings.UI.Selected = key
     end
+    local function IsExplicitPreviewActive(key)
+        return key and NSI[PreviewFlag(key)] == true
+    end
+    local function StopAutoPreview(key)
+        if key and autoPreviewKey == key and not IsExplicitPreviewActive(key) then
+            NSI:PreviewAuraTracking(key, false)
+        end
+        if autoPreviewKey == key then
+            autoPreviewKey = nil
+        end
+    end
+    local function StopPreview(key)
+        if key then
+            NSI[PreviewFlag(key)] = false
+            NSI:PreviewAuraTracking(key, false)
+        end
+        if autoPreviewKey == key then
+            autoPreviewKey = nil
+        end
+    end
+    local function SwitchAutoPreview(key)
+        if autoPreviewKey == key and not IsExplicitPreviewActive(key) then
+            StopAutoPreview(key)
+            return
+        end
+        if autoPreviewKey and autoPreviewKey ~= key then
+            StopAutoPreview(autoPreviewKey)
+        end
+        if key and autoPreviewKey ~= key and not IsExplicitPreviewActive(key) then
+            NSI:PreviewAuraTracking(key, true)
+            autoPreviewKey = key
+        end
+    end
+    NSI._StopAuraTrackingAutoPreview = function()
+        StopAutoPreview(autoPreviewKey)
+    end
+    if NSUI and not NSUI._AuraTrackingAutoPreviewOnHideHooked then
+        NSUI:HookScript("OnHide", function()
+            if NSI._StopAuraTrackingAutoPreview then
+                NSI._StopAuraTrackingAutoPreview()
+            end
+        end)
+        NSUI._AuraTrackingAutoPreviewOnHideHooked = true
+    end
     local searchText  = ""
 
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
-    local nameEntry, groupDD, enabledCB, anchorEntry
+    local nameEntry, groupDD, anchorEntry
 
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
@@ -284,6 +329,7 @@ local function BuildAuraTrackingUI(screen)
     importBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad + 24)
 
     local stopBtn = CreateLocalizedButton(screen, "Stop All Previews", function()
+        autoPreviewKey = nil
         NSI:StopAllAuraTrackingPreviews()
     end, leftWidth - pad * 2, 22, "NSUIAuraTrackStopPreview")
     stopBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
@@ -470,6 +516,7 @@ local function BuildAuraTrackingUI(screen)
                     NSI:Loc("Delete Group with Auras"),
                     string.format(NSI:Loc("Delete group '%s' and all its auras?"), groupName),
                     NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
+                        StopPreview(selectedKey)
                         SetSelectedKey(nil); rightPanel:Hide()
                         NSI:DeleteAuraTrackingGroup(groupName, false)
                     end)
@@ -483,6 +530,7 @@ local function BuildAuraTrackingUI(screen)
         local dlg = NSI.UI.Components.CreateDialog("NSRTAuraTrackDelete" .. tostring(settingsKey):gsub("%W", "_"),
             NSI:Loc("Delete Aura"), string.format(NSI:Loc("Delete '%s'?"), name or "?"),
             NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
+                StopPreview(settingsKey)
                 NSI:DeleteCustomAuraTracking(settingsKey)
                 -- Custom entries are index-keyed; a delete reindexes later ones,
                 -- so drop the selection to avoid editing a stale entry.
@@ -607,7 +655,6 @@ local function BuildAuraTrackingUI(screen)
                     local es = NSI:GetAuraTrackingSettings(sk)
                     if es then
                         es.enabled = v; NSI:InitAuraTracking()
-                        if selectedKey == sk and enabledCB then enabledCB:SetValue(v) end
                         RebuildList()
                     end
                 end)
@@ -683,21 +730,16 @@ local function BuildAuraTrackingUI(screen)
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
     groupDD:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
 
-    enabledCB = CreateCheckButton(rightPanel, NSI:Loc("Enabled"),
-        function() local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey); return s and s.enabled or false end,
-        function(_, v)
-            local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
-            if s then s.enabled = v; NSI:InitAuraTracking(); RebuildList() end
-        end, 90, 22, "NSUIAuraTrackEnabled")
-    enabledCB:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
-
-    local previewBtn = CreateLocalizedButton(rightPanel, "Preview", function()
+    local previewBtn = CreateLocalizedButton(rightPanel, "Lock Preview", function()
         if not selectedKey then return end
         local flag = PreviewFlag(selectedKey)
         NSI[flag] = not NSI[flag]
+        if NSI[flag] and autoPreviewKey == selectedKey then
+            autoPreviewKey = nil
+        end
         NSI:PreviewAuraTracking(selectedKey, NSI[flag])
-    end, 80, 22, "NSUIAuraTrackPreview")
-    previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, 0)
+    end, 110, 22, "NSUIAuraTrackPreview")
+    previewBtn:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local tabBtns, tabFrames, tabScroll = {}, {}, {}
@@ -719,7 +761,13 @@ local function BuildAuraTrackingUI(screen)
         tabFrames[name] = f
     end
 
-    local function apply(key) NSI:UpdateAuraTrackingDisplay(key) end
+    local function apply(key)
+        if autoPreviewKey == key and not IsExplicitPreviewActive(key) then
+            NSI:PreviewAuraTracking(key, true)
+        else
+            NSI:UpdateAuraTrackingDisplay(key)
+        end
+    end
 
     -- ── Fixed anchor row at the top of the Display tab ───────────────────────
     local displayF = tabFrames["Display"]
@@ -1437,17 +1485,19 @@ local function BuildAuraTrackingUI(screen)
     end
 
     -- ── SelectEntry ─────────────────────────────────────────────────────────
-    SelectEntry = function(key)
+    SelectEntry = function(key, shouldAutoPreview)
+        if shouldAutoPreview ~= false then
+            SwitchAutoPreview(key)
+        end
         SetSelectedKey(key)
         local settings = key and NSI:GetAuraTrackingSettings(key)
-        if not settings then SetSelectedKey(nil); rightPanel:Hide(); RebuildList(); return end
+        if not settings then StopAutoPreview(key); SetSelectedKey(nil); rightPanel:Hide(); RebuildList(); return end
         rightPanel:Show()
         nameEntry:SetValue(settings.builtin and NSI:Loc(settings.Name or "") or (settings.Name or ""))
         nameEntry.editBox:SetEnabled(not settings.builtin)
         nameEntry.editBox:SetAlpha(settings.builtin and 0.5 or 1)
         anchorEntry:SetValue(settings.CustomAnchorFrame or "UIParent")
         groupDD:Refresh()
-        enabledCB:SetValue(settings.enabled)
         SelectInnerTab(activeTab)
         RebuildList()
     end
@@ -1461,6 +1511,7 @@ local function BuildAuraTrackingUI(screen)
             if anchorEntry then anchorEntry:SetValue(NSI:GetAuraTrackingSettings(selectedKey).CustomAnchorFrame or "UIParent") end
             RebuildCurrentTab()
         elseif rightPanel then
+            StopAutoPreview(selectedKey)
             SetSelectedKey(nil); rightPanel:Hide()
         end
     end
@@ -1478,7 +1529,7 @@ local function BuildAuraTrackingUI(screen)
 
     RebuildList()
     if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then
-        SelectEntry(selectedKey)
+        SelectEntry(selectedKey, false)
     end
     return { screen = screen, RebuildList = RebuildList, SelectEntry = SelectEntry }
 end
