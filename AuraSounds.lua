@@ -214,6 +214,45 @@ function NSI:GetAuraSoundKey(spellID, unit)
     return tostring(spellID) .. ":" .. unit
 end
 
+function NSI:ResolveAuraSoundUnit(unit)
+    if type(unit) ~= "string" or unit == "" then
+        return "player"
+    end
+
+    unit = strtrim(unit)
+    if unit == "" then
+        return "player"
+    end
+
+    if unit == "player"
+        or unit == "target"
+        or unit == "targettarget"
+        or unit == "focus"
+        or unit == "focustarget"
+        or unit:match("^raid%d+$")
+        or unit:match("^party%d+$")
+        or unit:match("^boss%d+$")
+    then
+        return unit
+    end
+
+    local inputName, inputRealm = strsplit("-", unit)
+    if not inputName or inputName == "" then return end
+    inputName = Ambiguate(inputName, "none")
+    if inputRealm == "" then inputRealm = nil end
+    local _, playerRealm = UnitFullName("player")
+
+    for member in self:IterateGroupMembers() do
+        local name, realm = UnitFullName(member)
+        if name then
+            realm = realm or playerRealm
+            if (name == inputName or Ambiguate(name, "none") == inputName) and (not inputRealm or inputRealm == realm) then
+                return member
+            end
+        end
+    end
+end
+
 local function BuildAuraSoundDefaultList(categoryType)
     local list = {}
     for _, category in ipairs(NSI.AuraSoundCategories[categoryType] or {}) do
@@ -222,7 +261,7 @@ local function BuildAuraSoundDefaultList(categoryType)
                 list[#list + 1] = {
                     key = entry.key or NSI:GetAuraSoundKey(entry.spellID, "player"),
                     spellID = entry.spellID,
-                    unit = "player",
+                    unit = entry.unit or "player",
                     sound = entry.sound,
                 }
             end
@@ -279,7 +318,7 @@ function NSI:RebuildAuraSounds(updateDefaults)
     end
     for key, info in pairs(NSRT.AuraSounds) do
         if type(info) == "table" and info.sound then
-            self:AddAuraSound(info.spellID, info.sound, key)
+            self:AddAuraSound(info.spellID, info.sound, key, info.unit)
         end
     end
 end
@@ -288,14 +327,15 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit)
     spellID = tonumber(spellID)
     if not spellID then return end
     if self:Restricted() then return end
-    if not unit then unit = "player" end
-    entryKey = entryKey or self:GetAuraSoundKey(spellID, unit)
+    unit = self:ResolveAuraSoundUnit(unit)
 
     if not self.AuraSoundIDs then self.AuraSoundIDs = {} end
-    if self.AuraSoundIDs[entryKey] then
+    if entryKey and self.AuraSoundIDs[entryKey] then
         C_UnitAuras.RemoveAuraAppliedSound(self.AuraSoundIDs[entryKey])
         self.AuraSoundIDs[entryKey] = nil
     end
+    if not unit then return end
+    entryKey = entryKey or self:GetAuraSoundKey(spellID, unit)
     if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
     local soundPath = GetSoundPath(sound)
     if soundPath and soundPath ~= 1 then
@@ -321,28 +361,36 @@ function NSI:ApplyDefaultAuraSounds(changed, mplus, enabled) -- only registers/u
         if (not curSound) or (not curSound.edited) then -- only add default sound if user hasn't edited it prior
             if sound == "empty" then -- if sound is "empty" in the table I have marked it to be removed to clean up the table from old content
                 NSRT.AuraSounds[defaultInfo.key] = nil
-                if changed then self:AddAuraSound(spellID, nil, defaultInfo.key) end
+                if changed then self:AddAuraSound(spellID, nil, defaultInfo.key, defaultInfo.unit) end
             elseif spellID then
                 local appliedSound = enabled and ("|cFF4BAAC8"..sound.."|r") or nil
                 NSRT.AuraSounds[defaultInfo.key] = {spellID = spellID, unit = defaultInfo.unit or "player", sound = appliedSound, edited = false}
-                if changed then self:AddAuraSound(spellID, appliedSound, defaultInfo.key) end
+                if changed then self:AddAuraSound(spellID, appliedSound, defaultInfo.key, defaultInfo.unit) end
             end
         end
     end
 end
 
-function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey)
+function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, unit)
     spellID = tonumber(spellID)
     if not entryKey or not spellID then return end
-    local existing = NSRT.AuraSounds[entryKey]
-    NSRT.AuraSounds[entryKey] = {
+    local oldExisting = NSRT.AuraSounds[entryKey]
+    unit = unit or (type(oldExisting) == "table" and oldExisting.unit) or "player"
+    local saveKey = self:GetAuraSoundKey(spellID, unit)
+    local existing = NSRT.AuraSounds[saveKey] or oldExisting
+    if entryKey ~= saveKey then
+        NSRT.AuraSounds[entryKey] = nil
+        self:AddAuraSound(spellID, nil, entryKey)
+    end
+
+    NSRT.AuraSounds[saveKey] = {
         spellID = spellID,
-        unit = "player",
+        unit = unit,
         sound = sound,
         edited = true,
         categoryType = categoryType or (type(existing) == "table" and existing.categoryType) or nil,
         categoryKey = categoryKey or (type(existing) == "table" and existing.categoryKey) or nil,
     }
-    self:AddAuraSound(spellID, sound, entryKey)
+    self:AddAuraSound(spellID, sound, saveKey, unit)
 end
 

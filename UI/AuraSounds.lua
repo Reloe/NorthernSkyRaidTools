@@ -135,20 +135,21 @@ local function FindAuraSoundCategory(categoryType, categoryKey)
     end
 end
 
-local function GetAuraSoundDefaultEntryKey(spellID)
-    return NSI:GetAuraSoundKey(spellID, "player")
+local function GetAuraSoundDefaultEntryKey(spellID, unit)
+    return NSI:GetAuraSoundKey(spellID, unit or "player")
 end
 
 local function GetAuraSoundEntryInfo(entry)
     local spellID = tonumber(type(entry) == "table" and entry.spellID or entry)
     if not spellID then return end
-    local entryKey = type(entry) == "table" and entry.key or GetAuraSoundDefaultEntryKey(spellID)
+    local unit = type(entry) == "table" and entry.unit or "player"
+    local entryKey = type(entry) == "table" and entry.key or GetAuraSoundDefaultEntryKey(spellID, unit)
     local defaultSound = type(entry) == "table" and entry.sound or NSI:GetAuraSoundDefault(spellID)
-    return entryKey, spellID, defaultSound
+    return entryKey, spellID, defaultSound, unit
 end
 
-local function CreateCustomAuraSoundKey(spellID)
-    return NSI:GetAuraSoundKey(spellID, "player")
+local function CreateCustomAuraSoundKey(spellID, unit)
+    return NSI:GetAuraSoundKey(spellID, unit or "player")
 end
 
 local function BuildAuraSoundCategoryOptions(screen)
@@ -189,9 +190,10 @@ local function PrepareAuraSoundData(screen)
         for _, entry in ipairs(category.entries or {}) do
             local rawSpellID = tonumber(type(entry) == "table" and entry.spellID or entry)
             if rawSpellID then
-                local entryKey, spellID, defaultSound = GetAuraSoundEntryInfo(entry)
+                local entryKey, spellID, defaultSound, defaultUnit = GetAuraSoundEntryInfo(entry)
                 if entryKey then
                     local saved = NSRT.AuraSounds[entryKey]
+                    local unit = type(saved) == "table" and saved.unit or defaultUnit or "player"
                     local useDefaultSounds = screen.categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
                     local sound = useDefaultSounds and defaultSound or nil
                     if type(saved) == "table" and saved.edited then
@@ -202,6 +204,7 @@ local function PrepareAuraSoundData(screen)
                         key = entryKey,
                         spellID = spellID,
                         name = spell and spell.name or ("Spell " .. spellID),
+                        unit = unit,
                         sound = StripSoundColor(sound),
                         defaultSound = StripSoundColor(defaultSound),
                         isDefault = defaultSound ~= nil,
@@ -225,6 +228,7 @@ local function PrepareAuraSoundData(screen)
                     key = key,
                     spellID = spellID,
                     name = spell and spell.name or ("Spell " .. spellID),
+                    unit = info.unit or "player",
                     sound = StripSoundColor(info.sound),
                     defaultSound = nil,
                     isDefault = false,
@@ -252,13 +256,13 @@ local function BuildAuraSoundsUI(parent)
         if not spellID then return end
         NSRT.AuraSounds[entryKey] = nil
         local enabled = screen.categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
-        NSI:AddAuraSound(spellID, enabled and defaultSound or nil, entryKey)
+        NSI:AddAuraSound(spellID, enabled and defaultSound or nil, entryKey, "player")
     end
 
     local function DeleteAuraSound(entryKey, spellID, defaultSound)
         if not spellID then return end
         if defaultSound then
-            NSI:SaveAuraSound(entryKey, spellID, nil, screen.categoryType, screen.categoryKey)
+            NSI:SaveAuraSound(entryKey, spellID, nil, screen.categoryType, screen.categoryKey, "player")
         else
             NSRT.AuraSounds[entryKey] = nil
             NSI:AddAuraSound(spellID, nil, entryKey)
@@ -478,9 +482,11 @@ local function BuildAuraSoundsUI(parent)
                 line.spellID = rowData.spellID
                 line.defaultSound = rowData.defaultSound
                 line.isDefault = rowData.isDefault
+                line.unit = rowData.unit or "player"
                 line.name.text = rowData.name
                 line.spellIDText.text = rowData.spellID
                 line.defaultText.text = rowData.deleted and T("Deleted") or (rowData.edited and T("Edited") or T("Default"))
+                line.unitEntry.text = line.unit
                 line.icon:SetTexture(C_Spell.GetSpellTexture(rowData.spellID) or 134400)
                 line.sound = rowData.sound
                 line.soundDropdown:Select(rowData.deleted and "__NONE__" or (rowData.sound or "__NONE__"))
@@ -518,12 +524,23 @@ local function BuildAuraSoundsUI(parent)
         line.defaultText:SetPoint("LEFT", GetUIObject(line.spellIDText), "RIGHT", 5, 0)
         line.defaultText:SetWidth(60)
 
+        line.unitEntry = DF:CreateTextEntry(line, function(_, _, value)
+            if not line.isActive or not line.entryKey or not line.spellID then return end
+            line.unit = value ~= "" and value or "player"
+            local sound = line.soundDropdown:GetValue()
+            sound = sound ~= "__NONE__" and sound or nil
+            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey, line.unit)
+            scrollbox:MasterRefresh()
+        end, 80, 20)
+        line.unitEntry:SetTemplate(options_dropdown_template)
+        line.unitEntry:SetPoint("LEFT", GetUIObject(line.defaultText), "RIGHT", 5, 0)
+
         line.soundDropdown = DF:CreateDropDown(line, BuildAuraSoundDropdown, nil, 170, 20, nil, "$parentSoundDropdown", options_dropdown_template)
-        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.defaultText), "RIGHT", 5, 0)
+        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.unitEntry), "RIGHT", 5, 0)
         line.soundDropdown:SetHook("OnOptionSelected", function(_, _, value)
             if not line.isActive or not line.entryKey or not line.spellID then return end
             local sound = value ~= "__NONE__" and value or nil
-            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey)
+            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey, line.unit)
             scrollbox:MasterRefresh()
         end)
 
@@ -575,19 +592,31 @@ local function BuildAuraSoundsUI(parent)
     local newSoundDropdown = DF:CreateDropDown(screen, BuildAuraSoundDropdown, nil, 170, 20, nil, "$parentNewSoundDropdown", options_dropdown_template)
     newSoundDropdown:SetPoint("LEFT", GetUIObject(newSoundLabel), "RIGHT", 8, 0)
 
+    local newUnitLabel = DF:CreateLabel(screen, T("Unit"), 11)
+    ApplyUIFont(newUnitLabel, 11)
+    newUnitLabel:SetPoint("LEFT", GetUIObject(newSoundDropdown), "RIGHT", 12, 0)
+
+    local newUnitEntry = DF:CreateTextEntry(screen, function() end, 90, 20)
+    newUnitEntry:SetPoint("LEFT", GetUIObject(newUnitLabel), "RIGHT", 8, 0)
+    newUnitEntry:SetTemplate(options_dropdown_template)
+    newUnitEntry:SetText("player")
+
     local addButton = DF:CreateButton(screen, function()
         local spellID = tonumber(newSpellEntry:GetText())
         local value = newSoundDropdown:GetValue()
         local sound = value ~= "__NONE__" and value or nil
+        local unit = newUnitEntry:GetText()
+        unit = unit ~= "" and unit or "player"
         if not spellID or not sound then return end
-        local entryKey = CreateCustomAuraSoundKey(spellID)
-        NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey)
+        local entryKey = CreateCustomAuraSoundKey(spellID, unit)
+        NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey, unit)
         newSpellEntry:SetText("")
+        newUnitEntry:SetText("player")
         newSoundDropdown:SetValue(nil)
         scrollbox:MasterRefresh()
     end, 70, 20, T("Add"))
     ApplyUIFont(addButton, 11)
-    addButton:SetPoint("LEFT", GetUIObject(newSoundDropdown), "RIGHT", 10, 0)
+    addButton:SetPoint("LEFT", GetUIObject(newUnitEntry), "RIGHT", 10, 0)
     addButton:SetTemplate(options_button_template)
 
     scrollbox:MasterRefresh()
