@@ -128,6 +128,85 @@ local function EntryIcon(settingsKey, settings)
     return DEFAULT_ICON
 end
 
+local auraTrackingExportPopup
+local auraTrackingImportPopup
+
+local function ShowAuraTrackingExportPopup(text, label)
+    if not auraTrackingExportPopup then
+        auraTrackingExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Tracking") .. "|r",
+            "NSRTAuraTrackingExportPopup", { UseScaleBar = false })
+        auraTrackingExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        auraTrackingExportPopup:SetFrameLevel(100)
+
+        auraTrackingExportPopup.infoLabel = auraTrackingExportPopup:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(auraTrackingExportPopup.infoLabel, 13, "")
+        auraTrackingExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraTrackingExportPopup.infoLabel:SetPoint("TOPLEFT", auraTrackingExportPopup, "TOPLEFT", 10, -30)
+
+        auraTrackingExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraTrackingExportPopup, 280, 80, nil,
+            "NSRTAuraTrackingExportPopupTextBox", "$parentTextBox")
+        auraTrackingExportPopup.textbox:SetPoint("TOPLEFT", auraTrackingExportPopup, "TOPLEFT", 10, -50)
+        auraTrackingExportPopup.textbox:SetPoint("BOTTOMRIGHT", auraTrackingExportPopup, "BOTTOMRIGHT", -25, 40)
+        DF:ApplyStandardBackdrop(auraTrackingExportPopup.textbox)
+        DF:ReskinSlider(auraTrackingExportPopup.textbox.scroll)
+        auraTrackingExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        NSI:SetUIFont(auraTrackingExportPopup.textbox.editbox, 13, "OUTLINE")
+
+        local doneBtn = DF:CreateButton(auraTrackingExportPopup, function()
+            auraTrackingExportPopup:Hide()
+        end, 100, 20, NSI:Loc("Done"))
+        doneBtn:SetPoint("BOTTOM", auraTrackingExportPopup, "BOTTOM", 0, 10)
+    end
+
+    auraTrackingExportPopup.infoLabel:SetText(label or "")
+    auraTrackingExportPopup.textbox:SetText(text or "")
+    auraTrackingExportPopup.textbox:SetFocus()
+    auraTrackingExportPopup:Show()
+end
+
+local function ShowAuraTrackingImportPopup(onImport)
+    if not auraTrackingImportPopup then
+        auraTrackingImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Tracking") .. "|r",
+            "NSRTAuraTrackingImportPopup", { UseScaleBar = false })
+        auraTrackingImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        auraTrackingImportPopup:SetFrameLevel(100)
+
+        auraTrackingImportPopup.statusLabel = auraTrackingImportPopup:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(auraTrackingImportPopup.statusLabel, 13, "")
+        auraTrackingImportPopup.statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraTrackingImportPopup.statusLabel:SetPoint("TOPLEFT", auraTrackingImportPopup, "TOPLEFT", 10, -30)
+
+        auraTrackingImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraTrackingImportPopup, 280, 80, nil,
+            "NSRTAuraTrackingImportPopupTextBox", "$parentTextBox")
+        auraTrackingImportPopup.textbox:SetPoint("TOPLEFT", auraTrackingImportPopup, "TOPLEFT", 10, -50)
+        auraTrackingImportPopup.textbox:SetPoint("BOTTOMRIGHT", auraTrackingImportPopup, "BOTTOMRIGHT", -25, 40)
+        DF:ApplyStandardBackdrop(auraTrackingImportPopup.textbox)
+        DF:ReskinSlider(auraTrackingImportPopup.textbox.scroll)
+        auraTrackingImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        NSI:SetUIFont(auraTrackingImportPopup.textbox.editbox, 13, "OUTLINE")
+
+        local importBtn = DF:CreateButton(auraTrackingImportPopup, function()
+            local success, imported = NSI:ImportAuraTrackingString(auraTrackingImportPopup.textbox:GetText())
+            if success then
+                auraTrackingImportPopup:Hide()
+                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Aura Tracking display(s)."), imported or 0))
+                if auraTrackingImportPopup.onImport then
+                    auraTrackingImportPopup.onImport()
+                end
+            else
+                auraTrackingImportPopup.statusLabel:SetText("|cFFFF0000" .. NSI:Loc("Invalid Aura Tracking import string.") .. "|r")
+            end
+        end, 100, 20, NSI:Loc("Import"))
+        importBtn:SetPoint("BOTTOM", auraTrackingImportPopup, "BOTTOM", 0, 10)
+    end
+
+    auraTrackingImportPopup.onImport = onImport
+    auraTrackingImportPopup.statusLabel:SetText(NSI:Loc("Paste an Aura Tracking export string below and click Import."))
+    auraTrackingImportPopup.textbox:SetText("")
+    auraTrackingImportPopup.textbox:SetFocus()
+    auraTrackingImportPopup:Show()
+end
+
 local function ClassColor(class)
     local c = RAID_CLASS_COLORS and RAID_CLASS_COLORS[class]
     if c then return c.r, c.g, c.b end
@@ -183,7 +262,20 @@ local function BuildAuraTrackingUI(screen)
         local key = NSI:AddCustomAuraTracking()
         RebuildList(); SelectEntry(key)
     end, leftWidth - pad * 2, 22, "NSUIAuraTrackCreate")
-    createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad + 24)
+    createBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad + 48)
+
+    local importBtn = CreateLocalizedButton(screen, "Import", function()
+        ShowAuraTrackingImportPopup(function()
+            RebuildList()
+            if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then
+                SelectEntry(selectedKey)
+            else
+                selectedKey = nil
+                rightPanel:Hide()
+            end
+        end)
+    end, leftWidth - pad * 2, 22, "NSUIAuraTrackImport")
+    importBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad + 24)
 
     local stopBtn = CreateLocalizedButton(screen, "Stop All Previews", function()
         NSI:StopAllAuraTrackingPreviews()
@@ -192,7 +284,7 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Left: scroll list ───────────────────────────────────────────────────
     local scrollTop    = topY - 24 - 22 - 6
-    local scrollHeight = tab_content_height + scrollTop - pad - 48 - 6
+    local scrollHeight = tab_content_height + scrollTop - pad - 72 - 6
     local listW        = leftWidth - pad * 2
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackListScroll", screen, "UIPanelScrollFrameTemplate")
@@ -358,6 +450,9 @@ local function BuildAuraTrackingUI(screen)
         local items = {
             { type = "button", label = NSI:Loc("Enable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, true) end },
             { type = "button", label = NSI:Loc("Disable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, false) end },
+            { type = "button", label = NSI:Loc("Export Group"), fnc = function()
+                ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r"), groupName))
+            end },
         }
         if groupName ~= NSI.AuraTrackingBuiltinGroup then
             items[#items + 1] = { type = "separator" }
@@ -397,6 +492,9 @@ local function BuildAuraTrackingUI(screen)
 
         items[#items + 1] = { type = "button", label = s.pinned and NSI:Loc("Unpin") or NSI:Loc("Pin to Top"),
             fnc = function() NSI:SetAuraTrackingPinned(sk, not s.pinned) end }
+        items[#items + 1] = { type = "button", label = NSI:Loc("Export"), fnc = function()
+            ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingEntry(sk), string.format(NSI:Loc("Exporting Aura Tracking display: |cFF00FFFF%s|r"), s.Name or NSI:Loc("Unnamed")))
+        end }
 
         if not item.builtin then
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()

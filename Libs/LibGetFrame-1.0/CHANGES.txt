@@ -1,5 +1,35 @@
 Changes since tag 1.6.2
 
+commit 25cf3e6fbd119b7c380ae668b29d8774d8d431c2
+Author: EllesmereGaming <ellesmeregaming@gmail.com>
+Date:   Tue Jun 16 02:48:19 2026 -0400
+
+    Add EllesmereUI raid/party/unit frame support
+
+commit 8a9640644d73b929bd057c8f52f4068946bf9f5b
+Author: Reloe <Jerome.Bellefroid@gmail.com>
+Date:   Fri Apr 10 18:57:51 2026 +0200
+
+    add additional secretcheck and support for new dandersframes naming
+
+commit 6551b93a008a8788eac948d90105e47b514511e6
+Author: Reloe <Jerome.Bellefroid@gmail.com>
+Date:   Fri Jan 23 20:06:22 2026 +0100
+
+    move secret check to seperate function to not break classic wow
+
+commit aae0b84c95e3a768c6cd323c318892ca56473fbb
+Author: Reloe <Jerome.Bellefroid@gmail.com>
+Date:   Thu Jan 22 22:15:53 2026 +0100
+
+    Add secret value check to prevent errors in raid combat
+
+commit e0c9de731375034b1bf379bffb6cb80234c27360
+Author: Reloe <Jerome.Bellefroid@gmail.com>
+Date:   Thu Jan 22 06:20:32 2026 +0100
+
+    Add support for Danders Frames
+
 commit 0d449fa082e7e86c5c1c53a8e6f6d85d8ae260be
 Author: Buds <mrbouyou@gmail.com>
 Date:   Fri Aug 8 12:20:49 2025 +0200

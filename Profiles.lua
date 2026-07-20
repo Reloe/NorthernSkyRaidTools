@@ -579,6 +579,10 @@ local ignored = {
     ["CurrentProfile"]   = true,
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
+    ["AuraTrackingSettings"] = true,
+    ["AuraTrackingSettingsConverted"] = true,
+    ["AuraTrackingSelected"] = true,
+    ["AuraTrackingStyleCopySource"] = true,
 }
 
 function NSI:GetProfileKey()
