@@ -486,11 +486,16 @@ local function BuildAuraSoundsUI(parent)
                 line.name.text = rowData.name
                 line.spellIDText.text = rowData.spellID
                 line.defaultText.text = rowData.deleted and T("Deleted") or (rowData.edited and T("Edited") or T("Default"))
-                line.unitEntry.text = line.unit
+                line.unitEntry:SetText(line.unit)
+                if rowData.isDefault then
+                    line.unitEntry:Disable()
+                else
+                    line.unitEntry:Enable()
+                end
                 line.icon:SetTexture(C_Spell.GetSpellTexture(rowData.spellID) or 134400)
                 line.sound = rowData.sound
                 line.soundDropdown:Select(rowData.deleted and "__NONE__" or (rowData.sound or "__NONE__"))
-                GetUIObject(line.resetButton):SetShown(rowData.edited or not rowData.isDefault)
+                GetUIObject(line.resetButton):SetShown(rowData.isDefault and rowData.edited)
             end
         end
     end
@@ -526,6 +531,10 @@ local function BuildAuraSoundsUI(parent)
 
         line.unitEntry = DF:CreateTextEntry(line, function(_, _, value)
             if not line.isActive or not line.entryKey or not line.spellID then return end
+            if line.isDefault then
+                line.unitEntry:SetText(line.unit or "player")
+                return
+            end
             line.unit = value ~= "" and value or "player"
             local sound = line.soundDropdown:GetValue()
             sound = sound ~= "__NONE__" and sound or nil
@@ -536,7 +545,7 @@ local function BuildAuraSoundsUI(parent)
         line.unitEntry:SetPoint("LEFT", GetUIObject(line.defaultText), "RIGHT", 5, 0)
 
         line.soundDropdown = DF:CreateDropDown(line, BuildAuraSoundDropdown, nil, 170, 20, nil, "$parentSoundDropdown", options_dropdown_template)
-        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.unitEntry), "RIGHT", 5, 0)
+        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.unitEntry), "RIGHT", -1, 0)
         line.soundDropdown:SetHook("OnOptionSelected", function(_, _, value)
             if not line.isActive or not line.entryKey or not line.spellID then return end
             local sound = value ~= "__NONE__" and value or nil
