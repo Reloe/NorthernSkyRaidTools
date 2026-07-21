@@ -412,6 +412,8 @@ L["Show dropped consumable notifications for the selected number of seconds."] =
 L["Other QoL Things"] = "Other QoL Things"
 L["Check Vantus-Rune"] = "Check Vantus-Rune"
 L["Check the Vantus Rune status for all raid members."] = "Check the Vantus Rune status for all raid members."
+L["Add SpellID to Tooltips"] = "Add SpellID to Tooltips"
+L["Adds spell IDs to aura tooltips until the next logout or reload."] = "Adds spell IDs to aura tooltips until the next logout or reload."
 L["Auto-Repair"] = "Auto-Repair"
 L["Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs)."] = "Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs)."
 L["Auto-Invite on Whisper"] = "Auto-Invite on Whisper"
@@ -566,6 +568,10 @@ L["Reset Category"] = "Reset Category"
 L["Reset All"] = "Reset All"
 L["Confirm Resetting ALL Aura Sounds"] = "Confirm Resetting ALL Aura Sounds"
 L["Are you sure you want to reset all Aura Sounds?"] = "Are you sure you want to reset all Aura Sounds?"
+L["Event"] = "Event"
+L["Applied"] = "Applied"
+L["Removed"] = "Removed"
+L["Stack Gain"] = "Stack Gain"
 -- ============================================================================
 -- UI/Options/AuraTracking.lua
 -- ============================================================================
@@ -614,6 +620,7 @@ L["Hide the duration text on tracked auras."] = "Hide the duration text on track
 L["Hide Long Duration Auras"] = "Hide Long Duration Auras"
 L["Hide auras with no duration or a duration longer than 24 hours. Effectively hiding 'Void-Zone' Debuffs."] = "Hide auras with no duration or a duration longer than 24 hours. Effectively hiding 'Void-Zone' Debuffs."
 L["Hide auras with no duration or a duration longer than 3 minutes."] = "Hide auras with no duration or a duration longer than 3 minutes."
+L["Hide auras with no duration or a duration longer than 5 minutes."] = "Hide auras with no duration or a duration longer than 5 minutes."
 L["Show Whitelisted Buffs"] = "Show Whitelisted Buffs"
 L["Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."] = "Also shows a set of hardcoded whitelisted buffs that are relevant for some Encounters."
 L["Include Immunities"] = "Include Immunities"
