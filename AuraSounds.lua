@@ -272,15 +272,19 @@ end
 
 local SoundListRaid = BuildAuraSoundDefaultList("Raid")
 local SoundListMPlus = BuildAuraSoundDefaultList("Dungeons")
+local AuraSoundDefaultBySpellID = {}
+for _, info in ipairs(SoundListRaid) do
+    AuraSoundDefaultBySpellID[info.spellID] = info.sound
+end
+for _, info in ipairs(SoundListMPlus) do
+    if AuraSoundDefaultBySpellID[info.spellID] == nil then
+        AuraSoundDefaultBySpellID[info.spellID] = info.sound
+    end
+end
 
 function NSI:GetAuraSoundDefault(spellID)
     spellID = tonumber(spellID)
-    for _, info in ipairs(SoundListRaid) do
-        if info.spellID == spellID then return info.sound end
-    end
-    for _, info in ipairs(SoundListMPlus) do
-        if info.spellID == spellID then return info.sound end
-    end
+    return spellID and AuraSoundDefaultBySpellID[spellID]
 end
 
 local function StripSoundColor(sound)

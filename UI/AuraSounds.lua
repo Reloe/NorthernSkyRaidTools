@@ -23,23 +23,7 @@ local function GetUIObject(object)
     return object and (object.widget or object.label or object)
 end
 
--- Sound dropdown builder
 local soundlist = NSI.LSM:List("sound")
-local function build_sound_dropdown()
-    local t = {}
-    for i, sound in ipairs(soundlist) do
-        tinsert(t, {
-            label = sound,
-            value = i,
-            onclick = function(_, _, value)
-                local toplay = NSI.LSM:Fetch("sound", sound)
-                PlaySoundFile(toplay, "Master")
-                return value
-            end
-        })
-    end
-    return t
-end
 
 local function StripSoundColor(sound)
     if type(sound) ~= "string" then return sound end
@@ -135,21 +119,13 @@ local function FindAuraSoundCategory(categoryType, categoryKey)
     end
 end
 
-local function GetAuraSoundDefaultEntryKey(spellID, unit)
-    return NSI:GetAuraSoundKey(spellID, unit or "player")
-end
-
 local function GetAuraSoundEntryInfo(entry)
     local spellID = tonumber(type(entry) == "table" and entry.spellID or entry)
     if not spellID then return end
     local unit = type(entry) == "table" and entry.unit or "player"
-    local entryKey = type(entry) == "table" and entry.key or GetAuraSoundDefaultEntryKey(spellID, unit)
+    local entryKey = type(entry) == "table" and entry.key or NSI:GetAuraSoundKey(spellID, unit)
     local defaultSound = type(entry) == "table" and entry.sound or NSI:GetAuraSoundDefault(spellID)
     return entryKey, spellID, defaultSound, unit
-end
-
-local function CreateCustomAuraSoundKey(spellID, unit)
-    return NSI:GetAuraSoundKey(spellID, unit or "player")
 end
 
 local function BuildAuraSoundCategoryOptions(screen)
@@ -617,7 +593,7 @@ local function BuildAuraSoundsUI(parent)
         local unit = newUnitEntry:GetText()
         unit = unit ~= "" and unit or "player"
         if not spellID or not sound then return end
-        local entryKey = CreateCustomAuraSoundKey(spellID, unit)
+        local entryKey = NSI:GetAuraSoundKey(spellID, unit)
         NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey, unit)
         newSpellEntry:SetText("")
         newUnitEntry:SetText("player")

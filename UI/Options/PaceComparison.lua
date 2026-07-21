@@ -54,11 +54,6 @@ local function BuildFontFlagOptions()
     return options
 end
 
-local function GetNewThreshold()
-    NSRT.PaceComparison.NewThreshold = NSRT.PaceComparison.NewThreshold or {}
-    return NSRT.PaceComparison.NewThreshold
-end
-
 local function AddDisplayOptions(options)
     local display = NSRT.PaceComparison.Display
     options[#options + 1] = { type = "label", get = function() return "Pace Comparison Display" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
@@ -337,20 +332,6 @@ local function GetEditorData(screen)
     return data
 end
 
-local function CreateEnabledCheckButton(parent, screen)
-    local check = DF:CreateSwitch(parent, function(_, _, value)
-        local bossSettings = NSI:GetPaceComparisonBossSettings(screen.selectedBoss)
-        bossSettings.enabled = value
-    end, false, 20, 20, nil, nil, nil, "NSUIPaceComparisonEnabled", nil, nil, nil, nil, options_switch_template)
-    check:SetAsCheckBox()
-
-    local label = DF:CreateLabel(parent, NSI:Loc("Enabled"), 11, "white")
-    ApplyUIFont(label, 11)
-    label:SetPoint("LEFT", check, "RIGHT", 2, 0)
-
-    return check, label
-end
-
 local function BuildPaceComparisonEditorUI(parent)
     local screen = CreateFrame("Frame", "NSUIPaceComparisonEditor", parent, "BackdropTemplate")
     screen:SetPoint("TOPLEFT", parent, "TOPLEFT", 360, -10)
@@ -368,8 +349,15 @@ local function BuildPaceComparisonEditorUI(parent)
     screen.bossDropdown:SetPoint("LEFT", GetUIObject(bossLabel), "RIGHT", 10, 0)
     screen.bossDropdown:Select(NSI:Loc(NSI.BossNames[screen.selectedBoss] or ("Encounter " .. screen.selectedBoss)))
 
-    screen.enabledCheck, screen.enabledLabel = CreateEnabledCheckButton(screen, screen)
+    screen.enabledCheck = DF:CreateSwitch(screen, function(_, _, value)
+        local bossSettings = NSI:GetPaceComparisonBossSettings(screen.selectedBoss)
+        bossSettings.enabled = value
+    end, false, 20, 20, nil, nil, nil, "NSUIPaceComparisonEnabled", nil, nil, nil, nil, options_switch_template)
+    screen.enabledCheck:SetAsCheckBox()
     screen.enabledCheck:SetPoint("LEFT", GetUIObject(screen.bossDropdown), "RIGHT", 45, 0)
+    screen.enabledLabel = DF:CreateLabel(screen, NSI:Loc("Enabled"), 11, "white")
+    ApplyUIFont(screen.enabledLabel, 11)
+    screen.enabledLabel:SetPoint("LEFT", screen.enabledCheck, "RIGHT", 2, 0)
 
     local resetButton = DF:CreateButton(screen, function()
         NSI:ResetPaceComparisonBoss(screen.selectedBoss)
@@ -407,7 +395,8 @@ local function BuildPaceComparisonEditorUI(parent)
     local addLabel = CreateEditorLabel(screen, "Add Threshold", 12, "orange")
     addLabel:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, -16)
 
-    local newThreshold = GetNewThreshold()
+    NSRT.PaceComparison.NewThreshold = NSRT.PaceComparison.NewThreshold or {}
+    local newThreshold = NSRT.PaceComparison.NewThreshold
     local phaseEntry = CreateTextEntry(screen, NSI:Loc("Phase"), function() return newThreshold.phase or 1 end, function(_, value) newThreshold.phase = tonumber(value) or 1 end, 105, 22, true, nil, nil, "NSUIPaceComparisonNewPhase")
     phaseEntry:SetPoint("TOPLEFT", GetUIObject(addLabel), "BOTTOMLEFT", 0, -8)
     local timeEntry = CreateTextEntry(screen, NSI:Loc("Time"), function() return newThreshold.time or 0 end, function(_, value) newThreshold.time = tonumber(value) or 0 end, 110, 22, true, nil, nil, "NSUIPaceComparisonNewTime")

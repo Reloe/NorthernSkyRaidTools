@@ -479,12 +479,6 @@ local function FormatAuraTrackingDuration(seconds)
     return tostring(math.ceil(seconds))
 end
 
-local function GetAuraTrackingSettingsKeyFromRuntimeKey(key)
-    if key == "External" then return "External" end
-    local customIndex = tostring(key or ""):match("^[Cc]ustom(%d+)$")
-    if customIndex then return "Custom:" .. customIndex end
-end
-
 local function ParseAuraTrackingSpellIDs(value)
     local spellIDs = {}
     local seen = {}
@@ -1253,24 +1247,6 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
--- Resolve an entry's configured Unit into a concrete unit token.
--- "cotank" is resolved to the other tank in the group (like the Tank built-in);
--- all other units ("player", "target", "focus", "boss1-5") are dynamic tokens
--- the AuraContainer follows directly.
-local function ResolveAuraTrackingUnit(self, settings)
-    local unit = settings.Unit and strtrim(tostring(settings.Unit)) or "player"
-    if unit == "" then unit = "player" end
-    if string.lower(unit) == "cotank" then
-        for member in self:IterateGroupMembers() do
-            if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
-                return member
-            end
-        end
-        return nil
-    end
-    return unit
-end
-
 local function InitAuraTrackingContainer(self, unit, settings, key)
     if not unit or not settings or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
@@ -1280,7 +1256,15 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     local isCustom = tostring(key):match("^Custom") and true or false
     local isExternal = key == "External"
     local isSpellFiltered = isExternal or isCustom
-    local spellIDMap = isSpellFiltered and GetAuraTrackingSpellIDMap(settings, GetAuraTrackingSettingsKeyFromRuntimeKey(key)) or nil
+    local spellIDMap
+    if isExternal then
+        spellIDMap = GetAuraTrackingSpellIDMap(settings, "External")
+    elseif isCustom then
+        local customIndex = tostring(key):match("^Custom(%d+)$")
+        if customIndex then
+            spellIDMap = GetAuraTrackingSpellIDMap(settings, "Custom:" .. customIndex)
+        end
+    end
     if isSpellFiltered and not spellIDMap then return end
 
     local state = AcquireAuraTrackingContainer(self, key)
@@ -1436,7 +1420,17 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External")
 
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
-        local unit = ResolveAuraTrackingUnit(self, settings)
+        local unit = settings.Unit and strtrim(tostring(settings.Unit)) or "player"
+        if unit == "" then unit = "player" end
+        if string.lower(unit) == "cotank" then
+            unit = nil
+            for member in self:IterateGroupMembers() do
+                if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
+                    unit = member
+                    break
+                end
+            end
+        end
         InitAuraTrackingContainer(self, unit, settings, "Custom" .. index)
     end
 

@@ -230,7 +230,7 @@ function NSI:CreatePaceComparisonFrame()
     return frame
 end
 
-local function BuildPaceComparisonColorCache()
+function NSI:RefreshPaceComparisonColorCache()
     local display = NSRT.PaceComparison.Display
     local cache = {}
     for _, key in ipairs({"AheadColor", "CloseBehindColor", "BehindColor", "FarBehindColor"}) do
@@ -243,11 +243,7 @@ local function BuildPaceComparisonColorCache()
             shown = CreateColor(color[1], color[2], color[3], 1),
         }
     end
-    return cache
-end
-
-function NSI:RefreshPaceComparisonColorCache()
-    self.PaceComparisonColorCache = BuildPaceComparisonColorCache()
+    self.PaceComparisonColorCache = cache
 end
 
 local function GetPaceComparisonDeltaColorKey(delta)
