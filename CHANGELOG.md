@@ -8,3 +8,4 @@
 - Add Rangecheck API and use it for Entombed Sentinels
 - Add Setting to overwrite existing Notes when importing a new one
 - Add Pace Comparison Module (similar to the Pace WeakAuras back in Manaforge but bit more restricted)
+- Add QoL setting to show aura spell IDs in tooltips

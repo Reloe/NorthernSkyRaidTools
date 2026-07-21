@@ -191,6 +191,19 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = "Add SpellID to Tooltips",
+            desc = "Adds spell IDs to aura tooltips until the next logout or reload.",
+            get = function() return NSRT.QoL.AddSpellIDToTooltips end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.AddSpellIDToTooltips = value
+                C_CVar.SetCVar("tooltipShowAuraSpellIDs", value and "1" or "0")
+            end,
+            icontexture = 134400,
+            iconsize = {16, 16},
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Auto-Repair",
             desc = "Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs).",
             get = function() return NSRT.QoL.AutoRepair end,

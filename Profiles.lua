@@ -400,6 +400,7 @@ function NSI:AddMissingDefaults()
             LootBossReminder = false,
             AutoRepair = false,
             AutoInvite = false,
+            AddSpellIDToTooltips = false,
             ConsumableNotificationDurationSeconds = 5,
             TextDisplay = {
                 Anchor = "CENTER",
