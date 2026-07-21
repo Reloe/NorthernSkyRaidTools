@@ -3,7 +3,11 @@ local LibSerialize = LibStub("AceSerializer-3.0")
 local LibDeflate = LibStub("LibDeflate")
 
 local AuraTrackingFilters = {
-    "HARMFUL|!PLAYER",
+    "HARMFUL",
+}
+
+local AuraTrackingExcludedSpellIDs = {
+    [206151] = true,
 }
 
 NSI.AuraTrackingFilterDefinitions = {
@@ -1467,11 +1471,15 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
                 includeSpellIDs = group.spellIDMap,
             }
         elseif group.useLongDurationFilter then
-            candidateFilters = {}
+            candidateFilters = {
+                isFromPlayerOrPlayerPet = false,
+            }
             if settings.HideLongDurationAuras then
-                candidateFilters.maxDuration = 180
+                candidateFilters.maxDuration = 300
             end
         end
+        candidateFilters = candidateFilters or {}
+        candidateFilters.excludeSpellIDs = AuraTrackingExcludedSpellIDs
         local maxFrameCount = group.maxFrameCount
         if maxFrameCount == nil then
             maxFrameCount = settings.Limit
@@ -1505,6 +1513,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 
         if container:HasAuraGroup(groupKey) then
             SetAuraTrackingGroupMaxFrameCount(state, groupKey, options.maxFrameCount)
+            container:SetAuraGroupFilterString(groupKey, group.filter)
             container:SetAuraGroupCandidateFilters(groupKey, options.candidateFilters)
             container:SetAuraGroupLayout(groupKey, options.layout)
             container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
