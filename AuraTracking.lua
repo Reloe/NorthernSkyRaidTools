@@ -12,6 +12,7 @@ local AuraTrackingUnitRefreshStates = {
     focus = {},
     mouseover = {},
     boss = {},
+    roster = {},
 }
 
 local function GetAuraTrackingFlowDirections(growDirection)
@@ -155,6 +156,60 @@ local function ResolveAuraTrackingCustomUnitType(settings, unit)
         return "Friendly"
     end
     return "Enemy"
+end
+
+local function IsAuraTrackingStaticUnit(unit)
+    unit = unit and strtrim(tostring(unit)) or ""
+    if unit == "" then return true end
+    local lower = string.lower(unit)
+    return lower == "player"
+        or lower == "pet"
+        or lower == "target"
+        or lower == "targettarget"
+        or lower == "focus"
+        or lower == "focustarget"
+        or lower == "mouseover"
+        or lower == "cotank"
+        or lower:match("^raid%d+$")
+        or lower:match("^party%d+$")
+        or lower:match("^boss%d+$")
+end
+
+local function ResolveAuraTrackingUnit(self, settings)
+    local unit = settings and settings.Unit and strtrim(tostring(settings.Unit)) or "player"
+    if unit == "" then unit = "player" end
+    local lower = string.lower(unit)
+
+    if lower == "cotank" then
+        for member in self:IterateGroupMembers() do
+            if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
+                return member, true
+            end
+        end
+        return nil, true
+    end
+
+    if IsAuraTrackingStaticUnit(unit) then
+        return lower, false
+    end
+
+    local inputName, inputRealm = strsplit("-", unit)
+    if not inputName or inputName == "" then return nil, true end
+    inputName = Ambiguate(inputName, "none")
+    if inputRealm == "" then inputRealm = nil end
+    local _, playerRealm = UnitFullName("player")
+
+    for member in self:IterateGroupMembers() do
+        local name, realm = UnitFullName(member)
+        if name then
+            realm = realm or playerRealm
+            if (name == inputName or Ambiguate(name, "none") == inputName) and (not inputRealm or inputRealm == realm) then
+                return member, true
+            end
+        end
+    end
+
+    return nil, true
 end
 
 local function GetAuraTrackingCustomFrameLimit(settings, unit)
@@ -1419,19 +1474,17 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External")
 
+    local rosterRefreshStates = {}
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
-        local unit = settings.Unit and strtrim(tostring(settings.Unit)) or "player"
-        if unit == "" then unit = "player" end
-        if string.lower(unit) == "cotank" then
-            unit = nil
-            for member in self:IterateGroupMembers() do
-                if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
-                    unit = member
-                    break
-                end
-            end
+        local key = "Custom" .. index
+        local unit, needsRosterUpdate = ResolveAuraTrackingUnit(self, settings)
+        if needsRosterUpdate then
+            rosterRefreshStates[#rosterRefreshStates + 1] = {
+                key = key,
+                settings = settings,
+            }
         end
-        InitAuraTrackingContainer(self, unit, settings, "Custom" .. index)
+        InitAuraTrackingContainer(self, unit, settings, key)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
@@ -1450,6 +1503,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
         focus = {},
         mouseover = {},
         boss = {},
+        roster = rosterRefreshStates,
     }
 
     if self.AuraTrackingState then
@@ -1465,11 +1519,35 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
         end
     end
 
-    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 then
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 then
         if not AuraTrackingUnitRefreshFrame then
             AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
                 if NSI.IsBuilding then return end
+                if event == "GROUP_ROSTER_UPDATE" then
+                    if NSI:Restricted() then
+                        NSI.PendingAuraTrackingUpdate = true
+                        return
+                    end
+                    for _, entry in ipairs(AuraTrackingUnitRefreshStates.roster) do
+                        local unit = ResolveAuraTrackingUnit(NSI, entry.settings)
+                        if unit then
+                            InitAuraTrackingContainer(NSI, unit, entry.settings, entry.key)
+                        else
+                            local state = NSI.AuraTrackingState and NSI.AuraTrackingState[entry.key]
+                            if state and state.container then
+                                state.container:SetEnabled(false)
+                                state.container:Hide()
+                                if state.anchorFrame then
+                                    state.anchorFrame:Hide()
+                                end
+                                state.unit = nil
+                            end
+                        end
+                    end
+                    return
+                end
+
                 local states
                 if event == "PLAYER_TARGET_CHANGED" then
                     states = AuraTrackingUnitRefreshStates.target
@@ -1504,6 +1582,9 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
         end
         if #AuraTrackingUnitRefreshStates.boss > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+        end
+        if #AuraTrackingUnitRefreshStates.roster > 0 then
+            AuraTrackingUnitRefreshFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
         end
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()

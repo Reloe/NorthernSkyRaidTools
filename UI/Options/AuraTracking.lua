@@ -1084,9 +1084,9 @@ local function BuildAuraTrackingUI(screen)
                     s.Unit = (v ~= "") and v or "player"
                     apply(key); RebuildCurrentTab()
                 end },
-            { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40" },
+            { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40, or friendly player names" },
             { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
-                tooltip = { title = "Unit Type", desc = "Automatic treats player, party and raid units as friendly. Other units are treated as enemy unless manually changed." },
+                tooltip = { title = "Unit Type", desc = "Automatic treats player, party, raid and resolved player-name units as friendly. Other units are treated as enemy unless manually changed." },
                 get = function() return s.UnitType or "Automatic" end,
                 set = function(_, v)
                     s.UnitType = v or "Automatic"
