@@ -893,7 +893,7 @@ local function BuildAuraTrackingUI(screen)
             get = function() return s.HideTooltip end, set = function(_, v) s.HideTooltip = v; apply(key) end })
         if key == "Player" or key == "Tank" then
             add({ Type = "Checkbox", label = "Hide Long Duration Auras",
-                tooltip = tip("Hide Long Duration Auras", "Hide auras with no duration or a duration longer than 3 minutes."),
+                tooltip = tip("Hide Long Duration Auras", "Hide auras with no duration or a duration longer than 5 minutes."),
                 get = function() return s.HideLongDurationAuras end, set = function(_, v) s.HideLongDurationAuras = v; apply(key) end })
         end
         if key == "Player" then
