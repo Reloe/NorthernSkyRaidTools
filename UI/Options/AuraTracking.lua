@@ -56,6 +56,17 @@ local UNIT_TYPES = {
     { label = "Friendly", value = "Friendly" },
 }
 
+local TRACKING_MODES = {
+    { label = "Spell IDs", value = "SpellIDs" },
+    { label = "Aura Filters", value = "Filters" },
+}
+
+local FILTER_STATES = {
+    { label = "Disabled", value = "Disabled" },
+    { label = "Enabled", value = "Enabled" },
+    { label = "Inverted", value = "Inverted" },
+}
+
 local SORT_MODES = {
     { label = "Default", value = "Default" },
     { label = "Long Duration first", value = "LongDurationFirst" },
@@ -1069,13 +1080,11 @@ local function BuildAuraTrackingUI(screen)
                 and "This built-in display tracks a curated list of external/immunity buffs."
                 or  "This built-in display tracks all relevant debuffs automatically." } }
         end
-        return {
+        local defs = {
             -- No inline `label` on these TextEntries: CreateTextEntry only
             -- reserves a fixed 60px input box when given a label (the rest of
             -- the width goes to the label text), so a preceding standalone
             -- Label caption + a label-less full-width TextEntry is used instead.
-            { Type = "Label", text = "Spell IDs" },
-            BuildSpellIDListWidget(key),
             { Type = "Label", text = "Unit" },
             { Type = "TextEntry",
                 get = function() return s.Unit or "player" end,
@@ -1085,20 +1094,60 @@ local function BuildAuraTrackingUI(screen)
                     apply(key); RebuildCurrentTab()
                 end },
             { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40, or friendly player names" },
-            { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
-                tooltip = { title = "Unit Type", desc = "Automatic treats player, party, raid and resolved player-name units as friendly. Other units are treated as enemy unless manually changed." },
-                get = function() return s.UnitType or "Automatic" end,
+            { Type = "Dropdown", label = "Tracking Mode", values = TRACKING_MODES,
+                tooltip = { title = "Tracking Mode", desc = "Choose whether this custom Aura Tracking display uses a spell-ID whitelist or Blizzard aura filters." },
+                get = function() return s.TrackingMode or "SpellIDs" end,
                 set = function(_, v)
-                    s.UnitType = v or "Automatic"
-                    apply(key)
+                    s.TrackingMode = v or "SpellIDs"
+                    apply(key); RebuildCurrentTab()
                 end },
-            { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." },
             { Type = "Label", text = "Preview Spell ID" },
             { Type = "TextEntry",
                 tooltip = { title = "Preview Spell ID", desc = "Spell ID used for the custom Aura Tracking list icon." },
                 get = function() return s.PreviewSpellID and tostring(s.PreviewSpellID) or "" end,
                 set = function(_, v) NSI:SetAuraTrackingPreviewSpellID(key, v); RebuildList() end },
         }
+
+        if s.TrackingMode == "Filters" then
+            defs[#defs + 1] = { Type = "Label", text = "Aura Filters" }
+            defs[#defs + 1] = { Type = "Label", text = "Enabled adds the filter. Inverted adds the filter with ! in front of it." }
+            s.AuraFilters = s.AuraFilters or {}
+            for _, filter in ipairs(NSI.AuraTrackingFilterDefinitions or {}) do
+                local filterKey = filter.key
+                defs[#defs + 1] = {
+                    Type = "Dropdown",
+                    label = filterKey,
+                    values = FILTER_STATES,
+                    tooltip = { title = filterKey, desc = filter.value },
+                    get = function()
+                        local state = s.AuraFilters and s.AuraFilters[filterKey]
+                        return (state == "Enabled" or state == "Inverted") and state or "Disabled"
+                    end,
+                    set = function(_, v)
+                        s.AuraFilters = s.AuraFilters or {}
+                        if v == "Enabled" or v == "Inverted" then
+                            s.AuraFilters[filterKey] = v
+                        else
+                            s.AuraFilters[filterKey] = nil
+                        end
+                        apply(key)
+                    end,
+                }
+            end
+        else
+            defs[#defs + 1] = { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
+                tooltip = { title = "Unit Type", desc = "Automatic treats player, party, raid and resolved player-name units as friendly. Other units are treated as enemy unless manually changed." },
+                get = function() return s.UnitType or "Automatic" end,
+                set = function(_, v)
+                    s.UnitType = v or "Automatic"
+                    apply(key)
+                end }
+            defs[#defs + 1] = { Type = "Label", text = "Spell IDs" }
+            defs[#defs + 1] = BuildSpellIDListWidget(key)
+            defs[#defs + 1] = { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." }
+        end
+
+        return defs
     end
 
     local DEF_BUILDERS = { Display = BuildDisplayDefs, Trigger = BuildTriggerDefs }

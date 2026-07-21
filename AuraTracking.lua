@@ -6,6 +6,23 @@ local AuraTrackingFilters = {
     "HARMFUL|!PLAYER",
 }
 
+NSI.AuraTrackingFilterDefinitions = {
+    { key = "Helpful", value = "HELPFUL" },
+    { key = "Harmful", value = "HARMFUL" },
+    { key = "Player", value = "PLAYER" },
+    { key = "Raid", value = "RAID" },
+    { key = "Cancelable", value = "CANCELABLE" },
+    { key = "IncludeNameplateOnly", value = "INCLUDE_NAME_PLATE_ONLY" },
+    { key = "Maw", value = "MAW" },
+    { key = "ExternalDefensive", value = "EXTERNAL_DEFENSIVE" },
+    { key = "CrowdControl", value = "CROWD_CONTROL" },
+    { key = "RaidInCombat", value = "RAID_IN_COMBAT" },
+    { key = "RaidPlayerDispellable", value = "RAID_PLAYER_DISPELLABLE" },
+    { key = "BigDefensive", value = "BIG_DEFENSIVE" },
+    { key = "Important", value = "IMPORTANT" },
+    { key = "Dispellable", value = "DISPELLABLE" },
+}
+
 local AuraTrackingUnitRefreshFrame
 local AuraTrackingUnitRefreshStates = {
     target = {},
@@ -119,8 +136,10 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         NameXOffset = 0,
         NameYOffset = 4,
         NameFontSize = 30,
+        TrackingMode = "SpellIDs",
         SpellIDs = {},
         SpellIDsEdited = false,
+        AuraFilters = {},
         PreviewSpellID = nil,
         SortMode = "Default",
         Unit = "player",
@@ -379,13 +398,13 @@ end
 -- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
 -- of relying on a hand-maintained list that can silently fall out of sync.
 local AuraTrackingSectionFields = {
-    Trigger = { "SpellIDs", "SpellIDsEdited", "Unit", "UnitType", "PreviewSpellID" },
+    Trigger = { "TrackingMode", "SpellIDs", "SpellIDsEdited", "AuraFilters", "Unit", "UnitType", "PreviewSpellID" },
     Load    = { "loadConditions" },
 }
 
 local AuraTrackingNonDisplayFields = {
     Name = true, enabled = true, group = true, pinned = true, builtin = true,
-    SpellIDs = true, SpellIDsEdited = true, Unit = true, UnitType = true, PreviewSpellID = true,
+    TrackingMode = true, SpellIDs = true, SpellIDsEdited = true, AuraFilters = true, Unit = true, UnitType = true, PreviewSpellID = true,
     loadConditions = true,
 }
 
@@ -611,6 +630,36 @@ local function GetAuraTrackingSpellIDMap(settings, settingsKey)
         map[spellID] = true
     end
     return map
+end
+
+local function BuildAuraTrackingCustomFilterString(settings)
+    local filters = settings and settings.AuraFilters
+    if type(filters) ~= "table" then return end
+
+    local parts = {}
+    for _, filter in ipairs(NSI.AuraTrackingFilterDefinitions) do
+        local state = filters[filter.key]
+        if state == nil then
+            state = filters[filter.value]
+        end
+        if type(state) == "string" then
+            state = strtrim(state)
+            local lower = string.lower(state)
+            if lower == "enabled" then
+                state = "Enabled"
+            elseif lower == "inverted" or lower == "negated" or lower == "inverse" then
+                state = "Inverted"
+            end
+        end
+        if state == "Enabled" or state == true then
+            parts[#parts + 1] = filter.value
+        elseif state == "Inverted" then
+            parts[#parts + 1] = "!" .. filter.value
+        end
+    end
+
+    if #parts == 0 then return end
+    return table.concat(parts, "|")
 end
 
 function NSI:GetAuraTrackingSpellIDList(settingsKey)
@@ -1310,7 +1359,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     end
     local isCustom = tostring(key):match("^Custom") and true or false
     local isExternal = key == "External"
-    local isSpellFiltered = isExternal or isCustom
+    local customUsesFilters = isCustom and settings.TrackingMode == "Filters"
+    local isSpellFiltered = isExternal or (isCustom and not customUsesFilters)
     local spellIDMap
     if isExternal then
         spellIDMap = GetAuraTrackingSpellIDMap(settings, "External")
@@ -1321,6 +1371,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         end
     end
     if isSpellFiltered and not spellIDMap then return end
+    local customFilterString = customUsesFilters and BuildAuraTrackingCustomFilterString(settings) or nil
+    if customUsesFilters and not customFilterString then return end
 
     local state = AcquireAuraTrackingContainer(self, key)
     local container = state.container
@@ -1360,14 +1412,22 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             spellIDMap = spellIDMap,
         }
     elseif isCustom then
-        local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
-        state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
-        auraGroups[#auraGroups + 1] = {
-            filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
-            spellIDMap = spellIDMap,
-            customGroup = true,
-            maxFrameCount = GetAuraTrackingCustomFrameLimit(settings, unit),
-        }
+        if customUsesFilters then
+            state.customAuraGroupKey = groupKeyPrefix .. "_filters"
+            auraGroups[#auraGroups + 1] = {
+                filter = customFilterString,
+                customGroup = true,
+            }
+        else
+            local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
+            state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
+            auraGroups[#auraGroups + 1] = {
+                filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
+                spellIDMap = spellIDMap,
+                customGroup = true,
+                maxFrameCount = GetAuraTrackingCustomFrameLimit(settings, unit),
+            }
+        end
     else
         for _, filter in ipairs(AuraTrackingFilters) do
             auraGroups[#auraGroups + 1] = {
@@ -1396,6 +1456,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             end
             if container:HasAuraGroup(groupKeyPrefix .. "_harmful") then
                 SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_harmful", 0)
+            end
+            if container:HasAuraGroup(groupKeyPrefix .. "_filters") then
+                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_filters", 0)
             end
         end
         local candidateFilters
