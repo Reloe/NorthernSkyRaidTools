@@ -254,6 +254,32 @@ local function build_growdirection_options(SettingName, Icons)
     return t
 end
 
+local FONT_FLAG_OPTIONS = {
+    "",
+    "OUTLINE",
+    "THICKOUTLINE",
+    "MONOCHROME",
+    "OUTLINE, MONOCHROME",
+    "THICKOUTLINE, MONOCHROME",
+    "SLUG",
+    "SLUG, OUTLINE",
+    "SLUG, THICKOUTLINE",
+    "SLUG, MONOCHROME",
+    "SLUG, OUTLINE, MONOCHROME",
+    "SLUG, THICKOUTLINE, MONOCHROME",
+}
+
+local function build_fontflag_options()
+    local t = {}
+    for _, flags in ipairs(FONT_FLAG_OPTIONS) do
+        t[#t + 1] = {
+            label = flags == "" and "None" or flags,
+            value = flags,
+        }
+    end
+    return t
+end
+
 local function build_PAgrowdirection_options(SettingName, SecondaryName)
     local list = {"LEFT", "RIGHT", "UP", "DOWN"}
     local t = {}
@@ -328,6 +354,7 @@ NSI.UI.Core = {
     options_button_template = options_button_template,
     build_media_options = build_media_options,
     build_growdirection_options = build_growdirection_options,
+    build_fontflag_options = build_fontflag_options,
     build_PAgrowdirection_options = build_PAgrowdirection_options,
     build_raidframeicon_options = build_raidframeicon_options,
     build_sound_dropdown = build_sound_dropdown,

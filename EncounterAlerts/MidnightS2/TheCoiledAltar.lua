@@ -15,70 +15,62 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
-        textColors = {1, 0, 0, 1}, customIcon = 1299684,
+    local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8,
+        textColors = {1, 0, 0, 1}, spellID = 1299684,
         isConditional = {
-            text = "This Alert only shows if you are not a tank or if you have threat on boss1.",
-            func = [[return function()
-                if UnitGroupRolesAssigned("player") ~= "TANK" then return true end
-                local threat = UnitThreatSituation("player", "boss1")
-                return threat and threat >= 2
-            end]],
+            text = "This Alert only shows if you are not a tank or have threat on boss1.",
+            func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {23.1, 40.0, 60.0, 77.1, 103.1, 120.0, 140.0, 157.1},
-            [16] = {23.1, 40.0, 60.0, 77.1, 103.1, 120.0, 140.0, 157.1},
+            [15] = {23, 40.0, 60.0, 77.1, 108.1, 125, 145, 162.1},
+            [16] = {23, 40.0, 60.0, 77.1, 108.1, 125, 145, 162.1},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar Tanks", internalID = "P1Taunt", name = "P1 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6,
+    local data = {group = "Coiled Altar Tanks", internalID = "P1Taunt", name = "P1 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {23.6, 40.5, 60.5, 77.6, 103.6, 120.5, 140.5, 157.6},
-            [16] = {23.6, 40.5, 60.5, 77.6, 103.6, 120.5, 140.5, 157.6},
+            [15] = {23.6, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
+            [16] = {23.6, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P1", internalID = "P1Soak", name = "P1 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, customIcon = 1283489,
+    local data = {group = "Coiled Altar P1", internalID = "P1Soak", name = "P1 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1283489,
         timers = {
-            [15] = {48.0, 128.0},
-            [16] = {48.0, 128.0},
+            [15] = {48.0, 133.0},
+            [16] = {48.0, 133.0},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, customIcon = 1285643,
+    local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
             [15] = {7.2, 43.3, 92.3, 128.3, 177.3, 213.3},
-            [16] = {7.2, 43.3, 92.3, 128.3, 177.3, 213.3},
+            [16] = {8, 44.6, 93, 129.6, 178, 214.6},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P2", internalID = "P2Frontal", name = "P2 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 2, TTS = true, dur = 6,
-        textColors = {1, 0, 0, 1}, customIcon = 1286620,
+        textColors = {1, 0, 0, 1}, spellID = 1286620,
         isConditional = {
-            text = "This Alert only shows if you are not a tank or if you have threat on boss2.",
-            func = [[return function()
-                if UnitGroupRolesAssigned("player") ~= "TANK" then return true end
-                local threat = UnitThreatSituation("player", "boss2")
-                return threat and threat >= 2
-            end]],
+            text = "This Alert only shows if you are not a tank or have threat on boss2.",
+            func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
         },
         timers = {
             [15] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
-            [16] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
+            [16] = {38, 69, 123, 154, 208, 239},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar Tanks", internalID = "P2Taunt", name = "P2 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 2, TTS = true, TTSTimer = 0, dur = 6,
+    local data = {group = "Coiled Altar Tanks", internalID = "P2Taunt", name = "P2 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 2, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss2.",
@@ -86,16 +78,34 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {38.2, 69.2, 123.3, 154.3, 208.3, 239.3},
-            [16] = {38.2, 69.2, 123.3, 154.3, 208.3, 239.3},
+            [16] = {38.5, 69.5, 123.5, 154.5, 208.5, 239.5},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P2", internalID = "P2Debuffs", name = "P2 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
-        loadConditions = nonTankConditions, customIcon = 1286895,
+        loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
             [15] = {23.7, 61.7, 108.8, 146.8, 193.8, 231.8},
-            [16] = {23.7, 61.7, 108.8, 146.8, 193.8, 231.8},
+            [16] = {20, 55, 105, 140, 190, 225},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P2", internalID = "P2Shield", name = "P2 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+        spellID = 1286918,
+        timers = {
+            [15] = {70, 155},
+            [16] = {70, 155},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P2", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+        spellID = 1286399,
+        timers = {
+            [15] = {18, 51, 103, 136, 188, 221},
+            [16] = {18, 51, 103, 136, 188, 221},
         },
     }
     self:AddEncounterAlert(data)

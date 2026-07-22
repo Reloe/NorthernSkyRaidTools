@@ -3,6 +3,22 @@ local DF = _G["DetailsFramework"]
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 
+local function BuildQoLFontFlagOptions()
+    local options = {}
+    for _, option in ipairs(Core.build_fontflag_options()) do
+        local value = option.value
+        options[#options + 1] = {
+            label = option.label == "None" and NSI:Loc("None") or option.label,
+            value = value,
+            onclick = function()
+                NSRT.QoL.TextDisplay.FontFlags = value
+                NSI:UpdateQoLTextDisplay()
+            end,
+        }
+    end
+    return options
+end
+
 local function BuildQoLOptions()
     return {
         {
@@ -31,6 +47,13 @@ local function BuildQoLOptions()
             end,
             min = 5,
             max = 70,
+        },
+        {
+            type = "select",
+            name = "Font Outline",
+            desc = "Font outline flags for the QoL Text Display.",
+            values = BuildQoLFontFlagOptions,
+            get = function() return NSRT.QoL.TextDisplay.FontFlags end,
         },
         {
             type = "toggle",

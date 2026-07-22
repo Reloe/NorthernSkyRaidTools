@@ -14,7 +14,7 @@ function NSI:UpdateQoLTextDisplay()
     local F = self.NSRTFrame.QoLText
     F:ClearAllPoints()
     F:SetPoint(NSRT.QoL.TextDisplay.Anchor, self.NSRTFrame, NSRT.QoL.TextDisplay.relativeTo, NSRT.QoL.TextDisplay.xOffset, NSRT.QoL.TextDisplay.yOffset)
-    F.text:SetFont(self:GetGlobalFontPath(), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
+    F.text:SetFont(self:GetGlobalFontPath(), NSRT.QoL.TextDisplay.FontSize, NSRT.QoL.TextDisplay.FontFlags)
     local text = ""
     local now = GetTime()
     for _, v in pairs(self.QoLTextDisplays or {}) do -- table structure: {SettingsName = string, text = string}
@@ -34,11 +34,11 @@ end
 function NSI:CreateQoLTextDisplay()
     if self.NSRTFrame.QoLText then return end
     self.NSRTFrame.QoLText = CreateFrame("Frame", nil, self.NSRTFrame, "BackdropTemplate")
-    self.NSRTFrame.QoLText.text = self.NSRTFrame.QoLText:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    self.NSRTFrame.QoLText.text = self.NSRTFrame.QoLText:CreateFontString(nil, "OVERLAY")
     local F = self.NSRTFrame.QoLText
     F:SetPoint(NSRT.QoL.TextDisplay.Anchor, self.NSRTFrame, NSRT.QoL.TextDisplay.relativeTo, NSRT.QoL.TextDisplay.xOffset, NSRT.QoL.TextDisplay.yOffset)
     F:SetFrameStrata("DIALOG")
-    F.text:SetFont(self:GetGlobalFontPath(), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
+    F.text:SetFont(self:GetGlobalFontPath(), NSRT.QoL.TextDisplay.FontSize, NSRT.QoL.TextDisplay.FontFlags)
     F.text:SetPoint("TOP", F, "TOP", 0, 0)
     F.text:SetTextColor(1, 1, 1, 1)
     F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
@@ -83,7 +83,7 @@ function NSI:ToggleQoLTextPreview()
         end
         local F = self.NSRTFrame.QoLText
         F.text:SetText(text)
-        F.text:SetFont(self:GetGlobalFontPath(), NSRT.QoL.TextDisplay.FontSize, "OUTLINE")
+        F.text:SetFont(self:GetGlobalFontPath(), NSRT.QoL.TextDisplay.FontSize, NSRT.QoL.TextDisplay.FontFlags)
         F:SetSize(F.text:GetStringWidth(), F.text:GetStringHeight())
         F:Show()
         self:MakeDraggable(F, NSRT.QoL.TextDisplay, true)

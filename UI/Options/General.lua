@@ -4,6 +4,7 @@ local Core = NSI.UI.Core
 local NSUI = Core.NSUI
 local LDBIcon = Core.LDBIcon
 local build_media_options = Core.build_media_options
+local build_fontflag_options = Core.build_fontflag_options
 
 local function BuildLanguageSelector(parent)
     local onLanguageChangedCallback = function(languageId)
@@ -74,19 +75,11 @@ local function BuildGeneralOptions()
                 NSI.NSRTFrame.generic_display.Text:SetFont(NSI:GetGlobalFontPath(), NSRT.Settings.GlobalFontSize, NSRT.Settings.GlobalFontFlags)
             end,
             values = function()
-                local flags = {
-                    "",
-                    "OUTLINE",
-                    "THICKOUTLINE",
-                    "MONOCHROME",
-                    "OUTLINE, MONOCHROME",
-                    "THICKOUTLINE, MONOCHROME",
-                }
                 local t = {}
-                for _, v in ipairs(flags) do
-                    local label = v == "" and NSI:Loc("None") or v
+                for _, option in ipairs(build_fontflag_options()) do
+                    local v = option.value
                     tinsert(t, {
-                        label = label,
+                        label = option.label == "None" and NSI:Loc("None") or option.label,
                         value = v,
                         onclick = function()
                             NSRT.Settings.GlobalFontFlags = v

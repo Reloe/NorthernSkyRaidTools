@@ -77,8 +77,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitAuraSystem(true)
         self:UpdateLibSpecRegistration()
-        if NSRT.PASounds.UseDefaultPASounds then self:ApplyDefaultPASounds() end
-        if NSRT.PASounds.UseDefaultMPlusPASounds then self:ApplyDefaultPASounds(false, true) end
+        self:ApplyDefaultPASounds(false, false, NSRT.PASounds.UseDefaultPASounds)
+        self:ApplyDefaultPASounds(false, true, NSRT.PASounds.UseDefaultMPlusPASounds)
         for spellID, info in pairs(NSRT.PASounds) do
             if type(info) == "table" and info.sound then -- prevents user settings
                 self:AddPASound(spellID, info.sound)
@@ -156,6 +156,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
+        self:StartPaceComparison(self.EncounterID, diff)
         self:StartReminders(self.Phase)
         self:InitAuraSystem()
         if NSRT.ReminderSettings.NoteCountdown then
@@ -183,6 +184,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.CustomEvents = {}
         if not diff then return end
         self:EncounterRegister(nil, nil, nil, nil, true)
+        self:StopPaceComparison()
         self:InitAuraSystem()
         self:HideAllReminders(true)
         C_Timer.After(1, function()

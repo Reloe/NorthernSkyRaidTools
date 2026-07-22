@@ -8,61 +8,80 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
+    local nontankConditions = self:DefaultLoadConditions()
+    nontankConditions.Roles.HEALER = true
+    nontankConditions.Roles.DAMAGER = true
 
-    local data = {group = "Vashnik", internalID = "TankHits", name = "Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6,
-        textColors = {1, 0, 0, 1}, loadConditions = tankConditions, customIcon = 1280935,
+    local data = {group = "Vashnik", internalID = "TankHits", name = "Tank-Hits", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+        textColors = {1, 0, 0, 1}, loadConditions = tankConditions, spellID = 1280935,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {10.0, 37.1, 59.0, 89.0, 121.1, 143.0, 173.0, 205.1, 227.0, 257.1, 289.1, 311.1, 341.1, 373.1, 395.1, 425.1, 457.1},
-            [16] = {10.0, 37.1, 59.0, 89.0, 121.1, 143.0, 173.0, 205.1, 227.0, 257.1, 289.1, 311.1, 341.1, 373.1, 395.1, 425.1, 457.1},
+            [15] = {10, 37, 62, 87, 121.1, 146.1, 171, 205.1, 230.1, 255.1, 289.2, 314.1, 339.1, 373.1, 398.2, 423.1, 457.2, 485.1},
+            [16] = {10, 37, 62, 87, 121.1, 146.1, 171, 205.1, 230.1, 255.1, 289.2, 314.1, 339.1, 373.1, 398.2, 423.1, 457.2, 485.1},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Taunts", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6,
+    local data = {group = "Vashnik", internalID = "Taunts", name = "Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {10.5, 37.6, 59.5, 89.5, 121.6, 143.5, 173.5, 205.6, 227.5, 257.6, 289.6, 311.6, 341.6, 373.6, 395.6, 425.6, 457.6},
-            [16] = {10.5, 37.6, 59.5, 89.5, 121.6, 143.5, 173.5, 205.6, 227.5, 257.6, 289.6, 311.6, 341.6, 373.6, 395.6, 425.6, 457.6},
+            [15] = {10.5, 37.5, 62.5, 87.5, 121.6, 146.6, 171.5, 205.6, 230.6, 255.6, 289.7, 314.6, 339.6, 373.6, 398.7, 423.6, 457.7, 485.6},
+            [16] = {10.5, 37.5, 62.5, 87.5, 121.6, 146.6, 171.5, 205.6, 230.6, 255.6, 289.7, 314.6, 339.6, 373.6, 398.7, 423.6, 457.7, 485.6},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, customIcon = 1284663,
+    local data = {group = "Vashnik", internalID = "Adds", name = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1284663,
         timers = {
-            [15] = {24.0, 108.0, 192.1, 276.1, 360.1, 444.1},
-            [16] = {24.0, 108.0, 192.1, 276.1, 360.1, 444.1},
+            [15] = {24.1, 108.1, 192, 276.1, 360.1, 444.1, 462.1, 473, 483.1},
+            [16] = {24.1, 108.1, 192, 276.1, 360.1, 444.1, 462.1, 473, 483.1},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Infection", text = "Infection", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, customIcon = 1282114,
+    local data = {group = "Vashnik", internalID = "Infection", name = "Infection", text = "Infection", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1282114,
         timers = {
-            [15] = {48.7, 72.7, 102.7, 132.7, 156.7, 186.7, 216.7, 240.7, 270.7, 300.7, 324.7, 354.7, 384.7, 408.7, 438.7},
-            [15] = {48.7, 72.7, 102.7, 132.7, 156.7, 186.7, 216.7, 240.7, 270.7, 300.7, 324.7, 354.7, 384.7, 408.7, 438.7},
+            [15] = {42.3, 101.8, 126.1, 185.8, 210.3, 269.5, 294.6, 353.2, 378.1, 437.2, 462.3},
+            [16] = {42.3, 101.8, 126.1, 185.8, 210.3, 269.5, 294.6, 353.2, 378.1, 437.2, 462.3},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, customIcon = 1282516,
+    local data = {group = "Vashnik", internalID = "AoE", name = "AoE", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1282516,
         timers = {
-            [15] = {35.1, 79.0, 119.1, 163.1, 203.0, 247.0, 287.1, 331.0, 371.0, 415.0},
-            [16] = {35.1, 79.0, 119.1, 163.1, 203.0, 247.0, 287.1, 331.0, 371.0, 415.0},
+            [15] = {35, 74, 119.1, 158, 203.1, 242.1, 287.1, 326.1, 371.1, 410.2, 455.2},
+            [16] = {35, 74, 119.1, 158, 203.1, 242.1, 287.1, 326.1, 371.1, 410.2, 455.2},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Vashnik", internalID = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, customIcon = 1281908,
+    local data = {group = "Vashnik", internalID = "Soaks", name = "Soaks", text = "Soaks", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1282602,
         timers = {
-            [15] = {16.0, 46.0, 67.0, 98.1, 130.1, 151.1, 182.0, 214.1, 235.1, 266.1, 298.1, 319.1, 350.1, 382.1, 403.1},
-            [16] = {16.0, 46.0, 67.0, 98.1, 130.1, 151.1, 182.0, 214.1, 235.1, 266.1, 298.1, 319.1, 350.1, 382.1, 403.1},
+            [15] = {42, 81, 126.1, 165, 210.1, 249.1, 294.1, 333.1, 378.1, 417.2, 462.2},
+            [16] = {42, 81, 126.1, 165, 210.1, 249.1, 294.1, 333.1, 378.1, 417.2, 462.2},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Vashnik", internalID = "Waves", name = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1281908,
+        timers = {
+            [15] = {21.1, 62.1, 98.1, 146.1, 182.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
+            [16] = {21.1, 62.1, 98.1, 146.1, 182.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
+        },
+    }
+    self:AddEncounterAlert(data)
+    local data = {group = "Vashnik", internalID = "WaveSpread", name = "Wave-Spread", text = "Pre-Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 6, spellID = 1281908,
+        loadConditions = nontankConditions,
+        timers = {
+            [15] = {13.1, 54.1, 90, 138, 174.1, 222.1, 258.1, 306.1, 342.1, 390.1, 426.2, 474.2},
+            [16] = {13.1, 54.1, 90, 138, 174.1, 222.1, 258.1, 306.1, 342.1, 390.1, 426.2, 474.2},
         },
     }
     self:AddEncounterAlert(data)

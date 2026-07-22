@@ -1,6 +1,7 @@
 local addonId, NSI = ...
 local DF = _G["DetailsFramework"]
 local L = DF.Language.GetLanguageTable(addonId)
+local Core = NSI.UI.Core
 
 local function T(key)
     return DF.Language.GetText(addonId, key, true) or L[key] or key
@@ -56,6 +57,10 @@ local function CircleTextPositionValues()
         {label=T("Left"), value="Left"},
         {label=T("Right"), value="Right"},
     }
+end
+
+local function FontFlagValues()
+    return Core.build_fontflag_options()
 end
 
 -- ---------------------------------------------------------------
@@ -126,6 +131,7 @@ local function GetWidgetDefs(settingsName)
             Slider(T("Spacing"),            "Spacing",       -5,   20),
             Slider(T("Sticky Duration"),    "Sticky",        0,    30),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
+            DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
             Slider(T("Font Size"),          "FontSize",      5,    200),
             Slider(T("Timer Font Size"),    "TimerFontSize", 5,    200),
             Slider(T("Decimals Threshold"), "Decimals",      0,    10),
@@ -162,6 +168,7 @@ local function GetWidgetDefs(settingsName)
             Slider(T("Sticky Duration"),    "Sticky",        0,    30),
             DD    (T("Texture"),            "Texture",       MediaValuesFn(true)),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
+            DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
             Slider(T("Font Size"),          "FontSize",      5,    200),
             Slider(T("Timer Font Size"),    "TimerFontSize", 5,    200),
             Slider(T("Decimals Threshold"), "Decimals",      0,    10),
@@ -182,6 +189,7 @@ local function GetWidgetDefs(settingsName)
         return {
             DDGrow(false),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
+            DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
             Slider(T("Font Size"),          "FontSize",      5,  200),
             Slider(T("Decimals Threshold"), "Decimals",      0,    10),
             {Type="Color", label=T("Text Color"), get=GetColor, set=SetColor},
@@ -204,6 +212,7 @@ local function GetWidgetDefs(settingsName)
             Slider(T("Spacing"),            "Spacing",       -50, 100),
             DD    (T("Texture"),            "Texture",       CircleTextureValues),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
+            DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
             Slider(T("Font Size"),          "FontSize",      5,   80),
             DD    (T("Text Position"),       "TextPosition",  CircleTextPositionValues),
             Slider(T("Text X Offset"),      "xTextOffset",   -500, 500),

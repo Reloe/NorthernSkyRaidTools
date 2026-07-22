@@ -476,13 +476,14 @@ function NSI:UpdateRaidBuffFrame()
     end
     self.RaidBuffCheck.Title:SetText(L("[NSRT] Missing Raid Buffs"))
     local RaidFrame = FriendsFrame:IsShown() and FriendsFrameTab3:IsShown() and PanelTemplates_GetSelectedTab(FriendsFrame) == 3
+    local SocialRaidFrame = self:IsMidnightS2() and SocialUIFrame and SocialUIFrame.RaidFrame and SocialUIFrame.RaidFrame:IsShown() and SocialUIFrame.RaidFrame
     if PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == nil then -- first time opening PVE frame, tab info is not yet available
         C_Timer.After(0.1, function() NSI:UpdateRaidBuffFrame() end)
         return
     end
     local LFGFrame = PVEFrame:IsShown() and PanelTemplates_GetSelectedTab(PVEFrame) == 1
     local parent, height = FindRegisteredRaidBuffPanelParent()
-    parent = parent or (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
+    parent = parent or SocialRaidFrame or (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
     if parent then
         self.RaidBuffCheck:ClearAllPoints()
         self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)
@@ -537,17 +538,22 @@ function NSI:UpdateRaidBuffFrame()
     end
 end
 
-FriendsFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
-FriendsFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-FriendsFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+if NSI:IsMidnightS2() and SocialUIFrame and SocialUIFrame.RaidFrame then
+    SocialUIFrame.RaidFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
+    SocialUIFrame.RaidFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+else
+    FriendsFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
+    FriendsFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+    FriendsFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+    FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+    FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+    FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
+end
 
 function NSI:GetInviteListFromReminderInput(str)
     if not str then return end

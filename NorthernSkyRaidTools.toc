@@ -46,6 +46,7 @@ CooldownCheck.lua
 ReadyCheck.lua
 PrivateAura.lua
 AuraTracking.lua
+PaceComparison.lua
 QoL.lua
 Profiles.lua
 InterruptDisplay.lua
@@ -101,6 +102,7 @@ UI/Options/InterruptDisplay.lua
 UI/Options/ReadyCheck.lua
 UI/Options/PrivateAuras.lua
 UI/Options/AuraTracking.lua
+UI/Options/PaceComparison.lua
 UI/Options/QoL.lua
 UI/Options/WAImports.lua
 UI/AnchorWindow.lua

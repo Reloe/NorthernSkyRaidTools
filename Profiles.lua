@@ -19,11 +19,13 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
         "relativeTo",
         "xOffset",
         "yOffset",
-        "HideBorder",
         "HideTooltip",
         "HideDurationText",
     }) do
         CopyAuraTrackingSetting(source, target, key)
+    end
+    if source.HideBorder ~= nil then
+        target.ShowDispelBorder = not source.HideBorder
     end
 
     if source.StackScale then
@@ -44,8 +46,30 @@ function NSI:ConvertPrivateAuraSettingsToAuraTracking()
     NSRT.AuraTrackingSettingsConverted = true
 end
 
+function NSI:RunProfileMigrations()
+    local profileVersion = tonumber(NSRT.ProfileVersion) or 0
+    if profileVersion < 1 then
+        if not self:IsMidnightS2() then return end
+        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
+        for _, encID in ipairs(self.Season2EncounterIDs) do
+            NSRT.EncounterAlerts[encID] = nil
+            if self.InitializeAlerts and self.InitializeAlerts[encID] then
+                self.InitializeAlerts[encID](self)
+            end
+        end
+        self:FireCallback("NSRT_ALERT_FULL_UPDATE")
+        if NSRT.PaceComparison and NSRT.PaceComparison.Bosses then
+            for _, encID in ipairs(self.Season2EncounterIDs) do
+                NSRT.PaceComparison.Bosses[encID] = nil
+            end
+            self:ApplyDefaultPaceComparisonData()
+        end
+        NSRT.ProfileVersion = 1
+    end
+end
 
-function NSI:AddMissingDefaults()
+
+function NSI:AddMissingDefaults(skipProfileMigrations)
     local defaults = {
         -- Saved data tables (user-populated, empty by default)
         NickNames = {},
@@ -132,6 +156,8 @@ function NSI:AddMissingDefaults()
             TextTTSTimer = 5,
             AutoShare = false,
             OnlyReceiveGuild = false,
+            OverwriteSharedNoteOnImport = false,
+            OverwritePersonalNoteOnImport = false,
             NoteCountdown = false,
             ClearOnKill = true,
             PersonalReminderFrame = {
@@ -143,6 +169,7 @@ function NSI:AddMissingDefaults()
                 xOffset = 500,
                 yOffset = 0,
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 14,
                 BGcolor = { 0, 0, 0, 0.3 },
             },
@@ -155,6 +182,7 @@ function NSI:AddMissingDefaults()
                 xOffset = 0,
                 yOffset = 0,
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 14,
                 BGcolor = { 0, 0, 0, 0.3 },
             },
@@ -167,6 +195,7 @@ function NSI:AddMissingDefaults()
                 xOffset = 0,
                 yOffset = 0,
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 14,
                 BGcolor = { 0, 0, 0, 0.3 },
             },
@@ -184,6 +213,7 @@ function NSI:AddMissingDefaults()
                 xTimer = 0,
                 yTimer = 0,
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 30,
                 TimerFontSize = 40,
                 Width = 80,
@@ -216,6 +246,7 @@ function NSI:AddMissingDefaults()
                 xTimer = -2,
                 yTimer = 0,
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 22,
                 TimerFontSize = 22,
                 Spacing = -1,
@@ -231,6 +262,7 @@ function NSI:AddMissingDefaults()
                 xOffset = 0,
                 yOffset = 200,
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 50,
                 Spacing = 1,
                 HideTimerText = false,
@@ -248,6 +280,7 @@ function NSI:AddMissingDefaults()
                 Size = 80,
                 Texture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]],
                 Font = "Expressway",
+                FontFlags = "OUTLINE",
                 FontSize = 18,
                 TextPosition = "Top",
                 xTextOffset = 0,
@@ -343,76 +376,71 @@ function NSI:AddMissingDefaults()
             relativeTo = "TOP",
         },
         AuraTrackingSettings = {
-            Player = {
-                Spacing = -1,
-                Limit = 5,
-                GrowDirection = "RIGHT",
-                enabled = false,
-                Width = 100,
-                Height = 100,
-                Zoom = 0,
-                Anchor = "CENTER",
-                relativeTo = "CENTER",
-                xOffset = -450,
-                yOffset = -100,
-                HideBorder = false,
-                BorderSize = 1,
-                HideTooltip = false,
-                HideDurationText = false,
-                EnableCooldownSwipe = true,
-                InverseCooldownSwipe = true,
-                DurationColor = {1, 1, 0.25, 1},
-                StackColor = {1, 1, 1, 1},
-                DurationFontSize = 16,
-                StackFontSize = 16,
-                TextFont = "Expressway",
-                TextFontFlags = "OUTLINE",
-                DurationXOffset = 0,
-                DurationYOffset = 0,
-                StackXOffset = -1,
-                StackYOffset = 1,
-                NameEnabled = true,
-                NamePosition = "TOP",
-                NameXOffset = 0,
-                NameYOffset = 4,
-                NameFontSize = 30,
-            },
-            Tank = {
-                Spacing = -1,
-                Limit = 5,
+            Player = self:CreateAuraTrackingSettingsDefaults({
+                Name = "Player Debuffs",
+                builtin = "Player",
+                ShowWhitelistedPlayerBuffs = true,
+            }),
+            Tank = self:CreateAuraTrackingSettingsDefaults({
+                Name = "Co-Tank Debuffs",
+                builtin = "Tank",
                 GrowDirection = "LEFT",
-                enabled = false,
-                Width = 100,
-                Height = 100,
-                Zoom = 0,
-                Anchor = "CENTER",
-                relativeTo = "CENTER",
                 xOffset = -549,
                 yOffset = -199,
-                HideBorder = false,
-                BorderSize = 1,
-                HideTooltip = false,
-                HideDurationText = false,
-                EnableCooldownSwipe = true,
-                InverseCooldownSwipe = true,
-                DurationColor = {1, 1, 0.25, 1},
-                StackColor = {1, 1, 1, 1},
-                DurationFontSize = 16,
-                StackFontSize = 16,
-                TextFont = "Expressway",
-                TextFontFlags = "OUTLINE",
-                DurationXOffset = 0,
-                DurationYOffset = 0,
-                StackXOffset = -1,
-                StackYOffset = 1,
                 NameEnabled = true,
-                NamePosition = "TOP",
+            }),
+            External = self:CreateAuraTrackingSettingsDefaults({
+                Name = "External & Immunity",
+                builtin = "External",
+                Width = 120,
+                Height = 120,
+                GrowDirection = "UP",
+                xOffset = 319,
+                yOffset = 152,
+                DurationFontSize = 50,
+                StackFontSize = 50,
+                HideStackText = true,
+                HideTooltip = true,
+                ShowDispelBorder = false,
+                IncludeImmunities = true,
+                NameEnabled = true,
+                NamePosition = "LEFT",
                 NameXOffset = 0,
-                NameYOffset = 4,
-                NameFontSize = 30,
+                NameYOffset = 0,
+            }),
+            Custom = {},
+            Groups = {
+                ["Built-in"] = { collapsed = false },
             },
         },
         AuraTrackingSettingsConverted = false,
+        AuraTrackingSelected = "Player",
+        AuraTrackingStyleCopySource = "Player",
+        PaceComparison = {
+            SelectedBoss = 0,
+            NewThreshold = {
+                phase = 1,
+                time = 0,
+                unit = "boss1",
+                expected = 100,
+            },
+            Display = {
+                Anchor = "CENTER",
+                relativeTo = "CENTER",
+                xOffset = -400,
+                yOffset = 400,
+                Font = "Expressway",
+                FontSize = 28,
+                FontFlags = "OUTLINE",
+                LineSpacing = 4,
+                RefreshInterval = 1,
+                AheadColor = {0, 1, 0, 1},
+                CloseBehindColor = {1, 1, 0, 1},
+                BehindColor = {1, 0.5, 0, 1},
+                FarBehindColor = {1, 0, 0, 1},
+            },
+            Bosses = {},
+        },
 
         -- Ready Check Settings
         ReadyCheckSettings = {
@@ -446,6 +474,7 @@ function NSI:AddMissingDefaults()
                 xOffset = 0,
                 yOffset = 0,
                 FontSize = 30,
+                FontFlags = "OUTLINE",
             },
         },
 
@@ -497,6 +526,7 @@ function NSI:AddMissingDefaults()
         ProfileKeys = {},
         CurrentProfile = "default",
         MainProfile = "default",
+        ProfileVersion = 0,
 
         AutoLoadNote = {},
         HasNewAlertStructure = true,
@@ -525,6 +555,8 @@ function NSI:AddMissingDefaults()
         end
     end
     self:ConvertPrivateAuraSettingsToAuraTracking()
+    self:ApplyDefaultPaceComparisonData()
+    self:RunProfileMigrations()
 end
 
 function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
@@ -547,6 +579,10 @@ local ignored = {
     ["CurrentProfile"]   = true,
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
+    ["AuraTrackingSettings"] = true,
+    ["AuraTrackingSettingsConverted"] = true,
+    ["AuraTrackingSelected"] = true,
+    ["AuraTrackingStyleCopySource"] = true,
 }
 
 function NSI:GetProfileKey()
@@ -584,9 +620,11 @@ function NSI:CreateProfile(name, init)
     end
     self:AddMissingDefaults()
     local ProfileKey = self:GetProfileKey()
-    NSRT.ProfileKeys[ProfileKey] = name
+    if ProfileKey then
+        NSRT.ProfileKeys[ProfileKey] = name
+    end
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
+    if not init and ProfileKey then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:SaveProfile()
 end
 
@@ -599,9 +637,11 @@ function NSI:LoadProfile(name, skipsave, init)
             end
         end
     local ProfileKey = self:GetProfileKey()
-    NSRT.ProfileKeys[ProfileKey] = name
+    if ProfileKey then
+        NSRT.ProfileKeys[ProfileKey] = name
+    end
     NSRT.CurrentProfile = name
-    if not init then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
+    if not init and ProfileKey then self:SetReminder(NSRT.StoredPersonalReminder[ProfileKey], true) end
     self:AddMissingDefaults()
     self:SaveProfile()
     end
@@ -902,8 +942,8 @@ end
 function NSI:LoadMyProfile()
     local ProfileKey = self:GetProfileKey()
     local ProfileToLoad = "default"
-    self:AddMissingDefaults()
-    if NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
+    NSRT = NSRT or {}
+    if ProfileKey and NSRT.ProfileKeys and NSRT.ProfileKeys[ProfileKey] then
         ProfileToLoad = NSRT.ProfileKeys[ProfileKey]
     elseif NSRT.MainProfile then
         ProfileToLoad = NSRT.MainProfile

@@ -6,6 +6,23 @@ local build_media_options = Core.build_media_options
 local build_growdirection_options = Core.build_growdirection_options
 local build_raidframeicon_options = Core.build_raidframeicon_options
 local build_sound_dropdown = Core.build_sound_dropdown
+local build_fontflag_options = Core.build_fontflag_options
+
+local function BuildNoteFontFlagOptions(settingName, updateArgs)
+    local options = {}
+    for _, option in ipairs(build_fontflag_options()) do
+        local value = option.value
+        options[#options + 1] = {
+            label = option.label == "None" and NSI:Loc("None") or option.label,
+            value = value,
+            onclick = function()
+                NSRT.ReminderSettings[settingName].FontFlags = value
+                NSI:UpdateReminderFrame(unpack(updateArgs))
+            end,
+        }
+    end
+    return options
+end
 
 local function BuildSpellDisplayOptions()
     local options = {}
@@ -404,8 +421,10 @@ local function BuildReminderOptions()
                 if not value then
                     NSI.PersonalReminder = ""
                     NSI.LoadedPersonalReminder = nil
-                    NSRT.StoredPersonalReminder[charkey] = nil
-                    NSRT.ActivePersonalReminder[charkey] = {}
+                    if charkey then
+                        NSRT.StoredPersonalReminder[charkey] = nil
+                        NSRT.ActivePersonalReminder[charkey] = {}
+                    end
                 end
             end,
             nocombat = true,
@@ -453,6 +472,28 @@ local function BuildReminderOptions()
             get = function() return NSRT.ReminderSettings.OnlyReceiveGuild end,
             set = function(self, fixedparam, value)
                 NSRT.ReminderSettings.OnlyReceiveGuild = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Overwrite Shared Notes on Import",
+            desc = "When importing a shared note, delete existing shared notes for the same boss first.",
+            get = function() return NSRT.ReminderSettings.OverwriteSharedNoteOnImport end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OverwriteSharedNoteOnImport = value
+            end,
+            nocombat = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Overwrite Personal Notes on Import",
+            desc = "When importing a personal note, delete existing personal notes for the same boss first.",
+            get = function() return NSRT.ReminderSettings.OverwritePersonalNoteOnImport end,
+            set = function(self, fixedparam, value)
+                NSRT.ReminderSettings.OverwritePersonalNoteOnImport = value
             end,
             nocombat = true,
         },
@@ -561,6 +602,16 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.ReminderFrame.Font end,
             values = function()
                 return build_media_options("ReminderFrame", "Font", false, true, false)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font Outline",
+            desc = "Font outline flags of the All Reminders Note",
+            get = function() return NSRT.ReminderSettings.ReminderFrame.FontFlags end,
+            values = function()
+                return BuildNoteFontFlagOptions("ReminderFrame", {false, true})
             end,
             nocombat = true,
         },
@@ -740,6 +791,16 @@ local function BuildReminderNoteOptions()
             nocombat = true,
         },
         {
+            type = "select",
+            name = "Font Outline",
+            desc = "Font outline flags of the Personal Reminders Note",
+            get = function() return NSRT.ReminderSettings.PersonalReminderFrame.FontFlags end,
+            values = function()
+                return BuildNoteFontFlagOptions("PersonalReminderFrame", {false, false, true})
+            end,
+            nocombat = true,
+        },
+        {
             type = "range",
             name = "Width",
             desc = "Width of the Personal Reminders Note",
@@ -863,6 +924,16 @@ local function BuildReminderNoteOptions()
             get = function() return NSRT.ReminderSettings.ExtraReminderFrame.Font end,
             values = function()
                 return build_media_options("ExtraReminderFrame", "Font", false, true, true)
+            end,
+            nocombat = true,
+        },
+        {
+            type = "select",
+            name = "Font Outline",
+            desc = "Font outline flags of the Text-Note",
+            get = function() return NSRT.ReminderSettings.ExtraReminderFrame.FontFlags end,
+            values = function()
+                return BuildNoteFontFlagOptions("ExtraReminderFrame", {false, false, false, true})
             end,
             nocombat = true,
         },

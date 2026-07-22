@@ -116,6 +116,15 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     end
 end
 
+function NSAPI:GetRange(unit)
+    if not unit or not UnitExists(unit) then return false end
+
+    local lib = LibStub and LibStub("LibRangeCheck-3.0", true)
+    if not lib then return false end
+
+    return lib:GetRange(unit, true)
+end
+
 function NSI:GetSpecs(unit)
     if unit then
         local G = UnitGUID(unit)

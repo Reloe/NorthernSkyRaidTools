@@ -1010,7 +1010,7 @@ end
 --    :SetSize(w, h)
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
-                            width, height, minVal, maxVal, step, name, tooltip)
+                            width, height, minVal, maxVal, step, name, tooltip, liveDrag, decimals, useDecimals)
     local totalW  = width  or 220
     local totalH  = height or 22
     local LABEL_W = math.floor(totalW * 0.38)
@@ -1070,12 +1070,45 @@ local function CreateSlider(parent, label, getValue, setValue,
     valText:SetWidth(VAL_W)
     valText:SetHeight(totalH)
 
-    local useFloat = (step and step < 1)
-        or ((minVal or 0) ~= math.floor(minVal or 0))
-        or ((maxVal or 0) ~= math.floor(maxVal or 0))
+    local function GetDecimalPlaces(v)
+        local text = tostring(v or "")
+        local fractional = text:match("%.(%d+)")
+        return fractional and #fractional or 0
+    end
+
+    local configuredDecimals = tonumber(decimals)
+    local stepDecimals = step and step < 1 and math.max(1, GetDecimalPlaces(step)) or nil
+    local minDecimals = minVal and minVal ~= math.floor(minVal) and GetDecimalPlaces(minVal) or 0
+    local maxDecimals = maxVal and maxVal ~= math.floor(maxVal) and GetDecimalPlaces(maxVal) or 0
 
     local function Fmt(v)
-        return useFloat and string.format("%.2f", v) or tostring(math.floor(v + 0.5))
+        if type(v) ~= "number" then return "" end
+
+        local precision = configuredDecimals
+        if precision == nil then
+            if stepDecimals then
+                precision = stepDecimals
+            elseif useDecimals then
+                precision = 2
+            else
+                local rangeDecimals = math.max(minDecimals, maxDecimals)
+                if rangeDecimals > 0 then
+                    precision = rangeDecimals
+                elseif v ~= math.floor(v) then
+                    precision = 2
+                else
+                    precision = 0
+                end
+            end
+        end
+
+        if precision > 0 then
+            local text = string.format("%." .. precision .. "f", v)
+            text = text:gsub("(%..-)0+$", "%1"):gsub("%.$", "")
+            return text
+        end
+
+        return tostring(math.floor(v + 0.5))
     end
 
     local function UpdateVisual(value)
@@ -1085,7 +1118,8 @@ local function CreateSlider(parent, label, getValue, setValue,
         fillTex:SetWidth(math.max(1, math.floor(pct * TRACK_W)))
     end
 
-    -- Fire setValue only on mouse release, not during drag.
+    -- Fire setValue only on mouse release, not during drag, unless liveDrag
+    -- is requested (e.g. a position slider paired with a live preview).
     -- Keyboard changes (arrow keys) are not dragging, so they fire immediately.
     local dragging    = false
     local initialized = false
@@ -1097,7 +1131,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     end)
     slider:SetScript("OnValueChanged", function(_, value)
         UpdateVisual(value)
-        if initialized and not dragging and setValue then setValue(NSI, value) end
+        if initialized and setValue and (liveDrag or not dragging) then setValue(NSI, value) end
     end)
     slider:SetScript("OnEnter", function(self)
         thumb:SetVertexColor(0.5, 1, 1, 1)
@@ -1589,6 +1623,8 @@ end
 --    {Type="TextEntry", label=s, get=fn, set=fn, numeric=bool, min=n, max=n}
 --    {Type="Label",     text=s}
 --    {Type="Breakline"}
+--    {Type="Custom",    build=fn}
+--       build(parent, width, wName) → frame, height
 --
 --    "Scale" is accepted as an alias for "Slider".
 --    Any descriptor may include height=n to override the default row height.
@@ -1642,7 +1678,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
                 ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.min, def.max, def.step, wName, def.tooltip)
+                width, h, def.min, def.max, def.step, wName, def.tooltip, def.liveDrag, def.decimals, def.usedecimals or def.useDecimals)
 
         elseif t == "Dropdown" then
             local resolvedGet    = ResolveCallback(def.get)
@@ -1702,6 +1738,14 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
             ctrl = C.CreateButton(parent, def.label, function()
                 if resolvedFunc then resolvedFunc(NSI) end
             end, def.width or width, h, wName, nil, nil, def.tooltip)
+
+        elseif t == "Custom" then
+            local resolvedBuild = ResolveCallback(def.build)
+            if resolvedBuild then
+                local builtHeight
+                ctrl, builtHeight = resolvedBuild(parent, width, wName)
+                h = builtHeight or h
+            end
         end
 
         if ctrl then
