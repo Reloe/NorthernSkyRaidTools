@@ -413,7 +413,7 @@ local function BuildAuraSoundsUI(parent)
     categoryLabel:SetPoint("LEFT", GetUIObject(screen.typeDropdown), "RIGHT", 18, 0)
 
     screen.categoryDropdown = DF:CreateDropDown(screen, function() return BuildAuraSoundCategoryOptions(screen) end, nil, 230, 22, nil, "$parentCategoryDropdown", options_dropdown_template)
-    screen.categoryDropdown.realsizeH = 160
+    screen.categoryDropdown.realsizeH = 180
     screen.categoryDropdown:SetPoint("LEFT", GetUIObject(categoryLabel), "RIGHT", 10, 0)
     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
 
