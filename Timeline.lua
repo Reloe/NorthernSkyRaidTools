@@ -18,11 +18,15 @@ function NSI:SetupTimelineHooks(timeline)
 
         timeline:SetScript("OnMouseWheel", function(self, delta)
             if IsControlKeyDown() then
-                -- Vertical scroll
+                -- Vertical scroll. verticalSlider's units are raw content pixels
+                -- (SetMinMaxValues(0, bodyHeight - visibleHeight) in the DF timeline
+                -- lib), so scroll by whole rows rather than a flat pixel count or it
+                -- feels far slower than a normal list/scrollframe.
                 if timeline.verticalSlider then
+                    local rowHeight = (timeline.options.line_height or 20) + (timeline.options.line_padding or 0)
                     local cur = timeline.verticalSlider:GetValue()
                     local vMin, vMax = timeline.verticalSlider:GetMinMaxValues()
-                    timeline.verticalSlider:SetValue(math.max(vMin, math.min(vMax, cur - delta * 3)))
+                    timeline.verticalSlider:SetValue(math.max(vMin, math.min(vMax, cur - delta * rowHeight * 3)))
                 end
                 return
             end
@@ -1208,7 +1212,12 @@ function NSI:CreateTimelineWindow()
                         end,
                     })
                 end
-                table.insert(items, {type = "submenu", label = group.name, items = subItems})
+                table.insert(items, {
+                    type = "submenu",
+                    label = group.name,
+                    items = subItems,
+                    icon = group.encID and NSI.UI.BossData.BossIcons and NSI.UI.BossData.BossIcons[group.encID],
+                })
             end
         end
 
@@ -1680,7 +1689,7 @@ function NSI:CreateTimelineWindow()
                                     local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
                                     newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
                                     NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
-                                    NSI:SetReminder(timelineWindow.editNote.name, true, true)
+                                    NSI:SetReminder(timelineWindow.editNote.name, true, false)
                                     timelineWindow.preserveZoom = true
                                     NSI:RefreshTimelineForMode()
                                 end
@@ -1710,7 +1719,7 @@ function NSI:CreateTimelineWindow()
                                 {type = "button", label = "Delete Reminder", fnc = function()
                                     if p and p.srcLineIndex and timelineWindow.editNote then
                                         NSI:DeleteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw)
-                                        NSI:SetReminder(timelineWindow.editNote.name, true, true)
+                                        NSI:SetReminder(timelineWindow.editNote.name, true, false)
                                         timelineWindow.preserveZoom = true
                                         NSI:RefreshTimelineForMode()
                                     end
@@ -2057,7 +2066,7 @@ function NSI:CreateTimelineWindow()
     -- Ghost icon that floats at the block's row when dragging
     local dragGhostIcon = timelineFrame.body:CreateTexture(nil, "OVERLAY")
     dragGhostIcon:SetSize(20, 20)
-    dragGhostIcon:SetAlpha(0.6)
+    dragGhostIcon:SetAlpha(0.9)
     dragGhostIcon:Hide()
     timelineFrame.dragGhostIcon = dragGhostIcon
 
@@ -2116,7 +2125,7 @@ function NSI:CreateTimelineWindow()
                         local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
                         newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
                         NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
-                        NSI:SetReminder(timelineWindow.editNote.name, true, true)
+                        NSI:SetReminder(timelineWindow.editNote.name, true, false)
                         timelineWindow.preserveZoom = true
                         NSI:RefreshTimelineForMode()
                     end
@@ -3011,10 +3020,18 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         sep:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -28)
         sep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -28)
 
-        -- Time info (read-only)
-        local timeLabel = C.CreateLabel(popup, "", W - 24, 16)
-        timeLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -36)
-        popup.timeLabel = timeLabel
+        -- Phase / Time-in-phase (editable — map directly to the raw "ph:"/"time:" fields)
+        local phaseEntry = C.CreateTextEntry(popup, "Phase",
+            function() return "" end, function() end,
+            110, 22, true, 1, nil, "NSRTReminderPhase")
+        phaseEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -36)
+        popup.phaseEntry = phaseEntry
+
+        local timeEntry = C.CreateTextEntry(popup, "Time (s)",
+            function() return "" end, function() end,
+            160, 22, true, 0, nil, "NSRTReminderTime")
+        timeEntry:SetPoint("LEFT", phaseEntry.frame, "RIGHT", 14, 0)
+        popup.timeEntry = timeEntry
 
         -- ── Spell ID row ────────────────────────────────────────────────────
         -- Entry uses built-in label; 160px container keeps the 60px input
@@ -3153,15 +3170,13 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     local difficulty = window.currentDifficulty
     local phase, phaseStart = self:PhaseFromTime(encID, absoluteTime, difficulty)
     local relTime  = math.max(0, math.floor(absoluteTime - phaseStart))
-    local minutes  = math.floor(absoluteTime / 60)
-    local seconds  = math.floor(absoluteTime % 60)
-    popup.timeLabel.label:SetText(string.format(
-        "|cff88ff88Time: %d:%02d  |  Phase %d  +%ds|r", minutes, seconds, phase, relTime))
     popup._phase   = phase
     popup._relTime = relTime
     popup._pendingEncID = encID
 
     -- Pre-fill fields
+    popup.phaseEntry:SetValue(phase)
+    popup.timeEntry:SetValue(relTime)
     popup.spellEntry:SetValue(existingSpellID)
     popup.textEntry:SetValue(existingText)
     popup.durEntry:SetValue(existingDur)
@@ -3222,9 +3237,20 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         local dur      = tonumber(popup.durEntry:GetValue()) or NSRT.ReminderSettings.SpellDuration or 5
         local glowUnit = popup.glowEntry:GetValue()
 
+        -- Phase / time-in-phase: manual override from the editable fields, falling
+        -- back to the cursor/block-derived defaults if left blank or invalid.
+        local newPhase = math.max(1, math.floor(tonumber(popup.phaseEntry:GetValue()) or phase))
+        local newRelTime = math.max(0, tonumber(popup.timeEntry:GetValue()) or relTime)
+
         if isEdit and payload and payload.srcLineIndex then
-            -- Rebuild the line, preserving tag / time / ph; updating spell/text/dur/glowunit
+            -- Rebuild the line, preserving tag; updating time/ph/spell/text/dur/glowunit
             local newRaw = srcRaw
+            newRaw = newRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
+            if newRaw:find("ph:%d+") then
+                newRaw = newRaw:gsub("ph:%d+", "ph:" .. newPhase)
+            else
+                newRaw = newRaw .. ";ph:" .. newPhase
+            end
             -- Insert a new "key:value" chunk before ";ph:" when present; otherwise append
             -- it to the end. Lines without an explicit ph (defaults to phase 1) have no
             -- ";ph:" anchor, so a plain gsub(";ph:", ...) would silently no-op on them.
@@ -3277,15 +3303,15 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         else
             -- Build a new line
             local playerName = UnitName("player") or "Player"
-            local line = "tag:" .. playerName .. ";time:" .. relTime .. ";"
+            local line = "tag:" .. playerName .. ";time:" .. newRelTime .. ";"
             if spellID  then line = line .. "spellid:" .. spellID .. ";"  end
             if text ~= ""     then line = line .. "text:" .. text .. ";"          end
             if glowUnit ~= "" then line = line .. "glowunit:" .. glowUnit .. ";"  end
-            line = line .. "ph:" .. phase .. ";dur:" .. dur
+            line = line .. "ph:" .. newPhase .. ";dur:" .. dur
             NSI:AppendNoteLine(editNote.name, true, line)
         end
 
-        NSI:SetReminder(editNote.name, true, true)
+        NSI:SetReminder(editNote.name, true, false)
         window.preserveZoom = true
         NSI:RefreshTimelineForMode()
         popup:Hide()
@@ -3296,7 +3322,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         local editNote = popup._window and popup._window.editNote
         if editNote and payload and payload.srcLineIndex then
             NSI:DeleteNoteLine(editNote.name, true, payload.srcLineIndex, srcRaw)
-            NSI:SetReminder(editNote.name, true, true)
+            NSI:SetReminder(editNote.name, true, false)
             window.preserveZoom = true
             NSI:RefreshTimelineForMode()
             popup:Hide()
