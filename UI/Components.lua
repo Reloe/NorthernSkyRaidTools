@@ -887,6 +887,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
             local rowHover = MakeHoverBg(row, 2)
 
             local iconTex = row:CreateTexture(nil, "ARTWORK")
+
             iconTex:SetPoint("LEFT", row, "LEFT", 4, 0)
             iconTex:Hide()
             local rlbl = MakeFontString(row, 12)
@@ -1945,17 +1946,24 @@ end
 --    { type="button",  label="…", fnc=fn,    icon=texOrID, spellIcon=spellID }
 --    { type="submenu", label="…", items={…}, icon=texOrID, spellIcon=spellID }
 --    { type="label",   text="…" }
---    { type="separator" }
+--    { type="separator", label="…" }   -- label optional; centred in the line
 --
 --  width – optional fixed px width; nil = auto-sized to widest label
 -- ============================================================
 local CTX_ROW_H    = 20
 local CTX_SEP_H    = 8
+local CTX_SEP_LBL_H = 16
 local CTX_LABEL_H  = 18
 local CTX_PAD_H    = 8
 local CTX_ICON_SZ  = 14
 local CTX_ICON_GAP = 4
 local CTX_ARROW_W  = 14
+
+-- Menus taller than this many rows are clipped to that height and scrolled
+-- with the mouse wheel instead of running off the screen.
+local CTX_MAX_ROWS  = 10
+local CTX_SCROLL_W  = 4
+local CTX_SCROLL_MIN_THUMB = 12
 
 local MAX_CTX_LEVELS = 5
 local ctxFrames      = {}
@@ -1973,6 +1981,16 @@ local function CtxMeasureText(text)
         NSI:GetUIFontFlags())
     _ctxMeasureFS:SetText(text or "")
     return _ctxMeasureFS:GetStringWidth()
+end
+
+-- A labelled separator centres its text in the row and runs the divider line
+-- out to both edges. Labels past CTX_SEP_LABEL_MAX chars are cut.
+local CTX_SEP_LABEL_MAX = 26
+local CTX_SEP_LBL_GAP   = 6    -- blank space between the text and each line
+local CTX_SEP_LBL_MIN   = 10   -- shortest line stub worth drawing
+
+local function CtxSepLabel(label)
+    return string.sub(label, 1, CTX_SEP_LABEL_MAX)
 end
 
 local function ResolveCtxIcon(item)
@@ -2018,6 +2036,33 @@ local function GetOrCreateCtxFrame(level)
     })
     f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     f:SetBackdropBorderColor(0, 1, 1, 0.7)
+
+    -- Rows live in this clipped child so a long menu can be scrolled as a
+    -- block; its right edge is pulled in when the scrollbar is shown.
+    local content = CreateFrame("Frame", nil, f)
+    content:SetFrameLevel(f:GetFrameLevel() + 1)
+    content:SetClipsChildren(true)
+    f._content = content
+
+    local track = f:CreateTexture(nil, "ARTWORK")
+    track:SetColorTexture(1, 1, 1, 0.06)
+    track:SetWidth(CTX_SCROLL_W)
+    track:SetPoint("TOPRIGHT",    f, "TOPRIGHT",    -2, -2)
+    track:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -2,  2)
+    track:Hide()
+    f._scrollTrack = track
+
+    local thumb = f:CreateTexture(nil, "OVERLAY")
+    thumb:SetColorTexture(0, 1, 1, 0.45)
+    thumb:SetWidth(CTX_SCROLL_W)
+    thumb:Hide()
+    f._scrollThumb = thumb
+
+    f:EnableMouseWheel(true)
+    f:SetScript("OnMouseWheel", function(_, delta)
+        if f._Scroll then f._Scroll(delta) end
+    end)
+
     f._rows = {}
     ctxFrames[level] = f
     return f
@@ -2025,7 +2070,7 @@ end
 
 local ShowContextAtLevel
 
-ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
+ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows)
     HideCtxFromLevel(level + 1)
     EnsureCtxClickaway()
 
@@ -2033,6 +2078,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
     local baseLevel = f:GetFrameLevel()
 
     -- ── Width ────────────────────────────────────────────────────
+    local autoWidth = (width == nil)
     if not width then
         local hasIcon, hasSubmenu = false, false
         local maxW = 0
@@ -2046,6 +2092,11 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
             elseif t == "label" then
                 local w = CtxMeasureText(item.text or "")
                 if w > maxW then maxW = w end
+            elseif t == "separator" and item.label then
+                -- Leave room for the text plus a short line stub either side.
+                local w = CtxMeasureText(CtxSepLabel(item.label))
+                          + (CTX_SEP_LBL_GAP + CTX_SEP_LBL_MIN) * 2
+                if w > maxW then maxW = w end
             end
         end
         local iconW  = hasIcon    and (CTX_ICON_SZ + CTX_ICON_GAP) or 0
@@ -2054,15 +2105,33 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
     end
 
     -- ── Height ───────────────────────────────────────────────────
-    local totalH = 4   -- 2px inner padding top + bottom
+    local contentH = 0
     for _, item in ipairs(items) do
-        if     item.type == "separator" then totalH = totalH + CTX_SEP_H
-        elseif item.type == "label"     then totalH = totalH + CTX_LABEL_H
-        else                                 totalH = totalH + CTX_ROW_H
+        if item.type == "separator" then
+            contentH = contentH + (item.label and CTX_SEP_LBL_H or CTX_SEP_H)
+        elseif item.type == "label" then contentH = contentH + CTX_LABEL_H
+        else                             contentH = contentH + CTX_ROW_H
         end
     end
 
+    -- Anything past the configured row limit is reachable by scrolling.
+    local maxContentH = (maxRows or CTX_MAX_ROWS) * CTX_ROW_H
+    local scrollable  = contentH > maxContentH
+    local viewH       = scrollable and maxContentH or contentH
+    local totalH      = viewH + 4   -- 2px inner padding top + bottom
+
+    local scrollInset = scrollable and (CTX_SCROLL_W + 4) or 0
+    -- Auto-sized menus grow to keep the label area intact once the scrollbar
+    -- claims a strip on the right; fixed-width menus just give up the strip.
+    if autoWidth then width = width + scrollInset end
+    local contentW = width - scrollInset
+
     f:SetSize(width, totalH)
+
+    local content = f._content
+    content:ClearAllPoints()
+    content:SetPoint("TOPLEFT",     f, "TOPLEFT",      0, -2)
+    content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -scrollInset, 2)
 
     -- ── Position with four-way edge-flip ─────────────────────────
     local screenW = GetScreenWidth()
@@ -2078,8 +2147,14 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
     local function GetRow(i)
         if rowPool[i] then return rowPool[i] end
 
-        local row = CreateFrame("Button", nil, f)
+        local row = CreateFrame("Button", nil, content)
         row:SetFrameLevel(baseLevel + 2)
+        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        -- Rows swallow mouse input, so forward the wheel to the menu frame.
+        row:EnableMouseWheel(true)
+        row:SetScript("OnMouseWheel", function(_, delta)
+            if f._Scroll then f._Scroll(delta) end
+        end)
 
         local hoverBg = CreateFrame("Frame", nil, row)
         hoverBg:SetAllPoints(row)
@@ -2096,11 +2171,19 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
         sepTex:SetHeight(1)
         row.sepTex = sepTex
 
+        -- Second stub, used only by labelled separators: sepTex runs from the
+        -- left edge to the text, this one from the text to the right edge.
+        local sepTex2 = row:CreateTexture(nil, "ARTWORK")
+        sepTex2:SetColorTexture(0, 1, 1, 0.15)
+        sepTex2:SetHeight(1)
+        row.sepTex2 = sepTex2
+
         local iconFrame = CreateFrame("Frame", nil, row)
         iconFrame:SetSize(CTX_ICON_SZ, CTX_ICON_SZ)
         iconFrame:SetFrameLevel(baseLevel + 4)
         iconFrame:EnableMouse(false)
         local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
+        iconTex:SetTexCoord(0.1, 0.90, 0.1, 0.90)
         iconTex:SetAllPoints()
         row.iconFrame = iconFrame
         row.iconTex   = iconTex
@@ -2122,7 +2205,10 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
     end
 
     -- ── Build rows ───────────────────────────────────────────────
-    local curY     = -2
+    -- Rows are configured here but positioned by ApplyScroll() below, so a
+    -- scrolled menu can re-lay them out without rebuilding.
+    local layout   = {}
+    local curY     = 0
     local rowCount = 0
 
     for _, item in ipairs(items) do
@@ -2132,8 +2218,11 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
 
         row.hoverBg:SetAlpha(0)
         row.sepTex:Hide()
+        row.sepTex2:Hide()
         row.iconFrame:Hide()
         row.arrowTex:Hide()
+        row.labelFS:SetWordWrap(true)
+        row.labelFS:SetJustifyH("LEFT")
         row.labelFS:SetText("")
         row:SetScript("OnEnter", nil)
         row:SetScript("OnLeave", nil)
@@ -2141,34 +2230,64 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
         row:EnableMouse(false)
 
         if itype == "separator" then
-            row:SetSize(width, CTX_SEP_H)
-            row:SetPoint("TOPLEFT", f, "TOPLEFT", 0, curY)
-            row.sepTex:ClearAllPoints()
-            row.sepTex:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H, 0)
-            row.sepTex:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
-            row.sepTex:Show()
-            curY = curY - CTX_SEP_H
+            local sepH = item.label and CTX_SEP_LBL_H or CTX_SEP_H
+            row:SetSize(contentW, sepH)
+            layout[rowCount] = {row = row, y = curY, h = sepH}
+            if item.label then
+                local text = CtxSepLabel(item.label)
+                -- Anchored from the centre only, so the text keeps its natural
+                -- width and the line stubs can butt up against it.
+                row.labelFS:SetWordWrap(false)
+                row.labelFS:SetJustifyH("CENTER")
+                row.labelFS:SetTextColor(0.55, 0.55, 0.55, 1)
+                row.labelFS:SetText(text)
+                row.labelFS:ClearAllPoints()
+                row.labelFS:SetPoint("CENTER", row, "CENTER", 0, 0)
+                row.labelFS:SetHeight(sepH)
+
+                -- Hidden rather than drawn at a negative width when the text
+                -- alone already fills the row.
+                local halfGap = CtxMeasureText(text) / 2 + CTX_SEP_LBL_GAP
+                if contentW / 2 - CTX_PAD_H - halfGap >= CTX_SEP_LBL_MIN then
+                    row.sepTex:ClearAllPoints()
+                    row.sepTex:SetPoint("LEFT",  row, "LEFT",   CTX_PAD_H, 0)
+                    row.sepTex:SetPoint("RIGHT", row, "CENTER", -halfGap,  0)
+                    row.sepTex:Show()
+
+                    row.sepTex2:ClearAllPoints()
+                    row.sepTex2:SetPoint("LEFT",  row, "CENTER", halfGap,   0)
+                    row.sepTex2:SetPoint("RIGHT", row, "RIGHT",  -CTX_PAD_H, 0)
+                    row.sepTex2:Show()
+                end
+            else
+                row.sepTex:ClearAllPoints()
+                row.sepTex:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H, 0)
+                row.sepTex:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
+                row.sepTex:Show()
+            end
+            curY = curY + sepH
 
         elseif itype == "label" then
-            row:SetSize(width, CTX_LABEL_H)
-            row:SetPoint("TOPLEFT", f, "TOPLEFT", 0, curY)
+            row:SetSize(contentW, CTX_LABEL_H)
+            layout[rowCount] = {row = row, y = curY, h = CTX_LABEL_H}
             row.labelFS:SetTextColor(0.55, 0.55, 0.55, 1)
             row.labelFS:SetText(item.text or "")
             row.labelFS:ClearAllPoints()
             row.labelFS:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H,  0)
             row.labelFS:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
             row.labelFS:SetHeight(CTX_LABEL_H)
-            curY = curY - CTX_LABEL_H
+            curY = curY + CTX_LABEL_H
 
         elseif itype == "button" or itype == "submenu" then
-            row:SetSize(width, CTX_ROW_H)
-            row:SetPoint("TOPLEFT", f, "TOPLEFT", 0, curY)
+            row:SetSize(contentW, CTX_ROW_H)
+            layout[rowCount] = {row = row, y = curY, h = CTX_ROW_H}
             row:EnableMouse(true)
 
             local tex   = ResolveCtxIcon(item)
             local leftX = CTX_PAD_H
             if tex then
                 row.iconTex:SetTexture(tex)
+                row.iconTex:SetTexCoord(0.1, 0.90, 0.1, 0.90)
                 row.iconFrame:ClearAllPoints()
                 row.iconFrame:SetPoint("LEFT", row, "LEFT", CTX_PAD_H, 0)
                 row.iconFrame:Show()
@@ -2196,10 +2315,23 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
                 row:SetScript("OnLeave", function()
                     UIFrameFadeOut(row.hoverBg, STYLE.hover_out, row.hoverBg:GetAlpha(), 0)
                 end)
-                if item.fnc then
-                    row:SetScript("OnClick", function()
-                        HideCtxFromLevel(1)
-                        item.fnc()
+                if item.fnc or item.contextItems then
+                    row:SetScript("OnClick", function(_, clickButton)
+                        if clickButton == "RightButton" then
+                            if item.contextItems then
+                                -- x from the menu frame, not the row: rows are
+                                -- narrowed when the scrollbar is shown.
+                                local rRight = f:GetRight()
+                                local rLeft  = f:GetLeft()
+                                local rTop   = row:GetTop()
+                                if rRight and rTop then
+                                    ShowContextAtLevel(item.contextItems, level + 1, rRight + 2, rLeft - 2, rTop, item.contextWidth, maxRows)
+                                end
+                            end
+                        elseif item.fnc then
+                            HideCtxFromLevel(1)
+                            item.fnc()
+                        end
                     end)
                 end
             else -- submenu
@@ -2207,11 +2339,11 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
                 row:SetScript("OnEnter", function()
                     UIFrameFadeIn(row.hoverBg, STYLE.hover_in, row.hoverBg:GetAlpha(), 1)
                     row.arrowTex:SetVertexColor(0, 1, 1, 1)
-                    local rRight = row:GetRight()
-                    local rLeft  = row:GetLeft()
+                    local rRight = f:GetRight()
+                    local rLeft  = f:GetLeft()
                     local rTop   = row:GetTop()
                     if rRight and rTop then
-                        ShowContextAtLevel(subItems, level + 1, rRight + 2, rLeft - 2, rTop, nil)
+                        ShowContextAtLevel(subItems, level + 1, rRight + 2, rLeft - 2, rTop, nil, maxRows)
                     end
                 end)
                 row:SetScript("OnLeave", function()
@@ -2220,25 +2352,90 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
                 end)
             end
 
-            curY = curY - CTX_ROW_H
+            curY = curY + CTX_ROW_H
         end
-
-        row:Show()
     end
 
     for i = rowCount + 1, #rowPool do rowPool[i]:Hide() end
+
+    -- ── Scroll ───────────────────────────────────────────────────
+    local maxScroll = contentH - viewH   -- 0 when everything fits
+    f._scroll = 0
+
+    local function ApplyScroll()
+        for _, e in ipairs(layout) do
+            local top    = f._scroll - e.y
+            local bottom = top - e.h
+            e.row:ClearAllPoints()
+            e.row:SetPoint("TOPLEFT", content, "TOPLEFT", 0, top)
+            -- Rows entirely outside the viewport are hidden: clipping only
+            -- suppresses drawing, it does not stop them taking mouse input.
+            if top > -viewH and bottom < 0 then
+                e.row:Show()
+            else
+                e.row:Hide()
+            end
+        end
+
+        if scrollable then
+            local thumbH = math.max(CTX_SCROLL_MIN_THUMB, viewH * viewH / contentH)
+            local travel = viewH - thumbH
+            local frac   = maxScroll > 0 and (f._scroll / maxScroll) or 0
+            f._scrollThumb:SetHeight(thumbH)
+            f._scrollThumb:ClearAllPoints()
+            f._scrollThumb:SetPoint("TOP", f._scrollTrack, "TOP", 0, -travel * frac)
+            f._scrollTrack:Show()
+            f._scrollThumb:Show()
+        else
+            f._scrollTrack:Hide()
+            f._scrollThumb:Hide()
+        end
+    end
+
+    f._Scroll = scrollable and function(delta)
+        local newScroll = math.min(math.max(f._scroll - delta * CTX_ROW_H, 0), maxScroll)
+        if newScroll == f._scroll then return end
+        f._scroll = newScroll
+        -- Any open child menu is anchored to a row that just moved.
+        HideCtxFromLevel(level + 1)
+        ApplyScroll()
+    end or nil
+
+    ApplyScroll()
 
     f:Show()
     if level == 1 then ctxClickaway:Show() end
 end
 
-local function ShowContextMenu(items, width)
+local function ShowContextMenu(items, width, maxRows)
     EnsureCtxClickaway()
     local scale  = UIParent:GetEffectiveScale()
     local cx, cy = GetCursorPosition()
     local uiX    = cx / scale
     local uiY    = cy / scale
-    ShowContextAtLevel(items, 1, uiX, uiX, uiY, width)
+    ShowContextAtLevel(items, 1, uiX, uiX, uiY, width, maxRows)
+end
+
+-- ============================================================
+--  ShowContextMenuAtFrame
+--
+--  Same styled menu as ShowContextMenu, but opens anchored below
+--  a frame (e.g. a menu-bar button) instead of at the cursor.
+--  Left edge aligns to the anchor's left edge normally, flipping
+--  to right-align against the anchor's right edge if it would
+--  otherwise run off the edge of the screen.
+-- ============================================================
+local function ShowContextMenuAtFrame(items, anchor, width, maxRows)
+    EnsureCtxClickaway()
+    -- anchor's Get{Left,Right,Bottom} are expressed in ITS OWN effective-scale units,
+    -- but the popup frame is parented straight to UIParent, so if anchor sits inside
+    -- something with its own SetScale (e.g. a window's adjustable scale bar), the raw
+    -- values drift relative to UIParent's space. Renormalize by the scale ratio.
+    local scaleRatio = anchor:GetEffectiveScale() / UIParent:GetEffectiveScale()
+    local left   = (anchor:GetLeft() or 0) * scaleRatio
+    local right  = (anchor:GetRight() or 0) * scaleRatio
+    local bottom = (anchor:GetBottom() or 0) * scaleRatio
+    ShowContextAtLevel(items, 1, left, right, bottom, width, maxRows)
 end
 
 -- ============================================================
@@ -2417,6 +2614,7 @@ NSI.UI.Components = {
     CreateDialog        = CreateDialog,
     CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
+    ShowContextMenuAtFrame = ShowContextMenuAtFrame,
     CreateLink          = CreateLink,
     STYLE               = STYLE,
     registry            = componentRegistry,

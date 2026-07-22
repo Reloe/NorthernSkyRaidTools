@@ -514,7 +514,8 @@ local function BuildReminderScreen(personal, parentFrame)
     local metaGap         = 4
     local bossDropW       = 180
     local diffDropW       = 110
-    local nameEntryW      = 396
+    local timelineBtnSize = 22
+    local nameEntryW      = 396 - (timelineBtnSize + metaGap)
 
     local function BuildBossMetaOptions()
         local options = {
@@ -582,6 +583,21 @@ local function BuildReminderScreen(personal, parentFrame)
     nameEntry:SetPoint("TOPLEFT", diffDropdown.widget, "TOPRIGHT", metaGap, 0)
     NSI:SetUIFont(nameEntry.editbox, 14, "OUTLINE")
     screen.nameEntry = nameEntry
+
+    -- Jumps straight to this note in the Timeline (opening it if needed) — mirrors
+    -- the icon-only Timeline button at the top of the NSUI window.
+    local timelineBtn = CreateButton(screen, "",
+        function()
+            if screen.selectedName then
+                NSI:ViewNoteInTimeline(screen.selectedName, personal)
+            end
+        end,
+        timelineBtnSize, timelineBtnSize, screenName .. "TimelineBtn",
+        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\clock.png]], nil,
+        { title = NSI:Loc("Timeline"), desc = NSI:Loc("View this note in the Timeline") }
+    )
+    timelineBtn:SetPoint("LEFT", nameEntry.widget, "RIGHT", metaGap, 0)
+    screen.timelineBtn = timelineBtn
 
     local function SaveNameEntryRename(editBox)
         -- When viewing a received note, update its first line in place without touching stored notes

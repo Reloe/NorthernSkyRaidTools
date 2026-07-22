@@ -293,6 +293,19 @@ function NSUI:Init()
     )
     exportGroupBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + ANCHOR_BTN_SIZE + 6), NOTES_HEADER_BTN_Y)
 
+    -- Timeline button (icon-only, immediately left of the export group button)
+    local timelineBtn = CreateButton(
+        NSUI,
+        "",  -- icon-only, no text
+        function() NSI:ToggleTimelineWindow() end,
+        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+        "NSUITimelineBtn",
+        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\clock.png]],
+        nil,  -- textSize
+        { title = GetLocalizedText("Timeline"), desc = GetLocalizedText("Open the Timeline window") }
+    )
+    timelineBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + (ANCHOR_BTN_SIZE + 6) * 2), NOTES_HEADER_BTN_Y)
+
     -- --------------------------------------------------------
     -- Tab selection logic (matches Details' SelectOptionsSection)
     -- --------------------------------------------------------
