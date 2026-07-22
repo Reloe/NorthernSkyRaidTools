@@ -1946,12 +1946,13 @@ end
 --    { type="button",  label="…", fnc=fn,    icon=texOrID, spellIcon=spellID }
 --    { type="submenu", label="…", items={…}, icon=texOrID, spellIcon=spellID }
 --    { type="label",   text="…" }
---    { type="separator" }
+--    { type="separator", label="…" }   -- label optional; centred in the line
 --
 --  width – optional fixed px width; nil = auto-sized to widest label
 -- ============================================================
 local CTX_ROW_H    = 20
 local CTX_SEP_H    = 8
+local CTX_SEP_LBL_H = 16
 local CTX_LABEL_H  = 18
 local CTX_PAD_H    = 8
 local CTX_ICON_SZ  = 14
@@ -1980,6 +1981,16 @@ local function CtxMeasureText(text)
         NSI:GetUIFontFlags())
     _ctxMeasureFS:SetText(text or "")
     return _ctxMeasureFS:GetStringWidth()
+end
+
+-- A labelled separator centres its text in the row and runs the divider line
+-- out to both edges. Labels past CTX_SEP_LABEL_MAX chars are cut.
+local CTX_SEP_LABEL_MAX = 26
+local CTX_SEP_LBL_GAP   = 6    -- blank space between the text and each line
+local CTX_SEP_LBL_MIN   = 10   -- shortest line stub worth drawing
+
+local function CtxSepLabel(label)
+    return string.sub(label, 1, CTX_SEP_LABEL_MAX)
 end
 
 local function ResolveCtxIcon(item)
@@ -2081,6 +2092,11 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
             elseif t == "label" then
                 local w = CtxMeasureText(item.text or "")
                 if w > maxW then maxW = w end
+            elseif t == "separator" and item.label then
+                -- Leave room for the text plus a short line stub either side.
+                local w = CtxMeasureText(CtxSepLabel(item.label))
+                          + (CTX_SEP_LBL_GAP + CTX_SEP_LBL_MIN) * 2
+                if w > maxW then maxW = w end
             end
         end
         local iconW  = hasIcon    and (CTX_ICON_SZ + CTX_ICON_GAP) or 0
@@ -2091,9 +2107,10 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
     -- ── Height ───────────────────────────────────────────────────
     local contentH = 0
     for _, item in ipairs(items) do
-        if     item.type == "separator" then contentH = contentH + CTX_SEP_H
-        elseif item.type == "label"     then contentH = contentH + CTX_LABEL_H
-        else                                 contentH = contentH + CTX_ROW_H
+        if item.type == "separator" then
+            contentH = contentH + (item.label and CTX_SEP_LBL_H or CTX_SEP_H)
+        elseif item.type == "label" then contentH = contentH + CTX_LABEL_H
+        else                             contentH = contentH + CTX_ROW_H
         end
     end
 
@@ -2154,6 +2171,13 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
         sepTex:SetHeight(1)
         row.sepTex = sepTex
 
+        -- Second stub, used only by labelled separators: sepTex runs from the
+        -- left edge to the text, this one from the text to the right edge.
+        local sepTex2 = row:CreateTexture(nil, "ARTWORK")
+        sepTex2:SetColorTexture(0, 1, 1, 0.15)
+        sepTex2:SetHeight(1)
+        row.sepTex2 = sepTex2
+
         local iconFrame = CreateFrame("Frame", nil, row)
         iconFrame:SetSize(CTX_ICON_SZ, CTX_ICON_SZ)
         iconFrame:SetFrameLevel(baseLevel + 4)
@@ -2194,8 +2218,11 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
 
         row.hoverBg:SetAlpha(0)
         row.sepTex:Hide()
+        row.sepTex2:Hide()
         row.iconFrame:Hide()
         row.arrowTex:Hide()
+        row.labelFS:SetWordWrap(true)
+        row.labelFS:SetJustifyH("LEFT")
         row.labelFS:SetText("")
         row:SetScript("OnEnter", nil)
         row:SetScript("OnLeave", nil)
@@ -2203,13 +2230,42 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
         row:EnableMouse(false)
 
         if itype == "separator" then
-            row:SetSize(contentW, CTX_SEP_H)
-            layout[rowCount] = {row = row, y = curY, h = CTX_SEP_H}
-            row.sepTex:ClearAllPoints()
-            row.sepTex:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H, 0)
-            row.sepTex:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
-            row.sepTex:Show()
-            curY = curY + CTX_SEP_H
+            local sepH = item.label and CTX_SEP_LBL_H or CTX_SEP_H
+            row:SetSize(contentW, sepH)
+            layout[rowCount] = {row = row, y = curY, h = sepH}
+            if item.label then
+                local text = CtxSepLabel(item.label)
+                -- Anchored from the centre only, so the text keeps its natural
+                -- width and the line stubs can butt up against it.
+                row.labelFS:SetWordWrap(false)
+                row.labelFS:SetJustifyH("CENTER")
+                row.labelFS:SetTextColor(0.55, 0.55, 0.55, 1)
+                row.labelFS:SetText(text)
+                row.labelFS:ClearAllPoints()
+                row.labelFS:SetPoint("CENTER", row, "CENTER", 0, 0)
+                row.labelFS:SetHeight(sepH)
+
+                -- Hidden rather than drawn at a negative width when the text
+                -- alone already fills the row.
+                local halfGap = CtxMeasureText(text) / 2 + CTX_SEP_LBL_GAP
+                if contentW / 2 - CTX_PAD_H - halfGap >= CTX_SEP_LBL_MIN then
+                    row.sepTex:ClearAllPoints()
+                    row.sepTex:SetPoint("LEFT",  row, "LEFT",   CTX_PAD_H, 0)
+                    row.sepTex:SetPoint("RIGHT", row, "CENTER", -halfGap,  0)
+                    row.sepTex:Show()
+
+                    row.sepTex2:ClearAllPoints()
+                    row.sepTex2:SetPoint("LEFT",  row, "CENTER", halfGap,   0)
+                    row.sepTex2:SetPoint("RIGHT", row, "RIGHT",  -CTX_PAD_H, 0)
+                    row.sepTex2:Show()
+                end
+            else
+                row.sepTex:ClearAllPoints()
+                row.sepTex:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H, 0)
+                row.sepTex:SetPoint("RIGHT", row, "RIGHT", -CTX_PAD_H, 0)
+                row.sepTex:Show()
+            end
+            curY = curY + sepH
 
         elseif itype == "label" then
             row:SetSize(contentW, CTX_LABEL_H)

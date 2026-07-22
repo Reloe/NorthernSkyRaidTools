@@ -1179,7 +1179,6 @@ function NSI:CreateTimelineWindow()
         table.sort(groupOrder, function(a, b) return groups[a].order < groups[b].order end)
 
         if #groupOrder > 0 then
-            table.insert(items, {type = "separator"})
 
             for _, key in ipairs(groupOrder) do
                 local group = groups[key]
@@ -1224,6 +1223,19 @@ function NSI:CreateTimelineWindow()
                         end,
                     })
                 end
+
+                if group.encID == 3176 then
+                    items[#items + 1] = {
+                        type  = "separator",
+                        label = "Season 1 (Midnight) ",
+                    }
+                elseif group.encID == 3379 then
+                    items[#items + 1] = {
+                        type  = "separator",
+                        label = "Season 2 (Midnight) ",
+                    }
+                end
+
                 table.insert(items, {
                     type = "submenu",
                     label = group.name,
