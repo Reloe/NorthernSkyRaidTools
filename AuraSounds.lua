@@ -1,5 +1,9 @@
 local _, NSI = ... -- Internal namespace
 
+-- Built-in aura sound entries accept:
+-- { spellID = 12345, sound = "SoundName" }                         -- defaults to unit = "player", eventType = "applied"
+-- { spellID = 12345, sound = "SoundName", unit = "target" }         -- unit can also be a player name, raid/party unit, bossN, focus, etc.
+-- { spellID = 12345, sound = "SoundName", eventType = "removed" }   -- eventType can be "applied", "removed", or "stackGain"
 NSI.AuraSoundCategories = {
     Raid = {
         { key = 3176, entries = { -- Imperator Averzian
