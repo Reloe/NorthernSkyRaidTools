@@ -545,7 +545,7 @@ PVEFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 if SocialUIFrame and SocialUIFrame.RaidFrame then
     SocialUIFrame.RaidFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
-    SocialUIFrame.RaidFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+    SocialUIFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
 else
     FriendsFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
     FriendsFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
