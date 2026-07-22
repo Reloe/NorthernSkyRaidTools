@@ -36,7 +36,9 @@ function NSI:SetupTimelineHooks(timeline)
             local currentScale = timeline.currentScale or 1
 
             local cursorX = GetCursorPosition()
-            local uiScale = 1 / UIParent:GetEffectiveScale()
+            -- Use this timeline frame's own effective scale, not UIParent's — the
+            -- timeline window has an adjustable scale bar, so the two can differ.
+            local uiScale = 1 / timeline:GetEffectiveScale()
             cursorX = cursorX * uiScale
             local frameLeft = timeline:GetLeft() or 0
             local mouseXInFrame = cursorX - frameLeft
@@ -1194,6 +1196,16 @@ function NSI:CreateTimelineWindow()
                             self:UpdateEditNoteButtonLabel(timelineWindow)
                             self:RefreshTimelineForMode()
                         end,
+                        -- Right-click → Rename/Delete this note, without disturbing the
+                        -- outer boss list (opens as its own nested level anchored to the row).
+                        contextItems = {
+                            {type = "button", label = "Rename", fnc = function()
+                                NSI:ShowRenameNoteDialog(timelineWindow, data.name)
+                            end},
+                            {type = "button", label = "Delete", fnc = function()
+                                NSI:ShowDeleteNoteConfirm(timelineWindow, data.name)
+                            end},
+                        },
                     })
                 end
                 if group.encID then
@@ -1672,7 +1684,7 @@ function NSI:CreateTimelineWindow()
                                 -- Recalculate snapped time live at release so any zoom/scroll changes
                                 -- during the drag are reflected — using _lastSnappedTime risks stale pps/scrollX.
                                 timelineWindow._lastSnappedTime = nil
-                                local uiScale = 1 / UIParent:GetEffectiveScale()
+                                local uiScale = 1 / timelineWindow:GetEffectiveScale()
                                 local cursorX = GetCursorPosition() * uiScale
                                 local bodyLeft = tl and (tl.body:GetLeft() or 0) or 0
                                 -- tl.body is the scroll CHILD, not the viewport — its GetLeft() already
@@ -1934,7 +1946,8 @@ function NSI:CreateTimelineWindow()
         end
 
         local cursorX, cursorY = GetCursorPosition()
-        local uiScale = UIParent:GetEffectiveScale()
+        -- timelineWindow's own effective scale (its scale bar), not UIParent's.
+        local uiScale = timelineWindow:GetEffectiveScale()
         cursorX = cursorX / uiScale
         cursorY = cursorY / uiScale
 
@@ -1997,19 +2010,25 @@ function NSI:CreateTimelineWindow()
     previewTimeBg:SetPoint("TOPLEFT", previewTimeLabel, "TOPLEFT", -3, 2)
     previewTimeBg:SetPoint("BOTTOMRIGHT", previewTimeLabel, "BOTTOMRIGHT", 3, -1)
 
-    -- Right-click drag panning state
+    -- Right-click drag panning state (both axes — behaves like grabbing the
+    -- canvas: content tracks the cursor on X and Y simultaneously)
     local isDraggingTimeline = false
     local dragStartMouseX = 0
+    local dragStartMouseY = 0
     local dragStartScroll = 0
+    local dragStartVerticalScroll = 0
     local rightClickStartRawX = 0
     local rightClickStartRawY = 0
 
     local function startRightDrag()
         isDraggingTimeline = true
-        local uiScale = 1 / UIParent:GetEffectiveScale()
-        dragStartMouseX = GetCursorPosition() * uiScale
+        local uiScale = 1 / timelineWindow:GetEffectiveScale()
+        local rawX, rawY = GetCursorPosition()
+        dragStartMouseX = rawX * uiScale
+        dragStartMouseY = rawY * uiScale
         dragStartScroll = timelineFrame.horizontalSlider and timelineFrame.horizontalSlider:GetValue() or 0
-        rightClickStartRawX, rightClickStartRawY = GetCursorPosition()
+        dragStartVerticalScroll = timelineFrame.verticalSlider and timelineFrame.verticalSlider:GetValue() or 0
+        rightClickStartRawX, rightClickStartRawY = rawX, rawY
     end
 
     local function stopRightDrag()
@@ -2018,7 +2037,7 @@ function NSI:CreateTimelineWindow()
         local dx = curRawX - rightClickStartRawX
         local dy = curRawY - rightClickStartRawY
         if math.sqrt(dx * dx + dy * dy) < 4 then
-            local uiScale = 1 / UIParent:GetEffectiveScale()
+            local uiScale = 1 / timelineWindow:GetEffectiveScale()
             local cursorX = curRawX * uiScale
             local bodyLeft = timelineFrame.body:GetLeft() or 0
             -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts with
@@ -2076,12 +2095,24 @@ function NSI:CreateTimelineWindow()
         updateThrottle = updateThrottle + elapsed
         if updateThrottle >= 0.016 then  -- ~60fps
             updateThrottle = 0
-            if isDraggingTimeline and timelineFrame.horizontalSlider then
-                local uiScale = 1 / UIParent:GetEffectiveScale()
-                local currentMouseX = GetCursorPosition() * uiScale
-                local delta = dragStartMouseX - currentMouseX
-                local hMin, hMax = timelineFrame.horizontalSlider:GetMinMaxValues()
-                timelineFrame.horizontalSlider:SetValue(math.max(hMin, math.min(hMax, dragStartScroll + delta)))
+            if isDraggingTimeline then
+                local uiScale = 1 / timelineWindow:GetEffectiveScale()
+                local currentMouseX, currentMouseY = GetCursorPosition()
+                currentMouseX = currentMouseX * uiScale
+                currentMouseY = currentMouseY * uiScale
+                if timelineFrame.horizontalSlider then
+                    local delta = dragStartMouseX - currentMouseX
+                    local hMin, hMax = timelineFrame.horizontalSlider:GetMinMaxValues()
+                    timelineFrame.horizontalSlider:SetValue(math.max(hMin, math.min(hMax, dragStartScroll + delta)))
+                end
+                if timelineFrame.verticalSlider then
+                    -- Content-follows-cursor on Y too, mirroring the horizontal pan above:
+                    -- dragging up reveals lower rows (scroll value increases), dragging down
+                    -- reveals rows above (scroll value decreases) — standard drag-to-scroll feel.
+                    local deltaY = currentMouseY - dragStartMouseY
+                    local vMin, vMax = timelineFrame.verticalSlider:GetMinMaxValues()
+                    timelineFrame.verticalSlider:SetValue(math.max(vMin, math.min(vMax, dragStartVerticalScroll + deltaY)))
+                end
             end
             if self:IsMouseOver() then
                 updateCursorLine()
@@ -2108,7 +2139,7 @@ function NSI:CreateTimelineWindow()
                         NSI:ShowReminderDialog(timelineWindow, nil, block)
                     end
                 else
-                    local uiScale = 1 / UIParent:GetEffectiveScale()
+                    local uiScale = 1 / timelineWindow:GetEffectiveScale()
                     local cursorX = GetCursorPosition() * uiScale
                     local bodyLeft = timelineFrame.body:GetLeft() or 0
                     -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts
@@ -2133,7 +2164,7 @@ function NSI:CreateTimelineWindow()
             end
             -- Snapped ghost line + icon while dragging a block
             if timelineWindow.draggingBlock then
-                local uiScale = 1 / UIParent:GetEffectiveScale()
+                local uiScale = 1 / timelineWindow:GetEffectiveScale()
                 local cursorX = GetCursorPosition() * uiScale
                 local bodyLeft = timelineFrame.body:GetLeft() or 0
                 -- body is the scroll CHILD, not the viewport — its GetLeft() already shifts with
@@ -3515,4 +3546,139 @@ function NSI:ShowSpellbookPicker(targetPopup)
     picker:SetPoint("LEFT", targetPopup, "RIGHT", 4, 0)
     picker:Show()
     picker.filterBox.editbox:SetFocus()
+end
+
+--------------------------------------------------------------------------------
+-- RENAME / DELETE NOTE DIALOGS (right-click on a note in the Edit Note menu)
+--------------------------------------------------------------------------------
+
+-- Clears any Timeline window state pointing at `name`, since it either no
+-- longer exists (delete) or has moved to a new key (rename, pass newName).
+local function ClearWindowNoteReferences(window, name, newName)
+    if not window then return end
+    if window.editNote and window.editNote.name == name then
+        if newName then
+            window.editNote.name = newName
+        else
+            window.editNote = nil
+            window.editable = false
+        end
+        NSI:UpdateEditNoteButtonLabel(window)
+    end
+    if window.currentReminder and window.currentReminder.personal and window.currentReminder.name == name then
+        window.currentReminder = newName and {name = newName, personal = true} or nil
+    end
+end
+
+function NSI:ShowRenameNoteDialog(window, oldName)
+    local C = NSI.UI.Components
+    if not self.RenameNotePopup then
+        local W = 300
+        local popup = C.CreateFrame(UIParent, W, 96, "NSRTRenameNotePopup")
+        popup:SetFrameStrata("TOOLTIP")
+
+        local titleFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleFS:SetText("|cFF00FFFFRename Note|r")
+        titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -10)
+
+        local nameEntry = C.CreateTextEntry(popup, nil,
+            function() return "" end, function() end,
+            W - 24, 22, false, nil, nil, "NSRTRenameNoteEntry")
+        nameEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -34)
+        popup.nameEntry = nameEntry
+
+        local errorFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        errorFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -60)
+        errorFS:SetTextColor(1, 0.35, 0.35, 1)
+        popup.errorFS = errorFS
+
+        local confirmBtn = C.CreateButton(popup, "Rename", function()
+            if popup._confirmAction then popup._confirmAction() end
+        end, 90, 24)
+        confirmBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 10)
+
+        local cancelBtn = C.CreateButton(popup, "Cancel", function()
+            popup:Hide()
+        end, 80, 24)
+        cancelBtn:SetPoint("RIGHT", confirmBtn.frame, "LEFT", -6, 0)
+
+        nameEntry.editBox:SetScript("OnEnterPressed", function()
+            if popup._confirmAction then popup._confirmAction() end
+        end)
+
+        popup:Hide()
+        self.RenameNotePopup = popup
+    end
+
+    local popup = self.RenameNotePopup
+    popup.nameEntry:SetValue(oldName)
+    popup.errorFS:SetText("")
+
+    popup._confirmAction = function()
+        local newName = popup.nameEntry:GetValue()
+        local ok, resultOrErr = NSI:RenamePersonalNote(oldName, newName)
+        if not ok then
+            local messages = {
+                empty   = "Enter a different name.",
+                exists  = "A note with that name already exists.",
+                missing = "Note no longer exists.",
+            }
+            popup.errorFS:SetText(messages[resultOrErr] or "Rename failed.")
+            return
+        end
+        ClearWindowNoteReferences(window, oldName, resultOrErr)
+        if window then NSI:RefreshTimelineForMode() end
+        popup:Hide()
+    end
+
+    popup:SetPoint("CENTER", UIParent, "CENTER")
+    popup:Show()
+    popup.nameEntry.editBox:SetFocus()
+    popup.nameEntry.editBox:HighlightText()
+end
+
+function NSI:ShowDeleteNoteConfirm(window, name)
+    local C = NSI.UI.Components
+    if not self.DeleteNotePopup then
+        local W = 320
+        local popup = C.CreateFrame(UIParent, W, 110, "NSRTDeleteNotePopup")
+        popup:SetFrameStrata("TOOLTIP")
+
+        local titleFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        titleFS:SetText("|cFFff4444Delete Note|r")
+        titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -10)
+
+        local msgFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        msgFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -34)
+        msgFS:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -12, -34)
+        msgFS:SetJustifyH("LEFT")
+        msgFS:SetJustifyV("TOP")
+        popup.msgFS = msgFS
+
+        local confirmBtn = C.CreateButton(popup, "Delete", function()
+            if popup._confirmAction then popup._confirmAction() end
+        end, 90, 24)
+        confirmBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 10)
+
+        local cancelBtn = C.CreateButton(popup, "Cancel", function()
+            popup:Hide()
+        end, 80, 24)
+        cancelBtn:SetPoint("RIGHT", confirmBtn.frame, "LEFT", -6, 0)
+
+        popup:Hide()
+        self.DeleteNotePopup = popup
+    end
+
+    local popup = self.DeleteNotePopup
+    popup.msgFS:SetText(string.format("|cffffffffDelete \"%s\"?|r\nThis cannot be undone.", name))
+
+    popup._confirmAction = function()
+        NSI:RemoveReminder(name, true)
+        ClearWindowNoteReferences(window, name, nil)
+        if window then NSI:RefreshTimelineForMode() end
+        popup:Hide()
+    end
+
+    popup:SetPoint("CENTER", UIParent, "CENTER")
+    popup:Show()
 end

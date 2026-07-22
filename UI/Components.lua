@@ -2080,6 +2080,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
 
         local row = CreateFrame("Button", nil, f)
         row:SetFrameLevel(baseLevel + 2)
+        row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 
         local hoverBg = CreateFrame("Frame", nil, row)
         hoverBg:SetAllPoints(row)
@@ -2196,10 +2197,21 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
                 row:SetScript("OnLeave", function()
                     UIFrameFadeOut(row.hoverBg, STYLE.hover_out, row.hoverBg:GetAlpha(), 0)
                 end)
-                if item.fnc then
-                    row:SetScript("OnClick", function()
-                        HideCtxFromLevel(1)
-                        item.fnc()
+                if item.fnc or item.contextItems then
+                    row:SetScript("OnClick", function(_, clickButton)
+                        if clickButton == "RightButton" then
+                            if item.contextItems then
+                                local rRight = row:GetRight()
+                                local rLeft  = row:GetLeft()
+                                local rTop   = row:GetTop()
+                                if rRight and rTop then
+                                    ShowContextAtLevel(item.contextItems, level + 1, rRight + 2, rLeft - 2, rTop, item.contextWidth)
+                                end
+                            end
+                        elseif item.fnc then
+                            HideCtxFromLevel(1)
+                            item.fnc()
+                        end
                     end)
                 end
             else -- submenu
@@ -2252,9 +2264,14 @@ end
 -- ============================================================
 local function ShowContextMenuAtFrame(items, anchor, width)
     EnsureCtxClickaway()
-    local left   = anchor:GetLeft() or 0
-    local right  = anchor:GetRight() or 0
-    local bottom = anchor:GetBottom() or 0
+    -- anchor's Get{Left,Right,Bottom} are expressed in ITS OWN effective-scale units,
+    -- but the popup frame is parented straight to UIParent, so if anchor sits inside
+    -- something with its own SetScale (e.g. a window's adjustable scale bar), the raw
+    -- values drift relative to UIParent's space. Renormalize by the scale ratio.
+    local scaleRatio = anchor:GetEffectiveScale() / UIParent:GetEffectiveScale()
+    local left   = (anchor:GetLeft() or 0) * scaleRatio
+    local right  = (anchor:GetRight() or 0) * scaleRatio
+    local bottom = (anchor:GetBottom() or 0) * scaleRatio
     ShowContextAtLevel(items, 1, left, right, bottom, width)
 end
 
