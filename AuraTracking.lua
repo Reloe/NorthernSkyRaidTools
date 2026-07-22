@@ -1887,7 +1887,6 @@ function NSI:PreviewAuraTracking(key, show)
         return
     end
 
-    ClearAuraTracking(self)
     mover:SetSize(settings.Width, settings.Height)
     mover:SetScale(1)
     SetAuraTrackingPoint(mover, settings, UIParent)
