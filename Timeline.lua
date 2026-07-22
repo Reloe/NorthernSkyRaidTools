@@ -2219,7 +2219,7 @@ function NSI:RefreshEmbeddedTimeline(tab)
                 tab.currentReminder = {name = activeReminder, personal = isPersonal}
                 tab.reminderDropdown:Select({name = activeReminder, personal = isPersonal})
             else
-                tab.noDataLabel:SetText("Select a reminder set from the dropdown.")
+                tab.noDataLabel:SetText(T("Select a reminder set from the dropdown."))
                 tab.noDataLabel:Show()
                 tab.timeline:Hide()
             end
@@ -2437,7 +2437,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
-                    GameTooltip:AddLine(string.format("Start: %d:%02d", minutes, seconds), 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(string.format(T("Start: %d:%02d"), minutes, seconds), 0.7, 0.7, 0.7)
                     GameTooltip:AddLine(T("|cff00ff00Drag to adjust timing|r"), 0, 1, 0)
                     GameTooltip:AddLine(T("|cffff9900Right-click to reset|r"), 1, 0.6, 0)
                     GameTooltip:Show()
