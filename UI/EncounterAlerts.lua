@@ -312,7 +312,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local filterDD = CreateDropdown(screen, nil, BuildFilterOptions, getFilterBossSelected,
-        bossDDWidth, 22, "NSUIEncAlertFilter")
+        bossDDWidth, 22, "NSUIEncAlertFilter", nil, 10)
     filterDD:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20)
 
     local function BuildDiffOptions()
@@ -2486,7 +2486,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local trigBossDD = CreateDropdown(trigF, nil, BuildTrigBossOptions, getTrigBossSelected,
-        200, 22, "NSUIEncAlertTrigBoss")
+        200, 22, "NSUIEncAlertTrigBoss", nil, 9)
     trigBossDD:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -18)
     trigF.bossDD = trigBossDD
 
