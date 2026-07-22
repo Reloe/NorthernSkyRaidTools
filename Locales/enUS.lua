@@ -50,6 +50,7 @@ L["Sync Nicknames"] = "Sync Nicknames"
 L["%s is attempting to sync their nicknames with you."] = "%s is attempting to sync their nicknames with you."
 L["Cancel"] = "Cancel"
 L["Accept"] = "Accept"
+L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCFLeft click|r: Show/Hide Options Window"
 -- ============================================================================
 -- SlashCommands.lua
 -- ============================================================================
