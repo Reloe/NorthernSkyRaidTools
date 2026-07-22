@@ -1191,7 +1191,7 @@ function NSI:CreateTimelineWindow()
                             local value = {name = data.name, personal = true}
                             timelineWindow.editNote = value
                             timelineWindow.editable = true
-                            self:SetReminder(value.name, true, true)
+                            self:LoadPersonalEditNote(value.name)
                             self:UpdateEditNoteButtonLabel(timelineWindow)
                             self:RefreshTimelineForMode()
                         end,
@@ -2381,7 +2381,7 @@ function NSI:ViewNoteInTimeline(name, personal)
 
         window.editNote = value
         window.editable = true
-        self:SetReminder(name, true, true)
+        self:LoadPersonalEditNote(name)
         self:UpdateEditNoteButtonLabel(window)
     else
         window.mode = "all"
@@ -2508,6 +2508,18 @@ function NSI:UpdateEditNoteButtonLabel(window)
     window.editNoteButton:SetText(editNote and (editNote.name .. " (Personal)") or "None (Read Only)")
 end
 
+-- Loads a personal note as the active one for the timeline's edit target.
+--
+-- SetReminder is called with skipupdate so it doesn't drag UpdateReminderFrame
+-- and NSRT_REMINDER_CHANGED along with it, but Play Preview fires whatever is in
+-- NSI.ProcessedReminder — so the swap has to reprocess here. Without it the
+-- preview keeps playing the previously loaded note until an edit happens to
+-- reprocess as a side effect.
+function NSI:LoadPersonalEditNote(name)
+    self:SetReminder(name, true, true)
+    self:ProcessReminder()
+end
+
 -- Returns (creating if necessary) THE personal note for a boss, reusing one that
 -- already exists. Used by the Add Reminder popup's boss-picker path, where filing
 -- a stray reminder under an existing note is the more useful default.
@@ -2537,7 +2549,7 @@ function NSI:CreateNewPersonalBossNote(eid)
     end
     NSRT.PersonalReminders[actualName] = string.format(
         "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
-    self:SetReminder(actualName, true, true)
+    self:LoadPersonalEditNote(actualName)
     return {name = actualName, personal = true}
 end
 
