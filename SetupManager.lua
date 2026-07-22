@@ -486,7 +486,7 @@ function NSI:UpdateRaidBuffFrame()
     parent = parent or SocialRaidFrame or (LFGFrame and PVEFrame) or (RaidFrame and PVEFrame:IsShown() and PVEFrame) or (RaidFrame and FriendsFrame) or nil
     if parent then
         self.RaidBuffCheck:ClearAllPoints()
-        self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, -1)
+        self.RaidBuffCheck:SetPoint("TOPLEFT", parent, "TOPRIGHT", 45, -1)
         self.RaidBuffCheck:SetHeight(height or (parent:GetHeight()*parent:GetScale()-4))
         self.RaidBuffCheck:Show()
         local count = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
@@ -543,17 +543,8 @@ PVEFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
 PVEFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-if SocialUIFrame and SocialUIFrame.RaidFrame then
-    SocialUIFrame.RaidFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
-    SocialUIFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
-else
-    FriendsFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
-    FriendsFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
-    FriendsFrameTab1:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-    FriendsFrameTab2:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-    FriendsFrameTab3:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-    FriendsFrameTab4:HookScript("OnClick", function() NSI:UpdateRaidBuffFrame() end)
-end
+SocialUIFrame:HookScript("OnHide", function() NSI:UpdateRaidBuffFrame() end)
+SocialUIFrame.RaidFrame:HookScript("OnShow", function() NSI:UpdateRaidBuffFrame() end)
 
 function NSI:GetInviteListFromReminderInput(str)
     if not str then return end
