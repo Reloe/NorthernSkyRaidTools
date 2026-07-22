@@ -705,11 +705,11 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
-    local MAX_ROWS = 11
+    local MAX_ROWS = maxRows or 11
     local baseLevel = parent:GetFrameLevel() + 1
 
     local container = CreateFrame("Frame", name, parent)
@@ -866,6 +866,8 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         popup:Hide()
         clickaway:Hide()
     end
+
+    container:SetScript("OnHide", Close)
 
     local function Open()
         local items    = getItems and getItems() or {}
