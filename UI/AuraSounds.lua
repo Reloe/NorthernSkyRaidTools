@@ -536,7 +536,7 @@ local function BuildAuraSoundsUI(parent)
 
         line.spellIDText = DF:CreateLabel(line, "")
         ApplyUIFont(line.spellIDText, 11)
-        line.spellIDText:SetPoint("LEFT", GetUIObject(line.name), "RIGHT", 5, 0)
+        line.spellIDText:SetPoint("LEFT", GetUIObject(line.name), "RIGHT", -2, 0)
         line.spellIDText:SetWidth(58)
 
         line.defaultText = DF:CreateLabel(line, "")
