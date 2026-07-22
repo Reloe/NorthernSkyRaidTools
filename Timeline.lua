@@ -983,7 +983,7 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.reminderLabel:Hide()
                     timelineWindow.reminderDropdown:Hide()
                     timelineWindow.editNoteLabel:Show()
-                    timelineWindow.editNoteButton:Show()
+                    timelineWindow.editNoteButton.frame:Show()
                     if timelineWindow.playButton then timelineWindow.playButton:Show() end
                     self:RefreshTimelineForMode()
                 end
@@ -996,7 +996,7 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.reminderLabel:Show()
                     timelineWindow.reminderDropdown:Show()
                     timelineWindow.editNoteLabel:Hide()
-                    timelineWindow.editNoteButton:Hide()
+                    timelineWindow.editNoteButton.frame:Hide()
                     timelineWindow.editable = false
                     timelineWindow.editNote = nil
                     if timelineWindow.playButton then
@@ -1121,8 +1121,9 @@ function NSI:CreateTimelineWindow()
     editNoteLabel:Show()
 
     -- Menu-bar style picker: top level is "None (Read Only)" plus one entry per
-    -- boss that has personal notes; hovering a boss opens its notes as a submenu
-    -- (same nested-menu component used by the right-click context menus).
+    -- boss (every boss, not just ones that already have personal notes); hovering
+    -- a boss opens its notes as a submenu (same nested-menu component used by the
+    -- right-click context menus), with "+ New Note" always last in that submenu.
     local function BuildEditNoteMenuItems()
         local items = {}
         table.insert(items, {
@@ -1136,27 +1137,43 @@ function NSI:CreateTimelineWindow()
             end,
         })
 
+        -- Group existing personal notes by boss (EncounterID tag), preserving
+        -- encounter order; notes without an EncounterID are grouped under "Other".
         local personalList = self:GetAllReminderNames(true)
-        if #personalList > 0 then
-            table.insert(items, {type = "separator"})
-
-            -- Group notes by boss (EncounterID tag), preserving encounter order;
-            -- notes without an EncounterID are grouped under "Other".
-            local groups, groupOrder = {}, {}
-            for _, data in ipairs(personalList) do
-                local encID = data.hasencID and tonumber(data.hasencID) or nil
-                local key = encID or "other"
-                if not groups[key] then
-                    groups[key] = {
-                        name = encID and (NSI.BossNames[encID] or ("Boss " .. encID)) or "Other",
-                        order = data.order,
-                        notes = {},
-                    }
-                    table.insert(groupOrder, key)
-                end
-                table.insert(groups[key].notes, data)
+        local groups, groupOrder = {}, {}
+        for _, data in ipairs(personalList) do
+            local encID = data.hasencID and tonumber(data.hasencID) or nil
+            local key = encID or "other"
+            if not groups[key] then
+                groups[key] = {
+                    name = encID and (NSI.BossNames[encID] or ("Boss " .. encID)) or "Other",
+                    order = data.order,
+                    encID = encID,
+                    notes = {},
+                }
+                table.insert(groupOrder, key)
             end
-            table.sort(groupOrder, function(a, b) return groups[a].order < groups[b].order end)
+            table.insert(groups[key].notes, data)
+        end
+
+        -- Ensure every boss has a group (even with zero existing notes) so a note
+        -- can always be created for it, in encounter order.
+        for eid, order in pairs(NSI.EncounterOrder) do
+            if not groups[eid] then
+                groups[eid] = {
+                    name = NSI.BossNames[eid] or ("Boss " .. eid),
+                    order = order,
+                    encID = eid,
+                    notes = {},
+                }
+                table.insert(groupOrder, eid)
+            end
+        end
+
+        table.sort(groupOrder, function(a, b) return groups[a].order < groups[b].order end)
+
+        if #groupOrder > 0 then
+            table.insert(items, {type = "separator"})
 
             for _, key in ipairs(groupOrder) do
                 local group = groups[key]
@@ -1175,6 +1192,22 @@ function NSI:CreateTimelineWindow()
                         end,
                     })
                 end
+                if group.encID then
+                    if #subItems > 0 then
+                        table.insert(subItems, {type = "separator"})
+                    end
+                    table.insert(subItems, {
+                        type = "button",
+                        label = "+ New Note",
+                        fnc = function()
+                            local value = self:GetOrCreatePersonalBossNote(group.encID)
+                            timelineWindow.editNote = value
+                            timelineWindow.editable = true
+                            self:UpdateEditNoteButtonLabel(timelineWindow)
+                            self:RefreshTimelineForMode()
+                        end,
+                    })
+                end
                 table.insert(items, {type = "submenu", label = group.name, items = subItems})
             end
         end
@@ -1182,13 +1215,27 @@ function NSI:CreateTimelineWindow()
         return items
     end
 
-    local editNoteButton = DF:CreateButton(timelineWindow, function()
-        NSI.UI.Components.ShowContextMenuAtFrame(BuildEditNoteMenuItems(), timelineWindow.editNoteButton, 250)
-    end, 250, 22, "None (Read Only)")
-    editNoteButton:SetTemplate(options_button_template)
-    editNoteButton:SetPoint("LEFT", editNoteLabel, "RIGHT", 5, 0)
+    -- Styled with the shared UI component (same cyan hover-fade as CreateDropdown)
+    -- instead of the DF button template, so it visually reads as a dropdown trigger.
+    local editNoteButton = NSI.UI.Components.CreateButton(
+        timelineWindow, "None (Read Only)",
+        function(self)
+            NSI.UI.Components.ShowContextMenuAtFrame(BuildEditNoteMenuItems(), self.frame, 250)
+        end,
+        250, 22, "NSUITimelineEditNoteBtn"
+    )
+    -- editNoteLabel is a DF wrapper table, not a raw frame; anchor to its .widget
+    -- (the underlying FontString) since the component button's SetPoint calls the
+    -- native frame API directly and can't unwrap DF objects like DF's own SetPoint does.
+    editNoteButton:SetPoint("LEFT", editNoteLabel.widget, "RIGHT", 5, 0)
     timelineWindow.editNoteButton = editNoteButton
-    editNoteButton:Show()
+
+    -- Small chevron on the right edge signals this button opens a dropdown-style menu.
+    local editNoteArrow = editNoteButton.frame:CreateTexture(nil, "OVERLAY")
+    editNoteArrow:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]])
+    editNoteArrow:SetSize(10, 10)
+    editNoteArrow:SetPoint("RIGHT", editNoteButton.frame, "RIGHT", -6, 0)
+    timelineWindow.editNoteArrow = editNoteArrow
 
     -- Boss abilities toggle
     timelineWindow.showBossAbilities = true -- Default to showing boss abilities
@@ -2334,7 +2381,21 @@ end
 function NSI:UpdateEditNoteButtonLabel(window)
     if not window or not window.editNoteButton then return end
     local editNote = window.editNote
-    window.editNoteButton.text = editNote and (editNote.name .. " (Personal)") or "None (Read Only)"
+    window.editNoteButton:SetText(editNote and (editNote.name .. " (Personal)") or "None (Read Only)")
+end
+
+-- Returns (creating if necessary) the personal note for a boss, defaulting to
+-- Mythic difficulty. Shared by the Edit Note dropdown's "Create New Note" entries
+-- and the Add Reminder popup's boss-picker auto-creation path.
+function NSI:GetOrCreatePersonalBossNote(eid)
+    local bossName   = NSI.BossNames[eid] or ("Boss" .. eid)
+    local actualName = bossName .. " - Mythic"
+    if not NSRT.PersonalReminders[actualName] then
+        NSRT.PersonalReminders[actualName] = string.format(
+            "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
+    end
+    self:SetReminder(actualName, true, true)
+    return {name = actualName, personal = true}
 end
 
 -- Refresh timeline with player's own processed reminders (My Reminders mode)
@@ -3148,14 +3209,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
                 print("|cffff4444NSRT:|r Select a boss first, or open a note from the Edit Note menu.")
                 return
             end
-            local bossName   = NSI.BossNames[eid] or ("Boss" .. eid)
-            local actualName = bossName .. " - Mythic"
-            if not NSRT.PersonalReminders[actualName] then
-                NSRT.PersonalReminders[actualName] = string.format(
-                    "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
-            end
-            NSI:SetReminder(actualName, true, true)
-            editNote = {name = actualName, personal = true}
+            editNote = NSI:GetOrCreatePersonalBossNote(eid)
             if popup._window then
                 popup._window.editNote   = editNote
                 popup._window.editable   = true
@@ -3171,12 +3225,22 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         if isEdit and payload and payload.srcLineIndex then
             -- Rebuild the line, preserving tag / time / ph; updating spell/text/dur/glowunit
             local newRaw = srcRaw
+            -- Insert a new "key:value" chunk before ";ph:" when present; otherwise append
+            -- it to the end. Lines without an explicit ph (defaults to phase 1) have no
+            -- ";ph:" anchor, so a plain gsub(";ph:", ...) would silently no-op on them.
+            local function insertField(raw, chunk)
+                if raw:find(";ph:") then
+                    return (raw:gsub(";ph:", ";" .. chunk .. ";ph:", 1))
+                else
+                    return raw .. ";" .. chunk
+                end
+            end
             -- spellid
             if spellID then
                 if newRaw:find("spellid:%d+") then
                     newRaw = newRaw:gsub("spellid:%d+", "spellid:" .. spellID)
                 else
-                    newRaw = newRaw:gsub(";ph:", ";spellid:" .. spellID .. ";ph:")
+                    newRaw = insertField(newRaw, "spellid:" .. spellID)
                 end
             else
                 newRaw = newRaw:gsub(";spellid:%d+", "")
@@ -3186,7 +3250,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
                 if newRaw:find("text:[^;]+") then
                     newRaw = newRaw:gsub("text:[^;]+", "text:" .. text)
                 else
-                    newRaw = newRaw:gsub(";ph:", ";text:" .. text .. ";ph:")
+                    newRaw = insertField(newRaw, "text:" .. text)
                 end
             else
                 newRaw = newRaw:gsub(";text:[^;]+", "")
@@ -3202,7 +3266,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
                 if newRaw:find("glowunit:[^;]+") then
                     newRaw = newRaw:gsub("glowunit:[^;]+", "glowunit:" .. glowUnit)
                 else
-                    newRaw = newRaw:gsub(";ph:", ";glowunit:" .. glowUnit .. ";ph:")
+                    newRaw = insertField(newRaw, "glowunit:" .. glowUnit)
                 end
             else
                 newRaw = newRaw:gsub(";glowunit:[^;]+", "")
@@ -3247,6 +3311,34 @@ end
 --------------------------------------------------------------------------------
 -- SPELLBOOK PICKER
 --------------------------------------------------------------------------------
+
+-- TWW removed the classic spellbook globals in favor of C_SpellBook; shim them
+-- the same way LibDFramework does (see Libs/LibDFramework-1.0/fw.lua) so this
+-- keeps working on both API generations.
+local GetNumSpellTabs = GetNumSpellTabs or C_SpellBook.GetNumSpellBookSkillLines
+local GetSpellTabInfo = GetSpellTabInfo or function(tabLine)
+    local skillLine = C_SpellBook.GetSpellBookSkillLineInfo(tabLine)
+    if skillLine then
+        return skillLine.name, skillLine.iconID, skillLine.itemIndexOffset, skillLine.numSpellBookItems,
+            skillLine.isGuild, skillLine.offSpecID
+    end
+end
+local SpellBookItemTypeMap = Enum.SpellBookItemType and {
+    [Enum.SpellBookItemType.Spell] = "SPELL",
+    [Enum.SpellBookItemType.None] = "NONE",
+    [Enum.SpellBookItemType.Flyout] = "FLYOUT",
+    [Enum.SpellBookItemType.FutureSpell] = "FUTURESPELL",
+    [Enum.SpellBookItemType.PetAction] = "PETACTION",
+} or {}
+local GetSpellBookItemInfo = GetSpellBookItemInfo or function(...)
+    local si = C_SpellBook.GetSpellBookItemInfo(...)
+    if si then
+        return SpellBookItemTypeMap[si.itemType] or "NONE",
+            (si.itemType == Enum.SpellBookItemType.Flyout or si.itemType == Enum.SpellBookItemType.PetAction) and si.actionID or si.spellID or si.actionID,
+            si
+    end
+end
+local BOOKTYPE_SPELL = BOOKTYPE_SPELL or (Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player) or "player"
 
 function NSI:ShowSpellbookPicker(targetPopup)
     if not self.SpellbookPickerPopup then
