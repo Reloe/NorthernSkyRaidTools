@@ -2,6 +2,10 @@ local _, NSI = ... -- Internal namespace
 
 local DF = _G["DetailsFramework"]
 
+local function T(key)
+    return NSI:Loc(key)
+end
+
 -- Setup timeline hooks for zoom-to-cursor and sticky ruler
 -- Call this after creating a timeline with DF:CreateTimeLineFrame
 function NSI:SetupTimelineHooks(timeline)
@@ -214,7 +218,7 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
         table.insert(lines, {
             spellId = nil,
             icon = "Interface\\ICONS\\Achievement_Boss_KilJaeden",
-            text = "|cffff8800Boss Abilities|r",
+            text = T("|cffff8800Boss Abilities|r"),
             timeline = combinedTimeline,
             isBossAbility = true,
             isCombined = true,
@@ -228,8 +232,17 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
     for _, ability in ipairs(filteredAbilities) do
         local key = ability.name
         if not abilityGroups[key] then
+            -- Get name
+            local lineName = ability.name
+            if (GetLocale() ~= "enUS") then
+                local spellInfo = C_Spell.GetSpellInfo(ability.spellID)
+                if spellInfo then
+                    lineName = spellInfo.name
+                end
+            end
+
             abilityGroups[key] = {
-                name = ability.name,
+                name = lineName,
                 spellID = ability.spellID,
                 category = ability.category,
                 color = ability.color,
@@ -479,7 +492,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                 lineName = spellInfo.name or ""
             end
         else
-            lineName = "Notes"
+            lineName = T("Notes")
             lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
         end
 
@@ -512,7 +525,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
             table.insert(finalLines, {
                 spellId = nil,
                 icon = "Interface\\ICONS\\INV_Misc_Gear_01",
-                text = "|cff888888--- Your Reminders ---|r",
+                text = T("|cff888888--- Your Reminders ---|r"),
                 timeline = {},
                 isSeparator = true,
             })
@@ -730,7 +743,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                 end
             else
                 -- Text-only reminders: label the lane as "Notes"
-                lineName = "Notes"
+                lineName = T("Notes")
                 lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
             end
 
@@ -782,7 +795,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
             table.insert(finalLines, {
                 spellId = nil,
                 icon = "Interface\\ICONS\\INV_Misc_Gear_01",
-                text = "|cff888888--- Player Reminders ---|r",
+                text = T("|cff888888--- Player Reminders ---|r"),
                 timeline = {},
                 isSeparator = true,
             })
@@ -816,7 +829,7 @@ function NSI:CreateTimelineWindow()
     local window_height = 550
 
     local timelineWindow = DF:CreateSimplePanel(UIParent, window_width, window_height,
-        "|cFF00FFFFNorthern Sky|r Timeline", "NSUITimelineWindow", {
+        T("|cFF00FFFFNorthern Sky|r Timeline"), "NSUITimelineWindow", {
         DontRightClickClose = true,
         UseStatusBar = false,
             UseScaleBar = true,
@@ -897,7 +910,7 @@ function NSI:CreateTimelineWindow()
     local function BuildModeDropdownOptions()
         return {
             {
-                label = "My Reminders",
+                label = T("My Reminders"),
                 value = "my",
                 onclick = function(_, _, value)
                     timelineWindow.mode = value
@@ -908,7 +921,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "All Reminders (Raid Leader)",
+                label = T("All Reminders (Raid Leader)"),
                 value = "all",
                 onclick = function(_, _, value)
                     timelineWindow.mode = value
@@ -923,7 +936,7 @@ function NSI:CreateTimelineWindow()
                                 timelineWindow.timeline.previewLine:Hide()
                             end
                             NSI:HideAllReminders()
-                            timelineWindow.playButton.text = "Play Preview"
+                            timelineWindow.playButton.text = T("Play Preview")
                             timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
                         end
                         timelineWindow.playButton:Hide()
@@ -934,7 +947,7 @@ function NSI:CreateTimelineWindow()
         }
     end
 
-    local modeLabel = DF:CreateLabel(timelineWindow, "View:", 11, "white")
+    local modeLabel = DF:CreateLabel(timelineWindow, T("View:"), 11, "white")
     modeLabel:SetPoint("TOPLEFT", timelineWindow, "TOPLEFT", 10, -30)
 
     local modeDropdown = DF:CreateDropDown(timelineWindow, BuildModeDropdownOptions, "my", 200)
@@ -963,12 +976,12 @@ function NSI:CreateTimelineWindow()
         local personalList = self:GetAllReminderNames(true)
         if #personalList > 0 then
             table.insert(options, {
-                label = "--- Personal ---",
+                label = T("--- Personal ---"),
                 value = nil,
             })
             for _, data in ipairs(personalList) do
                 table.insert(options, {
-                    label = data.name .. " (Personal)",
+                    label = data.name .. " " .. T("(Personal)"),
                     value = {name = data.name, personal = true},
                     onclick = function(_, _, value)
                         self:RefreshAllRemindersTimeline(value.name, value.personal)
@@ -982,7 +995,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Reminder selection dropdown (only shown in "All Reminders" mode)
-    local reminderLabel = DF:CreateLabel(timelineWindow, "Reminder Set:", 11, "white")
+    local reminderLabel = DF:CreateLabel(timelineWindow, T("Reminder Set:"), 11, "white")
     reminderLabel:SetPoint("LEFT", modeDropdown, "RIGHT", 20, 0)
     timelineWindow.reminderLabel = reminderLabel
     reminderLabel:Hide() -- Hidden by default (My Reminders mode)
@@ -1004,7 +1017,7 @@ function NSI:CreateTimelineWindow()
                 timelineWindow.timeline.previewLine:Hide()
             end
             NSI:HideAllReminders()
-            timelineWindow.playButton.text = "Play Preview"
+            timelineWindow.playButton.text = T("Play Preview")
             timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
                 14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
         else
@@ -1013,11 +1026,11 @@ function NSI:CreateTimelineWindow()
             timelineWindow.previewActive = true
             timelineWindow.previewStartTime = GetTime()
             NSI:StartReminders(1, true)
-            timelineWindow.playButton.text = "Stop Preview"
+            timelineWindow.playButton.text = T("Stop Preview")
             timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\stop_icon.png", 14,
                 14, "OVERLAY", { 0.12, 0.88, 0.12, 0.88 }, stopColor)
         end
-    end, 32, 22, "Play Preview")
+    end, 32, 22, T("Play Preview"))
     playButton:SetTemplate(options_button_template)
     playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
         14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
@@ -1048,14 +1061,14 @@ function NSI:CreateTimelineWindow()
     bossAbilitiesToggle:SetPoint("TOPRIGHT", timelineWindow, "TOPRIGHT", -15, -28)
     timelineWindow.bossAbilitiesToggle = bossAbilitiesToggle
 
-    local bossAbilitiesLabel = DF:CreateLabel(timelineWindow, "Show Boss Abilities", 11, "white")
+    local bossAbilitiesLabel = DF:CreateLabel(timelineWindow, T("Show Boss Abilities"), 11, "white")
     bossAbilitiesLabel:SetPoint("RIGHT", bossAbilitiesToggle, "LEFT", -5, 0)
 
     -- Boss display mode dropdown
     local function BuildBossDisplayModeOptions()
         return {
             {
-                label = "Important Healer",
+                label = T("Important Healer"),
                 value = NSI.BossDisplayModes.IMPORTANT_HEALER,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1063,7 +1076,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Important Tank",
+                label = T("Important Tank"),
                 value = NSI.BossDisplayModes.IMPORTANT_TANK,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1071,7 +1084,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Show All",
+                label = T("Show All"),
                 value = NSI.BossDisplayModes.SHOW_ALL,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1079,7 +1092,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Combined",
+                label = T("Combined"),
                 value = NSI.BossDisplayModes.COMBINED,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1087,7 +1100,7 @@ function NSI:CreateTimelineWindow()
                 end
             },
             {
-                label = "Combined Important",
+                label = T("Combined Important"),
                 value = NSI.BossDisplayModes.COMBINED_IMPORTANT,
                 onclick = function(_, _, value)
                     timelineWindow.bossDisplayMode = value
@@ -1102,12 +1115,12 @@ function NSI:CreateTimelineWindow()
     bossDisplayDropdown:SetPoint("RIGHT", bossAbilitiesLabel, "LEFT", -20, 0)
     timelineWindow.bossDisplayDropdown = bossDisplayDropdown
 
-    local bossDisplayLabel = DF:CreateLabel(timelineWindow, "Boss Display:", 11, "white")
+    local bossDisplayLabel = DF:CreateLabel(timelineWindow, T("Boss Display:"), 11, "white")
     bossDisplayLabel:SetPoint("RIGHT", bossDisplayDropdown, "LEFT", -5, 0)
     timelineWindow.bossDisplayLabel = bossDisplayLabel
 
     -- No data label (shown when no reminders)
-    local noDataLabel = DF:CreateLabel(timelineWindow, "No reminders to display. Load a reminder set first with /ns", 14, "gray")
+    local noDataLabel = DF:CreateLabel(timelineWindow, T("No reminders to display. Load a reminder set first with /ns"), 14, "gray")
     noDataLabel:SetPoint("CENTER", timelineWindow, "CENTER", 0, 0)
     timelineWindow.noDataLabel = noDataLabel
     noDataLabel:Hide()
@@ -1357,12 +1370,12 @@ function NSI:CreateTimelineWindow()
                     spellName = block.blockData.payload.abilityName
                 end
 
-                GameTooltip:AddLine(spellName ~= "" and spellName or "Reminder", 1, 1, 1)
-                GameTooltip:AddLine("Time: " .. timeStr, 0.7, 0.7, 0.7)
+                GameTooltip:AddLine(spellName ~= "" and spellName or T("Reminder"), 1, 1, 1)
+                GameTooltip:AddLine(T("Time: ") .. timeStr, 0.7, 0.7, 0.7)
                 -- Duration is stored at position [4] in the block data (auraDuration)
                 local duration = block.blockData and tonumber(block.blockData[4]) or 0
                 if duration > 0 then
-                    GameTooltip:AddLine("Duration: " .. duration .. "s", 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(T("Duration: ") .. duration .. "s", 0.7, 0.7, 0.7)
                 end
 
                 -- Show category for boss abilities
@@ -1377,18 +1390,18 @@ function NSI:CreateTimelineWindow()
                             intermission = "|cffb366e6",
                         }
                         local colorCode = categoryColors[payload.category] or "|cffb3b3b3"
-                        GameTooltip:AddLine("Category: " .. colorCode .. payload.category .. "|r", 0.7, 0.7, 0.7)
+                        GameTooltip:AddLine(T("Category: ") .. colorCode .. payload.category .. "|r", 0.7, 0.7, 0.7)
                         if payload.important then
-                            GameTooltip:AddLine("|cffff9900Use Healing CDs!|r", 1, 0.6, 0)
+                            GameTooltip:AddLine(T("|cffff9900Use Healing CDs!|r"), 1, 0.6, 0)
                         end
                     elseif payload.phase then
-                        GameTooltip:AddLine("Phase: " .. payload.phase, 0.7, 0.7, 0.7)
+                        GameTooltip:AddLine(T("Phase: ") .. payload.phase, 0.7, 0.7, 0.7)
                     end
                     if payload.text then
-                        GameTooltip:AddLine("Text: " .. payload.text, 0.5, 0.8, 0.5)
+                        GameTooltip:AddLine(T("Text: ") .. payload.text, 0.5, 0.8, 0.5)
                     end
                     if payload.glowUnit then
-                        GameTooltip:AddLine("Glow Unit: " .. payload.glowUnit, 1, 1, 0)
+                        GameTooltip:AddLine(T("Glow Unit: ") .. payload.glowUnit, 1, 1, 0)
                     end
                 end
                 GameTooltip:Show()
@@ -1745,7 +1758,7 @@ function NSI:CreateTimelineWindow()
                     previewLine:Hide()
                     NSI:HideAllReminders()
                     if timelineWindow.playButton then
-                        timelineWindow.playButton.text = "Play Preview"
+                        timelineWindow.playButton.text = T("Play Preview")
                         timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
                     end
                 end
@@ -1773,7 +1786,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Help text (positioned at bottom, below the sliders)
-    local helpLabel = DF:CreateLabel(timelineWindow, "Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical", 10, "gray")
+    local helpLabel = DF:CreateLabel(timelineWindow, T("Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical"), 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
     -- Handle window resize to update timeline dimensions
@@ -1866,7 +1879,7 @@ function NSI:RefreshTimelineForMode()
                 self.TimelineWindow.currentReminder = {name = activeReminder, personal = isPersonal}
                 self.TimelineWindow.reminderDropdown:Select({name = activeReminder, personal = isPersonal})
             else
-                self.TimelineWindow.noDataLabel:SetText("Select a reminder set from the dropdown.")
+                self.TimelineWindow.noDataLabel:SetText(T("Select a reminder set from the dropdown."))
                 self.TimelineWindow.noDataLabel:Show()
                 self.TimelineWindow.timeline:Hide()
             end
@@ -1976,7 +1989,7 @@ function NSI:RefreshMyRemindersTimeline()
             end
         end
 
-        self.TimelineWindow.noDataLabel:SetText("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you.")
+        self.TimelineWindow.noDataLabel:SetText(T("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you."))
         self.TimelineWindow.noDataLabel:Show()
         self.TimelineWindow.timeline:SetData({
             length = 300,
@@ -2011,7 +2024,7 @@ function NSI:RefreshAllRemindersTimeline(reminderName, personal)
         self:UpdatePhaseMarkers()
         self:UpdateTimelineTitle()
     else
-        self.TimelineWindow.noDataLabel:SetText("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)")
+        self.TimelineWindow.noDataLabel:SetText(T("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)"))
         self.TimelineWindow.noDataLabel:Show()
         self.TimelineWindow.timeline:SetData({
             length = 300,
@@ -2032,7 +2045,7 @@ function NSI:UpdateTimelineTitle()
     local window = self.TimelineWindow
     if not window then return end
 
-    local title = "|cFF00FFFFNorthern Sky|r Timeline"
+    local title = T("|cFF00FFFFNorthern Sky|r Timeline")
 
     local encID = window.currentEncounterID
     if encID then
@@ -2040,9 +2053,9 @@ function NSI:UpdateTimelineTitle()
         local difficulty = window.currentDifficulty
 
         if difficulty then
-            title = string.format("|cFF00FFFFNorthern Sky|r Timeline - %s (%s)", bossName, difficulty)
+            title = string.format(T("|cFF00FFFFNorthern Sky|r Timeline - %s (%s)"), T(bossName), T(difficulty))
         else
-            title = string.format("|cFF00FFFFNorthern Sky|r Timeline - %s", bossName)
+            title = string.format(T("|cFF00FFFFNorthern Sky|r Timeline - %s"), T(bossName))
         end
     end
 
@@ -2133,14 +2146,14 @@ function NSI:UpdatePhaseMarkers()
                 -- Tooltip
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or ("Phase " .. self.phaseNum)
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. self.phaseNum)
                     local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
-                    GameTooltip:AddLine(string.format("Start: %d:%02d", minutes, seconds), 0.7, 0.7, 0.7)
-                    GameTooltip:AddLine("|cff00ff00Drag to adjust timing|r", 0, 1, 0)
-                    GameTooltip:AddLine("|cffff9900Right-click to reset|r", 1, 0.6, 0)
+                    GameTooltip:AddLine(string.format(T("Start: %d:%02d"), minutes, seconds), 0.7, 0.7, 0.7)
+                    GameTooltip:AddLine(T("|cff00ff00Drag to adjust timing|r"), 0, 1, 0)
+                    GameTooltip:AddLine(T("|cffff9900Right-click to reset|r"), 1, 0.6, 0)
                     GameTooltip:Show()
                 end)
 
@@ -2281,7 +2294,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
             end
         end
 
-        tab.noDataLabel:SetText("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you.")
+        tab.noDataLabel:SetText(T("No reminders loaded for you.\nLoad a reminder set with /ns and ensure it contains assignments for you."))
         tab.noDataLabel:Show()
         tab.timeline:SetData({
             length = 300,
@@ -2316,7 +2329,7 @@ function NSI:RefreshEmbeddedAllReminders(tab, reminderName, personal)
         self:UpdateEmbeddedPhaseMarkers(tab)
         self:UpdateEmbeddedTimelineTitle(tab)
     else
-        tab.noDataLabel:SetText("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)")
+        tab.noDataLabel:SetText(T("No player-specific reminders found in this reminder set.\n(Only showing named player assignments, not role/group tags)"))
         tab.noDataLabel:Show()
         tab.timeline:SetData({
             length = 300,
@@ -2419,14 +2432,14 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
 
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or ("Phase " .. self.phaseNum)
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. self.phaseNum)
                     local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
                     GameTooltip:AddLine(string.format("Start: %d:%02d", minutes, seconds), 0.7, 0.7, 0.7)
-                    GameTooltip:AddLine("|cff00ff00Drag to adjust timing|r", 0, 1, 0)
-                    GameTooltip:AddLine("|cffff9900Right-click to reset|r", 1, 0.6, 0)
+                    GameTooltip:AddLine(T("|cff00ff00Drag to adjust timing|r"), 0, 1, 0)
+                    GameTooltip:AddLine(T("|cffff9900Right-click to reset|r"), 1, 0.6, 0)
                     GameTooltip:Show()
                 end)
 
