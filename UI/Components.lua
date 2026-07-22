@@ -2070,7 +2070,7 @@ end
 
 local ShowContextAtLevel
 
-ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
+ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows)
     HideCtxFromLevel(level + 1)
     EnsureCtxClickaway()
 
@@ -2114,8 +2114,8 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
         end
     end
 
-    -- Anything past CTX_MAX_ROWS worth of height is reachable by scrolling.
-    local maxContentH = CTX_MAX_ROWS * CTX_ROW_H
+    -- Anything past the configured row limit is reachable by scrolling.
+    local maxContentH = (maxRows or CTX_MAX_ROWS) * CTX_ROW_H
     local scrollable  = contentH > maxContentH
     local viewH       = scrollable and maxContentH or contentH
     local totalH      = viewH + 4   -- 2px inner padding top + bottom
@@ -2325,7 +2325,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
                                 local rLeft  = f:GetLeft()
                                 local rTop   = row:GetTop()
                                 if rRight and rTop then
-                                    ShowContextAtLevel(item.contextItems, level + 1, rRight + 2, rLeft - 2, rTop, item.contextWidth)
+                                    ShowContextAtLevel(item.contextItems, level + 1, rRight + 2, rLeft - 2, rTop, item.contextWidth, maxRows)
                                 end
                             end
                         elseif item.fnc then
@@ -2343,7 +2343,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
                     local rLeft  = f:GetLeft()
                     local rTop   = row:GetTop()
                     if rRight and rTop then
-                        ShowContextAtLevel(subItems, level + 1, rRight + 2, rLeft - 2, rTop, nil)
+                        ShowContextAtLevel(subItems, level + 1, rRight + 2, rLeft - 2, rTop, nil, maxRows)
                     end
                 end)
                 row:SetScript("OnLeave", function()
@@ -2407,13 +2407,13 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
     if level == 1 then ctxClickaway:Show() end
 end
 
-local function ShowContextMenu(items, width)
+local function ShowContextMenu(items, width, maxRows)
     EnsureCtxClickaway()
     local scale  = UIParent:GetEffectiveScale()
     local cx, cy = GetCursorPosition()
     local uiX    = cx / scale
     local uiY    = cy / scale
-    ShowContextAtLevel(items, 1, uiX, uiX, uiY, width)
+    ShowContextAtLevel(items, 1, uiX, uiX, uiY, width, maxRows)
 end
 
 -- ============================================================
@@ -2425,7 +2425,7 @@ end
 --  to right-align against the anchor's right edge if it would
 --  otherwise run off the edge of the screen.
 -- ============================================================
-local function ShowContextMenuAtFrame(items, anchor, width)
+local function ShowContextMenuAtFrame(items, anchor, width, maxRows)
     EnsureCtxClickaway()
     -- anchor's Get{Left,Right,Bottom} are expressed in ITS OWN effective-scale units,
     -- but the popup frame is parented straight to UIParent, so if anchor sits inside
@@ -2435,7 +2435,7 @@ local function ShowContextMenuAtFrame(items, anchor, width)
     local left   = (anchor:GetLeft() or 0) * scaleRatio
     local right  = (anchor:GetRight() or 0) * scaleRatio
     local bottom = (anchor:GetBottom() or 0) * scaleRatio
-    ShowContextAtLevel(items, 1, left, right, bottom, width)
+    ShowContextAtLevel(items, 1, left, right, bottom, width, maxRows)
 end
 
 -- ============================================================

@@ -1253,7 +1253,7 @@ function NSI:CreateTimelineWindow()
     local editNoteButton = NSI.UI.Components.CreateButton(
         timelineWindow, "None (Read Only)",
         function(self)
-            NSI.UI.Components.ShowContextMenuAtFrame(BuildEditNoteMenuItems(), self.frame, 250)
+            NSI.UI.Components.ShowContextMenuAtFrame(BuildEditNoteMenuItems(), self.frame, 250, 11)
         end,
         250, 22, "NSUITimelineEditNoteBtn"
     )
@@ -3274,7 +3274,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         end
 
         local selectBossBtn = C.CreateButton(popup, "Pick Boss", function()
-            C.ShowContextMenu(buildBossMenuItems())
+            C.ShowContextMenu(buildBossMenuItems(), nil, 11)
         end, 88, 20)
         selectBossBtn:SetPoint("RIGHT", popup, "RIGHT", -12, 0)
         selectBossBtn.frame:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -12, -210)
