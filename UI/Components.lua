@@ -887,6 +887,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
             local rowHover = MakeHoverBg(row, 2)
 
             local iconTex = row:CreateTexture(nil, "ARTWORK")
+
             iconTex:SetPoint("LEFT", row, "LEFT", 4, 0)
             iconTex:Hide()
             local rlbl = MakeFontString(row, 12)
@@ -2158,6 +2159,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
         iconFrame:SetFrameLevel(baseLevel + 4)
         iconFrame:EnableMouse(false)
         local iconTex = iconFrame:CreateTexture(nil, "ARTWORK")
+        iconTex:SetTexCoord(0.1, 0.90, 0.1, 0.90)
         iconTex:SetAllPoints()
         row.iconFrame = iconFrame
         row.iconTex   = iconTex
@@ -2229,6 +2231,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width)
             local leftX = CTX_PAD_H
             if tex then
                 row.iconTex:SetTexture(tex)
+                row.iconTex:SetTexCoord(0.1, 0.90, 0.1, 0.90)
                 row.iconFrame:ClearAllPoints()
                 row.iconFrame:SetPoint("LEFT", row, "LEFT", CTX_PAD_H, 0)
                 row.iconFrame:Show()
