@@ -1110,7 +1110,7 @@ local function BuildAuraTrackingUI(screen)
 
         if s.TrackingMode == "Filters" then
             defs[#defs + 1] = { Type = "Label", text = "Aura Filters" }
-            defs[#defs + 1] = { Type = "Label", text = "Enabled adds the filter. Inverted adds the filter with ! in front of it." }
+            defs[#defs + 1] = { Type = "Label", text = "Enabled adds the filter. Inverted uses the same filter as negated. Multiple filters at the same time work as an AND condition."}
             s.AuraFilters = s.AuraFilters or {}
             for _, filter in ipairs(NSI.AuraTrackingFilterDefinitions or {}) do
                 local filterKey = filter.key

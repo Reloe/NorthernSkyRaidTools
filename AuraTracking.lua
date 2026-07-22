@@ -1523,12 +1523,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         end
     end
 
-    if not self:Restricted() and state.buttonRegions then
-        for button in pairs(state.buttonRegions) do
-            ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
-        end
-    end
-
     container:Show()
     container:SetEnabled(true)
 end

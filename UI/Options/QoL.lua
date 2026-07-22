@@ -198,8 +198,6 @@ local function BuildQoLOptions()
                 NSRT.QoL.AddSpellIDToTooltips = value
                 C_CVar.SetCVar("tooltipShowAuraSpellIDs", value and "1" or "0")
             end,
-            icontexture = 134400,
-            iconsize = {16, 16},
         },
         {
             type = "toggle",
