@@ -25,6 +25,7 @@ Libs\libs.xml
 
 # Locales
 Locales\enUS.lua
+Locales\deDE.lua
 Locales\koKR.lua
 Locales\ruRU.lua
 Locales\zhCN.lua
