@@ -1216,7 +1216,7 @@ function NSI:CreateTimelineWindow()
                         type = "button",
                         label = "+ New Note",
                         fnc = function()
-                            local value = self:GetOrCreatePersonalBossNote(group.encID)
+                            local value = self:CreateNewPersonalBossNote(group.encID)
                             timelineWindow.editNote = value
                             timelineWindow.editable = true
                             self:UpdateEditNoteButtonLabel(timelineWindow)
@@ -1701,9 +1701,12 @@ function NSI:CreateTimelineWindow()
                                     local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
                                     newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
                                     NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
-                                    NSI:SetReminder(timelineWindow.editNote.name, true, false)
+                                    -- Must be set BEFORE SetReminder: with skipupdate=false, SetReminder
+                                    -- calls ProcessReminder(), which itself refreshes the timeline
+                                    -- immediately if it's shown — so the flag has to already be in
+                                    -- place or that first refresh resets the zoom before we get here.
                                     timelineWindow.preserveZoom = true
-                                    NSI:RefreshTimelineForMode()
+                                    NSI:SetReminder(timelineWindow.editNote.name, true, false)
                                 end
                             end
                         elseif isClick then
@@ -1731,9 +1734,9 @@ function NSI:CreateTimelineWindow()
                                 {type = "button", label = "Delete Reminder", fnc = function()
                                     if p and p.srcLineIndex and timelineWindow.editNote then
                                         NSI:DeleteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw)
-                                        NSI:SetReminder(timelineWindow.editNote.name, true, false)
+                                        -- Set before SetReminder — see the drag-retime comment above.
                                         timelineWindow.preserveZoom = true
-                                        NSI:RefreshTimelineForMode()
+                                        NSI:SetReminder(timelineWindow.editNote.name, true, false)
                                     end
                                 end},
                             })
@@ -1927,7 +1930,7 @@ function NSI:CreateTimelineWindow()
 
     -- Time label for cursor
     local cursorTimeLabel = cursorLine:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    cursorTimeLabel:SetPoint("BOTTOM", cursorLine, "TOP", 0, 2)
+    cursorTimeLabel:SetPoint("BOTTOM", cursorLine, "TOP", 0, -10)
     cursorTimeLabel:SetTextColor(1, 1, 0.7, 1)
     timelineFrame.cursorTimeLabel = cursorTimeLabel
 
@@ -2156,9 +2159,9 @@ function NSI:CreateTimelineWindow()
                         local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
                         newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
                         NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
-                        NSI:SetReminder(timelineWindow.editNote.name, true, false)
+                        -- Set before SetReminder — see the drag-retime comment above.
                         timelineWindow.preserveZoom = true
-                        NSI:RefreshTimelineForMode()
+                        NSI:SetReminder(timelineWindow.editNote.name, true, false)
                     end
                 end
             end
@@ -2336,6 +2339,71 @@ function NSI:ToggleTimelineWindow()
     end
 end
 
+-- Opens the Timeline window (creating/showing it if needed) and points it at a
+-- specific note by name — used by the "View in Timeline" button on the note
+-- editor screens. Personal notes go through "My Reminders" mode with this note
+-- set as the Edit Note target (same chrome/result as picking it from the Edit
+-- Note menu). Shared notes have no Edit Note entry, so they use "All Reminders"
+-- mode instead, which is the only view that can show an arbitrary shared note.
+function NSI:ViewNoteInTimeline(name, personal)
+    if not name or name == "" then return end
+    if not self.TimelineWindow then
+        self.TimelineWindow = self:CreateTimelineWindow()
+    end
+    local window = self.TimelineWindow
+    if not window:IsShown() then
+        window:Show()
+    end
+
+    local value = {name = name, personal = personal}
+    window.currentReminder = value
+
+    if personal then
+        window.mode = "my"
+        if window.modeDropdown then window.modeDropdown:Select("my") end
+        window.reminderLabel:Hide()
+        window.reminderDropdown:Hide()
+        window.editNoteLabel:Show()
+        window.editNoteButton.frame:Show()
+        if window.playButton then window.playButton:Show() end
+
+        window.editNote = value
+        window.editable = true
+        self:SetReminder(name, true, true)
+        self:UpdateEditNoteButtonLabel(window)
+    else
+        window.mode = "all"
+        if window.modeDropdown then window.modeDropdown:Select("all") end
+        window.reminderLabel:Show()
+        window.reminderDropdown:Show()
+        window.editNoteLabel:Hide()
+        window.editNoteButton.frame:Hide()
+        window.editable = false
+        window.editNote = nil
+        if window.playButton then
+            if window.previewActive then
+                window.previewActive = false
+                window.previewStartTime = nil
+                if window.timeline and window.timeline.previewLine then
+                    window.timeline.previewLine:Hide()
+                end
+                self:HideAllReminders()
+                window.playButton.text = "Play Preview"
+                window.playButton:SetIcon(self.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+            end
+            window.playButton:Hide()
+        end
+        -- Select() matches against option.label/.value with ==, which is table
+        -- identity — a freshly-built {name=,personal=} table never equals the
+        -- option table already inside the dropdown's own list, so passing `value`
+        -- silently fails to update the visible selection. Shared entries' label
+        -- is just the note name, so matching on that string works correctly.
+        if window.reminderDropdown then window.reminderDropdown:Select(name) end
+    end
+
+    self:RefreshTimelineForMode()
+end
+
 -- Refresh timeline based on current mode
 function NSI:RefreshTimelineForMode()
     if not self.TimelineWindow then return end
@@ -2358,7 +2426,11 @@ function NSI:RefreshTimelineForMode()
             if activeReminder and activeReminder ~= "" then
                 self:RefreshAllRemindersTimeline(activeReminder, isPersonal)
                 self.TimelineWindow.currentReminder = {name = activeReminder, personal = isPersonal}
-                self.TimelineWindow.reminderDropdown:Select({name = activeReminder, personal = isPersonal})
+                -- Select() matches option.label with == (a string compare here, not
+                -- table identity), so pass the label text — personal entries carry
+                -- the " (Personal)" suffix BuildReminderDropdownOptions labels them with.
+                local label = isPersonal and (activeReminder .. " (Personal)") or activeReminder
+                self.TimelineWindow.reminderDropdown:Select(label)
             else
                 self.TimelineWindow.noDataLabel:SetText("Select a reminder set from the dropdown.")
                 self.TimelineWindow.noDataLabel:Show()
@@ -2424,9 +2496,9 @@ function NSI:UpdateEditNoteButtonLabel(window)
     window.editNoteButton:SetText(editNote and (editNote.name .. " (Personal)") or "None (Read Only)")
 end
 
--- Returns (creating if necessary) the personal note for a boss, defaulting to
--- Mythic difficulty. Shared by the Edit Note dropdown's "Create New Note" entries
--- and the Add Reminder popup's boss-picker auto-creation path.
+-- Returns (creating if necessary) THE personal note for a boss, reusing one that
+-- already exists. Used by the Add Reminder popup's boss-picker path, where filing
+-- a stray reminder under an existing note is the more useful default.
 function NSI:GetOrCreatePersonalBossNote(eid)
     local bossName   = NSI.BossNames[eid] or ("Boss" .. eid)
     local actualName = bossName .. " - Mythic"
@@ -2434,6 +2506,25 @@ function NSI:GetOrCreatePersonalBossNote(eid)
         NSRT.PersonalReminders[actualName] = string.format(
             "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
     end
+    self:SetReminder(actualName, true, true)
+    return {name = actualName, personal = true}
+end
+
+-- Always creates a brand-new personal note for a boss, uniquely named
+-- ("<Boss> - Mythic", "<Boss> - Mythic 2", ...) — mirrors the "+ Create Note"
+-- naming convention in the Personal Notes tab. Unlike GetOrCreatePersonalBossNote,
+-- this never reuses an existing note; used by the Edit Note menu's "+ New Note".
+function NSI:CreateNewPersonalBossNote(eid)
+    local bossName  = NSI.BossNames[eid] or ("Boss" .. eid)
+    local baseName  = bossName .. " - Mythic"
+    local actualName = baseName
+    local n = 2
+    while NSRT.PersonalReminders[actualName] do
+        actualName = baseName .. " " .. n
+        n = n + 1
+    end
+    NSRT.PersonalReminders[actualName] = string.format(
+        "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
     self:SetReminder(actualName, true, true)
     return {name = actualName, personal = true}
 end
@@ -3342,9 +3433,11 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
             NSI:AppendNoteLine(editNote.name, true, line)
         end
 
-        NSI:SetReminder(editNote.name, true, false)
+        -- Set before SetReminder: with skipupdate=false it calls ProcessReminder(),
+        -- which refreshes the timeline itself if shown — the flag must already be
+        -- set or that refresh resets the zoom before the explicit one below runs.
         window.preserveZoom = true
-        NSI:RefreshTimelineForMode()
+        NSI:SetReminder(editNote.name, true, false)
         popup:Hide()
     end
 
@@ -3353,9 +3446,8 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         local editNote = popup._window and popup._window.editNote
         if editNote and payload and payload.srcLineIndex then
             NSI:DeleteNoteLine(editNote.name, true, payload.srcLineIndex, srcRaw)
-            NSI:SetReminder(editNote.name, true, false)
             window.preserveZoom = true
-            NSI:RefreshTimelineForMode()
+            NSI:SetReminder(editNote.name, true, false)
             popup:Hide()
         end
     end
