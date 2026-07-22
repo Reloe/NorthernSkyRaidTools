@@ -674,7 +674,7 @@ function NSI:AddCustomAuraTracking(group)
     group = group and strtrim(tostring(group)) or ""
     if group == "" or group == NSI.AuraTrackingBuiltinGroup then group = nil end
     NSRT.AuraTrackingSettings.Custom[index] = self:CreateAuraTrackingSettingsDefaults({
-        Name = "Custom Aura Tracking " .. index,
+        Name = NSI:Loc("Custom Aura Tracking") .. " " .. index,
         xOffset = 0,
         yOffset = 0,
         HideStackText = true,

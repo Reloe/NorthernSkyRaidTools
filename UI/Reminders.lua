@@ -1290,11 +1290,11 @@ local function BuildReminderScreen(personal, parentFrame)
     end
 
     local CreateNoteButton = CreateLocalizedButton(screen, "+ Create Note", function()
-        local noteName = "New Note"
+        local noteName = NSI:Loc("New Note")
         local store = NSRT[storeKey]
         local n = 2
         while store[noteName] do
-            noteName = "New Note " .. n
+            noteName = NSI:Loc("New Note") .. " " .. n
             n = n + 1
         end
         local content = "EncounterID:3176;Name:" .. noteName .. ";Difficulty:Mythic\n"
