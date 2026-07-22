@@ -966,7 +966,7 @@ local function BuildAuraTrackingUI(screen)
                     label:SetText(spell.name .. "  |cFF808080(" .. spellID .. ")|r")
                 else
                     icon:SetTexture(DEFAULT_ICON)
-                    label:SetText("|cFFFF4040Unknown spell|r  |cFF808080(" .. spellID .. ")|r")
+                    label:SetText(NSI:Loc("|cFFFF4040Unknown spell|r") .. "  |cFF808080(" .. spellID .. ")|r")
                 end
 
                 iconFrame:SetScript("OnEnter", function(self)
