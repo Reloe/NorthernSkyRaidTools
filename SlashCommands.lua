@@ -9,10 +9,10 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "debug" then
         if NSRT.Settings["Debug"] then
             NSRT.Settings["Debug"] = false
-            print("|cFF00FFFFNSRT|r Debug mode is now disabled")
+            print(NSI:Loc("|cFF00FFFFNSRT|r Debug mode is now disabled"))
         else
             NSRT.Settings["Debug"] = true
-            print("|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing.")
+            print(NSI:Loc("|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing."))
         end
     elseif msg == "cd" then
         if NSI.NSUI.cooldowns_frame:IsShown() then
@@ -60,13 +60,13 @@ SlashCmdList["NSUI"] = function(msg)
         NSRT.Settings.DebugLogs = not NSRT.Settings.DebugLogs
         NSI:UpdateDebugLogEvents()
         if NSRT.Settings.DebugLogs then
-            print("|cFF00FFFFNSRT|r Debug logs are now enabled")
+            print(NSI:Loc("|cFF00FFFFNSRT|r Debug logs are now enabled"))
         else
-            print("|cFF00FFFFNSRT|r Debug logs are now disabled.")
+            print(NSI:Loc("|cFF00FFFFNSRT|r Debug logs are now disabled."))
         end
     elseif msg == "resetlogs" then
         NSRTTimelineData = {}
-        print("|cFF00FFFFNSRT|r Timeline logs have been reset.")
+        print(NSI:Loc("|cFF00FFFFNSRT|r Timeline logs have been reset."))
     elseif msg == "help" then
         print(NSI:Loc("|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n"))
         print(NSI:Loc("  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development"))
@@ -86,7 +86,7 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "" then
         NSI.NSUI:ToggleOptions()
     elseif msg then
-        print("|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands.")
+        print(NSI:Loc("|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."))
     else
         NSI.NSUI:ToggleOptions()
     end

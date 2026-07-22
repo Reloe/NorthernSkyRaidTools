@@ -54,6 +54,11 @@ L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCFLeft click|r:
 -- ============================================================================
 -- SlashCommands.lua
 -- ============================================================================
+L["|cFF00FFFFNSRT|r Debug mode is now disabled"] = "|cFF00FFFFNSRT|r Debug mode is now disabled"
+L["|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing."] = "|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing."
+L["|cFF00FFFFNSRT|r Debug logs are now enabled"] = "|cFF00FFFFNSRT|r Debug logs are now enabled"
+L["|cFF00FFFFNSRT|r Debug logs are now disabled."] = "|cFF00FFFFNSRT|r Debug logs are now disabled."
+L["|cFF00FFFFNSRT|r Timeline logs have been reset."] = "|cFF00FFFFNSRT|r Timeline logs have been reset."
 L["|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n"] = "|cFF00FFFFNSRT|r Available commands: (either '/ns' or '/nsrt' work)\n"
 L["  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development"] = "  |cFF00FFFF/ns debug|r - Toggle debug mode - mainly used for development"
 L["  |cFF00FFFF/ns wipe|r - Wipe ALL NSRT settings and reload UI"] = "  |cFF00FFFF/ns wipe|r - Wipe ALL NSRT settings and reload UI"
@@ -69,6 +74,7 @@ L["  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note"] = "  |cFF0
 L["  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"] = "  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"
 L["  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"] = "  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"
 L["  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"] = "  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"
+L["|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."] = "|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."
 -- ============================================================================
 -- UI/General.lua — Export/Import popups
 -- ============================================================================
