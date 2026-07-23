@@ -1481,6 +1481,46 @@ function NSI:RemoveReminder(name, personal)
     end
 end
 
+-- Rename a personal note in place, preserving its EncounterID/Difficulty header
+-- fields and updating every stored reference to the old key (per-character active
+-- personal reminder slots, the loaded-note pointer, and auto-load mappings).
+-- Returns true on success, or false, "empty"|"missing"|"exists" on failure.
+function NSI:RenamePersonalNote(oldName, newName)
+    newName = newName and strtrim(newName) or ""
+    if newName == "" or newName == oldName then return false, "empty" end
+    if not NSRT.PersonalReminders[oldName] then return false, "missing" end
+    if NSRT.PersonalReminders[newName] then return false, "exists" end
+
+    local oldContent = NSRT.PersonalReminders[oldName]
+    local encID = oldContent:match("EncounterID:(%d+)")
+    local diff = oldContent:match("Difficulty:([^;\n]+)")
+    local firstLine = encID and ("EncounterID:" .. encID .. ";") or ""
+    firstLine = firstLine .. "Name:" .. newName
+    if diff then firstLine = firstLine .. ";Difficulty:" .. strtrim(diff) end
+    local rest = oldContent:match("^[^\n]*\n(.*)") or ""
+    local newContent = firstLine .. "\n" .. rest
+
+    NSRT.PersonalReminders[newName] = newContent
+    NSRT.PersonalReminders[oldName] = nil
+
+    for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
+        for eid, name in pairs(charTable) do
+            if name == oldName then charTable[eid] = newName end
+        end
+    end
+    for charkey, name in pairs(NSRT.StoredPersonalReminder or {}) do
+        if name == oldName then NSRT.StoredPersonalReminder[charkey] = newName end
+    end
+    if encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[tonumber(encID)] == oldName then
+        NSRT.AutoLoadNote[tonumber(encID)] = newName
+    end
+    if self.LoadedPersonalReminder == oldName then
+        self.LoadedPersonalReminder = newName
+        self.PersonalReminder = newContent
+    end
+    return true, newName
+end
+
 function NSI:CleanUpAutoLoad(name)
     for encID, NoteName in pairs(NSRT.AutoLoadNote) do
         if name == NoteName then

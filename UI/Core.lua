@@ -29,6 +29,7 @@ local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLAT
 
 local supportedLanguages = {
     enUS = true,
+    deDE = true,
     koKR = true,
     ruRU = true,
     zhCN = true,

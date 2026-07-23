@@ -132,7 +132,7 @@ local function BuildBossDropdownOptions(onSelect, noBossLabel)
             value    = encID,
             icon     = BossIcons[encID],
             iconsize = { 16, 16 },
-            texcoord = { 0.05, 0.95, 0.05, 0.95 },
+            texcoord = { 0.1, 0.90, 0.1, 0.90 },
             onclick  = function(_, _, v)
                 if onSelect then onSelect(v) end
             end,
