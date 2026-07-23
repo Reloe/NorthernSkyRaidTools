@@ -1187,6 +1187,20 @@ local function RecreateAuraTrackingContainer(self, state)
     state.currentMaxFrameCountByGroup = {}
 end
 
+local function GetAuraTrackingBindingSignature(settings, key, width, height)
+    return table.concat({
+        tostring(width or ""),
+        tostring(height or ""),
+        tostring(settings.HideStackText and true or false),
+        tostring(settings.HideDurationText and true or false),
+        tostring(settings.EnableCooldownSwipe and true or false),
+        tostring(settings.HideTooltip and true or false),
+        tostring(AuraTrackingWantsDispelBorder(settings, key) and true or false),
+        tostring(((settings.BorderSize or 0) > 0) and true or false),
+        tostring((tostring(key or ""):match("^Tank") and settings.NameEnabled) and true or false),
+    }, ":")
+end
+
 local function EnsureAuraTrackingFontString(regions, key)
     if not regions[key] then
         regions[key] = regions.textOverlay:CreateFontString(nil, "OVERLAY")
@@ -1337,6 +1351,62 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     return button
 end
 
+local function UpdateAuraTrackingButtonVisuals(self, state, button, width, height, settings, unit, key)
+    local regions = state.buttonRegions and state.buttonRegions[button]
+    if not regions then return end
+
+    local fontPath = GetAuraTrackingFontPath(self, settings)
+    local zoom = ((settings.Zoom or 0) * 0.5) / 100
+    if regions.icon then
+        regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
+    end
+    UpdateAuraTrackingBorder(regions.border, button, settings.BorderSize, settings.BorderColor)
+
+    if AuraTrackingWantsDispelBorder(settings, key) and regions.dispelOverlay and regions.dispelBorder and regions.icon then
+        regions.dispelOverlay:ClearAllPoints()
+        regions.dispelOverlay:SetAllPoints(regions.icon)
+        regions.dispelOverlay:Show()
+        SetAuraTrackingDispelBorderSize(regions.dispelBorder, regions.icon, width, height)
+    elseif regions.dispelOverlay then
+        HideAuraTrackingDispelRegions(regions)
+    end
+    if AuraTrackingWantsDispelBorder(settings, key) and regions.dispelSymbol then
+        regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
+        regions.dispelSymbol:SetTextColor(1, 1, 1, 1)
+        regions.dispelSymbol:Show()
+    elseif regions.dispelSymbol then
+        regions.dispelSymbol:Hide()
+    end
+
+    if regions.count then
+        regions.count:ClearAllPoints()
+        regions.count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
+        regions.count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
+        regions.count:SetTextColor(unpack(settings.StackColor))
+        regions.count:SetShown(not settings.HideStackText)
+    end
+    if regions.duration then
+        regions.duration:ClearAllPoints()
+        regions.duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
+        regions.duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
+        regions.duration:SetTextColor(unpack(settings.DurationColor))
+        regions.duration:SetShown(not settings.HideDurationText)
+    end
+    if tostring(key or ""):match("^Tank") and regions.unitName then
+        PositionAuraTrackingUnitName(regions.unitName, button, settings)
+        regions.unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
+        regions.unitName:SetText(NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or "")
+        regions.unitName:SetShown(settings.NameEnabled)
+    elseif regions.unitName then
+        regions.unitName:SetText("")
+        regions.unitName:Hide()
+    end
+    if regions.cooldown then
+        regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
+        regions.cooldown:SetShown(settings.EnableCooldownSwipe)
+    end
+end
+
 local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     if not state or not state.container or not groupKey then return end
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
@@ -1385,7 +1455,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     local state = AcquireAuraTrackingContainer(self, key)
     local width = settings.Width
     local height = settings.Height
-    if not self:Restricted() and state.container and ((state.width and state.width ~= width) or (state.height and state.height ~= height)) then
+    local bindingSignature = GetAuraTrackingBindingSignature(settings, key, width, height)
+    if not self:Restricted() and state.container and state.bindingSignature and state.bindingSignature ~= bindingSignature then
         RecreateAuraTrackingContainer(self, state)
     end
     local container = state.container
@@ -1398,6 +1469,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     state.key = key
     state.width = width
     state.height = height
+    state.bindingSignature = bindingSignature
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
 
     container:SetEnabled(false)
@@ -1536,6 +1608,11 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
 
     container:Show()
     container:SetEnabled(true)
+    if not self:Restricted() then
+        for button in pairs(state.buttonRegions or {}) do
+            UpdateAuraTrackingButtonVisuals(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
+        end
+    end
     return state
 end
 
