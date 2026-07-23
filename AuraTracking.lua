@@ -7,7 +7,12 @@ local AuraTrackingFilters = {
 }
 
 local AuraTrackingExcludedSpellIDs = {
-    [206151] = true,
+    [57723] = true, -- Exhaustion
+    [390435] = true, -- Exhaustion
+    [57724] = true, -- Sated
+    [71041] = true, -- Dungeon Deserter
+    [206151] = true, -- Challenger's Burden
+    [264689] = true, -- Fatigued
 }
 
 NSI.AuraTrackingFilterDefinitions = {
