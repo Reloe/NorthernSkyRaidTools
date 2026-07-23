@@ -665,7 +665,7 @@ local function BuildAuraTrackingUI(screen)
                 row.enabledCB:SetOnChange(function(_, v)
                     local es = NSI:GetAuraTrackingSettings(sk)
                     if es then
-                        es.enabled = v; NSI:InitAuraTracking()
+                        es.enabled = v; NSI:InitAuraTracking(false, true)
                         RebuildList()
                     end
                 end)
@@ -775,7 +775,7 @@ local function BuildAuraTrackingUI(screen)
     local function apply(key)
         if autoPreviewKey == key and not IsExplicitPreviewActive(key) then
             NSI:PreviewAuraTracking(key, true)
-            NSI:InitAuraTracking()
+            NSI:InitAuraTracking(false, true)
         else
             NSI:UpdateAuraTrackingDisplay(key)
         end
