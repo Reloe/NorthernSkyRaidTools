@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 
 -- Built-in aura sound entries accept:
 -- {spellID = 12345, sound = "SoundName"}                         -- defaults to unit = "player", eventType = "applied"
--- {spellID = 12345, sound = "SoundName", unit = "target"}         -- unit can also be a player name, raid/party unit, bossN, focus, etc.
+-- {spellID = 12345, sound = "SoundName", unit = "target"}         -- unit can also be cotank, a player name, raid/party unit, bossN, focus, etc.
 -- {spellID = 12345, sound = "SoundName", eventType = "removed"}   -- eventType can be "applied", "removed", or "stackGain"
 NSI.AuraSoundCategories = {
     Raid = {
@@ -233,33 +233,33 @@ function NSI:ResolveAuraSoundUnit(unit)
         return "player"
     end
 
-    if unit == "player"
-        or unit == "target"
-        or unit == "targettarget"
-        or unit == "focus"
-        or unit == "focustarget"
-        or unit:match("^raid%d+$")
-        or unit:match("^party%d+$")
-        or unit:match("^boss%d+$")
+    local lower = strlower(unit)
+    if lower == "cotank" then
+        return self:GetCoTankUnits()[1]
+    end
+
+    if lower == "player"
+        or lower == "target"
+        or lower == "targettarget"
+        or lower == "focus"
+        or lower == "focustarget"
+        or lower:match("^raid%d+$")
+        or lower:match("^party%d+$")
+        or lower:match("^boss%d+$")
     then
-        return unit
+        return lower
     end
 
-    local inputName, inputRealm = strsplit("-", unit)
-    if not inputName or inputName == "" then return end
-    inputName = Ambiguate(inputName, "none")
-    if inputRealm == "" then inputRealm = nil end
-    local _, playerRealm = UnitFullName("player")
+    return self:ResolveGroupMemberUnit(unit)
+end
 
-    for member in self:IterateGroupMembers() do
-        local name, realm = UnitFullName(member)
-        if name then
-            realm = realm or playerRealm
-            if (name == inputName or Ambiguate(name, "none") == inputName) and (not inputRealm or inputRealm == realm) then
-                return member
-            end
-        end
+function NSI:ResolveAuraSoundUnits(unit)
+    if type(unit) == "string" and strlower(strtrim(unit)) == "cotank" then
+        return self:GetCoTankUnits()
     end
+
+    local resolvedUnit = self:ResolveAuraSoundUnit(unit)
+    return resolvedUnit and {resolvedUnit}
 end
 
 local function BuildAuraSoundDefaultList(categoryType)
@@ -325,9 +325,19 @@ local AuraSoundEventTriggers = {
     removed = UnitAuraSoundTrigger and UnitAuraSoundTrigger.OnAuraRemoved or 2,
 }
 
+local function RemoveRegisteredAuraSound(soundID)
+    if type(soundID) == "table" then
+        for _, id in pairs(soundID) do
+            C_UnitAuras.RemoveAuraSound(id)
+        end
+    elseif soundID then
+        C_UnitAuras.RemoveAuraSound(soundID)
+    end
+end
+
 function NSI:ClearRegisteredAuraSounds()
     for _, soundID in pairs(self.AuraSoundIDs or {}) do
-        C_UnitAuras.RemoveAuraSound(soundID)
+        RemoveRegisteredAuraSound(soundID)
     end
     self.AuraSoundIDs = {}
 end
@@ -350,28 +360,31 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType)
     spellID = tonumber(spellID)
     if not spellID then return end
     if self:Restricted() then return end
-    unit = self:ResolveAuraSoundUnit(unit)
+    local units = self:ResolveAuraSoundUnits(unit)
     if not eventType or eventType == "" then eventType = "applied" end
 
     if not self.AuraSoundIDs then self.AuraSoundIDs = {} end
     if entryKey and self.AuraSoundIDs[entryKey] then
-        C_UnitAuras.RemoveAuraSound(self.AuraSoundIDs[entryKey])
+        RemoveRegisteredAuraSound(self.AuraSoundIDs[entryKey])
         self.AuraSoundIDs[entryKey] = nil
     end
-    if not unit then return end
-    entryKey = entryKey or self:GetAuraSoundKey(spellID, unit, eventType)
+    if not units or #units == 0 then return end
+    entryKey = entryKey or self:GetAuraSoundKey(spellID, units[1], eventType)
     if not sound then return end -- essentially calling the function without a soundpath removes the sound (when user removes it in the UI)
     local soundPath = GetSoundPath(sound)
     if soundPath and soundPath ~= 1 then
         local trigger = AuraSoundEventTriggers[eventType] or AuraSoundEventTriggers.applied
-        local soundInfo = {
-            unitToken = unit,
-            spellID = spellID,
-            soundFileName = soundPath,
-            outputChannel = "master",
-        }
-        local soundID = C_UnitAuras.AddAuraSound(trigger, soundInfo)
-        self.AuraSoundIDs[entryKey] = soundID
+        local soundIDs = {}
+        for _, unitToken in ipairs(units) do
+            local soundInfo = {
+                unitToken = unitToken,
+                spellID = spellID,
+                soundFileName = soundPath,
+                outputChannel = "master",
+            }
+            soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
+        end
+        self.AuraSoundIDs[entryKey] = (#soundIDs == 1) and soundIDs[1] or soundIDs
     end
 end
 
