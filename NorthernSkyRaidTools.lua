@@ -24,7 +24,7 @@ function NSI:InitLDB()
             end,
             OnTooltipShow = function(tooltip)
                 tooltip:AddLine("Northern Sky Raid Tools", 0, 1, 1)
-                tooltip:AddLine("|cFFCFCFCFLeft click|r: Show/Hide Options Window")
+                tooltip:AddLine(NSI:Loc("|cFFCFCFCFLeft click|r: Show/Hide Options Window"))
             end
         })
 

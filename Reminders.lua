@@ -411,7 +411,7 @@ function NSI:ProcessReminder()
             end)
             for _, data in ipairs(remindertable) do
                 if not phasedisplayed[data.phase] then
-                    data.str = "Phase "..data.phase.."\n"..data.str
+                    data.str = NSI:Loc("Phase").. " " .. data.phase.."\n"..data.str
                     phasedisplayed[data.phase] = true
                 end
                 self.DisplayedReminder = self.DisplayedReminder..data.str.."\n"
@@ -428,7 +428,7 @@ function NSI:ProcessReminder()
             end)
             for _, data in ipairs(personalremindertable) do
                 if not phasedisplayed[data.phase] then
-                    data.str = "Phase "..data.phase.."\n"..data.str
+                    data.str = NSI:Loc("Phase").. " " .. data.phase.."\n"..data.str
                     phasedisplayed[data.phase] = true
                 end
                 self.DisplayedPersonalReminder = self.DisplayedPersonalReminder..data.str.."\n"
@@ -1260,7 +1260,7 @@ function NSI:CountdownNoteFrame(frame)
     if not originalText:match('\n$') then originalText = originalText..'\n' end
     for line in originalText:gmatch('([^\n]*)\n') do
         local ShouldDelete = false
-        local phase = line:match("Phase (%d*%.?%d+)")
+        local phase = line:match(NSI:Loc("Phase").." (%d*%.?%d+)")
         curphase = phase and tonumber(phase) or curphase
         if curphase < self.Phase then
             ShouldDelete = true
@@ -1699,7 +1699,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         titleFrame:SetFrameLevel(self[Name]:GetFrameLevel() + 1)
         local titleLabel = titleFrame:CreateFontString(nil, "OVERLAY")
         titleLabel:SetFont(self:GetUIFontPath(), 12, self:GetUIFontFlags())
-        titleLabel:SetText(title)
+        titleLabel:SetText(NSI:Loc(title))
         titleLabel:SetPoint("CENTER", titleFrame, "CENTER", 0, 0)
         titleLabel:SetTextColor(0, 1, 1, 1)
         titleLabel:Hide()

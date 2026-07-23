@@ -139,14 +139,14 @@ function NSI:TogglePreviewMode()
 
         local lbl = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         lbl:SetPoint("LEFT", bar, "LEFT", 10, 0)
-        lbl:SetText("Preview Mode")
+        lbl:SetText(NSI:Loc("Preview Mode"))
         lbl:SetTextColor(1, 0.75, 0.2, 1)
 
         local exitBtn = CreateFrame("Button", nil, bar)
         exitBtn:SetSize(70, 22)
         exitBtn:SetPoint("RIGHT", bar, "RIGHT", -10, 0)
         exitBtn:SetNormalFontObject("GameFontNormalSmall")
-        exitBtn:SetText("Exit Preview")
+        exitBtn:SetText(NSI:Loc("Exit Preview"))
         exitBtn:GetFontString():SetTextColor(0.9, 0.3, 0.3)
         exitBtn:SetScript("OnEnter", function(b) b:GetFontString():SetTextColor(1, 0.1, 0.1) end)
         exitBtn:SetScript("OnLeave", function(b) b:GetFontString():SetTextColor(0.9, 0.3, 0.3) end)
@@ -839,7 +839,7 @@ local function BuildReminderScreen(personal, parentFrame)
         local popup = DF:CreateSimplePanel(UIParent, 300, 150, NSI:Loc("Confirm Deletion"), "NSRTDeleteReminderConfirm")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER")
-        local label = DF:CreateLabel(popup, "Delete \"" .. toDelete .. "\"?", 12, "orange")
+        local label = DF:CreateLabel(popup, string.format(NSI:Loc("Delete \"%s\"?"), toDelete), 12, "orange")
         label:SetPoint("TOP", popup, "TOP", 0, -40)
         label:SetJustifyH("CENTER")
         local confirmBtn = CreateLocalizedButton(popup, "Confirm", function()
@@ -1306,11 +1306,11 @@ local function BuildReminderScreen(personal, parentFrame)
     end
 
     local CreateNoteButton = CreateLocalizedButton(screen, "+ Create Note", function()
-        local noteName = "New Note"
+        local noteName = NSI:Loc("New Note")
         local store = NSRT[storeKey]
         local n = 2
         while store[noteName] do
-            noteName = "New Note " .. n
+            noteName = NSI:Loc("New Note") .. " " .. n
             n = n + 1
         end
         local content = "EncounterID:3176;Name:" .. noteName .. ";Difficulty:Mythic\n"
