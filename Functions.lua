@@ -17,6 +17,42 @@ function NSI:IterateGroupMembers(reversed, forceParty)
     end
 end
 
+function NSI:GetCoTankUnits()
+    local tanks = {}
+    for member in self:IterateGroupMembers() do
+        if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
+            tanks[#tanks + 1] = member
+        end
+    end
+    return tanks
+end
+
+function NSI:ResolveGroupMemberUnit(unit)
+    if type(unit) ~= "string" or unit == "" then return end
+
+    local inputName, inputRealm = strsplit("-", unit)
+    if not inputName or inputName == "" then return end
+
+    inputName = strlower(Ambiguate(inputName, "none"))
+    if inputRealm == "" then inputRealm = nil end
+    if inputRealm then inputRealm = strlower(inputRealm) end
+
+    local _, playerRealm = UnitFullName("player")
+    playerRealm = playerRealm and strlower(playerRealm)
+
+    for member in self:IterateGroupMembers() do
+        local name, realm = UnitFullName(member)
+        if name then
+            local compareName = strlower(name)
+            local compareShortName = strlower(Ambiguate(name, "none"))
+            local compareRealm = strlower(realm or playerRealm or "")
+            if (compareName == inputName or compareShortName == inputName) and (not inputRealm or inputRealm == compareRealm) then
+                return member
+            end
+        end
+    end
+end
+
 function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
