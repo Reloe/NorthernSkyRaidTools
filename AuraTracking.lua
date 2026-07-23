@@ -204,35 +204,14 @@ local function ResolveAuraTrackingUnit(self, settings)
     local lower = string.lower(unit)
 
     if lower == "cotank" then
-        for member in self:IterateGroupMembers() do
-            if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
-                return member, true
-            end
-        end
-        return nil, true
+        return self:GetCoTankUnits()[1], true
     end
 
     if IsAuraTrackingStaticUnit(unit) then
         return lower, false
     end
 
-    local inputName, inputRealm = strsplit("-", unit)
-    if not inputName or inputName == "" then return nil, true end
-    inputName = Ambiguate(inputName, "none")
-    if inputRealm == "" then inputRealm = nil end
-    local _, playerRealm = UnitFullName("player")
-
-    for member in self:IterateGroupMembers() do
-        local name, realm = UnitFullName(member)
-        if name then
-            realm = realm or playerRealm
-            if (name == inputName or Ambiguate(name, "none") == inputName) and (not inputRealm or inputRealm == realm) then
-                return member, true
-            end
-        end
-    end
-
-    return nil, true
+    return self:ResolveGroupMemberUnit(unit), true
 end
 
 local function GetAuraTrackingCustomFrameLimit(settings, unit)
@@ -1554,13 +1533,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
-        local tankUnit
-        for unit in self:IterateGroupMembers() do
-            if UnitGroupRolesAssigned(unit) == "TANK" and not UnitIsUnit("player", unit) then
-                tankUnit = unit
-                break
-            end
-        end
+        local tankUnit = self:GetCoTankUnits()[1]
         InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "Tank")
     end
 
