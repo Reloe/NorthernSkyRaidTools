@@ -324,6 +324,7 @@ function NSI:AddMissingDefaults()
                 xOffset = -549,
                 yOffset = -199,
                 NameEnabled = true,
+                OnlyShowFirstTank = false,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
                 Name = "External & Immunity",

@@ -775,6 +775,7 @@ local function BuildAuraTrackingUI(screen)
     local function apply(key)
         if autoPreviewKey == key and not IsExplicitPreviewActive(key) then
             NSI:PreviewAuraTracking(key, true)
+            NSI:InitAuraTracking()
         else
             NSI:UpdateAuraTrackingDisplay(key)
         end
@@ -866,6 +867,11 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
             tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
+        if key == "Tank" then
+            add({ Type = "Checkbox", label = "Only show first tank",
+                tooltip = tip("Only show first tank", "Only creates one co-tank tracking container instead of one for every co-tank found in your group."),
+                get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
+        end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
             tooltip = tip("Sort Order", "Default uses Blizzard's aura order. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
             get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })

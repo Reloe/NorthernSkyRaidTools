@@ -148,6 +148,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         SortMode = "Default",
         Unit = "player",
         UnitType = "Automatic",
+        OnlyShowFirstTank = false,
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
     }
     for key, value in pairs(overrides or {}) do
@@ -1176,6 +1177,16 @@ local function AcquireAuraTrackingContainer(self, key)
     return state
 end
 
+local function RecreateAuraTrackingContainer(self, state)
+    if state.container then
+        state.container:SetEnabled(false)
+        state.container:Hide()
+    end
+    state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
+    state.buttonRegions = {}
+    state.currentMaxFrameCountByGroup = {}
+end
+
 local function EnsureAuraTrackingFontString(regions, key)
     if not regions[key] then
         regions[key] = regions.textOverlay:CreateFontString(nil, "OVERLAY")
@@ -1294,7 +1305,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     local isCustom = tostring(key):match("^Custom") and true or false
     if (key == "External" or isCustom) and settings.NameEnabled then]]
     -- if blizzard adds this just need to support it here
-    if key == "Tank" and settings.NameEnabled then
+    if tostring(key or ""):match("^Tank") and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
@@ -1334,7 +1345,21 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
-local function InitAuraTrackingContainer(self, unit, settings, key)
+local function AnchorAuraTrackingAfterContainer(anchorFrame, previousContainer, settings)
+    local spacing = settings.Spacing or 0
+    anchorFrame:ClearAllPoints()
+    if settings.GrowDirection == "LEFT" then
+        anchorFrame:SetPoint("TOPRIGHT", previousContainer, "TOPLEFT", -spacing, 0)
+    elseif settings.GrowDirection == "UP" then
+        anchorFrame:SetPoint("BOTTOMLEFT", previousContainer, "TOPLEFT", 0, spacing)
+    elseif settings.GrowDirection == "DOWN" then
+        anchorFrame:SetPoint("TOPLEFT", previousContainer, "BOTTOMLEFT", 0, -spacing)
+    else
+        anchorFrame:SetPoint("TOPLEFT", previousContainer, "TOPRIGHT", spacing, 0)
+    end
+end
+
+local function InitAuraTrackingContainer(self, unit, settings, key, previousState)
     if not unit or not settings or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
@@ -1358,10 +1383,13 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     if customUsesFilters and not customFilterString then return end
 
     local state = AcquireAuraTrackingContainer(self, key)
-    local container = state.container
-    local anchorFrame = state.anchorFrame
     local width = settings.Width
     local height = settings.Height
+    if not self:Restricted() and state.container and ((state.width and state.width ~= width) or (state.height and state.height ~= height)) then
+        RecreateAuraTrackingContainer(self, state)
+    end
+    local container = state.container
+    local anchorFrame = state.anchorFrame
     local groupKeyPrefix = "NSRT_" .. key
     local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
     local frameStrata = GetAuraTrackingFrameStrata(settings)
@@ -1377,7 +1405,11 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     container:SetFrameStrata(frameStrata)
     anchorFrame:SetFrameStrata(frameStrata)
     anchorFrame:SetSize(width, height)
-    SetAuraTrackingPoint(anchorFrame, settings, UIParent)
+    if previousState and previousState.container then
+        AnchorAuraTrackingAfterContainer(anchorFrame, previousState.container, settings)
+    else
+        SetAuraTrackingPoint(anchorFrame, settings, UIParent)
+    end
     anchorFrame:Show()
 
     container:ClearAllPoints()
@@ -1504,6 +1536,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
 
     container:Show()
     container:SetEnabled(true)
+    return state
 end
 
 function NSI:InitAuraTracking(allowRestrictedCreate)
@@ -1533,8 +1566,13 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
-        local tankUnit = self:GetCoTankUnits()[1]
-        InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "Tank")
+        local previousTankState
+        for index, tankUnit in ipairs(self:GetCoTankUnits()) do
+            if NSRT.AuraTrackingSettings.Tank.OnlyShowFirstTank and index > 1 then
+                break
+            end
+            previousTankState = InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, index == 1 and "Tank" or ("Tank" .. index), previousTankState)
+        end
     end
 
     AuraTrackingUnitRefreshStates = {
@@ -1904,7 +1942,7 @@ function NSI:UpdateAuraTrackingDisplay(key)
         self:PreviewAuraTracking("External", true)
     elseif tostring(key or ""):match("^Custom:") and self["IsAuraTracking" .. customPreviewKey .. "Preview"] then
         self:PreviewAuraTracking(key, true)
-    else
-        self:InitAuraTracking()
     end
+
+    self:InitAuraTracking()
 end
