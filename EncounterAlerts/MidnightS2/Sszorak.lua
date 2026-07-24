@@ -57,7 +57,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "SerpentsFury", name = "Serpent's Fury", text = "Stack Up", DisplayType = "Text", encID = encID, phase = 1, TTS = "Stack", dur = 6,
         loadConditions = nontankConditions,
         timers = {
-            [16] = {22, 74, 150, 202, 278, 330},
+            [16] = {25, 74, 153, 202, 281, 330},
         },
     }
     self:AddEncounterAlert(data)
