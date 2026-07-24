@@ -961,7 +961,7 @@ local function BuildAuraTrackingUI(screen)
             add({ Type = "Checkbox", label = isTank and "Show Co-Tank Name" or "Show Source Name",
                 tooltip = isTank
                     and tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons.")
-                    or tip("Show Source Name", "Shows the source name attached to visible aura icons."),
+                    or tip("Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"),
                 get = function() return s.NameEnabled end, set = function(_, v) s.NameEnabled = v; apply(key) end })
             add({ Type = "Dropdown", label = "Name Position", values = NAME_POSITIONS,
                 tooltip = tip("Name Position", isTank and "Position of the co-tank name relative to the aura icon." or "Position of the source name relative to the aura icon."),
