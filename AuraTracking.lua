@@ -1302,7 +1302,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         duration:SetTextColor(unpack(settings.DurationColor))
         duration:Show()
-        button:SetDurationText(duration, { formatter = GetAuraTrackingDurationFormatter() })
+        button:SetDurationText(duration, { textFormatter = GetAuraTrackingDurationFormatter() })
     end
     --[[
     local isCustom = tostring(key):match("^Custom") and true or false
