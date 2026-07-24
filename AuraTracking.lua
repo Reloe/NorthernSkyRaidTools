@@ -75,6 +75,14 @@ local function GetAuraTrackingLayoutAnchorPoint(settings)
     return "TOPLEFT"
 end
 
+local function GetAuraTrackingLayoutAxis(settings)
+    local growDirection = settings and settings.GrowDirection or "RIGHT"
+    if growDirection == "UP" or growDirection == "DOWN" then
+        return AnchorUtil.FlowLayoutAxis.Vertical
+    end
+    return AnchorUtil.FlowLayoutAxis.Horizontal
+end
+
 local function GetAuraTrackingFrameStrata(settings)
     local strata = settings and settings.FrameStrata
     if strata == "BACKGROUND" or strata == "LOW" or strata == "MEDIUM" or strata == "HIGH" or strata == "DIALOG" or strata == "FULLSCREEN" or strata == "FULLSCREEN_DIALOG" or strata == "TOOLTIP" then
@@ -1408,9 +1416,22 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     container:SetSize(width, height)
     container:SetPoint(layoutAnchorPoint, anchorFrame, layoutAnchorPoint, 0, 0)
     container:SetUnit(unit)
-    container:SetAuraLayoutAnchorPoint(layoutAnchorPoint)
-    container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
-    container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
+    local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection)
+    local flowLayout = (container.GetFlowLayout and container:GetFlowLayout()) or container.flowLayout
+    if flowLayout then
+        flowLayout:SetLayoutAxis(GetAuraTrackingLayoutAxis(settings))
+        flowLayout:SetAnchorPoint(layoutAnchorPoint)
+        flowLayout:SetGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
+        flowLayout:SetMaximumLineSize(GetAuraTrackingRowWidth(settings))
+    else
+        container.layoutAnchorPoint = layoutAnchorPoint
+        container.layoutHorizontalGrowthDirection = horizontalGrowthDirection
+        container.layoutVerticalGrowthDirection = verticalGrowthDirection
+        container.layoutRowWidth = GetAuraTrackingRowWidth(settings)
+    end
+    if container.MarkDirty and AuraContainerDirtyMask then
+        container:MarkDirty(AuraContainerDirtyMask.AuraFrameLayout)
+    end
 
     local auraGroups = {}
     if isExternal then
@@ -1509,8 +1530,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
             layout = {
                 elementWidth = width,
                 elementHeight = height,
-                elementSpacingX = settings.Spacing or 0,
-                elementSpacingY = settings.Spacing or 0,
+                elementSpacing = settings.Spacing or 0,
+                lineSpacing = settings.Spacing or 0,
             },
         }
 
