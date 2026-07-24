@@ -1340,17 +1340,17 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
-local function AnchorAuraTrackingAfterContainer(anchorFrame, previousContainer, settings)
+local function AnchorAuraTrackingAfterFrame(anchorFrame, previousAnchorFrame, settings)
     local spacing = settings.Spacing or 0
     anchorFrame:ClearAllPoints()
     if settings.GrowDirection == "LEFT" then
-        anchorFrame:SetPoint("TOPRIGHT", previousContainer, "TOPLEFT", -spacing, 0)
+        anchorFrame:SetPoint("TOPRIGHT", previousAnchorFrame, "TOPLEFT", -spacing, 0)
     elseif settings.GrowDirection == "UP" then
-        anchorFrame:SetPoint("BOTTOMLEFT", previousContainer, "TOPLEFT", 0, spacing)
+        anchorFrame:SetPoint("BOTTOMLEFT", previousAnchorFrame, "TOPLEFT", 0, spacing)
     elseif settings.GrowDirection == "DOWN" then
-        anchorFrame:SetPoint("TOPLEFT", previousContainer, "BOTTOMLEFT", 0, -spacing)
+        anchorFrame:SetPoint("TOPLEFT", previousAnchorFrame, "BOTTOMLEFT", 0, -spacing)
     else
-        anchorFrame:SetPoint("TOPLEFT", previousContainer, "TOPRIGHT", spacing, 0)
+        anchorFrame:SetPoint("TOPLEFT", previousAnchorFrame, "TOPRIGHT", spacing, 0)
     end
 end
 
@@ -1397,8 +1397,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     container:SetFrameStrata(frameStrata)
     anchorFrame:SetFrameStrata(frameStrata)
     anchorFrame:SetSize(width, height)
-    if previousState and previousState.container then
-        AnchorAuraTrackingAfterContainer(anchorFrame, previousState.container, settings)
+    if previousState and previousState.anchorFrame then
+        AnchorAuraTrackingAfterFrame(anchorFrame, previousState.anchorFrame, settings)
     else
         SetAuraTrackingPoint(anchorFrame, settings, UIParent)
     end
