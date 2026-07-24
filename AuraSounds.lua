@@ -320,9 +320,9 @@ end
 
 local UnitAuraSoundTrigger = Enum and Enum.UnitAuraSoundTrigger
 local AuraSoundEventTriggers = {
-    applied = UnitAuraSoundTrigger and UnitAuraSoundTrigger.OnAuraAdded or 0,
-    stackGain = UnitAuraSoundTrigger and UnitAuraSoundTrigger.OnAuraApplicationGained or 1,
-    removed = UnitAuraSoundTrigger and UnitAuraSoundTrigger.OnAuraRemoved or 2,
+    applied = UnitAuraSoundTrigger and UnitAuraSoundTrigger.Added or 0,
+    stackGain = UnitAuraSoundTrigger and UnitAuraSoundTrigger.ApplicationsIncreased or 1,
+    removed = UnitAuraSoundTrigger and UnitAuraSoundTrigger.Removed or 2,
 }
 
 local function RemoveRegisteredAuraSound(soundID)
