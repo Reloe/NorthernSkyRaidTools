@@ -1162,19 +1162,6 @@ local function GetAuraTrackingFontPath(self, settings)
     return [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 end
 
-local function ClearAuraTracking(self)
-    if not self.AuraTrackingState then return end
-    for _, state in pairs(self.AuraTrackingState) do
-        if state.container then
-            state.container:SetEnabled(false)
-            state.container:Hide()
-        end
-        if state.anchorFrame then
-            state.anchorFrame:Hide()
-        end
-    end
-end
-
 local function AcquireAuraTrackingContainer(self, key)
     if not self.AuraTrackingState then self.AuraTrackingState = {} end
     if not self.AuraTrackingState[key] then self.AuraTrackingState[key] = {} end
@@ -1400,8 +1387,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     state.width = width
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
+    state.active = true
 
-    container:SetEnabled(false)
     container:Hide()
     container:SetFrameStrata(frameStrata)
     anchorFrame:SetFrameStrata(frameStrata)
@@ -1566,7 +1553,9 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         return
     end
 
-    ClearAuraTracking(self)
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        state.active = false
+    end
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", nil, reconfigureButtons)
 
@@ -1592,6 +1581,19 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 break
             end
             previousTankState = InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, index == 1 and "Tank" or ("Tank" .. index), previousTankState, reconfigureButtons)
+        end
+    end
+
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        if not state.active then
+            if state.container then
+                state.container:SetEnabled(false)
+                state.container:Hide()
+                state.buttonRegions = nil
+            end
+            if state.anchorFrame then
+                state.anchorFrame:Hide()
+            end
         end
     end
 
@@ -1635,6 +1637,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                             if state and state.container then
                                 state.container:SetEnabled(false)
                                 state.container:Hide()
+                                state.buttonRegions = nil
                                 if state.anchorFrame then
                                     state.anchorFrame:Hide()
                                 end
