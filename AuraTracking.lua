@@ -1242,14 +1242,15 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
-        button:SetAuraBorder(regions.dispelBorder, {
+        button:ClearDispelTypeTextures()
+        button:AddDispelTypeTexture(regions.dispelBorder, {
             showIcon = true,
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
     else
         HideAuraTrackingDispelRegions(regions)
-        button:ClearAuraBorder()
+        button:ClearDispelTypeTextures()
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
@@ -1262,7 +1263,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
-        button:SetAuraSymbol(regions.dispelSymbol, {
+        button:SetDispelTypeText(regions.dispelSymbol, {
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
@@ -1270,7 +1271,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if regions.dispelSymbol then
             regions.dispelSymbol:Hide()
         end
-        button:ClearAuraSymbol()
+        button:ClearDispelTypeText()
     end
 
     if settings.HideStackText then
