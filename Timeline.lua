@@ -1134,7 +1134,7 @@ function NSI:CreateTimelineWindow()
 
     -- "Edit Note" menu button - anchored right of the play button (created here so
     -- the anchor reference is valid; was previously created before playButton).
-    local editNoteLabel = DF:CreateLabel(timelineWindow, "Edit Note:", 11, "white")
+    local editNoteLabel = DF:CreateLabel(timelineWindow, T("Edit Note:"), 11, "white")
     editNoteLabel:SetPoint("LEFT", playButton, "RIGHT", 20, 0)
     timelineWindow.editNoteLabel = editNoteLabel
     editNoteLabel:Show()
@@ -1147,7 +1147,7 @@ function NSI:CreateTimelineWindow()
         local items = {}
         table.insert(items, {
             type = "button",
-            label = "None (Read Only)",
+            label = T("None (Read Only)"),
             fnc = function()
                 timelineWindow.editNote = nil
                 timelineWindow.editable = false
@@ -1165,7 +1165,7 @@ function NSI:CreateTimelineWindow()
             local key = encID or "other"
             if not groups[key] then
                 groups[key] = {
-                    name = encID and (NSI.BossNames[encID] or ("Boss " .. encID)) or "Other",
+                    name = encID and (T(NSI.BossNames[encID]) or (T("Boss") .. " " .. encID)) or T("Other"),
                     order = data.order,
                     encID = encID,
                     notes = {},
@@ -1180,7 +1180,7 @@ function NSI:CreateTimelineWindow()
         for eid, order in pairs(NSI.EncounterOrder) do
             if not groups[eid] then
                 groups[eid] = {
-                    name = NSI.BossNames[eid] or ("Boss " .. eid),
+                    name = T(NSI.BossNames[eid]) or (T("Boss") .. " " .. eid),
                     order = order,
                     encID = eid,
                     notes = {},
@@ -1211,10 +1211,10 @@ function NSI:CreateTimelineWindow()
                         -- Right-click → Rename/Delete this note, without disturbing the
                         -- outer boss list (opens as its own nested level anchored to the row).
                         contextItems = {
-                            {type = "button", label = "Rename", fnc = function()
+                            {type = "button", label = T("Rename"), fnc = function()
                                 NSI:ShowRenameNoteDialog(timelineWindow, data.name)
                             end},
-                            {type = "button", label = "Delete", fnc = function()
+                            {type = "button", label = T("Delete"), fnc = function()
                                 NSI:ShowDeleteNoteConfirm(timelineWindow, data.name)
                             end},
                         },
@@ -1226,7 +1226,7 @@ function NSI:CreateTimelineWindow()
                     end
                     table.insert(subItems, {
                         type = "button",
-                        label = "+ New Note",
+                        label = T("+ New Note"),
                         fnc = function()
                             local value = self:CreateNewPersonalBossNote(group.encID)
                             timelineWindow.editNote = value
@@ -1240,12 +1240,12 @@ function NSI:CreateTimelineWindow()
                 if group.encID == 3176 then
                     items[#items + 1] = {
                         type  = "separator",
-                        label = "Season 1 (Midnight) ",
+                        label = T("Season 1 (Midnight) "),
                     }
                 elseif group.encID == 3379 then
                     items[#items + 1] = {
                         type  = "separator",
-                        label = "Season 2 (Midnight) ",
+                        label = T("Season 2 (Midnight) "),
                     }
                 end
 
@@ -1264,7 +1264,7 @@ function NSI:CreateTimelineWindow()
     -- Styled with the shared UI component (same cyan hover-fade as CreateDropdown)
     -- instead of the DF button template, so it visually reads as a dropdown trigger.
     local editNoteButton = NSI.UI.Components.CreateButton(
-        timelineWindow, "None (Read Only)",
+        timelineWindow, T("None (Read Only)"),
         function(self)
             NSI.UI.Components.ShowContextMenuAtFrame(BuildEditNoteMenuItems(), self.frame, 250, 11)
         end,
@@ -1750,13 +1750,13 @@ function NSI:CreateTimelineWindow()
                             local bd = self.blockData
                             local p = bd and bd.payload
                             NSI.UI.Components.ShowContextMenu({
-                                {type = "button", label = "Edit Reminder", fnc = function()
+                                {type = "button", label = T("Edit Reminder"), fnc = function()
                                     if p and p.srcLineIndex then
                                         NSI:ShowReminderDialog(timelineWindow, nil, self)
                                     end
                                 end},
                                 {type = "separator"},
-                                {type = "button", label = "Delete Reminder", fnc = function()
+                                {type = "button", label = T("Delete Reminder"), fnc = function()
                                     if p and p.srcLineIndex and timelineWindow.editNote then
                                         NSI:DeleteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw)
                                         -- Set before SetReminder — see the drag-retime comment above.
@@ -2074,7 +2074,7 @@ function NSI:CreateTimelineWindow()
             local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
             local absoluteTime = math.max(0, mouseXInBody / pps)
             NSI.UI.Components.ShowContextMenu({
-                {type = "button", label = "Add Reminder", fnc = function()
+                {type = "button", label = T("Add Reminder"), fnc = function()
                     NSI:ShowReminderDialog(timelineWindow, absoluteTime)
                 end},
             })
@@ -2454,7 +2454,7 @@ function NSI:RefreshTimelineForMode()
                 -- Select() matches option.label with == (a string compare here, not
                 -- table identity), so pass the label text — personal entries carry
                 -- the " (Personal)" suffix BuildReminderDropdownOptions labels them with.
-                local label = isPersonal and (activeReminder .. " (Personal)") or activeReminder
+                local label = isPersonal and (activeReminder .. " " .. T("(Personal)")) or activeReminder
                 self.TimelineWindow.reminderDropdown:Select(label)
             else
                 self.TimelineWindow.noDataLabel:SetText(T("Select a reminder set from the dropdown."))
@@ -2518,7 +2518,7 @@ end
 function NSI:UpdateEditNoteButtonLabel(window)
     if not window or not window.editNoteButton then return end
     local editNote = window.editNote
-    window.editNoteButton:SetText(editNote and (editNote.name .. " (Personal)") or "None (Read Only)")
+    window.editNoteButton:SetText(editNote and (editNote.name .. " " .. T("(Personal)")) or T("None (Read Only)"))
 end
 
 -- Loads a personal note as the active one for the timeline's edit target.
@@ -2537,8 +2537,8 @@ end
 -- already exists. Used by the Add Reminder popup's boss-picker path, where filing
 -- a stray reminder under an existing note is the more useful default.
 function NSI:GetOrCreatePersonalBossNote(eid)
-    local bossName   = NSI.BossNames[eid] or ("Boss" .. eid)
-    local actualName = bossName .. " - Mythic"
+    local bossName   = T(NSI.BossNames[eid]) or (T("Boss") .. " " .. eid)
+    local actualName = bossName .. " - " .. T("Mythic")
     if not NSRT.PersonalReminders[actualName] then
         NSRT.PersonalReminders[actualName] = string.format(
             "EncounterID:%d;Name:%s;Difficulty:Mythic\n", eid, bossName)
@@ -2552,8 +2552,8 @@ end
 -- naming convention in the Personal Notes tab. Unlike GetOrCreatePersonalBossNote,
 -- this never reuses an existing note; used by the Edit Note menu's "+ New Note".
 function NSI:CreateNewPersonalBossNote(eid)
-    local bossName  = NSI.BossNames[eid] or ("Boss" .. eid)
-    local baseName  = bossName .. " - Mythic"
+    local bossName  = T(NSI.BossNames[eid]) or (T("Boss") .. " " .. eid)
+    local baseName  = bossName .. " - " .. T("Mythic")
     local actualName = baseName
     local n = 2
     while NSRT.PersonalReminders[actualName] do
@@ -3180,13 +3180,13 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         sep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -28)
 
         -- Phase / Time-in-phase (editable — map directly to the raw "ph:"/"time:" fields)
-        local phaseEntry = C.CreateTextEntry(popup, "Phase",
+        local phaseEntry = C.CreateTextEntry(popup, T("Phase"),
             function() return "" end, function() end,
             110, 22, true, 1, nil, "NSRTReminderPhase")
         phaseEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -36)
         popup.phaseEntry = phaseEntry
 
-        local timeEntry = C.CreateTextEntry(popup, "Time (s)",
+        local timeEntry = C.CreateTextEntry(popup, T("Time (s)"),
             function() return "" end, function() end,
             160, 22, true, 0, nil, "NSRTReminderTime")
         timeEntry:SetPoint("LEFT", phaseEntry.frame, "RIGHT", 14, 0)
@@ -3195,7 +3195,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         -- ── Spell ID row ────────────────────────────────────────────────────
         -- Entry uses built-in label; 160px container keeps the 60px input
         -- right-aligned with room for the icon + Pick button beside it.
-        local spellEntry = C.CreateTextEntry(popup, "Spell ID",
+        local spellEntry = C.CreateTextEntry(popup, T("Spell ID"),
             function() return "" end, function() end,
             160, 22, false, nil, nil, "NSRTReminderSpellID")
         spellEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -60)
@@ -3209,7 +3209,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         popup.spellIcon = spellIcon
 
         -- Pick Spell button (right of icon)
-        local pickBtn = C.CreateButton(popup, "Pick Spell", function()
+        local pickBtn = C.CreateButton(popup, T("Pick Spell"), function()
             NSI:ShowSpellbookPicker(popup)
         end, 88, 20)
         pickBtn:SetPoint("LEFT", spellIcon, "RIGHT", 6, 0)
@@ -3230,7 +3230,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         end)
 
         -- ── Text row ────────────────────────────────────────────────────────
-        local textLabel = C.CreateLabel(popup, "Text", W - 24, 14)
+        local textLabel = C.CreateLabel(popup, T("Text"), W - 24, 14)
         textLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -90)
         local textEntry = C.CreateTextEntry(popup, nil,
             function() return "" end, function() end,
@@ -3239,14 +3239,14 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         popup.textEntry = textEntry
 
         -- ── Duration row ────────────────────────────────────────────────────
-        local durEntry = C.CreateTextEntry(popup, "Duration (s)",
+        local durEntry = C.CreateTextEntry(popup, T("Duration (s)"),
             function() return "5" end, function() end,
             200, 22, false, nil, nil, "NSRTReminderDur")
         durEntry:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -136)
         popup.durEntry = durEntry
 
         -- ── Glow Unit row ───────────────────────────────────────────────────
-        local glowLabel = C.CreateLabel(popup, "Glow Unit  (space-separated names)", W - 24, 14)
+        local glowLabel = C.CreateLabel(popup, T("Glow Unit  (space-separated names)"), W - 24, 14)
         glowLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -166)
         local glowEntry = C.CreateTextEntry(popup, nil,
             function() return "" end, function() end,
@@ -3255,11 +3255,11 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         popup.glowEntry = glowEntry
 
         -- ── Boss row (shown only when there is no boss context or edit note) ─
-        local bossRowLabel = C.CreateLabel(popup, "Boss", 60, 18)
+        local bossRowLabel = C.CreateLabel(popup, T("Boss"), 60, 18)
         bossRowLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -214)
         popup.bossRowLabel = bossRowLabel
 
-        local selectedBossLabel = C.CreateLabel(popup, "None selected", W - 170, 18)
+        local selectedBossLabel = C.CreateLabel(popup, T("None selected"), W - 170, 18)
         selectedBossLabel:SetPoint("LEFT", bossRowLabel.frame, "RIGHT", 6, 0)
         popup.selectedBossLabel = selectedBossLabel
 
@@ -3274,11 +3274,11 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
                 local eid = entry.encID
                 items[#items + 1] = {
                     type  = "button",
-                    label = NSI.BossNames[eid] or ("Encounter " .. eid),
+                    label = T(NSI.BossNames[eid]) or (T("Encounter") .. " " .. eid),
                     icon  = NSI.UI.BossData.BossIcons and NSI.UI.BossData.BossIcons[eid],
                     fnc   = function()
                         popup._pendingEncID = eid
-                        popup.selectedBossLabel.label:SetText(NSI.BossNames[eid] or ("Encounter " .. eid))
+                        popup.selectedBossLabel.label:SetText(T(NSI.BossNames[eid]) or (T("Encounter") .. " " .. eid))
                         popup.selectedBossLabel.label:SetTextColor(1, 1, 1, 1)
                     end,
                 }
@@ -3286,7 +3286,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
             return items
         end
 
-        local selectBossBtn = C.CreateButton(popup, "Pick Boss", function()
+        local selectBossBtn = C.CreateButton(popup, T("Pick Boss"), function()
             C.ShowContextMenu(buildBossMenuItems(), nil, 11)
         end, 88, 20)
         selectBossBtn:SetPoint("RIGHT", popup, "RIGHT", -12, 0)
@@ -3294,19 +3294,19 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         popup.selectBossBtn = selectBossBtn
 
         -- ── Bottom buttons ───────────────────────────────────────────────────
-        local confirmBtn = C.CreateButton(popup, "Add", function()
+        local confirmBtn = C.CreateButton(popup, T("Add"), function()
             if popup._confirmAction then popup._confirmAction() end
         end, 100, 24)
         confirmBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 10)
         popup.confirmBtn = confirmBtn
 
-        local cancelBtn = C.CreateButton(popup, "Cancel", function()
+        local cancelBtn = C.CreateButton(popup, T("Cancel"), function()
             popup:Hide()
         end, 80, 24)
         cancelBtn:SetPoint("RIGHT", confirmBtn.frame, "LEFT", -6, 0)
         popup.cancelBtn = cancelBtn
 
-        local deleteBtn = C.CreateButton(popup, "Delete", function()
+        local deleteBtn = C.CreateButton(popup, T("Delete"), function()
             if popup._deleteAction then popup._deleteAction() end
         end, 80, 24)
         deleteBtn:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 12, 10)
@@ -3322,7 +3322,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     popup._block  = block
 
     -- Title
-    popup.titleFS:SetText(isEdit and "|cFF00FFFFEdit Reminder|r" or "|cFF00FFFFAdd Reminder|r")
+    popup.titleFS:SetText(isEdit and T("|cFF00FFFFEdit Reminder|r") or T("|cFF00FFFFAdd Reminder|r"))
 
     -- Time info
     local encID    = window.currentEncounterID
@@ -3362,7 +3362,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     popup.selectedBossLabel.frame:SetShown(showBossRow)
     popup.selectBossBtn.frame:SetShown(showBossRow)
     if showBossRow then
-        popup.selectedBossLabel.label:SetText("None selected")
+        popup.selectedBossLabel.label:SetText(T("None selected"))
         popup.selectedBossLabel.label:SetTextColor(0.5, 0.5, 0.5, 1)
         if not hasBossContext then popup._pendingEncID = nil end
     end
@@ -3372,7 +3372,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     popup.deleteBtn.frame:SetShown(isEdit)
 
     -- Confirm button label
-    popup.confirmBtn:SetText(isEdit and "Save" or "Add")
+    popup.confirmBtn:SetText(isEdit and T("Save") or T("Add"))
 
     -- ── Confirm action (add or save) ─────────────────────────────────────────
     popup._confirmAction = function()
@@ -3380,7 +3380,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
         if not editNote then
             local eid = popup._pendingEncID
             if not eid then
-                print("|cffff4444NSRT:|r Select a boss first, or open a note from the Edit Note menu.")
+                print(T("|cffff4444NSRT:|r Select a boss first, or open a note from the Edit Note menu."))
                 return
             end
             editNote = NSI:GetOrCreatePersonalBossNote(eid)
@@ -3461,7 +3461,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
             NSI:RewriteNoteLine(editNote.name, true, payload.srcLineIndex, srcRaw, newRaw)
         else
             -- Build a new line
-            local playerName = UnitName("player") or "Player"
+            local playerName = UnitName("player") or T("Player")
             local line = "tag:" .. playerName .. ";time:" .. newRelTime .. ";"
             if spellID  then line = line .. "spellid:" .. spellID .. ";"  end
             if text ~= ""     then line = line .. "text:" .. text .. ";"          end
@@ -3547,7 +3547,7 @@ function NSI:ShowSpellbookPicker(targetPopup)
         titleBar:SetScript("OnMouseDown", function(_, b) if b == "LeftButton" then picker:StartMoving() end end)
         titleBar:SetScript("OnMouseUp", function() picker:StopMovingOrSizing() end)
         local titleFS = titleBar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetText("|cFF00FFFFPick Spell|r")
+        titleFS:SetText(T("|cFF00FFFFPick Spell|r"))
         titleFS:SetPoint("LEFT", titleBar, "LEFT", 8, 0)
         local xBtn = CreateFrame("Button", nil, picker)
         xBtn:SetSize(16, 16)
@@ -3707,7 +3707,7 @@ function NSI:ShowRenameNoteDialog(window, oldName)
         popup:SetFrameStrata("TOOLTIP")
 
         local titleFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetText("|cFF00FFFFRename Note|r")
+        titleFS:SetText(T("|cFF00FFFFRename Note|r"))
         titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -10)
 
         local nameEntry = C.CreateTextEntry(popup, nil,
@@ -3721,12 +3721,12 @@ function NSI:ShowRenameNoteDialog(window, oldName)
         errorFS:SetTextColor(1, 0.35, 0.35, 1)
         popup.errorFS = errorFS
 
-        local confirmBtn = C.CreateButton(popup, "Rename", function()
+        local confirmBtn = C.CreateButton(popup, T("Rename"), function()
             if popup._confirmAction then popup._confirmAction() end
         end, 90, 24)
         confirmBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 10)
 
-        local cancelBtn = C.CreateButton(popup, "Cancel", function()
+        local cancelBtn = C.CreateButton(popup, T("Cancel"), function()
             popup:Hide()
         end, 80, 24)
         cancelBtn:SetPoint("RIGHT", confirmBtn.frame, "LEFT", -6, 0)
@@ -3752,7 +3752,7 @@ function NSI:ShowRenameNoteDialog(window, oldName)
                 exists  = "A note with that name already exists.",
                 missing = "Note no longer exists.",
             }
-            popup.errorFS:SetText(messages[resultOrErr] or "Rename failed.")
+            popup.errorFS:SetText(T(messages[resultOrErr] or "Rename failed."))
             return
         end
         ClearWindowNoteReferences(window, oldName, resultOrErr)
@@ -3774,7 +3774,7 @@ function NSI:ShowDeleteNoteConfirm(window, name)
         popup:SetFrameStrata("TOOLTIP")
 
         local titleFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        titleFS:SetText("|cFFff4444Delete Note|r")
+        titleFS:SetText(T("|cFFff4444Delete Note|r"))
         titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -10)
 
         local msgFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -3784,12 +3784,12 @@ function NSI:ShowDeleteNoteConfirm(window, name)
         msgFS:SetJustifyV("TOP")
         popup.msgFS = msgFS
 
-        local confirmBtn = C.CreateButton(popup, "Delete", function()
+        local confirmBtn = C.CreateButton(popup, T("Delete"), function()
             if popup._confirmAction then popup._confirmAction() end
         end, 90, 24)
         confirmBtn:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -12, 10)
 
-        local cancelBtn = C.CreateButton(popup, "Cancel", function()
+        local cancelBtn = C.CreateButton(popup, T("Cancel"), function()
             popup:Hide()
         end, 80, 24)
         cancelBtn:SetPoint("RIGHT", confirmBtn.frame, "LEFT", -6, 0)
@@ -3799,7 +3799,7 @@ function NSI:ShowDeleteNoteConfirm(window, name)
     end
 
     local popup = self.DeleteNotePopup
-    popup.msgFS:SetText(string.format("|cffffffffDelete \"%s\"?|r\nThis cannot be undone.", name))
+    popup.msgFS:SetText(string.format(T("|cffffffffDelete \"%s\"?|r\nThis cannot be undone."), name))
 
     popup._confirmAction = function()
         NSI:RemoveReminder(name, true)
