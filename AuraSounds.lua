@@ -4,6 +4,7 @@ local _, NSI = ... -- Internal namespace
 -- {spellID = 12345, sound = "SoundName"}                         -- defaults to unit = "player", eventType = "applied"
 -- {spellID = 12345, sound = "SoundName", unit = "target"}         -- unit can also be cotank, a player name, raid/party unit, bossN, focus, etc.
 -- {spellID = 12345, sound = "SoundName", eventType = "removed"}   -- eventType can be "applied", "removed", or "stackGain"
+-- Duplicate spell/unit/event combinations are supported; built-in entry keys are assigned automatically.
 NSI.AuraSoundCategories = {
     Raid = {
         {key = 3176, entries = { -- Imperator Averzian
@@ -223,6 +224,32 @@ function NSI:GetAuraSoundKey(spellID, unit, eventType)
     return tostring(spellID) .. ":" .. unit .. ":" .. eventType
 end
 
+local builtInKeyCounts = {}
+for _, categoryType in ipairs({"Raid", "Dungeons"}) do
+    for _, category in ipairs(NSI.AuraSoundCategories[categoryType]) do
+        for _, entry in ipairs(category.entries or {}) do
+            if type(entry) == "table" and entry.spellID then
+                local baseKey = NSI:GetAuraSoundKey(entry.spellID, entry.unit, entry.eventType)
+                builtInKeyCounts[baseKey] = (builtInKeyCounts[baseKey] or 0) + 1
+                entry.key = entry.key or (builtInKeyCounts[baseKey] == 1 and baseKey or baseKey .. ":default:" .. builtInKeyCounts[baseKey])
+            end
+        end
+    end
+end
+
+function NSI:GetNextAuraSoundKey(spellID, unit, eventType)
+    local baseKey = self:GetAuraSoundKey(spellID, unit, eventType)
+    if not baseKey then return end
+
+    local index = 1
+    local key = baseKey .. ":custom:" .. index
+    while NSRT.AuraSounds[key] do
+        index = index + 1
+        key = baseKey .. ":custom:" .. index
+    end
+    return key
+end
+
 function NSI:ResolveAuraSoundUnit(unit)
     if type(unit) ~= "string" or unit == "" then
         return "player"
@@ -412,26 +439,23 @@ end
 
 function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, unit, eventType)
     spellID = tonumber(spellID)
-    if not entryKey or not spellID then return end
+    if not spellID then return end
+    entryKey = entryKey or self:GetNextAuraSoundKey(spellID, unit, eventType)
+    if not entryKey then return end
     local oldExisting = NSRT.AuraSounds[entryKey]
     unit = unit or (type(oldExisting) == "table" and oldExisting.unit) or "player"
     eventType = eventType or (type(oldExisting) == "table" and oldExisting.eventType) or "applied"
-    local saveKey = self:GetAuraSoundKey(spellID, unit, eventType)
-    local existing = NSRT.AuraSounds[saveKey] or oldExisting
-    if entryKey ~= saveKey then
-        NSRT.AuraSounds[entryKey] = nil
-        self:AddAuraSound(spellID, nil, entryKey)
-    end
 
-    NSRT.AuraSounds[saveKey] = {
+    NSRT.AuraSounds[entryKey] = {
         spellID = spellID,
         unit = unit,
         eventType = eventType,
         sound = sound,
         edited = true,
-        categoryType = categoryType or (type(existing) == "table" and existing.categoryType) or nil,
-        categoryKey = categoryKey or (type(existing) == "table" and existing.categoryKey) or nil,
+        categoryType = categoryType or (type(oldExisting) == "table" and oldExisting.categoryType) or nil,
+        categoryKey = categoryKey or (type(oldExisting) == "table" and oldExisting.categoryKey) or nil,
     }
-    self:AddAuraSound(spellID, sound, saveKey, unit, eventType)
+    self:AddAuraSound(spellID, sound, entryKey, unit, eventType)
+    return entryKey
 end
 

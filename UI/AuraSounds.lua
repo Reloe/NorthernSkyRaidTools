@@ -826,7 +826,7 @@ local function BuildAuraSoundsUI(parent)
         unit = unit ~= "" and unit or "player"
         local eventType = newEventDropdown:GetValue() or "applied"
         if not spellID or not sound then return end
-        local entryKey = NSI:GetAuraSoundKey(spellID, unit, eventType)
+        local entryKey = NSI:GetNextAuraSoundKey(spellID, unit, eventType)
         NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey, unit, eventType)
         newSpellEntry:SetText("")
         newUnitEntry:SetText("player")
