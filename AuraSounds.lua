@@ -192,9 +192,7 @@ NSI.AuraSoundCategories = {
         {key = "algethar_academy", label = "Algethar Academy", entries = {
         }},
     },
-    Custom = {
-        {key = "custom", label = "Custom", entries = {}},
-    },
+    Custom = {},
 }
 
 NSI.AuraSoundDungeonIcons = {
@@ -214,6 +212,17 @@ NSI.AuraSoundDungeonIcons = {
     seat_of_the_triumvirate = 1711340,
     skyreach = 1002596,
     algethar_academy = 4578414,
+}
+
+NSI.CurrentAuraSoundDungeonKeys = {
+    altar_of_fangs = true,
+    temple_of_sethraliss = true,
+    ruby_life_pools = true,
+    kings_rest = true,
+    voidscar_arena = true,
+    blinding_vale = true,
+    murder_row = true,
+    den_of_nalorakk = true,
 }
 
 function NSI:GetAuraSoundKey(spellID, unit, eventType)
