@@ -133,6 +133,13 @@ local function GetAuraSoundCategories(categoryType)
     for _, category in ipairs((NSI.AuraSoundCategories and NSI.AuraSoundCategories[categoryType]) or {}) do
         categories[#categories + 1] = category
     end
+    if categoryType == "Custom" then
+        for _, category in ipairs(NSRT.AuraSounds.CustomCategories or {}) do
+            if type(category) == "table" and category.key and category.label then
+                categories[#categories + 1] = category
+            end
+        end
+    end
     if categoryType == "Raid" then
         table.sort(categories, function(a, b)
             return (NSI.EncounterOrder[a.key] or 9999) < (NSI.EncounterOrder[b.key] or 9999)
@@ -174,6 +181,9 @@ local function BuildAuraSoundCategoryOptions(screen)
                 screen.categoryKey = value
                 screen.categoryDropdown:Select(label)
                 screen.scrollbox:MasterRefresh()
+                if screen.RefreshCategoryControls then
+                    screen:RefreshCategoryControls()
+                end
             end,
         }
     end
@@ -313,7 +323,7 @@ local function BuildAuraSoundsUI(parent)
 
     local function ResetAllAuraSounds()
         for key, info in pairs(NSRT.AuraSounds) do
-            if type(info) == "table" then
+            if type(info) == "table" and info.spellID then
                 NSRT.AuraSounds[key] = nil
                 NSI:AddAuraSound(info.spellID, nil, key)
             end
@@ -373,6 +383,9 @@ local function BuildAuraSoundsUI(parent)
                     screen.categoryDropdown:Refresh()
                     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
                     screen.scrollbox:MasterRefresh()
+                    if screen.RefreshCategoryControls then
+                        screen:RefreshCategoryControls()
+                    end
                 end,
             },
             {
@@ -386,6 +399,9 @@ local function BuildAuraSoundsUI(parent)
                     screen.categoryDropdown:Refresh()
                     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
                     screen.scrollbox:MasterRefresh()
+                    if screen.RefreshCategoryControls then
+                        screen:RefreshCategoryControls()
+                    end
                 end,
             },
             {
@@ -399,6 +415,9 @@ local function BuildAuraSoundsUI(parent)
                     screen.categoryDropdown:Refresh()
                     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
                     screen.scrollbox:MasterRefresh()
+                    if screen.RefreshCategoryControls then
+                        screen:RefreshCategoryControls()
+                    end
                 end,
             },
         }
@@ -416,6 +435,111 @@ local function BuildAuraSoundsUI(parent)
     screen.categoryDropdown.realsizeH = 180
     screen.categoryDropdown:SetPoint("LEFT", GetUIObject(categoryLabel), "RIGHT", 10, 0)
     screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
+
+    local function RefreshCategorySelection()
+        screen.categoryDropdown:Refresh()
+        screen.categoryDropdown:Select(GetAuraSoundSelectionLabel(screen))
+        screen.scrollbox:MasterRefresh()
+        if screen.RefreshCategoryControls then
+            screen:RefreshCategoryControls()
+        end
+    end
+
+    local function ShowCategoryEditor(title, initialName, onConfirm)
+        local popup = DF:CreateSimplePanel(UIParent, 300, 135, title)
+        ApplyUIFont(popup.Title, 12)
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local nameLabel = DF:CreateLabel(popup, T("Sub-Category Name"), 11)
+        ApplyUIFont(nameLabel, 11)
+        nameLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 20, -35)
+
+        local nameEntry = DF:CreateTextEntry(popup, function() end, 260, 22)
+        nameEntry:SetPoint("TOPLEFT", GetUIObject(nameLabel), "BOTTOMLEFT", 0, -5)
+        nameEntry:SetTemplate(options_dropdown_template)
+        nameEntry:SetText(initialName or "")
+        nameEntry:SetFocus()
+        nameEntry:HighlightText()
+
+        local confirmButton = DF:CreateButton(popup, function()
+            local name = strtrim(nameEntry:GetText() or "")
+            if name ~= "" then
+                onConfirm(name)
+                popup:Hide()
+            end
+        end, 100, 24, T("Confirm"))
+        ApplyUIFont(confirmButton, 11)
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
+        confirmButton:SetTemplate(options_button_template)
+
+        local cancelButton = DF:CreateButton(popup, function() popup:Hide() end, 100, 24, T("Cancel"))
+        ApplyUIFont(cancelButton, 11)
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
+        cancelButton:SetTemplate(options_button_template)
+        popup:Show()
+    end
+
+    local newCategoryButton = DF:CreateButton(screen, function()
+        ShowCategoryEditor(T("Create Sub-Category"), nil, function(name)
+            for _, category in ipairs(GetAuraSoundCategories("Custom")) do
+                if strlower(category.label) == strlower(name) then
+                    return
+                end
+            end
+            local nextID = tonumber(NSRT.AuraSounds.NextCustomCategoryID) or 1
+            local category = { key = "custom_" .. nextID, label = name, entries = {} }
+            NSRT.AuraSounds.NextCustomCategoryID = nextID + 1
+            NSRT.AuraSounds.CustomCategories[#NSRT.AuraSounds.CustomCategories + 1] = category
+            screen.categoryKey = category.key
+            RefreshCategorySelection()
+        end)
+    end, 120, 20, T("New Sub-Category"))
+    ApplyUIFont(newCategoryButton, 11)
+    newCategoryButton:SetPoint("LEFT", GetUIObject(screen.categoryDropdown), "RIGHT", 8, 0)
+    newCategoryButton:SetTemplate(options_button_template)
+
+    local renameCategoryButton = DF:CreateButton(screen, function()
+        local category = FindAuraSoundCategory("Custom", screen.categoryKey)
+        if not category or screen.categoryKey == "custom" then return end
+        ShowCategoryEditor(T("Rename Sub-Category"), category.label, function(name)
+            category.label = name
+            RefreshCategorySelection()
+        end)
+    end, 82, 20, T("Rename"))
+    ApplyUIFont(renameCategoryButton, 11)
+    renameCategoryButton:SetPoint("LEFT", GetUIObject(newCategoryButton), "RIGHT", 5, 0)
+    renameCategoryButton:SetTemplate(options_button_template)
+
+    local deleteCategoryButton = DF:CreateButton(screen, function()
+        if screen.categoryType ~= "Custom" or screen.categoryKey == "custom" then return end
+        local categoryKey = screen.categoryKey
+        for index, category in ipairs(NSRT.AuraSounds.CustomCategories) do
+            if category.key == categoryKey then
+                table.remove(NSRT.AuraSounds.CustomCategories, index)
+                break
+            end
+        end
+        for _, info in pairs(NSRT.AuraSounds) do
+            if type(info) == "table" and info.categoryType == "Custom" and info.categoryKey == categoryKey then
+                info.categoryKey = "custom"
+            end
+        end
+        screen.categoryKey = "custom"
+        RefreshCategorySelection()
+    end, 72, 20, T("Delete"))
+    ApplyUIFont(deleteCategoryButton, 11)
+    deleteCategoryButton:SetPoint("LEFT", GetUIObject(renameCategoryButton), "RIGHT", 5, 0)
+    deleteCategoryButton:SetTemplate(options_button_template)
+
+    function screen:RefreshCategoryControls()
+        local isCustom = self.categoryType == "Custom"
+        local canEdit = isCustom and self.categoryKey ~= "custom"
+        GetUIObject(categoryLabel):SetText(T(isCustom and "Sub-Category" or "Boss / Dungeon"))
+        GetUIObject(newCategoryButton):SetShown(isCustom)
+        GetUIObject(renameCategoryButton):SetShown(canEdit)
+        GetUIObject(deleteCategoryButton):SetShown(canEdit)
+    end
 
     local raidDefaultsCB = CreateCheckButton(screen, T("Use Default Raid Aura Sounds"), function()
         return NSRT.AuraSounds.UseDefaultRaidAuraSounds
@@ -458,6 +582,43 @@ local function BuildAuraSoundsUI(parent)
     resetAllButton:SetTemplate(options_button_template)
 
     local scrollLines = 18
+
+    local function ShowMoveAuraSoundPopup(line, scrollbox)
+        if not line.entryKey or not line.spellID then return end
+        local popup = DF:CreateSimplePanel(UIParent, 300, 130, T("Move Aura Sound"))
+        ApplyUIFont(popup.Title, 12)
+        popup:SetFrameStrata("FULLSCREEN_DIALOG")
+        popup:SetPoint("CENTER", UIParent, "CENTER")
+
+        local dropdown = DF:CreateDropDown(popup, function()
+            local options = {}
+            for _, category in ipairs(GetAuraSoundCategories("Custom")) do
+                options[#options + 1] = {
+                    label = GetAuraSoundCategoryLabel("Custom", category),
+                    value = category.key,
+                    onclick = function(_, _, value)
+                        local sound = line.soundDropdown:GetValue()
+                        sound = sound ~= "__NONE__" and sound or nil
+                        NSI:SaveAuraSound(line.entryKey, line.spellID, sound, "Custom", value, line.unit, line.eventType)
+                        popup:Hide()
+                        scrollbox:MasterRefresh()
+                        return value
+                    end,
+                }
+            end
+            return options
+        end, nil, 260, 22, nil, "$parentCategoryDropdown", options_dropdown_template)
+        dropdown:SetPoint("TOP", popup, "TOP", 0, -42)
+        dropdown:SetMenuSize(260)
+        local dropdownFrame = GetUIObject(dropdown)
+        dropdownFrame:SetFrameLevel(popup:GetFrameLevel() + 1)
+        dropdownFrame.dropdownborder:SetFrameStrata("FULLSCREEN_DIALOG")
+        dropdownFrame.dropdownborder:SetFrameLevel(popup:GetFrameLevel() + 2)
+        dropdownFrame.dropdownframe:SetFrameStrata("FULLSCREEN_DIALOG")
+        dropdownFrame.dropdownframe:SetFrameLevel(popup:GetFrameLevel() + 2)
+        dropdown:Select(GetAuraSoundSelectionLabel(screen))
+        popup:Show()
+    end
 
     local function ClearLine(line)
         if not line then return end
@@ -511,13 +672,14 @@ local function BuildAuraSoundsUI(parent)
                 line.sound = rowData.sound
                 line.soundDropdown:Select(rowData.deleted and "__NONE__" or (rowData.sound or "__NONE__"))
                 GetUIObject(line.resetButton):SetShown(rowData.isDefault and rowData.edited)
+                GetUIObject(line.moveButton):SetShown(not rowData.isDefault and screen.categoryType == "Custom")
             end
         end
     end
 
     local function createLine(scrollbox, index)
         local line = CreateFrame("Frame", "$parentAuraSoundLine" .. index, scrollbox, "BackdropTemplate")
-        line:SetPoint("TOPLEFT", GetUIObject(scrollbox), "TOPLEFT", 1, -((index - 1) * scrollbox.LineHeight) - 1)
+        line:SetPoint("TOPLEFT", GetUIObject(scrollbox), "TOPLEFT", 1, -((index - 1) * scrollbox.LineHeight - 1))
         line:SetSize(scrollbox:GetWidth() - 2, scrollbox.LineHeight)
         DF:ApplyStandardBackdrop(line)
 
@@ -560,7 +722,7 @@ local function BuildAuraSoundsUI(parent)
         line.unitEntry:SetPoint("LEFT", GetUIObject(line.defaultText), "RIGHT", 5, 0)
 
         line.eventDropdown = DF:CreateDropDown(line, BuildAuraSoundEventDropdown, nil, 105, 20, nil, "$parentEventDropdown", options_dropdown_template)
-        line.eventDropdown:SetPoint("LEFT", GetUIObject(line.unitEntry), "RIGHT", 4, 0)
+        line.eventDropdown:SetPoint("LEFT", GetUIObject(line.unitEntry), "RIGHT", -1, 0)
         line.eventDropdown:SetHook("OnOptionSelected", function(_, _, value)
             if not line.isActive or not line.entryKey or not line.spellID then return end
             if line.isDefault then
@@ -575,7 +737,7 @@ local function BuildAuraSoundsUI(parent)
         end)
 
         line.soundDropdown = DF:CreateDropDown(line, BuildAuraSoundDropdown, nil, 150, 20, nil, "$parentSoundDropdown", options_dropdown_template)
-        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.eventDropdown), "RIGHT", 4, 0)
+        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.eventDropdown), "RIGHT", -1, 0)
         line.soundDropdown:SetHook("OnOptionSelected", function(_, _, value)
             if not line.isActive or not line.entryKey or not line.spellID then return end
             local sound = value ~= "__NONE__" and value or nil
@@ -591,6 +753,14 @@ local function BuildAuraSoundsUI(parent)
         ApplyUIFont(line.resetButton, 11)
         line.resetButton:SetPoint("RIGHT", line, "RIGHT", -62, 0)
         line.resetButton:SetTemplate(options_button_template)
+
+        line.moveButton = DF:CreateButton(line, function()
+            if not line.isActive or line.isDefault or screen.categoryType ~= "Custom" then return end
+            ShowMoveAuraSoundPopup(line, scrollbox)
+        end, 48, 18, T("Move"))
+        ApplyUIFont(line.moveButton, 11)
+        line.moveButton:SetPoint("RIGHT", line, "RIGHT", -62, 0)
+        line.moveButton:SetTemplate(options_button_template)
 
         line.deleteButton = DF:CreateButton(line, function()
             if not line.isActive or not line.entryKey or not line.spellID then return end
@@ -661,13 +831,13 @@ local function BuildAuraSoundsUI(parent)
         newSpellEntry:SetText("")
         newUnitEntry:SetText("player")
         newEventDropdown:Select(GetAuraSoundEventLabel("applied"))
-        newSoundDropdown:SetValue(nil)
         scrollbox:MasterRefresh()
     end, 70, 20, T("Add"))
     ApplyUIFont(addButton, 11)
     addButton:SetPoint("LEFT", GetUIObject(newEventDropdown), "RIGHT", 10, 0)
     addButton:SetTemplate(options_button_template)
 
+    screen:RefreshCategoryControls()
     scrollbox:MasterRefresh()
     return screen
 end
