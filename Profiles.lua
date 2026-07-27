@@ -72,6 +72,7 @@ function NSI:AddMissingDefaults()
         AuraSounds = {
             UseDefaultRaidAuraSounds = false,
             UseDefaultDungeonAuraSounds = false,
+            SoundChannel = "Master",
             CustomCategories = {},
             NextCustomCategoryID = 1,
         },

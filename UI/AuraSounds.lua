@@ -48,7 +48,7 @@ local function BuildAuraSoundDropdown()
             onclick = function(_, _, value)
                 local toplay = NSI.LSM:Fetch("sound", sound)
                 if toplay then
-                    PlaySoundFile(toplay, "Master")
+                    PlaySoundFile(toplay, NSRT.AuraSounds.SoundChannel or "Master")
                 end
                 return value
             end,
@@ -62,6 +62,30 @@ local AuraSoundEventTypes = {
     { label = "Removed", value = "removed" },
     { label = "Stack Gain", value = "stackGain" },
 }
+
+local AuraSoundChannels = {
+    "Master",
+    "SFX",
+    "Music",
+    "Ambience",
+    "Dialog",
+}
+
+local function BuildAuraSoundChannelDropdown()
+    local options = {}
+    for _, channel in ipairs(AuraSoundChannels) do
+        options[#options + 1] = {
+            label = T(channel),
+            value = channel,
+            onclick = function(_, _, value)
+                NSRT.AuraSounds.SoundChannel = value
+                NSI:RebuildAuraSounds()
+                return value
+            end,
+        }
+    end
+    return options
+end
 
 local function BuildAuraSoundEventDropdown()
     local options = {}
@@ -580,6 +604,14 @@ local function BuildAuraSoundsUI(parent)
     ApplyUIFont(resetAllButton, 11)
     resetAllButton:SetPoint("LEFT", GetUIObject(resetCategoryButton), "RIGHT", 8, 0)
     resetAllButton:SetTemplate(options_button_template)
+
+    local soundChannelLabel = DF:CreateLabel(screen, T("Sound Channel"), 11)
+    ApplyUIFont(soundChannelLabel, 11)
+    soundChannelLabel:SetPoint("LEFT", GetUIObject(resetAllButton), "RIGHT", 18, 0)
+
+    local soundChannelDropdown = DF:CreateDropDown(screen, BuildAuraSoundChannelDropdown, nil, 105, 20, nil, "$parentSoundChannelDropdown", options_dropdown_template)
+    soundChannelDropdown:SetPoint("LEFT", GetUIObject(soundChannelLabel), "RIGHT", 8, 0)
+    soundChannelDropdown:Select(T(NSRT.AuraSounds.SoundChannel or "Master"))
 
     local scrollLines = 18
 

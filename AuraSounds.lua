@@ -407,7 +407,7 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType)
                 unitToken = unitToken,
                 spellID = spellID,
                 soundFileName = soundPath,
-                outputChannel = "master",
+                outputChannel = NSRT.AuraSounds.SoundChannel or "Master",
             }
             soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
         end
