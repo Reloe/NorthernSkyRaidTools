@@ -215,7 +215,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
             local texture_info = NSI.LSM:Fetch("statusbar", icon)
             iconTex:SetTexture(texture_info .. ".png")
         end
-        iconTex:SetTexCoord(0.1, 0.9, 0.09, 0.91)
+        iconTex:SetTexCoord(0.12, 0.88, 0.11, 0.89)
         iconTex:SetVertexColor(1, 1, 1)
         btn.icon = iconTex
         btn.iconFrame = iconFrame
@@ -705,11 +705,11 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
-    local MAX_ROWS = 11
+    local MAX_ROWS = maxRows or 11
     local baseLevel = parent:GetFrameLevel() + 1
 
     local container = CreateFrame("Frame", name, parent)
@@ -723,7 +723,10 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     -- Optional label
     local lbl
     if hasLabel then
-        lbl = MakeFontString(container, 13)
+        lbl = MakeFontString(container, highlighted and 14 or 13)
+        if highlighted then
+            lbl:SetTextColor(1, 0.82, 0, 1)
+        end
         lbl:SetText(label)
         lbl:SetJustifyH("LEFT")
         lbl:SetJustifyV("MIDDLE")
@@ -866,6 +869,8 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         popup:Hide()
         clickaway:Hide()
     end
+
+    container:SetScript("OnHide", Close)
 
     local function Open()
         local items    = getItems and getItems() or {}
@@ -1393,15 +1398,19 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateLabel(parent, text, width, height, name)
+local function CreateLabel(parent, text, width, height, name, highlighted)
     local totalW = width  or 220
     local totalH = height or 16
 
     local container = CreateFrame("Frame", name, parent)
     container:SetSize(totalW, totalH)
 
-    local lbl = MakeFontString(container, 12)
-    lbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    local lbl = MakeFontString(container, highlighted and 14 or 12)
+    if highlighted then
+        lbl:SetTextColor(1, 0.82, 0, 1)
+    else
+        lbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    end
     lbl:SetText(text or "")
     lbl:SetJustifyH("LEFT")
     lbl:SetJustifyV("MIDDLE")
@@ -1710,7 +1719,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 return cur ~= nil and tostring(cur) or ""
             end
             ctrl = C.CreateDropdown(parent, def.label,
-                getItems, getSelected, width, h, wName, def.tooltip)
+                getItems, getSelected, width, h, wName, def.tooltip, nil, def.highlight)
 
         elseif t == "Color" then
             ctrl = C.CreateColorPicker(parent, def.label,
@@ -1726,7 +1735,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 width, h, def.numeric, def.min, def.max, wName, def.tooltip)
 
         elseif t == "Label" then
-            ctrl = C.CreateLabel(parent, def.text, width, h, wName)
+            ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight)
 
         elseif t == "Breakline" then
             ctrl = C.CreateBreakline(parent, width, h, wName)

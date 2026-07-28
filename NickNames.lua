@@ -444,6 +444,13 @@ function NSI:InitNickNames()
             local name = UnitName(unit)
             return name and NSAPI:GetName(name, "Unhalted") or name
         end, "Name", "[NSRT] NickName")
+        for i=1, 12 do
+            UUFG:AddTag("NSNickName:"..i, "UNIT_NAME_UPDATE", function(unit)
+                local name = UnitName(unit)
+                name = name and NSAPI:GetName(name, "Unhalted") or name
+                return NSI:Utf8Sub(name, 1, i)
+            end, "Name", "[NSRT] NickName Shortened "..i)
+        end
     end
 
     self:VuhDoNickNameUpdated()

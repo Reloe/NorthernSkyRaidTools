@@ -312,7 +312,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local filterDD = CreateDropdown(screen, nil, BuildFilterOptions, getFilterBossSelected,
-        bossDDWidth, 22, "NSUIEncAlertFilter")
+        bossDDWidth, 22, "NSUIEncAlertFilter", nil, 10)
     filterDD:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20)
 
     local function BuildDiffOptions()
@@ -400,7 +400,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.bossIcon = row:CreateTexture(nil, "ARTWORK")
         row.bossIcon:SetSize(16, 16)
         row.bossIcon:SetPoint("LEFT", cb.frame, "RIGHT", 4, 0)
-        row.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+        row.bossIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
 
         row.nameLabel = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.nameLabel, 13, "")
@@ -464,7 +464,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         local bossIcon = row:CreateTexture(nil, "ARTWORK")
         bossIcon:SetSize(16, 16)
-        bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+        bossIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
         bossIcon:SetPoint("LEFT", row, "LEFT", 18, 0)
         bossIcon:Hide()
         row.bossIcon = bossIcon
@@ -1980,7 +1980,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local spellIconTex = spellIconFrame:CreateTexture(nil, "ARTWORK")
     spellIconTex:SetPoint("TOPLEFT",     spellIconFrame, "TOPLEFT",     1,  -1)
     spellIconTex:SetPoint("BOTTOMRIGHT", spellIconFrame, "BOTTOMRIGHT", -1,  1)
-    spellIconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    spellIconTex:SetTexCoord(0.1, 0.9, 0.1, 0.9)
     spellIconFrame.texture = spellIconTex
     spellIconFrame:Hide()
     dispF.spellIconFrame = spellIconFrame
@@ -2486,7 +2486,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local trigBossDD = CreateDropdown(trigF, nil, BuildTrigBossOptions, getTrigBossSelected,
-        200, 22, "NSUIEncAlertTrigBoss")
+        200, 22, "NSUIEncAlertTrigBoss", nil, 9)
     trigBossDD:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -18)
     trigF.bossDD = trigBossDD
 

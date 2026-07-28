@@ -56,6 +56,24 @@ local UNIT_TYPES = {
     { label = "Friendly", value = "Friendly" },
 }
 
+local TRACKING_MODES = {
+    { label = "Spell IDs", value = "SpellIDs" },
+    { label = "Aura Filters", value = "Filters" },
+}
+
+local FILTER_STATES = {
+    { label = "Disabled", value = "Disabled" },
+    { label = "Enabled", value = "Enabled" },
+    { label = "Inverted", value = "Inverted" },
+}
+
+local PROCESSED_AURA_TYPES = {
+    { label = "Disabled", value = "Disabled" },
+    { label = "Buff", value = "Buff" },
+    { label = "Debuff", value = "Debuff" },
+    { label = "Dispel", value = "Dispel" },
+}
+
 local SORT_MODES = {
     { label = "Default", value = "Default" },
     { label = "Long Duration first", value = "LongDurationFirst" },
@@ -230,12 +248,63 @@ local function BuildAuraTrackingUI(screen)
     -- frame's right edge) stays inside the NSUI window instead of spilling past it.
     local tabScrollW  = rightW - 14
 
-    local selectedKey = nil
+    NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+    local selectedKey = NSRT.AuraTrackingSettings.UI.Selected
+    local autoPreviewKey
+    local function SetSelectedKey(key)
+        selectedKey = key
+        NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+        NSRT.AuraTrackingSettings.UI.Selected = key
+    end
+    local function IsExplicitPreviewActive(key)
+        return key and NSI[PreviewFlag(key)] == true
+    end
+    local function StopAutoPreview(key)
+        if key and autoPreviewKey == key and not IsExplicitPreviewActive(key) then
+            NSI:PreviewAuraTracking(key, false)
+        end
+        if autoPreviewKey == key then
+            autoPreviewKey = nil
+        end
+    end
+    local function StopPreview(key)
+        if key then
+            NSI[PreviewFlag(key)] = false
+            NSI:PreviewAuraTracking(key, false)
+        end
+        if autoPreviewKey == key then
+            autoPreviewKey = nil
+        end
+    end
+    local function SwitchAutoPreview(key)
+        if autoPreviewKey == key and not IsExplicitPreviewActive(key) then
+            StopAutoPreview(key)
+            return
+        end
+        if autoPreviewKey and autoPreviewKey ~= key then
+            StopAutoPreview(autoPreviewKey)
+        end
+        if key and autoPreviewKey ~= key and not IsExplicitPreviewActive(key) then
+            NSI:PreviewAuraTracking(key, true)
+            autoPreviewKey = key
+        end
+    end
+    NSI._StopAuraTrackingAutoPreview = function()
+        StopAutoPreview(autoPreviewKey)
+    end
+    if NSUI and not NSUI._AuraTrackingAutoPreviewOnHideHooked then
+        NSUI:HookScript("OnHide", function()
+            if NSI._StopAuraTrackingAutoPreview then
+                NSI._StopAuraTrackingAutoPreview()
+            end
+        end)
+        NSUI._AuraTrackingAutoPreviewOnHideHooked = true
+    end
     local searchText  = ""
 
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
-    local nameEntry, groupDD, enabledCB, anchorEntry
+    local nameEntry, groupDD, anchorEntry
 
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
@@ -270,7 +339,7 @@ local function BuildAuraTrackingUI(screen)
             if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then
                 SelectEntry(selectedKey)
             else
-                selectedKey = nil
+                SetSelectedKey(nil)
                 rightPanel:Hide()
             end
         end)
@@ -278,6 +347,7 @@ local function BuildAuraTrackingUI(screen)
     importBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad + 24)
 
     local stopBtn = CreateLocalizedButton(screen, "Stop All Previews", function()
+        autoPreviewKey = nil
         NSI:StopAllAuraTrackingPreviews()
     end, leftWidth - pad * 2, 22, "NSUIAuraTrackStopPreview")
     stopBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
@@ -314,7 +384,7 @@ local function BuildAuraTrackingUI(screen)
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(16, 16)
         row.icon:SetPoint("LEFT", cb.frame, "RIGHT", 4, 0)
-        row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        row.icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
 
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, 13, "")
@@ -464,7 +534,8 @@ local function BuildAuraTrackingUI(screen)
                     NSI:Loc("Delete Group with Auras"),
                     string.format(NSI:Loc("Delete group '%s' and all its auras?"), groupName),
                     NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
-                        selectedKey = nil; rightPanel:Hide()
+                        StopPreview(selectedKey)
+                        SetSelectedKey(nil); rightPanel:Hide()
                         NSI:DeleteAuraTrackingGroup(groupName, false)
                     end)
                 dlg:Show()
@@ -477,10 +548,11 @@ local function BuildAuraTrackingUI(screen)
         local dlg = NSI.UI.Components.CreateDialog("NSRTAuraTrackDelete" .. tostring(settingsKey):gsub("%W", "_"),
             NSI:Loc("Delete Aura"), string.format(NSI:Loc("Delete '%s'?"), name or "?"),
             NSI:Loc("Cancel"), nil, NSI:Loc("Delete"), function()
+                StopPreview(settingsKey)
                 NSI:DeleteCustomAuraTracking(settingsKey)
                 -- Custom entries are index-keyed; a delete reindexes later ones,
                 -- so drop the selection to avoid editing a stale entry.
-                selectedKey = nil; rightPanel:Hide(); RebuildList()
+                SetSelectedKey(nil); rightPanel:Hide(); RebuildList()
             end)
         dlg:Show()
     end
@@ -600,8 +672,7 @@ local function BuildAuraTrackingUI(screen)
                 row.enabledCB:SetOnChange(function(_, v)
                     local es = NSI:GetAuraTrackingSettings(sk)
                     if es then
-                        es.enabled = v; NSI:InitAuraTracking()
-                        if selectedKey == sk and enabledCB then enabledCB:SetValue(v) end
+                        es.enabled = v; NSI:InitAuraTracking(false, true)
                         RebuildList()
                     end
                 end)
@@ -677,21 +748,16 @@ local function BuildAuraTrackingUI(screen)
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
     groupDD:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
 
-    enabledCB = CreateCheckButton(rightPanel, NSI:Loc("Enabled"),
-        function() local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey); return s and s.enabled or false end,
-        function(_, v)
-            local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
-            if s then s.enabled = v; NSI:InitAuraTracking(); RebuildList() end
-        end, 90, 22, "NSUIAuraTrackEnabled")
-    enabledCB:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
-
-    local previewBtn = CreateLocalizedButton(rightPanel, "Preview", function()
+    local previewBtn = CreateLocalizedButton(rightPanel, "Lock Preview", function()
         if not selectedKey then return end
         local flag = PreviewFlag(selectedKey)
         NSI[flag] = not NSI[flag]
+        if NSI[flag] and autoPreviewKey == selectedKey then
+            autoPreviewKey = nil
+        end
         NSI:PreviewAuraTracking(selectedKey, NSI[flag])
-    end, 80, 22, "NSUIAuraTrackPreview")
-    previewBtn:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, 0)
+    end, 110, 22, "NSUIAuraTrackPreview")
+    previewBtn:SetPoint("LEFT", groupDD.frame, "RIGHT", 8, 0)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local tabBtns, tabFrames, tabScroll = {}, {}, {}
@@ -713,7 +779,14 @@ local function BuildAuraTrackingUI(screen)
         tabFrames[name] = f
     end
 
-    local function apply(key) NSI:UpdateAuraTrackingDisplay(key) end
+    local function apply(key)
+        if autoPreviewKey == key and not IsExplicitPreviewActive(key) then
+            NSI:PreviewAuraTracking(key, true)
+            NSI:InitAuraTracking(false, true)
+        else
+            NSI:UpdateAuraTrackingDisplay(key)
+        end
+    end
 
     -- ── Fixed anchor row at the top of the Display tab ───────────────────────
     local displayF = tabFrames["Display"]
@@ -801,6 +874,11 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
             tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
+        if key == "Tank" then
+            add({ Type = "Checkbox", label = "Only show first tank",
+                tooltip = tip("Only show first tank", "Only creates one co-tank tracking container instead of one for every co-tank found in your group."),
+                get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
+        end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
             tooltip = tip("Sort Order", "Default uses Blizzard's aura order. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
             get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })
@@ -828,7 +906,7 @@ local function BuildAuraTrackingUI(screen)
             get = function() return s.HideTooltip end, set = function(_, v) s.HideTooltip = v; apply(key) end })
         if key == "Player" or key == "Tank" then
             add({ Type = "Checkbox", label = "Hide Long Duration Auras",
-                tooltip = tip("Hide Long Duration Auras", "Hide auras with no duration or a duration longer than 3 minutes."),
+                tooltip = tip("Hide Long Duration Auras", "Hide auras with no duration or a duration longer than 5 minutes."),
                 get = function() return s.HideLongDurationAuras end, set = function(_, v) s.HideLongDurationAuras = v; apply(key) end })
         end
         if key == "Player" then
@@ -890,7 +968,7 @@ local function BuildAuraTrackingUI(screen)
             add({ Type = "Checkbox", label = isTank and "Show Co-Tank Name" or "Show Source Name",
                 tooltip = isTank
                     and tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons.")
-                    or tip("Show Source Name", "Shows the source name attached to visible aura icons."),
+                    or tip("Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"),
                 get = function() return s.NameEnabled end, set = function(_, v) s.NameEnabled = v; apply(key) end })
             add({ Type = "Dropdown", label = "Name Position", values = NAME_POSITIONS,
                 tooltip = tip("Name Position", isTank and "Position of the co-tank name relative to the aura icon." or "Position of the source name relative to the aura icon."),
@@ -951,7 +1029,7 @@ local function BuildAuraTrackingUI(screen)
 
                 local icon = iconFrame:CreateTexture(nil, "ARTWORK")
                 icon:SetAllPoints()
-                icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+                icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
 
                 local label = row:CreateFontString(nil, "OVERLAY")
                 NSI:SetUIFont(label, 12, "")
@@ -1015,13 +1093,11 @@ local function BuildAuraTrackingUI(screen)
                 and "This built-in display tracks a curated list of external/immunity buffs."
                 or  "This built-in display tracks all relevant debuffs automatically." } }
         end
-        return {
+        local defs = {
             -- No inline `label` on these TextEntries: CreateTextEntry only
             -- reserves a fixed 60px input box when given a label (the rest of
             -- the width goes to the label text), so a preceding standalone
             -- Label caption + a label-less full-width TextEntry is used instead.
-            { Type = "Label", text = "Spell IDs" },
-            BuildSpellIDListWidget(key),
             { Type = "Label", text = "Unit" },
             { Type = "TextEntry",
                 get = function() return s.Unit or "player" end,
@@ -1030,21 +1106,139 @@ local function BuildAuraTrackingUI(screen)
                     s.Unit = (v ~= "") and v or "player"
                     apply(key); RebuildCurrentTab()
                 end },
-            { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40" },
-            { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
-                tooltip = { title = "Unit Type", desc = "Automatic treats player, party and raid units as friendly. Other units are treated as enemy unless manually changed." },
-                get = function() return s.UnitType or "Automatic" end,
+            { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40, or friendly player names" },
+            { Type = "Dropdown", label = "Tracking Mode", values = TRACKING_MODES, highlight = true,
+                tooltip = { title = "Tracking Mode", desc = "Choose whether this custom Aura Tracking display uses a spell-ID whitelist or Blizzard aura filters." },
+                get = function() return s.TrackingMode or "SpellIDs" end,
                 set = function(_, v)
-                    s.UnitType = v or "Automatic"
-                    apply(key)
+                    s.TrackingMode = v or "SpellIDs"
+                    apply(key); RebuildCurrentTab()
                 end },
-            { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." },
             { Type = "Label", text = "Preview Spell ID" },
             { Type = "TextEntry",
                 tooltip = { title = "Preview Spell ID", desc = "Spell ID used for the custom Aura Tracking list icon." },
                 get = function() return s.PreviewSpellID and tostring(s.PreviewSpellID) or "" end,
                 set = function(_, v) NSI:SetAuraTrackingPreviewSpellID(key, v); RebuildList() end },
         }
+        local function tip(title, desc)
+            return { title = title, desc = desc }
+        end
+
+        local function AddCandidateFilterDefs(includeSpellIDs)
+            s.CandidateFilters = s.CandidateFilters or {}
+            local candidateFilters = s.CandidateFilters
+            defs[#defs + 1] = { Type = "Breakline" }
+            defs[#defs + 1] = { Type = "Label", text = "Candidate Filters", height = 20, highlight = true }
+            defs[#defs + 1] = { Type = "Label", text = "Candidate filters are evaluated after normal aura filters. Every enabled candidate filter must match." }
+
+            if includeSpellIDs then
+                defs[#defs + 1] = { Type = "Label", text = "Include Spell IDs" }
+                defs[#defs + 1] = { Type = "TextEntry",
+                    tooltip = tip("Include Spell IDs", "Only show these spell IDs. Separate multiple IDs with spaces or commas."),
+                    get = function() return candidateFilters.IncludeSpellIDs or "" end,
+                    set = function(_, v) candidateFilters.IncludeSpellIDs = v; apply(key) end }
+            end
+
+            defs[#defs + 1] = { Type = "Label", text = "Exclude Spell IDs" }
+            defs[#defs + 1] = { Type = "TextEntry",
+                tooltip = tip("Exclude Spell IDs", "Hide these spell IDs. Separate multiple IDs with spaces or commas."),
+                get = function() return candidateFilters.ExcludeSpellIDs or "" end,
+                set = function(_, v) candidateFilters.ExcludeSpellIDs = v; apply(key) end }
+
+            defs[#defs + 1] = { Type = "Checkbox", label = "Maximum Duration",
+                tooltip = tip("Maximum Duration", "Only show auras whose maximum duration is at most this many seconds. Permanent auras are excluded."),
+                get = function() return type(candidateFilters.MaxDuration) == "number" end,
+                set = function(_, v)
+                    candidateFilters.MaxDuration = v and (candidateFilters.MaxDuration or 300) or nil
+                    apply(key); RebuildCurrentTab()
+                end }
+            if type(candidateFilters.MaxDuration) == "number" then
+                defs[#defs + 1] = { Type = "Slider", label = "Maximum Duration Seconds", min = 1, max = 3600, step = 1,
+                    tooltip = tip("Maximum Duration Seconds", "Maximum aura duration allowed by this candidate filter."),
+                    get = function() return candidateFilters.MaxDuration end,
+                    set = function(_, v) candidateFilters.MaxDuration = v; apply(key) end }
+            end
+
+            defs[#defs + 1] = { Type = "Dropdown", label = "Processed Aura Type", values = PROCESSED_AURA_TYPES,
+                tooltip = tip("Processed Aura Type", "Filters Blizzard's processed aura classification. This can be Buff, Debuff, or Dispel."),
+                get = function() return candidateFilters.ProcessedAuraType or "Disabled" end,
+                set = function(_, v) candidateFilters.ProcessedAuraType = v or "Disabled"; apply(key) end }
+
+            defs[#defs + 1] = { Type = "Label", text = "Dispel Types" }
+            candidateFilters.DispelTypes = candidateFilters.DispelTypes or {}
+            for _, dispelType in ipairs(NSI.AuraTrackingCandidateDispelTypes) do
+                defs[#defs + 1] = { Type = "Dropdown", label = dispelType, values = FILTER_STATES,
+                    tooltip = tip(dispelType, "Enabled only shows auras with this dispel type. Inverted hides this dispel type."),
+                    get = function()
+                        local state = candidateFilters.DispelTypes[dispelType]
+                        return (state == "Enabled" or state == "Inverted") and state or "Disabled"
+                    end,
+                    set = function(_, v)
+                        candidateFilters.DispelTypes[dispelType] = (v == "Enabled" or v == "Inverted") and v or nil
+                        apply(key)
+                    end }
+            end
+
+            defs[#defs + 1] = { Type = "Label", text = "Aura Properties" }
+            for _, filter in ipairs(NSI.AuraTrackingCandidateFilterDefinitions) do
+                local filterKey = filter.key
+                defs[#defs + 1] = { Type = "Dropdown", label = filter.label, values = FILTER_STATES,
+                    tooltip = tip(filter.label, "Enabled requires this property. Inverted requires the property to be false."),
+                    get = function()
+                        local state = candidateFilters[filterKey]
+                        if state == true or state == "Enabled" then return "Enabled" end
+                        if state == false or state == "Inverted" then return "Inverted" end
+                        return "Disabled"
+                    end,
+                    set = function(_, v)
+                        candidateFilters[filterKey] = v == "Enabled" and true or (v == "Inverted" and false or nil)
+                        apply(key)
+                    end }
+            end
+        end
+
+        if s.TrackingMode == "Filters" then
+            defs[#defs + 1] = { Type = "Breakline" }
+            defs[#defs + 1] = { Type = "Label", text = "Aura Filters", height = 20, highlight = true }
+            defs[#defs + 1] = { Type = "Label", text = "Enabled adds the filter. Inverted uses the same filter as negated. Multiple filters at the same time work as an AND condition."}
+            s.AuraFilters = s.AuraFilters or {}
+            for _, filter in ipairs(NSI.AuraTrackingFilterDefinitions or {}) do
+                local filterKey = filter.key
+                defs[#defs + 1] = {
+                    Type = "Dropdown",
+                    label = filterKey,
+                    values = FILTER_STATES,
+                    tooltip = { title = filterKey, desc = filter.value },
+                    get = function()
+                        local state = s.AuraFilters and s.AuraFilters[filterKey]
+                        return (state == "Enabled" or state == "Inverted") and state or "Disabled"
+                    end,
+                    set = function(_, v)
+                        s.AuraFilters = s.AuraFilters or {}
+                        if v == "Enabled" or v == "Inverted" then
+                            s.AuraFilters[filterKey] = v
+                        else
+                            s.AuraFilters[filterKey] = nil
+                        end
+                        apply(key)
+                    end,
+                }
+            end
+            AddCandidateFilterDefs(true)
+        else
+            defs[#defs + 1] = { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
+                tooltip = { title = "Unit Type", desc = "Automatic treats player, party, raid and resolved player-name units as friendly. Other units are treated as enemy unless manually changed." },
+                get = function() return s.UnitType or "Automatic" end,
+                set = function(_, v)
+                    s.UnitType = v or "Automatic"
+                    apply(key)
+                end }
+            defs[#defs + 1] = { Type = "Label", text = "Spell IDs" }
+            defs[#defs + 1] = BuildSpellIDListWidget(key)
+            defs[#defs + 1] = { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." }
+        end
+
+        return defs
     end
 
     local DEF_BUILDERS = { Display = BuildDisplayDefs, Trigger = BuildTriggerDefs }
@@ -1067,6 +1261,7 @@ local function BuildAuraTrackingUI(screen)
         local settings = NSI:GetAuraTrackingSettings(selectedKey)
         if not settings then return end
         local container = tabFrames[activeTab]
+        local scrollPosition = tabScroll[activeTab] and tabScroll[activeTab].frame:GetVerticalScroll() or 0
         container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
         for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
             HideWidgetScroll(scrollObj)
@@ -1079,6 +1274,7 @@ local function BuildAuraTrackingUI(screen)
         local totalH = BuildWidgets(scrollObj.scrollChild, defs, scrollObj.scrollChild:GetWidth(), "NSRTAuraTrack" .. activeTab)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         scrollObj:UpdateScrollBar()
+        scrollObj.frame:SetVerticalScroll(scrollPosition)
         tabScroll[activeTab] = scrollObj
         container._auraTrackingWidgetScrolls[#container._auraTrackingWidgetScrolls + 1] = scrollObj
     end
@@ -1397,7 +1593,7 @@ local function BuildAuraTrackingUI(screen)
         if not loadCollapsed.Specs then
             for _, sd in ipairs(SPEC_DATA) do
                 local id = sd.id; local cr, cg, cb = ClassColor(sd.class)
-                y = AddCheck(y, NSI:Loc(sd.label) .. " |cFF808080(" .. sd.class:sub(1, 3) .. ")|r", cond.SpecIDs[id],
+                y = AddCheck(y, NSI:Loc(sd.label), cond.SpecIDs[id],
                     function() cond.SpecIDs[id] = (not cond.SpecIDs[id]) or nil end, cr * 0.8 + 0.2, cg * 0.8 + 0.2, cb * 0.8 + 0.2)
             end
         end
@@ -1431,17 +1627,19 @@ local function BuildAuraTrackingUI(screen)
     end
 
     -- ── SelectEntry ─────────────────────────────────────────────────────────
-    SelectEntry = function(key)
-        selectedKey = key
+    SelectEntry = function(key, shouldAutoPreview)
+        if shouldAutoPreview ~= false then
+            SwitchAutoPreview(key)
+        end
+        SetSelectedKey(key)
         local settings = key and NSI:GetAuraTrackingSettings(key)
-        if not settings then rightPanel:Hide(); RebuildList(); return end
+        if not settings then StopAutoPreview(key); SetSelectedKey(nil); rightPanel:Hide(); RebuildList(); return end
         rightPanel:Show()
         nameEntry:SetValue(settings.builtin and NSI:Loc(settings.Name or "") or (settings.Name or ""))
         nameEntry.editBox:SetEnabled(not settings.builtin)
         nameEntry.editBox:SetAlpha(settings.builtin and 0.5 or 1)
         anchorEntry:SetValue(settings.CustomAnchorFrame or "UIParent")
         groupDD:Refresh()
-        enabledCB:SetValue(settings.enabled)
         SelectInnerTab(activeTab)
         RebuildList()
     end
@@ -1455,7 +1653,8 @@ local function BuildAuraTrackingUI(screen)
             if anchorEntry then anchorEntry:SetValue(NSI:GetAuraTrackingSettings(selectedKey).CustomAnchorFrame or "UIParent") end
             RebuildCurrentTab()
         elseif rightPanel then
-            selectedKey = nil; rightPanel:Hide()
+            StopAutoPreview(selectedKey)
+            SetSelectedKey(nil); rightPanel:Hide()
         end
     end
 
@@ -1471,6 +1670,9 @@ local function BuildAuraTrackingUI(screen)
     end
 
     RebuildList()
+    if selectedKey and NSI:GetAuraTrackingSettings(selectedKey) then
+        SelectEntry(selectedKey, false)
+    end
     return { screen = screen, RebuildList = RebuildList, SelectEntry = SelectEntry }
 end
 

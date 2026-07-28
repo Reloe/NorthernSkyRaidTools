@@ -1,44 +1,20 @@
-Changes since tag v12.0.5.730
+Changes since tag v12.0.7.746
 
-commit 661fb6fa576fa14047dc41bddd77c89d6453e62d
+commit 805002b3cfb1c8c90446595521493c49368d3c0f
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed Jun 3 13:32:48 2026 -0300
+Date:   Thu Jul 9 11:27:11 2026 -0300
 
-    Add languageId to widgets created in build menu.
+    Use DoesTemplateExist for the glow templates
 
-commit 1f82c1684dc75a9dbfbe0e74449236aafcc870a0
-Author: cont1nuity <continuity@gmx.net>
-Date:   Wed Jun 3 11:33:07 2026 +0200
-
-    - version bump
-
-commit 0c7793f28de15917202d2f83a08ed9de56bb423a
-Author: cont1nuity <continuity@gmx.net>
-Date:   Wed Jun 3 11:29:41 2026 +0200
-
-    - fixing midnight api issues
-
-commit df904f960134ca2bad07c2103a71b39812aaeec0
+commit 1464efafa2bd63830d255d0dae455f876a674ab3
 Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Fri May 29 22:25:51 2026 -0300
+Date:   Tue Jul 7 15:37:50 2026 -0300
 
-    General bug fixes.
+    Add `fixed_width` for BuildMenu.
 
-commit 88d5bde12e3d4c81049fec6fe92206bff356b05b
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Wed May 20 19:08:02 2026 -0300
+commit 347ab271275be0e3a2fdd1cd4d603d3145aa55f2
+Author: cont1nuity <10164755+cont1nuity@users.noreply.github.com>
+Date:   Tue Jul 7 20:29:29 2026 +0200
 
-    Update the profile management frame.
-
-commit 263cd27c1c7d2955b6bae0c0a944d22df3e3106f
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Sat May 16 13:07:34 2026 -0300
-
-    Add snap system.
-
-commit 59b3335b2813d1642dd2553ae46f3060d15b36b3
-Author: Tercio Jose <terciob19@hotmail.com>
-Date:   Thu May 14 00:50:17 2026 -0300
-
-    General fixes and documentation
+    - TBC seems to get retail API...
 

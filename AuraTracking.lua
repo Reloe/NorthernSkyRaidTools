@@ -3,7 +3,54 @@ local LibSerialize = LibStub("AceSerializer-3.0")
 local LibDeflate = LibStub("LibDeflate")
 
 local AuraTrackingFilters = {
-    "HARMFUL|!PLAYER",
+    "HARMFUL",
+}
+
+local AuraTrackingExcludedSpellIDs = {
+    [57723] = true, -- Exhaustion
+    [390435] = true, -- Exhaustion
+    [57724] = true, -- Sated
+    [71041] = true, -- Dungeon Deserter
+    [206151] = true, -- Challenger's Burden
+    [264689] = true, -- Fatigued
+}
+
+NSI.AuraTrackingFilterDefinitions = {
+    { key = "Helpful", value = "HELPFUL" },
+    { key = "Harmful", value = "HARMFUL" },
+    { key = "Player", value = "PLAYER" },
+    { key = "Raid", value = "RAID" },
+    { key = "Cancelable", value = "CANCELABLE" },
+    { key = "IncludeNameplateOnly", value = "INCLUDE_NAME_PLATE_ONLY" },
+    { key = "Maw", value = "MAW" },
+    { key = "ExternalDefensive", value = "EXTERNAL_DEFENSIVE" },
+    { key = "CrowdControl", value = "CROWD_CONTROL" },
+    { key = "RaidInCombat", value = "RAID_IN_COMBAT" },
+    { key = "RaidPlayerDispellable", value = "RAID_PLAYER_DISPELLABLE" },
+    { key = "BigDefensive", value = "BIG_DEFENSIVE" },
+    { key = "Important", value = "IMPORTANT" },
+    { key = "Dispellable", value = "DISPELLABLE" },
+}
+
+NSI.AuraTrackingCandidateFilterDefinitions = {
+    { key = "isFromPlayerOrPlayerPet", label = "From Player or Pet" },
+    { key = "isRoleAura", label = "Role Aura" },
+    { key = "isPriorityAura", label = "Priority Aura" },
+    { key = "isStealable", label = "Stealable" },
+    { key = "nameplateShowAll", label = "Nameplate: Show All" },
+    { key = "nameplateShowPersonal", label = "Nameplate: Personal" },
+    { key = "canApplyAura", label = "Can Apply Aura" },
+    { key = "isBossAura", label = "Boss Aura" },
+    { key = "isBossOrRoleAura", label = "Boss or Role Aura" },
+}
+
+NSI.AuraTrackingCandidateDispelTypes = {
+    "Magic",
+    "Curse",
+    "Disease",
+    "Poison",
+    "Enrage",
+    "Bleed",
 }
 
 local AuraTrackingUnitRefreshFrame
@@ -12,6 +59,7 @@ local AuraTrackingUnitRefreshStates = {
     focus = {},
     mouseover = {},
     boss = {},
+    roster = {},
 }
 
 local function GetAuraTrackingFlowDirections(growDirection)
@@ -46,6 +94,14 @@ local function GetAuraTrackingLayoutAnchorPoint(settings)
         return "BOTTOMLEFT"
     end
     return "TOPLEFT"
+end
+
+local function GetAuraTrackingLayoutAxis(settings)
+    local growDirection = settings and settings.GrowDirection or "RIGHT"
+    if growDirection == "UP" or growDirection == "DOWN" then
+        return AnchorUtil.FlowLayoutAxis.Vertical
+    end
+    return AnchorUtil.FlowLayoutAxis.Horizontal
 end
 
 local function GetAuraTrackingFrameStrata(settings)
@@ -98,7 +154,6 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         ShowDispelBorder = true,
         HideTooltip = false,
         HideDurationText = false,
-        HideLongDurationAuras = false,
         ShowWhitelistedPlayerBuffs = false,
         HideStackText = false,
         EnableCooldownSwipe = true,
@@ -118,12 +173,16 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         NameXOffset = 0,
         NameYOffset = 4,
         NameFontSize = 30,
+        TrackingMode = "SpellIDs",
         SpellIDs = {},
         SpellIDsEdited = false,
+        AuraFilters = {},
+        CandidateFilters = {},
         PreviewSpellID = nil,
         SortMode = "Default",
         Unit = "player",
         UnitType = "Automatic",
+        OnlyShowFirstTank = false,
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
     }
     for key, value in pairs(overrides or {}) do
@@ -155,6 +214,39 @@ local function ResolveAuraTrackingCustomUnitType(settings, unit)
         return "Friendly"
     end
     return "Enemy"
+end
+
+local function IsAuraTrackingStaticUnit(unit)
+    unit = unit and strtrim(tostring(unit)) or ""
+    if unit == "" then return true end
+    local lower = string.lower(unit)
+    return lower == "player"
+        or lower == "pet"
+        or lower == "target"
+        or lower == "targettarget"
+        or lower == "focus"
+        or lower == "focustarget"
+        or lower == "mouseover"
+        or lower == "cotank"
+        or lower:match("^raid%d+$")
+        or lower:match("^party%d+$")
+        or lower:match("^boss%d+$")
+end
+
+local function ResolveAuraTrackingUnit(self, settings)
+    local unit = settings and settings.Unit and strtrim(tostring(settings.Unit)) or "player"
+    if unit == "" then unit = "player" end
+    local lower = string.lower(unit)
+
+    if lower == "cotank" then
+        return self:GetCoTankUnits()[1], true
+    end
+
+    if IsAuraTrackingStaticUnit(unit) then
+        return lower, false
+    end
+
+    return self:ResolveGroupMemberUnit(unit), true
 end
 
 local function GetAuraTrackingCustomFrameLimit(settings, unit)
@@ -324,13 +416,13 @@ end
 -- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
 -- of relying on a hand-maintained list that can silently fall out of sync.
 local AuraTrackingSectionFields = {
-    Trigger = { "SpellIDs", "SpellIDsEdited", "Unit", "UnitType", "PreviewSpellID" },
+    Trigger = { "TrackingMode", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
     Load    = { "loadConditions" },
 }
 
 local AuraTrackingNonDisplayFields = {
     Name = true, enabled = true, group = true, pinned = true, builtin = true,
-    SpellIDs = true, SpellIDsEdited = true, Unit = true, UnitType = true, PreviewSpellID = true,
+    TrackingMode = true, SpellIDs = true, SpellIDsEdited = true, AuraFilters = true, CandidateFilters = true, Unit = true, UnitType = true, PreviewSpellID = true,
     loadConditions = true,
 }
 
@@ -479,12 +571,6 @@ local function FormatAuraTrackingDuration(seconds)
     return tostring(math.ceil(seconds))
 end
 
-local function GetAuraTrackingSettingsKeyFromRuntimeKey(key)
-    if key == "External" then return "External" end
-    local customIndex = tostring(key or ""):match("^[Cc]ustom(%d+)$")
-    if customIndex then return "Custom:" .. customIndex end
-end
-
 local function ParseAuraTrackingSpellIDs(value)
     local spellIDs = {}
     local seen = {}
@@ -562,6 +648,93 @@ local function GetAuraTrackingSpellIDMap(settings, settingsKey)
         map[spellID] = true
     end
     return map
+end
+
+local function BuildAuraTrackingCustomFilterString(settings)
+    local filters = settings and settings.AuraFilters
+    if type(filters) ~= "table" then return end
+
+    local parts = {}
+    for _, filter in ipairs(NSI.AuraTrackingFilterDefinitions) do
+        local state = filters[filter.key]
+        if state == nil then
+            state = filters[filter.value]
+        end
+        if type(state) == "string" then
+            state = strtrim(state)
+            local lower = string.lower(state)
+            if lower == "enabled" then
+                state = "Enabled"
+            elseif lower == "inverted" or lower == "negated" or lower == "inverse" then
+                state = "Inverted"
+            end
+        end
+        if state == "Enabled" or state == true then
+            parts[#parts + 1] = filter.value
+        elseif state == "Inverted" then
+            parts[#parts + 1] = "!" .. filter.value
+        end
+    end
+
+    if #parts == 0 then return end
+    return table.concat(parts, "|")
+end
+
+local function BuildAuraTrackingCandidateFilters(settings)
+    local configured = settings and settings.CandidateFilters
+    local candidateFilters = {}
+
+    if type(configured) == "table" then
+        local spellIDs = ParseAuraTrackingSpellIDs(configured.IncludeSpellIDs)
+        if #spellIDs > 0 then
+            candidateFilters.includeSpellIDs = {}
+            for _, spellID in ipairs(spellIDs) do
+                candidateFilters.includeSpellIDs[spellID] = true
+            end
+        end
+    end
+
+    if type(configured) == "table" then
+        local spellIDs = ParseAuraTrackingSpellIDs(configured.ExcludeSpellIDs)
+        if #spellIDs > 0 then
+            candidateFilters.excludeSpellIDs = {}
+            for _, spellID in ipairs(spellIDs) do
+                candidateFilters.excludeSpellIDs[spellID] = true
+            end
+        end
+
+        local dispelTypes = configured.DispelTypes
+        if type(dispelTypes) == "table" then
+            for _, dispelType in ipairs(NSI.AuraTrackingCandidateDispelTypes) do
+                if dispelTypes[dispelType] == "Enabled" then
+                    candidateFilters.includeDispelTypes = candidateFilters.includeDispelTypes or {}
+                    candidateFilters.includeDispelTypes[dispelType] = true
+                elseif dispelTypes[dispelType] == "Inverted" then
+                    candidateFilters.excludeDispelTypes = candidateFilters.excludeDispelTypes or {}
+                    candidateFilters.excludeDispelTypes[dispelType] = true
+                end
+            end
+        end
+
+        if type(configured.MaxDuration) == "number" then
+            candidateFilters.maxDuration = configured.MaxDuration
+        end
+
+        if configured.ProcessedAuraType and configured.ProcessedAuraType ~= "Disabled" then
+            candidateFilters.processedAuraType = AuraUtil.AuraUpdateChangedType[configured.ProcessedAuraType]
+        end
+
+        for _, filter in ipairs(NSI.AuraTrackingCandidateFilterDefinitions) do
+            local state = configured[filter.key]
+            if state == "Enabled" or state == true then
+                candidateFilters[filter.key] = true
+            elseif state == "Inverted" or state == false then
+                candidateFilters[filter.key] = false
+            end
+        end
+    end
+
+    return candidateFilters
 end
 
 function NSI:GetAuraTrackingSpellIDList(settingsKey)
@@ -688,7 +861,8 @@ function NSI:AddCustomAuraTracking(group)
         NSRT.AuraTrackingSettings.Groups[group] = NSRT.AuraTrackingSettings.Groups[group] or { collapsed = false }
     end
     local settingsKey = "Custom:" .. index
-    NSRT.AuraTrackingSelected = settingsKey
+    NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+    NSRT.AuraTrackingSettings.UI.Selected = settingsKey
     self:RefreshAuraTrackingUI()
     return settingsKey
 end
@@ -730,7 +904,8 @@ function NSI:DeleteCustomAuraTracking(settingsKey)
     local customIndex = tonumber(tostring(settingsKey or ""):match("^Custom:(%d+)$"))
     if not customIndex or not NSRT.AuraTrackingSettings.Custom then return end
     table.remove(NSRT.AuraTrackingSettings.Custom, customIndex)
-    NSRT.AuraTrackingSelected = "Player"
+    NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
+    NSRT.AuraTrackingSettings.UI.Selected = "Player"
     self:InitAuraTracking()
     self:RefreshAuraTrackingUI()
 end
@@ -1065,19 +1240,6 @@ local function GetAuraTrackingFontPath(self, settings)
     return [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 end
 
-local function ClearAuraTracking(self)
-    if not self.AuraTrackingState then return end
-    for _, state in pairs(self.AuraTrackingState) do
-        if state.container then
-            state.container:SetEnabled(false)
-            state.container:Hide()
-        end
-        if state.anchorFrame then
-            state.anchorFrame:Hide()
-        end
-    end
-end
-
 local function AcquireAuraTrackingContainer(self, key)
     if not self.AuraTrackingState then self.AuraTrackingState = {} end
     if not self.AuraTrackingState[key] then self.AuraTrackingState[key] = {} end
@@ -1145,14 +1307,15 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
-        button:SetAuraBorder(regions.dispelBorder, {
+        button:ClearDispelTypeTextures()
+        button:AddDispelTypeTexture(regions.dispelBorder, {
             showIcon = true,
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
     else
         HideAuraTrackingDispelRegions(regions)
-        button:ClearAuraBorder()
+        button:ClearDispelTypeTextures()
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
@@ -1165,7 +1328,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     if AuraTrackingWantsDispelBorder(settings, key) then
-        button:SetAuraSymbol(regions.dispelSymbol, {
+        button:SetDispelTypeText(regions.dispelSymbol, {
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
@@ -1173,7 +1336,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if regions.dispelSymbol then
             regions.dispelSymbol:Hide()
         end
-        button:ClearAuraSymbol()
+        button:ClearDispelTypeText()
     end
 
     if settings.HideStackText then
@@ -1205,13 +1368,13 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         duration:SetTextColor(unpack(settings.DurationColor))
         duration:Show()
-        button:SetDurationText(duration, { formatter = GetAuraTrackingDurationFormatter() })
+        button:SetDurationText(duration, { textFormatter = GetAuraTrackingDurationFormatter() })
     end
     --[[
     local isCustom = tostring(key):match("^Custom") and true or false
     if (key == "External" or isCustom) and settings.NameEnabled then]]
     -- if blizzard adds this just need to support it here
-    if key == "Tank" and settings.NameEnabled then
+    if tostring(key or ""):match("^Tank") and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
@@ -1251,25 +1414,21 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
--- Resolve an entry's configured Unit into a concrete unit token.
--- "cotank" is resolved to the other tank in the group (like the Tank built-in);
--- all other units ("player", "target", "focus", "boss1-5") are dynamic tokens
--- the AuraContainer follows directly.
-local function ResolveAuraTrackingUnit(self, settings)
-    local unit = settings.Unit and strtrim(tostring(settings.Unit)) or "player"
-    if unit == "" then unit = "player" end
-    if string.lower(unit) == "cotank" then
-        for member in self:IterateGroupMembers() do
-            if UnitGroupRolesAssigned(member) == "TANK" and not UnitIsUnit("player", member) then
-                return member
-            end
-        end
-        return nil
+local function AnchorAuraTrackingAfterFrame(anchorFrame, previousAnchorFrame, settings)
+    local spacing = settings.Spacing or 0
+    anchorFrame:ClearAllPoints()
+    if settings.GrowDirection == "LEFT" then
+        anchorFrame:SetPoint("TOPRIGHT", previousAnchorFrame, "TOPLEFT", -spacing, 0)
+    elseif settings.GrowDirection == "UP" then
+        anchorFrame:SetPoint("BOTTOMLEFT", previousAnchorFrame, "TOPLEFT", 0, spacing)
+    elseif settings.GrowDirection == "DOWN" then
+        anchorFrame:SetPoint("TOPLEFT", previousAnchorFrame, "BOTTOMLEFT", 0, -spacing)
+    else
+        anchorFrame:SetPoint("TOPLEFT", previousAnchorFrame, "TOPRIGHT", spacing, 0)
     end
-    return unit
 end
 
-local function InitAuraTrackingContainer(self, unit, settings, key)
+local function InitAuraTrackingContainer(self, unit, settings, key, previousState, reconfigureButtons)
     if not unit or not settings or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
@@ -1277,15 +1436,26 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     end
     local isCustom = tostring(key):match("^Custom") and true or false
     local isExternal = key == "External"
-    local isSpellFiltered = isExternal or isCustom
-    local spellIDMap = isSpellFiltered and GetAuraTrackingSpellIDMap(settings, GetAuraTrackingSettingsKeyFromRuntimeKey(key)) or nil
+    local customUsesFilters = isCustom and settings.TrackingMode == "Filters"
+    local isSpellFiltered = isExternal or (isCustom and not customUsesFilters)
+    local spellIDMap
+    if isExternal then
+        spellIDMap = GetAuraTrackingSpellIDMap(settings, "External")
+    elseif isCustom then
+        local customIndex = tostring(key):match("^Custom(%d+)$")
+        if customIndex then
+            spellIDMap = GetAuraTrackingSpellIDMap(settings, "Custom:" .. customIndex)
+        end
+    end
     if isSpellFiltered and not spellIDMap then return end
+    local customFilterString = customUsesFilters and BuildAuraTrackingCustomFilterString(settings) or nil
+    if customUsesFilters and not customFilterString then return end
 
     local state = AcquireAuraTrackingContainer(self, key)
-    local container = state.container
-    local anchorFrame = state.anchorFrame
     local width = settings.Width
     local height = settings.Height
+    local container = state.container
+    local anchorFrame = state.anchorFrame
     local groupKeyPrefix = "NSRT_" .. key
     local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
     local frameStrata = GetAuraTrackingFrameStrata(settings)
@@ -1295,22 +1465,48 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
     state.width = width
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
+    state.active = true
 
-    container:SetEnabled(false)
+    if isCustom then
+        -- Blizzard only populates processedAuraType while this policy is active.
+        local processedAuraType = customUsesFilters and settings.CandidateFilters and settings.CandidateFilters.ProcessedAuraType
+        local policy = processedAuraType and processedAuraType ~= "Disabled"
+            and CustomAuraContainerAuraProcessingPolicy.ProcessAura
+            or CustomAuraContainerAuraProcessingPolicy.None
+        container:SetAuraProcessingPolicy(policy)
+    end
+
     container:Hide()
     container:SetFrameStrata(frameStrata)
     anchorFrame:SetFrameStrata(frameStrata)
     anchorFrame:SetSize(width, height)
-    SetAuraTrackingPoint(anchorFrame, settings, UIParent)
+    if previousState and previousState.anchorFrame then
+        AnchorAuraTrackingAfterFrame(anchorFrame, previousState.anchorFrame, settings)
+    else
+        SetAuraTrackingPoint(anchorFrame, settings, UIParent)
+    end
     anchorFrame:Show()
 
     container:ClearAllPoints()
     container:SetSize(width, height)
     container:SetPoint(layoutAnchorPoint, anchorFrame, layoutAnchorPoint, 0, 0)
     container:SetUnit(unit)
-    container:SetAuraLayoutAnchorPoint(layoutAnchorPoint)
-    container:SetAuraLayoutGrowthDirection(GetAuraTrackingFlowDirections(settings.GrowDirection))
-    container:SetAuraLayoutRowWidth(GetAuraTrackingRowWidth(settings))
+    local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection)
+    local flowLayout = (container.GetFlowLayout and container:GetFlowLayout()) or container.flowLayout
+    if flowLayout then
+        flowLayout:SetLayoutAxis(GetAuraTrackingLayoutAxis(settings))
+        flowLayout:SetAnchorPoint(layoutAnchorPoint)
+        flowLayout:SetGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
+        flowLayout:SetMaximumLineSize(GetAuraTrackingRowWidth(settings))
+    else
+        container.layoutAnchorPoint = layoutAnchorPoint
+        container.layoutHorizontalGrowthDirection = horizontalGrowthDirection
+        container.layoutVerticalGrowthDirection = verticalGrowthDirection
+        container.layoutRowWidth = GetAuraTrackingRowWidth(settings)
+    end
+    if container.MarkDirty and AuraContainerDirtyMask then
+        container:MarkDirty(AuraContainerDirtyMask.AuraFrameLayout)
+    end
 
     local auraGroups = {}
     if isExternal then
@@ -1319,14 +1515,22 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             spellIDMap = spellIDMap,
         }
     elseif isCustom then
-        local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
-        state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
-        auraGroups[#auraGroups + 1] = {
-            filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
-            spellIDMap = spellIDMap,
-            customGroup = true,
-            maxFrameCount = GetAuraTrackingCustomFrameLimit(settings, unit),
-        }
+        if customUsesFilters then
+            state.customAuraGroupKey = groupKeyPrefix .. "_filters"
+            auraGroups[#auraGroups + 1] = {
+                filter = customFilterString,
+                customGroup = true,
+            }
+        else
+            local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
+            state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
+            auraGroups[#auraGroups + 1] = {
+                filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
+                spellIDMap = spellIDMap,
+                customGroup = true,
+                maxFrameCount = GetAuraTrackingCustomFrameLimit(settings, unit),
+            }
+        end
     else
         for _, filter in ipairs(AuraTrackingFilters) do
             auraGroups[#auraGroups + 1] = {
@@ -1356,17 +1560,32 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             if container:HasAuraGroup(groupKeyPrefix .. "_harmful") then
                 SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_harmful", 0)
             end
+            if container:HasAuraGroup(groupKeyPrefix .. "_filters") then
+                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_filters", 0)
+            end
         end
         local candidateFilters
-        if group.spellIDMap then
-            candidateFilters = {
-                includeSpellIDs = group.spellIDMap,
-            }
+        if isCustom and customUsesFilters then
+            candidateFilters = BuildAuraTrackingCandidateFilters(settings)
+        elseif isCustom then
+            candidateFilters = { includeSpellIDs = group.spellIDMap }
+        elseif group.spellIDMap then
+            candidateFilters = { includeSpellIDs = group.spellIDMap }
         elseif group.useLongDurationFilter then
-            candidateFilters = {}
+            candidateFilters = {
+                isFromPlayerOrPlayerPet = false,
+            }
             if settings.HideLongDurationAuras then
-                candidateFilters.maxDuration = 180
+                candidateFilters.maxDuration = 300
             end
+        end
+        candidateFilters = candidateFilters or {}
+        if candidateFilters.excludeSpellIDs then
+            for spellID in pairs(AuraTrackingExcludedSpellIDs) do
+                candidateFilters.excludeSpellIDs[spellID] = true
+            end
+        else
+            candidateFilters.excludeSpellIDs = AuraTrackingExcludedSpellIDs
         end
         local maxFrameCount = group.maxFrameCount
         if maxFrameCount == nil then
@@ -1394,13 +1613,14 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
             layout = {
                 elementWidth = width,
                 elementHeight = height,
-                elementSpacingX = settings.Spacing or 0,
-                elementSpacingY = settings.Spacing or 0,
+                elementSpacing = settings.Spacing or 0,
+                lineSpacing = settings.Spacing or 0,
             },
         }
 
         if container:HasAuraGroup(groupKey) then
             SetAuraTrackingGroupMaxFrameCount(state, groupKey, options.maxFrameCount)
+            container:SetAuraGroupFilterString(groupKey, group.filter)
             container:SetAuraGroupCandidateFilters(groupKey, options.candidateFilters)
             container:SetAuraGroupLayout(groupKey, options.layout)
             container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
@@ -1410,43 +1630,69 @@ local function InitAuraTrackingContainer(self, unit, settings, key)
         end
     end
 
-    if not self:Restricted() and state.buttonRegions then
-        for button in pairs(state.buttonRegions) do
-            ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
-        end
-    end
-
     container:Show()
     container:SetEnabled(true)
+    if reconfigureButtons then
+        for button in pairs(state.buttonRegions or {}) do
+            ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
+        end
+    end
+    return state
 end
 
-function NSI:InitAuraTracking(allowRestrictedCreate)
+function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
         self.PendingAuraTrackingUpdate = true
+        self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
         return
     end
 
-    ClearAuraTracking(self)
+    self.PendingAuraTrackingUpdate = nil
+    self.PendingAuraTrackingReconfigure = nil
 
-    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player")
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        state.active = false
+    end
 
-    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External")
+    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", nil, reconfigureButtons)
 
+    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External", nil, reconfigureButtons)
+
+    local rosterRefreshStates = {}
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
-        local unit = ResolveAuraTrackingUnit(self, settings)
-        InitAuraTrackingContainer(self, unit, settings, "Custom" .. index)
+        local key = "Custom" .. index
+        local unit, needsRosterUpdate = ResolveAuraTrackingUnit(self, settings)
+        if needsRosterUpdate then
+            rosterRefreshStates[#rosterRefreshStates + 1] = {
+                key = key,
+                settings = settings,
+            }
+        end
+        InitAuraTrackingContainer(self, unit, settings, key, nil, reconfigureButtons)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
-        local tankUnit
-        for unit in self:IterateGroupMembers() do
-            if UnitGroupRolesAssigned(unit) == "TANK" and not UnitIsUnit("player", unit) then
-                tankUnit = unit
+        local previousTankState
+        for index, tankUnit in ipairs(self:GetCoTankUnits()) do
+            if NSRT.AuraTrackingSettings.Tank.OnlyShowFirstTank and index > 1 then
                 break
             end
+            previousTankState = InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, index == 1 and "Tank" or ("Tank" .. index), previousTankState, reconfigureButtons)
         end
-        InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, "Tank")
+    end
+
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        if not state.active then
+            if state.container then
+                state.container:SetEnabled(false)
+                state.container:Hide()
+                state.buttonRegions = nil
+            end
+            if state.anchorFrame then
+                state.anchorFrame:Hide()
+            end
+        end
     end
 
     AuraTrackingUnitRefreshStates = {
@@ -1454,6 +1700,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
         focus = {},
         mouseover = {},
         boss = {},
+        roster = rosterRefreshStates,
     }
 
     if self.AuraTrackingState then
@@ -1469,11 +1716,36 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
         end
     end
 
-    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 then
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 then
         if not AuraTrackingUnitRefreshFrame then
             AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
                 if NSI.IsBuilding then return end
+                if event == "GROUP_ROSTER_UPDATE" then
+                    if NSI:Restricted() then
+                        NSI.PendingAuraTrackingUpdate = true
+                        return
+                    end
+                    for _, entry in ipairs(AuraTrackingUnitRefreshStates.roster) do
+                        local unit = ResolveAuraTrackingUnit(NSI, entry.settings)
+                        if unit then
+                            InitAuraTrackingContainer(NSI, unit, entry.settings, entry.key)
+                        else
+                            local state = NSI.AuraTrackingState and NSI.AuraTrackingState[entry.key]
+                            if state and state.container then
+                                state.container:SetEnabled(false)
+                                state.container:Hide()
+                                state.buttonRegions = nil
+                                if state.anchorFrame then
+                                    state.anchorFrame:Hide()
+                                end
+                                state.unit = nil
+                            end
+                        end
+                    end
+                    return
+                end
+
                 local states
                 if event == "PLAYER_TARGET_CHANGED" then
                     states = AuraTrackingUnitRefreshStates.target
@@ -1509,33 +1781,26 @@ function NSI:InitAuraTracking(allowRestrictedCreate)
         if #AuraTrackingUnitRefreshStates.boss > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
         end
+        if #AuraTrackingUnitRefreshStates.roster > 0 then
+            AuraTrackingUnitRefreshFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+        end
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
     end
 end
 
-function NSI:ApplyPendingAuraTracking()
-    if not self.PendingAuraTrackingUpdate or self:Restricted() then return end
-    self.PendingAuraTrackingUpdate = nil
-    self:InitAuraTracking()
-end
-
 function NSI:InitAuraSystem(firstcall)
-    if self:IsMidnightS2() then
-        if firstcall then
-            self.PendingInitialAuraTracking = true
-            C_Timer.After(2, function()
-                if not self.PendingInitialAuraTracking then return end
-                self.PendingInitialAuraTracking = nil
-                self:InitAuraTracking(true)
-            end)
-            return
-        end
-        self.PendingInitialAuraTracking = nil
-        self:InitAuraTracking(true)
-    else
-        self:InitPrivateAuras(firstcall)
+    if firstcall then
+        self.PendingInitialAuraTracking = true
+        C_Timer.After(2, function()
+            if not self.PendingInitialAuraTracking then return end
+            self.PendingInitialAuraTracking = nil
+            self:InitAuraTracking(true)
+        end)
+        return
     end
+    self.PendingInitialAuraTracking = nil
+    self:InitAuraTracking(true)
 end
 
 local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
@@ -1748,7 +2013,6 @@ function NSI:PreviewAuraTracking(key, show)
         return
     end
 
-    ClearAuraTracking(self)
     mover:SetSize(settings.Width, settings.Height)
     mover:SetScale(1)
     SetAuraTrackingPoint(mover, settings, UIParent)
@@ -1784,6 +2048,12 @@ end
 
 function NSI:UpdateAuraTrackingDisplay(key)
     if self.IsBuilding then return end
+    if self:Restricted() then
+        self.PendingAuraTrackingUpdate = true
+        self.PendingAuraTrackingReconfigure = true
+        return
+    end
+
     local customPreviewKey = tostring(key or ""):gsub(":", "")
     if key == "Player" and self.IsAuraTrackingPlayerPreview then
         self:PreviewAuraTracking("Player", true)
@@ -1793,7 +2063,7 @@ function NSI:UpdateAuraTrackingDisplay(key)
         self:PreviewAuraTracking("External", true)
     elseif tostring(key or ""):match("^Custom:") and self["IsAuraTracking" .. customPreviewKey .. "Preview"] then
         self:PreviewAuraTracking(key, true)
-    else
-        self:InitAuraTracking()
     end
+
+    self:InitAuraTracking(false, true)
 end

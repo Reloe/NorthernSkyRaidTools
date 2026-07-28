@@ -1,7 +1,7 @@
 -- SPDX-License-Identifier: LGPL-2.1-or-later
 -- Details Framework (DetailsFramework-1.0) -- see Libs/DF/LICENSE
 
-local dversion = 743
+local dversion = 749
 local major, minor = "DetailsFramework-1.0", dversion
 local DF, oldminor = LibStub:NewLibrary(major, minor)
 
@@ -260,8 +260,9 @@ function DF.IsAddonApocalypseWow()
 end
 
 function DF.IsMidnightWowAPI()
-	if (buildInfo < 130000 and buildInfo >= 120000) then		return true	end
-	if (buildInfo < 60000 and buildInfo >= 50504) then        return true    end
+	if (buildInfo < 130000 and buildInfo >= 120000) then return true end
+	if (buildInfo < 60000 and buildInfo >= 50504) then   return true end
+	if (buildInfo < 30000 and buildInfo >= 20506) then   return true end
 	return false
 end
 
@@ -914,6 +915,28 @@ function DF.table.addunique(t, index, value)
 	end
 
 	table.insert(t, index, value)
+	return true
+end
+
+---return if both tables has the same values in the same order
+---@param t1 table
+---@param t2 table
+---@return boolean
+function DF.table.isequal(t1, t2)
+	if (t1 == t2) then
+		return true
+	end
+
+	if (#t1 ~= #t2) then
+		return false
+	end
+
+	for i = 1, #t1 do
+		if (t1[i] ~= t2[i]) then
+			return false
+		end
+	end
+
 	return true
 end
 
@@ -4318,6 +4341,19 @@ local glow_overlay_onhide = function(self)
 	glow_overlay_stop(self)
 end
 
+--pick whichever spell alert template the running client actually ships, instead of guessing from the build number:
+--some clients (e.g. WoW Classic Titan) have neither the newer nor the legacy template, so CreateFrame() would
+--throw a hard "Couldn't find inherited node" error that isn't reliably catchable with pcall
+local create_glow_overlay_frame = function(frameName, parent)
+	if (DoesTemplateExist("ActionButtonSpellAlertTemplate")) then
+		return CreateFrame("frame", frameName, parent, "ActionButtonSpellAlertTemplate")
+	elseif (DoesTemplateExist("ActionBarButtonSpellActivationAlert")) then
+		return CreateFrame("frame", frameName, parent, "ActionBarButtonSpellActivationAlert")
+	else
+		return CreateFrame("frame", frameName, parent)
+	end
+end
+
 ---create a glow overlay around a frame, return a frame and also add parent.overlay to the parent frame
 ---@param self table
 ---@param parent frame
@@ -4331,12 +4367,7 @@ function DF:CreateGlowOverlay(parent, antsColor, glowColor)
 		frameName = string.sub(frameName, string.len(frameName)-49)
 	end
 
-	local glowFrame
-	if (DF.IsMidnightWowAPI() or DF.IsTBCWow()) then --24-05-2025: in the 11.1.7 patch, the template used here does not exist anymore, replacement used
-		glowFrame = CreateFrame("frame", frameName, parent, "ActionButtonSpellAlertTemplate")
-	else
-		glowFrame = CreateFrame("frame", frameName, parent, "ActionBarButtonSpellActivationAlert")
-	end
+	local glowFrame = create_glow_overlay_frame(frameName, parent)
 
 	--local glowFrame = CreateFrame("frame", frameName, parent)
 	glowFrame:HookScript("OnShow", glow_overlay_onshow)

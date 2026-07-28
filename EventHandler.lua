@@ -15,6 +15,7 @@ f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_LOGOUT")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 
 function NSI:UpdateDebugLogEvents()
     if NSRT.Settings.DebugLogs then
@@ -77,16 +78,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitAuraSystem(true)
         self:UpdateLibSpecRegistration()
-        self:ApplyDefaultPASounds(false, false, NSRT.PASounds.UseDefaultPASounds)
-        self:ApplyDefaultPASounds(false, true, NSRT.PASounds.UseDefaultMPlusPASounds)
-        for spellID, info in pairs(NSRT.PASounds) do
-            if type(info) == "table" and info.sound then -- prevents user settings
-                self:AddPASound(spellID, info.sound)
-            end
-        end
+        self:RebuildAuraSounds(true)
         self:UpdateDebugLogEvents()
-        -- only running this on login if enabled. It will only run with false when actively disabling the setting. Doing it this way should prevent conflicts with other addons.
-        if NSRT.PASettings.DebuffTypeBorder then C_UnitAuras.TriggerPrivateAuraShowDispelType(true) end
         if NSRT.StoredSharedReminder then
             self.Reminder = NSRT.StoredSharedReminder
         else
@@ -122,7 +115,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             end
         end)
-    elseif e == "ENCOUNTER_START" and wowevent then -- allow sending fake encounter_start if in debug mode
+    elseif e == "ENCOUNTER_START" and wowevent then
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
@@ -158,7 +151,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartPaceComparison(self.EncounterID, diff)
         self:StartReminders(self.Phase)
-        self:InitAuraSystem()
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
             for i, name in ipairs(frames) do
@@ -269,7 +261,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if assigntable then self.Assignments = assigntable end
         end
     elseif e == "NSI_READY_CHECK" and internal then
-        self:ApplyPendingAuraTracking()
+        self:InitAuraSystem()
+        self:RebuildAuraSounds()
         if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
@@ -371,7 +364,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
-        self:ApplyPendingAuraTracking()
+        if self.PendingAuraTrackingUpdate then
+            self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
+        end
+    elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
+        self:InitAuraTracking()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck({14, 15, 16}) then return end
         local info = ...

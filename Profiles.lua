@@ -1,7 +1,7 @@
 local _, NSI = ...
 
 local function CopyAuraTrackingSetting(source, target, key)
-    if source[key] ~= nil then
+    if source and target and source[key] ~= nil then
         target[key] = source[key]
     end
 end
@@ -27,7 +27,6 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
     if source.HideBorder ~= nil then
         target.ShowDispelBorder = not source.HideBorder
     end
-
     if source.StackScale then
         local fontSize = math.max(6, math.floor((source.StackScale * 16) + 0.5))
         target.DurationFontSize = fontSize
@@ -36,40 +35,32 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
 end
 
 function NSI:ConvertPrivateAuraSettingsToAuraTracking()
-    if not self:IsMidnightS2() or NSRT.AuraTrackingSettingsConverted then return end
-    NSRT.AuraTrackingSettings = NSRT.AuraTrackingSettings or {}
-    NSRT.AuraTrackingSettings.Player = NSRT.AuraTrackingSettings.Player or {}
-    NSRT.AuraTrackingSettings.Tank = NSRT.AuraTrackingSettings.Tank or {}
-
+    if NSRT.PASounds then
+        if NSRT.PASounds.UseDefaultPASounds ~= nil then
+            NSRT.AuraSounds.UseDefaultRaidAuraSounds = NSRT.PASounds.UseDefaultPASounds
+        end
+        if NSRT.PASounds.UseDefaultMPlusPASounds ~= nil then
+            NSRT.AuraSounds.UseDefaultDungeonAuraSounds = NSRT.PASounds.UseDefaultMPlusPASounds
+        end
+    end
     CopyPrivateAuraSettingsToAuraTracking(NSRT.PASettings, NSRT.AuraTrackingSettings.Player)
     CopyPrivateAuraSettingsToAuraTracking(NSRT.PATankSettings, NSRT.AuraTrackingSettings.Tank)
-    NSRT.AuraTrackingSettingsConverted = true
+    NSRT.PASettings = nil
+    NSRT.PATankSettings = nil
+    NSRT.PARaidSettings = nil
+    NSRT.PATextSettings = nil
+    NSRT.PASounds = nil
 end
 
 function NSI:RunProfileMigrations()
     local profileVersion = tonumber(NSRT.ProfileVersion) or 0
-    if profileVersion < 1 then
-        if not self:IsMidnightS2() then return end
-        NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
-        for _, encID in ipairs(self.Season2EncounterIDs) do
-            NSRT.EncounterAlerts[encID] = nil
-            if self.InitializeAlerts and self.InitializeAlerts[encID] then
-                self.InitializeAlerts[encID](self)
-            end
-        end
-        self:FireCallback("NSRT_ALERT_FULL_UPDATE")
-        if NSRT.PaceComparison and NSRT.PaceComparison.Bosses then
-            for _, encID in ipairs(self.Season2EncounterIDs) do
-                NSRT.PaceComparison.Bosses[encID] = nil
-            end
-            self:ApplyDefaultPaceComparisonData()
-        end
-        NSRT.ProfileVersion = 1
+    if profileVersion < 2 then
+        self:ConvertPrivateAuraSettingsToAuraTracking()
+        NSRT.ProfileVersion = 2
     end
 end
 
-
-function NSI:AddMissingDefaults(skipProfileMigrations)
+function NSI:AddMissingDefaults()
     local defaults = {
         -- Saved data tables (user-populated, empty by default)
         NickNames = {},
@@ -78,9 +69,13 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
         InviteList = {},
         AssignmentSettings = {},
         CooldownList = {},
-        PASounds = {
-            UseDefaultPASounds = false,
-            UseDefaultMPlusPASounds = false,
+        AuraSounds = {
+            UseDefaultRaidAuraSounds = false,
+            UseDefaultDungeonAuraSounds = false,
+            SoundChannel = "Master",
+            CustomGroups = {},
+            CustomCategories = {},
+            NextCustomCategoryID = 1,
         },
         PhaseTimings = {},
 
@@ -316,69 +311,15 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
 
         },
 
-        -- Private Aura Settings
-        PASettings = {
-            Spacing = -1,
-            Limit = 5,
-            GrowDirection = "RIGHT",
-            enabled = false,
-            Width = 100,
-            Height = 100,
-            Anchor = "CENTER",
-            relativeTo = "CENTER",
-            xOffset = -450,
-            yOffset = -100,
-            DebuffTypeBorder = false,
-            HideBorder = false,
-            StackScale = 2,
-            HideTooltip = false,
-            HideDurationText = false,
-        },
-        PATankSettings = {
-            Spacing = -1,
-            Limit = 5,
-            GrowDirection = "LEFT",
-            enabled = false,
-            Width = 100,
-            Height = 100,
-            Anchor = "CENTER",
-            relativeTo = "CENTER",
-            xOffset = -549,
-            yOffset = -199,
-            HideBorder = false,
-            StackScale = 2,
-            HideTooltip = false,
-            HideDurationText = false,
-        },
-        PARaidSettings = {
-            PerRow = 3,
-            RowGrowDirection = "UP",
-            Spacing = -1,
-            Limit = 5,
-            GrowDirection = "RIGHT",
-            enabled = false,
-            Width = 25,
-            Height = 25,
-            Anchor = "BOTTOMLEFT",
-            relativeTo = "BOTTOMLEFT",
-            xOffset = 0,
-            yOffset = 0,
-            HideBorder = false,
-            StackScale = 1,
-            HideDurationText = false,
-        },
-        PATextSettings = {
-            Scale = 2.5,
-            xOffset = 0,
-            yOffset = -200,
-            enabled = false,
-            Anchor = "TOP",
-            relativeTo = "TOP",
-        },
         AuraTrackingSettings = {
+            UI = {
+                Selected = "Player",
+                StyleCopySource = "Player",
+            },
             Player = self:CreateAuraTrackingSettingsDefaults({
                 Name = "Player Debuffs",
                 builtin = "Player",
+                HideLongDurationAuras = false,
                 ShowWhitelistedPlayerBuffs = true,
             }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
@@ -388,6 +329,8 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 xOffset = -549,
                 yOffset = -199,
                 NameEnabled = true,
+                OnlyShowFirstTank = false,
+                HideLongDurationAuras = false,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
                 Name = "External & Immunity",
@@ -413,9 +356,6 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
                 ["Built-in"] = { collapsed = false },
             },
         },
-        AuraTrackingSettingsConverted = false,
-        AuraTrackingSelected = "Player",
-        AuraTrackingStyleCopySource = "Player",
         PaceComparison = {
             SelectedBoss = 0,
             NewThreshold = {
@@ -467,6 +407,7 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
             LootBossReminder = false,
             AutoRepair = false,
             AutoInvite = false,
+            AddSpellIDToTooltips = false,
             ConsumableNotificationDurationSeconds = 5,
             TextDisplay = {
                 Anchor = "CENTER",
@@ -554,9 +495,8 @@ function NSI:AddMissingDefaults(skipProfileMigrations)
             end
         end
     end
-    self:ConvertPrivateAuraSettingsToAuraTracking()
-    self:ApplyDefaultPaceComparisonData()
     self:RunProfileMigrations()
+    self:ApplyDefaultPaceComparisonData()
 end
 
 function NSI:AddMissingTableDefaults(NSRTTable, defaultsTable)
@@ -580,10 +520,16 @@ local ignored = {
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
     ["AuraTrackingSettings"] = true,
-    ["AuraTrackingSettingsConverted"] = true,
-    ["AuraTrackingSelected"] = true,
-    ["AuraTrackingStyleCopySource"] = true,
+    ["NickNames"]        = true,
 }
+
+local function CopyProfileValue(key, value)
+    local copy = type(value) == "table" and CopyTable(value) or value
+    if key == "Settings" and type(copy) == "table" then
+        copy.MyNickName = nil
+    end
+    return copy
+end
 
 function NSI:GetProfileKey()
     local CharName, Realm = UnitFullName("player")
@@ -633,7 +579,11 @@ function NSI:LoadProfile(name, skipsave, init)
     if NSRT.Profiles[name] then
         for k, v in pairs(NSRT.Profiles[name]) do
             if not ignored[k] then
-                NSRT[k] = type(v) == "table" and CopyTable(v) or v
+                local myNickName = k == "Settings" and NSRT.Settings and NSRT.Settings.MyNickName
+                NSRT[k] = CopyProfileValue(k, v)
+                if myNickName and k == "Settings" and type(NSRT.Settings) == "table" then
+                    NSRT.Settings.MyNickName = myNickName
+                end
             end
         end
     local ProfileKey = self:GetProfileKey()
@@ -652,7 +602,7 @@ function NSI:SaveProfile()
         NSRT.Profiles[NSRT.CurrentProfile] = {}
         for k, v in pairs(NSRT) do
             if not ignored[k] then
-                NSRT.Profiles[NSRT.CurrentProfile][k] = type(v) == "table" and CopyTable(v) or v
+                NSRT.Profiles[NSRT.CurrentProfile][k] = CopyProfileValue(k, v)
             end
         end
     end
@@ -693,9 +643,15 @@ function NSI:ExportProfileString()
     local LibDeflate = LibStub("LibDeflate")
     local profileData = NSRT.Profiles[NSRT.CurrentProfile]
     if not profileData then return nil end
+    local exportData = {}
+    for key, value in pairs(profileData) do
+        if not ignored[key] then
+            exportData[key] = CopyProfileValue(key, value)
+        end
+    end
     local exportTable = {
         profileName = NSRT.CurrentProfile,
-        data = profileData,
+        data = exportData,
     }
     local serialized = LibSerialize:Serialize(exportTable)
     local compressed = LibDeflate:CompressDeflate(serialized)
@@ -722,7 +678,14 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
         return name
     end
     name = EnsureUniqueName(name)
-    NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
+    NSRT.Profiles[name] = {}
+    if type(exportTable.data) == "table" then
+        for key, value in pairs(exportTable.data) do
+            if not ignored[key] then
+                NSRT.Profiles[name][key] = CopyProfileValue(key, value)
+            end
+        end
+    end
     NSI:LoadProfile(name)
     return name
 end

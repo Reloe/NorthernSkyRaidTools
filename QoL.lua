@@ -207,6 +207,9 @@ end
 
 function NSI:InitQoL()
     self.QoLTextDisplays = {}
+    if NSRT.QoL.AddSpellIDToTooltips then
+        C_CVar.SetCVar("tooltipShowAuraSpellIDs", "1")
+    end
     -- stuff in here is ALWAYS enabled.
     self:ToggleQoLEvent("PLAYER_ENTERING_WORLD", true)
     self:ToggleQoLEvent("ENCOUNTER_START", true)

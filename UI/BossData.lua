@@ -28,7 +28,7 @@ local BossIcons = {
     [3492] = 7966624, -- Ula'tek
 }
 
-local season1EncounterIDs = {
+local oldEncounterIDs = {
     3176, -- Imperator Averzian
     3177, -- Vorasius
     3179, -- Fallen-King Salhadaar
@@ -41,7 +41,7 @@ local season1EncounterIDs = {
     3159, -- Rotmire
 }
 
-local season2EncounterIDs = {
+local currentEncounterIDs = {
     3379, -- Nymrissa Wavecaller
     3470, -- Nek'zali the Soulcoiler
     3445, -- Entombed Sentinels
@@ -53,22 +53,21 @@ local season2EncounterIDs = {
     3492, -- Ula'tek
 }
 
-NSI.Season2EncounterIDs = season2EncounterIDs
+NSI.CurrentEncounterIDList = currentEncounterIDs
 
-local isSeason2 = NSI:IsMidnightS2()
-local orderedSeasons = isSeason2 and {season2EncounterIDs, season1EncounterIDs} or {season1EncounterIDs}
+local orderedEncounterGroups = {currentEncounterIDs, oldEncounterIDs}
 
 NSI.EncounterOrder = {}
 local encounterOrder = 0
-for _, season in ipairs(orderedSeasons) do
-    for _, encID in ipairs(season) do
+for _, encounterGroup in ipairs(orderedEncounterGroups) do
+    for _, encID in ipairs(encounterGroup) do
         encounterOrder = encounterOrder + 1
         NSI.EncounterOrder[encID] = encounterOrder
     end
 end
 
 NSI.CurrentEncounterIDs = {} -- Old-season Reloe alerts are deletable and are not imported automatically.
-for _, encID in ipairs(isSeason2 and season2EncounterIDs or season1EncounterIDs) do
+for _, encID in ipairs(currentEncounterIDs) do
     NSI.CurrentEncounterIDs[encID] = true
 end
 
