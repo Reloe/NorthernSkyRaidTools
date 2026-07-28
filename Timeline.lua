@@ -2060,10 +2060,12 @@ function NSI:CreateTimelineWindow()
     end
 
     local function stopRightDrag()
+        if not isDraggingTimeline then return end
         isDraggingTimeline = false
         local curRawX, curRawY = GetCursorPosition()
         local dx = curRawX - rightClickStartRawX
         local dy = curRawY - rightClickStartRawY
+        rightClickStartRawX, rightClickStartRawY = 0, 0
         if math.sqrt(dx * dx + dy * dy) < 4 then
             local uiScale = 1 / timelineWindow:GetEffectiveScale()
             local cursorX = curRawX * uiScale
