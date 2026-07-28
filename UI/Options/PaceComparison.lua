@@ -4,8 +4,9 @@ local Core = NSI.UI.Core
 local BossData = NSI.UI.BossData
 local C = NSI.UI.Components
 local CreateTextEntry = C.CreateTextEntry
-local options_dropdown_template = Core.options_dropdown_template
-local options_switch_template = Core.options_switch_template
+local CreateLocalizedSubButton = C.CreateLocalizedSubButton
+local ReskinScrollbar = C.ReskinScrollbar
+local BuildWidgets = C.BuildWidgets
 local options_button_template = Core.options_button_template
 
 local function GetSelectedBoss()
@@ -21,189 +22,6 @@ local function GetSelectedBoss()
     end
     NSRT.PaceComparison.SelectedBoss = selected
     return selected
-end
-
-local function BuildFontOptions()
-    local options = {}
-    for _, name in ipairs(NSI.LSM:List("font")) do
-        options[#options + 1] = {
-            label = name,
-            value = name,
-            onclick = function()
-                NSRT.PaceComparison.Display.Font = name
-                NSI:UpdatePaceComparisonFrameStyle()
-            end,
-        }
-    end
-    return options
-end
-
-local function BuildFontFlagOptions()
-    local options = {}
-    for _, option in ipairs(Core.build_fontflag_options()) do
-        local value = option.value
-        options[#options + 1] = {
-            label = option.label == "None" and NSI:Loc("None") or option.label,
-            value = value,
-            onclick = function()
-                NSRT.PaceComparison.Display.FontFlags = value
-                NSI:UpdatePaceComparisonFrameStyle()
-            end,
-        }
-    end
-    return options
-end
-
-local function AddDisplayOptions(options)
-    local display = NSRT.PaceComparison.Display
-    options[#options + 1] = { type = "label", get = function() return "Pace Comparison Display" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") }
-    options[#options + 1] = {
-        type = "button",
-        name = "Preview/Unlock",
-        desc = "Preview and move the Pace Comparison display.",
-        func = function()
-            NSI:PreviewPaceComparison()
-        end,
-        spacement = true,
-    }
-    options[#options + 1] = {
-        type = "select",
-        name = "Font",
-        desc = "Font used for the Pace Comparison display.",
-        get = function() return display.Font end,
-        values = BuildFontOptions,
-    }
-    options[#options + 1] = {
-        type = "select",
-        name = "Font Outline",
-        desc = "Font outline flags for the Pace Comparison display.",
-        get = function() return display.FontFlags end,
-        values = BuildFontFlagOptions,
-    }
-    options[#options + 1] = {
-        type = "range",
-        name = "Font Size",
-        desc = "Font size of the Pace Comparison display.",
-        get = function() return display.FontSize end,
-        set = function(_, _, value)
-            display.FontSize = value
-            NSI:UpdatePaceComparisonFrameStyle()
-        end,
-        min = 8,
-        max = 80,
-        step = 1,
-    }
-    options[#options + 1] = {
-        type = "range",
-        name = "Line Spacing",
-        desc = "Spacing between boss HP lines.",
-        get = function() return display.LineSpacing end,
-        set = function(_, _, value)
-            display.LineSpacing = value
-            NSI:RefreshPaceComparisonDisplay()
-        end,
-        min = 0,
-        max = 30,
-        step = 1,
-    }
-    options[#options + 1] = {
-        type = "range",
-        name = "Update Interval",
-        desc = "How often the Pace Comparison display updates, in seconds. Lower values update faster but have a higher performance cost.",
-        get = function() return display.RefreshInterval end,
-        set = function(_, _, value)
-            display.RefreshInterval = math.max(0.1, math.min(value, 1))
-            if NSI.PaceComparisonActive then
-                NSI:SchedulePaceComparisonPhase(NSI.Phase or 1, NSI.PaceComparisonState and NSI.PaceComparisonState.encID)
-            end
-        end,
-        min = 0.1,
-        max = 1,
-        step = 0.1,
-        usedecimals = true,
-    }
-    options[#options + 1] = {
-        type = "color",
-        name = "Ahead Color",
-        desc = "Color used when the boss HP is lower than expected.",
-        get = function() return unpack(display.AheadColor) end,
-        set = function(_, r, g, b, a)
-            display.AheadColor = {r, g, b, a}
-            NSI:RefreshPaceComparisonColorCache()
-            NSI:RefreshPaceComparisonDisplay()
-        end,
-        hasAlpha = true,
-    }
-    options[#options + 1] = {
-        type = "color",
-        name = "Close Behind Color",
-        desc = "Color used when the boss HP is at most 0.5% higher than expected.",
-        get = function() return unpack(display.CloseBehindColor) end,
-        set = function(_, r, g, b, a)
-            display.CloseBehindColor = {r, g, b, a}
-            NSI:RefreshPaceComparisonColorCache()
-            NSI:RefreshPaceComparisonDisplay()
-        end,
-        hasAlpha = true,
-    }
-    options[#options + 1] = {
-        type = "color",
-        name = "Behind Color",
-        desc = "Color used when the boss HP is between 0.5% and 1.5% higher than expected.",
-        get = function() return unpack(display.BehindColor) end,
-        set = function(_, r, g, b, a)
-            display.BehindColor = {r, g, b, a}
-            NSI:RefreshPaceComparisonColorCache()
-            NSI:RefreshPaceComparisonDisplay()
-        end,
-        hasAlpha = true,
-    }
-    options[#options + 1] = {
-        type = "color",
-        name = "Far Behind Color",
-        desc = "Color used when the boss HP is more than 1.5% higher than expected.",
-        get = function() return unpack(display.FarBehindColor) end,
-        set = function(_, r, g, b, a)
-            display.FarBehindColor = {r, g, b, a}
-            NSI:RefreshPaceComparisonColorCache()
-            NSI:RefreshPaceComparisonDisplay()
-        end,
-        hasAlpha = true,
-    }
-    options[#options + 1] = {
-        type = "range",
-        name = "X-Offset",
-        desc = "Horizontal offset of the Pace Comparison display.",
-        get = function() return display.xOffset end,
-        set = function(_, _, value)
-            display.xOffset = value
-            NSI:UpdatePaceComparisonFrameStyle()
-        end,
-        min = -3000,
-        max = 3000,
-        step = 1,
-    }
-    options[#options + 1] = {
-        type = "range",
-        name = "Y-Offset",
-        desc = "Vertical offset of the Pace Comparison display.",
-        get = function() return display.yOffset end,
-        set = function(_, _, value)
-            display.yOffset = value
-            NSI:UpdatePaceComparisonFrameStyle()
-        end,
-        min = -3000,
-        max = 3000,
-        step = 1,
-    }
-end
-
-local function BuildOptions()
-    local options = {}
-
-    AddDisplayOptions(options)
-
-    return options
 end
 
 local function ApplyUIFont(object, size, flags)
@@ -304,18 +122,17 @@ local function GetUIObject(object)
 end
 
 local function CreateEditorLabel(parent, text, size, color)
-    local label = DF:CreateLabel(parent, NSI:Loc(text), size or 11, color)
-    ApplyUIFont(label, size or 11)
+    local label = parent:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(label, size or 11, "")
+    label:SetText(NSI:Loc(text))
+    if color == "orange" then
+        label:SetTextColor(1, 0.65, 0.1, 1)
+    else
+        label:SetTextColor(0.8, 0.8, 0.8, 1)
+    end
+    label:SetJustifyH("LEFT")
+    label:SetJustifyV("MIDDLE")
     return label
-end
-
-local function BuildEditorBossOptions(screen)
-    return BossData.BuildBossDropdownOptions(function(encID)
-        NSRT.PaceComparison.SelectedBoss = encID
-        screen.selectedBoss = encID
-        screen.bossDropdown:Select(NSI:Loc(NSI.BossNames[encID] or ("Encounter " .. encID)))
-        screen:Refresh()
-    end, false)
 end
 
 local function GetEditorData(screen)
@@ -334,66 +151,195 @@ end
 
 local function BuildPaceComparisonEditorUI(parent)
     local screen = CreateFrame("Frame", "NSUIPaceComparisonEditor", parent, "BackdropTemplate")
-    screen:SetPoint("TOPLEFT", parent, "TOPLEFT", 360, -10)
-    screen:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -10, 10)
+    screen:SetAllPoints()
     screen:SetFrameLevel(parent:GetFrameLevel() + 20)
     screen.selectedBoss = GetSelectedBoss()
 
-    local title = CreateEditorLabel(screen, "Expected HP Thresholds", 14, "orange")
-    title:SetPoint("TOPLEFT", screen, "TOPLEFT", 0, 0)
+    local leftWidth = 220
+    local title = CreateEditorLabel(screen, "Pace-Comparison", 14, "orange")
+    title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
-    local bossLabel = CreateEditorLabel(screen, "Boss", 11)
-    bossLabel:SetPoint("TOPLEFT", GetUIObject(title), "BOTTOMLEFT", 0, -12)
+    local leftScroll = CreateFrame("ScrollFrame", "$parentPaceComparisonBossScroll", screen, "UIPanelScrollFrameTemplate")
+    leftScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -36)
+    leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 10)
+    leftScroll:SetWidth(leftWidth)
+    ReskinScrollbar(leftScroll)
+    local leftChild = CreateFrame("Frame", nil, leftScroll, "BackdropTemplate")
+    leftChild:SetWidth(leftWidth)
+    leftChild:SetHeight(1)
+    leftChild:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
+    leftChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+    leftScroll:SetScrollChild(leftChild)
 
-    screen.bossDropdown = DF:CreateDropDown(screen, function() return BuildEditorBossOptions(screen) end, nil, 240, 22, nil, "NSUIPaceComparisonBossDropdown", options_dropdown_template)
-    screen.bossDropdown:SetPoint("LEFT", GetUIObject(bossLabel), "RIGHT", 10, 0)
-    screen.bossDropdown:Select(NSI:Loc(NSI.BossNames[screen.selectedBoss] or ("Encounter " .. screen.selectedBoss)))
+    local rightPanel = CreateFrame("Frame", "$parentPaceComparisonEditor", screen)
+    rightPanel:SetPoint("TOPLEFT", screen, "TOPLEFT", leftWidth + 42, -8)
+    rightPanel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -10, 10)
 
-    screen.enabledCheck = DF:CreateSwitch(screen, function(_, _, value)
-        local bossSettings = NSI:GetPaceComparisonBossSettings(screen.selectedBoss)
-        bossSettings.enabled = value
-    end, false, 20, 20, nil, nil, nil, "NSUIPaceComparisonEnabled", nil, nil, nil, nil, options_switch_template)
-    screen.enabledCheck:SetAsCheckBox()
-    screen.enabledCheck:SetPoint("LEFT", GetUIObject(screen.bossDropdown), "RIGHT", 45, 0)
-    screen.enabledLabel = DF:CreateLabel(screen, NSI:Loc("Enabled"), 11, "white")
-    ApplyUIFont(screen.enabledLabel, 11)
-    screen.enabledLabel:SetPoint("LEFT", screen.enabledCheck, "RIGHT", 2, 0)
+    screen.collapsedSections = { Season2 = false, Season1 = true }
+    local bossRows, sectionRows = {}, {}
+    local RefreshBossList
 
-    local resetButton = DF:CreateButton(screen, function()
+    local function CreateBossRow()
+        local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
+        row:SetHeight(23)
+        DF:ApplyStandardBackdrop(row)
+        row.__background:SetVertexColor(0.4, 0.4, 0.4)
+        row.__background:SetAlpha(0.5)
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(16, 16)
+        row.icon:SetPoint("LEFT", row, "LEFT", 24, 0)
+        row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        row.name = row:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(row.name, 13, "")
+        row.name:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
+        row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.name:SetJustifyH("LEFT")
+        row.name:SetWordWrap(false)
+        row.enabled = CreateFrame("Button", nil, row, "BackdropTemplate")
+        row.enabled:SetSize(16, 16)
+        row.enabled:SetPoint("LEFT", row, "LEFT", 4, 0)
+        row.enabled:SetBackdrop({
+            bgFile = [[Interface\Buttons\WHITE8x8]],
+            edgeFile = [[Interface\Buttons\WHITE8x8]],
+            edgeSize = 1,
+        })
+        row.enabled:SetBackdropColor(0.04, 0.04, 0.06, 1)
+        row.enabled.fill = row.enabled:CreateTexture(nil, "ARTWORK")
+        row.enabled.fill:SetPoint("TOPLEFT", row.enabled, "TOPLEFT", 2, -2)
+        row.enabled.fill:SetPoint("BOTTOMRIGHT", row.enabled, "BOTTOMRIGHT", -2, 2)
+        row.enabled.fill:SetColorTexture(0, 1, 1, 0.85)
+        return row
+    end
+
+    local function CreateSeasonRow()
+        local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
+        row:SetHeight(23)
+        row:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
+        row:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
+        row.arrow = row:CreateTexture(nil, "OVERLAY")
+        row.arrow:SetSize(10, 10)
+        row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
+        row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
+        row.arrow:SetVertexColor(0, 0.9, 1, 1)
+        row.name = row:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(row.name, 12, "")
+        row.name:SetPoint("LEFT", row.arrow, "RIGHT", 4, 0)
+        row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        row.name:SetTextColor(0.2, 0.85, 1, 1)
+        row.name:SetJustifyH("LEFT")
+        return row
+    end
+
+    local bossLabel = CreateEditorLabel(rightPanel, "Expected HP Thresholds", 14, "orange")
+    bossLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
+
+    RefreshBossList = function()
+        local current, previous = {}, {}
+        for encID, order in pairs(NSI.EncounterOrder) do
+            local list = NSI.CurrentEncounterIDs[encID] and current or previous
+            list[#list + 1] = { encID = encID, order = order }
+        end
+        table.sort(current, function(a, b) return a.order < b.order end)
+        table.sort(previous, function(a, b) return a.order < b.order end)
+
+        local sections = {
+            { key = "Season2", label = NSI:Loc("Season 2"), bosses = current },
+            { key = "Season1", label = NSI:Loc("Season 1"), bosses = previous },
+        }
+        local slot, sectionIndex, bossIndex = 0, 0, 0
+        for _, section in ipairs(sections) do
+            sectionIndex = sectionIndex + 1
+            slot = slot + 1
+            local sectionRow = sectionRows[sectionIndex] or CreateSeasonRow()
+            sectionRows[sectionIndex] = sectionRow
+            sectionRow:ClearAllPoints()
+            sectionRow:SetPoint("TOPLEFT", leftChild, "TOPLEFT", 0, -(slot - 1) * 23)
+            sectionRow:SetWidth(leftWidth)
+            sectionRow.name:SetText(section.label)
+            local sectionKey = section.key
+            local collapsed = screen.collapsedSections[sectionKey]
+            sectionRow.arrow:SetRotation(collapsed and -math.pi / 2 or 0)
+            sectionRow:SetScript("OnClick", function()
+                screen.collapsedSections[sectionKey] = not screen.collapsedSections[sectionKey]
+                RefreshBossList()
+            end)
+            sectionRow:Show()
+
+            if not collapsed then
+                for _, data in ipairs(section.bosses) do
+                    bossIndex = bossIndex + 1
+                    slot = slot + 1
+                    local row = bossRows[bossIndex] or CreateBossRow()
+                    bossRows[bossIndex] = row
+                    row:ClearAllPoints()
+                    row:SetPoint("TOPLEFT", leftChild, "TOPLEFT", 0, -(slot - 1) * 23)
+                    row:SetWidth(leftWidth)
+                    local encID = data.encID
+                    local icon = BossData.BossIcons[encID]
+                    row.icon:SetTexture(icon)
+                    row.icon:SetShown(icon ~= nil)
+                    row.name:SetText(NSI:Loc(NSI.BossNames[encID] or ("Encounter " .. encID)))
+                    local enabled = NSI:GetPaceComparisonBossSettings(encID).enabled
+                    row.enabled.fill:SetShown(enabled)
+                    row.enabled:SetBackdropBorderColor(enabled and 0 or 0.25, enabled and 1 or 0.25, enabled and 1 or 0.25, 1)
+                    row.enabled:SetScript("OnClick", function()
+                        local settings = NSI:GetPaceComparisonBossSettings(encID)
+                        settings.enabled = not settings.enabled
+                        RefreshBossList()
+                    end)
+                    if screen.selectedBoss == encID then
+                        row.__background:SetVertexColor(0, 1, 1)
+                        row.__background:SetAlpha(1)
+                    else
+                        row.__background:SetVertexColor(0.4, 0.4, 0.4)
+                        row.__background:SetAlpha(0.5)
+                    end
+                    row:SetScript("OnClick", function()
+                        screen.selectedBoss = encID
+                        NSRT.PaceComparison.SelectedBoss = encID
+                        screen:Refresh()
+                    end)
+                    row:Show()
+                end
+            end
+        end
+        for i = bossIndex + 1, #bossRows do bossRows[i]:Hide() end
+        for i = sectionIndex + 1, #sectionRows do sectionRows[i]:Hide() end
+        leftChild:SetHeight(math.max(1, slot * 23))
+    end
+
+    local resetButton = CreateLocalizedSubButton(screen, "Reset Boss Defaults", function()
         NSI:ResetPaceComparisonBoss(screen.selectedBoss)
         screen:Refresh()
-    end, 125, 20, NSI:Loc("Reset Boss Defaults"))
+    end, 160, "NSUIPaceComparisonReset")
     resetButton:SetPoint("TOPLEFT", GetUIObject(bossLabel), "BOTTOMLEFT", 0, -10)
-    resetButton:SetTemplate(options_button_template)
-    ApplyUIFont(resetButton, 11)
 
-    local importButton = DF:CreateButton(screen, function()
+    local importButton = CreateLocalizedSubButton(screen, "Import", function()
         ShowPaceComparisonImportPopup(function()
             screen.selectedBoss = GetSelectedBoss()
             screen:Refresh()
         end)
-    end, 70, 20, NSI:Loc("Import"))
-    importButton:SetPoint("LEFT", resetButton, "RIGHT", 8, 0)
-    importButton:SetTemplate(options_button_template)
-    ApplyUIFont(importButton, 11)
+    end, 70, "NSUIPaceComparisonImport")
+    importButton:SetPoint("LEFT", resetButton.frame, "RIGHT", 8, 0)
 
-    local exportBossButton = DF:CreateButton(screen, function()
+    local exportBossButton = CreateLocalizedSubButton(screen, "Export Boss", function()
         local export = NSI:ExportPaceComparisonString(screen.selectedBoss)
         ShowPaceComparisonExportPopup(export, NSI:Loc("Selected Boss"))
-    end, 95, 20, NSI:Loc("Export Boss"))
-    exportBossButton:SetPoint("LEFT", importButton, "RIGHT", 8, 0)
-    exportBossButton:SetTemplate(options_button_template)
-    ApplyUIFont(exportBossButton, 11)
+    end, 95, "NSUIPaceComparisonExportBoss")
+    exportBossButton:SetPoint("LEFT", importButton.frame, "RIGHT", 8, 0)
 
-    local exportAllButton = DF:CreateButton(screen, function()
+    local exportAllButton = CreateLocalizedSubButton(screen, "Export All", function()
         ShowPaceComparisonExportPopup(NSI:ExportAllPaceComparisonString(), NSI:Loc("All Bosses"))
-    end, 80, 20, NSI:Loc("Export All"))
-    exportAllButton:SetPoint("LEFT", exportBossButton, "RIGHT", 8, 0)
-    exportAllButton:SetTemplate(options_button_template)
-    ApplyUIFont(exportAllButton, 11)
+    end, 80, "NSUIPaceComparisonExportAll")
+    exportAllButton:SetPoint("LEFT", exportBossButton.frame, "RIGHT", 8, 0)
+
+    local previewButton = CreateLocalizedSubButton(screen, "Preview", function()
+        NSI:PreviewPaceComparison()
+    end, 70, "NSUIPaceComparisonPreview")
+    previewButton:SetPoint("LEFT", exportAllButton.frame, "RIGHT", 8, 0)
 
     local addLabel = CreateEditorLabel(screen, "Add Threshold", 12, "orange")
-    addLabel:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, -16)
+    addLabel:SetPoint("TOPLEFT", resetButton.frame, "BOTTOMLEFT", 0, -16)
 
     NSRT.PaceComparison.NewThreshold = NSRT.PaceComparison.NewThreshold or {}
     local newThreshold = NSRT.PaceComparison.NewThreshold
@@ -446,6 +392,11 @@ local function BuildPaceComparisonEditorUI(parent)
                 line.timeEntry:SetValue(rowData.entry.time or 0)
                 line.unitEntry:SetValue(rowData.entry.unit or "boss1")
                 line.expectedEntry:SetValue(rowData.entry.expected or 100)
+            else
+                local line = scrollbox.Frames[i]
+                line.entry = nil
+                line.index = nil
+                line:Hide()
             end
         end
     end
@@ -506,6 +457,11 @@ local function BuildPaceComparisonEditorUI(parent)
     scrollbox:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
     DF:ReskinSlider(scrollbox)
     scrollbox.MasterRefresh = function(self)
+        for _, line in ipairs(self.Frames) do
+            line.entry = nil
+            line.index = nil
+            line:Hide()
+        end
         self:SetData(GetEditorData(screen))
         self:Refresh()
     end
@@ -514,19 +470,114 @@ local function BuildPaceComparisonEditorUI(parent)
     end
 
     function screen:Refresh()
-        local bossSettings = NSI:GetPaceComparisonBossSettings(self.selectedBoss)
-        self.enabledCheck:SetChecked(bossSettings.enabled)
-        self.bossDropdown:Select(NSI:Loc(NSI.BossNames[self.selectedBoss] or ("Encounter " .. self.selectedBoss)))
+        bossLabel:SetText(NSI:Loc("Expected HP Thresholds"))
         self.scrollbox:MasterRefresh()
+        RefreshBossList()
     end
 
     screen:Refresh()
     return screen
 end
 
+function NSI:TogglePaceComparisonSettingsWindow(frame)
+    if not frame then return end
+    if frame.SettingsWindow then
+        frame.SettingsWindow:SetShown(not frame.SettingsWindow:IsShown())
+        return
+    end
+
+    local display = NSRT.PaceComparison.Display
+    local window = CreateFrame("Frame", "NSRTPaceComparisonSettings", frame, "BackdropTemplate")
+    window:SetFrameStrata("DIALOG")
+    window:SetFrameLevel(frame:GetFrameLevel() + 10)
+    window:SetWidth(330)
+    window:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    window:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+    window:SetBackdropBorderColor(0, 1, 1, 0.9)
+    window:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", -8, -10)
+
+    local title = window:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(title, 11, "")
+    title:SetTextColor(0, 1, 1, 0.85)
+    title:SetText(NSI:Loc("Pace Comparison Display"))
+    title:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -7)
+
+    local closeButton = CreateFrame("Button", nil, window)
+    closeButton:SetSize(16, 16)
+    closeButton:SetPoint("TOPRIGHT", window, "TOPRIGHT", -3, -3)
+    closeButton:SetNormalFontObject("GameFontNormalSmall")
+    closeButton:SetText("x")
+    closeButton:SetScript("OnClick", function() window:Hide() end)
+
+    local function FontValues()
+        local values = {}
+        for _, font in ipairs(NSI.LSM:List("font")) do
+            values[#values + 1] = { label = font, value = font }
+        end
+        return values
+    end
+
+    local function RefreshStyle()
+        NSI:UpdatePaceComparisonFrameStyle()
+        NSI:RefreshPaceComparisonDisplay()
+    end
+
+    local function SetColor(key, r, g, b, a)
+        display[key] = {r, g, b, a}
+        NSI:RefreshPaceComparisonColorCache()
+        NSI:RefreshPaceComparisonDisplay()
+    end
+
+    local definitions = {
+        { Type = "Dropdown", label = "Font", values = FontValues,
+            get = function() return display.Font end,
+            set = function(_, value) display.Font = value; RefreshStyle() end },
+        { Type = "Dropdown", label = "Font Outline", values = Core.build_fontflag_options(),
+            get = function() return display.FontFlags end,
+            set = function(_, value) display.FontFlags = value; RefreshStyle() end },
+        { Type = "Slider", label = "Font Size", min = 8, max = 80,
+            get = function() return display.FontSize end,
+            set = function(_, value) display.FontSize = value; RefreshStyle() end },
+        { Type = "Slider", label = "Line Spacing", min = 0, max = 30,
+            get = function() return display.LineSpacing end,
+            set = function(_, value) display.LineSpacing = value; NSI:RefreshPaceComparisonDisplay() end },
+        { Type = "Slider", label = "Update Interval", min = 0.1, max = 1,
+            get = function() return display.RefreshInterval end,
+            set = function(_, value)
+                display.RefreshInterval = math.max(0.1, math.min(value, 1))
+                if NSI.PaceComparisonActive then
+                    NSI:SchedulePaceComparisonPhase(NSI.Phase or 1, NSI.PaceComparisonState and NSI.PaceComparisonState.encID)
+                end
+            end },
+        { Type = "Color", label = "Ahead Color",
+            get = function() return unpack(display.AheadColor) end,
+            set = function(_, r, g, b, a) SetColor("AheadColor", r, g, b, a) end },
+        { Type = "Color", label = "Close Behind Color",
+            get = function() return unpack(display.CloseBehindColor) end,
+            set = function(_, r, g, b, a) SetColor("CloseBehindColor", r, g, b, a) end },
+        { Type = "Color", label = "Behind Color",
+            get = function() return unpack(display.BehindColor) end,
+            set = function(_, r, g, b, a) SetColor("BehindColor", r, g, b, a) end },
+        { Type = "Color", label = "Far Behind Color",
+            get = function() return unpack(display.FarBehindColor) end,
+            set = function(_, r, g, b, a) SetColor("FarBehindColor", r, g, b, a) end },
+    }
+
+    local content = CreateFrame("Frame", nil, window)
+    content:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -28)
+    content:SetWidth(314)
+    local contentHeight = BuildWidgets(content, definitions, 314, "NSRTPaceComparisonSettings")
+    content:SetHeight(contentHeight)
+    window:SetHeight(contentHeight + 36)
+    frame.SettingsWindow = window
+end
+
 NSI.UI = NSI.UI or {}
 NSI.UI.Options = NSI.UI.Options or {}
 NSI.UI.Options.PaceComparison = {
-    BuildOptions = BuildOptions,
     BuildEditorUI = BuildPaceComparisonEditorUI,
 }

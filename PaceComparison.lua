@@ -224,6 +224,24 @@ function NSI:CreatePaceComparisonFrame()
     frame:SetFrameStrata("HIGH")
     frame:SetSize(260, 30)
     frame.lines = {}
+    frame.GearButton = CreateFrame("Button", nil, frame)
+    frame.GearButton:SetSize(18, 18)
+    frame.GearButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 2, 2)
+    local gearTexture = frame.GearButton:CreateTexture(nil, "OVERLAY")
+    gearTexture:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\settings.png]])
+    gearTexture:SetSize(20, 20)
+    gearTexture:SetAllPoints(frame.GearButton)
+    gearTexture:SetParent(frame.GearButton)
+    frame.GearButton:SetScript("OnEnter", function()
+        gearTexture:SetVertexColor(0, 0.8, 0.8, 1)
+    end)
+    frame.GearButton:SetScript("OnLeave", function()
+        gearTexture:SetVertexColor(0.8, 0.8, 0.8, 1)
+    end)
+    frame.GearButton:SetScript("OnClick", function()
+        NSI:TogglePaceComparisonSettingsWindow(frame)
+    end)
+    frame.GearButton:Hide()
     frame:Hide()
 
     self.PaceComparisonFrame = frame
@@ -681,8 +699,11 @@ function NSI:PreviewPaceComparison()
         self:UpdatePaceComparisonFrameStyle()
         self:RefreshPaceComparisonDisplay()
         self:MakeDraggable(frame, NSRT.PaceComparison.Display, true)
+        frame.GearButton:Show()
     else
         self:MakeDraggable(frame, NSRT.PaceComparison.Display, false)
+        frame.GearButton:Hide()
+        if frame.SettingsWindow then frame.SettingsWindow:Hide() end
         self.PaceComparisonActive = false
         self.PaceComparisonState = nil
         frame:Hide()
