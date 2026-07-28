@@ -1295,4 +1295,4 @@ L["A note with that name already exists."] = "Заметка с таким им�
 L["Note no longer exists."] = "Заметка больше не существует."
 L["Rename failed."] = "Не удалось переименовать."
 L["|cFFff4444Delete Note|r"] = "|cFFff4444Удалить заметку|r"
-L["|cffffffffDelete "%s"?|r\nThis cannot be undone."] = "|cffffffffУдалить "%s"?|r\nЭто действие нельзя отменить."
+L["|cffffffffDelete \"%s\"?|r\nThis cannot be undone."] = "|cffffffffУдалить \"%s\"?|r\nЭто действие нельзя отменить."
