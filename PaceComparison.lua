@@ -201,14 +201,6 @@ function NSI:ResetPaceComparisonBoss(encID)
     settings.thresholds = CopyThresholds(self.PaceComparisonDefaults[encID] and self.PaceComparisonDefaults[encID].thresholds or {})
 end
 
-function NSI:ResetAllPaceComparisonBosses()
-    if not NSRT or not NSRT.PaceComparison then return end
-    for encID in pairs(NSRT.PaceComparison.Bosses) do
-        self:ResetPaceComparisonBoss(encID)
-    end
-    self:ApplyDefaultPaceComparisonData()
-end
-
 local function GetPaceComparisonFontPath(settings)
     local font = settings.Font
     if NSI.LSM then

@@ -792,55 +792,6 @@ function NSI:SetAuraTrackingCustomName(settingsKey, value)
     self:RefreshAuraTrackingUI()
 end
 
-local AuraTrackingStyleKeys = {
-    "Spacing",
-    "Limit",
-    "SortMode",
-    "GrowDirection",
-    "CustomAnchorFrame",
-    "xOffset",
-    "yOffset",
-    "FrameStrata",
-    "Width",
-    "Height",
-    "Zoom",
-    "BorderSize",
-    "BorderColor",
-    "ShowDispelBorder",
-    "HideTooltip",
-    "HideDurationText",
-    "HideLongDurationAuras",
-    "HideStackText",
-    "EnableCooldownSwipe",
-    "InverseCooldownSwipe",
-    "DurationColor",
-    "StackColor",
-    "DurationFontSize",
-    "StackFontSize",
-    "TextFont",
-    "TextFontFlags",
-    "DurationXOffset",
-    "DurationYOffset",
-    "StackXOffset",
-    "StackYOffset",
-}
-
-function NSI:CopyAuraTrackingStyle(sourceKey, targetKey)
-    local source = self:GetAuraTrackingSettings(sourceKey)
-    local target = self:GetAuraTrackingSettings(targetKey)
-    if not source or not target or source == target then return end
-
-    for _, key in ipairs(AuraTrackingStyleKeys) do
-        if type(source[key]) == "table" then
-            target[key] = CopyTable(source[key])
-        else
-            target[key] = source[key]
-        end
-    end
-
-    self:UpdateAuraTrackingDisplay(targetKey)
-end
-
 function NSI:AddCustomAuraTracking(group)
     NSRT.AuraTrackingSettings.Custom = NSRT.AuraTrackingSettings.Custom or {}
     local index = #NSRT.AuraTrackingSettings.Custom + 1
@@ -1492,17 +1443,18 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     container:SetPoint(layoutAnchorPoint, anchorFrame, layoutAnchorPoint, 0, 0)
     container:SetUnit(unit)
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection)
+    local rowWidth = GetAuraTrackingRowWidth(settings)
     local flowLayout = (container.GetFlowLayout and container:GetFlowLayout()) or container.flowLayout
     if flowLayout then
         flowLayout:SetLayoutAxis(GetAuraTrackingLayoutAxis(settings))
         flowLayout:SetAnchorPoint(layoutAnchorPoint)
         flowLayout:SetGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
-        flowLayout:SetMaximumLineSize(GetAuraTrackingRowWidth(settings))
+        flowLayout:SetMaximumLineSize(rowWidth)
     else
         container.layoutAnchorPoint = layoutAnchorPoint
         container.layoutHorizontalGrowthDirection = horizontalGrowthDirection
         container.layoutVerticalGrowthDirection = verticalGrowthDirection
-        container.layoutRowWidth = GetAuraTrackingRowWidth(settings)
+        container.layoutRowWidth = rowWidth
     end
     if container.MarkDirty and AuraContainerDirtyMask then
         container:MarkDirty(AuraContainerDirtyMask.AuraFrameLayout)

@@ -45,15 +45,13 @@ local BuildReminderCallback        = NSI.UI.Options.Reminders.BuildCallback
 local BuildReminderNoteCallback    = NSI.UI.Options.Reminders.BuildNoteCallback
 local BuildAssignmentsOptions      = NSI.UI.Options.Assignments.BuildOptions
 local BuildAssignmentsCallback     = NSI.UI.Options.Assignments.BuildCallback
-local BuildEncounterAlertsOptions  = NSI.UI.Options.EncounterAlerts.BuildOptions
-local BuildEncounterAlertsCallback = NSI.UI.Options.EncounterAlerts.BuildCallback
 local BuildInterruptDisplayOptions = NSI.UI.Options.InterruptDisplay.BuildOptions
 local BuildInterruptDisplayCallback= NSI.UI.Options.InterruptDisplay.BuildCallback
 local BuildReadyCheckOptions       = NSI.UI.Options.ReadyCheck.BuildOptions
 local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
-local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking and NSI.UI.Options.AuraTracking.BuildUI
-local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison and NSI.UI.Options.PaceComparison.BuildEditorUI
+local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking.BuildUI
+local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
 local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
@@ -86,9 +84,7 @@ local TABS_GROUPS                  = {
         { name = "Versions",  textKey = "Version Check" },
     },
 }
-if BuildPaceComparisonEditorUI then
-    table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
-end
+table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
@@ -387,7 +383,6 @@ function NSUI:Init()
     local reminder_options1_table        = BuildReminderOptions()
     local reminder_note_options1_table   = BuildReminderNoteOptions()
     local assignments_options1_table     = BuildAssignmentsOptions()
-    local encounteralerts_options1_table = BuildEncounterAlertsOptions()
     local interruptdisplay_options1_table= BuildInterruptDisplayOptions()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = BuildRaidBuffMenu()
@@ -399,7 +394,6 @@ function NSUI:Init()
         reminder_options1_table,
         reminder_note_options1_table,
         assignments_options1_table,
-        encounteralerts_options1_table,
         interruptdisplay_options1_table,
         readycheck_options1_table,
         RaidBuffMenu,
@@ -418,7 +412,6 @@ function NSUI:Init()
     local reminder_callback              = BuildReminderCallback()
     local reminder_note_callback         = BuildReminderNoteCallback()
     local assignments_callback           = BuildAssignmentsCallback()
-    local encounteralerts_callback       = BuildEncounterAlertsCallback()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
     local QoL_callback                   = BuildQoLCallback()
@@ -448,9 +441,6 @@ function NSUI:Init()
     DF:BuildMenu(assignments_tab, assignments_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         assignments_callback)
-    DF:BuildMenu(encounteralerts_tab, encounteralerts_options1_table, 10, -10, tab_content_height, false,
-        options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template,
-        options_button_template, encounteralerts_callback)
     DF:BuildMenu(interruptdisplay_tab, interruptdisplay_options1_table, 10, -10, tab_content_height, false,
         options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template,
         options_button_template, interruptdisplay_callback)
@@ -459,12 +449,8 @@ function NSUI:Init()
         readycheck_callback)
     DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template, options_dropdown_template,
         options_switch_template, true, options_slider_template, options_button_template, nil)
-    if auratracking_tab and BuildAuraTrackingUI then
-        NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
-    end
-    if pacecomparison_tab and BuildPaceComparisonEditorUI then
-        NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
-    end
+    NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
+    NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         QoL_callback)
@@ -485,9 +471,7 @@ function NSUI:Init()
     NSUI.nickname_frame           = BuildNicknameEditUI()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
     NSUI.reminders_frame          = BuildRemindersEditUI(tabSystem:GetTabFrameByName("SharedNotes"))
-    if BuildAuraSoundsUI then
-        NSUI.aurasounds_frame     = BuildAuraSoundsUI(aurasounds_tab)
-    end
+    NSUI.aurasounds_frame         = BuildAuraSoundsUI(aurasounds_tab)
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()

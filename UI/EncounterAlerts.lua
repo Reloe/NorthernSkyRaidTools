@@ -3543,30 +3543,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     return screen
 end
 
-local function BuildEncounterAlertsOptions()
-    return {
-    }
-end
-
-local function BuildEncounterAlertsCallback()
-    return function()
-        if NSRT.Alerts and NSRT.Alerts.Groups then
-            for _, gdata in pairs(NSRT.Alerts.Groups) do
-                if type(gdata) == "table" then
-                    gdata.collapsed = true
-                end
-            end
-        end
-    end
-end
-
 -- Export to namespace
 NSI.UI = NSI.UI or {}
 NSI.UI.EncounterAlerts = {
     BuildEncounterAlertsUI = BuildEncounterAlertsUI,
-}
-NSI.UI.Options = NSI.UI.Options or {}
-NSI.UI.Options.EncounterAlerts = {
-    BuildOptions = BuildEncounterAlertsOptions,
-    BuildCallback = BuildEncounterAlertsCallback,
 }
