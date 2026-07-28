@@ -15,6 +15,7 @@ f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_LOGOUT")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 
 function NSI:UpdateDebugLogEvents()
     if NSRT.Settings.DebugLogs then
@@ -150,7 +151,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartPaceComparison(self.EncounterID, diff)
         self:StartReminders(self.Phase)
-        self:InitAuraSystem()
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
             for i, name in ipairs(frames) do
@@ -261,7 +261,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if assigntable then self.Assignments = assigntable end
         end
     elseif e == "NSI_READY_CHECK" and internal then
-        self:ApplyPendingAuraTracking()
+        self:InitAuraSystem()
         self:RebuildAuraSounds()
         if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
             self:ProcessReminder()
@@ -364,7 +364,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
-        self:ApplyPendingAuraTracking()
+        if self.PendingAuraTrackingUpdate then
+            self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
+        end
+    elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
+        self:InitAuraTracking()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck({14, 15, 16}) then return end
         local info = ...

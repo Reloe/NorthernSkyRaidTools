@@ -67,6 +67,13 @@ local FILTER_STATES = {
     { label = "Inverted", value = "Inverted" },
 }
 
+local PROCESSED_AURA_TYPES = {
+    { label = "Disabled", value = "Disabled" },
+    { label = "Buff", value = "Buff" },
+    { label = "Debuff", value = "Debuff" },
+    { label = "Dispel", value = "Dispel" },
+}
+
 local SORT_MODES = {
     { label = "Default", value = "Default" },
     { label = "Long Duration first", value = "LongDurationFirst" },
@@ -1100,7 +1107,7 @@ local function BuildAuraTrackingUI(screen)
                     apply(key); RebuildCurrentTab()
                 end },
             { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40, or friendly player names" },
-            { Type = "Dropdown", label = "Tracking Mode", values = TRACKING_MODES,
+            { Type = "Dropdown", label = "Tracking Mode", values = TRACKING_MODES, highlight = true,
                 tooltip = { title = "Tracking Mode", desc = "Choose whether this custom Aura Tracking display uses a spell-ID whitelist or Blizzard aura filters." },
                 get = function() return s.TrackingMode or "SpellIDs" end,
                 set = function(_, v)
@@ -1113,9 +1120,86 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.PreviewSpellID and tostring(s.PreviewSpellID) or "" end,
                 set = function(_, v) NSI:SetAuraTrackingPreviewSpellID(key, v); RebuildList() end },
         }
+        local function tip(title, desc)
+            return { title = title, desc = desc }
+        end
+
+        local function AddCandidateFilterDefs(includeSpellIDs)
+            s.CandidateFilters = s.CandidateFilters or {}
+            local candidateFilters = s.CandidateFilters
+            defs[#defs + 1] = { Type = "Breakline" }
+            defs[#defs + 1] = { Type = "Label", text = "Candidate Filters", height = 20, highlight = true }
+            defs[#defs + 1] = { Type = "Label", text = "Candidate filters are evaluated after normal aura filters. Every enabled candidate filter must match." }
+
+            if includeSpellIDs then
+                defs[#defs + 1] = { Type = "Label", text = "Include Spell IDs" }
+                defs[#defs + 1] = { Type = "TextEntry",
+                    tooltip = tip("Include Spell IDs", "Only show these spell IDs. Separate multiple IDs with spaces or commas."),
+                    get = function() return candidateFilters.IncludeSpellIDs or "" end,
+                    set = function(_, v) candidateFilters.IncludeSpellIDs = v; apply(key) end }
+            end
+
+            defs[#defs + 1] = { Type = "Label", text = "Exclude Spell IDs" }
+            defs[#defs + 1] = { Type = "TextEntry",
+                tooltip = tip("Exclude Spell IDs", "Hide these spell IDs. Separate multiple IDs with spaces or commas."),
+                get = function() return candidateFilters.ExcludeSpellIDs or "" end,
+                set = function(_, v) candidateFilters.ExcludeSpellIDs = v; apply(key) end }
+
+            defs[#defs + 1] = { Type = "Checkbox", label = "Maximum Duration",
+                tooltip = tip("Maximum Duration", "Only show auras whose maximum duration is at most this many seconds. Permanent auras are excluded."),
+                get = function() return type(candidateFilters.MaxDuration) == "number" end,
+                set = function(_, v)
+                    candidateFilters.MaxDuration = v and (candidateFilters.MaxDuration or 300) or nil
+                    apply(key); RebuildCurrentTab()
+                end }
+            if type(candidateFilters.MaxDuration) == "number" then
+                defs[#defs + 1] = { Type = "Slider", label = "Maximum Duration Seconds", min = 1, max = 3600, step = 1,
+                    tooltip = tip("Maximum Duration Seconds", "Maximum aura duration allowed by this candidate filter."),
+                    get = function() return candidateFilters.MaxDuration end,
+                    set = function(_, v) candidateFilters.MaxDuration = v; apply(key) end }
+            end
+
+            defs[#defs + 1] = { Type = "Dropdown", label = "Processed Aura Type", values = PROCESSED_AURA_TYPES,
+                tooltip = tip("Processed Aura Type", "Filters Blizzard's processed aura classification. This can be Buff, Debuff, or Dispel."),
+                get = function() return candidateFilters.ProcessedAuraType or "Disabled" end,
+                set = function(_, v) candidateFilters.ProcessedAuraType = v or "Disabled"; apply(key) end }
+
+            defs[#defs + 1] = { Type = "Label", text = "Dispel Types" }
+            candidateFilters.DispelTypes = candidateFilters.DispelTypes or {}
+            for _, dispelType in ipairs(NSI.AuraTrackingCandidateDispelTypes) do
+                defs[#defs + 1] = { Type = "Dropdown", label = dispelType, values = FILTER_STATES,
+                    tooltip = tip(dispelType, "Enabled only shows auras with this dispel type. Inverted hides this dispel type."),
+                    get = function()
+                        local state = candidateFilters.DispelTypes[dispelType]
+                        return (state == "Enabled" or state == "Inverted") and state or "Disabled"
+                    end,
+                    set = function(_, v)
+                        candidateFilters.DispelTypes[dispelType] = (v == "Enabled" or v == "Inverted") and v or nil
+                        apply(key)
+                    end }
+            end
+
+            defs[#defs + 1] = { Type = "Label", text = "Aura Properties" }
+            for _, filter in ipairs(NSI.AuraTrackingCandidateFilterDefinitions) do
+                local filterKey = filter.key
+                defs[#defs + 1] = { Type = "Dropdown", label = filter.label, values = FILTER_STATES,
+                    tooltip = tip(filter.label, "Enabled requires this property. Inverted requires the property to be false."),
+                    get = function()
+                        local state = candidateFilters[filterKey]
+                        if state == true or state == "Enabled" then return "Enabled" end
+                        if state == false or state == "Inverted" then return "Inverted" end
+                        return "Disabled"
+                    end,
+                    set = function(_, v)
+                        candidateFilters[filterKey] = v == "Enabled" and true or (v == "Inverted" and false or nil)
+                        apply(key)
+                    end }
+            end
+        end
 
         if s.TrackingMode == "Filters" then
-            defs[#defs + 1] = { Type = "Label", text = "Aura Filters" }
+            defs[#defs + 1] = { Type = "Breakline" }
+            defs[#defs + 1] = { Type = "Label", text = "Aura Filters", height = 20, highlight = true }
             defs[#defs + 1] = { Type = "Label", text = "Enabled adds the filter. Inverted uses the same filter as negated. Multiple filters at the same time work as an AND condition."}
             s.AuraFilters = s.AuraFilters or {}
             for _, filter in ipairs(NSI.AuraTrackingFilterDefinitions or {}) do
@@ -1140,6 +1224,7 @@ local function BuildAuraTrackingUI(screen)
                     end,
                 }
             end
+            AddCandidateFilterDefs(true)
         else
             defs[#defs + 1] = { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
                 tooltip = { title = "Unit Type", desc = "Automatic treats player, party, raid and resolved player-name units as friendly. Other units are treated as enemy unless manually changed." },
@@ -1176,6 +1261,7 @@ local function BuildAuraTrackingUI(screen)
         local settings = NSI:GetAuraTrackingSettings(selectedKey)
         if not settings then return end
         local container = tabFrames[activeTab]
+        local scrollPosition = tabScroll[activeTab] and tabScroll[activeTab].frame:GetVerticalScroll() or 0
         container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
         for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
             HideWidgetScroll(scrollObj)
@@ -1188,6 +1274,7 @@ local function BuildAuraTrackingUI(screen)
         local totalH = BuildWidgets(scrollObj.scrollChild, defs, scrollObj.scrollChild:GetWidth(), "NSRTAuraTrack" .. activeTab)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         scrollObj:UpdateScrollBar()
+        scrollObj.frame:SetVerticalScroll(scrollPosition)
         tabScroll[activeTab] = scrollObj
         container._auraTrackingWidgetScrolls[#container._auraTrackingWidgetScrolls + 1] = scrollObj
     end
@@ -1506,7 +1593,7 @@ local function BuildAuraTrackingUI(screen)
         if not loadCollapsed.Specs then
             for _, sd in ipairs(SPEC_DATA) do
                 local id = sd.id; local cr, cg, cb = ClassColor(sd.class)
-                y = AddCheck(y, NSI:Loc(sd.label) .. " |cFF808080(" .. sd.class:sub(1, 3) .. ")|r", cond.SpecIDs[id],
+                y = AddCheck(y, NSI:Loc(sd.label), cond.SpecIDs[id],
                     function() cond.SpecIDs[id] = (not cond.SpecIDs[id]) or nil end, cr * 0.8 + 0.2, cg * 0.8 + 0.2, cb * 0.8 + 0.2)
             end
         end

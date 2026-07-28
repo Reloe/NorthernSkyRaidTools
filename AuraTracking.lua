@@ -32,6 +32,27 @@ NSI.AuraTrackingFilterDefinitions = {
     { key = "Dispellable", value = "DISPELLABLE" },
 }
 
+NSI.AuraTrackingCandidateFilterDefinitions = {
+    { key = "isFromPlayerOrPlayerPet", label = "From Player or Pet" },
+    { key = "isRoleAura", label = "Role Aura" },
+    { key = "isPriorityAura", label = "Priority Aura" },
+    { key = "isStealable", label = "Stealable" },
+    { key = "nameplateShowAll", label = "Nameplate: Show All" },
+    { key = "nameplateShowPersonal", label = "Nameplate: Personal" },
+    { key = "canApplyAura", label = "Can Apply Aura" },
+    { key = "isBossAura", label = "Boss Aura" },
+    { key = "isBossOrRoleAura", label = "Boss or Role Aura" },
+}
+
+NSI.AuraTrackingCandidateDispelTypes = {
+    "Magic",
+    "Curse",
+    "Disease",
+    "Poison",
+    "Enrage",
+    "Bleed",
+}
+
 local AuraTrackingUnitRefreshFrame
 local AuraTrackingUnitRefreshStates = {
     target = {},
@@ -133,7 +154,6 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         ShowDispelBorder = true,
         HideTooltip = false,
         HideDurationText = false,
-        HideLongDurationAuras = false,
         ShowWhitelistedPlayerBuffs = false,
         HideStackText = false,
         EnableCooldownSwipe = true,
@@ -157,6 +177,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         SpellIDs = {},
         SpellIDsEdited = false,
         AuraFilters = {},
+        CandidateFilters = {},
         PreviewSpellID = nil,
         SortMode = "Default",
         Unit = "player",
@@ -395,13 +416,13 @@ end
 -- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
 -- of relying on a hand-maintained list that can silently fall out of sync.
 local AuraTrackingSectionFields = {
-    Trigger = { "TrackingMode", "SpellIDs", "SpellIDsEdited", "AuraFilters", "Unit", "UnitType", "PreviewSpellID" },
+    Trigger = { "TrackingMode", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
     Load    = { "loadConditions" },
 }
 
 local AuraTrackingNonDisplayFields = {
     Name = true, enabled = true, group = true, pinned = true, builtin = true,
-    TrackingMode = true, SpellIDs = true, SpellIDsEdited = true, AuraFilters = true, Unit = true, UnitType = true, PreviewSpellID = true,
+    TrackingMode = true, SpellIDs = true, SpellIDsEdited = true, AuraFilters = true, CandidateFilters = true, Unit = true, UnitType = true, PreviewSpellID = true,
     loadConditions = true,
 }
 
@@ -657,6 +678,63 @@ local function BuildAuraTrackingCustomFilterString(settings)
 
     if #parts == 0 then return end
     return table.concat(parts, "|")
+end
+
+local function BuildAuraTrackingCandidateFilters(settings)
+    local configured = settings and settings.CandidateFilters
+    local candidateFilters = {}
+
+    if type(configured) == "table" then
+        local spellIDs = ParseAuraTrackingSpellIDs(configured.IncludeSpellIDs)
+        if #spellIDs > 0 then
+            candidateFilters.includeSpellIDs = {}
+            for _, spellID in ipairs(spellIDs) do
+                candidateFilters.includeSpellIDs[spellID] = true
+            end
+        end
+    end
+
+    if type(configured) == "table" then
+        local spellIDs = ParseAuraTrackingSpellIDs(configured.ExcludeSpellIDs)
+        if #spellIDs > 0 then
+            candidateFilters.excludeSpellIDs = {}
+            for _, spellID in ipairs(spellIDs) do
+                candidateFilters.excludeSpellIDs[spellID] = true
+            end
+        end
+
+        local dispelTypes = configured.DispelTypes
+        if type(dispelTypes) == "table" then
+            for _, dispelType in ipairs(NSI.AuraTrackingCandidateDispelTypes) do
+                if dispelTypes[dispelType] == "Enabled" then
+                    candidateFilters.includeDispelTypes = candidateFilters.includeDispelTypes or {}
+                    candidateFilters.includeDispelTypes[dispelType] = true
+                elseif dispelTypes[dispelType] == "Inverted" then
+                    candidateFilters.excludeDispelTypes = candidateFilters.excludeDispelTypes or {}
+                    candidateFilters.excludeDispelTypes[dispelType] = true
+                end
+            end
+        end
+
+        if type(configured.MaxDuration) == "number" then
+            candidateFilters.maxDuration = configured.MaxDuration
+        end
+
+        if configured.ProcessedAuraType and configured.ProcessedAuraType ~= "Disabled" then
+            candidateFilters.processedAuraType = AuraUtil.AuraUpdateChangedType[configured.ProcessedAuraType]
+        end
+
+        for _, filter in ipairs(NSI.AuraTrackingCandidateFilterDefinitions) do
+            local state = configured[filter.key]
+            if state == "Enabled" or state == true then
+                candidateFilters[filter.key] = true
+            elseif state == "Inverted" or state == false then
+                candidateFilters[filter.key] = false
+            end
+        end
+    end
+
+    return candidateFilters
 end
 
 function NSI:GetAuraTrackingSpellIDList(settingsKey)
@@ -1389,6 +1467,15 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
     state.active = true
 
+    if isCustom then
+        -- Blizzard only populates processedAuraType while this policy is active.
+        local processedAuraType = customUsesFilters and settings.CandidateFilters and settings.CandidateFilters.ProcessedAuraType
+        local policy = processedAuraType and processedAuraType ~= "Disabled"
+            and CustomAuraContainerAuraProcessingPolicy.ProcessAura
+            or CustomAuraContainerAuraProcessingPolicy.None
+        container:SetAuraProcessingPolicy(policy)
+    end
+
     container:Hide()
     container:SetFrameStrata(frameStrata)
     anchorFrame:SetFrameStrata(frameStrata)
@@ -1478,10 +1565,12 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
             end
         end
         local candidateFilters
-        if group.spellIDMap then
-            candidateFilters = {
-                includeSpellIDs = group.spellIDMap,
-            }
+        if isCustom and customUsesFilters then
+            candidateFilters = BuildAuraTrackingCandidateFilters(settings)
+        elseif isCustom then
+            candidateFilters = { includeSpellIDs = group.spellIDMap }
+        elseif group.spellIDMap then
+            candidateFilters = { includeSpellIDs = group.spellIDMap }
         elseif group.useLongDurationFilter then
             candidateFilters = {
                 isFromPlayerOrPlayerPet = false,
@@ -1491,7 +1580,13 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
             end
         end
         candidateFilters = candidateFilters or {}
-        candidateFilters.excludeSpellIDs = AuraTrackingExcludedSpellIDs
+        if candidateFilters.excludeSpellIDs then
+            for spellID in pairs(AuraTrackingExcludedSpellIDs) do
+                candidateFilters.excludeSpellIDs[spellID] = true
+            end
+        else
+            candidateFilters.excludeSpellIDs = AuraTrackingExcludedSpellIDs
+        end
         local maxFrameCount = group.maxFrameCount
         if maxFrameCount == nil then
             maxFrameCount = settings.Limit
@@ -1552,6 +1647,9 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
         return
     end
+
+    self.PendingAuraTrackingUpdate = nil
+    self.PendingAuraTrackingReconfigure = nil
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         state.active = false
@@ -1689,14 +1787,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
     end
-end
-
-function NSI:ApplyPendingAuraTracking()
-    if not self.PendingAuraTrackingUpdate or self:Restricted() then return end
-    local reconfigureButtons = self.PendingAuraTrackingReconfigure
-    self.PendingAuraTrackingUpdate = nil
-    self.PendingAuraTrackingReconfigure = nil
-    self:InitAuraTracking(false, reconfigureButtons)
 end
 
 function NSI:InitAuraSystem(firstcall)

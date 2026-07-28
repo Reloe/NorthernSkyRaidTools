@@ -319,6 +319,7 @@ function NSI:AddMissingDefaults()
             Player = self:CreateAuraTrackingSettingsDefaults({
                 Name = "Player Debuffs",
                 builtin = "Player",
+                HideLongDurationAuras = false,
                 ShowWhitelistedPlayerBuffs = true,
             }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
@@ -329,6 +330,7 @@ function NSI:AddMissingDefaults()
                 yOffset = -199,
                 NameEnabled = true,
                 OnlyShowFirstTank = false,
+                HideLongDurationAuras = false,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
                 Name = "External & Immunity",
