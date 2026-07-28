@@ -384,7 +384,7 @@ local function BuildAuraTrackingUI(screen)
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(16, 16)
         row.icon:SetPoint("LEFT", cb.frame, "RIGHT", 4, 0)
-        row.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        row.icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
 
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, 13, "")
@@ -1029,7 +1029,7 @@ local function BuildAuraTrackingUI(screen)
 
                 local icon = iconFrame:CreateTexture(nil, "ARTWORK")
                 icon:SetAllPoints()
-                icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+                icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
 
                 local label = row:CreateFontString(nil, "OVERLAY")
                 NSI:SetUIFont(label, 12, "")

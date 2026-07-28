@@ -215,7 +215,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
             local texture_info = NSI.LSM:Fetch("statusbar", icon)
             iconTex:SetTexture(texture_info .. ".png")
         end
-        iconTex:SetTexCoord(0.1, 0.9, 0.09, 0.91)
+        iconTex:SetTexCoord(0.12, 0.88, 0.11, 0.89)
         iconTex:SetVertexColor(1, 1, 1)
         btn.icon = iconTex
         btn.iconFrame = iconFrame

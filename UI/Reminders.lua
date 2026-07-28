@@ -1157,7 +1157,7 @@ local function BuildReminderScreen(personal, parentFrame)
         line.bossIcon = line:CreateTexture(nil, "OVERLAY")
         line.bossIcon:SetSize(16, 16)
         line.bossIcon:SetPoint("LEFT", line, "LEFT", 4, 0)
-        line.bossIcon:SetTexCoord(0.05, 0.95, 0.05, 0.95)
+        line.bossIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
         line.bossIcon:Hide()
 
         -- Name label (click line to select)
