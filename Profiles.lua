@@ -518,7 +518,16 @@ local ignored = {
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
     ["AuraTrackingSettings"] = true,
+    ["NickNames"]        = true,
 }
+
+local function CopyProfileValue(key, value)
+    local copy = type(value) == "table" and CopyTable(value) or value
+    if key == "Settings" and type(copy) == "table" then
+        copy.MyNickName = nil
+    end
+    return copy
+end
 
 function NSI:GetProfileKey()
     local CharName, Realm = UnitFullName("player")
@@ -568,7 +577,11 @@ function NSI:LoadProfile(name, skipsave, init)
     if NSRT.Profiles[name] then
         for k, v in pairs(NSRT.Profiles[name]) do
             if not ignored[k] then
-                NSRT[k] = type(v) == "table" and CopyTable(v) or v
+                local myNickName = k == "Settings" and NSRT.Settings and NSRT.Settings.MyNickName
+                NSRT[k] = CopyProfileValue(k, v)
+                if myNickName and k == "Settings" and type(NSRT.Settings) == "table" then
+                    NSRT.Settings.MyNickName = myNickName
+                end
             end
         end
     local ProfileKey = self:GetProfileKey()
@@ -587,7 +600,7 @@ function NSI:SaveProfile()
         NSRT.Profiles[NSRT.CurrentProfile] = {}
         for k, v in pairs(NSRT) do
             if not ignored[k] then
-                NSRT.Profiles[NSRT.CurrentProfile][k] = type(v) == "table" and CopyTable(v) or v
+                NSRT.Profiles[NSRT.CurrentProfile][k] = CopyProfileValue(k, v)
             end
         end
     end
@@ -628,9 +641,15 @@ function NSI:ExportProfileString()
     local LibDeflate = LibStub("LibDeflate")
     local profileData = NSRT.Profiles[NSRT.CurrentProfile]
     if not profileData then return nil end
+    local exportData = {}
+    for key, value in pairs(profileData) do
+        if not ignored[key] then
+            exportData[key] = CopyProfileValue(key, value)
+        end
+    end
     local exportTable = {
         profileName = NSRT.CurrentProfile,
-        data = profileData,
+        data = exportData,
     }
     local serialized = LibSerialize:Serialize(exportTable)
     local compressed = LibDeflate:CompressDeflate(serialized)
@@ -657,7 +676,14 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
         return name
     end
     name = EnsureUniqueName(name)
-    NSRT.Profiles[name] = type(exportTable.data) == "table" and CopyTable(exportTable.data) or {}
+    NSRT.Profiles[name] = {}
+    if type(exportTable.data) == "table" then
+        for key, value in pairs(exportTable.data) do
+            if not ignored[key] then
+                NSRT.Profiles[name][key] = CopyProfileValue(key, value)
+            end
+        end
+    end
     NSI:LoadProfile(name)
     return name
 end
