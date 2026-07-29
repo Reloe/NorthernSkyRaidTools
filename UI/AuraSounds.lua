@@ -360,8 +360,7 @@ local function BuildAuraSoundsUI(parent)
     rightPanel:SetPoint("TOPLEFT", screen, "TOPLEFT", leftWidth + 36, -8)
     rightPanel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -10, 8)
 
-    local title = CreateLabel(screen, T("Aura Sounds"), 14)
-    title:SetTextColor(1, 0.65, 0.1, 1)
+    local title = CreateLabel(screen, T("|cFF00FFFFAura|r Sounds"), 14)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
     local leftScroll = CreateFrame("ScrollFrame", "$parentAuraSoundCategoryScroll", screen, "UIPanelScrollFrameTemplate")

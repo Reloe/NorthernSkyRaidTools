@@ -156,7 +156,8 @@ local function BuildPaceComparisonEditorUI(parent)
     screen.selectedBoss = GetSelectedBoss()
 
     local leftWidth = 220
-    local title = CreateEditorLabel(screen, "Pace-Comparison", 14, "orange")
+    local title = CreateEditorLabel(screen, "|cFF00FFFFPace|r-Comparison", 14)
+    title:SetTextColor(1, 1, 1, 1)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
     local leftScroll = CreateFrame("ScrollFrame", "$parentPaceComparisonBossScroll", screen, "UIPanelScrollFrameTemplate")

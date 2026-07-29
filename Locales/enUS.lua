@@ -549,6 +549,7 @@ L["Hide Duration Text"] = "Hide Duration Text"
 -- UI/AuraSounds.lua
 -- ============================================================================
 L["Aura Sounds"] = "Aura Sounds"
+L["|cFF00FFFFAura|r Sounds"] = "|cFF00FFFFAura|r Sounds"
 L["Sound Channel"] = "Sound Channel"
 L["Master"] = "Master"
 L["SFX"] = "SFX"
@@ -1126,6 +1127,7 @@ L["Countdown"] = "Countdown"
 L["At how many seconds remaining you would like to hear a TTS countdown"] = "At how many seconds remaining you would like to hear a TTS countdown"
 -- UI/Options/PaceComparison.lua
 L["Pace-Comparison"] = "Pace-Comparison"
+L["|cFF00FFFFPace|r-Comparison"] = "|cFF00FFFFPace|r-Comparison"
 L["Pace Comparison Display"] = "Pace Comparison Display"
 L["Line Spacing"] = "Line Spacing"
 L["Update Interval"] = "Update Interval"
