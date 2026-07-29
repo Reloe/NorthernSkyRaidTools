@@ -879,15 +879,19 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
         local needsScroll = rowCount > MAX_ROWS
         local popupH = math.min(rowCount * ROW_H, MAX_ROWS * ROW_H)
-        popup:SetSize(dropW, popupH)
-        local contentW = dropW - 4 - (needsScroll and SB_W + 1 or 0)
+        -- The popup is parented to UIParent while its selector may be inside
+        -- a scaled NSUI frame, so convert the dropdown width to UIParent's
+        -- coordinate scale before sizing the popup and its rows.
+        local popupW = dropW * dropBtn:GetEffectiveScale() / UIParent:GetEffectiveScale()
+        popup:SetSize(popupW, popupH)
+        local contentW = popupW - 4 - (needsScroll and SB_W + 1 or 0)
         content:SetSize(contentW, rowCount * ROW_H)
         if needsScroll then sbTrack:Show() sbThumb:Show() else sbTrack:Hide() sbThumb:Hide() end
 
         -- Grow the row pool as needed (frames are never destroyed)
         for i = #content._rows + 1, rowCount do
             local row = CreateFrame("Button", nil, content)
-            row:SetSize(dropW - 4, ROW_H)
+            row:SetSize(popupW - 4, ROW_H)
 
             local rowHover = MakeHoverBg(row, 2)
 
