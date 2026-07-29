@@ -891,20 +891,16 @@ local function BuildEncounterAlertsUI(parentFrame)
                 local canDelete = NSI:CanDeleteEncounterAlert(entry.data, entry.encID)
                 local isEnabled, icon, name
 
-                if filterEncID == nil or filterEncID == 0 then
-                    icon = BossData.BossIcons[entry.encID]
+                local alertData = entry.data
+                local customIcon = alertData and alertData.customIcon and C_Spell.GetSpellInfo(alertData.customIcon)
+                if customIcon then
+                    icon = customIcon.iconID
                 else
-                    local alertData = entry.data
-                    local customIcon = alertData and alertData.customIcon and C_Spell.GetSpellInfo(alertData.customIcon)
-                    if customIcon then
-                        icon = customIcon.iconID
+                    local spell = alertData and alertData.spellID and C_Spell.GetSpellInfo(alertData.spellID)
+                    if spell then
+                        icon = spell.iconID
                     else
-                        local spell = alertData and alertData.spellID and C_Spell.GetSpellInfo(alertData.spellID)
-                        if spell then
-                            icon = spell.iconID
-                        else
-                            icon = BossData.BossIcons[entry.encID]
-                        end
+                        icon = BossData.BossIcons[entry.encID]
                     end
                 end
 
