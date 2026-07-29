@@ -224,6 +224,27 @@ local function BuildReadyCheckOptions()
 
         {
             type = "label",
+            get = function() return "Consumables" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Clickable Consumables",
+            desc = "Shows a box of clickable raid consumables (flask, food, augment rune, weapon enhancement, healthstone) above the ready check popup. Click an icon to use the first matching item in your bags. Maintain the item IDs in ReadyCheckConsumables.lua each season.",
+            get = function() return NSRT.ReadyCheckSettings.ConsumablesDisplay end,
+            set = function(self, fixedparam, value)
+                NSRT.ReadyCheckSettings.ConsumablesDisplay = value
+            end,
+            nocombat = true,
+        },
+
+        {
+            type = "breakline"
+        },
+
+        {
+            type = "label",
             get = function() return "Cooldowns Options" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
