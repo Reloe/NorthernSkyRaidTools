@@ -2,17 +2,17 @@
     <!-- Core initialization and helper functions (must load first) -->
     <Script file="BossTimelines.lua"/>
 
-    <!-- Individual boss timelines -->
-    <Script file="ImperatorAverzian.lua"/>
-    <Script file="Vorasius.lua"/>
-    <Script file="VaelgorEzzorak.lua"/>
-    <Script file="FallenKingSalhadaar.lua"/>
-    <Script file="LightblindedVanguard.lua"/>
-    <Script file="Beloren.lua"/>
-    <Script file="Chimaerus.lua"/>
-    <Script file="CrownOfTheCosmos.lua"/>
-    <Script file="MidnightFalls.lua"/>
-    <Script file="Rotmire.lua"/>
+    <!-- Midnight Season 1 -->
+    <Script file="MidnightS1/ImperatorAverzian.lua"/>
+    <Script file="MidnightS1/Vorasius.lua"/>
+    <Script file="MidnightS1/VaelgorEzzorak.lua"/>
+    <Script file="MidnightS1/FallenKingSalhadaar.lua"/>
+    <Script file="MidnightS1/LightblindedVanguard.lua"/>
+    <Script file="MidnightS1/Beloren.lua"/>
+    <Script file="MidnightS1/Chimaerus.lua"/>
+    <Script file="MidnightS1/CrownOfTheCosmos.lua"/>
+    <Script file="MidnightS1/MidnightFalls.lua"/>
+    <Script file="MidnightS1/Rotmire.lua"/>
 
     <!-- Midnight current raid -->
     <Script file="MidnightS2/NymrissaWavecaller.lua"/>

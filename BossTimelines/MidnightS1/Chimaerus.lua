@@ -1,0 +1,96 @@
+local _, NSI = ... -- Internal namespace
+
+-- Chimaerus (3306)
+
+local heroicPhases = {
+        [1] = {start = 0},
+        [2] = {start = 227},
+        [3] = {start = 454},
+        [4] = {start = 681},
+        [5] = {start = 908},
+    }
+
+local heroicAbilities = {
+        {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 1, times = {9, 84}, duration = 0},
+        {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 1, times = {13, 87}, duration = 0},
+        {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 1, times = {19, 91}, duration = 0},
+        {name = "Alnsight", spellID = 1262289, category = "event", phase = 1, times = {19, 91}, duration = 40},
+        {name = "Caustic Phlegm", spellID = 1246621, category = "raid damage", phase = 1, times = {26, 53, 101, 123, 162, 173, 198}, duration = 12},
+        {name = "Colossal Strikes", spellID = 1262020, category = "tankbuster", phase = 1, times = {34, 53, 104, 180, 199, 219}, duration = 0},
+        {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 1, times = {36, 40, 109, 113}, duration = 0},
+        {name = "Consume", spellID = 1245396, category = "raid damage", phase = 1, times = {68, 143}, duration = 10},
+        {name = "Corrupted Devastation", spellID = 1245452, category = "movement", phase = 1, times = {163, 187, 211}, duration = 7},
+        {name = "Ravenous Dive", spellID = 1245404, category = "raid damage, knock", phase = 2, times = {0}, duration = 0},
+        {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 2, times = {10, 84}, duration = 0},
+        {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 2, times = {13, 87}, duration = 0},
+        {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 2, times = {19, 92}, duration = 0},
+        {name = "Alnsight", spellID = 1262289, category = "event", phase = 2, times = {19, 91}, duration = 40},
+        {name = "Caustic Phlegm", spellID = 1246621, category = "raid damage", phase = 2, times = {26, 53, 101, 123, 162, 173, 198}, duration = 12},
+        {name = "Colossal Strikes", spellID = 1262020, category = "", phase = 2, times = {34, 53, 104, 180, 199, 219}, duration = 0},
+        {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 2, times = {37, 40, 109, 113}, duration = 0},
+        {name = "Consume", spellID = 1245396, category = "raid damage", phase = 2, times = {68, 143}, duration = 10},
+        {name = "Corrupted Devastation", spellID = 1245452, category = "movement", phase = 2, times = {166, 190, 215}, duration = 7},
+        {name = "Ravenous Dive", spellID = 1245404, category = "raid damage, knock", phase = 3, times = {0}, duration = 0},
+        {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 3, times = {10, 84}, duration = 0},
+        {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 3, times = {13, 87}, duration = 0},
+        {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 3, times = {19, 92}, duration = 0},
+        {name = "Alnsight", spellID = 1262289, category = "event", phase = 3, times = {19, 91}, duration = 40},
+        {name = "Caustic Phlegm", spellID = 1246621, category = "raid damage", phase = 3, times = {26, 53, 101, 123, 162, 173, 198}, duration = 12},
+        {name = "Colossal Strikes", spellID = 1262020, category = "tankbuster", phase = 3, times = {34, 53, 104, 180, 199, 219}, duration = 0},
+        {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 3, times = {37, 40, 109, 113}, duration = 0},
+        {name = "Consume", spellID = 1245396, category = "raid damage", phase = 3, times = {68, 143}, duration = 10},
+        {name = "Corrupted Devastation", spellID = 1245452, category = "movement", phase = 3, times = {166, 190, 215}, duration = 7},
+        {name = "Ravenous Dive", spellID = 1245404, category = "raid damage, knock", phase = 4, times = {0}, duration = 0},
+        {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 4, times = {10, 84}, duration = 0},
+        {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 4, times = {13, 87}, duration = 0},
+        {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 4, times = {19, 92}, duration = 0},
+        {name = "Alnsight", spellID = 1262289, category = "event", phase = 4, times = {19, 91}, duration = 40},
+        {name = "Caustic Phlegm", spellID = 1246621, category = "raid damage", phase = 4, times = {26, 53, 101, 123, 162, 173, 198}, duration = 12},
+        {name = "Colossal Strikes", spellID = 1262020, category = "tankbuster", phase = 4, times = {34, 53, 104, 180, 199, 219}, duration = 0},
+        {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 4, times = {37, 40, 109, 113}, duration = 0},
+        {name = "Consume", spellID = 1245396, category = "raid damage", phase = 4, times = {68, 143}, duration = 10},
+        {name = "Corrupted Devastation", spellID = 1245452, category = "movement", phase = 4, times = {166, 190, 215}, duration = 7},
+    }
+
+local mythicPhases = {
+        [1] = {start = 0},
+        [2] = {start = 240},
+        [3] = {start = 395},
+    }
+
+local mythicAbilities = {
+        {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 1, times = {9, 84}, duration = 0},
+        {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 1, times = {13, 87}, duration = 0},
+        {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 1, times = {19, 91, 155}, duration = 0},
+        {name = "Alnsight", spellID = 1262289, category = "event", phase = 1, times = {19, 91}, duration = 40},
+        {name = "Caustic Phlegm", spellID = 1246621, category = "raid damage", phase = 1, times = {26, 52, 101, 124, 164, 173, 198}, duration = 12},
+        {name = "Consuming Miasma", spellID = 1257087, category = "dispel", phase = 1, times = {33, 83, 120, 182}, duration = 0},
+        {name = "Rift Madness", spellID = 1264756, category = "debuffs", phase = 1, times = {44, 117}, duration = 3},
+        {name = "Colossal Strikes", spellID = 1262020, category = "tankbuster", phase = 1, times = {34, 104, 123, 184, 203, 223}, duration = 0},
+        {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 1, times = {36, 39, 109, 112}, duration = 0},
+        {name = "Consume", spellID = 1245396, category = "raid damage", phase = 1, times = {68, 140}, duration = 8},
+        {name = "Corrupted Devastation", spellID = 1245452, category = "movement", phase = 1, times = {171, 194, 220}, duration = 8},
+        {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 2, times = {9, 84}, duration = 0},
+        {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 2, times = {13, 87}, duration = 0},
+        {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 2, times = {19, 91}, duration = 0},
+        {name = "Alnsight", spellID = 1262289, category = "event", phase = 2, times = {19, 91}, duration = 40},
+        {name = "Caustic Phlegm", spellID = 1246621, category = "raid damage", phase = 2, times = {26, 52, 101, 124}, duration = 12},
+        {name = "Consuming Miasma", spellID = 1257087, category = "dispel", phase = 2, times = {33, 83, 120}, duration = 0},
+        {name = "Rift Madness", spellID = 1264756, category = "debuffs", phase = 2, times = {44, 117}, duration = 3},
+        {name = "Colossal Strikes", spellID = 1262020, category = "tankbuster", phase = 2, times = {34, 104, 123}, duration = 0},
+        {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 2, times = {36, 39, 109, 112}, duration = 0},
+        {name = "Consume", spellID = 1245396, category = "raid damage", phase = 2, times = {68, 140}, duration = 8},
+    }
+
+NSI.BossTimelines[3306] = {
+    Heroic = {
+        duration = 700,
+        phases = heroicPhases,
+        abilities = heroicAbilities,
+    },
+    Mythic = {
+        duration = 400,
+        phases = mythicPhases,
+        abilities = mythicAbilities,
+    },
+}

@@ -1,27 +1,124 @@
 local _, NSI = ... -- Internal namespace
 
--- Entombed Sentinels (3445)
-
-local heroicAbilities = {
-}
+-- EntombedSentinels (3445)
 
 local heroicPhases = {
-}
+        [1] = {start = 0},
+        [2] = {start = 70},
+        [3] = {start = 178},
+        [4] = {start = 284},
+        [5] = {start = 386},
+        [6] = {start = 487},
+    }
 
-local mythicAbilities = {
-}
+local heroicAbilities = {
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 1, times = {6.58, 28.65}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 1, times = {8.13, 30.35}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 1, times = {9.76}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 1, times = {15.05}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 1, times = {15.67}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 1, times = {17.89}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 1, times = {43}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 1, times = {46.29}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 2, times = {0, 21.88, 43.76, 65.69}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 2, times = {1.4, 23.27, 45.33, 67.63}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 2, times = {3.63, 55.86}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 2, times = {7.8, 40.57}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 2, times = {9.41, 61.66}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 2, times = {11.45, 52.72}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 2, times = {35.73}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 2, times = {84.51}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 3, times = {0, 21.88, 43.76, 65.69}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 3, times = {1.4, 23.27, 45.33, 67.63}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 3, times = {3.63, 55.86}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 3, times = {7.8, 40.57}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 3, times = {9.41, 61.66}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 3, times = {11.45, 52.72}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 3, times = {35.73}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 3, times = {84.51}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 4, times = {0, 21.88, 43.76, 65.69}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 4, times = {1.4, 23.27, 45.33, 67.63}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 4, times = {3.63, 55.86}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 4, times = {7.8, 40.57}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 4, times = {9.41, 61.66}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 4, times = {11.45, 52.72}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 4, times = {35.73}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 4, times = {84.51}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 5, times = {0, 21.88, 43.76, 65.69}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 5, times = {1.4, 23.27, 45.33, 67.63}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 5, times = {3.63, 55.86}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 5, times = {7.8, 40.57}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 5, times = {9.41, 61.66}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 5, times = {11.45, 52.72}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 5, times = {35.73}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 5, times = {84.51}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 6, times = {0, 21.88, 43.76}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 6, times = {1.4, 23.27, 45.33}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 6, times = {3.63, 55.86}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 6, times = {7.8, 40.57}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 6, times = {9.41}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 6, times = {11.45, 52.72}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 6, times = {35.73}, duration = 0},
+    }
 
 local mythicPhases = {
-}
+        [1] = {start = 0},
+        [2] = {start = 63},
+        [3] = {start = 165},
+        [4] = {start = 266},
+        [5] = {start = 366},
+    }
+
+local mythicAbilities = {
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 1, times = {6.2, 28.06}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 1, times = {8.53, 30.39}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 1, times = {9.76}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 1, times = {15.03}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 1, times = {15.54}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 1, times = {17.76}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 1, times = {42.97}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 1, times = {46.26}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 2, times = {0, 21.9, 43.8, 65.84}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 2, times = {1.21, 23.08, 45, 66.87}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 2, times = {3.65, 55.91}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 2, times = {7.79, 40.62, 73.61}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 2, times = {9.43, 61.7}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 2, times = {10.84, 51.8}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 2, times = {35.75}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 2, times = {84.29}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 3, times = {0, 21.9, 43.8, 65.84}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 3, times = {1.21, 23.08, 45, 66.87}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 3, times = {3.65, 55.91}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 3, times = {7.79, 40.62, 73.61}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 3, times = {9.43, 61.7}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 3, times = {10.84, 51.8}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 3, times = {35.75}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 3, times = {84.29}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 4, times = {0, 21.9, 43.8, 65.84}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 4, times = {1.21, 23.08, 45, 66.87}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 4, times = {3.65, 55.91}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 4, times = {7.79, 40.62, 73.61}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 4, times = {9.43, 61.7}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 4, times = {10.84, 51.8}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 4, times = {35.75}, duration = 0},
+        {name = "Vitriolic Stasis", spellID = 1284588, category = "intermission", phase = 4, times = {84.29}, duration = 0},
+        {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 5, times = {0, 21.9, 43.8, 65.84}, duration = 0},
+        {name = "Bloodvenom Injection", spellID = 1284487, category = "tank debuff", phase = 5, times = {1.21, 23.08, 45, 66.87}, duration = 0},
+        {name = "Venom Coagulation", spellID = 1284251, category = "add spawn", phase = 5, times = {3.65, 55.91}, duration = 0},
+        {name = "Toxic Droplets", spellID = 1284434, category = "raid soak", phase = 5, times = {7.79, 40.62, 73.61}, duration = 0},
+        {name = "Contaminate", spellID = 1284257, category = "raid damage", phase = 5, times = {9.43, 61.7}, duration = 0},
+        {name = "Unstable Miasma", spellID = 1288232, category = "raid aoe", phase = 5, times = {10.84, 51.8}, duration = 0},
+        {name = "Blighted Blood", spellID = 1284483, category = "raid debuff", phase = 5, times = {35.75}, duration = 0},
+    }
 
 NSI.BossTimelines[3445] = {
     Heroic = {
-        duration = 600,
+        duration = 545,
         phases = heroicPhases,
         abilities = heroicAbilities,
     },
     Mythic = {
-        duration = 600,
+        duration = 453,
         phases = mythicPhases,
         abilities = mythicAbilities,
     },
