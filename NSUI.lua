@@ -71,15 +71,15 @@ local TABS_GROUPS                  = {
         { name = "Reminders",        textKey = "Reminders" },
         { name = "Reminders-Note",   textKey = "Note-Display" },
         { name = "EncounterAlerts",  textKey = "Encounter Alerts" },
-        { name = "InterruptDisplay", textKey = "Interrupt Display" },
-        { name = "Assignments",      textKey = "Assignments" },
     },
     {
         { name = "AuraSounds", textKey = "Aura Sounds" },
         { name = "AuraTracking", textKey = "Aura Tracking" },
-        { name = "WAImports",   textKey = "WA Imports" },
     },
     {
+        { name = "InterruptDisplay", textKey = "Interrupt Display" },
+        { name = "Assignments",      textKey = "Assignments" },
+        { name = "WAImports",        textKey = "WA Imports" },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
     },
