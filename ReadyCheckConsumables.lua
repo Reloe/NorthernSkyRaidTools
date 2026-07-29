@@ -168,6 +168,213 @@ local function IsPlayerTheInitiator(initiator)
     return initiator == (name .. "-" .. realm)
 end
 
+-- ---------------------------------------------------------------------------
+--  Class / spec weapon overrides
+--  Some specs use self-applied imbues / weapon rites instead of oils, so their
+--  weapon slot is replaced by a single spell button that glows when any of the
+--  buffs it should maintain is missing or low. Fill the TODO IDs in for Midnight;
+--  unfilled tracking simply stays dormant (the button still shows and casts).
+-- ---------------------------------------------------------------------------
+local RITE_OF_SANCTIFICATION = 433568 -- Paladin (Lightsmith): cast
+local RITE_SANCT_BUFF        = 7143   -- Paladin (Lightsmith): buff to track
+local LIGHTNING_SHIELD       = 192106 -- Shaman: the click for ALL specs (applies the spec's imbues)
+local THUNDERSTRIKE_WARD     = 7587   -- Elemental: off-hand SHIELD enchant ID (needs shield + talent)
+local FLAMETONGUE_TALENT     = 318038 -- Flametongue Weapon talent spellID (IsPlayerSpell)
+local EARTHLIVING_TALENT     = 382021 -- TODO Earthliving Weapon talent spellID
+local THUNDERSTRIKE_TALENT   = 462757 -- TODO Thunderstrike Ward talent spellID
+-- Exact imbue enchant IDs (GetWeaponEnchantInfo enchantID). Empty -> falls back to
+-- "any temp enchant present" on that hand until you fill them in.
+local WINDFURY_ENCH          = { 5401 } -- TODO Windfury Weapon enchant ID(s)
+local FLAMETONGUE_ENCH       = { 5400 } -- TODO Flametongue Weapon enchant ID(s)
+local EARTHLIVING_ENCH       = { 6498 } -- TODO Earthliving Weapon enchant ID(s)
+local RITE_ENCH              = { 7143 } -- TODO Rite of Sanctification enchant ID(s)
+
+local function PlayerClass()
+    return select(2, UnitClass("player"))
+end
+
+local function PlayerSpec()
+    return GetSpecialization() -- Shaman: 1 = Elemental, 2 = Enhancement, 3 = Restoration
+end
+
+local function HasShieldOffhand()
+    local id = GetInventoryItemID("player", OFFHAND_SLOT)
+    if not id then return false end
+    local _, _, _, _, _, classID, subClassID = C_Item.GetItemInfoInstant(id)
+    return classID == 4 and subClassID == 6 -- Armor / Shield
+end
+
+local function SpellTexture(id)
+    if not id then return nil end
+    return (C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(id))
+        or (GetSpellTexture and GetSpellTexture(id))
+end
+
+local function SpellName(id)
+    if not id then return nil end
+    return (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id))
+        or (GetSpellInfo and GetSpellInfo(id))
+end
+
+-- Each override: `cast`/`icon` = the spell shown/cast, `requires` = the set that
+-- must stay up (else glow). Add `applyToSlot = MAINHAND_SLOT/OFFHAND_SLOT` when the
+-- spell creates a pending weapon enchant that should auto-apply to that hand (oil-style).
+-- A requirement is one of:
+--   { aura = spellID }                                        -- a self-buff (character aura)
+--   { enchant = MAINHAND_SLOT|OFFHAND_SLOT, ids = { enchIDs } } -- a temporary weapon enchant
+--       (read from GetWeaponEnchantInfo; add needsShield = true when the enchant
+--        sits on an off-hand SHIELD, e.g. Thunderstrike Ward, so the weapon check is bypassed)
+-- optional gates: needsShield, and talentGated + talent = <spellID>.
+local WEAPON_OVERRIDES = {
+    { -- Paladin: Lightsmith hero talent -> Rite of Sanctification (replaces oils)
+        condition    = function()
+            return PlayerClass() == "PALADIN" and IsPlayerSpell(RITE_OF_SANCTIFICATION)
+        end,
+        replacesOils = true,
+        cast         = RITE_OF_SANCTIFICATION,
+        icon         = RITE_OF_SANCTIFICATION,
+        applyToSlot  = MAINHAND_SLOT, -- oil-style: apply the pending enchant to the main hand
+        requires     = {
+            { enchant = MAINHAND_SLOT, ids = RITE_ENCH },
+        },
+    },
+    { -- Enhancement shaman: Windfury (MH) + Flametongue (OH) + Lightning Shield (replaces oils)
+        condition    = function()
+            return PlayerClass() == "SHAMAN" and PlayerSpec() == 2
+        end,
+        replacesOils = true,
+        cast         = LIGHTNING_SHIELD,
+        icon         = LIGHTNING_SHIELD,
+        requires     = {
+            { aura = LIGHTNING_SHIELD },
+            { enchant = MAINHAND_SLOT, ids = WINDFURY_ENCH },
+            { enchant = OFFHAND_SLOT,  ids = FLAMETONGUE_ENCH },
+        },
+    },
+    { -- Elemental shaman WITH Flametongue Weapon talented: single Lightning Shield
+        --   button (replaces oils); glows to reapply Flametongue if it drops off the weapon.
+        condition    = function()
+            return PlayerClass() == "SHAMAN" and PlayerSpec() == 1 and IsPlayerSpell(FLAMETONGUE_TALENT)
+        end,
+        replacesOils = true,
+        cast         = LIGHTNING_SHIELD,
+        icon         = LIGHTNING_SHIELD,
+        requires     = {
+            { aura = LIGHTNING_SHIELD },
+            { enchant = MAINHAND_SLOT, ids = FLAMETONGUE_ENCH },
+            { enchant = OFFHAND_SLOT,  ids = { THUNDERSTRIKE_WARD }, needsShield = true, talentGated = true, talent = THUNDERSTRIKE_TALENT },
+        },
+    },
+    { -- Elemental shaman WITHOUT Flametongue Weapon: keep the oil buttons AND add a
+        --   separate Lightning Shield button (additive, does not replace the oils).
+        condition = function()
+            return PlayerClass() == "SHAMAN" and PlayerSpec() == 1 and not IsPlayerSpell(FLAMETONGUE_TALENT)
+        end,
+        cast      = LIGHTNING_SHIELD,
+        icon      = LIGHTNING_SHIELD,
+        requires  = {
+            { aura = LIGHTNING_SHIELD },
+            { enchant = OFFHAND_SLOT, ids = { THUNDERSTRIKE_WARD }, needsShield = true, talentGated = true, talent = THUNDERSTRIKE_TALENT },
+        },
+    },
+    { -- Restoration shaman: Lightning Shield + Earthliving (if talented) (replaces oils)
+        condition    = function()
+            return PlayerClass() == "SHAMAN" and PlayerSpec() == 3
+        end,
+        replacesOils = true,
+        cast         = LIGHTNING_SHIELD,
+        icon         = LIGHTNING_SHIELD,
+        requires     = {
+            { aura = LIGHTNING_SHIELD },
+            { enchant = MAINHAND_SLOT, ids = EARTHLIVING_ENCH, talentGated = true, talent = EARTHLIVING_TALENT },
+        },
+    },
+}
+
+for _, cat in ipairs(ConsumableCategories) do
+    if cat.key == "weapon" then cat.specialButtons = WEAPON_OVERRIDES end
+end
+
+local function AuraRemaining(aura)
+    if aura.expirationTime and aura.expirationTime > 0 then
+        return aura.expirationTime - GetTime()
+    end
+    return math.huge -- active but has no timer
+end
+
+local function RequirementActive(req)
+    if req.needsShield then
+        -- Off-hand SHIELD enchant (e.g. Thunderstrike Ward): needs a shield, not a weapon.
+        if not HasShieldOffhand() then return false end
+    elseif req.enchant and not IsWeaponInSlot(req.enchant) then
+        -- Weapon imbue: only relevant when that hand actually holds a weapon.
+        return false
+    end
+    if req.talentGated and not (req.talent and IsPlayerSpell(req.talent)) then return false end
+    return true
+end
+
+local function RequirementRemaining(req)
+    if req.aura then
+        local a = C_UnitAuras.GetPlayerAuraBySpellID(req.aura)
+        return a and AuraRemaining(a) or nil
+    elseif req.enchant then
+        local hasMH, mhExp, _, mhID, hasOH, ohExp, _, ohID = GetWeaponEnchantInfo()
+        local has, exp, eid
+        if req.enchant == MAINHAND_SLOT then
+            has, exp, eid = hasMH, mhExp, mhID
+        else
+            has, exp, eid = hasOH, ohExp, ohID
+        end
+        if not has then return nil end
+        if req.ids and #req.ids > 0 then -- exact match; empty list = any enchant counts
+            local match = false
+            for _, id in ipairs(req.ids) do
+                if id == eid then
+                    match = true
+                    break
+                end
+            end
+            if not match then return nil end
+        end
+        return exp and (exp / 1000) or math.huge
+    end
+    return nil
+end
+
+-- Shortest remaining among active requirements, plus whether any is missing.
+local function EvaluateOverride(ov)
+    local minRem, anyMissing = nil, false
+    for _, req in ipairs(ov.requires) do
+        if RequirementActive(req) then
+            local rem = RequirementRemaining(req)
+            if not rem then
+                anyMissing = true
+            elseif rem ~= math.huge and (not minRem or rem < minRem) then
+                minRem = rem
+            end
+        end
+    end
+    return minRem, anyMissing
+end
+
+-- Returns the special button that REPLACES the oils (if any) plus a list of
+-- additive special buttons that appear alongside the oils.
+local function GetWeaponSpecials(cat)
+    local replacer, extras = nil, {}
+    if cat.specialButtons then
+        for _, ov in ipairs(cat.specialButtons) do
+            if ov.condition() then
+                if ov.replacesOils then
+                    replacer = replacer or ov
+                else
+                    extras[#extras + 1] = ov
+                end
+            end
+        end
+    end
+    return replacer, extras
+end
 -- A variant is identified by its first (best) item, used as the "last used" key.
 local function VariantKey(v)
     return v.items and v.items[1]
@@ -228,27 +435,30 @@ local function BuildSlotList()
     local slots   = {}
     local warlock = IsWarlock()
     for _, cat in ipairs(ConsumableCategories) do
-        if (cat.warlockOnly and not warlock) or #cat._allItems == 0 then
-            -- skipped: wrong class, or item IDs not filled in yet
+        if cat.warlockOnly and not warlock then
+            -- skipped: wrong class
         elseif cat.perWeaponHand then
-            if IsWeaponInSlot(MAINHAND_SLOT) then
-                slots[#slots + 1] = { cat = cat, weaponSlot = MAINHAND_SLOT, handLabel = "MH" }
+            local replacer, extras = GetWeaponSpecials(cat)
+            if replacer then
+                -- Class/spec ability replaces the oil buttons with one spell button.
+                slots[#slots + 1] = { cat = cat, override = replacer }
+            elseif #cat._allItems > 0 then
+                if IsWeaponInSlot(MAINHAND_SLOT) then
+                    slots[#slots + 1] = { cat = cat, weaponSlot = MAINHAND_SLOT, handLabel = "MH" }
+                end
+                if IsWeaponInSlot(OFFHAND_SLOT) then
+                    slots[#slots + 1] = { cat = cat, weaponSlot = OFFHAND_SLOT, handLabel = "OH" }
+                end
             end
-            if IsWeaponInSlot(OFFHAND_SLOT) then
-                slots[#slots + 1] = { cat = cat, weaponSlot = OFFHAND_SLOT, handLabel = "OH" }
+            -- Additive class buttons shown alongside the oils (e.g. Lightning Shield).
+            for _, ex in ipairs(extras) do
+                slots[#slots + 1] = { cat = cat, override = ex }
             end
-        else
+        elseif #cat._allItems > 0 then
             slots[#slots + 1] = { cat = cat }
         end
     end
     return slots
-end
-
-local function AuraRemaining(aura)
-    if aura.expirationTime and aura.expirationTime > 0 then
-        return aura.expirationTime - GetTime()
-    end
-    return math.huge -- active but has no timer
 end
 
 -- Remaining seconds of a slot's buff. Weapon slots use the weapon-enchant API;
@@ -348,10 +558,34 @@ local function FormatDuration(sec)
 end
 
 -- Refresh the buff timer text + glow for one visible button.
+local function ApplyGlow(btn, needsRebuff)
+    if needsRebuff and not btn.glowing then
+        NSI.LCG.PixelGlow_Start(btn)
+        btn.glowing = true
+    elseif not needsRebuff and btn.glowing then
+        NSI.LCG.PixelGlow_Stop(btn)
+        btn.glowing = false
+    end
+end
 local function UpdateButtonBuff(btn)
     local slot = btn.slot
     if not slot then return end
 
+    if btn.override then
+        local minRem, anyMissing = EvaluateOverride(btn.override)
+        if minRem and minRem ~= math.huge then
+            btn.duration:SetText(FormatDuration(minRem))
+            btn.duration:SetTextColor(minRem < LOW_BUFF_SECS and 1 or 1,
+                minRem < LOW_BUFF_SECS and 0.3 or 1, minRem < LOW_BUFF_SECS and 0.3 or 1, 1)
+            btn.duration:Show()
+        else
+            btn.duration:SetText("")
+            btn.duration:Hide()
+        end
+        -- Glow if the player can cast it and any tracked buff is missing / low.
+        ApplyGlow(btn, btn.hasItem and (anyMissing or (minRem and minRem < LOW_BUFF_SECS)))
+        return
+    end
     local tracked   = SlotHasBuffTracking(slot)
     local remaining = tracked and GetSlotBuffRemaining(slot) or nil
 
@@ -369,17 +603,7 @@ local function UpdateButtonBuff(btn)
     end
 
     -- Glow when the player owns the item but the buff is missing or running low.
-    local needsRebuff = btn.hasItem and tracked
-        and (not remaining or remaining < LOW_BUFF_SECS)
-
-    if needsRebuff and not btn.glowing then
-        -- Single-line (1x), 1px-thick pixel glow.
-        NSI.LCG.PixelGlow_Start(btn)
-        btn.glowing = true
-    elseif not needsRebuff and btn.glowing then
-        NSI.LCG.PixelGlow_Stop(btn)
-        btn.glowing = false
-    end
+    ApplyGlow(btn, btn.hasItem and tracked and (not remaining or remaining < LOW_BUFF_SECS))
 end
 
 -- Refresh the bag stack count (bag counts change as consumables are used).
@@ -403,10 +627,15 @@ local function StopAllGlows()
 end
 
 local function Button_OnEnter(self)
-    if not self.currentItem then return end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetItemByID(self.currentItem)
-    GameTooltip:Show()
+    if self.currentSpell then
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetSpellByID(self.currentSpell)
+        GameTooltip:Show()
+    elseif self.currentItem then
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetItemByID(self.currentItem)
+        GameTooltip:Show()
+    end
 end
 
 local function Button_OnLeave()
@@ -472,57 +701,88 @@ end
 
 -- Point a pooled button at a slot and lay it out at position `index`.
 local function ConfigureButton(btn, slot, index)
-    local cat                          = slot.cat
-    local chosenID, displayID, variant = ResolveCategory(cat)
-    -- cat.icon forces a fixed icon (e.g. food always shows the Well Fed icon);
-    -- otherwise use the icon of the item that would be used / shown.
-    local iconID                       = cat.icon or (displayID and C_Item.GetItemIconByID(displayID)) or QUESTION_MARK
+    local cat    = slot.cat
 
-    btn.slot                           = slot
-    btn.chosenID                       = chosenID
-    btn.chosenVariant                  = variant
-    btn.icon:SetTexture(iconID)
-    -- Tooltip reflects only the item that will actually be used; no owned item = no tooltip.
-    btn.currentItem = chosenID
-    btn.hasItem     = chosenID ~= nil
+    btn.slot     = slot
+    btn.override = slot.override
 
     -- Reset stale action attributes (pooled buttons switch slot types).
     btn:SetAttribute("type", nil)
     btn:SetAttribute("macrotext", nil)
     btn:SetAttribute("item", nil)
     btn:SetAttribute("target-slot", nil)
+    btn:SetAttribute("spell", nil)
 
-    if chosenID then
-        -- /use resolves items by name; the "item:ID" macro form does not work,
-        -- so use the name (falling back to the item link for the secure item type).
-        local itemName = C_Item.GetItemInfo(chosenID)
-        if slot.weaponSlot then
-            -- Apply the oil to that specific weapon via the secure target-slot.
-            btn:SetAttribute("type", "item")
-            btn:SetAttribute("item", itemName or ("item:" .. chosenID))
-            btn:SetAttribute("target-slot", tostring(slot.weaponSlot))
-        elseif itemName then
-            btn:SetAttribute("type", "macro")
-            btn:SetAttribute("macrotext", "/stopmacro [combat]\n/use " .. itemName)
-        else
-            btn:SetAttribute("type", "item")
-            btn:SetAttribute("item", "item:" .. chosenID)
-        end
+    if slot.override then
+        -- Class/spec ability: a single button that casts a self-buff / weapon rite
+        -- (optionally applying a pending weapon enchant to a hand, oil-style).
+        local ov          = slot.override
+        btn.chosenID      = nil
+        btn.chosenVariant = nil
+        btn.currentItem   = nil
+        btn.currentSpell  = ov.cast
+        btn.hasItem       = IsPlayerSpell(ov.cast) and true or false -- can they cast it
+        btn.icon:SetTexture(SpellTexture(ov.icon) or QUESTION_MARK)
         btn.icon:SetDesaturated(false)
-        local count = C_Item.GetItemCount(chosenID)
-        btn.count:SetText(count > 1 and count or "")
-    else
-        btn:SetAttribute("type", "macro")
-        btn:SetAttribute("macrotext", "") -- greyed-out: clicking does nothing
-        btn.icon:SetDesaturated(true)
         btn.count:SetText("")
-    end
-
-    if slot.handLabel then
-        btn.handLabel:SetText(slot.handLabel)
-        btn.handLabel:Show()
-    else
         btn.handLabel:Hide()
+        local spellName = SpellName(ov.cast) or tostring(ov.cast)
+        if ov.applyToSlot then
+            -- Spell creates a pending weapon enchant (like an oil): cast it, then
+            -- apply it to the given weapon slot so it lands without a target cursor.
+            btn:SetAttribute("type", "macro")
+            btn:SetAttribute("macrotext",
+                "/stopmacro [combat]\n/cast " .. spellName .. "\n/use " .. ov.applyToSlot)
+        else
+            btn:SetAttribute("type", "spell")
+            btn:SetAttribute("spell", spellName)
+        end
+    else
+        local chosenID, displayID, variant = ResolveCategory(cat)
+        -- cat.icon forces a fixed icon (e.g. food always shows the Well Fed icon);
+        -- otherwise use the icon of the item that would be used / shown.
+        local iconID                       = cat.icon or (displayID and C_Item.GetItemIconByID(displayID)) or
+            QUESTION_MARK
+        btn.chosenID                       = chosenID
+        btn.chosenVariant                  = variant
+        btn.currentSpell                   = nil
+        -- Tooltip reflects only the item that will actually be used; none = no tooltip.
+        btn.currentItem                    = chosenID
+        btn.hasItem                        = chosenID ~= nil
+        btn.icon:SetTexture(iconID)
+
+        if chosenID then
+            -- /use resolves items by name; the "item:ID" macro form does not work,
+            -- so use the name (falling back to the item link for the secure item type).
+            local itemName = C_Item.GetItemInfo(chosenID)
+            if slot.weaponSlot then
+                -- Apply the oil to that specific weapon via the secure target-slot.
+                btn:SetAttribute("type", "item")
+                btn:SetAttribute("item", itemName or ("item:" .. chosenID))
+                btn:SetAttribute("target-slot", tostring(slot.weaponSlot))
+            elseif itemName then
+                btn:SetAttribute("type", "macro")
+                btn:SetAttribute("macrotext", "/stopmacro [combat]\n/use " .. itemName)
+            else
+                btn:SetAttribute("type", "item")
+                btn:SetAttribute("item", "item:" .. chosenID)
+            end
+            btn.icon:SetDesaturated(false)
+            local count = C_Item.GetItemCount(chosenID)
+            btn.count:SetText(count > 1 and count or "")
+        else
+            btn:SetAttribute("type", "macro")
+            btn:SetAttribute("macrotext", "") -- greyed-out: clicking does nothing
+            btn.icon:SetDesaturated(true)
+            btn.count:SetText("")
+        end
+
+        if slot.handLabel then
+            btn.handLabel:SetText(slot.handLabel)
+            btn.handLabel:Show()
+        else
+            btn.handLabel:Hide()
+        end
     end
 
     btn:ClearAllPoints()
