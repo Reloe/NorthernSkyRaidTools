@@ -685,16 +685,6 @@ local function BuildAuraTrackingCandidateFilters(settings)
     local candidateFilters = {}
 
     if type(configured) == "table" then
-        local spellIDs = ParseAuraTrackingSpellIDs(configured.IncludeSpellIDs)
-        if #spellIDs > 0 then
-            candidateFilters.includeSpellIDs = {}
-            for _, spellID in ipairs(spellIDs) do
-                candidateFilters.includeSpellIDs[spellID] = true
-            end
-        end
-    end
-
-    if type(configured) == "table" then
         local spellIDs = ParseAuraTrackingSpellIDs(configured.ExcludeSpellIDs)
         if #spellIDs > 0 then
             candidateFilters.excludeSpellIDs = {}

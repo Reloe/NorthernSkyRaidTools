@@ -792,7 +792,7 @@ local function BuildAuraTrackingUI(screen)
     local displayF = tabFrames["Display"]
     local anchorLbl = displayF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(anchorLbl, 11, "")
-    anchorLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    anchorLbl:SetTextColor(1, 0.82, 0, 1)
     anchorLbl:SetText(NSI:Loc("Anchor Frame"))
     anchorLbl:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, 0)
 
@@ -820,7 +820,7 @@ local function BuildAuraTrackingUI(screen)
         local function tip(title, desc)
             return { title = title, desc = desc }
         end
-        add({ Type = "Label", text = "Anchor Point" })
+        add({ Type = "Label", text = "Position Settings", highlight = true })
         add({ Type = "Dropdown", label = "Anchor Point", values = ANCHOR_POINTS,
             tooltip = tip("Anchor Point", "Point on this Aura Tracking display that should be anchored."),
             get = function() return s.Anchor or "CENTER" end, set = function(_, v) s.Anchor = v; apply(key) end })
@@ -855,7 +855,7 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Frame Strata", "Controls whether this Aura Tracking display appears above or below other UI frames."),
             get = function() return s.FrameStrata or "MEDIUM" end, set = function(_, v) s.FrameStrata = v; apply(key) end })
 
-        add({ Type = "Label", text = "Layout" })
+        add({ Type = "Label", text = "Layout", highlight = true })
         add({ Type = "Dropdown", label = "Grow Direction", values = GROW_DIRECTIONS,
             tooltip = tip("Grow Direction", "Grow Direction"),
             get = function() return s.GrowDirection end, set = function(_, v) s.GrowDirection = v; apply(key) end })
@@ -883,7 +883,7 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Sort Order", "Default uses Blizzard's aura order. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
             get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })
 
-        add({ Type = "Label", text = "Icon" })
+        add({ Type = "Label", text = "Icon", highlight = true })
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
             tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
             get = function() return s.BorderSize end, set = function(_, v) s.BorderSize = v; apply(key) end })
@@ -920,7 +920,7 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.IncludeImmunities end, set = function(_, v) s.IncludeImmunities = v; apply(key) end })
         end
 
-        add({ Type = "Label", text = "Text Style" })
+        add({ Type = "Label", text = "Text Style", highlight = true })
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
             tooltip = tip("Text Font", "Font used for duration and stack text"),
             get = function() return s.TextFont end, set = function(_, v) s.TextFont = v; apply(key) end })
@@ -928,7 +928,7 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Text Outline", "Outline style used for duration and stack text"),
             get = function() return s.TextFontFlags end, set = function(_, v) s.TextFontFlags = v; apply(key) end })
 
-        add({ Type = "Label", text = "Duration Text" })
+        add({ Type = "Label", text = "Duration Text", highlight = true })
         add({ Type = "Checkbox", label = "Hide Duration Text",
             tooltip = tip("Hide Duration Text", "Hide the duration text on tracked auras."),
             get = function() return s.HideDurationText end, set = function(_, v) s.HideDurationText = v; apply(key) end })
@@ -945,7 +945,7 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Duration Y-Offset", "Vertical offset of the duration text"),
             get = function() return s.DurationYOffset end, set = function(_, v) s.DurationYOffset = v; apply(key) end })
 
-        add({ Type = "Label", text = "Stack Text" })
+        add({ Type = "Label", text = "Stack Text", highlight = true })
         add({ Type = "Checkbox", label = "Hide Stack Text",
             tooltip = tip("Hide Stack Text", "Hide the stack count text on tracked auras."),
             get = function() return s.HideStackText end, set = function(_, v) s.HideStackText = v; apply(key) end })
@@ -964,11 +964,11 @@ local function BuildAuraTrackingUI(screen)
 
         if key == "Tank" or key == "External" or tostring(key):match("^Custom:") then
             local isTank = key == "Tank"
-            add({ Type = "Label", text = isTank and "Co-Tank Name Settings" or "Source Name Settings" })
+            add({ Type = "Label", text = isTank and "Co-Tank Name Settings" or "Source Name Settings", highlight = true })
             add({ Type = "Checkbox", label = isTank and "Show Co-Tank Name" or "Show Source Name",
                 tooltip = isTank
                     and tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons.")
-                    or tip("Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"),
+                    or tip("Show Source Name", "Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"),
                 get = function() return s.NameEnabled end, set = function(_, v) s.NameEnabled = v; apply(key) end })
             add({ Type = "Dropdown", label = "Name Position", values = NAME_POSITIONS,
                 tooltip = tip("Name Position", isTank and "Position of the co-tank name relative to the aura icon." or "Position of the source name relative to the aura icon."),
@@ -1098,7 +1098,7 @@ local function BuildAuraTrackingUI(screen)
             -- reserves a fixed 60px input box when given a label (the rest of
             -- the width goes to the label text), so a preceding standalone
             -- Label caption + a label-less full-width TextEntry is used instead.
-            { Type = "Label", text = "Unit" },
+            { Type = "Label", text = "Unit", highlight = true },
             { Type = "TextEntry",
                 get = function() return s.Unit or "player" end,
                 set = function(_, v)
@@ -1124,20 +1124,12 @@ local function BuildAuraTrackingUI(screen)
             return { title = title, desc = desc }
         end
 
-        local function AddCandidateFilterDefs(includeSpellIDs)
+        local function AddCandidateFilterDefs()
             s.CandidateFilters = s.CandidateFilters or {}
             local candidateFilters = s.CandidateFilters
             defs[#defs + 1] = { Type = "Breakline" }
             defs[#defs + 1] = { Type = "Label", text = "Candidate Filters", height = 20, highlight = true }
             defs[#defs + 1] = { Type = "Label", text = "Candidate filters are evaluated after normal aura filters. Every enabled candidate filter must match." }
-
-            if includeSpellIDs then
-                defs[#defs + 1] = { Type = "Label", text = "Include Spell IDs" }
-                defs[#defs + 1] = { Type = "TextEntry",
-                    tooltip = tip("Include Spell IDs", "Only show these spell IDs. Separate multiple IDs with spaces or commas."),
-                    get = function() return candidateFilters.IncludeSpellIDs or "" end,
-                    set = function(_, v) candidateFilters.IncludeSpellIDs = v; apply(key) end }
-            end
 
             defs[#defs + 1] = { Type = "Label", text = "Exclude Spell IDs" }
             defs[#defs + 1] = { Type = "TextEntry",
@@ -1164,7 +1156,7 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return candidateFilters.ProcessedAuraType or "Disabled" end,
                 set = function(_, v) candidateFilters.ProcessedAuraType = v or "Disabled"; apply(key) end }
 
-            defs[#defs + 1] = { Type = "Label", text = "Dispel Types" }
+            defs[#defs + 1] = { Type = "Label", text = "Dispel Types", highlight = true }
             candidateFilters.DispelTypes = candidateFilters.DispelTypes or {}
             for _, dispelType in ipairs(NSI.AuraTrackingCandidateDispelTypes) do
                 defs[#defs + 1] = { Type = "Dropdown", label = dispelType, values = FILTER_STATES,
@@ -1179,7 +1171,7 @@ local function BuildAuraTrackingUI(screen)
                     end }
             end
 
-            defs[#defs + 1] = { Type = "Label", text = "Aura Properties" }
+            defs[#defs + 1] = { Type = "Label", text = "Aura Properties", highlight = true }
             for _, filter in ipairs(NSI.AuraTrackingCandidateFilterDefinitions) do
                 local filterKey = filter.key
                 defs[#defs + 1] = { Type = "Dropdown", label = filter.label, values = FILTER_STATES,
@@ -1224,16 +1216,17 @@ local function BuildAuraTrackingUI(screen)
                     end,
                 }
             end
-            AddCandidateFilterDefs(true)
+            AddCandidateFilterDefs()
         else
-            defs[#defs + 1] = { Type = "Dropdown", label = "Unit Type", values = UNIT_TYPES,
+            defs[#defs + 1] = { Type = "Label", text = "Unit Type", highlight = true }
+            defs[#defs + 1] = { Type = "Dropdown", values = UNIT_TYPES,
                 tooltip = { title = "Unit Type", desc = "Automatic treats player, party, raid and resolved player-name units as friendly. Other units are treated as enemy unless manually changed." },
                 get = function() return s.UnitType or "Automatic" end,
                 set = function(_, v)
                     s.UnitType = v or "Automatic"
                     apply(key)
                 end }
-            defs[#defs + 1] = { Type = "Label", text = "Spell IDs" }
+            defs[#defs + 1] = { Type = "Label", text = "Spell IDs", highlight = true }
             defs[#defs + 1] = BuildSpellIDListWidget(key)
             defs[#defs + 1] = { Type = "Label", text = "Blizzard only allows spell-ID filtering for buffs on friendly units and debuffs on enemy units." }
         end
