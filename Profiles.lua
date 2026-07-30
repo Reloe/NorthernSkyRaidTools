@@ -641,8 +641,6 @@ function NSI:CopyFromProfile(name)
 end
 
 function NSI:ExportProfileString()
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
     local profileData = NSRT.Profiles[NSRT.CurrentProfile]
     if not profileData then return nil end
     local exportData = {}
@@ -655,22 +653,12 @@ function NSI:ExportProfileString()
         profileName = NSRT.CurrentProfile,
         data = exportData,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    local encoded = LibDeflate:EncodeForPrint(compressed)
-    return encoded
+    return self:EncodeExportData(exportTable)
 end
 
 function NSAPI:ImportProfileString(importString, name) -- name is optional
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
-    if not importString or importString == "" then return nil end
-    local decoded = LibDeflate:DecodeForPrint(importString)
-    if not decoded then return nil end
-    local decompressed = LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return nil end
-    local success, exportTable = LibSerialize:Deserialize(decompressed)
-    if not success or type(exportTable) ~= "table" then return nil end
+    local exportTable = NSI:DecodeExportData(importString)
+    if type(exportTable) ~= "table" then return nil end
     local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
         if NSRT.Profiles[name] then
@@ -693,8 +681,6 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
 end
 
 function NSI:ExportAlertsString(encID, diffID)
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
     local source = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
     local encounterAlerts
     if diffID then
@@ -721,14 +707,10 @@ function NSI:ExportAlertsString(encID, diffID)
         diffID          = diffID,
         encounterAlerts = encounterAlerts,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    return LibDeflate:EncodeForPrint(compressed)
+    return self:EncodeExportData(exportTable)
 end
 
 function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
     local exportTable = {
         version   = 1,
         type      = "single_alert",
@@ -738,15 +720,11 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
         alertKey  = alertKey,
         data      = data,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    return LibDeflate:EncodeForPrint(compressed)
+    return self:EncodeExportData(exportTable)
 end
 
 function NSI:ExportGroupString(encID, groupName, diffID)
     if not encID or not groupName then return nil end
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate   = LibStub("LibDeflate")
     local encounterAlerts = {}
     local encTable = encID and NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
     if not encTable then return nil end
@@ -771,21 +749,12 @@ function NSI:ExportGroupString(encID, groupName, diffID)
         groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
         encounterAlerts = encounterAlerts,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    return LibDeflate:EncodeForPrint(compressed)
+    return self:EncodeExportData(exportTable)
 end
 
 function NSAPI:ImportAlertsString(importString)
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
-    if not importString or importString == "" then return nil end
-    local decoded = LibDeflate:DecodeForPrint(importString)
-    if not decoded then return nil end
-    local decompressed = LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return nil end
-    local success, t = LibSerialize:Deserialize(decompressed)
-    if not success or type(t) ~= "table" then return nil end
+    local t = NSI:DecodeExportData(importString)
+    if type(t) ~= "table" then return nil end
 
     if t.type == "alerts" then
         local count = 0
