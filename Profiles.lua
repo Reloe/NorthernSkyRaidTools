@@ -521,6 +521,7 @@ local ignored = {
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
     ["AuraTrackingSettings"] = true,
+    ["AuraSounds"]       = true,
     ["NickNames"]        = true,
 }
 

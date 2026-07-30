@@ -508,7 +508,7 @@ end
 
 function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
-    local id = self:DifficultyCheck({14, 15, 16})
+    local id = self:DifficultyCheck({8, 14, 15, 16})
     if not id then return end
     local function GetBossUnitState()
         local bossUnits = {}
@@ -537,7 +537,7 @@ function NSI:LogTimeline(e, ...)
         self.CurrentEncounterData = {
             Name = encName,
             encID = encID,
-            difficulty = difficultyID == 16 and "Mythic" or difficultyID == 15 and "Heroic" or difficultyID == 14 and "Normal",
+            difficulty = difficultyID == 8 and "Mythic+" or difficultyID == 16 and "Mythic" or difficultyID == 15 and "Heroic" or difficultyID == 14 and "Normal",
             pullTime = now,
             startTime = string.format("%02d:%02d", date.hour, date.minute),
             success = false,
