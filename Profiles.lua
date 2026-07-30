@@ -398,6 +398,7 @@ function NSI:AddMissingDefaults()
             SourceOfMagicCheck = false,
             BlisteringScalesCheck = false,
             SymbioticRelationshipCheck = false,
+            ConsumablesDisplay = true,
         },
 
         -- QoL Settings

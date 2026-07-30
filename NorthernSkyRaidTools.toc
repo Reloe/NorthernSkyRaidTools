@@ -45,6 +45,7 @@ VersionCheck.lua
 SetupManager.lua
 CooldownCheck.lua
 ReadyCheck.lua
+ReadyCheckConsumables.lua
 AuraSounds.lua
 AuraTracking.lua
 PaceComparison.lua
