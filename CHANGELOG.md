@@ -1,4 +1,6 @@
 ## Changelog
+- Add configurable keywords and guild-only toggle to Auto-Invite on Whisper
+- Add Auto-Promote Assistants QoL setting (guild rank threshold + always-promote name list)
 - Fix Aura Tracking for 12.1 (Private Aura replacement)
 - Add External and Custom Aura Tracking and a few new settings
 - Allow Filtering for Aura Tracking instead of just spellid's

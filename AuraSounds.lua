@@ -468,3 +468,157 @@ function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, 
     return entryKey
 end
 
+local function GetAuraSoundCategory(categoryType, categoryKey)
+    local categories = categoryType == "Custom" and NSRT.AuraSounds.CustomCategories or NSI.AuraSoundCategories[categoryType]
+    for _, category in ipairs(categories or {}) do
+        if category.key == categoryKey then
+            return category
+        end
+    end
+end
+
+function NSI:ExportAuraSoundCategories(categoryType, categoryKeys, group)
+    if type(categoryType) ~= "string" or type(categoryKeys) ~= "table" then return end
+
+    local export = {
+        type = "NSRT_AURA_SOUNDS",
+        version = 1,
+        categoryType = categoryType,
+        categories = {},
+        groups = {},
+        sounds = {},
+    }
+    local includedCategories, includedSounds = {}, {}
+    for _, categoryKey in ipairs(categoryKeys) do
+        local category = GetAuraSoundCategory(categoryType, categoryKey)
+        if category then
+            includedCategories[categoryKey] = category
+            if categoryType == "Custom" then
+                export.categories[#export.categories + 1] = CopyTable(category)
+            else
+                export.categories[#export.categories + 1] = {key = category.key}
+            end
+        end
+    end
+    if not next(includedCategories) then return end
+
+    if categoryType == "Custom" then
+        local groupKeys = {}
+        if group then groupKeys[group.key] = group end
+        for _, category in pairs(includedCategories) do
+            if category.groupKey then
+                for _, customGroup in ipairs(NSRT.AuraSounds.CustomGroups or {}) do
+                    if customGroup.key == category.groupKey then groupKeys[customGroup.key] = customGroup break end
+                end
+            end
+        end
+        for _, customGroup in pairs(groupKeys) do
+            export.groups[#export.groups + 1] = CopyTable(customGroup)
+        end
+    end
+
+    local defaultsEnabled = categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
+    for categoryKey, category in pairs(includedCategories) do
+        for _, entry in ipairs(category.entries or {}) do
+            if type(entry) == "table" and entry.spellID then
+                local unit, eventType = entry.unit or "player", entry.eventType or "applied"
+                local key = entry.key or self:GetAuraSoundKey(entry.spellID, unit, eventType)
+                local saved = NSRT.AuraSounds[key]
+                local info = type(saved) == "table" and CopyTable(saved) or {}
+                info.spellID = entry.spellID
+                info.unit = info.unit or unit
+                info.eventType = info.eventType or eventType
+                info.categoryType = categoryType
+                info.categoryKey = categoryKey
+                if not info.edited then
+                    info.sound = defaultsEnabled and entry.sound or nil
+                end
+                export.sounds[#export.sounds + 1] = {key = key, info = info}
+                includedSounds[key] = true
+            end
+        end
+    end
+    for key, info in pairs(NSRT.AuraSounds) do
+        if type(info) == "table" and info.spellID and info.categoryType == categoryType
+            and includedCategories[info.categoryKey] and not includedSounds[key]
+        then
+            export.sounds[#export.sounds + 1] = {key = key, info = CopyTable(info)}
+        end
+    end
+    return self:EncodeExportData(export)
+end
+
+function NSI:ImportAuraSoundString(text)
+    local import = self:DecodeExportData(text)
+    if type(import) ~= "table" or import.type ~= "NSRT_AURA_SOUNDS"
+        or type(import.categoryType) ~= "string" or type(import.categories) ~= "table" or type(import.sounds) ~= "table"
+    then
+        return false
+    end
+
+    local categoryKeys = {}
+    if import.categoryType == "Custom" then
+        for _, group in ipairs(import.groups or {}) do
+            if type(group) == "table" and group.key and group.label then
+                local found
+                for index, existing in ipairs(NSRT.AuraSounds.CustomGroups) do
+                    if existing.key == group.key then NSRT.AuraSounds.CustomGroups[index] = CopyTable(group) found = true break end
+                end
+                if not found then NSRT.AuraSounds.CustomGroups[#NSRT.AuraSounds.CustomGroups + 1] = CopyTable(group) end
+                local id = tonumber(group.key:match("^group_(%d+)$"))
+                if id then NSRT.AuraSounds.NextCustomGroupID = math.max(NSRT.AuraSounds.NextCustomGroupID or 1, id + 1) end
+            end
+        end
+        for _, category in ipairs(import.categories) do
+            if type(category) == "table" and category.key and category.label then
+                categoryKeys[category.key] = true
+                local found
+                for index, existing in ipairs(NSRT.AuraSounds.CustomCategories) do
+                    if existing.key == category.key then NSRT.AuraSounds.CustomCategories[index] = CopyTable(category) found = true break end
+                end
+                if not found then NSRT.AuraSounds.CustomCategories[#NSRT.AuraSounds.CustomCategories + 1] = CopyTable(category) end
+                local id = tonumber(category.key:match("^custom_(%d+)$"))
+                if id then NSRT.AuraSounds.NextCustomCategoryID = math.max(NSRT.AuraSounds.NextCustomCategoryID or 1, id + 1) end
+            end
+        end
+    else
+        for _, category in ipairs(import.categories) do
+            if type(category) == "table" and GetAuraSoundCategory(import.categoryType, category.key) then
+                categoryKeys[category.key] = true
+            end
+        end
+    end
+    if not next(categoryKeys) then return false end
+
+    local keysToRemove = {}
+    for categoryKey in pairs(categoryKeys) do
+        local category = GetAuraSoundCategory(import.categoryType, categoryKey)
+        for _, entry in ipairs(category and category.entries or {}) do
+            if type(entry) == "table" and entry.spellID then
+                keysToRemove[entry.key or self:GetAuraSoundKey(entry.spellID, entry.unit or "player", entry.eventType or "applied")] = true
+            end
+        end
+    end
+    for key, info in pairs(NSRT.AuraSounds) do
+        if type(info) == "table" and info.categoryType == import.categoryType and categoryKeys[info.categoryKey] then
+            keysToRemove[key] = true
+        end
+    end
+    for key in pairs(keysToRemove) do NSRT.AuraSounds[key] = nil end
+
+    local imported = 0
+    for _, entry in ipairs(import.sounds) do
+        if type(entry) == "table" and type(entry.key) == "string" and type(entry.info) == "table"
+            and tonumber(entry.info.spellID) and categoryKeys[entry.info.categoryKey]
+        then
+            NSRT.AuraSounds[entry.key] = CopyTable(entry.info)
+            imported = imported + 1
+        end
+    end
+    -- Imported defaults remain unedited so they continue following future built-in updates.
+    self:ApplyDefaultAuraSounds(false, false, NSRT.AuraSounds.UseDefaultRaidAuraSounds)
+    self:ApplyDefaultAuraSounds(false, true, NSRT.AuraSounds.UseDefaultDungeonAuraSounds)
+    self:RebuildAuraSounds()
+    return true, imported
+end
+

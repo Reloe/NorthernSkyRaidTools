@@ -85,14 +85,6 @@ NSI.CLASS_SPECIALIZATION_MAP = {
     ["ALL"] = { 1 },
 }
 
-function NSI:GetAllSpecializationIDs()
-    local ids = {}
-    for k, v in pairs(self.SPECIALIZATION_MAP) do
-        tinsert(ids, v)
-    end
-    return ids
-end
-
 function NSI:CheckCooldowns()
     if self:Restricted() then return end
     local spec = self:GetMySpecID()
