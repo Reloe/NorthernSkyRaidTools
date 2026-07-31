@@ -705,7 +705,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted, searchable)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
@@ -780,10 +780,31 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     popup:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     popup:SetBackdropBorderColor(0, 1, 1, 0.7)
 
+    -- Optional search box pinned to the top of the popup
+    local SEARCH_H = 20
+    local searchBox
+    if searchable then
+        searchBox = CreateFrame("EditBox", nil, popup, "BackdropTemplate")
+        searchBox:SetHeight(SEARCH_H)
+        searchBox:SetPoint("TOPLEFT", popup, "TOPLEFT", 2, -2)
+        searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -2)
+        MakeControlBackdrop(searchBox)
+        searchBox:SetAutoFocus(false)
+        searchBox:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
+        searchBox:SetTextColor(1, 1, 1, 1)
+        searchBox:SetTextInsets(6, 6, 0, 0)
+        searchBox:SetMaxLetters(100)
+        labelRegistry[#labelRegistry + 1] = {label = searchBox, size = 12}
+    end
+
     -- Scrollbar track (right strip inside popup)
     local sbTrack = popup:CreateTexture(nil, "BACKGROUND")
     sbTrack:SetColorTexture(0.10, 0.10, 0.10, 1)
-    sbTrack:SetPoint("TOPRIGHT",    popup, "TOPRIGHT",    -2, -2)
+    if searchable then
+        sbTrack:SetPoint("TOPRIGHT", searchBox, "BOTTOMRIGHT", 0, -1)
+    else
+        sbTrack:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -2)
+    end
     sbTrack:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -2,  2)
     sbTrack:SetWidth(SB_W)
     sbTrack:Hide()
@@ -798,7 +819,11 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     sbThumb:Hide()
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, popup)
-    scrollFrame:SetPoint("TOPLEFT",     popup, "TOPLEFT",     2,  -2)
+    if searchable then
+        scrollFrame:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -1)
+    else
+        scrollFrame:SetPoint("TOPLEFT", popup, "TOPLEFT", 2, -2)
+    end
     scrollFrame:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -(2 + SB_W + 1), 2)
     scrollFrame:EnableMouseWheel(true)
 
@@ -868,25 +893,53 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local function Close()
         popup:Hide()
         clickaway:Hide()
+        if searchBox then
+            searchBox:SetText("")
+            searchBox:ClearFocus()
+        end
     end
 
     container:SetScript("OnHide", Close)
 
-    local function Open()
-        local items    = getItems and getItems() or {}
+    local allItems = {}
+
+    local function FilterItems(list, query)
+        if not query or query == "" then return list end
+        local q = query:lower()
+        local filtered = {}
+        for _, item in ipairs(list) do
+            local label = item.label and tostring(item.label):lower() or ""
+            if label:find(q, 1, true) then
+                filtered[#filtered + 1] = item
+            end
+        end
+        return filtered
+    end
+
+    local noResultsLabel
+    if searchable then
+        noResultsLabel = MakeFontString(content, 12)
+        noResultsLabel:SetText("No matches")
+        noResultsLabel:SetTextColor(0.6, 0.6, 0.6, 1)
+        noResultsLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 6, 0)
+        noResultsLabel:Hide()
+    end
+
+    local function Render(items)
         local rowCount = #items
-        if rowCount == 0 then return end
 
         local needsScroll = rowCount > MAX_ROWS
-        local popupH = math.min(rowCount * ROW_H, MAX_ROWS * ROW_H)
+        local popupH = math.min(math.max(rowCount, 1) * ROW_H, MAX_ROWS * ROW_H)
+        if searchable then popupH = popupH + SEARCH_H + 1 end
         -- The popup is parented to UIParent while its selector may be inside
         -- a scaled NSUI frame, so convert the dropdown width to UIParent's
         -- coordinate scale before sizing the popup and its rows.
         local popupW = dropW * dropBtn:GetEffectiveScale() / UIParent:GetEffectiveScale()
         popup:SetSize(popupW, popupH)
         local contentW = popupW - 4 - (needsScroll and SB_W + 1 or 0)
-        content:SetSize(contentW, rowCount * ROW_H)
+        content:SetSize(contentW, math.max(rowCount, 1) * ROW_H)
         if needsScroll then sbTrack:Show() sbThumb:Show() else sbTrack:Hide() sbThumb:Hide() end
+        if noResultsLabel then noResultsLabel:SetShown(rowCount == 0) end
 
         -- Grow the row pool as needed (frames are never destroyed)
         for i = #content._rows + 1, rowCount do
@@ -965,9 +1018,31 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         else
             popup:SetPoint("BOTTOMRIGHT", dropBtn, "TOPRIGHT", 0, 1)
         end
+    end
+
+    local function Open()
+        allItems = getItems and getItems() or {}
+        if #allItems == 0 then return end
+
+        if searchBox then searchBox:SetText("") end
+        Render(allItems)
 
         popup:Show()
         clickaway:Show()
+        if searchBox then searchBox:SetFocus() end
+    end
+
+    if searchBox then
+        searchBox:SetScript("OnTextChanged", function(self)
+            Render(FilterItems(allItems, self:GetText()))
+        end)
+        searchBox:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+            Close()
+        end)
+        searchBox:SetScript("OnEnterPressed", function(self)
+            self:ClearFocus()
+        end)
     end
 
     clickaway:SetScript("OnMouseDown", Close)

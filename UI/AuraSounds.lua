@@ -1037,24 +1037,47 @@ local function BuildAuraSoundsUI(parent)
             return items
         end, function()
             return GetSoundDisplayLabel(row.entry and not row.entry.deleted and row.entry.sound or nil)
-        end, 130, 20)
+        end, 130, 20, nil, nil, nil, nil, true)
         row.soundDropdown:SetPoint("LEFT", row.eventDropdown.frame, "RIGHT", -1, 0)
 
-        row.resetButton = NSI.UI.Components.CreateButton(row, T("Reset"), function()
-            local entry = row.entry
-            if not entry then return end
-            ResetSpellToDefault(entry.key, entry.spellID, entry.defaultSound, entry.unit, entry.eventType)
-            RefreshAuraScrollbox()
-        end, 48, 18, nil, nil, 11)
-        row.resetButton:SetPoint("RIGHT", row, "RIGHT", -62, 0)
-
-        row.deleteButton = NSI.UI.Components.CreateButton(row, T("Delete"), function()
+        row.deleteButton = CreateFrame("Button", nil, row)
+        row.deleteButton:SetSize(16, 16)
+        row.deleteButton:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+        row.deleteButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
+        row.deleteButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
+        row.deleteButton:GetNormalTexture():SetVertexColor(0.9, 0.25, 0.25)
+        row.deleteButton:GetHighlightTexture():SetVertexColor(1, 0.4, 0.4)
+        row.deleteButton:SetScript("OnClick", function()
             local entry = row.entry
             if not entry then return end
             DeleteAuraSound(entry.key, entry.spellID, entry.defaultSound, entry.unit, entry.eventType)
             RefreshAuraScrollbox()
-        end, 52, 18, nil, nil, 11)
-        row.deleteButton:SetPoint("RIGHT", row, "RIGHT", -5, 0)
+        end)
+        row.deleteButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(T("Delete"))
+            GameTooltip:Show()
+        end)
+        row.deleteButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        row.resetButton = CreateFrame("Button", nil, row)
+        row.resetButton:SetSize(16, 16)
+        row.resetButton:SetPoint("RIGHT", row.deleteButton, "LEFT", -8, 0)
+        row.resetButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\rotate-ccw.png]])
+        row.resetButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\rotate-ccw.png]])
+        row.resetButton:GetHighlightTexture():SetVertexColor(1, 1, 1, 0.7)
+        row.resetButton:SetScript("OnClick", function()
+            local entry = row.entry
+            if not entry then return end
+            ResetSpellToDefault(entry.key, entry.spellID, entry.defaultSound, entry.unit, entry.eventType)
+            RefreshAuraScrollbox()
+        end)
+        row.resetButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_TOP")
+            GameTooltip:SetText(T("Reset"))
+            GameTooltip:Show()
+        end)
+        row.resetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
         return row
     end
@@ -1070,7 +1093,7 @@ local function BuildAuraSoundsUI(parent)
         row.eventDropdown.dropBtn:SetEnabled(not entry.isDefault)
         row.eventDropdown:Refresh()
         row.soundDropdown:Refresh()
-        row.resetButton.frame:SetShown(entry.isDefault and entry.edited)
+        row.resetButton:SetShown(entry.isDefault and entry.edited)
     end
 
     RefreshAuraScrollbox = function()
@@ -1114,7 +1137,7 @@ local function BuildAuraSoundsUI(parent)
         return items
     end, function()
         return GetSoundDisplayLabel(newSoundValue ~= "__NONE__" and newSoundValue or nil)
-    end, 135, 20)
+    end, 135, 20, nil, nil, nil, nil, true)
     newSoundDropdown:SetPoint("LEFT", newSoundLabel, "RIGHT", 8, 0)
 
     local newUnitLabel = CreateLabel(rightPanel, T("Unit"), 11)
