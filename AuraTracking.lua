@@ -1228,35 +1228,25 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         regions.dispelOverlay:SetAllPoints(regions.icon)
         regions.dispelOverlay:Show()
         SetAuraTrackingDispelBorderSize(regions.dispelBorder, regions.icon, width, height)
-    end
-
-    if AuraTrackingWantsDispelBorder(settings, key) then
         button:ClearDispelTypeTextures()
         button:AddDispelTypeTexture(regions.dispelBorder, {
             showIcon = true,
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
-    else
-        HideAuraTrackingDispelRegions(regions)
-        button:ClearDispelTypeTextures()
-    end
-
-    if AuraTrackingWantsDispelBorder(settings, key) then
         if not regions.dispelSymbol then
             regions.dispelSymbol = regions.textOverlay:CreateFontString(nil, "OVERLAY")
             regions.dispelSymbol:SetPoint("TOPLEFT", button, "TOPLEFT", 2, -2)
             regions.dispelSymbol:SetTextColor(1, 1, 1, 1)
         end
         regions.dispelSymbol:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
-    end
-
-    if AuraTrackingWantsDispelBorder(settings, key) then
         button:SetDispelTypeText(regions.dispelSymbol, {
             showWhenHarmful = true,
             showWhenHelpful = false,
         })
     else
+        HideAuraTrackingDispelRegions(regions)
+        button:ClearDispelTypeTextures()
         if regions.dispelSymbol then
             regions.dispelSymbol:Hide()
         end
