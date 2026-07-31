@@ -1,9 +1,6 @@
 local _, NSI = ...
 local DF = _G["DetailsFramework"]
 
-local Core = NSI.UI.Core
-local options_dropdown_template = Core.options_dropdown_template
-local options_button_template = Core.options_button_template
 local BossData = NSI.UI.BossData
 local CreateCheckButton = NSI.UI.Components.CreateCheckButton
 local CreateLocalizedButton = NSI.UI.Components.CreateLocalizedButton
@@ -29,10 +26,6 @@ local function CreateLabel(parent, text, size, flags)
     label:SetJustifyH("LEFT")
     label:SetJustifyV("MIDDLE")
     return label
-end
-
-local function GetUIObject(object)
-    return object and (object.widget or object.label or object)
 end
 
 local soundlist = NSI.LSM:List("sound")
@@ -702,37 +695,56 @@ local function BuildAuraSoundsUI(parent)
     end
 
     local function ShowCategoryEditor(title, initialName, onConfirm, fieldLabel)
-        local popup = DF:CreateSimplePanel(UIParent, 300, 135, title)
-        ApplyUIFont(popup.Title, 12)
+        local POPUP_W, POPUP_H, TITLE_H = 300, 150, 30
+
+        local popup = NSI.UI.Components.CreateFrame(UIParent, POPUP_W, POPUP_H)
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
-        local nameLabel = DF:CreateLabel(popup, fieldLabel or T("Sub-Category Name"), 11)
-        ApplyUIFont(nameLabel, 11)
-        nameLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 20, -35)
+        local titleFS = CreateLabel(popup, title, 13)
+        titleFS:SetTextColor(1, 0.82, 0, 1)
+        titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 14, -10)
+        titleFS:SetPoint("RIGHT", popup, "RIGHT", -24, 0)
 
-        local nameEntry = DF:CreateTextEntry(popup, function() end, 260, 22)
-        nameEntry:SetPoint("TOPLEFT", GetUIObject(nameLabel), "BOTTOMLEFT", 0, -5)
-        nameEntry:SetTemplate(options_dropdown_template)
-        nameEntry:SetText(initialName or "")
-        nameEntry:SetFocus()
-        nameEntry:HighlightText()
+        local titleSep = popup:CreateTexture(nil, "ARTWORK")
+        titleSep:SetColorTexture(0, 1, 1, 0.20)
+        titleSep:SetHeight(1)
+        titleSep:SetPoint("TOPLEFT", popup, "TOPLEFT", 1, -TITLE_H)
+        titleSep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -TITLE_H)
 
-        local confirmButton = DF:CreateButton(popup, function()
-            local name = strtrim(nameEntry:GetText() or "")
+        local nameLabel = CreateLabel(popup, fieldLabel or T("Sub-Category Name"), 11)
+        nameLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 16, -(TITLE_H + 12))
+
+        local nameEntry = NSI.UI.Components.CreateTextEntry(popup, nil, function()
+            return initialName or ""
+        end, nil, 268, 22)
+        nameEntry:SetPoint("TOPLEFT", nameLabel, "BOTTOMLEFT", 0, -6)
+        nameEntry.editBox:HighlightText()
+        nameEntry.editBox:SetFocus()
+
+        local function Confirm()
+            local name = strtrim(nameEntry:GetValue() or "")
             if name ~= "" then
                 onConfirm(name)
                 popup:Hide()
             end
-        end, 100, 24, T("Confirm"))
-        ApplyUIFont(confirmButton, 11)
-        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
-        confirmButton:SetTemplate(options_button_template)
+        end
 
-        local cancelButton = DF:CreateButton(popup, function() popup:Hide() end, 100, 24, T("Cancel"))
-        ApplyUIFont(cancelButton, 11)
-        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
-        cancelButton:SetTemplate(options_button_template)
+        nameEntry.editBox:SetScript("OnEnterPressed", function(self)
+            self:ClearFocus()
+            Confirm()
+        end)
+        nameEntry.editBox:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+            popup:Hide()
+        end)
+
+        local confirmButton = NSI.UI.Components.CreateButton(popup, T("Confirm"), Confirm, 100, 24, nil, nil, 11)
+        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 6, 12)
+
+        local cancelButton = NSI.UI.Components.CreateButton(popup, T("Cancel"), function() popup:Hide() end, 100, 24, nil, nil, 11)
+        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -6, 12)
+
         popup:Show()
     end
 
@@ -938,7 +950,7 @@ local function BuildAuraSoundsUI(parent)
         local header = CreateLabel(columnHeaders, T(text), 10)
         header:SetPoint("LEFT", columnHeaders, "LEFT", x, 0)
         header:SetWidth(width)
-        header:SetTextColor(1, 0.65, 0.1, 1)
+        header:SetTextColor(0, 1, 1, 1)
         return header
     end
     AddColumnHeader("Spell Name", 28, 175)
