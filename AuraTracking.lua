@@ -1,6 +1,5 @@
 local _, NSI = ...
-local LibSerialize = LibStub("AceSerializer-3.0")
-local LibDeflate = LibStub("LibDeflate")
+local AuraTrackingSerializer = LibStub("AceSerializer-3.0")
 
 local AuraTrackingFilters = {
     "HARMFUL",
@@ -857,22 +856,6 @@ local AuraTrackingBuiltinKeys = {
     External = true,
 }
 
-local function EncodeAuraTrackingExport(payload)
-    local serialized = LibSerialize:Serialize(payload)
-    local compressed = serialized and LibDeflate:CompressDeflate(serialized)
-    return compressed and LibDeflate:EncodeForPrint(compressed) or ""
-end
-
-local function DecodeAuraTrackingExport(text)
-    local decoded = LibDeflate:DecodeForPrint(text or "")
-    local decompressed = decoded and LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return end
-    local success, data = LibSerialize:Deserialize(decompressed)
-    if success and type(data) == "table" then
-        return data
-    end
-end
-
 local function NormalizeAuraTrackingImport(settings, builtinKey, groupName)
     if type(settings) ~= "table" then return end
     local data = CopyTable(settings)
@@ -895,7 +878,7 @@ function NSI:ExportAuraTrackingEntry(settingsKey)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings then return "" end
     local builtinKey = AuraTrackingBuiltinKeys[settingsKey] and settingsKey or nil
-    return EncodeAuraTrackingExport({
+    return self:EncodeExportData({
         type = "NSRT_AURA_TRACKING",
         version = 1,
         entries = {
@@ -904,7 +887,7 @@ function NSI:ExportAuraTrackingEntry(settingsKey)
                 settings = CopyTable(settings),
             },
         },
-    })
+    }, AuraTrackingSerializer) or ""
 end
 
 function NSI:ExportAuraTrackingGroup(groupName)
@@ -919,16 +902,16 @@ function NSI:ExportAuraTrackingGroup(groupName)
         end
     end
     if #entries == 0 then return "" end
-    return EncodeAuraTrackingExport({
+    return self:EncodeExportData({
         type = "NSRT_AURA_TRACKING",
         version = 1,
         group = groupName,
         entries = entries,
-    })
+    }, AuraTrackingSerializer) or ""
 end
 
 function NSI:ImportAuraTrackingString(text)
-    local payload = DecodeAuraTrackingExport(text)
+    local payload = self:DecodeExportData(text, AuraTrackingSerializer)
     if not payload or payload.type ~= "NSRT_AURA_TRACKING" or type(payload.entries) ~= "table" then
         return false
     end

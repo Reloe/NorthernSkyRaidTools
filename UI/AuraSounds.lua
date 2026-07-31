@@ -257,6 +257,75 @@ local function PrepareAuraSoundData(screen)
     return data
 end
 
+local auraSoundsExportPopup
+local auraSoundsImportPopup
+
+local function ShowAuraSoundsExportPopup(text, label)
+    if not auraSoundsExportPopup then
+        auraSoundsExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Export Aura Sounds") .. "|r",
+            "NSRTAuraSoundsExportPopup", { UseScaleBar = false })
+        auraSoundsExportPopup:SetPoint("CENTER", UIParent, "CENTER")
+        auraSoundsExportPopup:SetFrameLevel(100)
+
+        auraSoundsExportPopup.infoLabel = CreateLabel(auraSoundsExportPopup, "", 13)
+        auraSoundsExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraSoundsExportPopup.infoLabel:SetPoint("TOPLEFT", auraSoundsExportPopup, "TOPLEFT", 10, -30)
+        auraSoundsExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraSoundsExportPopup, 280, 80, nil,
+            "NSRTAuraSoundsExportTextBox", true, false, true)
+        auraSoundsExportPopup.textbox:SetPoint("TOPLEFT", auraSoundsExportPopup, "TOPLEFT", 10, -50)
+        auraSoundsExportPopup.textbox:SetPoint("BOTTOMRIGHT", auraSoundsExportPopup, "BOTTOMRIGHT", -25, 40)
+        DF:ApplyStandardBackdrop(auraSoundsExportPopup.textbox)
+        DF:ReskinSlider(auraSoundsExportPopup.textbox.scroll)
+        auraSoundsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        NSI:SetUIFont(auraSoundsExportPopup.textbox.editbox, 13, "OUTLINE")
+
+        local doneButton = CreateLocalizedButton(auraSoundsExportPopup, "Done", function() auraSoundsExportPopup:Hide() end, 280, 20)
+        doneButton:SetPoint("BOTTOM", auraSoundsExportPopup, "BOTTOM", 0, 10)
+    end
+    auraSoundsExportPopup.infoLabel:SetText(label or "")
+    auraSoundsExportPopup.textbox:SetText(text or "")
+    auraSoundsExportPopup:Show()
+    auraSoundsExportPopup.textbox:SetFocus()
+end
+
+local function ShowAuraSoundsImportPopup(onImport)
+    if not auraSoundsImportPopup then
+        auraSoundsImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Import Aura Sounds") .. "|r",
+            "NSRTAuraSoundsImportPopup", { UseScaleBar = false })
+        auraSoundsImportPopup:SetPoint("CENTER", UIParent, "CENTER")
+        auraSoundsImportPopup:SetFrameLevel(100)
+
+        auraSoundsImportPopup.statusLabel = CreateLabel(auraSoundsImportPopup, T("Paste an Aura Sounds export string below and click Import."), 13)
+        auraSoundsImportPopup.statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraSoundsImportPopup.statusLabel:SetPoint("TOPLEFT", auraSoundsImportPopup, "TOPLEFT", 10, -30)
+        auraSoundsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraSoundsImportPopup, 280, 80, nil,
+            "NSRTAuraSoundsImportTextBox", true, false, true)
+        auraSoundsImportPopup.textbox:SetPoint("TOPLEFT", auraSoundsImportPopup, "TOPLEFT", 10, -50)
+        auraSoundsImportPopup.textbox:SetPoint("BOTTOMRIGHT", auraSoundsImportPopup, "BOTTOMRIGHT", -25, 40)
+        DF:ApplyStandardBackdrop(auraSoundsImportPopup.textbox)
+        DF:ReskinSlider(auraSoundsImportPopup.textbox.scroll)
+        auraSoundsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
+        NSI:SetUIFont(auraSoundsImportPopup.textbox.editbox, 13, "OUTLINE")
+
+        local importButton = CreateLocalizedButton(auraSoundsImportPopup, "Import", function()
+            local success, count = NSI:ImportAuraSoundString(auraSoundsImportPopup.textbox:GetText())
+            if success then
+                auraSoundsImportPopup:Hide()
+                print("|cFF00FFFFNSRT:|r " .. string.format(T("Imported %d Aura Sound(s)."), count or 0))
+                if auraSoundsImportPopup.onImport then auraSoundsImportPopup.onImport() end
+            else
+                auraSoundsImportPopup.statusLabel:SetText("|cFFFF0000" .. T("Invalid Aura Sounds import string.") .. "|r")
+            end
+        end, 280, 20)
+        importButton:SetPoint("BOTTOM", auraSoundsImportPopup, "BOTTOM", 0, 10)
+    end
+    auraSoundsImportPopup.onImport = onImport
+    auraSoundsImportPopup.statusLabel:SetText(T("Paste an Aura Sounds export string below and click Import."))
+    auraSoundsImportPopup.textbox:SetText("")
+    auraSoundsImportPopup:Show()
+    auraSoundsImportPopup.textbox:SetFocus()
+end
+
 local function BuildAuraSoundsUI(parent)
     local screen = CreateFrame("Frame", "$parentAuraSounds", parent, "BackdropTemplate")
     screen:SetAllPoints()
@@ -365,7 +434,7 @@ local function BuildAuraSoundsUI(parent)
 
     local leftScroll = CreateFrame("ScrollFrame", "$parentAuraSoundCategoryScroll", screen, "UIPanelScrollFrameTemplate")
     leftScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -62)
-    leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 54)
+    leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 78)
     leftScroll:SetWidth(leftWidth)
     NSI.UI.Components.ReskinScrollbar(leftScroll)
     local leftChild = CreateFrame("Frame", nil, leftScroll, "BackdropTemplate")
@@ -389,6 +458,15 @@ local function BuildAuraSoundsUI(parent)
     local CreateCustomGroup, CreateCustomCategory
     local ShowCustomGroupMenu, ShowCustomCategoryMenu
     local raidTypeButton, dungeonTypeButton, customTypeButton
+
+    local function ExportCategories(categoryType, categories, label, group)
+        local keys = {}
+        for _, category in ipairs(categories or {}) do
+            keys[#keys + 1] = category.key
+        end
+        local text = NSI:ExportAuraSoundCategories(categoryType, keys, group)
+        if text then ShowAuraSoundsExportPopup(text, label) end
+    end
 
     local function CreateCategoryRow()
         local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
@@ -499,8 +577,16 @@ local function BuildAuraSoundsUI(parent)
                 local sectionKey = section.key
                 local group = section.group
                 sectionRow:SetScript("OnMouseDown", function(_, button)
-                    if button == "RightButton" and group then
-                        ShowCustomGroupMenu(group)
+                    if button == "RightButton" then
+                        if group then
+                            ShowCustomGroupMenu(group)
+                        else
+                            ShowContextMenu({
+                                {type = "button", label = T("Export Group"), fnc = function()
+                                    ExportCategories(screen.categoryType, section.categories, section.label)
+                                end},
+                            })
+                        end
                         return
                     end
                     screen.collapsedSections[sectionKey] = not screen.collapsedSections[sectionKey]
@@ -542,8 +628,16 @@ local function BuildAuraSoundsUI(parent)
                         row.__background:SetAlpha(0.5)
                     end
                     row:SetScript("OnMouseDown", function(_, button)
-                        if button == "RightButton" and screen.categoryType == "Custom" then
-                            ShowCustomCategoryMenu(category)
+                        if button == "RightButton" then
+                            if screen.categoryType == "Custom" then
+                                ShowCustomCategoryMenu(category)
+                            else
+                                ShowContextMenu({
+                                    {type = "button", label = T("Export"), fnc = function()
+                                        ExportCategories(screen.categoryType, {category}, row.name:GetText())
+                                    end},
+                                })
+                            end
                             return
                         end
                         screen.categoryKey = category.key
@@ -580,6 +674,18 @@ local function BuildAuraSoundsUI(parent)
     customTypeButton = CreateLocalizedSubButton(screen, "Custom", function() SelectCategoryType("Custom") end,
         70, "NSRTAuraSoundCustomType")
     customTypeButton:SetPoint("LEFT", dungeonTypeButton.frame, "RIGHT", 4, 0)
+
+    local function AddTypeExport(button, categoryType, label)
+        button.frame:RegisterForClicks("LeftButtonUp")
+        button.frame:SetScript("OnMouseDown", function(_, mouseButton)
+            if mouseButton == "RightButton" then
+                ExportCategories(categoryType, GetAuraSoundCategories(categoryType), T(label))
+            end
+        end)
+    end
+    AddTypeExport(raidTypeButton, "Raid", "Raid Bosses")
+    AddTypeExport(dungeonTypeButton, "Dungeons", "Dungeons")
+    AddTypeExport(customTypeButton, "Custom", "Custom")
 
     RefreshCategorySelection = function()
         RefreshCategoryList()
@@ -655,10 +761,14 @@ local function BuildAuraSoundsUI(parent)
 
     newCategoryButton = CreateLocalizedButton(screen, "New Group", function() CreateCustomGroup() end,
         175, 20, "NSRTAuraSoundNewGroup")
-    newCategoryButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 30)
+    newCategoryButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 54)
     newSubCategoryButton = CreateLocalizedButton(screen, "New Sub-Category", function() CreateCustomCategory() end,
         175, 20, "NSRTAuraSoundNewSubCategory")
-    newSubCategoryButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 6)
+    newSubCategoryButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 30)
+    local importButton = CreateLocalizedButton(screen, "Import", function()
+        ShowAuraSoundsImportPopup(function() RefreshCategorySelection() end)
+    end, 175, 20, "NSRTAuraSoundImport")
+    importButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 6)
 
     local function DeleteCustomCategory(category)
         for index, customCategory in ipairs(NSRT.AuraSounds.CustomCategories) do
@@ -677,6 +787,13 @@ local function BuildAuraSoundsUI(parent)
 
     ShowCustomGroupMenu = function(group)
         ShowContextMenu({
+            {type = "button", label = T("Export Group"), fnc = function()
+                local categories = {}
+                for _, category in ipairs(GetAuraSoundCategories("Custom")) do
+                    if category.groupKey == group.key then categories[#categories + 1] = category end
+                end
+                ExportCategories("Custom", categories, group.label, group)
+            end},
             {type = "button", label = T("New Sub-Category"), fnc = function() CreateCustomCategory(group) end},
             {type = "button", label = T("Rename"), fnc = function()
                 ShowCategoryEditor(T("Rename"), group.label, function(name)
@@ -725,6 +842,9 @@ local function BuildAuraSoundsUI(parent)
             end)
         end}
         ShowContextMenu({
+            {type = "button", label = T("Export"), fnc = function()
+                ExportCategories("Custom", {category}, category.label)
+            end},
             {type = "submenu", label = T("Add to Group"), items = groupMenuItems},
             {
                 type = "button",

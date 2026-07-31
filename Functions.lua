@@ -378,48 +378,26 @@ function NSAPI.UnregisterAllCallbacks(target)
     return NSI.UnregisterAllCallbacks(target)
 end
 
-local Serialize = LibStub("AceSerializer-3.0")
-local Compress = LibStub("LibDeflate")
+local ExportSerializer = LibStub("LibSerialize")
+local ExportDeflate = LibStub("LibDeflate")
+
+function NSI:EncodeExportData(data, serializer)
+    local serialized = (serializer or ExportSerializer):Serialize(data)
+    local compressed = serialized and ExportDeflate:CompressDeflate(serialized)
+    return compressed and ExportDeflate:EncodeForPrint(compressed)
+end
+
+function NSI:DecodeExportData(text, serializer)
+    if type(text) ~= "string" or text == "" then return end
+    local decoded = ExportDeflate:DecodeForPrint(text)
+    local decompressed = decoded and ExportDeflate:DecompressDeflate(decoded)
+    if not decompressed then return end
+    local success, data = (serializer or ExportSerializer):Deserialize(decompressed)
+    return success and data or nil
+end
 
 -- Snapshot of the original locale strings before any override is applied.
 local _localeSnapshot = nil
-
-function NSI:CreateExportString(SettingsTable) -- {"ReminderSettings", ...}
-    local str = ""
-    local ExportTable = {}
-    for k, Settings in pairs(SettingsTable) do
-        if Settings.enabled then
-            ExportTable[k] = Settings
-        end
-    end
-    local serialized = Serialize:Serialize(ExportTable)
-    local compressed = serialized and Compress:CompressDeflate(serialized)
-    local encoded = compressed and Compress:EncodeForPrint(compressed)
-    return encoded or ""
-end
-
-function NSI:ImportFromTable(ImportTable)
-    local changed = false
-    for k, v in pairs(ImportTable) do
-        if v.enabled then
-            changed = true
-            NSRT[k] = v.data
-        end
-    end
-    if changed then
-        ReloadUI()
-    end
-end
-
-function NSI:ImportSettingsFromString(string)
-    local decoded = Compress:DecodeForPrint(string)
-    local decompressed = decoded and Compress:DecompressDeflate(decoded)
-    if not decompressed then return nil end
-    local success, data = Serialize:Deserialize(decompressed)
-    if success and data then
-        return data
-    else return nil end
-end
 
 function NSI:SaveFramePosition(F, SettingsTable)
     if not F or not SettingsTable then return end
@@ -508,7 +486,7 @@ end
 
 function NSI:LogTimeline(e, ...)
     if not NSRT.Settings.DebugLogs then return end
-    local id = self:DifficultyCheck({14, 15, 16})
+    local id = self:DifficultyCheck({8, 14, 15, 16})
     if not id then return end
     local function GetBossUnitState()
         local bossUnits = {}
@@ -537,7 +515,7 @@ function NSI:LogTimeline(e, ...)
         self.CurrentEncounterData = {
             Name = encName,
             encID = encID,
-            difficulty = difficultyID == 16 and "Mythic" or difficultyID == 15 and "Heroic" or difficultyID == 14 and "Normal",
+            difficulty = difficultyID == 8 and "Mythic+" or difficultyID == 16 and "Mythic" or difficultyID == 15 and "Heroic" or difficultyID == 14 and "Normal",
             pullTime = now,
             startTime = string.format("%02d:%02d", date.hour, date.minute),
             success = false,
