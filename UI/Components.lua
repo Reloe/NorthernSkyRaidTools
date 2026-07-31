@@ -1486,7 +1486,7 @@ local function CreateLabel(parent, text, width, height, name, highlighted)
 
     local lbl = MakeFontString(container, highlighted and 14 or 12)
     if highlighted then
-        lbl:SetTextColor(1, 0.82, 0, 1)
+        lbl:SetTextColor(0, 1, 1, 1)
     else
         lbl:SetTextColor(0.55, 0.55, 0.55, 1)
     end
