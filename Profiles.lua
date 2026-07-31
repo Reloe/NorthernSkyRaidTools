@@ -321,6 +321,8 @@ function NSI:AddMissingDefaults()
                 builtin = "Player",
                 HideLongDurationAuras = false,
                 ShowWhitelistedPlayerBuffs = true,
+                DispelBorderMode = "Custom",
+                CustomDispelBorderSize = 3,
             }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
                 Name = "Co-Tank Debuffs",
@@ -331,6 +333,8 @@ function NSI:AddMissingDefaults()
                 NameEnabled = true,
                 OnlyShowFirstTank = false,
                 HideLongDurationAuras = false,
+                DispelBorderMode = "Custom",
+                CustomDispelBorderSize = 3,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
                 Name = "External & Immunity",
