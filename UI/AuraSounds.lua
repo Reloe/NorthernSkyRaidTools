@@ -42,6 +42,14 @@ local function StripSoundColor(sound)
     return sound:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
 end
 
+local function GetSoundDisplayLabel(sound)
+    if not sound then return T("None") end
+    for _, s in ipairs(soundlist) do
+        if StripSoundColor(s) == sound then return s end
+    end
+    return sound
+end
+
 local function BuildAuraSoundDropdown()
     local t = {
         {
@@ -882,7 +890,7 @@ local function BuildAuraSoundsUI(parent)
         end
         if resetCategoryButton then
             resetCategoryButton:SetText(T(self.categoryType == "Dungeons" and "Reset This Dungeon" or "Reset This Boss"))
-            GetUIObject(resetCategoryButton):SetShown(self.categoryType ~= "Custom")
+            resetCategoryButton.frame:SetShown(self.categoryType ~= "Custom")
         end
     end
 
@@ -909,167 +917,19 @@ local function BuildAuraSoundsUI(parent)
     defaultSoundsCB:SetPoint("LEFT", customTypeButton.frame, "RIGHT", 14, 0)
     NSI:SetUIFont(defaultSoundsCB.label, 11, "")
 
-    resetCategoryButton = DF:CreateButton(rightPanel, ResetCategory, 115, 20, T("Reset This Boss"))
-    ApplyUIFont(resetCategoryButton, 11)
+    resetCategoryButton = NSI.UI.Components.CreateButton(rightPanel, T("Reset This Boss"), ResetCategory, 115, 20, nil, nil, 11)
     resetCategoryButton:SetPoint("LEFT", defaultSoundsCB.frame, "RIGHT", 18, 0)
-    resetCategoryButton:SetTemplate(options_button_template)
 
-    local resetAllButton = DF:CreateButton(rightPanel, ConfirmResetAllAuraSounds, 110, 20, T("Reset All Sounds"))
-    ApplyUIFont(resetAllButton, 11)
-    resetAllButton:SetPoint("LEFT", GetUIObject(resetCategoryButton), "RIGHT", 8, 0)
-    resetAllButton:SetTemplate(options_button_template)
+    local resetAllButton = NSI.UI.Components.CreateButton(rightPanel, T("Reset All Sounds"), ConfirmResetAllAuraSounds, 110, 20, nil, nil, 11)
+    resetAllButton:SetPoint("LEFT", resetCategoryButton.frame, "RIGHT", 8, 0)
 
-    local soundChannelLabel = DF:CreateLabel(rightPanel, T("Sound Channel"), 11)
-    ApplyUIFont(soundChannelLabel, 11)
-    soundChannelLabel:SetPoint("LEFT", GetUIObject(resetAllButton), "RIGHT", 18, 0)
+    local soundChannelLabel = CreateLabel(rightPanel, T("Sound Channel"), 11)
+    soundChannelLabel:SetPoint("LEFT", resetAllButton.frame, "RIGHT", 18, 0)
 
-    local soundChannelDropdown = DF:CreateDropDown(rightPanel, BuildAuraSoundChannelDropdown, nil, 105, 20, nil, "$parentSoundChannelDropdown", options_dropdown_template)
-    soundChannelDropdown:SetPoint("LEFT", GetUIObject(soundChannelLabel), "RIGHT", 8, 0)
-    soundChannelDropdown:Select(T(NSRT.AuraSounds.SoundChannel or "Master"))
-
-    local scrollLines = 18
-
-    local function ClearLine(line)
-        if not line then return end
-        line.entryKey = nil
-        line.spellID = nil
-        line.defaultSound = nil
-        line.isDefault = nil
-        line.eventType = nil
-        line.isActive = false
-        if line.name then line.name.text = "" end
-        if line.spellIDText then line.spellIDText.text = "" end
-        if line.defaultText then line.defaultText.text = "" end
-        if line.icon then line.icon:SetTexture(nil) end
-        line:Hide()
-    end
-
-    local function refresh(scrollbox, data, offset)
-        for _, line in ipairs(scrollbox.Frames or {}) do
-            ClearLine(line)
-        end
-        for i = 1, scrollLines do
-            local index = i + offset
-            local rowData = data[index]
-            if rowData then
-                local line = scrollbox:GetLine(i)
-                line:Show()
-                line.isActive = true
-                line.entryKey = rowData.key
-                line.spellID = rowData.spellID
-                line.defaultSound = rowData.defaultSound
-                line.isDefault = rowData.isDefault
-                line.unit = rowData.unit or "player"
-                line.eventType = rowData.eventType or "applied"
-                line.name.text = rowData.name
-                line.spellIDText.text = rowData.spellID
-                line.defaultText.text = rowData.deleted and T("Deleted") or (rowData.edited and T("Edited") or T("Default"))
-                line.unitEntry:SetText(line.unit)
-                line.eventDropdown:Select(GetAuraSoundEventLabel(line.eventType))
-                if rowData.isDefault then
-                    line.unitEntry:Disable()
-                    line.eventDropdown:Disable()
-                else
-                    line.unitEntry:Enable()
-                    line.eventDropdown:Enable()
-                end
-                line.icon:SetTexture(C_Spell.GetSpellTexture(rowData.spellID) or 134400)
-                line.sound = rowData.sound
-                line.soundDropdown:Select(rowData.deleted and "__NONE__" or (rowData.sound or "__NONE__"))
-                GetUIObject(line.resetButton):SetShown(rowData.isDefault and rowData.edited)
-            end
-        end
-    end
-
-    local function createLine(scrollbox, index)
-        local line = CreateFrame("Frame", "$parentAuraSoundLine" .. index, scrollbox, "BackdropTemplate")
-        line:SetPoint("TOPLEFT", GetUIObject(scrollbox), "TOPLEFT", 1, -((index - 1) * scrollbox.LineHeight - 1))
-        line:SetSize(scrollbox:GetWidth() - 2, scrollbox.LineHeight)
-        DF:ApplyStandardBackdrop(line)
-
-        line.icon = DF:CreateTexture(line, 134400, 18, 18)
-        line.icon:SetPoint("LEFT", line, "LEFT", 5, 0)
-        line.icon:SetTexCoord(0.025, 0.975, 0.025, 0.975)
-        line.icon:SetScript("OnEnter", function(self)
-            local spellID = self:GetParent().spellID
-            ShowAuraSoundSpellTooltip(self, spellID)
-        end)
-        line.icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
-
-        line.name = DF:CreateLabel(line, "")
-        ApplyUIFont(line.name, 11)
-        line.name:SetPoint("LEFT", GetUIObject(line.icon), "RIGHT", 5, 0)
-        line.name:SetWidth(175)
-
-        line.spellIDText = DF:CreateLabel(line, "")
-        ApplyUIFont(line.spellIDText, 11)
-        line.spellIDText:SetPoint("LEFT", GetUIObject(line.name), "RIGHT", -2, 0)
-        line.spellIDText:SetWidth(58)
-
-        line.defaultText = DF:CreateLabel(line, "")
-        ApplyUIFont(line.defaultText, 11)
-        line.defaultText:SetPoint("LEFT", GetUIObject(line.spellIDText), "RIGHT", 5, 0)
-        line.defaultText:SetWidth(50)
-
-        line.unitEntry = DF:CreateTextEntry(line, function(_, _, value)
-            if not line.isActive or not line.entryKey or not line.spellID then return end
-            if line.isDefault then
-                line.unitEntry:SetText(line.unit or "player")
-                return
-            end
-            line.unit = value ~= "" and value or "player"
-            local sound = line.soundDropdown:GetValue()
-            sound = sound ~= "__NONE__" and sound or nil
-            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey, line.unit, line.eventType)
-            scrollbox:MasterRefresh()
-        end, 60, 20)
-        line.unitEntry:SetTemplate(options_dropdown_template)
-        line.unitEntry:SetPoint("LEFT", GetUIObject(line.defaultText), "RIGHT", 5, 0)
-
-        line.eventDropdown = DF:CreateDropDown(line, BuildAuraSoundEventDropdown, nil, 92, 20, nil, "$parentEventDropdown", options_dropdown_template)
-        line.eventDropdown:SetPoint("LEFT", GetUIObject(line.unitEntry), "RIGHT", -1, 0)
-        line.eventDropdown:SetHook("OnOptionSelected", function(_, _, value)
-            if not line.isActive or not line.entryKey or not line.spellID then return end
-            if line.isDefault then
-                line.eventDropdown:Select(GetAuraSoundEventLabel(line.eventType))
-                return
-            end
-            line.eventType = value or "applied"
-            local sound = line.soundDropdown:GetValue()
-            sound = sound ~= "__NONE__" and sound or nil
-            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey, line.unit, line.eventType)
-            scrollbox:MasterRefresh()
-        end)
-
-        line.soundDropdown = DF:CreateDropDown(line, BuildAuraSoundDropdown, nil, 130, 20, nil, "$parentSoundDropdown", options_dropdown_template)
-        line.soundDropdown:SetPoint("LEFT", GetUIObject(line.eventDropdown), "RIGHT", -1, 0)
-        line.soundDropdown:SetHook("OnOptionSelected", function(_, _, value)
-            if not line.isActive or not line.entryKey or not line.spellID then return end
-            local sound = value ~= "__NONE__" and value or nil
-            NSI:SaveAuraSound(line.entryKey, line.spellID, sound, screen.categoryType, screen.categoryKey, line.unit, line.eventType)
-            scrollbox:MasterRefresh()
-        end)
-
-        line.resetButton = DF:CreateButton(line, function()
-            if not line.isActive or not line.entryKey or not line.spellID then return end
-            ResetSpellToDefault(line.entryKey, line.spellID, line.defaultSound, line.unit, line.eventType)
-            scrollbox:MasterRefresh()
-        end, 48, 18, T("Reset"))
-        ApplyUIFont(line.resetButton, 11)
-        line.resetButton:SetPoint("RIGHT", line, "RIGHT", -62, 0)
-        line.resetButton:SetTemplate(options_button_template)
-
-        line.deleteButton = DF:CreateButton(line, function()
-            if not line.isActive or not line.entryKey or not line.spellID then return end
-            DeleteAuraSound(line.entryKey, line.spellID, line.defaultSound, line.unit, line.eventType)
-            scrollbox:MasterRefresh()
-        end, 52, 18, T("Delete"))
-        ApplyUIFont(line.deleteButton, 11)
-        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
-        line.deleteButton:SetTemplate(options_button_template)
-
-        return line
-    end
+    local soundChannelDropdown = NSI.UI.Components.CreateDropdown(rightPanel, nil, BuildAuraSoundChannelDropdown, function()
+        return T(NSRT.AuraSounds.SoundChannel or "Master")
+    end, 105, 20)
+    soundChannelDropdown:SetPoint("LEFT", soundChannelLabel, "RIGHT", 8, 0)
 
     local columnHeaders = CreateFrame("Frame", nil, rightPanel)
     columnHeaders:SetSize(760, 18)
@@ -1088,69 +948,219 @@ local function BuildAuraSoundsUI(parent)
     AddColumnHeader("Event Type", 380, 92)
     AddColumnHeader("Sound", 470, 130)
 
-    local scrollbox = DF:CreateScrollBox(rightPanel, "$parentAuraSoundScrollBox", refresh, {}, 760, 340, scrollLines, 20, createLine)
+    local ROW_HEIGHT = 20
+    local auraRows = {}
+
+    local scrollbox = NSI.UI.Components.CreateScrollBox(rightPanel, 760, 340)
     screen.scrollbox = scrollbox
     scrollbox:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, -76)
-    DF:ReskinSlider(scrollbox)
-    scrollbox.MasterRefresh = function(self)
-        self:SetData(PrepareAuraSoundData(screen))
-        self:Refresh()
+
+    local RefreshAuraScrollbox
+
+    local function CreateAuraRow(index)
+        local rowWidth = scrollbox.scrollChild:GetWidth()
+        local row = CreateFrame("Frame", nil, scrollbox.scrollChild, "BackdropTemplate")
+        row:SetSize(rowWidth, ROW_HEIGHT)
+        row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
+        row:SetBackdropColor(unpack(NSI.UI.Components.STYLE.bg_color))
+
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(18, 18)
+        row.icon:SetPoint("LEFT", row, "LEFT", 5, 0)
+        row.icon:SetTexCoord(0.025, 0.975, 0.025, 0.975)
+        row.icon:SetScript("OnEnter", function(self)
+            ShowAuraSoundSpellTooltip(self, row.entry and row.entry.spellID)
+        end)
+        row.icon:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+        row.name = CreateLabel(row, "", 11)
+        row.name:SetPoint("LEFT", row.icon, "RIGHT", 5, 0)
+        row.name:SetWidth(175)
+
+        row.spellIDText = CreateLabel(row, "", 11)
+        row.spellIDText:SetPoint("LEFT", row.name, "RIGHT", -2, 0)
+        row.spellIDText:SetWidth(58)
+
+        row.defaultText = CreateLabel(row, "", 11)
+        row.defaultText:SetPoint("LEFT", row.spellIDText, "RIGHT", 5, 0)
+        row.defaultText:SetWidth(50)
+
+        row.unitEntry = NSI.UI.Components.CreateTextEntry(row, nil, function()
+            return row.entry and row.entry.unit or "player"
+        end, function(_, value)
+            local entry = row.entry
+            if not entry then return end
+            if entry.isDefault then
+                row.unitEntry:SetValue(entry.unit or "player")
+                return
+            end
+            entry.unit = value ~= "" and value or "player"
+            local sound = entry.deleted and nil or entry.sound
+            NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType)
+            RefreshAuraScrollbox()
+        end, 60, 20)
+        row.unitEntry:SetPoint("LEFT", row.defaultText, "RIGHT", 5, 0)
+
+        row.eventDropdown = NSI.UI.Components.CreateDropdown(row, nil, function()
+            local items = BuildAuraSoundEventDropdown()
+            for _, item in ipairs(items) do
+                local baseOnclick = item.onclick
+                item.onclick = function(a, b, value)
+                    if baseOnclick then baseOnclick(a, b, value) end
+                    local entry = row.entry
+                    if not entry or entry.isDefault then return end
+                    entry.eventType = value or "applied"
+                    local sound = entry.deleted and nil or entry.sound
+                    NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType)
+                    RefreshAuraScrollbox()
+                end
+            end
+            return items
+        end, function()
+            return GetAuraSoundEventLabel(row.entry and row.entry.eventType)
+        end, 92, 20)
+        row.eventDropdown:SetPoint("LEFT", row.unitEntry.frame, "RIGHT", -1, 0)
+
+        row.soundDropdown = NSI.UI.Components.CreateDropdown(row, nil, function()
+            local items = BuildAuraSoundDropdown()
+            for _, item in ipairs(items) do
+                local baseOnclick = item.onclick
+                item.onclick = function(a, b, value)
+                    if baseOnclick then baseOnclick(a, b, value) end
+                    local entry = row.entry
+                    if not entry then return end
+                    local sound = value ~= "__NONE__" and value or nil
+                    NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType)
+                    RefreshAuraScrollbox()
+                end
+            end
+            return items
+        end, function()
+            return GetSoundDisplayLabel(row.entry and not row.entry.deleted and row.entry.sound or nil)
+        end, 130, 20)
+        row.soundDropdown:SetPoint("LEFT", row.eventDropdown.frame, "RIGHT", -1, 0)
+
+        row.resetButton = NSI.UI.Components.CreateButton(row, T("Reset"), function()
+            local entry = row.entry
+            if not entry then return end
+            ResetSpellToDefault(entry.key, entry.spellID, entry.defaultSound, entry.unit, entry.eventType)
+            RefreshAuraScrollbox()
+        end, 48, 18, nil, nil, 11)
+        row.resetButton:SetPoint("RIGHT", row, "RIGHT", -62, 0)
+
+        row.deleteButton = NSI.UI.Components.CreateButton(row, T("Delete"), function()
+            local entry = row.entry
+            if not entry then return end
+            DeleteAuraSound(entry.key, entry.spellID, entry.defaultSound, entry.unit, entry.eventType)
+            RefreshAuraScrollbox()
+        end, 52, 18, nil, nil, 11)
+        row.deleteButton:SetPoint("RIGHT", row, "RIGHT", -5, 0)
+
+        return row
     end
-    for i = 1, scrollLines do
-        ClearLine(scrollbox:CreateLine(createLine))
+
+    local function UpdateAuraRow(row, entry)
+        row.entry = entry
+        row.name:SetText(entry.name)
+        row.spellIDText:SetText(entry.spellID)
+        row.defaultText:SetText(entry.deleted and T("Deleted") or (entry.edited and T("Edited") or T("Default")))
+        row.icon:SetTexture(C_Spell.GetSpellTexture(entry.spellID) or 134400)
+        row.unitEntry:SetValue(entry.unit or "player")
+        row.unitEntry.editBox:SetEnabled(not entry.isDefault)
+        row.eventDropdown.dropBtn:SetEnabled(not entry.isDefault)
+        row.eventDropdown:Refresh()
+        row.soundDropdown:Refresh()
+        row.resetButton.frame:SetShown(entry.isDefault and entry.edited)
     end
 
-    local newSpellLabel = DF:CreateLabel(rightPanel, T("SpellID:"), 11)
-    ApplyUIFont(newSpellLabel, 11)
-    newSpellLabel:SetPoint("TOPLEFT", GetUIObject(scrollbox), "BOTTOMLEFT", 0, -18)
+    RefreshAuraScrollbox = function()
+        local data = PrepareAuraSoundData(screen)
+        for i = #auraRows + 1, #data do
+            auraRows[i] = CreateAuraRow(i)
+        end
+        for i, entry in ipairs(data) do
+            local row = auraRows[i]
+            row:SetPoint("TOPLEFT", scrollbox.scrollChild, "TOPLEFT", 0, -(i - 1) * ROW_HEIGHT)
+            UpdateAuraRow(row, entry)
+            row:Show()
+        end
+        for i = #data + 1, #auraRows do
+            auraRows[i]:Hide()
+        end
+        scrollbox.scrollChild:SetHeight(math.max(1, #data * ROW_HEIGHT))
+        scrollbox:UpdateScrollBar()
+    end
+    scrollbox.MasterRefresh = function(self) RefreshAuraScrollbox() end
 
-    local newSpellEntry = DF:CreateTextEntry(rightPanel, function() end, 90, 20)
-    newSpellEntry:SetPoint("LEFT", GetUIObject(newSpellLabel), "RIGHT", 8, 0)
-    newSpellEntry:SetTemplate(options_dropdown_template)
+    local newSpellLabel = CreateLabel(rightPanel, T("SpellID:"), 11)
+    newSpellLabel:SetPoint("TOPLEFT", scrollbox.frame, "BOTTOMLEFT", 0, -18)
 
-    local newSoundLabel = DF:CreateLabel(rightPanel, T("Sound:"), 11)
-    ApplyUIFont(newSoundLabel, 11)
-    newSoundLabel:SetPoint("LEFT", GetUIObject(newSpellEntry), "RIGHT", 12, 0)
+    local newSpellEntry = NSI.UI.Components.CreateTextEntry(rightPanel, nil, nil, nil, 90, 20)
+    newSpellEntry:SetPoint("LEFT", newSpellLabel, "RIGHT", 8, 0)
 
-    local newSoundDropdown = DF:CreateDropDown(rightPanel, BuildAuraSoundDropdown, nil, 135, 20, nil, "$parentNewSoundDropdown", options_dropdown_template)
-    newSoundDropdown:SetPoint("LEFT", GetUIObject(newSoundLabel), "RIGHT", 8, 0)
+    local newSoundLabel = CreateLabel(rightPanel, T("Sound:"), 11)
+    newSoundLabel:SetPoint("LEFT", newSpellEntry.frame, "RIGHT", 12, 0)
 
-    local newUnitLabel = DF:CreateLabel(rightPanel, T("Unit"), 11)
-    ApplyUIFont(newUnitLabel, 11)
-    newUnitLabel:SetPoint("LEFT", GetUIObject(newSoundDropdown), "RIGHT", 12, 0)
+    local newSoundValue = "__NONE__"
+    local newSoundDropdown = NSI.UI.Components.CreateDropdown(rightPanel, nil, function()
+        local items = BuildAuraSoundDropdown()
+        for _, item in ipairs(items) do
+            local baseOnclick = item.onclick
+            item.onclick = function(a, b, value)
+                if baseOnclick then baseOnclick(a, b, value) end
+                newSoundValue = value
+            end
+        end
+        return items
+    end, function()
+        return GetSoundDisplayLabel(newSoundValue ~= "__NONE__" and newSoundValue or nil)
+    end, 135, 20)
+    newSoundDropdown:SetPoint("LEFT", newSoundLabel, "RIGHT", 8, 0)
 
-    local newUnitEntry = DF:CreateTextEntry(rightPanel, function() end, 65, 20)
-    newUnitEntry:SetPoint("LEFT", GetUIObject(newUnitLabel), "RIGHT", 8, 0)
-    newUnitEntry:SetTemplate(options_dropdown_template)
-    newUnitEntry:SetText("player")
+    local newUnitLabel = CreateLabel(rightPanel, T("Unit"), 11)
+    newUnitLabel:SetPoint("LEFT", newSoundDropdown.frame, "RIGHT", 12, 0)
 
-    local newEventLabel = DF:CreateLabel(rightPanel, T("Event"), 11)
-    ApplyUIFont(newEventLabel, 11)
-    newEventLabel:SetPoint("LEFT", GetUIObject(newUnitEntry), "RIGHT", 12, 0)
+    local newUnitEntry = NSI.UI.Components.CreateTextEntry(rightPanel, nil, function() return "player" end, nil, 65, 20)
+    newUnitEntry:SetPoint("LEFT", newUnitLabel, "RIGHT", 8, 0)
 
-    local newEventDropdown = DF:CreateDropDown(rightPanel, BuildAuraSoundEventDropdown, nil, 92, 20, nil, "$parentNewEventDropdown", options_dropdown_template)
-    newEventDropdown:SetPoint("LEFT", GetUIObject(newEventLabel), "RIGHT", 8, 0)
-    newEventDropdown:Select(GetAuraSoundEventLabel("applied"))
+    local newEventLabel = CreateLabel(rightPanel, T("Event"), 11)
+    newEventLabel:SetPoint("LEFT", newUnitEntry.frame, "RIGHT", 12, 0)
 
-    local addButton = DF:CreateButton(rightPanel, function()
+    local newEventValue = "applied"
+    local newEventDropdown = NSI.UI.Components.CreateDropdown(rightPanel, nil, function()
+        local items = BuildAuraSoundEventDropdown()
+        for _, item in ipairs(items) do
+            local baseOnclick = item.onclick
+            item.onclick = function(a, b, value)
+                if baseOnclick then baseOnclick(a, b, value) end
+                newEventValue = value
+            end
+        end
+        return items
+    end, function()
+        return GetAuraSoundEventLabel(newEventValue)
+    end, 92, 20)
+    newEventDropdown:SetPoint("LEFT", newEventLabel, "RIGHT", 8, 0)
+
+    local addButton = NSI.UI.Components.CreateButton(rightPanel, T("Add"), function()
         if screen.categoryType == "Custom" and not screen.categoryKey then return end
-        local spellID = tonumber(newSpellEntry:GetText())
-        local value = newSoundDropdown:GetValue()
-        local sound = value ~= "__NONE__" and value or nil
-        local unit = newUnitEntry:GetText()
+        local spellID = tonumber(newSpellEntry:GetValue())
+        local sound = newSoundValue ~= "__NONE__" and newSoundValue or nil
+        local unit = newUnitEntry:GetValue()
         unit = unit ~= "" and unit or "player"
-        local eventType = newEventDropdown:GetValue() or "applied"
+        local eventType = newEventValue or "applied"
         if not spellID or not sound then return end
         local entryKey = NSI:GetNextAuraSoundKey(spellID, unit, eventType)
         NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey, unit, eventType)
-        scrollbox:MasterRefresh()
-        newSpellEntry:SetText("")
-        newUnitEntry:SetText("player")
-        newEventDropdown:Select(GetAuraSoundEventLabel("applied"))
-    end, 70, 20, T("Add"))
-    ApplyUIFont(addButton, 11)
-    addButton:SetPoint("LEFT", GetUIObject(newEventDropdown), "RIGHT", 10, 0)
-    addButton:SetTemplate(options_button_template)
+        RefreshAuraScrollbox()
+        newSpellEntry:SetValue("")
+        newUnitEntry:SetValue("player")
+        newSoundValue = "__NONE__"
+        newSoundDropdown:Refresh()
+        newEventValue = "applied"
+        newEventDropdown:Refresh()
+    end, 70, 20, nil, nil, 11)
+    addButton:SetPoint("LEFT", newEventDropdown.frame, "RIGHT", 10, 0)
 
     SelectCategoryType("Raid")
     return screen
