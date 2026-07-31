@@ -137,7 +137,6 @@ local LOW_BUFF_SECS = 600    -- glow / warn when a buff has under 10 minutes lef
 local MAINHAND_SLOT = 16
 local OFFHAND_SLOT  = 17
 local WEAPON_CLASS  = 2 -- Enum.ItemClass.Weapon
-local GLOW_KEY      = "NSIReadyCheckConsumables"
 
 local container
 local buttons       = {}
@@ -176,7 +175,6 @@ end
 --  unfilled tracking simply stays dormant (the button still shows and casts).
 -- ---------------------------------------------------------------------------
 local RITE_OF_SANCTIFICATION = 433568 -- Paladin (Lightsmith): cast
-local RITE_SANCT_BUFF        = 7143   -- Paladin (Lightsmith): buff to track
 local LIGHTNING_SHIELD       = 192106 -- Shaman: the click for ALL specs (applies the spec's imbues)
 local THUNDERSTRIKE_WARD     = 7587   -- Elemental: off-hand SHIELD enchant ID (needs shield + talent)
 local FLAMETONGUE_TALENT     = 318038 -- Flametongue Weapon talent spellID (IsPlayerSpell)
