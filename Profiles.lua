@@ -408,6 +408,12 @@ function NSI:AddMissingDefaults()
             LootBossReminder = false,
             AutoRepair = false,
             AutoInvite = false,
+            AutoInviteKeywords = "inv",
+            AutoInviteGuildOnly = true,
+            AutoPromote = false,
+            AutoPromoteOfficers = true,
+            AutoPromoteNames = "",
+            AutoPromoteRankIndex = 1,
             AddSpellIDToTooltips = false,
             ConsumableNotificationDurationSeconds = 5,
             TextDisplay = {
