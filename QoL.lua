@@ -314,9 +314,6 @@ function NSI:HasLustDebuff()
     return false
 end
 
-local VantusIds = {
-
-}
 function NSI:VantusRuneCheck()
     if self:Restricted() then print("Auras are currently secret so this is unvailable.") return end
     if not UnitInRaid("player") then return end
