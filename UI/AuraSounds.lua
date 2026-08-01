@@ -1101,8 +1101,13 @@ local function BuildAuraSoundsUI(parent)
         row.defaultText:SetText(entry.deleted and T("Deleted") or (entry.edited and T("Edited") or T("Default")))
         row.icon:SetTexture(C_Spell.GetSpellTexture(entry.spellID) or 134400)
         row.unitEntry:SetValue(entry.unit or "player")
-        row.unitEntry.editBox:SetEnabled(not entry.isDefault)
-        row.eventDropdown.dropBtn:SetEnabled(not entry.isDefault)
+        if entry.isDefault then
+            row.unitEntry:Disable()
+            row.eventDropdown:Disable()
+        else
+            row.unitEntry:Enable()
+            row.eventDropdown:Enable()
+        end
         row.eventDropdown:Refresh()
         row.soundDropdown:Refresh()
         row.resetButton:SetShown(entry.isDefault and entry.edited)

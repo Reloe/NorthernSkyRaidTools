@@ -449,6 +449,9 @@ end
 --    :GetValue() → bool
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()       also dims label and box, blocks toggling
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateCheckButton(parent, label, getValue, setValue, width, height, name, tooltip)
     local totalW = width  or 180
@@ -494,12 +497,19 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     lbl:SetPoint("RIGHT", btn, "RIGHT",   0,   0)
     lbl:SetHeight(totalH)
 
-    local isChecked = getValue and getValue(NSI) or false
+    local isChecked  = getValue and getValue(NSI) or false
+    local isDisabled = false
 
     local function Refresh()
         if isChecked then
             checkFill:Show()
-            box:SetBackdropBorderColor(0, 1, 1, 0.9)
+            if isDisabled then
+                checkFill:SetColorTexture(0.45, 0.45, 0.45, 0.6)
+                box:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+            else
+                checkFill:SetColorTexture(0, 1, 1, 0.85)
+                box:SetBackdropBorderColor(0, 1, 1, 0.9)
+            end
         else
             checkFill:Hide()
             box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
@@ -542,6 +552,22 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
         RegisterLocalizedText(self.label, key)
     end
 
+    function obj:Enable()
+        isDisabled = false
+        btn:Enable()
+        lbl:SetTextColor(unpack(STYLE.text_color))
+        Refresh()
+    end
+
+    function obj:Disable()
+        isDisabled = true
+        btn:Disable()
+        lbl:SetTextColor(unpack(STYLE.text_disabled))
+        Refresh()
+    end
+
+    function obj:IsEnabled() return not isDisabled end
+
     componentRegistry.Checkbox[#componentRegistry.Checkbox + 1] = obj
     return obj
 end
@@ -571,6 +597,9 @@ end
 --    :GetValue() → string|number
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/text and blocks editing
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
                                width, height, numeric, minVal, maxVal, name, tooltip)
@@ -679,6 +708,27 @@ local function CreateTextEntry(parent, label, getValue, setValue,
         if self.label then RegisterLocalizedText(self.label, key) end
     end
 
+    function obj:Enable()
+        self._disabled = false
+        edit:SetEnabled(true)
+        edit:EnableMouse(true)
+        edit:SetTextColor(1, 1, 1, 1)
+        if lbl then lbl:SetTextColor(unpack(STYLE.text_color)) end
+        MakeControlBackdrop(inputFrame)
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        edit:ClearFocus()
+        edit:SetEnabled(false)
+        edit:EnableMouse(false)
+        edit:SetTextColor(unpack(STYLE.text_disabled))
+        if lbl then lbl:SetTextColor(unpack(STYLE.text_disabled)) end
+        inputFrame:SetBackdropColor(0.2, 0.2, 0.2, 0.6)
+    end
+
+    function obj:IsEnabled() return not self._disabled end
+
     componentRegistry.TextEntry[#componentRegistry.TextEntry + 1] = obj
     return obj
 end
@@ -704,6 +754,9 @@ end
 --    :Close()
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/value and closes the popup if open
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted, searchable)
     local totalW   = width  or 220
@@ -1063,6 +1116,27 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         if self.label then RegisterLocalizedText(self.label, key) end
     end
 
+    function obj:Enable()
+        self._disabled = false
+        dropBtn:Enable()
+        valText:SetTextColor(unpack(STYLE.text_color))
+        arrowTexture:SetVertexColor(1, 1, 1, 1)
+        if lbl then
+            if highlighted then lbl:SetTextColor(1, 0.82, 0, 1) else lbl:SetTextColor(unpack(STYLE.text_color)) end
+        end
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        Close()
+        dropBtn:Disable()
+        valText:SetTextColor(unpack(STYLE.text_disabled))
+        arrowTexture:SetVertexColor(unpack(STYLE.text_disabled))
+        if lbl then lbl:SetTextColor(unpack(STYLE.text_disabled)) end
+    end
+
+    function obj:IsEnabled() return not self._disabled end
+
     componentRegistry.Dropdown[#componentRegistry.Dropdown + 1] = obj
     return obj
 end
@@ -1093,6 +1167,9 @@ end
 --    :GetValue() → number
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/track/thumb and blocks dragging
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
                             width, height, minVal, maxVal, step, name, tooltip, liveDrag, decimals, useDecimals)
@@ -1309,6 +1386,33 @@ local function CreateSlider(parent, label, getValue, setValue,
         RegisterLocalizedText(self.label, key)
     end
 
+    function obj:Enable()
+        self._disabled = false
+        slider:Enable()
+        slider:EnableMouse(true)
+        valBtn:EnableMouse(true)
+        lbl:SetTextColor(unpack(STYLE.text_color))
+        valText:SetTextColor(0.65, 0.65, 0.65, 1)
+        thumb:SetVertexColor(0, 1, 1, 1)
+        fillTex:SetColorTexture(0, 1, 1, 0.45)
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        slider:Disable()
+        slider:EnableMouse(false)
+        valBtn:EnableMouse(false)
+        typeBox:ClearFocus()
+        typeBox:Hide()
+        valText:Show()
+        lbl:SetTextColor(unpack(STYLE.text_disabled))
+        valText:SetTextColor(unpack(STYLE.text_disabled))
+        thumb:SetVertexColor(unpack(STYLE.text_disabled))
+        fillTex:SetColorTexture(unpack(STYLE.text_disabled))
+    end
+
+    function obj:IsEnabled() return not self._disabled end
+
     componentRegistry.Slider[#componentRegistry.Slider + 1] = obj
     return obj
 end
@@ -1334,6 +1438,9 @@ end
 --    :Refresh()  re-reads getValue and repaints the swatch
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/swatch and blocks opening the picker
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateColorPicker(parent, label, getValue, setValue, width, height, name, tooltip)
     local totalW   = width  or 220
@@ -1452,6 +1559,23 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
     function obj:SetLocaleKey(key)
         RegisterLocalizedText(self.label, key)
     end
+
+    function obj:Enable()
+        self._disabled = false
+        swatchBtn:Enable()
+        lbl:SetTextColor(unpack(STYLE.text_color))
+        colorTex:SetVertexColor(1, 1, 1, 1)
+        UpdateSwatch()
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        swatchBtn:Disable()
+        lbl:SetTextColor(unpack(STYLE.text_disabled))
+        colorTex:SetVertexColor(unpack(STYLE.text_disabled))
+    end
+
+    function obj:IsEnabled() return not self._disabled end
 
     componentRegistry.Color[#componentRegistry.Color + 1] = obj
     return obj
