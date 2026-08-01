@@ -474,6 +474,7 @@ local AuraTrackingPreviewData = {
         timerKey = "AuraTrackingPlayerPreviewTimer",
         texture = 237555,
         unit = "player",
+        previewSpellIDs = {1241058, 474545, 1308113, 1300503, 397077, 1238247, 1238084, 373692, 1216571, 1222103, 1246957},
     },
     Tank = {
         frameKey = "AuraTrackingTankPreviewMover",
@@ -481,6 +482,7 @@ local AuraTrackingPreviewData = {
         timerKey = "AuraTrackingTankPreviewTimer",
         texture = 236318,
         unit = "player",
+        previewSpellIDs = {1291929, 1295858, 1280934, 1303230, 1282873, 1277051},
     },
     External = {
         frameKey = "AuraTrackingExternalPreviewMover",
@@ -1785,11 +1787,21 @@ end
 local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
     local entries = {}
     local limit = math.min(settings.Limit or 1, 20)
-    local spellIDs = GetAuraTrackingSpellIDs(settings, key)
+    local previewData = GetAuraTrackingPreviewData(key)
+    local spellIDs = previewData and previewData.previewSpellIDs or GetAuraTrackingSpellIDs(settings, key)
+    local shuffledSpellIDs = {}
+    for i, spellID in ipairs(spellIDs) do
+        shuffledSpellIDs[i] = spellID
+    end
+    for i = #shuffledSpellIDs, 2, -1 do
+        local j = math.random(i)
+        shuffledSpellIDs[i], shuffledSpellIDs[j] = shuffledSpellIDs[j], shuffledSpellIDs[i]
+    end
     for i = 1, limit do
         local texture = fallbackTexture
-        if #spellIDs > 0 then
-            texture = C_Spell.GetSpellTexture(spellIDs[math.random(1, #spellIDs)]) or fallbackTexture
+        if #shuffledSpellIDs > 0 then
+            local spellID = shuffledSpellIDs[((i - 1) % #shuffledSpellIDs) + 1]
+            texture = C_Spell.GetSpellTexture(spellID) or fallbackTexture
         end
         entries[#entries + 1] = {
             index = i,

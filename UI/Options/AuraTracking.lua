@@ -886,7 +886,7 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
-            tooltip = tip("Sort Order", "Default uses Blizzard's aura order. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
+            tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which is usually the application order of debuffs. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
             get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })
 
         add({ Type = "Label", text = "Icon", highlight = true })
