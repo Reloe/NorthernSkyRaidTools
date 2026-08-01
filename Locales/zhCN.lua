@@ -645,8 +645,6 @@ L["Hide tooltips on mouseover. The frame will be clickthrough regardless."] = "�
 L["Border Size"] = "边框尺寸"
 L["Size of the black border around tracked aura icons. Set to 0 to disable it."] = "设置光环追踪图标的黑色边框尺寸（0 = 禁用）。"
 L["Color of the border around tracked aura icons."] = "选择光环追踪图标的边框颜色。"
-L["Show Dispel Border"] = "显示驱散边框"
-L["Show Blizzard's dispel-type border and icon on tracked auras."] = "显示光环追踪的暴雪驱散类型边框和图标。"
 L["Dispel Border"] = "驱散边框"
 L["Select whether to use the custom dispel-colored border, Blizzard's dispel border, or no dispel border."] = "选择驱散边框的类型：自定义驱散边框、暴雪驱散边框或无边框。"
 L["Use Custom Dispel Border"] = "自定义驱散边框"
