@@ -1,13 +1,12 @@
 ## Changelog
 - Add configurable keywords and guild-only toggle to Auto-Invite on Whisper
 - Add Auto-Promote Assistants QoL setting (guild rank threshold + always-promote name list)
-- Fix Aura Tracking for 12.1 (Private Aura replacement)
-- Add External and Custom Aura Tracking and a few new settings
-- Allow Filtering for Aura Tracking instead of just spellid's
-- Add Unitid and eventtype settings to Aura Sounds
+- Add clickable consumeable frame on ready check
+- Add Aura Tracking which includes builtin replacements for what was previously private auras but also allows custom tracking
+- Rework Aura Sounds to new 12.1 API and seperate it by bosses/dungeons + allow custom entries and sounds on removed/stack gain
 - Allow textures to be displayed through note / alerts if the texture path was manually entered
 - Add FontFlag Options for Reminders
-- Add Custom Anchor Frame to Aura Tracking
 - Add Setting to overwrite existing Notes when importing a new one
 - Add Pace Comparison Module (similar to the Pace WeakAuras back in Manaforge but bit more restricted)
 - Add QoL setting to show aura spell IDs in tooltips
+- Add S2 Sound Data for Raids & Dungeons
