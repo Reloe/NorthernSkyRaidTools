@@ -81,8 +81,9 @@ local SORT_MODES = {
 }
 
 local DISPEL_BORDER_MODES = {
-    { label = "Use Custom Dispel Border", value = "Custom" },
-    { label = "Show Blizzard Dispel Border", value = "Blizzard" },
+    { label = "Colored Border + Icon", value = "ColoredWithIcon" },
+    { label = "Colored Border", value = "Colored" },
+    { label = "Icon Only", value = "IconOnly" },
     { label = "No Dispel Border", value = "None" },
 }
 
@@ -898,17 +899,13 @@ local function BuildAuraTrackingUI(screen)
             get = function() return unpack(s.BorderColor) end, set = function(_, r, g, b, a) s.BorderColor = {r, g, b, a}; apply(key) end })
         if key ~= "External" then
             add({ Type = "Dropdown", label = "Dispel Border", values = DISPEL_BORDER_MODES,
-                tooltip = tip("Dispel Border", "Select whether to use the custom dispel-colored border, Blizzard's dispel border, or no dispel border."),
-                get = function()
-                    if s.DispelBorderMode then return s.DispelBorderMode end
-                    if s.ShowDispelBorder == false then return "None" end
-                    return s.UseCustomDispelBorder == false and "Blizzard" or "Custom"
-                end,
+                tooltip = tip("Dispel Border", "Select a colored border, a colored border with a dispel icon, an icon without a border, or no dispel indicator."),
+                get = function() return s.DispelBorderMode end,
                 set = function(_, v) s.DispelBorderMode = v; apply(key) end })
-            add({ Type = "Slider", label = "Custom Dispel Border Size", min = 0, max = 10, step = 1,
-                tooltip = tip("Custom Dispel Border Size", "Size of the custom dispel-colored border. Set to 0 to disable it."),
-                get = function() return s.CustomDispelBorderSize ~= nil and s.CustomDispelBorderSize or 3 end,
-                set = function(_, v) s.CustomDispelBorderSize = v; apply(key) end })
+            add({ Type = "Slider", label = "Dispel Border Size", min = 0, max = 10, step = 1,
+                tooltip = tip("Dispel Border Size", "Size of the colored dispel border. Set to 0 to disable it."),
+                get = function() return s.DispelBorderSize ~= nil and s.DispelBorderSize or 3 end,
+                set = function(_, v) s.DispelBorderSize = v; apply(key) end })
         end
         add({ Type = "Checkbox", label = "Enable Cooldown Swipe",
             tooltip = tip("Enable Cooldown Swipe", "Shows a cooldown swipe on tracked aura icons."),

@@ -25,7 +25,7 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
         CopyAuraTrackingSetting(source, target, key)
     end
     if source.HideBorder ~= nil then
-        target.ShowDispelBorder = not source.HideBorder
+        target.DispelBorderMode = source.HideBorder and "None" or "ColoredWithIcon"
     end
     if source.StackScale then
         local fontSize = math.max(6, math.floor((source.StackScale * 16) + 0.5))
@@ -321,8 +321,8 @@ function NSI:AddMissingDefaults()
                 builtin = "Player",
                 HideLongDurationAuras = false,
                 ShowWhitelistedPlayerBuffs = true,
-                DispelBorderMode = "Custom",
-                CustomDispelBorderSize = 3,
+                DispelBorderMode = "ColoredWithIcon",
+                DispelBorderSize = 3,
             }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
                 Name = "Co-Tank Debuffs",
@@ -333,8 +333,8 @@ function NSI:AddMissingDefaults()
                 NameEnabled = true,
                 OnlyShowFirstTank = false,
                 HideLongDurationAuras = false,
-                DispelBorderMode = "Custom",
-                CustomDispelBorderSize = 3,
+                DispelBorderMode = "ColoredWithIcon",
+                DispelBorderSize = 3,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
                 Name = "External & Immunity",
@@ -348,7 +348,6 @@ function NSI:AddMissingDefaults()
                 StackFontSize = 50,
                 HideStackText = true,
                 HideTooltip = true,
-                ShowDispelBorder = false,
                 IncludeImmunities = true,
                 NameEnabled = true,
                 NamePosition = "LEFT",
