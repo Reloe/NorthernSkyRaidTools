@@ -150,8 +150,8 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         FrameStrata = "MEDIUM",
         BorderSize = 1,
         BorderColor = {0, 0, 0, 1},
-        DispelBorderMode = "Custom",
-        CustomDispelBorderSize = 3,
+        DispelBorderMode = "ColoredWithIcon",
+        DispelBorderSize = 3,
         HideTooltip = false,
         HideDurationText = false,
         ShowWhitelistedPlayerBuffs = false,
@@ -493,9 +493,16 @@ local AuraTrackingPreviewData = {
     },
 }
 
-local AuraTrackingPreviewDispelTypes = {
+local AuraTrackingPreviewNonMagicDispelTypes = {
     "Curse",
+    "Disease",
+    "Poison",
+    "Bleed",
+}
+
+local AuraTrackingPreviewDispelTypes = {
     "Magic",
+    "Curse",
     "Disease",
     "Poison",
     "Bleed",
@@ -625,18 +632,15 @@ local function GetAuraTrackingSpellIDs(settings, settingsKey)
 end
 
 local function AuraTrackingWantsDispelBorder(settings, key)
-    if key == "External" or not settings then return false end
-    if settings.DispelBorderMode then
-        return settings.DispelBorderMode ~= "None"
-    end
-    return settings.ShowDispelBorder ~= false
+    return key ~= "External" and settings and settings.DispelBorderMode ~= "None"
 end
 
 local function AuraTrackingUsesCustomDispelBorder(settings)
-    if settings.DispelBorderMode then
-        return settings.DispelBorderMode == "Custom"
-    end
-    return settings.UseCustomDispelBorder ~= false
+    return settings.DispelBorderMode == "Colored" or settings.DispelBorderMode == "ColoredWithIcon"
+end
+
+local function AuraTrackingUsesCustomDispelIcon(settings)
+    return settings.DispelBorderMode == "ColoredWithIcon" or settings.DispelBorderMode == "IconOnly"
 end
 
 local AuraTrackingDispelBorderColors
@@ -653,20 +657,20 @@ end
 local function HideAuraTrackingDispelRegions(regions)
     if not regions then return end
     if regions.dispelOverlay then regions.dispelOverlay:Hide() end
-    if regions.dispelBorder then regions.dispelBorder:Hide() end
     if regions.customDispelBorder then
         for _, texture in pairs(regions.customDispelBorder) do texture:Hide() end
     end
+    if regions.customDispelIcon then regions.customDispelIcon:Hide() end
     if regions.dispelSymbol then regions.dispelSymbol:Hide() end
 end
 
 local function HideAuraTrackingPreviewDispelRegions(frame)
     if not frame then return end
     if frame.DispelOverlay then frame.DispelOverlay:Hide() end
-    if frame.DispelBorder then frame.DispelBorder:Hide() end
     if frame.CustomDispelBorder then
         for _, texture in pairs(frame.CustomDispelBorder) do texture:Hide() end
     end
+    if frame.CustomDispelIcon then frame.CustomDispelIcon:Hide() end
 end
 
 local function GetAuraTrackingSpellIDMap(settings, settingsKey)
@@ -823,7 +827,7 @@ function NSI:AddCustomAuraTracking(group)
         yOffset = 0,
         HideStackText = true,
         HideTooltip = true,
-        DispelBorderMode = "None",
+        DispelBorderMode = "ColoredWithIcon",
         SpellIDsEdited = true,
         group = group,
     })
@@ -1022,12 +1026,6 @@ local function UpdateAuraTrackingBorder(border, parent, size, color)
     border.right:SetWidth(size)
 end
 
-local function SetAuraTrackingDispelBorderSize(border, relativeRegion, width, height)
-    border:ClearAllPoints()
-    border:SetPoint("CENTER", relativeRegion, "CENTER", 0, 0)
-    border:SetSize(width * 1.25, height * 1.25)
-end
-
 local function AddAuraTrackingCustomDispelBorder(button, border)
     local options = {
         style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
@@ -1038,21 +1036,6 @@ local function AddAuraTrackingCustomDispelBorder(button, border)
     for _, texture in pairs(border) do
         button:AddDispelTypeTexture(texture, options)
     end
-end
-
-local function UpdateAuraTrackingCustomDispelBorder(border, parent, size, color)
-    UpdateAuraTrackingBorder(border, parent, size, color or {1, 1, 1, 1})
-end
-
-local function GetAuraTrackingCustomDispelBorderSize(settings)
-    return settings.CustomDispelBorderSize ~= nil and settings.CustomDispelBorderSize or 3
-end
-
-local function ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index)
-    if not AuraTrackingWantsDispelBorder(settings, key) then return false end
-    if index == 1 then return true end
-    if index == 2 then return false end
-    return random(2) == 1
 end
 
 local function PositionAuraTrackingUnitName(fontString, parent, settings)
@@ -1280,25 +1263,29 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
             if not regions.customDispelBorder then
                 regions.customDispelBorder = CreateAuraTrackingBorder(regions.dispelOverlay)
             end
-            local customBorderSize = GetAuraTrackingCustomDispelBorderSize(settings)
-            UpdateAuraTrackingCustomDispelBorder(regions.customDispelBorder, regions.dispelOverlay, customBorderSize)
+            local customBorderSize = settings.DispelBorderSize
+            UpdateAuraTrackingBorder(regions.customDispelBorder, regions.dispelOverlay, customBorderSize, {1, 1, 1, 1})
             if customBorderSize > 0 then
                 AddAuraTrackingCustomDispelBorder(button, regions.customDispelBorder)
             end
-            if regions.dispelBorder then regions.dispelBorder:Hide() end
-        else
-            if not regions.dispelBorder then
-                regions.dispelBorder = regions.dispelOverlay:CreateTexture(nil, "OVERLAY")
+        elseif regions.customDispelBorder then
+            for _, texture in pairs(regions.customDispelBorder) do texture:Hide() end
+        end
+        if AuraTrackingUsesCustomDispelIcon(settings) then
+            if not regions.customDispelIcon then
+                regions.customDispelIcon = regions.dispelOverlay:CreateTexture(nil, "OVERLAY")
             end
-            SetAuraTrackingDispelBorderSize(regions.dispelBorder, regions.icon, width, height)
-            button:AddDispelTypeTexture(regions.dispelBorder, {
-                showIcon = true,
+            local iconSize = math.min(width, height) * 0.35
+            regions.customDispelIcon:ClearAllPoints()
+            regions.customDispelIcon:SetPoint("TOPRIGHT", regions.dispelOverlay, "TOPRIGHT", -2, -2)
+            regions.customDispelIcon:SetSize(iconSize, iconSize)
+            button:AddDispelTypeTexture(regions.customDispelIcon, {
+                style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon,
                 showWhenHarmful = true,
                 showWhenHelpful = false,
             })
-            if regions.customDispelBorder then
-                for _, texture in pairs(regions.customDispelBorder) do texture:Hide() end
-            end
+        elseif regions.customDispelIcon then
+            regions.customDispelIcon:Hide()
         end
         if not regions.dispelSymbol then
             regions.dispelSymbol = regions.textOverlay:CreateFontString(nil, "OVERLAY")
@@ -1803,10 +1790,17 @@ local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
             local spellID = shuffledSpellIDs[((i - 1) % #shuffledSpellIDs) + 1]
             texture = C_Spell.GetSpellTexture(spellID) or fallbackTexture
         end
+        local dispelType
+        if i == 1 then
+            dispelType = AuraTrackingPreviewNonMagicDispelTypes[math.random(#AuraTrackingPreviewNonMagicDispelTypes)]
+        elseif i > 2 and math.random(#AuraTrackingPreviewDispelTypes + 1) > 1 then
+            dispelType = AuraTrackingPreviewDispelTypes[math.random(#AuraTrackingPreviewDispelTypes)]
+        end
         entries[#entries + 1] = {
             index = i,
             duration = math.random(10, 120),
             texture = texture,
+            dispelType = dispelType,
         }
     end
 
@@ -1874,7 +1868,7 @@ local function EnsureAuraTrackingPreviewFontString(frame, key)
     return frame[key]
 end
 
-local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, index, key, duration)
+local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType)
     local fontPath = GetAuraTrackingFontPath(self, settings)
     local now = GetTime()
     duration = duration or 10
@@ -1889,7 +1883,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
     end
     UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize, settings.BorderColor)
 
-    if ShouldShowAuraTrackingPreviewDispelBorder(settings, key, index) then
+    if AuraTrackingWantsDispelBorder(settings, key) and dispelType then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
@@ -1899,27 +1893,30 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, in
         frame.DispelOverlay:ClearAllPoints()
         frame.DispelOverlay:SetAllPoints(frame.Icon)
         frame.DispelOverlay:Show()
-        local dispelType = AuraTrackingPreviewDispelTypes[((index - 1) % #AuraTrackingPreviewDispelTypes) + 1]
         if AuraTrackingUsesCustomDispelBorder(settings) then
             if not frame.CustomDispelBorder then
                 frame.CustomDispelBorder = CreateAuraTrackingBorder(frame.DispelOverlay)
             end
-            UpdateAuraTrackingCustomDispelBorder(frame.CustomDispelBorder, frame.DispelOverlay, GetAuraTrackingCustomDispelBorderSize(settings))
+            UpdateAuraTrackingBorder(frame.CustomDispelBorder, frame.DispelOverlay, settings.DispelBorderSize, {1, 1, 1, 1})
             local color = GetAuraTrackingDispelBorderColors()[dispelType]
             for _, texture in pairs(frame.CustomDispelBorder) do
                 texture:SetVertexColor(color:GetRGBA())
             end
-            if frame.DispelBorder then frame.DispelBorder:Hide() end
-        else
-            if not frame.DispelBorder then
-                frame.DispelBorder = frame.DispelOverlay:CreateTexture(nil, "OVERLAY")
+        elseif frame.CustomDispelBorder then
+            for _, texture in pairs(frame.CustomDispelBorder) do texture:Hide() end
+        end
+        if AuraTrackingUsesCustomDispelIcon(settings) then
+            if not frame.CustomDispelIcon then
+                frame.CustomDispelIcon = frame.DispelOverlay:CreateTexture(nil, "OVERLAY")
             end
-            SetAuraTrackingDispelBorderSize(frame.DispelBorder, frame.Icon, settings.Width, settings.Height)
-            AuraUtil.SetAuraBorderAtlas(frame.DispelBorder, dispelType, true)
-            frame.DispelBorder:Show()
-            if frame.CustomDispelBorder then
-                for _, texture in pairs(frame.CustomDispelBorder) do texture:Hide() end
-            end
+            local iconSize = math.min(settings.Width, settings.Height) * 0.35
+            frame.CustomDispelIcon:ClearAllPoints()
+            frame.CustomDispelIcon:SetPoint("TOPRIGHT", frame.DispelOverlay, "TOPRIGHT", -2, -2)
+            frame.CustomDispelIcon:SetSize(iconSize, iconSize)
+            AuraUtil.SetAuraDispelTypeIcon(frame.CustomDispelIcon, dispelType)
+            frame.CustomDispelIcon:Show()
+        elseif frame.CustomDispelIcon then
+            frame.CustomDispelIcon:Hide()
         end
     else
         HideAuraTrackingPreviewDispelRegions(frame)
@@ -2043,7 +2040,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, i, key, entry.duration)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType)
             icon:Show()
         else
             icon.PreviewExpires = nil
