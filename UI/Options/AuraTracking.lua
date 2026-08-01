@@ -80,6 +80,13 @@ local SORT_MODES = {
     { label = "Short Duration first", value = "ShortDurationFirst" },
 }
 
+local DISPEL_BORDER_MODES = {
+    { label = "Colored Border + Icon", value = "ColoredWithIcon" },
+    { label = "Colored Border", value = "Colored" },
+    { label = "Icon Only", value = "IconOnly" },
+    { label = "No Dispel Border", value = "None" },
+}
+
 local ANCHOR_POINTS = {
     { label = "TOPLEFT", value = "TOPLEFT" }, { label = "TOP", value = "TOP" }, { label = "TOPRIGHT", value = "TOPRIGHT" },
     { label = "LEFT", value = "LEFT" }, { label = "CENTER", value = "CENTER" }, { label = "RIGHT", value = "RIGHT" },
@@ -880,7 +887,7 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
-            tooltip = tip("Sort Order", "Default uses Blizzard's aura order. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
+            tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which is usually the application order of debuffs. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
             get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })
 
         add({ Type = "Label", text = "Icon", highlight = true })
@@ -891,9 +898,14 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Border Color", "Color of the border around tracked aura icons."),
             get = function() return unpack(s.BorderColor) end, set = function(_, r, g, b, a) s.BorderColor = {r, g, b, a}; apply(key) end })
         if key ~= "External" then
-            add({ Type = "Checkbox", label = "Show Dispel Border",
-                tooltip = tip("Show Dispel Border", "Show Blizzard's dispel-type border and icon on tracked auras."),
-                get = function() return s.ShowDispelBorder end, set = function(_, v) s.ShowDispelBorder = v; apply(key) end })
+            add({ Type = "Dropdown", label = "Dispel Border", values = DISPEL_BORDER_MODES,
+                tooltip = tip("Dispel Border", "Select a colored border, a colored border with a dispel icon, an icon without a border, or no dispel indicator."),
+                get = function() return s.DispelBorderMode end,
+                set = function(_, v) s.DispelBorderMode = v; apply(key) end })
+            add({ Type = "Slider", label = "Dispel Border Size", min = 0, max = 10, step = 1,
+                tooltip = tip("Dispel Border Size", "Size of the colored dispel border. Set to 0 to disable it."),
+                get = function() return s.DispelBorderSize ~= nil and s.DispelBorderSize or 3 end,
+                set = function(_, v) s.DispelBorderSize = v; apply(key) end })
         end
         add({ Type = "Checkbox", label = "Enable Cooldown Swipe",
             tooltip = tip("Enable Cooldown Swipe", "Shows a cooldown swipe on tracked aura icons."),

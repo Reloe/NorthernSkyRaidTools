@@ -224,6 +224,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.Assignments = NSRT.AssignmentSettings
         end
     elseif e == "READY_CHECK" and wowevent then
+        local initiator = ...
+        self:ShowReadyCheckConsumables(initiator)
         self.ProcessDone = false
         if self:DifficultyCheck({14, 15, 16, 23}) then
             C_Timer.After(1, function()
@@ -370,7 +372,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
         self:InitAuraTracking()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
-        if not self:DifficultyCheck({14, 15, 16}) then return end
+        if not self:DifficultyCheck({8, 14, 15, 16}) then return end
         local info = ...
         if info.source ~= Enum.EncounterTimelineEventSource.Encounter then
             self.CustomEvents = self.CustomEvents or {}
@@ -380,7 +382,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:LogTimeline(e, ...)
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" and wowevent then
-        if not self:DifficultyCheck({14, 15, 16}) then return end
+        if not self:DifficultyCheck({8, 14, 15, 16}) then return end
         local eventID = ...
         if self.CustomEvents and self.CustomEvents[eventID] then
             return
@@ -389,7 +391,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
     elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" and wowevent then
         local eventID = ...
-        if not self:DifficultyCheck({14, 15, 16}) then return end
+        if not self:DifficultyCheck({8, 14, 15, 16}) then return end
         if self.CustomEvents and self.CustomEvents[eventID] then
             return
         end

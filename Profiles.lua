@@ -25,7 +25,7 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
         CopyAuraTrackingSetting(source, target, key)
     end
     if source.HideBorder ~= nil then
-        target.ShowDispelBorder = not source.HideBorder
+        target.DispelBorderMode = source.HideBorder and "None" or "ColoredWithIcon"
     end
     if source.StackScale then
         local fontSize = math.max(6, math.floor((source.StackScale * 16) + 0.5))
@@ -321,6 +321,8 @@ function NSI:AddMissingDefaults()
                 builtin = "Player",
                 HideLongDurationAuras = false,
                 ShowWhitelistedPlayerBuffs = true,
+                DispelBorderMode = "ColoredWithIcon",
+                DispelBorderSize = 3,
             }),
             Tank = self:CreateAuraTrackingSettingsDefaults({
                 Name = "Co-Tank Debuffs",
@@ -331,6 +333,8 @@ function NSI:AddMissingDefaults()
                 NameEnabled = true,
                 OnlyShowFirstTank = false,
                 HideLongDurationAuras = false,
+                DispelBorderMode = "ColoredWithIcon",
+                DispelBorderSize = 3,
             }),
             External = self:CreateAuraTrackingSettingsDefaults({
                 Name = "External & Immunity",
@@ -344,7 +348,6 @@ function NSI:AddMissingDefaults()
                 StackFontSize = 50,
                 HideStackText = true,
                 HideTooltip = true,
-                ShowDispelBorder = false,
                 IncludeImmunities = true,
                 NameEnabled = true,
                 NamePosition = "LEFT",
@@ -398,6 +401,7 @@ function NSI:AddMissingDefaults()
             SourceOfMagicCheck = false,
             BlisteringScalesCheck = false,
             SymbioticRelationshipCheck = false,
+            ConsumablesDisplay = true,
         },
 
         -- QoL Settings
@@ -407,6 +411,12 @@ function NSI:AddMissingDefaults()
             LootBossReminder = false,
             AutoRepair = false,
             AutoInvite = false,
+            AutoInviteKeywords = "inv",
+            AutoInviteGuildOnly = true,
+            AutoPromote = false,
+            AutoPromoteOfficers = true,
+            AutoPromoteNames = "",
+            AutoPromoteRankIndex = 1,
             AddSpellIDToTooltips = false,
             ConsumableNotificationDurationSeconds = 5,
             TextDisplay = {
@@ -520,6 +530,7 @@ local ignored = {
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
     ["AuraTrackingSettings"] = true,
+    ["AuraSounds"]       = true,
     ["NickNames"]        = true,
 }
 
@@ -639,8 +650,6 @@ function NSI:CopyFromProfile(name)
 end
 
 function NSI:ExportProfileString()
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
     local profileData = NSRT.Profiles[NSRT.CurrentProfile]
     if not profileData then return nil end
     local exportData = {}
@@ -653,22 +662,12 @@ function NSI:ExportProfileString()
         profileName = NSRT.CurrentProfile,
         data = exportData,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    local encoded = LibDeflate:EncodeForPrint(compressed)
-    return encoded
+    return self:EncodeExportData(exportTable)
 end
 
 function NSAPI:ImportProfileString(importString, name) -- name is optional
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
-    if not importString or importString == "" then return nil end
-    local decoded = LibDeflate:DecodeForPrint(importString)
-    if not decoded then return nil end
-    local decompressed = LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return nil end
-    local success, exportTable = LibSerialize:Deserialize(decompressed)
-    if not success or type(exportTable) ~= "table" then return nil end
+    local exportTable = NSI:DecodeExportData(importString)
+    if type(exportTable) ~= "table" then return nil end
     local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
         if NSRT.Profiles[name] then
@@ -691,8 +690,6 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
 end
 
 function NSI:ExportAlertsString(encID, diffID)
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
     local source = encID and NSRT.EncounterAlerts[encID] or NSRT.EncounterAlerts
     local encounterAlerts
     if diffID then
@@ -719,14 +716,10 @@ function NSI:ExportAlertsString(encID, diffID)
         diffID          = diffID,
         encounterAlerts = encounterAlerts,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    return LibDeflate:EncodeForPrint(compressed)
+    return self:EncodeExportData(exportTable)
 end
 
 function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
     local exportTable = {
         version   = 1,
         type      = "single_alert",
@@ -736,15 +729,11 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
         alertKey  = alertKey,
         data      = data,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    return LibDeflate:EncodeForPrint(compressed)
+    return self:EncodeExportData(exportTable)
 end
 
 function NSI:ExportGroupString(encID, groupName, diffID)
     if not encID or not groupName then return nil end
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate   = LibStub("LibDeflate")
     local encounterAlerts = {}
     local encTable = encID and NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
     if not encTable then return nil end
@@ -769,21 +758,12 @@ function NSI:ExportGroupString(encID, groupName, diffID)
         groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
         encounterAlerts = encounterAlerts,
     }
-    local serialized = LibSerialize:Serialize(exportTable)
-    local compressed = LibDeflate:CompressDeflate(serialized)
-    return LibDeflate:EncodeForPrint(compressed)
+    return self:EncodeExportData(exportTable)
 end
 
 function NSAPI:ImportAlertsString(importString)
-    local LibSerialize = LibStub("LibSerialize")
-    local LibDeflate = LibStub("LibDeflate")
-    if not importString or importString == "" then return nil end
-    local decoded = LibDeflate:DecodeForPrint(importString)
-    if not decoded then return nil end
-    local decompressed = LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return nil end
-    local success, t = LibSerialize:Deserialize(decompressed)
-    if not success or type(t) ~= "table" then return nil end
+    local t = NSI:DecodeExportData(importString)
+    if type(t) ~= "table" then return nil end
 
     if t.type == "alerts" then
         local count = 0
