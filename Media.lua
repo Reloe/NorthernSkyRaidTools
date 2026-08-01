@@ -67,6 +67,14 @@ NSI.LSM:Register("sound", color .. "MindControl|r", [[Interface\Addons\NorthernS
 NSI.LSM:Register("sound", color .. "Orb|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Orb.ogg]])
 NSI.LSM:Register("sound", color .. "Move|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Move.ogg]])
 NSI.LSM:Register("sound", color .. "Collect|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Collect.ogg]])
+NSI.LSM:Register("sound", color .. "Hide|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Hide.ogg]])
+NSI.LSM:Register("sound", color .. "Beam|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Beam.ogg]])
+NSI.LSM:Register("sound", color .. "Server|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Server.ogg]])
+NSI.LSM:Register("sound", color .. "Bouncer|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Bouncer.ogg]])
+NSI.LSM:Register("sound", color .. "Entertainer|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Entertainer.ogg]])
+NSI.LSM:Register("sound", color .. "Cleaner|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Cleaner.ogg]])
+NSI.LSM:Register("sound", color .. "Root|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Root.ogg]])
+NSI.LSM:Register("sound", color .. "Adds|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Adds.ogg]])
 --Fonts
 NSI.LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars

@@ -7,6 +7,7 @@ local _, NSI = ... -- Internal namespace
 -- Duplicate spell/unit/event combinations are supported; built-in entry keys are assigned automatically.
 NSI.AuraSoundCategories = {
     Raid = {
+        -- Season 1
         {key = 3176, entries = { -- Imperator Averzian
             {spellID = 1260203, sound = "Soak"}, -- Umbral Collapse
             {spellID = 1249265, sound = "Soak"}, -- Umbral Collapse (one of them is 2nd cast I think?)
@@ -65,6 +66,7 @@ NSI.AuraSoundCategories = {
             {spellID = 1221639, sound = "Boss"}, -- Shroomling Fixate
             {spellID = 1299508, sound = "Ranged"}, -- Fungling Fixate
         }},
+        -- Season 2
         {key = 3379, entries = { -- Nymrissa Wavecaller
             {spellID = 1258901, sound = "Targeted"}, -- Water Jet
             {spellID = 1257608, sound = "Targeted"}, -- Frost Barrage
@@ -119,28 +121,7 @@ NSI.AuraSoundCategories = {
         }},
     },
     Dungeons = {
-        {key = "altar_of_fangs", label = "Altar of Fangs", entries = {
-        }},
-        {key = "temple_of_sethraliss", label = "Temple of Sethraliss", entries = {
-        }},
-        {key = "ruby_life_pools", label = "Ruby Life Pools", entries = {
-        }},
-        {key = "kings_rest", label = "King's Rest", entries = {
-        }},
-        {key = "voidscar_arena", label = "Voidscar Arena", entries = {
-        }},
-        {key = "blinding_vale", label = "Blinding Vale", entries = {
-            {spellID = 1237091, sound = "Fixate"}, -- Bloodthirsty Gaze
-            {spellID = 1261276, sound = "Targeted"}, -- Thornblade
-            {spellID = 1240222, sound = "Targeted"}, -- Pulverizing Strikes
-        }},
-        {key = "murder_row", label = "Murder Row", entries = {
-            {spellID = 1214352, sound = "Spread"}, -- Fire Bomb
-            {spellID = 474545, sound = "Targeted"}, -- Murder in a Row
-        }},
-        {key = "den_of_nalorakk", label = "Den of Nalorakk", entries = {
-            {spellID = 1242869, sound = "Spread"}, -- Echoing Maul
-        }},
+        -- Season 1
         {key = "magisters_terrace", label = "Magister's Terrace", entries = {
             {spellID = 1225792, sound = "Debuff"}, -- Runic Mark
             {spellID = 1223958, sound = "Debuff"}, -- Cosmic Sting
@@ -179,7 +160,7 @@ NSI.AuraSoundCategories = {
         }},
         {key = "seat_of_the_triumvirate", label = "Seat of the Triumvirate", entries = {
             {spellID = 1265426, sound = "Targeted"}, -- Discordant Beam
-            {spellID = 1280064, sound = "Phase Dash"}, -- Targeted
+            {spellID = 1280064, sound = "Targeted"}, -- Phase Dash
         }},
         {key = "skyreach", label = "Skyreach", entries = {
             {spellID = 1252733, sound = "Targeted"}, -- Gale Surge
@@ -190,6 +171,56 @@ NSI.AuraSoundCategories = {
             {spellID = 1249020, sound = "Spread"}, -- Eclipsing Step
         }},
         {key = "algethar_academy", label = "Algethar Academy", entries = {
+        }},
+        -- Season 2
+        {key = "altar_of_fangs", label = "Altar of Fangs", entries = {
+            {spellID = 1308865, sound = "Adds"}, -- Infest
+        }},
+        {key = "temple_of_sethraliss", label = "Temple of Sethraliss", entries = {
+            {spellID = 1300704, sound = "Fixate"}, -- Fixate
+            {spellID = 1311979, sound = "Spread"}, -- Latent Hex
+            {spellID = 1311981, sound = "Spread"}, -- Latent Hex
+            {spellID = 1290030, sound = "Stack"}, -- A Knot of Snakes
+            {spellID = 1289109, sound = "Targeted"}, -- Thunder Spit
+        }},
+        {key = "ruby_life_pools", label = "Ruby Life Pools", entries = {
+            {spellID = 373693, sound = "Bomb"}, -- Living Bomb
+            {spellID = 381862, sound = "DropPool"}, -- Inferno Spit
+            {spellID = 385518, sound = "Targeted"}, -- Chillstorm
+            {spellID = 372865, sound = "Targeted"}, -- Ritual of Blazebinding
+        }},
+        {key = "kings_rest", label = "King's Rest", entries = {
+            {spellID = 1298304, sound = "Spread"}, -- Dark Revelation
+            {spellID = 1306736, sound = "DropPool"}, -- Spit Gold
+            {spellID = 267618, sound = "Targeted"}, -- Drain Fluids
+            {spellID = 270927, sound = "Fixate"}, -- Bladestorm
+        }},
+        {key = "voidscar_arena", label = "Voidscar Arena", entries = {
+            {spellID = 1263983, sound = "Orb"}, -- Condensed Mass
+            {spellID = 1310309, sound = "Targeted"}, -- Macestorm
+        }},
+        {key = "blinding_vale", label = "Blinding Vale", entries = {
+            {spellID = 1237091, sound = "Fixate"}, -- Bloodthirsty Gaze
+            {spellID = 1261276, sound = "Targeted"}, -- Thornblade
+            {spellID = 1240222, sound = "Targeted"}, -- Pulverizing Strikes
+            {spellID = 1236747, sound = "Root"}, -- Verdant Stomp
+            {spellID = 1238368, sound = "Spread"}, -- Lightmaw Beams
+            {spellID = 1239825, sound = "Stack"}, -- Lightfire
+            {spellID = 1240222, sound = "Targeted"}, -- Pulverizing Strikes
+        }},
+        {key = "murder_row", label = "Murder Row", entries = {
+            {spellID = 1214352, sound = "Spread"}, -- Fire Bomb
+            {spellID = 474545, sound = "Hide"}, -- Murder in a Row
+            {spellID = 1218187, sound = "Beam"}, -- Fel Beam
+            {spellID = 1214352, sound = "Bomb"}, -- Fire Bomb
+            {spellID = 1217973, sound = "Stack"}, -- Cures of Doom
+            {spellID = 1218465, sound = "Server"}, -- Server
+            {spellID = 1218468, sound = "Bouncer"}, -- Bouncer
+            {spellID = 1218467, sound = "Entertainer"}, -- Entertainer
+            {spellID = 1218466, sound = "Cleaner"}, -- Cleaner
+        }},
+        {key = "den_of_nalorakk", label = "Den of Nalorakk", entries = {
+            {spellID = 1242869, sound = "Spread"}, -- Echoing Maul
         }},
     },
     Custom = {},
