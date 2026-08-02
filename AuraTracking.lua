@@ -179,7 +179,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         AuraFilters = {},
         CandidateFilters = {},
         PreviewSpellID = nil,
-        SortMode = "Default",
+        SortMode = "AuraInstanceID",
         Unit = "player",
         UnitType = "Automatic",
         OnlyShowFirstTank = false,
@@ -1559,7 +1559,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
         if maxFrameCount == nil then
             maxFrameCount = settings.Limit
         end
-        local sortMode = settings.SortMode or "Default"
+        local sortMode = settings.SortMode or "AuraInstanceID"
         local sortMethod = AuraContainerSortMethod.Default
         local sortDirection = AuraContainerSortDirection.Normal
         if sortMode == "LongDurationFirst" then
@@ -1567,6 +1567,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
             sortDirection = AuraContainerSortDirection.Reverse
         elseif sortMode == "ShortDurationFirst" then
             sortMethod = AuraContainerSortMethod.ExpirationOnly
+            sortDirection = AuraContainerSortDirection.Normal
+        elseif sortMode == "AuraInstanceID" then
+            sortMethod = AuraContainerSortMethod.AuraInstanceIDOnly
             sortDirection = AuraContainerSortDirection.Normal
         end
 

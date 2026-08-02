@@ -78,6 +78,7 @@ local SORT_MODES = {
     { label = "Default", value = "Default" },
     { label = "Long Duration first", value = "LongDurationFirst" },
     { label = "Short Duration first", value = "ShortDurationFirst" },
+    { label = "Aura Instance ID", value = "AuraInstanceID" },
 }
 
 local DISPEL_BORDER_MODES = {
@@ -887,8 +888,8 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
-            tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which is usually the application order of debuffs. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first."),
-            get = function() return s.SortMode or "Default" end, set = function(_, v) s.SortMode = v or "Default"; apply(key) end })
+            tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which usually follows application order and uses the aura instance ID as a final tie-breaker. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first. Aura Instance ID sorts only by aura instance ID."),
+            get = function() return s.SortMode or "AuraInstanceID" end, set = function(_, v) s.SortMode = v or "AuraInstanceID"; apply(key) end })
 
         add({ Type = "Label", text = "Icon", highlight = true })
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
