@@ -417,6 +417,8 @@ function NSI:AddMissingDefaults()
             AutoPromoteOfficers = true,
             AutoPromoteNames = "",
             AutoPromoteRankIndex = 1,
+            AutoInviteGuildRankIndex = 1,
+            AutoAcceptGuildInvite = false,
             AddSpellIDToTooltips = false,
             ConsumableNotificationDurationSeconds = 5,
             TextDisplay = {
