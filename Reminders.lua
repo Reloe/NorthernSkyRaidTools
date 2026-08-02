@@ -654,6 +654,12 @@ function NSI:ArrangeStates(DisplayType)
 end
 
 function NSI:SetProperties(F, info, skipsound, s)
+    -- Active reminders tick frequently for sound timing, but their visible text
+    -- usually changes only once per second. Keep the last values on the pooled
+    -- frame so repeated ticks do not issue redundant region updates.
+    F.lastReminderText = nil
+    F.lastReminderTimerText = nil
+    F.reminderTimerTextIsRed = nil
     F:SetScript("OnUpdate", function(self, elapsed)
         self.elapsed = (self.elapsed or 0) + elapsed
         if self.elapsed < 0.025 then return end
@@ -1115,7 +1121,9 @@ function NSI:DisplayReminder(info, bypass)
 end
 
 function NSI:UpdateReminderDisplay(info, F, skipsound)
-    local rem = info.dur - (GetTime() - info.startTime)
+    local now = GetTime()
+    local elapsed = now - info.startTime
+    local rem = info.dur - elapsed
     local encId = info.encID or 0
     local phase = info.phase or 0
     local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
@@ -1135,13 +1143,19 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
     if F.IsUnitFrameIcon then return end
     local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
-        F.Text:SetText(text)
+        if F.lastReminderText ~= text then
+            F.Text:SetText(text)
+            F.lastReminderText = text
+        end
         return
     elseif info.DisplayType == "Text" then
-        F.Text:SetText(text)
+        if F.lastReminderText ~= text then
+            F.Text:SetText(text)
+            F.lastReminderText = text
+        end
         return
     elseif info.DisplayType == "Bar" then
-        if F.SetValue then F:SetValue((GetTime()-info.startTime)) end
+        if F.SetValue then F:SetValue(elapsed) end
         if F.Ticks then
             for _, tick in ipairs(F.Ticks) do
                 if tick.HideTimer and rem <= tick.HideTimer then
@@ -1150,17 +1164,24 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
                 end
             end
         end
-        if F.TimerText then F.TimerText:SetText(remString) end
+        if F.TimerText and F.lastReminderTimerText ~= remString then
+            F.TimerText:SetText(remString)
+            F.lastReminderTimerText = remString
+        end
         return
     elseif info.DisplayType == "Icon" then
-        if rem <= 3 and F.TimerText then
+        if rem <= 3 and F.TimerText and not F.reminderTimerTextIsRed then
             F.TimerText:SetTextColor(1, 0, 0, 1)
+            F.reminderTimerTextIsRed = true
         end
         if F.Swipe and NSRT.ReminderSettings.IconSettings.Glow > 0 and rem <= NSRT.ReminderSettings.IconSettings.Glow and not self.GlowStarted["enc"..encId.."ph"..phase.."id"..info.id] then
             self.GlowStarted["enc"..encId.."ph"..phase.."id"..info.id] = true
             self:GlowFrame(nil, nil, F)
         end
-        if F.TimerText then F.TimerText:SetText(remString) end
+        if F.TimerText and F.lastReminderTimerText ~= remString then
+            F.TimerText:SetText(remString)
+            F.lastReminderTimerText = remString
+        end
         return
     end
 end
