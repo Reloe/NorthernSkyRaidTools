@@ -248,18 +248,10 @@ local function GetTTSSoundFile(sound)
     end
 
     local numeric = tonumber(sound)
-    local function GetCachedKey()
-        local key = NSI.LSMSoundCache and (NSI.LSMSoundCache[sound] or NSI.LSMSoundCache[strlower(sound)])
-        if not key and numeric then
-            key = NSI.LSMSoundCache and NSI.LSMSoundCache[tostring(numeric)]
-        end
-        return key
-    end
-
-    local lsmKey = GetCachedKey()
-    if not lsmKey and NSI.CacheSounds then
-        NSI:CacheSounds()
-        lsmKey = GetCachedKey()
+    local cache = NSI.LSMSoundCache
+    local lsmKey = cache and (cache[sound] or cache[strlower(sound)])
+    if cache and not lsmKey and numeric then
+        lsmKey = cache[tostring(numeric)]
     end
     return lsmKey and NSI.LSM:Fetch("sound", lsmKey, true)
 end
@@ -275,15 +267,20 @@ function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
         else
             sound = tostring(sound)
             local num = voice or NSRT.Settings["TTSVoice"]
-            local voices = C_VoiceChat.GetTtsVoices()
-            local validVoice = false
-            if voices then
-                for i, v in ipairs(voices) do
-                    if v.voiceID == num then
-                        validVoice = true
-                        break
+            NSI.TTSVoiceValidity = NSI.TTSVoiceValidity or {}
+            local validVoice = NSI.TTSVoiceValidity[num]
+            if validVoice == nil then
+                validVoice = false
+                local voices = C_VoiceChat.GetTtsVoices()
+                if voices then
+                    for i, v in ipairs(voices) do
+                        if v.voiceID == num then
+                            validVoice = true
+                            break
+                        end
                     end
                 end
+                NSI.TTSVoiceValidity[num] = validVoice
             end
             if not validVoice then num = 0 end
             C_VoiceChat.SpeakText(
