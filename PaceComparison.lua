@@ -562,51 +562,64 @@ function NSI:SchedulePaceComparisonPhase(phase, encID)
     self:CancelPaceComparisonTimers()
     local state = self.PaceComparisonState
     phase = tonumber(phase) or 1
-    state.samples = {}
+    state.phaseThresholds = {}
+    state.phaseThresholdIndexes = {}
+
+    -- Index the active phase once. The refresh ticker only needs to advance
+    -- each unit's cursor instead of rebuilding previous/next tables every tick.
+    for _, entry in ipairs(state.thresholds) do
+        if (tonumber(entry.phase) or 1) == phase then
+            local unit = entry.unit or "boss1"
+            local thresholds = state.phaseThresholds[unit]
+            if not thresholds then
+                thresholds = {}
+                state.phaseThresholds[unit] = thresholds
+            end
+            thresholds[#thresholds + 1] = entry
+        end
+    end
+
+    state.samples = state.samples or {}
+    state.sampleCache = state.sampleCache or {}
 
     local function RefreshPhaseSamples()
         if self.PaceComparisonState ~= state then return end
         local now = GetTime()
         local phaseStart = self.PhaseSwapTime or now
         local elapsed = now - phaseStart
-        local expectedByUnit = {}
-
-        for _, entry in ipairs(state.thresholds) do
-            if (tonumber(entry.phase) or 1) == phase then
-                local unit = entry.unit or "boss1"
-                local entryTime = tonumber(entry.time) or 0
-                local expected = tonumber(entry.expected) or 100
-                local data = expectedByUnit[unit]
-                if not data then
-                    data = {}
-                    expectedByUnit[unit] = data
-                end
-
-                if entryTime <= elapsed then
-                    if not data.previous or entryTime >= data.previous.time then
-                        data.previous = { time = entryTime, expected = expected }
-                    end
-                elseif not data.next or entryTime < data.next.time then
-                    data.next = { time = entryTime, expected = expected }
-                end
-            end
+        for unit in pairs(state.samples) do
+            state.samples[unit] = nil
         end
 
-        state.samples = {}
-        for unit, data in pairs(expectedByUnit) do
+        for unit, thresholds in pairs(state.phaseThresholds) do
+            local index = state.phaseThresholdIndexes[unit] or 0
+            while index < #thresholds and (tonumber(thresholds[index + 1].time) or 0) <= elapsed do
+                index = index + 1
+            end
+            state.phaseThresholdIndexes[unit] = index
+
+            local previous = thresholds[index]
+            local nextThreshold = thresholds[index + 1]
             local expected
-            if data.previous and data.next and data.next.time ~= data.previous.time then
-                local progress = (elapsed - data.previous.time) / (data.next.time - data.previous.time)
-                expected = data.previous.expected + ((data.next.expected - data.previous.expected) * progress)
-            elseif data.previous then
-                expected = data.previous.expected
-            elseif data.next then
-                expected = data.next.expected
+            if previous and nextThreshold and nextThreshold.time ~= previous.time then
+                local progress = (elapsed - previous.time) / (nextThreshold.time - previous.time)
+                expected = previous.expected + ((nextThreshold.expected - previous.expected) * progress)
+            elseif previous then
+                expected = previous.expected
+            elseif nextThreshold then
+                expected = nextThreshold.expected
             end
 
             if expected and (UnitExists(unit) or self.PaceComparisonPreview) then
                 expected = math.max(0, math.min(expected, 100))
-                state.samples[unit] = CreatePaceComparisonSample(unit, expected)
+                local sample = state.sampleCache[unit]
+                if sample then
+                    sample.expected = expected
+                else
+                    sample = CreatePaceComparisonSample(unit, expected)
+                    state.sampleCache[unit] = sample
+                end
+                state.samples[unit] = sample
             end
         end
 
