@@ -240,6 +240,13 @@ function NSI:QoLEvents(e, ...)
         self:HandleQoLComm(...)
     elseif (e == "GROUP_ROSTER_UPDATE" or e == "PARTY_LEADER_CHANGED") and NSRT.QoL.AutoPromote then
         self:ScheduleAutoPromotePass()
+    elseif e == "PARTY_INVITE_REQUEST" and NSRT.QoL.AutoAcceptGuildInvite then
+        local name = ...
+        if issecretvalue(name) then return end
+        if self:IsInSameGuild(nil, name) then
+            AcceptGroup()
+            C_Timer.After(0, function() StaticPopup_Hide("PARTY_INVITE") end)
+        end
     end
 end
 
@@ -258,6 +265,9 @@ function NSI:InitQoL()
     end
     if NSRT.QoL.AutoPromote then
         self:UpdateAutoPromoteEvents(true)
+    end
+    if NSRT.QoL.AutoAcceptGuildInvite then
+        self:ToggleQoLEvent("PARTY_INVITE_REQUEST", true)
     end
 end
 
@@ -458,6 +468,25 @@ function NSI:ScheduleAutoPromotePass()
         self.AutoPromoteTimer = nil
         self:AutoPromotePass()
     end)
+end
+
+-- Invites every online guild member at or above (rankIndex <=) the selected rank threshold.
+function NSI:InviteOnlineGuildMembers()
+    if not IsInGuild() then return end
+    if IsInGroup() and not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then return end
+
+    local rankThreshold = NSRT.QoL.AutoInviteGuildRankIndex or 1
+    local myName = UnitName("player")
+    local numMembers = GetNumGuildMembers()
+    for i = 1, numMembers do
+        local name, _, rankIndex, _, _, _, _, _, online = GetGuildRosterInfo(i)
+        if name and online and rankIndex and rankIndex <= rankThreshold then
+            local bareName = (name:find("-", 1, true)) and name:match("^([^-]+)") or name
+            if bareName ~= myName and not UnitInRaid(name) and not UnitInParty(name) then
+                C_PartyInfo.InviteUnit(name)
+            end
+        end
+    end
 end
 
 -- Guild rank permission flags (C_GuildInfo.GuildControlGetRankFlags) are believed to require

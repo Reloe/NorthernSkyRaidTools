@@ -19,7 +19,7 @@ local function BuildQoLFontFlagOptions()
     return options
 end
 
-local function BuildAutoPromoteRankOptions()
+local function BuildGuildRankOptions(settingKey)
     local ranks, seen = {}, {}
     if IsInGuild() then
         for i = 1, GetNumGuildMembers() do
@@ -37,14 +37,14 @@ local function BuildAutoPromoteRankOptions()
             label = rank.rankName,
             value = rank.rankIndex,
             onclick = function(_, _, value)
-                NSRT.QoL.AutoPromoteRankIndex = value
+                NSRT.QoL[settingKey] = value
             end,
         }
     end
     if #options == 0 then
         options[1] = {
             label = NSI:Loc("Not in a Guild"),
-            value = NSRT.QoL.AutoPromoteRankIndex,
+            value = NSRT.QoL[settingKey],
             onclick = function() end,
         }
     end
@@ -290,6 +290,35 @@ local function BuildQoLOptions()
             end,
         },
         {
+            type = "select",
+            name = "Guild Invite Rank",
+            desc =
+            "The guild rank threshold used for Invite Online Guild Members. Members at this rank or higher (closer to Guild Master) are invited.",
+            values = function() return BuildGuildRankOptions("AutoInviteGuildRankIndex") end,
+            get = function() return NSRT.QoL.AutoInviteGuildRankIndex end,
+        },
+        {
+            type = "button",
+            name = "Invite Guild Members",
+            desc =
+            "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group.",
+            func = function(self)
+                NSI:InviteOnlineGuildMembers()
+            end,
+            spacement = true
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Auto-Accept Guild Invites",
+            desc = "Automatically accept group/raid invites sent by members of your guild.",
+            get = function() return NSRT.QoL.AutoAcceptGuildInvite end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.AutoAcceptGuildInvite = value
+                NSI:ToggleQoLEvent("PARTY_INVITE_REQUEST", value)
+            end,
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Auto-Promote Assistants",
@@ -316,7 +345,7 @@ local function BuildQoLOptions()
             type = "select",
             name = "Officer Rank",
             desc = "The guild rank threshold used for Promote Guild Officers. Members at this rank or higher (closer to Guild Master) are promoted.",
-            values = function() return BuildAutoPromoteRankOptions() end,
+            values = function() return BuildGuildRankOptions("AutoPromoteRankIndex") end,
             get = function() return NSRT.QoL.AutoPromoteRankIndex end,
         },
         {
