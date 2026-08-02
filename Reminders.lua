@@ -1616,10 +1616,20 @@ function NSI:InviteListFromReminder(str)
     local list = {}
     local found = false
     for line in str:gmatch('[^\r\n]+') do
-        if line:find("invitelist:") then
+        local inviteString = line:match("invitelist:%s*(.*)")
+        if inviteString then
             found = true
-            for name in line:gmatch("([^%s,;:]+)") do
-                if name ~= "invitelist" then
+            -- Comma/semicolon-separated lists are positional. Empty fields
+            -- therefore preserve deliberately unused raid slots. The old
+            -- whitespace-separated form remains a compact invite list.
+            if inviteString:find(",", 1, true) or inviteString:find(";", 1, true) then
+                inviteString = inviteString:gsub(";", ",")
+                for name in (inviteString .. ","):gmatch("(.-),") do
+                    name = name:match("^%s*(.-)%s*$")
+                    table.insert(list, name)
+                end
+            else
+                for name in inviteString:gmatch("([^%s]+)") do
                     table.insert(list, name)
                 end
             end

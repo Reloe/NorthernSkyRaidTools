@@ -577,15 +577,17 @@ function NSI:InviteList(list)
     if not list then return end
     local myrealm = GetRealmName()
     for _, name in ipairs(list) do
-        local fullname = ""
-        local name, realm = strsplit("-", name)
-        if realm == nil or realm == "" or realm == myrealm then
-            fullname = name
-        else
-            fullname = name.."-"..realm
-        end
-        if (not UnitIsUnit("player", name)) and (not UnitInRaid(name)) then
-            C_PartyInfo.InviteUnit(fullname)
+        if name and name ~= "" then
+            local fullname = ""
+            local name, realm = strsplit("-", name)
+            if realm == nil or realm == "" or realm == myrealm then
+                fullname = name
+            else
+                fullname = name.."-"..realm
+            end
+            if (not UnitIsUnit("player", name)) and (not UnitInRaid(name)) then
+                C_PartyInfo.InviteUnit(fullname)
+            end
         end
     end
 end
@@ -608,8 +610,8 @@ function NSI:ArrangeFromReminder(str)
     local count = 0
     local missingPlayers = ""
     for i, name in ipairs(list) do
-        local name, realm = strsplit("-", name)
-        local pos = UnitInRaid(name)
+        local name, realm = name ~= "" and strsplit("-", name)
+        local pos = name and UnitInRaid(name)
         local unit = pos and "raid"..pos
         local role = unit and UnitGroupRolesAssigned(unit)
         count = count + 1
@@ -617,9 +619,13 @@ function NSI:ArrangeFromReminder(str)
             self.Groups.units[i] = {sort = i, name = name, unitid = unit, role = role}
             self.Groups.total = self.Groups.total + 1
         else
-            self.Groups.units[i] = {sort = (math.ceil(i/5)*5)+0.5, processed = true}
+            -- Keep empty and missing entries at their imported absolute slot.
+            -- ArrangeGroups will consequently leave those subgroup positions open.
+            self.Groups.units[i] = {sort = i, processed = true}
             self.Groups.total = self.Groups.total + 1
-            missingPlayers = missingPlayers..name.." "
+            if name and name ~= "" then
+                missingPlayers = missingPlayers..name.." "
+            end
         end
         table.sort(self.Groups.units, function(a, b) return a.sort < b.sort end)
     end
