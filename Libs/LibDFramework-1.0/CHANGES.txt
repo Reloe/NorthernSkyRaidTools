@@ -1,5 +1,23 @@
 Changes since tag v12.0.7.746
 
+commit d86b8e7377471ee1b870b3fed4331738fe5c3296
+Author: Tercio Jose <terciob19@hotmail.com>
+Date:   Tue Jul 28 15:23:14 2026 -0300
+
+    Add boos loot to the encounter journal cache
+
+commit 64b053ba0f9f6f6ea2ed6430cbcc33d81cd7b310
+Author: cont1nuity <10164755+cont1nuity@users.noreply.github.com>
+Date:   Fri Jul 24 14:59:00 2026 +0200
+
+    - adjusting aura tracking callback
+
+commit 511f732f3a38a35d2eabc0ff6ae0ed232775483f
+Author: cont1nuity <10164755+cont1nuity@users.noreply.github.com>
+Date:   Fri Jul 10 14:36:07 2026 +0200
+
+    - prep classic midnight api...
+
 commit 805002b3cfb1c8c90446595521493c49368d3c0f
 Author: Tercio Jose <terciob19@hotmail.com>
 Date:   Thu Jul 9 11:27:11 2026 -0300
