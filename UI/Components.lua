@@ -449,6 +449,9 @@ end
 --    :GetValue() → bool
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()       also dims label and box, blocks toggling
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateCheckButton(parent, label, getValue, setValue, width, height, name, tooltip)
     local totalW = width  or 180
@@ -494,12 +497,19 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     lbl:SetPoint("RIGHT", btn, "RIGHT",   0,   0)
     lbl:SetHeight(totalH)
 
-    local isChecked = getValue and getValue(NSI) or false
+    local isChecked  = getValue and getValue(NSI) or false
+    local isDisabled = false
 
     local function Refresh()
         if isChecked then
             checkFill:Show()
-            box:SetBackdropBorderColor(0, 1, 1, 0.9)
+            if isDisabled then
+                checkFill:SetColorTexture(0.45, 0.45, 0.45, 0.6)
+                box:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+            else
+                checkFill:SetColorTexture(0, 1, 1, 0.85)
+                box:SetBackdropBorderColor(0, 1, 1, 0.9)
+            end
         else
             checkFill:Hide()
             box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
@@ -542,6 +552,22 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
         RegisterLocalizedText(self.label, key)
     end
 
+    function obj:Enable()
+        isDisabled = false
+        btn:Enable()
+        lbl:SetTextColor(unpack(STYLE.text_color))
+        Refresh()
+    end
+
+    function obj:Disable()
+        isDisabled = true
+        btn:Disable()
+        lbl:SetTextColor(unpack(STYLE.text_disabled))
+        Refresh()
+    end
+
+    function obj:IsEnabled() return not isDisabled end
+
     componentRegistry.Checkbox[#componentRegistry.Checkbox + 1] = obj
     return obj
 end
@@ -571,6 +597,9 @@ end
 --    :GetValue() → string|number
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/text and blocks editing
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
                                width, height, numeric, minVal, maxVal, name, tooltip)
@@ -679,6 +708,27 @@ local function CreateTextEntry(parent, label, getValue, setValue,
         if self.label then RegisterLocalizedText(self.label, key) end
     end
 
+    function obj:Enable()
+        self._disabled = false
+        edit:SetEnabled(true)
+        edit:EnableMouse(true)
+        edit:SetTextColor(1, 1, 1, 1)
+        if lbl then lbl:SetTextColor(unpack(STYLE.text_color)) end
+        MakeControlBackdrop(inputFrame)
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        edit:ClearFocus()
+        edit:SetEnabled(false)
+        edit:EnableMouse(false)
+        edit:SetTextColor(unpack(STYLE.text_disabled))
+        if lbl then lbl:SetTextColor(unpack(STYLE.text_disabled)) end
+        inputFrame:SetBackdropColor(0.2, 0.2, 0.2, 0.6)
+    end
+
+    function obj:IsEnabled() return not self._disabled end
+
     componentRegistry.TextEntry[#componentRegistry.TextEntry + 1] = obj
     return obj
 end
@@ -704,8 +754,11 @@ end
 --    :Close()
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/value and closes the popup if open
+--    :IsEnabled() → bool
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted, searchable)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
@@ -780,10 +833,31 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     popup:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
     popup:SetBackdropBorderColor(0, 1, 1, 0.7)
 
+    -- Optional search box pinned to the top of the popup
+    local SEARCH_H = 20
+    local searchBox
+    if searchable then
+        searchBox = CreateFrame("EditBox", nil, popup, "BackdropTemplate")
+        searchBox:SetHeight(SEARCH_H)
+        searchBox:SetPoint("TOPLEFT", popup, "TOPLEFT", 2, -2)
+        searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -2)
+        MakeControlBackdrop(searchBox)
+        searchBox:SetAutoFocus(false)
+        searchBox:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
+        searchBox:SetTextColor(1, 1, 1, 1)
+        searchBox:SetTextInsets(6, 6, 0, 0)
+        searchBox:SetMaxLetters(100)
+        labelRegistry[#labelRegistry + 1] = {label = searchBox, size = 12}
+    end
+
     -- Scrollbar track (right strip inside popup)
     local sbTrack = popup:CreateTexture(nil, "BACKGROUND")
     sbTrack:SetColorTexture(0.10, 0.10, 0.10, 1)
-    sbTrack:SetPoint("TOPRIGHT",    popup, "TOPRIGHT",    -2, -2)
+    if searchable then
+        sbTrack:SetPoint("TOPRIGHT", searchBox, "BOTTOMRIGHT", 0, -1)
+    else
+        sbTrack:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -2)
+    end
     sbTrack:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -2,  2)
     sbTrack:SetWidth(SB_W)
     sbTrack:Hide()
@@ -798,7 +872,11 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     sbThumb:Hide()
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, popup)
-    scrollFrame:SetPoint("TOPLEFT",     popup, "TOPLEFT",     2,  -2)
+    if searchable then
+        scrollFrame:SetPoint("TOPLEFT", searchBox, "BOTTOMLEFT", 0, -1)
+    else
+        scrollFrame:SetPoint("TOPLEFT", popup, "TOPLEFT", 2, -2)
+    end
     scrollFrame:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -(2 + SB_W + 1), 2)
     scrollFrame:EnableMouseWheel(true)
 
@@ -868,25 +946,53 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local function Close()
         popup:Hide()
         clickaway:Hide()
+        if searchBox then
+            searchBox:SetText("")
+            searchBox:ClearFocus()
+        end
     end
 
     container:SetScript("OnHide", Close)
 
-    local function Open()
-        local items    = getItems and getItems() or {}
+    local allItems = {}
+
+    local function FilterItems(list, query)
+        if not query or query == "" then return list end
+        local q = query:lower()
+        local filtered = {}
+        for _, item in ipairs(list) do
+            local label = item.label and tostring(item.label):lower() or ""
+            if label:find(q, 1, true) then
+                filtered[#filtered + 1] = item
+            end
+        end
+        return filtered
+    end
+
+    local noResultsLabel
+    if searchable then
+        noResultsLabel = MakeFontString(content, 12)
+        noResultsLabel:SetText("No matches")
+        noResultsLabel:SetTextColor(0.6, 0.6, 0.6, 1)
+        noResultsLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 6, 0)
+        noResultsLabel:Hide()
+    end
+
+    local function Render(items)
         local rowCount = #items
-        if rowCount == 0 then return end
 
         local needsScroll = rowCount > MAX_ROWS
-        local popupH = math.min(rowCount * ROW_H, MAX_ROWS * ROW_H)
+        local popupH = math.min(math.max(rowCount, 1) * ROW_H, MAX_ROWS * ROW_H)
+        if searchable then popupH = popupH + SEARCH_H + 1 end
         -- The popup is parented to UIParent while its selector may be inside
         -- a scaled NSUI frame, so convert the dropdown width to UIParent's
         -- coordinate scale before sizing the popup and its rows.
         local popupW = dropW * dropBtn:GetEffectiveScale() / UIParent:GetEffectiveScale()
         popup:SetSize(popupW, popupH)
         local contentW = popupW - 4 - (needsScroll and SB_W + 1 or 0)
-        content:SetSize(contentW, rowCount * ROW_H)
+        content:SetSize(contentW, math.max(rowCount, 1) * ROW_H)
         if needsScroll then sbTrack:Show() sbThumb:Show() else sbTrack:Hide() sbThumb:Hide() end
+        if noResultsLabel then noResultsLabel:SetShown(rowCount == 0) end
 
         -- Grow the row pool as needed (frames are never destroyed)
         for i = #content._rows + 1, rowCount do
@@ -965,9 +1071,31 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         else
             popup:SetPoint("BOTTOMRIGHT", dropBtn, "TOPRIGHT", 0, 1)
         end
+    end
+
+    local function Open()
+        allItems = getItems and getItems() or {}
+        if #allItems == 0 then return end
+
+        if searchBox then searchBox:SetText("") end
+        Render(allItems)
 
         popup:Show()
         clickaway:Show()
+        if searchBox then searchBox:SetFocus() end
+    end
+
+    if searchBox then
+        searchBox:SetScript("OnTextChanged", function(self)
+            Render(FilterItems(allItems, self:GetText()))
+        end)
+        searchBox:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+            Close()
+        end)
+        searchBox:SetScript("OnEnterPressed", function(self)
+            self:ClearFocus()
+        end)
     end
 
     clickaway:SetScript("OnMouseDown", Close)
@@ -987,6 +1115,27 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     function obj:SetLocaleKey(key)
         if self.label then RegisterLocalizedText(self.label, key) end
     end
+
+    function obj:Enable()
+        self._disabled = false
+        dropBtn:Enable()
+        valText:SetTextColor(unpack(STYLE.text_color))
+        arrowTexture:SetVertexColor(1, 1, 1, 1)
+        if lbl then
+            if highlighted then lbl:SetTextColor(1, 0.82, 0, 1) else lbl:SetTextColor(unpack(STYLE.text_color)) end
+        end
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        Close()
+        dropBtn:Disable()
+        valText:SetTextColor(unpack(STYLE.text_disabled))
+        arrowTexture:SetVertexColor(unpack(STYLE.text_disabled))
+        if lbl then lbl:SetTextColor(unpack(STYLE.text_disabled)) end
+    end
+
+    function obj:IsEnabled() return not self._disabled end
 
     componentRegistry.Dropdown[#componentRegistry.Dropdown + 1] = obj
     return obj
@@ -1018,6 +1167,9 @@ end
 --    :GetValue() → number
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/track/thumb and blocks dragging
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
                             width, height, minVal, maxVal, step, name, tooltip, liveDrag, decimals, useDecimals)
@@ -1234,6 +1386,33 @@ local function CreateSlider(parent, label, getValue, setValue,
         RegisterLocalizedText(self.label, key)
     end
 
+    function obj:Enable()
+        self._disabled = false
+        slider:Enable()
+        slider:EnableMouse(true)
+        valBtn:EnableMouse(true)
+        lbl:SetTextColor(unpack(STYLE.text_color))
+        valText:SetTextColor(0.65, 0.65, 0.65, 1)
+        thumb:SetVertexColor(0, 1, 1, 1)
+        fillTex:SetColorTexture(0, 1, 1, 0.45)
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        slider:Disable()
+        slider:EnableMouse(false)
+        valBtn:EnableMouse(false)
+        typeBox:ClearFocus()
+        typeBox:Hide()
+        valText:Show()
+        lbl:SetTextColor(unpack(STYLE.text_disabled))
+        valText:SetTextColor(unpack(STYLE.text_disabled))
+        thumb:SetVertexColor(unpack(STYLE.text_disabled))
+        fillTex:SetColorTexture(unpack(STYLE.text_disabled))
+    end
+
+    function obj:IsEnabled() return not self._disabled end
+
     componentRegistry.Slider[#componentRegistry.Slider + 1] = obj
     return obj
 end
@@ -1259,6 +1438,9 @@ end
 --    :Refresh()  re-reads getValue and repaints the swatch
 --    :SetPoint(…)
 --    :SetSize(w, h)
+--    :Enable()
+--    :Disable()   also dims label/swatch and blocks opening the picker
+--    :IsEnabled() → bool
 -- ============================================================
 local function CreateColorPicker(parent, label, getValue, setValue, width, height, name, tooltip)
     local totalW   = width  or 220
@@ -1378,6 +1560,23 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
         RegisterLocalizedText(self.label, key)
     end
 
+    function obj:Enable()
+        self._disabled = false
+        swatchBtn:Enable()
+        lbl:SetTextColor(unpack(STYLE.text_color))
+        colorTex:SetVertexColor(1, 1, 1, 1)
+        UpdateSwatch()
+    end
+
+    function obj:Disable()
+        self._disabled = true
+        swatchBtn:Disable()
+        lbl:SetTextColor(unpack(STYLE.text_disabled))
+        colorTex:SetVertexColor(unpack(STYLE.text_disabled))
+    end
+
+    function obj:IsEnabled() return not self._disabled end
+
     componentRegistry.Color[#componentRegistry.Color + 1] = obj
     return obj
 end
@@ -1411,7 +1610,7 @@ local function CreateLabel(parent, text, width, height, name, highlighted)
 
     local lbl = MakeFontString(container, highlighted and 14 or 12)
     if highlighted then
-        lbl:SetTextColor(1, 0.82, 0, 1)
+        lbl:SetTextColor(0, 1, 1, 1)
     else
         lbl:SetTextColor(0.55, 0.55, 0.55, 1)
     end
