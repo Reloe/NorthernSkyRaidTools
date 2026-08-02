@@ -2,12 +2,13 @@ local _, NSI = ... -- Internal namespace
 
 -- LightblindedVanguard (3180)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 500,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 480},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Avenger's Shield", spellID = 1246497, category = "debuffs", phase = 1, times = {20, 85, 110, 122, 142, 162, 182, 202, 255, 277, 294, 319, 334, 356, 376, 430, 470}, duration = 0},
         {name = "Judgment", spellID = 1251857, category = "tankbuster", phase = 1, times = {29, 33, 71, 75, 113, 115, 127, 131, 151, 155, 171, 175, 191, 195, 243, 247, 303, 307, 323, 327, 350, 367}, duration = 0},
         {name = "Shield of the Righteous", spellID = 1251859, category = "tankbuster", phase = 1, times = {30, 72, 114, 128, 152, 172, 192, 244, 304, 324, 347, 364}, duration = 0},
@@ -24,14 +25,16 @@ local heroicAbilities = {
         {name = "Tyr's Wrath", spellID = 1248710, category = "healing absorb", phase = 1, times = {142, 147, 152, 157, 319, 324, 329, 334}, duration = 5},
         {name = "Execution Sentence", spellID = 1250839, category = "debuffs, movement", phase = 1, times = {86, 261, 433}, duration = 10},
         {name = "Execution Sentence", spellID = 1250839, category = "group soak", phase = 1, times = {96, 271, 443}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 500,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 480},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Light Infused", spellID = 1258659, category = "raid dot", phase = 1, times = {0, 26, 79, 134, 185, 238, 291, 344, 397, 451}, duration = 0},
         {name = "Avenger's Shield", spellID = 1246497, category = "dispel", phase = 1, times = {18, 96, 108, 126, 140, 146, 162, 180, 255, 270, 288, 299, 306, 326, 342, 414, 432, 450, 458}, duration = 0},
         {name = "Avenger's Shield", spellID = 1246497, category = "raid damage", phase = 1, times = {72, 234, 396}, duration = 0},
@@ -52,17 +55,10 @@ local mythicAbilities = {
         {name = "Tyr's Wrath", spellID = 1248710, category = "healing absorb", phase = 1, times = {39, 148, 198, 307, 357, 466}, duration = 15},
         {name = "Execution Sentence", spellID = 1250839, category = "group soak", phase = 1, times = {90, 146, 249, 305, 408, 464}, duration = 0},
         {name = "Execution Sentence", spellID = 1250839, category = "debuffs, movement", phase = 1, times = {82, 138, 241, 297, 400, 456}, duration = 10},
-    }
+    },
+}
 
 NSI.BossTimelines[3180] = {
-    Heroic = {
-        duration = 500,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 500,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

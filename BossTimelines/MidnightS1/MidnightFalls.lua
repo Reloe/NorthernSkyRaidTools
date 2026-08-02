@@ -2,15 +2,16 @@ local _, NSI = ... -- Internal namespace
 
 -- MidnightFalls (3183)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 495,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 184},
         [3] = {start = 227},
         [4] = {start = 330},
         [5] = {start = 495},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Heaven's Lance", spellID = 1267049, category = "tankbuster", phase = 1, times = {20, 40, 60, 80, 101, 120, 140, 160}, duration = 0},
         {name = "Death's Dirge", spellID = 1249620, category = "event", phase = 1, times = {10, 80, 150}, duration = 9},
         {name = "Death's Dirge", spellID = 1249620, category = "raid damage", phase = 1, times = {28, 98, 168}, duration = 3},
@@ -32,18 +33,20 @@ local heroicAbilities = {
         {name = "The Dark Archangel", spellID = 1251331, category = "raid damage", phase = 4, times = {22, 60, 98, 136}, duration = 0},
         {name = "Light Siphon", spellID = 1266810, category = "group soak", phase = 4, times = {26, 64, 102, 140}, duration = 20},
         {name = "Glimmering", spellID = 1253031, category = "debuffs", phase = 4, times = {6}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 630,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 180},
         [3] = {start = 225},
         [4] = {start = 330},
         [5] = {start = 522},
         [6] = {start = 624},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Heaven's Lance", spellID = 1267049, category = "tankbuster", phase = 1, times = {21.5, 41.5, 61.5, 81.5, 101.5, 121.5, 141.5, 161.5}, duration = 0},
         {name = "Termination Prism", spellID = 1284931, category = "add spawn", phase = 1, times = {6, 68, 130}, duration = 0},
         {name = "Termination Prism", spellID = 1284931, category = "raid damage", phase = 1, times = {16, 78, 140}, duration = 10},
@@ -70,17 +73,10 @@ local mythicAbilities = {
         {name = "Black Tide", spellID = 1263253, category = "movement", phase = 4, times = {65, 120, 176}, duration = 5},
         {name = "Starsplinter", spellID = 1285510, category = "spread", phase = 5, times = {13, 33, 53, 73, 93}, duration = 5},
         {name = "Heaven & Hell", spellID = 1276525, category = "raid damage", phase = 5, times = {24, 44, 64, 84}, duration = 5},
-    }
+    },
+}
 
 NSI.BossTimelines[3183] = {
-    Heroic = {
-        duration = 495,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 630,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

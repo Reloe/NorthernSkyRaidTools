@@ -2,15 +2,16 @@ local _, NSI = ... -- Internal namespace
 
 -- TheCoiledAltar (3429)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 490,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 164},
         [3] = {start = 392},
         [4] = {start = 427},
         [5] = {start = 490},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Fangs of the Crucible", spellID = 1282487, category = "damage buff", phase = 1, times = {0.06, 80.05, 160.05}, duration = 8},
         {name = "Axegrinder", spellID = 1283832, category = "raid damage, knock", phase = 1, times = {14.03, 94.02, 174.06}, duration = 0},
         {name = "Sever", spellID = 1299684, category = "frontal, tank debuff", phase = 1, times = {23.01, 40.01, 60, 77.03, 103.06, 120.07, 140.04, 157.06}, duration = 0},
@@ -28,17 +29,19 @@ local heroicAbilities = {
         {name = "Grim Guillotine", spellID = 1299266, category = "group soak", phase = 4, times = {18}, duration = 0},
         {name = "Blighted Sever", spellID = 1307292, category = "frontal, tank debuff", phase = 4, times = {34.97}, duration = 0},
         {name = "Eternal Nightfall", spellID = 1286918, category = "raid damage", phase = 4, times = {53}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 454,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 186},
         [3] = {start = 356},
         [4] = {start = 391},
         [5] = {start = 454},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Fangs of the Crucible", spellID = 1282487, category = "damage buff", phase = 1, times = {0.05, 85.03, 170.06}, duration = 8},
         {name = "Axegrinder", spellID = 1283832, category = "raid damage, knock", phase = 1, times = {14.04, 99.04, 184.06}, duration = 0},
         {name = "Sever", spellID = 1299684, category = "frontal, tank debuff", phase = 1, times = {23.04, 40.04, 60.03, 77.03, 108.05, 125.04, 145.05, 162.04}, duration = 0},
@@ -56,17 +59,10 @@ local mythicAbilities = {
         {name = "Grim Guillotine", spellID = 1299266, category = "group soak", phase = 4, times = {18}, duration = 0},
         {name = "Blighted Sever", spellID = 1307292, category = "frontal, tank debuff", phase = 4, times = {34.97}, duration = 0},
         {name = "Eternal Nightfall", spellID = 1286918, category = "raid damage", phase = 4, times = {53}, duration = 0},
-    }
+    },
+}
 
 NSI.BossTimelines[3429] = {
-    Heroic = {
-        duration = 490,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 454,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

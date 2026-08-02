@@ -2,16 +2,17 @@ local _, NSI = ... -- Internal namespace
 
 -- CrownOfTheCosmos (3181)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 600,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 129},
         [3] = {start = 161},
         [4] = {start = 371},
         [5] = {start = 394},
         [6] = {start = 589},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Null Corona", spellID = 1233865, category = "healing absorb", phase = 1, times = {4, 48, 96, 123}, duration = 0},
         {name = "Dark Hand", spellID = 1233787, category = "tankbuster", phase = 1, times = {7, 33}, duration = 0},
         {name = "Interrupting Tremor", spellID = 1243743, category = "event", phase = 1, times = {10, 31, 51, 71, 91}, duration = 0},
@@ -34,18 +35,20 @@ local heroicAbilities = {
         {name = "Voidstalker Sting", spellID = 1237035, category = "raid dot", phase = 5, times = {16, 34, 46, 60, 76, 94, 106, 120, 136, 154, 166, 180}, duration = 0},
         {name = "Aspect of the End", spellID = 1239080, category = "raid damage", phase = 5, times = {13, 52, 73, 112, 133, 172}, duration = 8},
         {name = "Devouring Cosmos", spellID = 1238843, category = "movement", phase = 5, times = {65, 125, 185}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 609,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 138},
         [3] = {start = 171},
         [4] = {start = 347},
         [5] = {start = 362},
         [6] = {start = 607},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Null Corona", spellID = 1233865, category = "healing absorb", phase = 1, times = {3, 40, 80}, duration = 0},
         {name = "Grasp of Emptiness", spellID = 1232467, category = "debuffs", phase = 1, times = {5, 28, 55, 81}, duration = 0},
         {name = "Interrupting Tremor", spellID = 1243743, category = "event", phase = 1, times = {10, 30, 50}, duration = 0},
@@ -73,17 +76,10 @@ local mythicAbilities = {
         {name = "Cosmic Barrier", spellID = 1246918, category = "raid damage", phase = 5, times = {13, 73, 133, 193}, duration = 25},
         {name = "Interrupting Tremor", spellID = 1243743, category = "event", phase = 5, times = {90, 107}, duration = 0},
         {name = "Dark Hand", spellID = 1233787, category = "tankbuster", phase = 5, times = {159, 176}, duration = 0},
-    }
+    },
+}
 
 NSI.BossTimelines[3181] = {
-    Heroic = {
-        duration = 600,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 609,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

@@ -2,15 +2,16 @@ local _, NSI = ... -- Internal namespace
 
 -- Chimaerus (3306)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 700,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 227},
         [3] = {start = 454},
         [4] = {start = 681},
         [5] = {start = 908},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 1, times = {9, 84}, duration = 0},
         {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 1, times = {13, 87}, duration = 0},
         {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 1, times = {19, 91}, duration = 0},
@@ -50,15 +51,17 @@ local heroicAbilities = {
         {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 4, times = {37, 40, 109, 113}, duration = 0},
         {name = "Consume", spellID = 1245396, category = "raid damage", phase = 4, times = {68, 143}, duration = 10},
         {name = "Corrupted Devastation", spellID = 1245452, category = "movement", phase = 4, times = {166, 190, 215}, duration = 7},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 400,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 240},
         [3] = {start = 395},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Rift Emergence", spellID = 1258610, category = "raid damage, add spawn", phase = 1, times = {9, 84}, duration = 0},
         {name = "Rift Sickness", spellID = 1250953, category = "healing absorb", phase = 1, times = {13, 87}, duration = 0},
         {name = "Alndust Upheaval", spellID = 1262289, category = "group soak", phase = 1, times = {19, 91, 155}, duration = 0},
@@ -80,17 +83,10 @@ local mythicAbilities = {
         {name = "Colossal Strikes", spellID = 1262020, category = "tankbuster", phase = 2, times = {34, 104, 123}, duration = 0},
         {name = "Rending Tear", spellID = 1272726, category = "frontal", phase = 2, times = {36, 39, 109, 112}, duration = 0},
         {name = "Consume", spellID = 1245396, category = "raid damage", phase = 2, times = {68, 140}, duration = 8},
-    }
+    },
+}
 
 NSI.BossTimelines[3306] = {
-    Heroic = {
-        duration = 700,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 400,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

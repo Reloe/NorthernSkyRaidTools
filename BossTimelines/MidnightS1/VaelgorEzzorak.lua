@@ -2,13 +2,14 @@ local _, NSI = ... -- Internal namespace
 
 -- VaelgorEzzorak (3178)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 500,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 106},
         [3] = {start = 500},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Vaelwing", spellID = 1265131, category = "", phase = 1, times = {6, 32, 56, 81}, duration = 0},
         {name = "Nullbeam", spellID = 1262623, category = "tankbuster", phase = 1, times = {14, 64}, duration = 0},
         {name = "Nullzone", spellID = 1244672, category = "tankbuster", phase = 1, times = {18, 68}, duration = 0},
@@ -26,14 +27,16 @@ local heroicAbilities = {
         {name = "Gloomfield", spellID = 1245420, category = "group soak", phase = 2, times = {46, 96, 216, 278, 341}, duration = 0},
         {name = "Midnight Flames", spellID = 1249748, category = "raid damage", phase = 2, times = {8, 140, 390}, duration = 10},
         {name = "Void Howl", spellID = 1244917, category = "raid damage, add spawn", phase = 2, times = {40, 64, 90, 114, 179, 230, 282, 338}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 540,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 540},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Vaelwing", spellID = 1265131, category = "tankbuster, knock", phase = 1, times = {13.5, 40.5, 57.5, 90.5, 107.5, 188.5, 205.5, 238.5, 256.5, 288.5, 353.5, 386.5, 403.5, 442.5, 453.5}, duration = 2},
         {name = "Tail Lash", spellID = 1264467, category = "tankbuster, knock", phase = 1, times = {14, 41, 58, 91, 108, 189, 206, 239, 257, 289, 354, 387, 404, 443, 454}, duration = 0},
         {name = "Rakfang", spellID = 1245645, category = "tankbuster", phase = 1, times = {17.5, 42.5, 67.5, 88.5, 117.5, 186.5, 216.5, 236.5, 265.5, 290.5, 363.5, 384.5, 413.5, 434.5}, duration = 2},
@@ -48,17 +51,10 @@ local mythicAbilities = {
         {name = "Nullzone", spellID = 1244672, category = "movement", phase = 1, times = {40, 90, 149, 188, 238, 288, 385, 435}, duration = 0},
         {name = "Void Howl", spellID = 1244917, category = "raid damage, movement, adds", phase = 1, times = {38, 78, 171, 206, 246, 286, 308, 374, 419, 454}, duration = 0},
         {name = "Midnight Flames", spellID = 1249748, category = "raid damage, raid dot", phase = 1, times = {133, 304, 469}, duration = 25},
-    }
+    },
+}
 
 NSI.BossTimelines[3178] = {
-    Heroic = {
-        duration = 500,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 540,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

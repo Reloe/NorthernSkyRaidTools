@@ -2,15 +2,16 @@ local _, NSI = ... -- Internal namespace
 
 -- Beloren (3182)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 545,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 91},
         [3] = {start = 251},
         [4] = {start = 411},
         [5] = {start = 540},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Voidlight Convergence", spellID = 1242515, category = "raid damage", phase = 1, times = {1, 51, 101, 151}, duration = 6},
         {name = "Light Burn", spellID = 1244348, category = "debuffs, healing absorb", phase = 1, times = {36}, duration = 0},
         {name = "Light Dive", spellID = 1241291, category = "group soak", phase = 1, times = {20, 71, 122, 173}, duration = 0},
@@ -46,17 +47,19 @@ local heroicAbilities = {
         {name = "Voidlight Convergence", spellID = 1242515, category = "raid damage", phase = 4, times = {42, 92, 142, 192}, duration = 6},
         {name = "Death Drop", spellID = 1246709, category = "raid damage", phase = 4, times = {6}, duration = 0},
         {name = "Death Drop", spellID = 1246709, category = "movement", phase = 4, times = {0}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 360,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 110},
         [3] = {start = 286},
         [4] = {start = 462},
         [5] = {start = 500},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Radiant Echoes", spellID = 1242981, category = "event", phase = 1, times = {7, 57, 107, 157}, duration = 0},
         {name = "Light Edict", spellID = 1261217, category = "tankbuster, frontal", phase = 1, times = {40, 90, 140, 190}, duration = 0},
         {name = "Void Edict", spellID = 1261218, category = "tankbuster, frontal", phase = 1, times = {20, 70, 120, 170}, duration = 0},
@@ -87,17 +90,10 @@ local mythicAbilities = {
         {name = "Death Drop", spellID = 1246709, category = "raid damage", phase = 4, times = {6}, duration = 0},
         {name = "Light Dive", spellID = 1241291, category = "group soak", phase = 4, times = {62, 112, 162}, duration = 0},
         {name = "Voidlight Convergence", spellID = 1242515, category = "raid damage", phase = 4, times = {42, 92, 142, 192}, duration = 4.5},
-    }
+    },
+}
 
 NSI.BossTimelines[3182] = {
-    Heroic = {
-        duration = 545,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 360,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }

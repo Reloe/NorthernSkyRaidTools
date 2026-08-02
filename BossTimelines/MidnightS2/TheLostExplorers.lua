@@ -2,14 +2,15 @@ local _, NSI = ... -- Internal namespace
 
 -- TheLostExplorers (3497)
 
-local heroicPhases = {
+local heroicData = {
+    duration = 442,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 54},
         [3] = {start = 177},
         [4] = {start = 301},
-    }
-
-local heroicAbilities = {
+    },
+    abilities = {
         {name = "Empower", spellID = 1297075, category = "phase change", phase = 1, times = {0}, duration = 0},
         {name = "Blink Nova", spellID = 1296021, category = "raid aoe", phase = 1, times = {19.08, 50.02}, duration = 0},
         {name = "Shell Spin", spellID = 1296062, category = "raid damage", phase = 1, times = {22.05, 38.04, 53.01}, duration = 0},
@@ -78,16 +79,18 @@ local heroicAbilities = {
         {name = "Throw Junk", spellID = 1291933, category = "raid damage, raid soak", phase = 4, times = {15.75, 20.74, 31.75, 35.73, 46.77, 51.72}, duration = 0},
         {name = "Throw Junk", spellID = 1291933, category = "raid damage, raid soak", phase = 4, times = {14.71, 18.74, 33.7, 37.72, 53.73, 57.73}, duration = 0},
         {name = "Throw Junk", spellID = 1306145, category = "event", phase = 4, times = {97.74}, duration = 0},
-    }
+    },
+}
 
-local mythicPhases = {
+local mythicData = {
+    duration = 451,
+    phases = {
         [1] = {start = 0},
         [2] = {start = 53},
         [3] = {start = 172},
         [4] = {start = 295},
-    }
-
-local mythicAbilities = {
+    },
+    abilities = {
         {name = "Empower", spellID = 1297075, category = "phase change", phase = 1, times = {0}, duration = 0},
         {name = "Blink Nova", spellID = 1296021, category = "raid aoe", phase = 1, times = {17.89, 48.88}, duration = 0},
         {name = "Shell Spin", spellID = 1296062, category = "raid damage", phase = 1, times = {22.86, 38.84, 53.94}, duration = 0},
@@ -156,17 +159,10 @@ local mythicAbilities = {
         {name = "Throw Junk", spellID = 1291933, category = "raid damage, raid soak", phase = 4, times = {16.73, 20.73, 31.69, 35.72, 43.69, 47.73}, duration = 0},
         {name = "Throw Junk", spellID = 1291933, category = "raid damage, raid soak", phase = 4, times = {29.53, 33.52, 60.54, 64.52}, duration = 0},
         {name = "Throw Junk", spellID = 1306145, category = "event", phase = 4, times = {97.58}, duration = 0},
-    }
+    },
+}
 
 NSI.BossTimelines[3497] = {
-    Heroic = {
-        duration = 442,
-        phases = heroicPhases,
-        abilities = heroicAbilities,
-    },
-    Mythic = {
-        duration = 451,
-        phases = mythicPhases,
-        abilities = mythicAbilities,
-    },
+    Heroic = heroicData,
+    Mythic = mythicData,
 }
