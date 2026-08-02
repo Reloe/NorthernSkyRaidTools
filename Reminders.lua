@@ -659,6 +659,7 @@ function NSI:SetProperties(F, info, skipsound, s)
     -- frame so repeated ticks do not issue redundant region updates.
     F.lastReminderText = nil
     F.lastReminderTimerText = nil
+    F.lastReminderDisplayBucket = nil
     F.reminderTimerTextIsRed = nil
     F:SetScript("OnUpdate", function(self, elapsed)
         self.elapsed = (self.elapsed or 0) + elapsed
@@ -1036,6 +1037,11 @@ function NSI:CheckReminderLogic(info)
 end
 
 function NSI:GetDisplayedText(rem, info, F)
+    local displayType = info.DisplayType
+    if info.HideTimer and (displayType == "Text" or displayType == "Circle") and info.text ~= nil then
+        return (F and F.SpellText or "")..info.text
+    end
+
     local remString
     if rem <= info.Decimals then
         if rem < 0 then
@@ -1141,7 +1147,24 @@ function NSI:UpdateReminderDisplay(info, F, skipsound)
         return
     end
     if F.IsUnitFrameIcon then return end
-    local text, remString = self:GetDisplayedText(rem, info, F)
+    if info.HideTimer and (info.DisplayType == "Text" or info.DisplayType == "Circle") and info.text ~= nil then return end
+
+    local displayBucket
+    if rem <= info.Decimals then
+        displayBucket = rem < 0 and -1 or math.floor(rem * 10 + 0.5)
+    else
+        displayBucket = math.ceil(rem)
+    end
+    local displayBucketChanged = F.lastReminderDisplayBucket ~= displayBucket
+    F.lastReminderDisplayBucket = displayBucket
+    local text, remString
+    if displayBucketChanged then
+        text, remString = self:GetDisplayedText(rem, info, F)
+    elseif info.DisplayType == "Text" or info.DisplayType == "Circle" then
+        return
+    else
+        remString = F.lastReminderTimerText
+    end
     if info.DisplayType == "Circle" then
         if F.lastReminderText ~= text then
             F.Text:SetText(text)
@@ -1275,36 +1298,59 @@ function NSI:CountdownNoteFrame(frame)
     if not frame or not frame:IsShown() then return end
     local originalText = frame.OriginalText or frame.Text:GetText()
     if not originalText then return end
-    local newtext = ""
-    local PassedTime = (GetTime() - self.PhaseSwapTime)
-    local curphase = 100
-    if not originalText:match('\n$') then originalText = originalText..'\n' end
-    for line in originalText:gmatch('([^\n]*)\n') do
-        local ShouldDelete = false
-        local phase = line:match(NSI:Loc("Phase").." (%d*%.?%d+)")
-        curphase = phase and tonumber(phase) or curphase
-        if curphase < self.Phase then
-            ShouldDelete = true
-        elseif curphase == self.Phase and not phase then
+    local lines = frame.CountdownLines
+    if frame.CountdownSourceText ~= originalText then
+        local phasePattern = frame.CountdownPhasePattern
+        if not phasePattern then
+            phasePattern = NSI:Loc("Phase").." (%d*%.?%d+)"
+            frame.CountdownPhasePattern = phasePattern
+        end
+
+        lines = {}
+        local currentPhase = 100
+        local sourceText = originalText:match('\n$') and originalText or originalText..'\n'
+        for line in sourceText:gmatch('([^\n]*)\n') do
+            local phaseText = line:match(phasePattern)
+            local phase = phaseText and tonumber(phaseText) or currentPhase
+            currentPhase = phase
             local minutes, seconds = line:match("(%d+):(%d%d)")
-            local originalTime = minutes and seconds and (minutes*60) + seconds
-            if originalTime then
-                local newtime = originalTime - PassedTime
-                if newtime > 0 then
-                    local newminutes = math.floor(newtime/60)
-                    local newseconds = math.floor(newtime%60)
-                    local timeFormatted = string.format("%d:%02d", newminutes, newseconds)
-                    line = line:gsub(minutes..":"..seconds.." ", timeFormatted.." ")
+            lines[#lines + 1] = {
+                text = line,
+                phase = phase,
+                hasPhase = phaseText ~= nil,
+                minutes = minutes,
+                seconds = seconds,
+                originalTime = minutes and seconds and (minutes * 60) + seconds,
+                timePrefix = minutes and seconds and (minutes..":"..seconds.." "),
+            }
+        end
+        frame.CountdownLines = lines
+        frame.CountdownSourceText = originalText
+    end
+
+    local passedTime = GetTime() - self.PhaseSwapTime
+    local currentPhase = self.Phase
+    local visibleLines = {}
+    for _, entry in ipairs(lines) do
+        if entry.phase >= currentPhase then
+            local line = entry.text
+            if entry.phase == currentPhase and not entry.hasPhase and entry.originalTime then
+                local newTime = entry.originalTime - passedTime
+                if newTime <= 0 then
+                    line = nil
                 else
-                    ShouldDelete = true
+                    local timeFormatted = string.format("%d:%02d", math.floor(newTime / 60), math.floor(newTime % 60))
+                    line = line:gsub(entry.timePrefix, timeFormatted.." ")
                 end
             end
-        end
-        if not ShouldDelete then
-            newtext = newtext..line.."\n"
+            if line then visibleLines[#visibleLines + 1] = line end
         end
     end
-    frame.Text:SetText(newtext)
+    local newText = table.concat(visibleLines, "\n") .. (#visibleLines > 0 and "\n" or "")
+    if frame.CountdownDisplayedText ~= newText then
+        frame.Text:SetText(newText)
+        frame.CountdownDisplayedText = newText
+    end
 end
 
 function NSI:DelayAllReminders(delay)
@@ -1993,7 +2039,12 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
         self[Name]:SetAllPoints(self[Name.."Mover"])
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
         self[Name].Text:SetWidth(SettingsTable.Width)
-        if text ~= "skip" then self[Name].Text:SetText(text) self[Name].OriginalText = text end
+        if text ~= "skip" then
+            self[Name].Text:SetText(text)
+            self[Name].OriginalText = text
+            self[Name].CountdownSourceText = nil
+            self[Name].CountdownDisplayedText = nil
+        end
         if not self[Name.."Mover"].IsActiveFlash then self[Name.."Mover"].Border:SetBackdropColor(unpack(SettingsTable.BGcolor)) end
         if self:DifficultyCheck({14, 15, 16}) or NSRT.ReminderSettings.ShowOutsideOfRaid then
             self[Name]:Show()
