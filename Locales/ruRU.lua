@@ -411,6 +411,14 @@ L["Alndust Upheaval - Mythic"] = "Встряска пыли Альн (эпоха
 L["Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast"] = "Автоматически указывает группам 1 и 2 поглотить первое применение 'Встряска пыли Альн', а группам 3 и 4 - второе применение"
 L["Alndust Upheaval - Normal/Heroic"] = "Встряска пыли Альн (обычный и героический режим)"
 L["For Normal & Heroic the Addon automatically splits healers & dps in half. Tanks are ignored."] = "На обычном и героическом режиме аддон автоматически делит хилов и дамагеров пополам. Танки игнорируются."
+L["Tank Combo Soaks - Mythic"] = "Поглощения комбо-танков - Мифик"
+L["Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."] = "Разделяет группы 1 и 2 и группы 3 и 4. Первая группа назначена поглощать слева, вторая группа - справа. Танки игнорируются."
+L["Tank Combo Soaks - Normal/Heroic"] = "Поглощения танкового комбо - обычный/героический"
+L["Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."] = "Автоматически разделяет игроков на две сбалансированные по ролям группы и назначает им поглощение слева или справа. Танки игнорируются."
+L["Coiled Altar Soaks - Mythic"] = "Поглощения в Спиральном алтаре - мифический"
+L["Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."] = "Разделяет группы 1 и 2 и группы 3 и 4. Каждой группе следует поглощать только на своём назначенном применении и не поглощать на другом. Танки игнорируются."
+L["Coiled Altar Soaks - Heroic"] = "Поглощения в Спиральном алтаре - героический"
+L["Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."] = "Автоматически разделяет игроков на две сбалансированные по ролям группы и говорит им поглощать или не поглощать на каждом применении. Танки игнорируются. Назначений для обычного режима нет."
 
 -- ============================================================================
 -- UI/Options/QoL.lua
