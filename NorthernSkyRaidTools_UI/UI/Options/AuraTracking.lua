@@ -837,6 +837,7 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local tabBtns, tabFrames, tabScroll = {}, {}, {}
+    local tabScrollKey = {}
     local activeTab = "Display"
     local tabRowY   = -44
     local contentY  = tabRowY - 24
@@ -1201,7 +1202,7 @@ local function BuildAuraTrackingUI(screen)
                 set = function(_, v)
                     v = strtrim(tostring(v or ""))
                     s.Unit = (v ~= "") and v or "player"
-                    apply(key); RebuildCurrentTab()
+                    apply(key)
                 end },
             { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40, or friendly player names" },
             { Type = "Dropdown", label = "Tracking Mode", values = TRACKING_MODES, highlight = true,
@@ -1351,22 +1352,38 @@ local function BuildAuraTrackingUI(screen)
         local settings = NSI:GetAuraTrackingSettings(selectedKey)
         if not settings then return end
         local container = tabFrames[activeTab]
-        local scrollPosition = tabScroll[activeTab] and tabScroll[activeTab].frame:GetVerticalScroll() or 0
+        local scrollPosition = 0
+        if tabScroll[activeTab] and tabScrollKey[activeTab] == selectedKey then
+            scrollPosition = tabScroll[activeTab].frame:GetVerticalScroll() or 0
+        end
         container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
         for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
             HideWidgetScroll(scrollObj)
         end
-        tabScroll[activeTab] = nil
+        for _, child in ipairs({container:GetChildren()}) do
+            if child:IsObjectType("ScrollFrame") then
+                child:Hide()
+            end
+        end
+        container._auraTrackingWidgetScrolls = {}
         local topPad = (activeTab == "Display") and DISPLAY_TOP or 0
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
-        local scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
+        local scrollObj = tabScroll[activeTab]
+        if not scrollObj then
+            scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
+            tabScroll[activeTab] = scrollObj
+        else
+            scrollObj:SetSize(tabScrollW, tabContentH - topPad)
+            scrollObj.frame:Show()
+        end
         scrollObj.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -topPad)
         local totalH = BuildWidgets(scrollObj.scrollChild, defs, scrollObj.scrollChild:GetWidth(), "NSRTAuraTrack" .. activeTab)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         scrollObj:UpdateScrollBar()
         scrollObj.frame:SetVerticalScroll(scrollPosition)
         tabScroll[activeTab] = scrollObj
-        container._auraTrackingWidgetScrolls[#container._auraTrackingWidgetScrolls + 1] = scrollObj
+        tabScrollKey[activeTab] = selectedKey
+        container._auraTrackingWidgetScrolls[1] = scrollObj
     end
 
     -- ========================================================================
