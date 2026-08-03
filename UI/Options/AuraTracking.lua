@@ -1101,6 +1101,20 @@ local function BuildAuraTrackingUI(screen)
                 row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
                 row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
                 row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+                row.highlight = row:CreateTexture(nil, "BACKGROUND")
+                row.highlight:SetAllPoints()
+                row.highlight:SetColorTexture(0.08, 0.32, 0.40, 0.45)
+                row.highlight:Hide()
+                local function SetHovered(hovered)
+                    if hovered then
+                        row.highlight:Show()
+                    else
+                        row.highlight:Hide()
+                    end
+                end
+                row:EnableMouse(true)
+                row:SetScript("OnEnter", function() SetHovered(true) end)
+                row:SetScript("OnLeave", function() SetHovered(false) end)
 
                 local iconFrame = CreateFrame("Frame", nil, row)
                 iconFrame:SetSize(16, 16)
@@ -1128,6 +1142,7 @@ local function BuildAuraTrackingUI(screen)
                 end
 
                 iconFrame:SetScript("OnEnter", function(self)
+                    SetHovered(true)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     GameTooltip:SetSpellByID(spellID)
                     if GameTooltip:NumLines() == 0 then
@@ -1145,6 +1160,7 @@ local function BuildAuraTrackingUI(screen)
                 removeBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
                 removeBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
                 removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+                removeBtn:SetScript("OnEnter", function() SetHovered(true) end)
                 removeBtn:SetScript("OnClick", function()
                     NSI:RemoveAuraTrackingSpellID(key, spellID)
                     RebuildList(); RebuildCurrentTab()
