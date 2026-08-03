@@ -398,6 +398,14 @@ L["Alndust Upheaval - Mythic"] = "알른가루 지각 변동 - 신화"
 L["Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast"] = "첫 번째 알른가루 지각 변동 시전에 1,2파티, 두 번째 시전에 3,4파티가 맞도록 자동으로 알려줍니다"
 L["Alndust Upheaval - Normal/Heroic"] = "알른가루 지각 변동 - 일반/영웅"
 L["For Normal & Heroic the Addon automatically splits healers & dps in half. Tanks are ignored."] = "일반과 영웅에서는 애드온이 힐러와 딜러를 반씩 자동으로 나눕니다. 탱커는 제외합니다."
+L["Tank Combo Soaks - Mythic"] = "탱커 콤보 공격 맞기 - 신화"
+L["Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."] = "1,2파와 3,4파를 각 조로 나눕니다. 1조는 왼쪽 공격을 맞고 2조는 오른쪽 공격을 맞습니다. 탱커는 배정되지 않습니다."
+L["Tank Combo Soaks - Normal/Heroic"] = "탱커 콤보 공격 맞기 - 일반/영웅"
+L["Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."] = "2개 조에 공대원을 역할 균형을 맞춰 자동 분배 후 왼쪽이나 오른쪽 공격을 맞도록 지정합니다. 탱커는 배정되지 않습니다."
+L["Coiled Altar Soaks - Mythic"] = "똬리의 제단 스킬 맞기 - 신화"
+L["Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."] = "1,2파와 3,4파를 각 조로 나눕니다. 조마다 지정된 시전을 맞아야 할 때 알림이 나오고 맞지 않아야 하는 시전에는 맞지 말라고 나옵니다. 탱커는 배정되지 않습니다."
+L["Coiled Altar Soaks - Heroic"] = "똬리의 제단 스킬 맞기 - 영웅"
+L["Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."] = "2개 조에 공대원을 역할 균형을 맞춰 자동 분배 후 시전때마다 맞아야 하는 것과 맞지 않아야 하는 것을 알립니다. 탱커는 배정되지 않습니다. 일반 난이도 배정은 없습니다."
 -- ============================================================================
 -- UI/Options/QoL.lua
 -- ============================================================================
