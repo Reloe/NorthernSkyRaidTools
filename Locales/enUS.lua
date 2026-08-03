@@ -398,6 +398,14 @@ L["Alndust Upheaval - Mythic"] = "Alndust Upheaval - Mythic"
 L["Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast"] = "Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast"
 L["Alndust Upheaval - Normal/Heroic"] = "Alndust Upheaval - Normal/Heroic"
 L["For Normal & Heroic the Addon automatically splits healers & dps in half. Tanks are ignored."] = "For Normal & Heroic the Addon automatically splits healers & dps in half. Tanks are ignored."
+L["Tank Combo Soaks - Mythic"] = "Tank Combo Soaks - Mythic"
+L["Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."] = "Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."
+L["Tank Combo Soaks - Normal/Heroic"] = "Tank Combo Soaks - Normal/Heroic"
+L["Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."] = "Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."
+L["Coiled Altar Soaks - Mythic"] = "Coiled Altar Soaks - Mythic"
+L["Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."] = "Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."
+L["Coiled Altar Soaks - Heroic"] = "Coiled Altar Soaks - Heroic"
+L["Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."] = "Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."
 -- ============================================================================
 -- UI/Options/QoL.lua
 -- ============================================================================
