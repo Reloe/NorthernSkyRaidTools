@@ -103,6 +103,9 @@ function NSUI:Init()
         return
     end
 
+    self.Initializing = true
+    self.PendingShow = false
+    NSUI:Hide()
     NSI.IsBuilding = true
     -- Scale bar
     local scale = NSRT.NSUI.scale
@@ -477,9 +480,23 @@ function NSUI:Init()
     SelectTab("General")
     NSI.IsBuilding = false
     self.Initialized = true
+    C_Timer.After(0, function()
+        if not self.Initialized then return end
+        NSUI:SetScale(NSRT.NSUI.scale)
+        SelectTab(tabSystem.CurrentName or "General")
+        self.Initializing = false
+        if self.PendingShow then
+            self.PendingShow = false
+            NSUI:Show()
+        end
+    end)
 end
 
 function NSUI:ToggleOptions()
+    if self.Initializing then
+        self.PendingShow = true
+        return
+    end
     if NSUI:IsShown() then
         NSUI:Hide()
     else
