@@ -409,21 +409,24 @@ function NSI:DuplicateCustomAuraTracking(settingsKey)
 end
 
 -- ── Section copy / paste ────────────────────────────────────────────────────
--- Trigger/Load are copied via a small explicit allowlist (their fields
--- are few and clearly scoped). "Display" is copied by EXCLUSION instead —
--- every field on the entry except identity/Trigger/Load fields — so
--- every current and future Display-tab setting (border, stack/duration text,
--- font, cooldown swipe, co-tank name, etc.) is captured automatically instead
--- of relying on a hand-maintained list that can silently fall out of sync.
+-- Trigger/Load and Display use explicit field lists so identity and activation
+-- state are never copied accidentally. Display fields are listed below
+-- alongside the settings defaults.
 local AuraTrackingSectionFields = {
     Trigger = { "TrackingMode", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
     Load    = { "loadConditions" },
 }
 
-local AuraTrackingNonDisplayFields = {
-    Name = true, enabled = true, group = true, pinned = true, builtin = true,
-    TrackingMode = true, SpellIDs = true, SpellIDsEdited = true, AuraFilters = true, CandidateFilters = true, Unit = true, UnitType = true, PreviewSpellID = true,
-    loadConditions = true,
+local AuraTrackingDisplayFields = {
+    "Spacing", "Limit", "GrowDirection", "Width", "Height", "Zoom",
+    "Anchor", "relativeTo", "CustomAnchorFrame", "xOffset", "yOffset",
+    "FrameStrata", "BorderSize", "BorderColor", "DispelBorderMode", "DispelBorderSize",
+    "HideTooltip", "HideDurationText", "HideLongDurationAuras", "ShowWhitelistedPlayerBuffs", "IncludeImmunities", "HideStackText",
+    "EnableCooldownSwipe", "InverseCooldownSwipe", "SortMode",
+    "DurationColor", "StackColor", "DurationFontSize", "StackFontSize",
+    "TextFont", "TextFontFlags", "DurationXOffset", "DurationYOffset", "StackXOffset", "StackYOffset",
+    "NameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
+    "OnlyShowFirstTank",
 }
 
 local function CopyAuraTrackingValue(v)
@@ -436,10 +439,8 @@ function NSI:CopyAuraTrackingSection(settingsKey, section)
     if not settings then return end
     local data = {}
     if section == "Display" then
-        for key, value in pairs(settings) do
-            if not AuraTrackingNonDisplayFields[key] then
-                data[key] = CopyAuraTrackingValue(value)
-            end
+        for _, key in ipairs(AuraTrackingDisplayFields) do
+            data[key] = CopyAuraTrackingValue(settings[key])
         end
     else
         local fields = AuraTrackingSectionFields[section]
