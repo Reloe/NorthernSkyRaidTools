@@ -393,9 +393,6 @@ function NSI:DecodeExportData(text, serializer)
     return success and data or nil
 end
 
--- Snapshot of the original locale strings before any override is applied.
-local _localeSnapshot = nil
-
 function NSI:SaveFramePosition(F, SettingsTable)
     if not F or not SettingsTable then return end
     local Anchor, _, relativeTo, xOffset, yOffset = F:GetPoint()

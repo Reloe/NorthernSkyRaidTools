@@ -1,6 +1,7 @@
 local _, NSI = ... -- Internal namespace
 _G.NorthernSkyRaidTools = NSI
 _G["NSAPI"] = {}
+NSI.UIAddonName = "NorthernSkyRaidTools_UI"
 NSI.specs = {}
 NSI.LCG = LibStub("LibCustomGlow-1.0")
 NSI.LGF = LibStub("LibGetFrame-1.0")
@@ -52,9 +53,21 @@ function NSI:ValidateFontPath(path)
 end
 
 function NSI:GetUIFontPath()
-    local fontPath = NSRT.Settings.GlobalFont
+    local languageId = self:GetSelectedLanguage()
+    local fontPath
+    if languageId == "enUS" then
+        fontPath = NSRT.Settings.GlobalFont
+    elseif languageId and DF.Language.GetFontForLanguageID then
+        fontPath = DF.Language.GetFontForLanguageID(languageId, "NorthernSkyRaidTools")
+    else
+        fontPath = DF:GetBestFontForLanguage()
+    end
+
     if self.LSM then
-        fontPath = self.LSM:Fetch("font", fontPath, true) or fontPath
+        local lsmFont = self.LSM:Fetch("font", fontPath, true)
+        if lsmFont then
+            return self:ValidateFontPath(lsmFont)
+        end
     end
     return self:ValidateFontPath(fontPath)
 end
@@ -77,9 +90,18 @@ function NSI:Loc(key)
 end
 
 function NSI:LoadUI()
-    if not C_AddOns.IsAddOnLoaded("NorthernSkyRaidTools_UI") then
-        local loaded = C_AddOns.LoadAddOn("NorthernSkyRaidTools_UI")
-        if not loaded and not C_AddOns.IsAddOnLoaded("NorthernSkyRaidTools_UI") then
+    if self.UILoading then
+        return false
+    end
+
+    if not self.NSUI then
+        self.UILoading = true
+        local loaded = C_AddOns.LoadAddOn(self.UIAddonName)
+        self.UILoading = nil
+        if not self.NSUI and self.UIBootstrap then
+            self.NSUI = self.UIBootstrap.NSUI
+        end
+        if not loaded and not self.NSUI then
             return false
         end
     end
