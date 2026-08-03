@@ -679,7 +679,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
         end
     end
 
-    edit:SetScript("OnEnterPressed", function() Commit() ; edit:ClearFocus() end)
+    edit:SetScript("OnEnterPressed", function() edit:ClearFocus() end)
     edit:SetScript("OnEscapePressed", function()
         edit:SetText(tostring(getValue and getValue(NSI) or ""))
         edit:ClearFocus()
