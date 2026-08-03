@@ -77,8 +77,8 @@ local TABS_GROUPS                  = {
         { name = "AuraTracking", textKey = "Aura Tracking" },
     },
     {
-        { name = "InterruptDisplay", textKey = "Interrupt Display" },
         { name = "Assignments",      textKey = "Assignments" },
+        { name = "InterruptDisplay", textKey = "Interrupt Display" },
         { name = "WAImports",        textKey = "WA Imports" },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
