@@ -843,7 +843,6 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local tabBtns, tabFrames, tabScroll = {}, {}, {}
-    local tabScrollKey = {}
     local activeTab = "Display"
     local tabRowY   = -44
     local contentY  = tabRowY - 24
@@ -1366,7 +1365,7 @@ local function BuildAuraTrackingUI(screen)
         if not settings then return end
         local container = tabFrames[activeTab]
         local scrollPosition = 0
-        if tabScroll[activeTab] and tabScrollKey[activeTab] == selectedKey then
+        if tabScroll[activeTab] then
             scrollPosition = tabScroll[activeTab].frame:GetVerticalScroll() or 0
         end
         container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
@@ -1395,7 +1394,6 @@ local function BuildAuraTrackingUI(screen)
         scrollObj:UpdateScrollBar()
         scrollObj.frame:SetVerticalScroll(scrollPosition)
         tabScroll[activeTab] = scrollObj
-        tabScrollKey[activeTab] = selectedKey
         container._auraTrackingWidgetScrolls[1] = scrollObj
     end
 
