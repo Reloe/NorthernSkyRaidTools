@@ -1,4 +1,4 @@
-local _, NSI = ...
+local NSI = _G.NorthernSkyRaidTools
 
 local BossIcons = {
     [3176] = 7448209, -- Imperator Averzian
