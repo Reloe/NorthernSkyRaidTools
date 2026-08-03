@@ -5,6 +5,11 @@ local _, NSI = ... -- Internal namespace
 local encID = 3429
 -- /run NSAPI:DebugEncounter(3429)
 
+local p1SoakTimers = {
+    [15] = {48, 133},
+    [16] = {48, 133},
+}
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -42,9 +47,10 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P1", internalID = "P1Soak", name = "P1 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1283489,
+        loadConditions = tankConditions,
         timers = {
-            [15] = {48.0, 133.0},
-            [16] = {48.0, 133.0},
+            [15] = p1SoakTimers[15],
+            [16] = p1SoakTimers[16],
         },
     }
     self:AddEncounterAlert(data)
@@ -109,6 +115,45 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+end
+
+NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
+    local settings = self.Assignments and self.Assignments[encID]
+    if not settings or UnitGroupRolesAssigned("player") == "TANK" then return end
+
+    local diff = id or self:DifficultyCheck({15, 16})
+    if not diff or not p1SoakTimers[diff] then return end
+
+    local group
+    if diff == 16 then
+        if not settings.Mythic then return end
+        group = self:GetSubGroup("player") <= 2 and 1 or 2
+    else
+        if not settings.Heroic then return end
+        local _, first = self:GetSortedGroup(true, false, false)
+        group = 2
+        for _, member in ipairs(first) do
+            if UnitIsUnit(member.unitid, "player") then
+                group = 1
+                break
+            end
+        end
+    end
+
+    local alert = self:CreateDefaultAlert("", "Text", nil, nil, 1, encID)
+    alert.dur = 8
+    for index, timer in ipairs(p1SoakTimers[diff]) do
+        local shouldSoak = (index == 1 and group == 1) or (index == 2 and group == 2)
+        alert.time = timer
+        alert.text = shouldSoak and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
+        alert.TTS = shouldSoak and "Soak" or "Don't soak"
+        self:AddToReminder(alert)
+    end
+
+    if NSRT.AssignmentSettings.OnPull then
+        local side = group == 1 and "First" or "Second"
+        self:DisplayText("You are assigned to the |cFF00FF00" .. side .. "|r Coiled Altar soak", 5)
+    end
 end
 
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START

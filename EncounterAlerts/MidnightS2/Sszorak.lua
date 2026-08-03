@@ -3,6 +3,11 @@ local _, NSI = ... -- Internal namespace
 local encID = 3420
 -- /run NSAPI:DebugEncounter(3420)
 
+local tankComboTimers = {
+    [15] = {5.5, 55.7, 141.7, 195.9, 281.8, 334.1},
+    [16] = {4.9, 52, 132, 179, 259, 306.1},
+}
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -13,10 +18,11 @@ NSI.InitializeAlerts[encID] = function(self)
     nontankConditions.Roles.DAMAGER = true
 
     local data = {group = "Sszorak", internalID = "TankCombo", name = "Tank Combo", text = "Tank Combo", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1277002,
+        loadConditions = tankConditions,
         textColors = {1, 0, 0, 1},
         timers = {
-            [15] = {5.5, 55.7, 141.7, 195.9, 281.8, 334.1},
-            [16] = {4.9, 52, 132, 179, 259, 306.1},
+            [15] = tankComboTimers[15],
+            [16] = tankComboTimers[16],
         },
     }
     self:AddEncounterAlert(data)
@@ -61,4 +67,44 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+end
+
+NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
+    local settings = self.Assignments and self.Assignments[encID]
+    if not settings then return end
+
+    local diff = id or self:DifficultyCheck({14, 15, 16})
+    if not diff or not tankComboTimers[diff] then return end
+    if UnitGroupRolesAssigned("player") == "TANK" then return end
+
+    local group
+    if diff == 16 then
+        if not settings.Mythic then return end
+        group = self:GetSubGroup("player") <= 2 and 1 or 2
+    else
+        if not settings.NormalHeroic then return end
+        local _, first = self:GetSortedGroup(true, false, false)
+        group = 2
+        for _, member in ipairs(first) do
+            if UnitIsUnit(member.unitid, "player") then
+                group = 1
+                break
+            end
+        end
+    end
+
+    local alert = self:CreateDefaultAlert("", "Text", nil, nil, 1, encID)
+    alert.dur = 6
+    alert.TTSTimer = 0
+    for _, timer in ipairs(tankComboTimers[diff]) do
+        alert.time = timer
+        alert.text = group == 1 and "|cFF00FF00Soak Left" or "|cFF00FF00Soak Right"
+        alert.TTS = group == 1 and "Soak Left" or "Soak Right"
+        self:AddToReminder(alert)
+    end
+
+    if NSRT.AssignmentSettings.OnPull then
+        local side = group == 1 and "Left" or "Right"
+        self:DisplayText("You are assigned to soak |cFF00FF00" .. side .. "|r", 5)
+    end
 end
