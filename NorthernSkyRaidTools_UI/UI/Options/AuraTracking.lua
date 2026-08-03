@@ -898,6 +898,8 @@ local function BuildAuraTrackingUI(screen)
     -- ── Definition builders (Display / Trigger via BuildWidgets) ─────
     local function BuildDisplayDefs(s, key)
         local defs = {}
+        s.DurationColor = s.DurationColor or {1, 1, 0.25, 1}
+        s.DurationThresholdColor = s.DurationThresholdColor or {1, 0.25, 0.25, 1}
         local function add(d) defs[#defs + 1] = d end
         local function tip(title, desc)
             return { title = title, desc = desc }
@@ -1022,6 +1024,30 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Color", label = "Duration Color",
             tooltip = tip("Duration Color", "Color of the duration text"),
             get = function() return unpack(s.DurationColor) end, set = function(_, r, g, b, a) s.DurationColor = {r, g, b, a}; apply(key) end })
+        add({ Type = "Checkbox", label = "Show Decimal Seconds",
+            tooltip = tip("Show Decimal Seconds", "Shows one decimal place while the remaining duration is below the threshold."),
+            get = function() return s.ShowDecimalSeconds end,
+            set = function(_, v) s.ShowDecimalSeconds = v; apply(key); RebuildCurrentTab() end })
+        if s.ShowDecimalSeconds then
+            add({ Type = "Slider", label = "Decimal Threshold", min = 0.1, max = 59.9, step = 0.1,
+                tooltip = tip("Decimal Threshold", "Shows decimal seconds below this remaining-duration threshold."),
+                get = function() return s.DecimalThreshold or 3 end,
+                set = function(_, v) s.DecimalThreshold = v; apply(key) end })
+        end
+        add({ Type = "Checkbox", label = "Color Duration Under Threshold",
+            tooltip = tip("Color Duration Under Threshold", "Uses a separate color while the remaining duration is below the threshold."),
+            get = function() return s.ColorDurationUnderThreshold end,
+            set = function(_, v) s.ColorDurationUnderThreshold = v; apply(key); RebuildCurrentTab() end })
+        if s.ColorDurationUnderThreshold then
+            add({ Type = "Slider", label = "Color Threshold", min = 0.1, max = 59.9, step = 0.1,
+                tooltip = tip("Color Threshold", "Uses the threshold color below this remaining-duration threshold."),
+                get = function() return s.ColorDurationThreshold or 3 end,
+                set = function(_, v) s.ColorDurationThreshold = v; apply(key) end })
+            add({ Type = "Color", label = "Threshold Duration Color",
+                tooltip = tip("Threshold Duration Color", "Color used while the remaining duration is below the threshold."),
+                get = function() return unpack(s.DurationThresholdColor) end,
+                set = function(_, r, g, b, a) s.DurationThresholdColor = {r, g, b, a}; apply(key) end })
+        end
         add({ Type = "Slider", label = "Duration Font Size", min = 6, max = 80, step = 1,
             tooltip = tip("Duration Font Size", "Font size of the duration text"),
             get = function() return s.DurationFontSize end, set = function(_, v) s.DurationFontSize = v; apply(key) end })

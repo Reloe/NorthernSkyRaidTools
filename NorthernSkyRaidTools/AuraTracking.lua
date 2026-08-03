@@ -159,6 +159,11 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         EnableCooldownSwipe = true,
         InverseCooldownSwipe = true,
         DurationColor = {1, 1, 0.25, 1},
+        ShowDecimalSeconds = false,
+        DecimalThreshold = 3,
+        ColorDurationUnderThreshold = false,
+        ColorDurationThreshold = 3,
+        DurationThresholdColor = {1, 0.25, 0.25, 1},
         StackColor = {1, 1, 1, 1},
         DurationFontSize = 32,
         StackFontSize = 32,
@@ -524,7 +529,8 @@ local AuraTrackingDisplayFields = {
     "FrameStrata", "BorderSize", "BorderColor", "DispelBorderMode", "DispelBorderSize",
     "HideTooltip", "HideDurationText", "HideLongDurationAuras", "ShowWhitelistedPlayerBuffs", "IncludeImmunities", "HideStackText",
     "EnableCooldownSwipe", "InverseCooldownSwipe", "SortMode",
-    "DurationColor", "StackColor", "DurationFontSize", "StackFontSize",
+    "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
+    "StackColor", "DurationFontSize", "StackFontSize",
     "TextFont", "TextFontFlags", "DurationXOffset", "DurationYOffset", "StackXOffset", "StackYOffset",
     "NameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
     "OnlyShowFirstTank",
@@ -646,11 +652,46 @@ function NSI:GetAuraTrackingSettings(settingsKey)
     return NSRT.AuraTrackingSettings[settingsKey]
 end
 
-local AuraTrackingDurationFormatter
-local function GetAuraTrackingDurationFormatter()
-    if not AuraTrackingDurationFormatter then
-        AuraTrackingDurationFormatter = C_StringUtil.CreateNumericRuleFormatter()
-        AuraTrackingDurationFormatter:SetBreakpoints({
+local AuraTrackingDurationFormatterCache = setmetatable({}, {__mode = "k"})
+
+local function GetAuraTrackingDurationFormatter(settings)
+    local decimalEnabled = settings.ShowDecimalSeconds == true
+    local decimalThreshold = decimalEnabled and math.min(math.max(tonumber(settings.DecimalThreshold) or 3, 0.1), 59.9) or 0
+    local cache = AuraTrackingDurationFormatterCache[settings]
+    if cache and cache.decimalEnabled == decimalEnabled and cache.decimalThreshold == decimalThreshold then
+        return cache.formatter
+    end
+
+    local formatter = C_StringUtil.CreateNumericRuleFormatter()
+    if decimalEnabled then
+        formatter:SetBreakpoints({
+            {
+                threshold = 60,
+                rounding = Enum.NumericRuleFormatRounding.Down,
+                format = "%dm",
+                components = {
+                    {
+                        div = 60,
+                        step = 1,
+                        rounding = Enum.NumericRuleFormatRounding.Down,
+                    },
+                },
+            },
+            {
+                threshold = decimalThreshold,
+                step = 1,
+                rounding = Enum.NumericRuleFormatRounding.Up,
+                format = "%d",
+            },
+            {
+                threshold = 0,
+                step = 0.1,
+                rounding = Enum.NumericRuleFormatRounding.Up,
+                format = "%.1f",
+            },
+        })
+    else
+        formatter:SetBreakpoints({
             {
                 threshold = 60,
                 rounding = Enum.NumericRuleFormatRounding.Down,
@@ -671,11 +712,47 @@ local function GetAuraTrackingDurationFormatter()
             },
         })
     end
-    return AuraTrackingDurationFormatter
+    AuraTrackingDurationFormatterCache[settings] = {
+        decimalEnabled = decimalEnabled,
+        decimalThreshold = decimalThreshold,
+        formatter = formatter,
+    }
+    return formatter
 end
 
-local function FormatAuraTrackingDuration(seconds)
+local function GetAuraTrackingDurationTextColor(settings)
+    if not settings.ColorDurationUnderThreshold then return end
+    local threshold = math.min(math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1), 59.9)
+    local cache = AuraTrackingDurationFormatterCache[settings]
+    local normalColor = settings.DurationColor or {1, 1, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
+    if cache and cache.colorThreshold == threshold
+        and cache.normalColor == normalColor and cache.thresholdColor == thresholdColor then
+        return cache.textColor
+    end
+
+    local curve = C_CurveUtil.CreateColorCurve()
+    curve:SetType(Enum.LuaCurveType.Step)
+    curve:AddPoint(0, CreateColor(thresholdColor[1], thresholdColor[2], thresholdColor[3], thresholdColor[4] or 1))
+    curve:AddPoint(threshold, CreateColor(normalColor[1], normalColor[2], normalColor[3], normalColor[4] or 1))
+    local textColor = {
+        curve = curve,
+        property = Enum.DurationTextBindingProperty.RemainingDuration,
+    }
+    cache = cache or { formatter = GetAuraTrackingDurationFormatter(settings) }
+    cache.colorThreshold = threshold
+    cache.normalColor = normalColor
+    cache.thresholdColor = thresholdColor
+    cache.textColor = textColor
+    AuraTrackingDurationFormatterCache[settings] = cache
+    return textColor
+end
+
+local function FormatAuraTrackingDuration(seconds, settings)
     seconds = tonumber(seconds) or 0
+    if settings.ShowDecimalSeconds and seconds < math.max(tonumber(settings.DecimalThreshold) or 3, 0.1) then
+        return string.format("%.1f", seconds)
+    end
     if seconds >= 60 then
         return string.format("%dm", math.max(1, math.floor(seconds / 60)))
     end
@@ -1327,6 +1404,7 @@ end
 
 local function ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
     state.buttonRegions = state.buttonRegions or {}
+    local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local fontPath = GetAuraTrackingFontPath(self, settings)
 
     if not state.buttonRegions[button] then
@@ -1438,9 +1516,12 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         duration:ClearAllPoints()
         duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
         duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
-        duration:SetTextColor(unpack(settings.DurationColor))
+        duration:SetTextColor(unpack(durationColor))
         duration:Show()
-        button:SetDurationText(duration, { textFormatter = GetAuraTrackingDurationFormatter() })
+        button:SetDurationText(duration, {
+            textFormatter = GetAuraTrackingDurationFormatter(settings),
+            textColor = GetAuraTrackingDurationTextColor(settings),
+        })
     end
     --[[
     local isCustom = tostring(key):match("^Custom") and true or false
@@ -1937,6 +2018,9 @@ local function StartAuraTrackingPreviewTimer(self, key)
     StopAuraTrackingPreviewTimer(self, key)
     local previewData = GetAuraTrackingPreviewData(key)
     if not previewData then return end
+    local settings = NSI:GetAuraTrackingSettings(key)
+    local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
     local timerKey = previewData.timerKey
     self[timerKey] = C_Timer.NewTicker(0.05, function()
         local now = GetTime()
@@ -1953,7 +2037,12 @@ local function StartAuraTrackingPreviewTimer(self, key)
         for _, frame in ipairs(self[iconKey]) do
             if frame:IsShown() and frame.Duration and frame.PreviewExpires then
                 local remaining = math.max(0, frame.PreviewExpires - now)
-                frame.Duration:SetText(FormatAuraTrackingDuration(remaining))
+                frame.Duration:SetText(FormatAuraTrackingDuration(remaining, settings))
+                if settings.ColorDurationUnderThreshold and remaining < math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1) then
+                    frame.Duration:SetTextColor(unpack(thresholdColor))
+                else
+                    frame.Duration:SetTextColor(unpack(durationColor))
+                end
             end
         end
     end)
@@ -1983,6 +2072,8 @@ local function EnsureAuraTrackingPreviewFontString(frame, key)
 end
 
 local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType)
+    local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
     local fontPath = GetAuraTrackingFontPath(self, settings)
     local now = GetTime()
     duration = duration or 10
@@ -2076,8 +2167,13 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
         durationText:ClearAllPoints()
         durationText:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
         durationText:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
-        durationText:SetTextColor(unpack(settings.DurationColor))
-        durationText:SetText(FormatAuraTrackingDuration(duration))
+        durationText:SetTextColor(unpack(durationColor))
+        durationText:SetText(FormatAuraTrackingDuration(duration, settings))
+        if settings.ColorDurationUnderThreshold and duration < math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1) then
+            durationText:SetTextColor(unpack(thresholdColor))
+        else
+            durationText:SetTextColor(unpack(durationColor))
+        end
         durationText:Show()
     end
 
@@ -2107,6 +2203,8 @@ function NSI:PreviewAuraTracking(key, show)
     local settings = self:GetAuraTrackingSettings(key)
     local previewData = GetAuraTrackingPreviewData(key)
     if not settings or not previewData then return end
+    local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
     local frameKey = previewData.frameKey
     local iconKey = previewData.iconKey
     local texture = previewData.texture
