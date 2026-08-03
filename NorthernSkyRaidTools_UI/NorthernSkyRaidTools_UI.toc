@@ -1,0 +1,35 @@
+## Interface: 120100
+## Title: |cFF00FFFFNorthern Sky Raid Tools - UI|r
+## Version: @project-version@
+## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
+## Author: Reloe, Rav
+## LoadOnDemand: 1
+## Dependencies: NorthernSkyRaidTools
+## Category: Dungeons & Raids
+
+UI\Core.lua
+UI\Components.lua
+UI\BossData.lua
+UI\SoundData.lua
+UI\Notes.lua
+UI\VersionCheck.lua
+UI\Nicknames.lua
+UI\Reminders.lua
+UI\EncounterAlerts.lua
+UI\Cooldowns.lua
+UI\AuraSounds.lua
+UI\General.lua
+
+UI\Options\General.lua
+UI\Options\Nicknames.lua
+UI\Options\Reminders.lua
+UI\Options\Assignments.lua
+UI\Options\InterruptDisplay.lua
+UI\Options\ReadyCheck.lua
+UI\Options\AuraTracking.lua
+UI\Options\PaceComparison.lua
+UI\Options\QoL.lua
+UI\Options\WAImports.lua
+UI\AnchorWindow.lua
+
+NSUI.lua

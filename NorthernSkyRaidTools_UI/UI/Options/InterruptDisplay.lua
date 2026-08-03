@@ -1,0 +1,352 @@
+local addonId = "NorthernSkyRaidTools"
+local NSI = _G.NorthernSkyRaidTools
+local DF = _G["DetailsFramework"]
+local anchors   = { "TOPLEFT", "TOP", "TOPRIGHT", "LEFT", "CENTER", "RIGHT", "BOTTOMLEFT", "BOTTOM", "BOTTOMRIGHT" }
+local fontflags = { "", "OUTLINE", "THICKOUTLINE", "MONOCHROME", "OUTLINE, MONOCHROME", "THICKOUTLINE, MONOCHROME" }
+
+local function refreshPreview()
+    if not (NSI.InterruptDisplay and NSI.InterruptDisplay:IsShown()) then return end
+    NSI:CreateInterruptDisplay()
+end
+
+local function buildAnchorOptions(key)
+    local t = {}
+    for _, v in ipairs(anchors) do
+        tinsert(t, {
+            label = NSI:Loc(v),
+            phraseId = v,
+            value = v,
+            onclick = function()
+                NSRT.InterruptSettings[key] = v
+                refreshPreview()
+            end,
+        })
+    end
+    return t
+end
+
+local function buildFontFlagOptions(key)
+    local t = {}
+    for _, v in ipairs(fontflags) do
+        tinsert(t, {
+            label = v == "" and NSI:Loc("None") or v,
+            value = v,
+            onclick = function()
+                NSRT.InterruptSettings[key] = v
+                refreshPreview()
+            end,
+        })
+    end
+    return t
+end
+
+local function buildFontOptions(key)
+    local t = {}
+    for _, name in ipairs(NSI.LSM:List("font")) do
+        tinsert(t, {
+            label = name,
+            value = name,
+            onclick = function()
+                NSRT.InterruptSettings[key] = name
+                refreshPreview()
+            end,
+        })
+    end
+    return t
+end
+
+local function buildSoundOptions()
+    local t = {}
+    for _, name in ipairs(NSI.LSM:List("sound")) do
+        tinsert(t, {
+            label = name,
+            value = name,
+            onclick = function()
+                NSRT.InterruptSettings.InterruptSound = name
+                PlaySoundFile(NSI.LSM:Fetch("sound", name), "Master")
+            end,
+        })
+    end
+    return t
+end
+
+local function BuildInterruptDisplayOptions()
+    return {
+        { type = "label", get = function() return "Size & Position" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        {
+            type = "button",
+            name = "Preview / Move",
+            desc = "Toggle a live preview of the Interrupt Display. While shown, drag it to reposition.",
+            func = function()
+                if NSI.InterruptDisplay and NSI.InterruptDisplay:IsShown() then
+                    NSI:MakeDraggable(NSI.InterruptDisplay, NSRT.InterruptSettings, false)
+                    NSI:HideInterrupt()
+                else
+                    NSI:CreateInterruptDisplay()
+                    NSI.InterruptDisplay.Number:SetText("3")
+                    NSI.InterruptDisplay.Name:SetText(NSAPI:Shorten("player", 12, false, "GlobalNickNames", false, false))
+                    NSI.InterruptDisplay.Box:SetColorTexture(unpack(NSRT.InterruptSettings.InterruptNowColor))
+                    NSI:MakeDraggable(NSI.InterruptDisplay, NSRT.InterruptSettings, true)
+                end
+            end,
+            nocombat = true,
+            spacement = true,
+        },
+        {
+            type = "toggle",
+            name = "Show Interrupt Bar",
+            desc = "Show a Bar when it's your turn to interrupt. This Bar will show through the reminder system and use your default settings for bars.",
+            get = function() return NSRT.InterruptSettings.ShowBar end,
+            set = function(_, _, value) NSRT.InterruptSettings.ShowBar = value; refreshPreview() end,
+        },
+
+        {
+            type = "range",
+            name = "Width",
+            desc = "Width of the interrupt display box",
+            get = function() return NSRT.InterruptSettings.Width end,
+            set = function(_, _, value) NSRT.InterruptSettings.Width = value; refreshPreview() end,
+            min = 20, max = 400, step = 1,
+        },
+        {
+            type = "range",
+            name = "Height",
+            desc = "Height of the interrupt display box",
+            get = function() return NSRT.InterruptSettings.Height end,
+            set = function(_, _, value) NSRT.InterruptSettings.Height = value; refreshPreview() end,
+            min = 20, max = 400, step = 1,
+        },
+        {
+            type = "range",
+            name = "X Offset",
+            desc = "Horizontal offset from anchor",
+            get = function() return NSRT.InterruptSettings.xOffset end,
+            set = function(_, _, value) NSRT.InterruptSettings.xOffset = value; refreshPreview() end,
+            min = -2000, max = 2000, step = 1,
+        },
+        {
+            type = "range",
+            name = "Y Offset",
+            desc = "Vertical offset from anchor",
+            get = function() return NSRT.InterruptSettings.yOffset end,
+            set = function(_, _, value) NSRT.InterruptSettings.yOffset = value; refreshPreview() end,
+            min = -1200, max = 1200, step = 1,
+        },
+        {
+            type = "select",
+            name = "Anchor Point",
+            desc = "Which corner/edge of the display to anchor from",
+            get = function() return NSRT.InterruptSettings.Anchor end,
+            set = function() end,
+            values = function() return buildAnchorOptions("Anchor") end,
+        },
+        {
+            type = "select",
+            name = "Relative Point",
+            desc = "Which corner/edge of the parent frame to anchor to",
+            get = function() return NSRT.InterruptSettings.relativeTo end,
+            set = function() end,
+            values = function() return buildAnchorOptions("relativeTo") end,
+        },
+        {
+            type = "select",
+            name = "Interrupt Sound",
+            desc = "Sound played when it is your turn to interrupt",
+            get = function() return NSRT.InterruptSettings.InterruptSound end,
+            set = function() end,
+            values = function() return buildSoundOptions() end,
+        },
+        {
+            type = "color",
+            name = "Interrupt Now Color",
+            desc = "Color of the display box when it's your turn to interrupt",
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNowColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNowColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = "Interrupt Next Color",
+            desc = "Color of the display box when you are up next to interrupt",
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = "Interrupt Default Color",
+            desc = "Color of the display box when it's not your turn to interrupt",
+            get = function() return unpack(NSRT.InterruptSettings.InterruptDefaultColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptDefaultColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "label",
+            get = function() return "The first line of a note will be assigned to interrupt the first relevant boss unit. For Lura this means it assigns boss2, then boss3, then boss4.\nThe note allows for colored name-strings as well as NSNickNames." end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        {
+            type = "label",
+            get = function() return "intstart\nNeykgreifen Hoori Fonkydan Nerdshockz\nGladrien Gy Cheb Evokimoz\nReloe Therzp Patrickwl Tizaxyr\nintend" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+
+        { type = "breakline" },
+        { type = "label", get = function() return "Number Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+
+        {
+            type = "select",
+            name = "Number Font",
+            get = function() return NSRT.InterruptSettings.NumberFont end,
+            set = function() end,
+            values = function() return buildFontOptions("NumberFont") end,
+        },
+        {
+            type = "select",
+            name = "Number Font Flags",
+            desc = "Outline style for the number",
+            get = function() return NSRT.InterruptSettings.NumberFontFlags end,
+            set = function() end,
+            values = function() return buildFontFlagOptions("NumberFontFlags") end,
+        },
+        {
+            type = "range",
+            name = "Number Font Size",
+            desc = "Size of the interrupt count number",
+            get = function() return NSRT.InterruptSettings.NumberFontSize end,
+            set = function(_, _, value) NSRT.InterruptSettings.NumberFontSize = value; refreshPreview() end,
+            min = 8, max = 120, step = 1,
+        },
+        {
+            type = "range",
+            name = "Number X Offset",
+            get = function() return NSRT.InterruptSettings.NumberxOffset end,
+            set = function(_, _, value) NSRT.InterruptSettings.NumberxOffset = value; refreshPreview() end,
+            min = -200, max = 200, step = 1,
+        },
+        {
+            type = "range",
+            name = "Number Y Offset",
+            get = function() return NSRT.InterruptSettings.NumberyOffset end,
+            set = function(_, _, value) NSRT.InterruptSettings.NumberyOffset = value; refreshPreview() end,
+            min = -200, max = 200, step = 1,
+        },
+        {
+            type = "select",
+            name = "Number Anchor Point",
+            desc = "Which corner/edge of the box the number anchors from",
+            get = function() return NSRT.InterruptSettings.NumberAnchor end,
+            set = function() end,
+            values = function() return buildAnchorOptions("NumberAnchor") end,
+        },
+        {
+            type = "select",
+            name = "Number Relative Point",
+            desc = "Which corner/edge of the box the number anchors to",
+            get = function() return NSRT.InterruptSettings.NumberRelativeTo end,
+            set = function() end,
+            values = function() return buildAnchorOptions("NumberRelativeTo") end,
+        },
+
+        {
+            type = "color",
+            name = "Interrupt Now Text Color",
+            desc = "Color of the number when it's your turn to interrupt",
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNowTextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNowTextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = "Interrupt Next Text Color",
+            desc = "Color of the number when you are up next to interrupt",
+            get = function() return unpack(NSRT.InterruptSettings.InterruptNextTextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptNextTextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+        {
+            type = "color",
+            name = "Interrupt Default Text Color",
+            desc = "Color of the number when it's not your turn to interrupt",
+            get = function() return unpack(NSRT.InterruptSettings.InterruptDefaultTextColor) end,
+            set = function(_, r, g, b, a) NSRT.InterruptSettings.InterruptDefaultTextColor = {r, g, b, a}; refreshPreview() end,
+            hasAlpha = true,
+            nocombat = true,
+        },
+
+        { type = "breakline" },
+        { type = "label", get = function() return "Name Settings" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+
+        {
+            type = "select",
+            name = "Name Font",
+            get = function() return NSRT.InterruptSettings.NameFont end,
+            set = function() end,
+            values = function() return buildFontOptions("NameFont") end,
+        },
+        {
+            type = "select",
+            name = "Name Font Flags",
+            desc = "Outline style for the name",
+            get = function() return NSRT.InterruptSettings.NameFontFlags end,
+            set = function() end,
+            values = function() return buildFontFlagOptions("NameFontFlags") end,
+        },
+        {
+            type = "range",
+            name = "Name Font Size",
+            desc = "Size of the player name text",
+            get = function() return NSRT.InterruptSettings.NameFontSize end,
+            set = function(_, _, value) NSRT.InterruptSettings.NameFontSize = value; refreshPreview() end,
+            min = 8, max = 120, step = 1,
+        },
+        {
+            type = "range",
+            name = "Name X Offset",
+            get = function() return NSRT.InterruptSettings.NamexOffset end,
+            set = function(_, _, value) NSRT.InterruptSettings.NamexOffset = value; refreshPreview() end,
+            min = -200, max = 200, step = 1,
+        },
+        {
+            type = "range",
+            name = "Name Y Offset",
+            get = function() return NSRT.InterruptSettings.NameyOffset end,
+            set = function(_, _, value) NSRT.InterruptSettings.NameyOffset = value; refreshPreview() end,
+            min = -200, max = 200, step = 1,
+        },
+        {
+            type = "select",
+            name = "Name Anchor Point",
+            desc = "Which corner/edge of the box the name anchors from",
+            get = function() return NSRT.InterruptSettings.NameAnchor end,
+            set = function() end,
+            values = function() return buildAnchorOptions("NameAnchor") end,
+        },
+        {
+            type = "select",
+            name = "Name Relative Point",
+            desc = "Which corner/edge of the box the name anchors to",
+            get = function() return NSRT.InterruptSettings.NameRelativeTo end,
+            set = function() end,
+            values = function() return buildAnchorOptions("NameRelativeTo") end,
+        },
+    }
+end
+
+local function BuildInterruptDisplayCallback()
+    return function() end
+end
+
+-- Export to namespace
+NSI.UI = NSI.UI or {}
+NSI.UI.Options = NSI.UI.Options or {}
+NSI.UI.Options.InterruptDisplay = {
+    BuildOptions  = BuildInterruptDisplayOptions,
+    BuildCallback = BuildInterruptDisplayCallback,
+}
