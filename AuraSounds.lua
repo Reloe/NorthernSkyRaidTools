@@ -118,6 +118,11 @@ NSI.AuraSoundCategories = {
             {spellID = 1285911, sound = "Fixate"}, -- Unnerving Fixation
         }},
         {key = 3492, entries = { -- Ula'tek
+            {spellID = 1305163, sound = "Targeted"}, -- Petrifying Sting
+            {spellID = 1293046, sound = "Targeted"}, -- Serpent's Bite
+            {spellID = 1312967, sound = "Spread"}, -- Volatile Purge
+            {spellID = 1301118, sound = "Debuff"}, -- Grasping Fangs
+            {spellID = 1311611, sound = "Break"}, -- Grasping Fangs
         }},
     },
     Dungeons = {
