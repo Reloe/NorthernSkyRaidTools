@@ -174,6 +174,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         NameYOffset = 4,
         NameFontSize = 30,
         TrackingMode = "SpellIDs",
+        SpellIDPlayerFilter = "Disabled",
         SpellIDs = {},
         SpellIDsEdited = false,
         AuraFilters = {},
@@ -513,7 +514,7 @@ end
 -- state are never copied accidentally. Display fields are listed below
 -- alongside the settings defaults.
 local AuraTrackingSectionFields = {
-    Trigger = { "TrackingMode", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
+    Trigger = { "TrackingMode", "SpellIDPlayerFilter", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
     Load    = { "loadConditions" },
 }
 
@@ -1596,8 +1597,14 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
         else
             local unitType = ResolveAuraTrackingCustomUnitType(settings, unit)
             state.customAuraGroupKey = groupKeyPrefix .. "_" .. string.lower(unitType)
+            local filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL"
+            if settings.SpellIDPlayerFilter == "Enabled" then
+                filter = filter .. "|PLAYER"
+            elseif settings.SpellIDPlayerFilter == "Inverted" then
+                filter = filter .. "|!PLAYER"
+            end
             auraGroups[#auraGroups + 1] = {
-                filter = unitType == "Friendly" and "HELPFUL" or "HARMFUL",
+                filter = filter,
                 spellIDMap = spellIDMap,
                 customGroup = true,
                 maxFrameCount = GetAuraTrackingCustomFrameLimit(settings, unit),

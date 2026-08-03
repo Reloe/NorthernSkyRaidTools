@@ -68,6 +68,12 @@ local FILTER_STATES = {
     { label = "Inverted", value = "Inverted" },
 }
 
+local SPELL_ID_PLAYER_FILTER_STATES = {
+    { label = "Disabled", value = "Disabled" },
+    { label = "Own Auras Only", value = "Enabled" },
+    { label = "Other Auras Only", value = "Inverted" },
+}
+
 local PROCESSED_AURA_TYPES = {
     { label = "Disabled", value = "Disabled" },
     { label = "Buff", value = "Buff" },
@@ -1322,6 +1328,13 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.UnitType or "Automatic" end,
                 set = function(_, v)
                     s.UnitType = v or "Automatic"
+                    apply(key)
+                end }
+            defs[#defs + 1] = { Type = "Dropdown", label = "Player Aura Filter", values = SPELL_ID_PLAYER_FILTER_STATES,
+                tooltip = { title = "Player Aura Filter", desc = "Optionally combine spell-ID filtering with PLAYER or !PLAYER." },
+                get = function() return s.SpellIDPlayerFilter or "Disabled" end,
+                set = function(_, v)
+                    s.SpellIDPlayerFilter = v or "Disabled"
                     apply(key)
                 end }
             defs[#defs + 1] = { Type = "Label", text = "Spell IDs", highlight = true }
