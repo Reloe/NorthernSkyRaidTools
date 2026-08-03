@@ -2,9 +2,6 @@ local _, NSI = ... -- Internal namespace
 
 SLASH_NSUI1 = "/ns"
 SLASH_NSUI2 = "/nsrt"
-
-NSI.LoadEndTime = debugprofilestop()
-
 SlashCmdList["NSUI"] = function(msg)
     local function OpenUI(tabName)
         if not NSI:LoadUI() then return end

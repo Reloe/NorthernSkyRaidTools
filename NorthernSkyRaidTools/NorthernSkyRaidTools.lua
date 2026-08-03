@@ -1,7 +1,6 @@
 local _, NSI = ... -- Internal namespace
 _G.NorthernSkyRaidTools = NSI
 _G["NSAPI"] = {}
-NSI.LoadStartTime = debugprofilestop()
 NSI.specs = {}
 NSI.LCG = LibStub("LibCustomGlow-1.0")
 NSI.LGF = LibStub("LibGetFrame-1.0")
