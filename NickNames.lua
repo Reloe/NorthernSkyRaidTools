@@ -22,14 +22,14 @@ function NSAPI:GetAllCharacters()
     return CopyTable(fullCharList)
 end
 
-function NSAPI:GetName(str, AddonName) -- Returns Nickname
+function NSAPI:GetName(str, AddonName, skiptranslit) -- Returns Nickname
     if (not str) or issecretvalue(str) then return str end
     local unitname = UnitExists(str) and UnitName(str) or str
     if issecretvalue(unitname) then return unitname end
     -- check if setting for the requesting addon is enabled, if not return the original name.
     -- if no AddonName is given we assume it's from an old WeakAura as they never specified
     if ((not NSRT.Settings["GlobalNickNames"]) or (AddonName and not NSRT.Settings[AddonName])) and AddonName ~= "Note" then
-        if NSRT.Settings["Translit"] then
+        if NSRT.Settings["Translit"] and not skiptranslit then
             unitname = LibTranslit:Transliterate(unitname)
         end
         return unitname
@@ -42,10 +42,10 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         end
         if (issecretvalue(name) or issecretvalue(realm)) then return name end
         local nickname = name and realm and fullCharList[name.."-"..realm]
-        if nickname and NSRT.Settings["Translit"] then
+        if nickname and NSRT.Settings["Translit"] and not skiptranslit then
             nickname = LibTranslit:Transliterate(nickname)
         end
-        if NSRT.Settings["Translit"] and not nickname then
+        if NSRT.Settings["Translit"] and not nickname and not skiptranslit then
             name = issecretvalue(name) and name or LibTranslit:Transliterate(name)
         end
         return nickname or name
@@ -54,7 +54,7 @@ function NSAPI:GetName(str, AddonName) -- Returns Nickname
         if not nickname then
             nickname = fullNameList[str]
         end
-        if nickname and NSRT.Settings["Translit"] then
+        if nickname and NSRT.Settings["Translit"] and not skiptranslit then
             nickname = LibTranslit:Transliterate(nickname)
         end
         return nickname or unitname
@@ -63,7 +63,7 @@ end
 
 function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickname or Character Name with nick = true
     if UnitExists(name) and UnitIsConnected(name) then return name end
-    name = nick and NSAPI:GetName(name, AddonName) or name
+    name = nick and NSAPI:GetName(name, AddonName, true) or name
     if UnitExists(name) and UnitIsConnected(name) then return name end
     local chars = NSAPI:GetCharacters(name)
     local newname, newrealm = nil
