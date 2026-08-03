@@ -610,21 +610,22 @@ function NSI:ArrangeFromReminder(str)
     local count = 0
     local missingPlayers = ""
     for i, name in ipairs(list) do
-        local name, realm = name ~= "" and strsplit("-", name)
-        local pos = name and UnitInRaid(name)
+        local entryName = name ~= "" and strsplit("-", name)
+        entryName = entryName and NSAPI:GetChar(entryName, true, "GlobalNickNames")
+        local pos = entryName and UnitInRaid(entryName)
         local unit = pos and "raid"..pos
         local role = unit and UnitGroupRolesAssigned(unit)
         count = count + 1
-        if name and unit and role then
-            self.Groups.units[i] = {sort = i, name = name, unitid = unit, role = role}
+        if entryName and unit and role then
+            self.Groups.units[i] = {sort = i, name = entryName, unitid = unit, role = role}
             self.Groups.total = self.Groups.total + 1
         else
             -- Keep empty and missing entries at their imported absolute slot.
             -- ArrangeGroups will consequently leave those subgroup positions open.
             self.Groups.units[i] = {sort = i, processed = true}
             self.Groups.total = self.Groups.total + 1
-            if name and name ~= "" then
-                missingPlayers = missingPlayers..name.." "
+            if entryName and entryName ~= "" then
+                missingPlayers = missingPlayers..entryName.." "
             end
         end
         table.sort(self.Groups.units, function(a, b) return a.sort < b.sort end)
