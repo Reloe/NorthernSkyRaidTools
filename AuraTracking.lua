@@ -339,17 +339,113 @@ function NSI:AddAuraTrackingGroup(name)
     return name
 end
 
+function NSI:RenameAuraTrackingGroup(oldName, newName)
+    if not oldName or oldName == self.AuraTrackingBuiltinGroup then return end
+    local root = NSRT.AuraTrackingSettings
+    if not root then return end
+    newName = strtrim(tostring(newName or ""))
+    if newName == "" or newName == self.AuraTrackingBuiltinGroup or newName == oldName then return end
+    if root.Groups and root.Groups[newName] then return end
+    for _, settings in ipairs(root.Custom or {}) do
+        if settings.group == newName then return end
+    end
+
+    root.Groups = root.Groups or {}
+    root.Groups[newName] = root.Groups[oldName] or { collapsed = false }
+    root.Groups[oldName] = nil
+    for _, settings in ipairs(root.Custom or {}) do
+        if settings.group == oldName then
+            settings.group = newName
+        end
+    end
+    self:RefreshAuraTrackingUI()
+end
+
 function NSI:SetAuraTrackingEntryGroup(settingsKey, groupName)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings or settings.builtin then return end
     groupName = groupName and strtrim(tostring(groupName)) or ""
     settings.group = (groupName ~= "" and groupName ~= NSI.AuraTrackingBuiltinGroup) and groupName or nil
+    settings.GroupOrder = nil
     if settings.group then
         local root = NSRT.AuraTrackingSettings
         root.Groups = root.Groups or {}
         root.Groups[settings.group] = root.Groups[settings.group] or { collapsed = false }
     end
     self:RefreshAuraTrackingUI()
+end
+
+local function GetOrderedAuraTrackingGroupEntries(groupName)
+    local entries = {}
+    for index, settings in ipairs((NSRT.AuraTrackingSettings and NSRT.AuraTrackingSettings.Custom) or {}) do
+        if settings.group == groupName then
+            entries[#entries + 1] = { settings = settings, index = index }
+        end
+    end
+    table.sort(entries, function(a, b)
+        local aOrder = a.settings.GroupOrder or math.huge
+        local bOrder = b.settings.GroupOrder or math.huge
+        if aOrder ~= bOrder then return aOrder < bOrder end
+        return a.index < b.index
+    end)
+    return entries
+end
+
+function NSI:MoveAuraTrackingEntry(settingsKey, direction)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if not settings or not settings.group or settings.builtin then return end
+
+    local entries = GetOrderedAuraTrackingGroupEntries(settings.group)
+    local currentIndex
+    for index, entry in ipairs(entries) do
+        if entry.settings == settings then
+            currentIndex = index
+            break
+        end
+    end
+    if not currentIndex then return end
+
+    local targetIndex = currentIndex + (direction == "up" and -1 or 1)
+    if targetIndex < 1 or targetIndex > #entries then return end
+    entries[currentIndex], entries[targetIndex] = entries[targetIndex], entries[currentIndex]
+    for index, entry in ipairs(entries) do
+        entry.settings.GroupOrder = index
+    end
+    self:RefreshAuraTrackingUI()
+end
+
+function NSI:DuplicateAuraTrackingGroup(groupName)
+    if not groupName then return end
+    local root = NSRT.AuraTrackingSettings
+    root.Custom = root.Custom or {}
+    root.Groups = root.Groups or {}
+
+    local newName = groupName .. " Copy"
+    local suffix = 2
+    local function GroupNameExists(name)
+        if root.Groups[name] then return true end
+        for _, settings in ipairs(root.Custom) do
+            if settings.group == name then return true end
+        end
+        return false
+    end
+    while GroupNameExists(newName) do
+        newName = groupName .. " Copy " .. suffix
+        suffix = suffix + 1
+    end
+
+    root.Groups[newName] = { collapsed = false }
+    for order, entry in ipairs(GetOrderedAuraTrackingGroupEntries(groupName)) do
+        local settings = CopyTable(entry.settings)
+        settings.builtin = nil
+        settings.pinned = nil
+        settings.group = newName
+        settings.GroupOrder = order
+        root.Custom[#root.Custom + 1] = settings
+    end
+    self:InitAuraTracking()
+    self:RefreshAuraTrackingUI()
+    return newName
 end
 
 -- Delete a user group. Entries either become ungrouped (keepEntries) or are
@@ -360,7 +456,10 @@ function NSI:DeleteAuraTrackingGroup(name, keepEntries)
     if not root then return end
     if keepEntries then
         for _, settings in ipairs(root.Custom or {}) do
-            if settings.group == name then settings.group = nil end
+            if settings.group == name then
+                settings.group = nil
+                settings.GroupOrder = nil
+            end
         end
     else
         for index = #(root.Custom or {}), 1, -1 do
@@ -400,6 +499,7 @@ function NSI:DuplicateCustomAuraTracking(settingsKey)
     local copy = CopyTable(settings)
     copy.builtin = nil
     copy.pinned = nil
+    copy.GroupOrder = nil
     copy.Name = (settings.Name or "Aura") .. " " .. NSI:Loc("Copy")
     local index = #NSRT.AuraTrackingSettings.Custom + 1
     NSRT.AuraTrackingSettings.Custom[index] = copy

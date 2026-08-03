@@ -481,11 +481,22 @@ local function BuildAuraTrackingUI(screen)
                 if item.settings.pinned then
                     pinned[#pinned + 1] = item
                 elseif item.group and item.group ~= "" then
-                    table.insert(pushGroup(item.group), item)
+                    local groupEntries = pushGroup(item.group)
+                    item._groupIndex = #groupEntries + 1
+                    groupEntries[#groupEntries + 1] = item
                 else
                     ungrouped[#ungrouped + 1] = item
                 end
             end
+        end
+
+        for _, entries in pairs(groups) do
+            table.sort(entries, function(a, b)
+                local aOrder = a.settings.GroupOrder or math.huge
+                local bOrder = b.settings.GroupOrder or math.huge
+                if aOrder ~= bOrder then return aOrder < bOrder end
+                return a._groupIndex < b._groupIndex
+            end)
         end
 
         table.sort(groupOrder, function(a, b)
@@ -524,16 +535,65 @@ local function BuildAuraTrackingUI(screen)
         StaticPopup_Show("NSRT_AURATRACK_NEW_GROUP")
     end
 
+    local function PromptRenameGroup(groupName)
+        StaticPopupDialogs["NSRT_AURATRACK_RENAME_GROUP"] = {
+            text = NSI:Loc("Rename Group"), button1 = NSI:Loc("OK"), button2 = NSI:Loc("Cancel"),
+            hasEditBox = true, timeout = 0, whileDead = true, hideOnEscape = true,
+            OnShow = function(self)
+                self.EditBox:SetText(groupName)
+                self.EditBox:HighlightText()
+            end,
+            OnAccept = function(self)
+                NSI:RenameAuraTrackingGroup(groupName, self.EditBox:GetText())
+            end,
+            EditBoxOnEnterPressed = function(self)
+                local parent = self:GetParent()
+                StaticPopupDialogs["NSRT_AURATRACK_RENAME_GROUP"].OnAccept(parent)
+                parent:Hide()
+            end,
+        }
+        StaticPopup_Show("NSRT_AURATRACK_RENAME_GROUP")
+    end
+
+    local function GetGroupPreviewKeys(groupName)
+        local keys = {}
+        for _, item in ipairs(NSI:IterateAuraTrackingEntries()) do
+            if item.group == groupName then
+                keys[#keys + 1] = item.settingsKey
+            end
+        end
+        return keys
+    end
+
+    local function SetGroupPreviewLocked(groupName, locked)
+        if locked then autoPreviewKey = nil end
+        for _, key in ipairs(GetGroupPreviewKeys(groupName)) do
+            NSI[PreviewFlag(key)] = locked
+            NSI:PreviewAuraTracking(key, locked)
+        end
+    end
+
     local function GroupContextMenu(groupName)
+        local previewKeys = GetGroupPreviewKeys(groupName)
+        local groupPreviewLocked = #previewKeys > 0
+        for _, key in ipairs(previewKeys) do
+            if NSI[PreviewFlag(key)] ~= true then
+                groupPreviewLocked = false
+                break
+            end
+        end
         local items = {
             { type = "button", label = NSI:Loc("Enable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, true) end },
             { type = "button", label = NSI:Loc("Disable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, false) end },
+            { type = "button", label = NSI:Loc("Duplicate Group"), fnc = function() NSI:DuplicateAuraTrackingGroup(groupName); RebuildList() end },
+            { type = "button", label = NSI:Loc(groupPreviewLocked and "Unlock Group Preview" or "Lock Group Preview"), fnc = function() SetGroupPreviewLocked(groupName, not groupPreviewLocked) end },
             { type = "button", label = NSI:Loc("Export Group"), fnc = function()
                 ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r"), groupName))
             end },
         }
         if groupName ~= NSI.AuraTrackingBuiltinGroup then
             items[#items + 1] = { type = "separator" }
+            items[#items + 1] = { type = "button", label = NSI:Loc("Rename Group"), fnc = function() PromptRenameGroup(groupName) end }
             items[#items + 1] = { type = "button", label = NSI:Loc("Delete Group (keep auras)"), fnc = function()
                 NSI:DeleteAuraTrackingGroup(groupName, true)
             end }
@@ -592,6 +652,13 @@ local function BuildAuraTrackingUI(screen)
                 PromptNewGroup(function(newName) NSI:SetAuraTrackingEntryGroup(sk, newName) end)
             end }
             items[#items + 1] = { type = "submenu", label = NSI:Loc("Add to Group") .. "...", items = groupSub }
+
+            if s.group and s.group ~= "" then
+                items[#items + 1] = { type = "submenu", label = NSI:Loc("Move in Group") .. "...", items = {
+                    { type = "button", label = NSI:Loc("Move Up"), fnc = function() NSI:MoveAuraTrackingEntry(sk, "up"); RebuildList() end },
+                    { type = "button", label = NSI:Loc("Move Down"), fnc = function() NSI:MoveAuraTrackingEntry(sk, "down"); RebuildList() end },
+                } }
+            end
         end
 
         local copySub = {}
