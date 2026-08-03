@@ -944,24 +944,26 @@ function NSI:AddCustomAuraTracking(group)
 end
 
 function NSI:StopAllAuraTrackingPreviews()
-    for _, key in ipairs({"Player", "Tank", "External"}) do
-        local previewData = GetAuraTrackingPreviewData(key)
-        self["IsAuraTracking" .. key .. "Preview"] = false
-        StopAuraTrackingPreviewTimer(self, key)
-        if previewData and self[previewData.frameKey] then
-            self[previewData.frameKey]:Hide()
-        end
-        if previewData and self[previewData.iconKey] then
-            for _, icon in ipairs(self[previewData.iconKey]) do
-                icon:Hide()
-            end
+    local previewKeys = {
+        Player = true,
+        Tank = true,
+        External = true,
+    }
+    for index in ipairs((NSRT.AuraTrackingSettings and NSRT.AuraTrackingSettings.Custom) or {}) do
+        previewKeys["Custom:" .. index] = true
+    end
+    for fieldName in pairs(self) do
+        local suffix = fieldName:match("^IsAuraTracking(.+)Preview$")
+        local customIndex = suffix and suffix:match("^Custom(%d+)$")
+        if customIndex then
+            previewKeys["Custom:" .. customIndex] = true
         end
     end
 
-    for index in ipairs((NSRT.AuraTrackingSettings and NSRT.AuraTrackingSettings.Custom) or {}) do
-        local key = "Custom:" .. index
+    for key in pairs(previewKeys) do
         local previewData = GetAuraTrackingPreviewData(key)
-        self["IsAuraTrackingCustom" .. index .. "Preview"] = false
+        local previewFlag = "IsAuraTracking" .. tostring(key):gsub(":", "") .. "Preview"
+        self[previewFlag] = false
         StopAuraTrackingPreviewTimer(self, key)
         if previewData and self[previewData.frameKey] then
             self[previewData.frameKey]:Hide()
@@ -979,6 +981,7 @@ end
 function NSI:DeleteCustomAuraTracking(settingsKey)
     local customIndex = tonumber(tostring(settingsKey or ""):match("^Custom:(%d+)$"))
     if not customIndex or not NSRT.AuraTrackingSettings.Custom then return end
+    self:PreviewAuraTracking(settingsKey, false)
     table.remove(NSRT.AuraTrackingSettings.Custom, customIndex)
     NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
     NSRT.AuraTrackingSettings.UI.Selected = "Player"
