@@ -231,7 +231,9 @@ function NSI:CreatePaceComparisonFrame()
         gearTexture:SetVertexColor(0.8, 0.8, 0.8, 1)
     end)
     frame.GearButton:SetScript("OnClick", function()
-        NSI:TogglePaceComparisonSettingsWindow(frame)
+        if NSI:LoadUI() then
+            NSI:TogglePaceComparisonSettingsWindow(frame)
+        end
     end)
     frame.GearButton:Hide()
     frame:Hide()

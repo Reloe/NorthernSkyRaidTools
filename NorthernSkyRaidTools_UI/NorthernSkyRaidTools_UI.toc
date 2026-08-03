@@ -32,5 +32,6 @@ UI\Options\PaceComparison.lua
 UI\Options\QoL.lua
 UI\Options\WAImports.lua
 UI\AnchorWindow.lua
+Timeline.lua
 
 NSUI.lua
