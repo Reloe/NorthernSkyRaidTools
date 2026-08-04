@@ -8,4 +8,4 @@ move-folders:
     NorthernSkyRaidTools/NorthernSkyRaidTools: NorthernSkyRaidTools
     NorthernSkyRaidTools/NorthernSkyRaidTools_UI: NorthernSkyRaidTools_UI
 
-manual-changelog: NorthernSkyRaidTools/CHANGELOG.md
+manual-changelog: CHANGELOG.md
