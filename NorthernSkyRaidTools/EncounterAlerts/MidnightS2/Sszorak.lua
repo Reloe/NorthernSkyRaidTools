@@ -4,6 +4,7 @@ local encID = 3420
 -- /run NSAPI:DebugEncounter(3420)
 
 local tankComboTimers = {
+    [14] = {5.5, 55.7, 141.7, 195.9, 281.8, 334.1},
     [15] = {5.5, 55.7, 141.7, 195.9, 281.8, 334.1},
     [16] = {4.9, 52, 132, 179, 259, 306.1},
 }
@@ -20,10 +21,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "TankCombo", name = "Tank Combo", text = "Tank Combo", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1277002,
         loadConditions = tankConditions,
         textColors = {1, 0, 0, 1},
-        timers = {
-            [15] = tankComboTimers[15],
-            [16] = tankComboTimers[16],
-        },
+        timers = tankComboTimers,
     }
     self:AddEncounterAlert(data)
 
