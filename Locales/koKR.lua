@@ -978,7 +978,7 @@ L["Condition Function is required."] = "조건 함수가 필요합니다."
 L["Invalid condition function."] = "잘못된 조건 함수입니다."
 L["— No Group —"] = "— 그룹 없음 —"
 -- Inner tabs
-L["Display"] = "표시"
+L["Display"] = "디스플레이"
 L["Trigger"] = "트리거"
 L["Options"] = "옵션"
 -- Display tab
