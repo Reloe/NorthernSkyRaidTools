@@ -452,7 +452,7 @@ L["Officer Rank"] = "관리자 등급"
 L["The guild rank threshold used for Promote Guild Officers. Members at this rank or higher (closer to Guild Master) are promoted."] = "길드 관리자 승급에 사용할 길드 등급 기준입니다. 이 등급 이상의 길드원(길드장과 가까운 등급일수록)들이 부공대장으로 승급됩니다."
 L["Always Promote"] = "항상 승급"
 L["Comma-separated list of character names or nicknames to always promote to Raid Assistant, regardless of guild rank. Example: Rav, Reloe"] = "길드 등급과 상관없이 부공대장으로 항상 승급시킬 이름이나 닉네임 목록입니다. (콤마로 구분) 예: Rav, Reloe"
-L["Promote Now"] = "지금 승급"
+L["Promote Now"] = "즉시 승급"
 L["Immediately run an Auto-Promote pass without waiting for a roster change."] = "공격대 구성 변경을 기다리지 않고 즉시 자동 승급을 실시합니다."
 L["Not in a Guild"] = "길드 없음"
 -- ============================================================================
