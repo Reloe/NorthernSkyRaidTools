@@ -99,7 +99,7 @@ local tab_content_y                = -25 - TAB_HEADER_HEIGHT  -- -80
 local CreateButton                 = NSI.UI.Components.CreateButton
 
 function NSUI:Init()
-    if self.Initialized then
+    if self.Initialized or self.Initializing then
         return
     end
 
@@ -107,6 +107,8 @@ function NSUI:Init()
     self.PendingShow = false
     NSUI:Hide()
     NSI.IsBuilding = true
+    local initCoroutine
+    initCoroutine = coroutine.create(function()
     -- Scale bar
     local scale = NSRT.NSUI.scale
     NSRT.NSUI.scale = scale
@@ -410,6 +412,7 @@ function NSUI:Init()
     DF:BuildMenu(general_tab, general_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         general_callback)
+    coroutine.yield()
     if general_tab.widgetids and general_tab.widgetids.current_profile_label then
         NSI:SetUIFont(general_tab.widgetids.current_profile_label.widget, 10)
     end
@@ -417,31 +420,41 @@ function NSUI:Init()
     DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         nicknames_callback)
+    coroutine.yield()
     DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         reminder_callback)
+    coroutine.yield()
     DF:BuildMenu(reminder_note_tab, reminder_note_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         reminder_note_callback)
+    coroutine.yield()
     DF:BuildMenu(assignments_tab, assignments_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         assignments_callback)
+    coroutine.yield()
     DF:BuildMenu(interruptdisplay_tab, interruptdisplay_options1_table, 10, -10, tab_content_height, false,
         options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template,
         options_button_template, interruptdisplay_callback)
+    coroutine.yield()
     DF:BuildMenu(readycheck_tab, readycheck_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         readycheck_callback)
+    coroutine.yield()
     DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template, options_dropdown_template,
         options_switch_template, true, options_slider_template, options_button_template, nil)
+    coroutine.yield()
     NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
+    coroutine.yield()
     NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         QoL_callback)
+    coroutine.yield()
     DF:BuildMenu(WAImports_tab, WAImports_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         WAImports_callback)
+    coroutine.yield()
     C_Timer.After(0.1, function()
         NSI:ApplySelectedLanguage()
     end)
@@ -452,12 +465,19 @@ function NSUI:Init()
     -- Build custom UI components
     -- --------------------------------------------------------
     NSUI.encounters_frame         = BuildEncounterAlertsUI(encounteralerts_tab)
+    coroutine.yield()
     NSUI.version_scrollbox        = BuildVersionCheckUI(versions_tab)
+    coroutine.yield()
     NSUI.nickname_frame           = BuildNicknameEditUI()
+    coroutine.yield()
     NSUI.cooldowns_frame          = BuildCooldownsEditUI()
+    coroutine.yield()
     NSUI.reminders_frame          = BuildRemindersEditUI(tabSystem:GetTabFrameByName("SharedNotes"))
+    coroutine.yield()
     NSUI.aurasounds_frame         = BuildAuraSoundsUI(aurasounds_tab)
+    coroutine.yield()
     NSUI.personal_reminders_frame = BuildPersonalRemindersEditUI(tabSystem:GetTabFrameByName("PersonalNotes"))
+    coroutine.yield()
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()
     NSUI.group_export_popup       = BuildGroupExportUI()
@@ -477,7 +497,8 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Select the default tab
     -- --------------------------------------------------------
-    SelectTab("General")
+    SelectTab(self.PendingTabName or "General")
+    self.PendingTabName = nil
     NSI.IsBuilding = false
     self.Initialized = true
     C_Timer.After(0, function()
@@ -490,6 +511,20 @@ function NSUI:Init()
             NSUI:Show()
         end
     end)
+    end)
+
+    local initFrame = CreateFrame("Frame")
+    initFrame:SetScript("OnUpdate", function(frame)
+        local ok, errorMessage = coroutine.resume(initCoroutine)
+        if not ok then
+            frame:SetScript("OnUpdate", nil)
+            error(errorMessage, 0)
+        elseif coroutine.status(initCoroutine) == "dead" then
+            frame:SetScript("OnUpdate", nil)
+            self.InitCoroutine = nil
+        end
+    end)
+    self.InitCoroutine = initCoroutine
 end
 
 function NSUI:ToggleOptions()

@@ -4,7 +4,7 @@ SLASH_NSUI1 = "/ns"
 SLASH_NSUI2 = "/nsrt"
 SlashCmdList["NSUI"] = function(msg)
     local function OpenUI(tabName)
-        if not NSI:LoadUI() then return end
+        if not NSI:LoadUI(true, tabName) then return end
         NSI.NSUI:Show()
         if tabName then NSI.NSUI.MenuFrame:SelectTabByName(tabName) end
     end
@@ -91,10 +91,10 @@ SlashCmdList["NSUI"] = function(msg)
         print(NSI:Loc("  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"))
         print(NSI:Loc("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"))
     elseif msg == "" then
-        if NSI:LoadUI() then NSI.NSUI:ToggleOptions() end
+        if NSI:LoadUI(true) then NSI.NSUI:ToggleOptions() end
     elseif msg then
         print(NSI:Loc("|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."))
     else
-        if NSI:LoadUI() then NSI.NSUI:ToggleOptions() end
+        if NSI:LoadUI(true) then NSI.NSUI:ToggleOptions() end
     end
 end

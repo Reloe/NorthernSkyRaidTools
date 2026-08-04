@@ -89,7 +89,7 @@ function NSI:Loc(key)
     return DF.Language.GetText("NorthernSkyRaidTools", key, true) or key
 end
 
-function NSI:LoadUI()
+function NSI:LoadUI(showOptions, pendingTabName)
     if self.UILoading then
         return false
     end
@@ -106,8 +106,20 @@ function NSI:LoadUI()
         end
     end
 
+    if self.NSUI and self.NSUI.Initializing then
+        if showOptions then
+            self.NSUI.PendingShow = true
+            self.NSUI.PendingTabName = pendingTabName or self.NSUI.PendingTabName
+        end
+        return false
+    end
+
     if self.NSUI and not self.NSUI.Initialized then
         self.NSUI:Init()
+        if showOptions and self.NSUI.Initializing then
+            self.NSUI.PendingShow = true
+            self.NSUI.PendingTabName = pendingTabName
+        end
     end
     return self.NSUI and self.NSUI.Initialized == true
 end
@@ -121,7 +133,7 @@ function NSI:InitLDB()
             showInCompartment = true,
             OnClick = function(self, button)
                 if button == "LeftButton" then
-                    if NSI:LoadUI() then
+                    if NSI:LoadUI(true) then
                         NSI.NSUI:ToggleOptions()
                     end
                 end
