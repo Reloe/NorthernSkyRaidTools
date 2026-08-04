@@ -471,13 +471,6 @@ L["Ring Color"] = "環顏色"
 -- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================
-L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] = "你必須自行取得相容的 WA 分支。按鈕會提供每個光環的 Wago 連結。"
-L["Heal Absorb WA"] = "治療吸收WA"
-L["Link to a WA that shows the Heal Absorb on Raidframes."] = "連結到一個在團隊框架顯示治療吸收的 WA。"
-L["Alleria P1 Dmg Amp"] = "艾蘭里亞P1傷害加成"
-L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = "在三隻大型小怪的名條上顯示傷害加成減益的層數。並非完美，部分情況可能無法顯示，但總比沒有好。"
-L["Lura Interrupts"] = "路拉打斷"
-L["Interrupt WA for Lura P1."] = "路拉第一階段的打斷 WA。"
 
 -- ============================================================================
 -- UI/EncounterAlerts.lua

@@ -35,14 +35,7 @@ local function WAButton(Text, Name, URL)
 end
 
 local function BuildWAImportsOptions()
-    return {
-        {
-            type = "label",
-            get = function() return "You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras." end,
-            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-            spacement = true
-        },
-    }
+    return {}
 end
 
 local function BuildWACallback()
