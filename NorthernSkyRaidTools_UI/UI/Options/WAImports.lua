@@ -42,33 +42,6 @@ local function BuildWAImportsOptions()
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
             spacement = true
         },
-        {
-            type = "button",
-            name = "Heal Absorb WA",
-            desc = "Link to a WA that shows the Heal Absorb on Raidframes.",
-            func = function(self)
-                WAButton("Heal Absorb WA", "PaladinsHealAbsorb", "https://wago.io/lylBMpoMB")
-            end,
-            nocombat = true
-        },
-        {
-            type = "button",
-            name = "Alleria P1 Dmg Amp",
-            desc = "Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing.",
-            func = function(self)
-                WAButton("Alleria P1 Dmg Amp", "AlleriaP1DmgAmp", "https://wago.io/yh2rnY4_8")
-            end,
-            nocombat = true
-        },
-        {
-            type = "button",
-            name = "Lura Interrupts",
-            desc = "Interrupt WA for Lura P1.",
-            func = function(self)
-                WAButton("Lura Interrupts", "LuraInterrupts", "https://wago.io/ymoJBMQF0")
-            end,
-            nocombat = true
-        },
     }
 end
 
