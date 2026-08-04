@@ -1,0 +1,394 @@
+local _, NSI = ... -- Internal namespace
+local f = NSI.NSRTFrame
+local debugLogFrame = CreateFrame("Frame")
+f:RegisterEvent("ENCOUNTER_START")
+f:RegisterEvent("ENCOUNTER_END")
+f:RegisterEvent("READY_CHECK")
+f:RegisterEvent("GROUP_FORMED")
+f:RegisterEvent("ADDON_LOADED")
+f:RegisterEvent("PLAYER_LOGIN")
+f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
+f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
+f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
+f:RegisterEvent("START_PLAYER_COUNTDOWN")
+f:RegisterEvent("GROUP_ROSTER_UPDATE")
+f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("PLAYER_LOGOUT")
+f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
+
+function NSI:UpdateDebugLogEvents()
+    if NSRT.Settings.DebugLogs then
+        debugLogFrame:RegisterEvent("ENCOUNTER_WARNING")
+        debugLogFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+        debugLogFrame:RegisterEvent("UNIT_TARGETABLE_CHANGED")
+        debugLogFrame:RegisterUnitEvent("UNIT_FACTION", "boss1", "boss2", "boss3", "boss4")
+        debugLogFrame:RegisterUnitEvent("UNIT_FLAGS", "boss1", "boss2", "boss3", "boss4")
+    else
+        debugLogFrame:UnregisterEvent("ENCOUNTER_WARNING")
+        debugLogFrame:UnregisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
+        debugLogFrame:UnregisterEvent("UNIT_TARGETABLE_CHANGED")
+        debugLogFrame:UnregisterEvent("UNIT_FACTION")
+        debugLogFrame:UnregisterEvent("UNIT_FLAGS")
+    end
+end
+
+f:SetScript("OnEvent", function(self, e, ...)
+    NSI:EventHandler(e, true, false, ...)
+end)
+
+debugLogFrame:SetScript("OnEvent", function(self, e, ...)
+    NSI:LogTimeline(e, ...)
+end)
+
+function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether the event comes from addon comms. We don't want to allow blizzard events to be fired manually
+    if e == "ADDON_LOADED" and wowevent then
+        local name = ...
+        if name == "NorthernSkyRaidTools" then
+            if not NSRTTimelineData then NSRTTimelineData = {} end
+            self.Reminder = ""
+            self.PersonalReminder = ""
+            self.DisplayedReminder = ""
+            self.DisplayedPersonalReminder = ""
+            self.DisplayedExtraReminder = ""
+            self.BlizzardNickNamesHook = false
+            self.MRTNickNamesHook = false
+            self.ReminderTimer = {}
+            self.PlayedSound = {}
+            self.StartedCountdown = {}
+            self.GlowStarted = {}
+            self:InitNickNames()
+            if self:GetProfileKey() then
+                self.LoadedProfile = true
+                self:LoadMyProfile()
+                self:CreateMoveFrames()
+            end
+        end
+    elseif e == "PLAYER_LOGIN" and wowevent then
+        if not self.LoadedProfile then
+            self.LoadedProfile = true
+            self:LoadMyProfile()
+            self:CreateMoveFrames()
+        end
+        self:CreateGenericDisplays()
+        self:InitLDB()
+        self:InitQoL()
+        self:CacheSounds()
+        self.NSRTFrame:SetAllPoints(UIParent)
+        local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
+        self:InitAuraSystem(true)
+        self:UpdateLibSpecRegistration()
+        self:RebuildAuraSounds(true)
+        self:UpdateDebugLogEvents()
+        if NSRT.StoredSharedReminder then
+            self.Reminder = NSRT.StoredSharedReminder
+        else
+            self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
+        end
+        local charkey = self:GetProfileKey()
+        self:SetReminder(NSRT.StoredPersonalReminder[charkey], true, true) -- loading active personal reminder from last session
+        self:ProcessReminder()
+        self:UpdateReminderFrame(true)
+        if NSRT.Settings["Debug"] then
+            print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
+        end
+        self:ImportReloeReminders()
+        if self:Restricted() then return end
+        if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
+            local name, realm = UnitName("player")
+            if not realm then
+                realm = GetNormalizedRealmName()
+            end
+            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
+                self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
+            end
+        end
+    elseif e == "PLAYER_ENTERING_WORLD" then
+        local IsLogin, IsReload = ...
+        C_Timer.After(0.01, function()
+            local diff = self:DifficultyCheck({14, 15, 16})
+            if not diff then self:HideAllReminders(true) end
+            if self.LoadedProfile then
+                self:UpdateNoteFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, "skip")
+                self:UpdateNoteFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, "skip")
+                self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
+            end
+        end)
+    elseif e == "ENCOUNTER_START" and wowevent then
+        local diff = self:DifficultyCheck({14, 15, 16, 220})
+        if internal then diff = 16 end
+        if not internal then self:LogTimeline(e, ...) end
+        if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
+        self.NSRTFrame.generic_display:Hide()
+        self.EncounterID = ...
+        self:LoadPersReminder(self.EncounterID)
+        if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
+            self:ProcessReminder()
+        end
+        self.TestingReminder = false
+        self.IsInPreview = false
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
+            self:MakeDraggable(self[v], nil, false)
+        end
+        self.Phase = 1
+        self.PhaseSwapTime = GetTime()
+        self.ReminderText = self.ReminderText or {}
+        self.ReminderIcon = self.ReminderIcon or {}
+        self.ReminderBar = self.ReminderBar or {}
+        self.ReminderTimer = self.ReminderTimer or {}
+        self.AllGlows = self.AllGlows or {}
+        self.PlayedSound = {}
+        self.StartedCountdown = {}
+        self.GlowStarted = {}
+        self.Timelines = {}
+        self.RemovedTimelines = {}
+        self.CustomEvents = self.CustomEvents or {}
+        self.DefaultAlertID = 10000
+        self.TLAlerts = {}
+        if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
+        if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
+        self:FireEncounterAlerts(self.EncounterID, diff)
+        self:StartPaceComparison(self.EncounterID, diff)
+        self:StartReminders(self.Phase)
+        if NSRT.ReminderSettings.NoteCountdown then
+            local frames = {"ReminderFrame", "PersonalReminderFrame"}
+            for i, name in ipairs(frames) do
+                if self[name] then
+                    if self[name].UpdateTimer then
+                        self[name].UpdateTimer:Cancel()
+                        self[name].UpdateTimer = nil
+                    end
+                    if self[name]:IsShown() then
+                        self[name].UpdateTimer = C_Timer.NewTicker(1, function()
+                            self:CountdownNoteFrame(self[name])
+                        end)
+                    end
+                end
+            end
+        end
+        self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
+    elseif e == "ENCOUNTER_END" and wowevent then
+        self:LogTimeline(e, ...)
+        local encID, encounterName, _, _, kill = ...
+        local diff = self:DifficultyCheck({14, 15, 16, 220})
+        if internal then diff = 16 end
+        self.CustomEvents = {}
+        if not diff then return end
+        self:EncounterRegister(nil, nil, nil, nil, true)
+        self:StopPaceComparison()
+        self:InitAuraSystem()
+        self:HideAllReminders(true)
+        if NSRT.ReminderSettings.NoteCountdown then
+            self:UpdateReminderFrame(true) -- need to recalculate reminders if the user has countdown enabled
+            local frames = {"ReminderFrame", "PersonalReminderFrame"}
+            for i, name in ipairs(frames) do
+                if self[name] and self[name].UpdateTimer then
+                    self[name].UpdateTimer:Cancel()
+                    self[name].UpdateTimer = nil
+                end
+            end
+        end
+        if kill and kill ~= 0 then
+            local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
+            local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
+            if NSRT.ReminderSettings.ClearOnKill then
+                if not HasAutoLoadNote then NSI:SetReminder(nil) end
+                NSI:SetReminder(nil, true)
+            end
+            if HasAutoLoadNote then
+                C_Timer.After(2, function()
+                    if self:Restricted() then return end
+                    if UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") then
+                        self:Broadcast("NSI_REM_SHARE", "RAID", NSRT.Reminders[NoteName], nil, true)
+                    end
+                end)
+            end
+        end
+    elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
+        if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
+        self.LastBroadcast = GetTime()
+        if UnitIsGroupLeader("player") and UnitInRaid("player") then
+            local tosend = false
+            if NSRT.ReminderSettings.AutoShare then
+                tosend = self.Reminder
+            end
+            self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
+            self.Assignments = NSRT.AssignmentSettings
+        end
+    elseif e == "READY_CHECK" and wowevent then
+        local initiator = ...
+        self.ProcessDone = false
+        if self:DifficultyCheck({14, 15, 16, 23}) then
+            self:ShowReadyCheckConsumables(initiator)
+            C_Timer.After(1, function()
+                self:EventHandler("NSI_READY_CHECK", false, true)
+            end)
+        end
+        if UnitIsGroupLeader("player") and UnitInRaid("player") then
+            -- always doing this, even outside of raid to allow outside raidleading to work. The difficulty check will instead happen client-side
+            local tosend = false
+            if NSRT.ReminderSettings.AutoShare then
+                tosend = self.Reminder
+            end
+            self:Broadcast("NSI_REM_SHARE", "RAID", tosend, NSRT.AssignmentSettings, false)
+            self.Assignments = NSRT.AssignmentSettings
+        end
+        if C_ChatInfo.InChatMessagingLockdown() then return end
+        self.LastBroadcast = GetTime()
+        if self:Restricted() then return end
+        if NSRT.Settings["CheckCooldowns"] and self:DifficultyCheck({15, 16}) and UnitInRaid("player") then -- only heroic& mythic because in normal you just wanna go fast and don't care about someone having a cd
+            self:CheckCooldowns()
+        end
+    elseif e == "NSI_REM_SHARE"  and internal then
+        local unit, reminderstring, assigntable, skipcheck = ...
+        if (UnitIsGroupLeader(unit) or (UnitIsGroupAssistant(unit) and skipcheck)) and (self:DifficultyCheck({14, 15, 16}) or skipcheck) then -- skipcheck allows manually sent reminders to bypass difficulty checks
+            if reminderstring and type(reminderstring) == "string" and reminderstring ~= "" and ((not NSRT.ReminderSettings.OnlyReceiveGuild) or self:IsInSameGuild(unit)) then
+                self.Reminder = reminderstring
+                NSRT.StoredSharedReminder = reminderstring
+                self.ReminderReceivedTime = GetTime()
+                self:FireCallback("NSRT_REMINDER_CHANGED", self.PersonalReminder, self.Reminder)
+            end
+            self:ProcessReminder()
+            self:UpdateReminderFrame(true)
+            self.ProcessDone = true
+            if skipcheck then self:FlashNoteBackgrounds() end -- only show animation if reminder was manually shared
+            if assigntable then self.Assignments = assigntable end
+        end
+    elseif e == "NSI_READY_CHECK" and internal then
+        self:InitAuraSystem()
+        self:RebuildAuraSounds()
+        if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
+            self:ProcessReminder()
+            self:UpdateReminderFrame(true)
+        end
+        local text = ""
+        if UnitLevel("player") < 90 then return end
+        self:CheckRaidBuff()
+        if NSRT.ReadyCheckSettings.RaidBuffCheck and not self:Restricted() then
+            local buff = self:BuffCheck()
+            if buff and buff ~= "" then text = buff end
+        end
+        if NSRT.ReadyCheckSettings.SoulstoneCheck and not self:Restricted() then
+            text = self:SoulstoneCheck(text)
+        end
+        if NSRT.ReadyCheckSettings.SourceOfMagicCheck and not self:Restricted() then
+            text = self:SourceOfMagicCheck(text)
+        end
+        if NSRT.ReadyCheckSettings.BlisteringScalesCheck and not self:Restricted() then
+            text = self:BlisteringScalesCheck(text)
+        end
+        if NSRT.ReadyCheckSettings.SymbioticRelationshipCheck and not self:Restricted() then
+            text = self:SymbioticRelationshipCheck(text)
+        end
+        if NSRT.ReadyCheckSettings.DisplayGroupCheck and not self:Restricted() then
+            local groupNumber = self:GetSubGroup("player")
+            if groupNumber then
+                local groupText = "You are in group |cFF00FFFF" ..groupNumber .. "|r"
+                if text == "" then
+                    text = groupText
+                else
+                    text = text.."\n"..groupText
+                end
+            end
+        end
+        if self.ReadyCheckAssignments then
+            for _, assignText in ipairs(self.ReadyCheckAssignments) do
+                if text == "" then
+                    text = assignText
+                else
+                    text = text.."\n"..assignText
+                end
+            end
+        end
+        text = self:GearCheck(text)
+        if text ~= "" then
+            self:DisplayText(text)
+        end
+    elseif e == "GROUP_FORMED" and wowevent then
+        if self:Restricted() then return end
+        if NSRT.Settings["MyNickName"] then self:SendNickName("Any", true) end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
+        if self.NSUI and self.NSUI.reminders_frame and self.NSUI.reminders_frame.UpdateButtonAccess then
+            self.NSUI.reminders_frame.UpdateButtonAccess()
+        end
+    elseif e == "NSI_VERSION_CHECK" and internal then
+        if self:Restricted() then return end
+        if not self.VersionCheckData then return end -- ignore stale responses from a previous check
+        local unit, ver, ignoreCheck = ...
+        self:VersionResponse({name = UnitName(unit), version = ver, ignoreCheck = ignoreCheck})
+    elseif e == "NSI_VERSION_REQUEST" and internal then
+        local unit, type, name = ...
+        if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't send to yourself
+        if UnitExists(unit) then
+            local u, ver, _, ignoreCheck = self:GetVersionNumber(type, name, unit)
+            self:Broadcast("NSI_VERSION_CHECK", "WHISPER", unit, ver, ignoreCheck)
+        end
+    elseif e == "NSI_NICKNAMES_COMMS" and internal then
+        if self:Restricted() then return end
+        local unit, nickname, name, realm, requestback, channel = ...
+        if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
+        if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
+        self:NewNickName(unit, nickname, name, realm, channel)
+    elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
+        self:ArrangeGroups()
+        if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
+        self.GroupUpdateTimer = C_Timer.After(2, function()
+            self.GroupUpdateTimer = nil
+            self:InitAuraSystem()
+            self:UpdateRaidBuffFrame()
+        end)
+        if self:Restricted() then return end
+        if self.InviteInProgress then
+            if not UnitInRaid("player") then
+                C_PartyInfo.ConvertToRaid()
+                C_Timer.After(1, function() -- send invites again if player is now in a raid
+                    if UnitInRaid("player") then
+                        self:InviteList(self.CurrentInviteList)
+                        self.InviteInProgress = nil
+                    end
+                end)
+            end
+        end
+    elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
+        if self.PendingAuraTrackingUpdate then
+            self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
+        end
+    elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
+        self:InitAuraTracking()
+    elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
+        if not self:DifficultyCheck({8, 14, 15, 16}) then return end
+        local info = ...
+        if info.source ~= Enum.EncounterTimelineEventSource.Encounter then
+            self.CustomEvents = self.CustomEvents or {}
+            self.CustomEvents[info.id] = true
+            return
+        end
+        self:LogTimeline(e, ...)
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
+    elseif e == "ENCOUNTER_TIMELINE_EVENT_REMOVED" and wowevent then
+        if not self:DifficultyCheck({8, 14, 15, 16}) then return end
+        local eventID = ...
+        if self.CustomEvents and self.CustomEvents[eventID] then
+            return
+        end
+        self:LogTimeline(e, ...)
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, info) end
+    elseif e == "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" and wowevent then
+        local eventID = ...
+        if not self:DifficultyCheck({8, 14, 15, 16}) then return end
+        if self.CustomEvents and self.CustomEvents[eventID] then
+            return
+        end
+        self:LogTimeline(e, ...)
+        local state = C_EncounterTimeline.GetEventState(eventID)
+        if state == Enum.EncounterTimelineEventState.Canceled then
+            self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
+        end
+    elseif e == "QoL_Comms" and internal then
+        self:QoLEvents(e, ...)
+    elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end
+    elseif e == "PLAYER_LOGOUT" and wowevent then
+        self:SaveProfile()
+    end
+end

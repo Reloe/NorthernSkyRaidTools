@@ -1,5 +1,6 @@
 ## Changelog
 - Improved Addon Performance, specifically when displaying Reminders or using the note-countdown functionality
+- Improved Addon load-time by making the UI load on-demand
 - Add configurable keywords and guild-only toggle to Auto-Invite on Whisper
 - Add Auto-Promote Assistants QoL setting (guild rank threshold + always-promote name list)
 - Add clickable consumeable frame on ready check
