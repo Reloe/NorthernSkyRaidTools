@@ -514,7 +514,7 @@ L["Flex Raid"] = "弹性团队"
 L["Check raid buffs up to Group 6 instead of only Group 4."] = "检查前6个小队的团队增益（默认前4个）。"
 L["Disable this Feature"] = "禁用此功能"
 L["Disable the Missing Raid Buffs Feature. You can re-enable it in the Setup Manager Settings."] = "禁用“缺失的团队增益”功能（在“常规 > 团队设置管理”中重新启用）。"
-L["MISSING WEEKLY-STACKING DAMAGE/HEALING RAIDBUFF"] = "缺少每周增强的伤害/治疗团队副本增益效果"
+L["MISSING WEEKLY-STACKING DAMAGE/HEALING RAIDBUFF"] = "缺少每周增强伤害/治疗的团队副本增益效果"
 -- ============================================================================
 -- UI/Options/Nicknames.lua
 -- ============================================================================
