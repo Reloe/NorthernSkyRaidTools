@@ -141,7 +141,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         enabled = false,
         Width = 100,
         Height = 100,
-        Zoom = 10,
+        Zoom = 25,
         Anchor = "CENTER",
         relativeTo = "CENTER",
         CustomAnchorFrame = "UIParent",
@@ -1417,7 +1417,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
 
     local regions = state.buttonRegions[button]
     button:SetSize(width, height)
-    local zoom = ((settings.Zoom or 0) * 0.5) / 100
+    local zoom = ((settings.Zoom or 0) * 0.25) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
     regions.textOverlay:SetFrameLevel(button:GetFrameLevel() + 3)
     if (settings.BorderSize or 0) > 0 and not regions.border then
@@ -2051,14 +2051,6 @@ local function StartAuraTrackingPreviewTimer(self, key)
     end)
 end
 
-local function CreateAuraTrackingPreviewFrame(parent, settings)
-    local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
-    frame.Icon = frame:CreateTexture(nil, "ARTWORK")
-    frame.Icon:SetAllPoints(frame)
-    return frame
-end
-
 local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
@@ -2068,7 +2060,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     frame.PreviewExpires = now + duration
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
-    local zoom = ((settings.Zoom or 0) * 0.5) / 100
+    local zoom = ((settings.Zoom or 0) * 0.25) / 100
     frame.Icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
 
     if (settings.BorderSize or 0) > 0 and not frame.Border then
@@ -2223,7 +2215,11 @@ function NSI:PreviewAuraTracking(key, show)
     local entries = BuildAuraTrackingPreviewEntries(settings, key, texture)
     for i = 1, 20 do
         if not self[iconKey][i] then
-            self[iconKey][i] = CreateAuraTrackingPreviewFrame(mover, settings)
+            local frame = CreateFrame("Frame", nil, mover)
+            frame:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
+            frame.Icon = frame:CreateTexture(nil, "ARTWORK")
+            frame.Icon:SetAllPoints(frame)
+            self[iconKey][i] = frame
         end
         local icon = self[iconKey][i]
         icon:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
