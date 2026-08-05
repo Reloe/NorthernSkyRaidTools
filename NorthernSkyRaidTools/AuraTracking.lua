@@ -1380,21 +1380,6 @@ local function GetAuraTrackingFontPath(self, settings)
     return [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 end
 
-local function AcquireAuraTrackingContainer(self, key)
-    if not self.AuraTrackingState then self.AuraTrackingState = {} end
-    if not self.AuraTrackingState[key] then self.AuraTrackingState[key] = {} end
-
-    local state = self.AuraTrackingState[key]
-    if not state.container then
-        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-        state.buttonRegions = {}
-    end
-    if not state.anchorFrame then
-        state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
-    end
-    return state
-end
-
 local function EnsureAuraTrackingFontString(owner, key)
     local overlay = owner.textOverlay or owner.TextOverlay
     if not overlay then
@@ -1613,7 +1598,16 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     local customFilterString = customUsesFilters and BuildAuraTrackingCustomFilterString(settings) or nil
     if customUsesFilters and not customFilterString then return end
 
-    local state = AcquireAuraTrackingContainer(self, key)
+    self.AuraTrackingState = self.AuraTrackingState or {}
+    self.AuraTrackingState[key] = self.AuraTrackingState[key] or {}
+    local state = self.AuraTrackingState[key]
+    if not state.container then
+        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
+        state.buttonRegions = {}
+    end
+    if not state.anchorFrame then
+        state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+    end
     local width = settings.Width
     local height = settings.Height
     local container = state.container
