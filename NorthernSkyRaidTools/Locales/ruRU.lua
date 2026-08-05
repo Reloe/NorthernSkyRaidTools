@@ -968,13 +968,6 @@ L["Ring Color"] = "Цвет кольца"
 -- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================
-L["You will need to get a compatible WA fork for this yourself. The buttons provide you the wago link to each of the auras."] = "Вам нужно будет самостоятельно получить совместимую версию WA. Кнопки предоставляют Вам ссылку Wago на каждую из аур."
-L["Heal Absorb WA"] = "WA для поглощения лечения"
-L["Link to a WA that shows the Heal Absorb on Raidframes."] = "Ссылка на WA, которая показывает поглощение лечения на рейдовых фреймах."
-L["Alleria P1 Dmg Amp"] = "Усиление урона [Аллерия, 1-я фаза]"
-L["Displays the stacks of the dmg amp debuff on the nameplate of the 3 big adds. It is not perfect and might not display at all in some instances but it's better than nothing."] = "Отображает количество стаков дебаффа усиления урона на индикаторах здоровья 3-х больших аддов. Это не идеально и может вообще не отображаться в некоторых случаях, но это лучше, чем ничего."
-L["Lura Interrupts"] = "Прерывания [Л'ура]"
-L["Interrupt WA for Lura P1."] = "WA для прерываний [Л'ура, 1-я фаза]."
 
 -- ============================================================================
 -- UI/EncounterAlerts.lua

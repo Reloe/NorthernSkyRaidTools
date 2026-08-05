@@ -80,7 +80,7 @@ local TABS_GROUPS                  = {
     {
         { name = "Assignments",      textKey = "Assignments" },
         { name = "InterruptDisplay", textKey = "Interrupt Display" },
-        { name = "WAImports",        textKey = "WA Imports" },
+        -- { name = "WAImports",        textKey = "WA Imports" },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
     },
@@ -360,7 +360,7 @@ function NSUI:Init()
     local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = tabSystem:GetTabFrameByName("QoL")
-    local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
+    -- local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
 
     -- --------------------------------------------------------
     -- Build options tables
@@ -374,7 +374,7 @@ function NSUI:Init()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = BuildRaidBuffMenu()
     local QoL_options1_table             = BuildQoLOptions()
-    local WAImports_options1_table       = BuildWAImportsOptions()
+    -- local WAImports_options1_table       = BuildWAImportsOptions()
     local option_tables = {
         general_options1_table,
         nicknames_options1_table,
@@ -385,7 +385,7 @@ function NSUI:Init()
         readycheck_options1_table,
         RaidBuffMenu,
         QoL_options1_table,
-        WAImports_options1_table,
+        -- WAImports_options1_table,
     }
     for _, options in ipairs(option_tables) do
         options.language_addonId = addonId
@@ -402,7 +402,7 @@ function NSUI:Init()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
     local QoL_callback                   = BuildQoLCallback()
-    local WAImports_callback             = BuildWACallback()
+    -- local WAImports_callback             = BuildWACallback()
 
     -- --------------------------------------------------------
     -- Build options menus into each content frame
@@ -451,10 +451,8 @@ function NSUI:Init()
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         QoL_callback)
     coroutine.yield()
-    DF:BuildMenu(WAImports_tab, WAImports_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        WAImports_callback)
-    coroutine.yield()
+    -- WA Imports is intentionally hidden for now. Keep its module and builder
+    -- intact so the tab can be restored without rebuilding the feature.
     C_Timer.After(0.1, function()
         NSI:ApplySelectedLanguage()
     end)
