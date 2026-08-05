@@ -2181,19 +2181,19 @@ local CTX_SCROLL_MIN_THUMB = 12
 local MAX_CTX_LEVELS = 5
 local ctxFrames      = {}
 local ctxClickaway   = nil
-local _ctxMeasureFS
+local contextMeasureFontString
 
 local function CtxMeasureText(text)
-    if not _ctxMeasureFS then
-        _ctxMeasureFS = UIParent:CreateFontString(nil, "ARTWORK")
-        _ctxMeasureFS:Hide()
+    if not contextMeasureFontString then
+        contextMeasureFontString = UIParent:CreateFontString(nil, "ARTWORK")
+        contextMeasureFontString:Hide()
     end
-    _ctxMeasureFS:SetFont(
+    contextMeasureFontString:SetFont(
         ValidateFont(NSI:GetUIFontPath()),
         13,
         NSI:GetUIFontFlags())
-    _ctxMeasureFS:SetText(text or "")
-    return _ctxMeasureFS:GetStringWidth()
+    contextMeasureFontString:SetText(text or "")
+    return contextMeasureFontString:GetStringWidth()
 end
 
 -- A labelled separator centres its text in the row and runs the divider line
