@@ -1395,11 +1395,20 @@ local function AcquireAuraTrackingContainer(self, key)
     return state
 end
 
-local function EnsureAuraTrackingFontString(regions, key)
-    if not regions[key] then
-        regions[key] = regions.textOverlay:CreateFontString(nil, "OVERLAY")
+local function EnsureAuraTrackingFontString(owner, key)
+    local overlay = owner.textOverlay or owner.TextOverlay
+    if not overlay then
+        overlay = CreateFrame("Frame", nil, owner)
+        overlay:SetAllPoints(owner)
+        owner.TextOverlay = overlay
     end
-    return regions[key]
+    if owner.GetFrameLevel then
+        overlay:SetFrameLevel(owner:GetFrameLevel() + 3)
+    end
+    if not owner[key] then
+        owner[key] = overlay:CreateFontString(nil, "OVERLAY")
+    end
+    return owner[key]
 end
 
 local function ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
@@ -2056,21 +2065,6 @@ local function CreateAuraTrackingPreviewFrame(parent, settings)
     return frame
 end
 
-local function EnsureAuraTrackingPreviewFontString(frame, key)
-    if frame.TextOverlay then
-        frame.TextOverlay:SetFrameLevel(frame:GetFrameLevel() + 3)
-    end
-    if not frame[key] then
-        if not frame.TextOverlay then
-            frame.TextOverlay = CreateFrame("Frame", nil, frame)
-            frame.TextOverlay:SetAllPoints(frame)
-            frame.TextOverlay:SetFrameLevel(frame:GetFrameLevel() + 3)
-        end
-        frame[key] = frame.TextOverlay:CreateFontString(nil, "OVERLAY")
-    end
-    return frame[key]
-end
-
 local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
@@ -2148,7 +2142,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
             frame.Stack:Hide()
         end
     else
-        local stack = EnsureAuraTrackingPreviewFontString(frame, "Stack")
+        local stack = EnsureAuraTrackingFontString(frame, "Stack")
         stack:ClearAllPoints()
         stack:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
         stack:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
@@ -2163,7 +2157,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
             frame.Duration:Hide()
         end
     else
-        local durationText = EnsureAuraTrackingPreviewFontString(frame, "Duration")
+        local durationText = EnsureAuraTrackingFontString(frame, "Duration")
         durationText:ClearAllPoints()
         durationText:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
         durationText:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
@@ -2178,15 +2172,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     end
 
     local isCustom = tostring(key):match("^Custom") and true or false
-    if (key == "External" or isCustom) and settings.NameEnabled then
-        local unitName = EnsureAuraTrackingPreviewFontString(frame, "UnitName")
-        PositionAuraTrackingUnitName(unitName, frame, settings)
-        unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-        local previewData = GetAuraTrackingPreviewData(key)
-        unitName:SetText(NSAPI:Shorten(previewData and previewData.unit or "player", nil, false, "GlobalNickNames") or "")
-        unitName:Show()
-    elseif key == "Tank" and settings.NameEnabled then
-        local unitName = EnsureAuraTrackingPreviewFontString(frame, "UnitName")
+    if (key == "External" or isCustom or key == "Tank") and settings.NameEnabled then
+        local unitName = EnsureAuraTrackingFontString(frame, "UnitName")
         PositionAuraTrackingUnitName(unitName, frame, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
         local previewData = GetAuraTrackingPreviewData(key)
