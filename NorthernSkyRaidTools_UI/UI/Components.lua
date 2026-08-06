@@ -953,6 +953,29 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         end
     end
 
+    local function GetOwningScrollFrame()
+        local frame = container:GetParent()
+        while frame do
+            if frame.IsObjectType and frame:IsObjectType("ScrollFrame") then
+                return frame
+            end
+            frame = frame:GetParent()
+        end
+    end
+
+    popup:SetScript("OnUpdate", function()
+        if not popup:IsShown() then return end
+        local scrollFrame = GetOwningScrollFrame()
+        if not scrollFrame then return end
+
+        local buttonTop, buttonBottom = dropBtn:GetTop(), dropBtn:GetBottom()
+        local viewportTop, viewportBottom = scrollFrame:GetTop(), scrollFrame:GetBottom()
+        if not buttonTop or not buttonBottom or not viewportTop or not viewportBottom
+            or buttonBottom >= viewportTop or buttonTop <= viewportBottom then
+            Close()
+        end
+    end)
+
     container:SetScript("OnHide", Close)
 
     local allItems = {}
@@ -1602,7 +1625,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateLabel(parent, text, width, height, name, highlighted)
+local function CreateLabel(parent, text, width, height, name, highlighted, textColor)
     local totalW = width  or 220
     local totalH = height or 16
 
@@ -1612,10 +1635,13 @@ local function CreateLabel(parent, text, width, height, name, highlighted)
     local lbl = MakeFontString(container, highlighted and 14 or 12)
     if highlighted then
         lbl:SetTextColor(0, 1, 1, 1)
+    elseif textColor then
+        lbl:SetTextColor(unpack(textColor))
     else
         lbl:SetTextColor(0.55, 0.55, 0.55, 1)
     end
     lbl:SetText(text or "")
+    lbl:SetWordWrap(true)
     lbl:SetJustifyH("LEFT")
     lbl:SetJustifyV("MIDDLE")
     lbl:SetAllPoints(container)
@@ -1939,7 +1965,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 width, h, def.numeric, def.min, def.max, wName, def.tooltip)
 
         elseif t == "Label" then
-            ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight)
+            ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight, def.textColor)
 
         elseif t == "Breakline" then
             ctrl = C.CreateBreakline(parent, width, h, wName)
@@ -2181,19 +2207,19 @@ local CTX_SCROLL_MIN_THUMB = 12
 local MAX_CTX_LEVELS = 5
 local ctxFrames      = {}
 local ctxClickaway   = nil
-local _ctxMeasureFS
+local contextMeasureFontString
 
 local function CtxMeasureText(text)
-    if not _ctxMeasureFS then
-        _ctxMeasureFS = UIParent:CreateFontString(nil, "ARTWORK")
-        _ctxMeasureFS:Hide()
+    if not contextMeasureFontString then
+        contextMeasureFontString = UIParent:CreateFontString(nil, "ARTWORK")
+        contextMeasureFontString:Hide()
     end
-    _ctxMeasureFS:SetFont(
+    contextMeasureFontString:SetFont(
         ValidateFont(NSI:GetUIFontPath()),
         13,
         NSI:GetUIFontFlags())
-    _ctxMeasureFS:SetText(text or "")
-    return _ctxMeasureFS:GetStringWidth()
+    contextMeasureFontString:SetText(text or "")
+    return contextMeasureFontString:GetStringWidth()
 end
 
 -- A labelled separator centres its text in the row and runs the divider line

@@ -672,7 +672,6 @@ L["Controls whether this Aura Tracking display appears above or below other UI f
 L["Icon"] = "Symbol"
 L["Name Font Size"] = "Namens-Schriftgröße"
 L["This built-in display tracks a curated list of external/immunity buffs."] = "Diese integrierte Anzeige verfolgt eine vordefinierte Liste externer Buffs und Immunitäten."
-L["This built-in display tracks all relevant debuffs automatically."] = "Diese integrierte Anzeige verfolgt automatisch alle relevanten Debuffs."
 L["Unit"] = "Einheit"
 L["Unit Type"] = "Einheitstyp"
 L["Automatic"] = "Automatisch"

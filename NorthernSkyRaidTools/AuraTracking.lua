@@ -141,12 +141,12 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         enabled = false,
         Width = 100,
         Height = 100,
-        Zoom = 10,
+        Zoom = 25,
         Anchor = "CENTER",
         relativeTo = "CENTER",
         CustomAnchorFrame = "UIParent",
-        xOffset = -450,
-        yOffset = -100,
+        xOffset = -238,
+        yOffset = 314,
         FrameStrata = "MEDIUM",
         BorderSize = 1,
         BorderColor = {0, 0, 0, 1},
@@ -189,6 +189,9 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         Unit = "player",
         UnitType = "Automatic",
         OnlyShowFirstTank = false,
+        MultiTankGrow = "Same",
+        MultiTankXOffset = 500,
+        MultiTankYOffset = 0,
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
     }
     for key, value in pairs(overrides or {}) do
@@ -534,6 +537,7 @@ local AuraTrackingDisplayFields = {
     "TextFont", "TextFontFlags", "DurationXOffset", "DurationYOffset", "StackXOffset", "StackYOffset",
     "NameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
     "OnlyShowFirstTank",
+    "MultiTankGrow", "MultiTankXOffset", "MultiTankYOffset",
 }
 
 local function CopyAuraTrackingValue(v)
@@ -1243,8 +1247,38 @@ local function PositionAuraTrackingUnitName(fontString, parent, settings)
     fontString:SetJustifyV("MIDDLE")
 end
 
-local function GetAuraTrackingAnchorFrame(settings, fallback)
+local AURA_TRACKING_FRAME_ANCHOR_PREFIX = "NSRT:AuraFrame:"
+
+local function GetAuraTrackingNamedAnchor(self, frameName, excludedFrame)
+    if type(frameName) ~= "string" or frameName:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) ~= AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+        return
+    end
+
+    local auraName = frameName:sub(#AURA_TRACKING_FRAME_ANCHOR_PREFIX + 1)
+    if auraName == "" then return end
+
+    for _, key in ipairs(self.AuraTrackingStateOrder or {}) do
+        local state = self.AuraTrackingState and self.AuraTrackingState[key]
+        if state and state.active and state.settings and state.settings.Name == auraName and state.anchorFrame and state.anchorFrame ~= excludedFrame then
+            return state.anchorFrame
+        end
+    end
+end
+
+local function AuraTrackingNameExists(name)
+    local settings = NSRT.AuraTrackingSettings
+    if settings.Player and settings.Player.Name == name then return true end
+    if settings.External and settings.External.Name == name then return true end
+    if settings.Tank and settings.Tank.Name == name then return true end
+    for _, entry in ipairs(settings.Custom or {}) do
+        if entry.Name == name then return true end
+    end
+end
+
+local function GetAuraTrackingAnchorFrame(self, settings, fallback, excludedFrame)
     local frameName = settings and settings.CustomAnchorFrame
+    local auraFrame = GetAuraTrackingNamedAnchor(self, frameName, excludedFrame)
+    if auraFrame then return auraFrame end
     local frame = frameName and frameName ~= "" and _G[frameName]
     if type(frame) == "table" and frame.GetCenter and frame.IsShown then
         return frame
@@ -1254,12 +1288,15 @@ end
 
 function NSI:IsValidAuraTrackingAnchorFrame(frameName)
     if not frameName or frameName == "" then return true end
+    if frameName:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) == AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+        return AuraTrackingNameExists(frameName:sub(#AURA_TRACKING_FRAME_ANCHOR_PREFIX + 1))
+    end
     local frame = _G[frameName]
     return type(frame) == "table" and frame.GetCenter and frame.IsShown
 end
 
 local function SetAuraTrackingPoint(frame, settings, fallback)
-    local relativeFrame = GetAuraTrackingAnchorFrame(settings, fallback)
+    local relativeFrame = GetAuraTrackingAnchorFrame(NSI, settings, fallback, frame)
     frame:ClearAllPoints()
     frame:SetPoint(settings.Anchor or "CENTER", relativeFrame or fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
 end
@@ -1305,7 +1342,7 @@ end
 
 local function SaveAuraTrackingFramePosition(self, frame, settings)
     if not frame or not settings then return end
-    local relativeFrame = GetAuraTrackingAnchorFrame(settings, UIParent)
+    local relativeFrame = GetAuraTrackingAnchorFrame(self, settings, UIParent, frame)
     local point = settings.Anchor or "CENTER"
     local relativePoint = settings.relativeTo or "CENTER"
     local frameX, frameY = GetPointCoordinate(frame, point)
@@ -1380,32 +1417,27 @@ local function GetAuraTrackingFontPath(self, settings)
     return [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]]
 end
 
-local function AcquireAuraTrackingContainer(self, key)
-    if not self.AuraTrackingState then self.AuraTrackingState = {} end
-    if not self.AuraTrackingState[key] then self.AuraTrackingState[key] = {} end
-
-    local state = self.AuraTrackingState[key]
-    if not state.container then
-        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
-        state.buttonRegions = {}
+local function EnsureAuraTrackingFontString(owner, key)
+    local overlay = owner.textOverlay or owner.TextOverlay
+    if not overlay then
+        overlay = CreateFrame("Frame", nil, owner)
+        overlay:SetAllPoints(owner)
+        owner.TextOverlay = overlay
     end
-    if not state.anchorFrame then
-        state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+    if owner.GetFrameLevel then
+        overlay:SetFrameLevel(owner:GetFrameLevel() + 3)
     end
-    return state
-end
-
-local function EnsureAuraTrackingFontString(regions, key)
-    if not regions[key] then
-        regions[key] = regions.textOverlay:CreateFontString(nil, "OVERLAY")
+    if not owner[key] then
+        owner[key] = overlay:CreateFontString(nil, "OVERLAY")
     end
-    return regions[key]
+    return owner[key]
 end
 
 local function ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
     state.buttonRegions = state.buttonRegions or {}
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local fontPath = GetAuraTrackingFontPath(self, settings)
+    local buttonLevel = button:GetFrameLevel()
 
     if not state.buttonRegions[button] then
         local regions = {}
@@ -1416,16 +1448,16 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
 
         regions.textOverlay = CreateFrame("Frame", nil, button)
         regions.textOverlay:SetAllPoints(button)
-        regions.textOverlay:SetFrameLevel(button:GetFrameLevel() + 3)
+        regions.textOverlay:SetFrameLevel(buttonLevel + 3)
 
         state.buttonRegions[button] = regions
     end
 
     local regions = state.buttonRegions[button]
     button:SetSize(width, height)
-    local zoom = ((settings.Zoom or 0) * 0.5) / 100
+    local zoom = ((settings.Zoom or 0) * 0.25) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
-    regions.textOverlay:SetFrameLevel(button:GetFrameLevel() + 3)
+    regions.textOverlay:SetFrameLevel(buttonLevel + 3)
     if (settings.BorderSize or 0) > 0 and not regions.border then
         regions.border = CreateAuraTrackingBorder(button)
     end
@@ -1435,9 +1467,9 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if not regions.dispelOverlay then
             regions.dispelOverlay = CreateFrame("Frame", nil, button)
             regions.dispelOverlay:SetAllPoints(regions.icon)
-            regions.dispelOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
+            regions.dispelOverlay:SetFrameLevel(buttonLevel + 2)
         end
-        regions.dispelOverlay:SetFrameLevel(button:GetFrameLevel() + 2)
+        regions.dispelOverlay:SetFrameLevel(buttonLevel + 2)
         regions.dispelOverlay:ClearAllPoints()
         regions.dispelOverlay:SetAllPoints(regions.icon)
         regions.dispelOverlay:Show()
@@ -1543,7 +1575,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if not regions.cooldown then
             regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
             regions.cooldown:SetAllPoints(regions.icon)
-            regions.cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
+            regions.cooldown:SetFrameLevel(buttonLevel + 1)
             regions.cooldown:SetDrawEdge(false)
             regions.cooldown:SetHideCountdownNumbers(true)
         end
@@ -1567,21 +1599,7 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
-local function AnchorAuraTrackingAfterFrame(anchorFrame, previousAnchorFrame, settings)
-    local spacing = settings.Spacing or 0
-    anchorFrame:ClearAllPoints()
-    if settings.GrowDirection == "LEFT" then
-        anchorFrame:SetPoint("TOPRIGHT", previousAnchorFrame, "TOPLEFT", -spacing, 0)
-    elseif settings.GrowDirection == "UP" then
-        anchorFrame:SetPoint("BOTTOMLEFT", previousAnchorFrame, "TOPLEFT", 0, spacing)
-    elseif settings.GrowDirection == "DOWN" then
-        anchorFrame:SetPoint("TOPLEFT", previousAnchorFrame, "BOTTOMLEFT", 0, -spacing)
-    else
-        anchorFrame:SetPoint("TOPLEFT", previousAnchorFrame, "TOPRIGHT", spacing, 0)
-    end
-end
-
-local function InitAuraTrackingContainer(self, unit, settings, key, previousState, reconfigureButtons)
+local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons)
     if not unit or not settings or not settings.enabled then return end
     if not self:EvaluateLoad(settings) then return end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
@@ -1604,7 +1622,16 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     local customFilterString = customUsesFilters and BuildAuraTrackingCustomFilterString(settings) or nil
     if customUsesFilters and not customFilterString then return end
 
-    local state = AcquireAuraTrackingContainer(self, key)
+    self.AuraTrackingState = self.AuraTrackingState or {}
+    self.AuraTrackingState[key] = self.AuraTrackingState[key] or {}
+    local state = self.AuraTrackingState[key]
+    if not state.container then
+        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
+        state.buttonRegions = {}
+    end
+    if not state.anchorFrame then
+        state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+    end
     local width = settings.Width
     local height = settings.Height
     local container = state.container
@@ -1619,6 +1646,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
     state.active = true
+    self.AuraTrackingStateOrder[#self.AuraTrackingStateOrder + 1] = key
 
     if isCustom then
         -- Blizzard only populates processedAuraType while this policy is active.
@@ -1633,11 +1661,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     container:SetFrameStrata(frameStrata)
     anchorFrame:SetFrameStrata(frameStrata)
     anchorFrame:SetSize(width, height)
-    if previousState and previousState.anchorFrame then
-        AnchorAuraTrackingAfterFrame(anchorFrame, previousState.anchorFrame, settings)
-    else
-        SetAuraTrackingPoint(anchorFrame, settings, UIParent)
-    end
+    SetAuraTrackingPoint(anchorFrame, settings, UIParent)
     anchorFrame:Show()
 
     container:ClearAllPoints()
@@ -1813,14 +1837,15 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
     self.PendingAuraTrackingUpdate = nil
     self.PendingAuraTrackingReconfigure = nil
+    self.AuraTrackingStateOrder = {}
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         state.active = false
     end
 
-    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", nil, reconfigureButtons)
+    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", reconfigureButtons)
 
-    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External", nil, reconfigureButtons)
+    InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External", reconfigureButtons)
 
     local rosterRefreshStates = {}
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
@@ -1832,16 +1857,50 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 settings = settings,
             }
         end
-        InitAuraTrackingContainer(self, unit, settings, key, nil, reconfigureButtons)
+        InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons)
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
-        local previousTankState
+        local firstTankState
+        local tankSettings = NSRT.AuraTrackingSettings.Tank
         for index, tankUnit in ipairs(self:GetCoTankUnits()) do
-            if NSRT.AuraTrackingSettings.Tank.OnlyShowFirstTank and index > 1 then
+            if index > 2 or (tankSettings.OnlyShowFirstTank and index > 1) then
                 break
             end
-            previousTankState = InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, index == 1 and "Tank" or ("Tank" .. index), previousTankState, reconfigureButtons)
+            local tankKey = index == 1 and "Tank" or ("Tank" .. index)
+            local containerSettings = tankSettings
+            if index == 2 then
+                containerSettings = CopyTable(tankSettings)
+                local multiTankGrow = tankSettings.MultiTankGrow or "Same"
+                containerSettings.GrowDirection = multiTankGrow == "Same" and tankSettings.GrowDirection or multiTankGrow
+                containerSettings.CustomAnchorFrame = nil
+            end
+            local tankState = InitAuraTrackingContainer(self, tankUnit, containerSettings, tankKey, reconfigureButtons)
+            if tankState then
+                if not firstTankState then
+                    firstTankState = tankState
+                elseif firstTankState.anchorFrame then
+                    local xOffset = tankSettings.MultiTankXOffset or 0
+                    local yOffset = tankSettings.MultiTankYOffset or 0
+                    local frame = tankState.anchorFrame
+                    local base = firstTankState.anchorFrame
+                    frame:ClearAllPoints()
+                    frame:SetPoint("CENTER", base, "CENTER", xOffset, yOffset)
+                end
+            end
+        end
+    end
+
+    for _, key in ipairs(self.AuraTrackingStateOrder) do
+        local state = self.AuraTrackingState[key]
+        local settings = state and state.settings
+        if state and state.active and settings and settings.CustomAnchorFrame and settings.CustomAnchorFrame:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) == AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+            local anchorFrame = GetAuraTrackingAnchorFrame(self, settings, UIParent, state.anchorFrame)
+            state.anchorFrame:ClearAllPoints()
+            state.anchorFrame:SetPoint(settings.Anchor or "CENTER", anchorFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
+            local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
+            state.container:ClearAllPoints()
+            state.container:SetPoint(layoutAnchorPoint, state.anchorFrame, layoutAnchorPoint, 0, 0)
         end
     end
 
@@ -2021,66 +2080,48 @@ local function StartAuraTrackingPreviewTimer(self, key)
     local settings = NSI:GetAuraTrackingSettings(key)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
+    local colorUnderThreshold = settings.ColorDurationUnderThreshold
+    local durationThreshold = math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1)
     local timerKey = previewData.timerKey
     self[timerKey] = C_Timer.NewTicker(0.05, function()
         local now = GetTime()
         local iconKey = previewData.iconKey
-        if not self[iconKey] then return end
-
-        for _, frame in ipairs(self[iconKey]) do
-            if frame:IsShown() and frame.PreviewExpires and now >= frame.PreviewExpires then
-                self:PreviewAuraTracking(key, true)
-                return
-            end
-        end
-
-        for _, frame in ipairs(self[iconKey]) do
-            if frame:IsShown() and frame.Duration and frame.PreviewExpires then
-                local remaining = math.max(0, frame.PreviewExpires - now)
-                frame.Duration:SetText(FormatAuraTrackingDuration(remaining, settings))
-                if settings.ColorDurationUnderThreshold and remaining < math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1) then
-                    frame.Duration:SetTextColor(unpack(thresholdColor))
-                else
-                    frame.Duration:SetTextColor(unpack(durationColor))
+        local secondIconKey = key == "Tank" and "AuraTrackingTankPreviewIcons2"
+        for listIndex = 1, 2 do
+            local icons = self[listIndex == 1 and iconKey or secondIconKey]
+            if icons then
+                for _, frame in ipairs(icons) do
+                    if frame:IsShown() and frame.PreviewExpires then
+                        local remaining = math.max(0, frame.PreviewExpires - now)
+                        if remaining <= 0 then
+                            self:PreviewAuraTracking(key, true)
+                            return
+                        end
+                        if frame.Duration then
+                            frame.Duration:SetText(FormatAuraTrackingDuration(remaining, settings))
+                            if colorUnderThreshold and remaining < durationThreshold then
+                                frame.Duration:SetTextColor(unpack(thresholdColor))
+                            else
+                                frame.Duration:SetTextColor(unpack(durationColor))
+                            end
+                        end
+                    end
                 end
             end
         end
     end)
 end
 
-local function CreateAuraTrackingPreviewFrame(parent, settings)
-    local frame = CreateFrame("Frame", nil, parent)
-    frame:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
-    frame.Icon = frame:CreateTexture(nil, "ARTWORK")
-    frame.Icon:SetAllPoints(frame)
-    return frame
-end
-
-local function EnsureAuraTrackingPreviewFontString(frame, key)
-    if frame.TextOverlay then
-        frame.TextOverlay:SetFrameLevel(frame:GetFrameLevel() + 3)
-    end
-    if not frame[key] then
-        if not frame.TextOverlay then
-            frame.TextOverlay = CreateFrame("Frame", nil, frame)
-            frame.TextOverlay:SetAllPoints(frame)
-            frame.TextOverlay:SetFrameLevel(frame:GetFrameLevel() + 3)
-        end
-        frame[key] = frame.TextOverlay:CreateFontString(nil, "OVERLAY")
-    end
-    return frame[key]
-end
-
-local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType)
+local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType, fontPath, previewData, previewUnitName)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
-    local fontPath = GetAuraTrackingFontPath(self, settings)
+    fontPath = fontPath or GetAuraTrackingFontPath(self, settings)
     local now = GetTime()
     duration = duration or 10
     frame.PreviewExpires = now + duration
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
-    local zoom = ((settings.Zoom or 0) * 0.5) / 100
+    local zoom = ((settings.Zoom or 0) * 0.25) / 100
     frame.Icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
 
     if (settings.BorderSize or 0) > 0 and not frame.Border then
@@ -2148,7 +2189,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
             frame.Stack:Hide()
         end
     else
-        local stack = EnsureAuraTrackingPreviewFontString(frame, "Stack")
+        local stack = EnsureAuraTrackingFontString(frame, "Stack")
         stack:ClearAllPoints()
         stack:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
         stack:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
@@ -2163,7 +2204,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
             frame.Duration:Hide()
         end
     else
-        local durationText = EnsureAuraTrackingPreviewFontString(frame, "Duration")
+        local durationText = EnsureAuraTrackingFontString(frame, "Duration")
         durationText:ClearAllPoints()
         durationText:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
         durationText:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
@@ -2178,19 +2219,11 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     end
 
     local isCustom = tostring(key):match("^Custom") and true or false
-    if (key == "External" or isCustom) and settings.NameEnabled then
-        local unitName = EnsureAuraTrackingPreviewFontString(frame, "UnitName")
+    if (key == "External" or isCustom or key == "Tank") and settings.NameEnabled then
+        local unitName = EnsureAuraTrackingFontString(frame, "UnitName")
         PositionAuraTrackingUnitName(unitName, frame, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-        local previewData = GetAuraTrackingPreviewData(key)
-        unitName:SetText(NSAPI:Shorten(previewData and previewData.unit or "player", nil, false, "GlobalNickNames") or "")
-        unitName:Show()
-    elseif key == "Tank" and settings.NameEnabled then
-        local unitName = EnsureAuraTrackingPreviewFontString(frame, "UnitName")
-        PositionAuraTrackingUnitName(unitName, frame, settings)
-        unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-        local previewData = GetAuraTrackingPreviewData(key)
-        unitName:SetText(NSAPI:Shorten(previewData and previewData.unit or "player", nil, false, "GlobalNickNames") or "")
+        unitName:SetText(previewUnitName or NSAPI:Shorten(previewData and previewData.unit or "player", nil, false, "GlobalNickNames") or "")
         unitName:Show()
     elseif frame.UnitName then
         frame.UnitName:SetText("")
@@ -2203,8 +2236,6 @@ function NSI:PreviewAuraTracking(key, show)
     local settings = self:GetAuraTrackingSettings(key)
     local previewData = GetAuraTrackingPreviewData(key)
     if not settings or not previewData then return end
-    local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
-    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
     local frameKey = previewData.frameKey
     local iconKey = previewData.iconKey
     local texture = previewData.texture
@@ -2214,7 +2245,8 @@ function NSI:PreviewAuraTracking(key, show)
     end
 
     local mover = self[frameKey]
-    mover:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
+    local frameStrata = GetAuraTrackingFrameStrata(settings)
+    mover:SetFrameStrata(frameStrata)
     if not show then
         StopAuraTrackingPreviewTimer(self, key)
         MakeAuraTrackingDraggable(self, mover, settings, false)
@@ -2223,6 +2255,19 @@ function NSI:PreviewAuraTracking(key, show)
             for _, icon in ipairs(self[iconKey]) do
                 icon.PreviewExpires = nil
                 icon:Hide()
+            end
+        end
+        if key == "Tank" then
+            local secondIconKey = "AuraTrackingTankPreviewIcons2"
+            local secondFrameKey = "AuraTrackingTankPreviewMover2"
+            if self[secondIconKey] then
+                for _, icon in ipairs(self[secondIconKey]) do
+                    icon.PreviewExpires = nil
+                    icon:Hide()
+                end
+            end
+            if self[secondFrameKey] then
+                self[secondFrameKey]:Hide()
             end
         end
         self:InitAuraTracking()
@@ -2234,29 +2279,117 @@ function NSI:PreviewAuraTracking(key, show)
     SetAuraTrackingPoint(mover, settings, UIParent)
     mover:Show()
 
+    local secondMover
+    local secondIconKey
+    if key == "Tank" and settings.OnlyShowFirstTank then
+        if self.AuraTrackingTankPreviewMover2 then
+            self.AuraTrackingTankPreviewMover2:Hide()
+        end
+        if self.AuraTrackingTankPreviewIcons2 then
+            for _, icon in ipairs(self.AuraTrackingTankPreviewIcons2) do
+                icon.PreviewExpires = nil
+                icon:Hide()
+            end
+        end
+    end
+    if key == "Tank" and not settings.OnlyShowFirstTank then
+        secondIconKey = "AuraTrackingTankPreviewIcons2"
+        secondMover = self.AuraTrackingTankPreviewMover2
+        if not secondMover then
+            secondMover = CreateFrame("Frame", nil, self.NSRTFrame)
+            self.AuraTrackingTankPreviewMover2 = secondMover
+        end
+        secondMover:SetFrameStrata(frameStrata)
+        secondMover:SetSize(settings.Width, settings.Height)
+        secondMover:ClearAllPoints()
+        local grow = settings.MultiTankGrow or "Same"
+        local secondGrow = grow == "Same" and settings.GrowDirection or grow
+        local xOffset = settings.MultiTankXOffset or 0
+        local yOffset = settings.MultiTankYOffset or 0
+        secondMover:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
+        secondMover:Show()
+        if not self[secondIconKey] then self[secondIconKey] = {} end
+        secondMover.GrowDirection = secondGrow
+    end
+
     MakeAuraTrackingDraggable(self, mover, settings, true, key)
 
     if not self[iconKey] then self[iconKey] = {} end
+    local fontPath = GetAuraTrackingFontPath(self, settings)
+    local previewUnit = previewData and previewData.unit or "player"
+    local previewPlayerName = UnitName(previewUnit) or previewUnit
+    local previewClass = select(2, UnitClass(previewUnit))
+    local previewColor = GetClassColorObj(previewClass)
+    local firstPreviewName = previewPlayerName
+    local secondPreviewName
+    local firstPreviewSuffix
+    local secondPreviewSuffix
+    if key == "Tank" then
+        local cotankPreviewName = NSAPI:GetName(previewPlayerName, "GlobalNickNames") or previewPlayerName
+        firstPreviewName = cotankPreviewName
+        secondPreviewName = cotankPreviewName
+        firstPreviewSuffix = " 1"
+        secondPreviewSuffix = " 2"
+    end
+    if previewColor then
+        firstPreviewName = previewColor:WrapTextInColorCode(firstPreviewName)
+        if secondPreviewName then
+            secondPreviewName = previewColor:WrapTextInColorCode(secondPreviewName)
+        end
+    end
+    firstPreviewName = firstPreviewName .. (firstPreviewSuffix or "")
+    secondPreviewName = secondPreviewName and (secondPreviewName .. secondPreviewSuffix) or nil
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
+    local secondXDirection = secondMover and (secondMover.GrowDirection == "RIGHT" and 1 or secondMover.GrowDirection == "LEFT" and -1 or 0)
+    local secondYDirection = secondMover and (secondMover.GrowDirection == "DOWN" and -1 or secondMover.GrowDirection == "UP" and 1 or 0)
     local entries = BuildAuraTrackingPreviewEntries(settings, key, texture)
     for i = 1, 20 do
         if not self[iconKey][i] then
-            self[iconKey][i] = CreateAuraTrackingPreviewFrame(mover, settings)
+            local frame = CreateFrame("Frame", nil, mover)
+            frame:SetFrameStrata(frameStrata)
+            frame.Icon = frame:CreateTexture(nil, "ARTWORK")
+            frame.Icon:SetAllPoints(frame)
+            self[iconKey][i] = frame
         end
         local icon = self[iconKey][i]
-        icon:SetFrameStrata(GetAuraTrackingFrameStrata(settings))
+        icon:SetFrameStrata(frameStrata)
         local entry = entries[i]
         if entry then
             local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
             icon:Show()
         else
             icon.PreviewExpires = nil
             icon:Hide()
+        end
+    end
+    if secondMover then
+        for i = 1, 20 do
+            if not self[secondIconKey][i] then
+                local frame = CreateFrame("Frame", nil, secondMover)
+                frame:SetFrameStrata(frameStrata)
+                frame.Icon = frame:CreateTexture(nil, "ARTWORK")
+                frame.Icon:SetAllPoints(frame)
+                self[secondIconKey][i] = frame
+            end
+            local icon = self[secondIconKey][i]
+            icon:SetFrameStrata(frameStrata)
+            local entry = entries[i]
+            if entry then
+                local xOffset = (i - 1) * (settings.Width + settings.Spacing) * secondXDirection
+                local yOffset = (i - 1) * (settings.Height + settings.Spacing) * secondYDirection
+                icon:ClearAllPoints()
+                icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
+                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
+                icon:Show()
+            else
+                icon.PreviewExpires = nil
+                icon:Hide()
+            end
         end
     end
     StartAuraTrackingPreviewTimer(self, key)

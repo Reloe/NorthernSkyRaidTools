@@ -78,6 +78,19 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Twin Fangs", internalID = "WatchSpawns", name = "Watch Spawns", text = "Watch Spawns", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1288538,
+        loadConditions = tankConditions,
+        isConditional = {
+            text = "This Alert only shows if you have threat on boss2.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
+        },
+        timers = {
+            [15] = {20.5, 88.3, 190, 257.8, 359.4, 427.2},
+            [16] = {18.3, 79.3, 172.3, 233.3, 327.3, 388.3},
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Twin Fangs", internalID = "Knock", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1289192,
         textColors = {1, 0, 0, 1},
         loadConditions = tankConditions,
