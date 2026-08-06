@@ -892,7 +892,8 @@ local function BuildAuraTrackingUI(screen)
             end
             s.CustomAnchorFrame = v; apply(selectedKey)
         end,
-        rightW, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry")
+        rightW, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry",
+        { title = NSI:Loc("Anchor Frame"), desc = NSI:Loc("Aura Tracking Anchor Frame Tooltip") })
     anchorEntry:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -18)
 
     -- ── Definition builders (Display / Trigger via BuildWidgets) ─────

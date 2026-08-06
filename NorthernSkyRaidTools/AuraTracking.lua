@@ -1243,8 +1243,38 @@ local function PositionAuraTrackingUnitName(fontString, parent, settings)
     fontString:SetJustifyV("MIDDLE")
 end
 
-local function GetAuraTrackingAnchorFrame(settings, fallback)
+local AURA_TRACKING_FRAME_ANCHOR_PREFIX = "NSRT:AuraFrame:"
+
+local function GetAuraTrackingNamedAnchor(self, frameName, excludedFrame)
+    if type(frameName) ~= "string" or frameName:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) ~= AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+        return
+    end
+
+    local auraName = frameName:sub(#AURA_TRACKING_FRAME_ANCHOR_PREFIX + 1)
+    if auraName == "" then return end
+
+    for _, key in ipairs(self.AuraTrackingStateOrder or {}) do
+        local state = self.AuraTrackingState and self.AuraTrackingState[key]
+        if state and state.active and state.settings and state.settings.Name == auraName and state.anchorFrame and state.anchorFrame ~= excludedFrame then
+            return state.anchorFrame
+        end
+    end
+end
+
+local function AuraTrackingNameExists(name)
+    local settings = NSRT.AuraTrackingSettings
+    if settings.Player and settings.Player.Name == name then return true end
+    if settings.External and settings.External.Name == name then return true end
+    if settings.Tank and settings.Tank.Name == name then return true end
+    for _, entry in ipairs(settings.Custom or {}) do
+        if entry.Name == name then return true end
+    end
+end
+
+local function GetAuraTrackingAnchorFrame(self, settings, fallback, excludedFrame)
     local frameName = settings and settings.CustomAnchorFrame
+    local auraFrame = GetAuraTrackingNamedAnchor(self, frameName, excludedFrame)
+    if auraFrame then return auraFrame end
     local frame = frameName and frameName ~= "" and _G[frameName]
     if type(frame) == "table" and frame.GetCenter and frame.IsShown then
         return frame
@@ -1254,12 +1284,15 @@ end
 
 function NSI:IsValidAuraTrackingAnchorFrame(frameName)
     if not frameName or frameName == "" then return true end
+    if frameName:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) == AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+        return AuraTrackingNameExists(frameName:sub(#AURA_TRACKING_FRAME_ANCHOR_PREFIX + 1))
+    end
     local frame = _G[frameName]
     return type(frame) == "table" and frame.GetCenter and frame.IsShown
 end
 
 local function SetAuraTrackingPoint(frame, settings, fallback)
-    local relativeFrame = GetAuraTrackingAnchorFrame(settings, fallback)
+    local relativeFrame = GetAuraTrackingAnchorFrame(NSI, settings, fallback, frame)
     frame:ClearAllPoints()
     frame:SetPoint(settings.Anchor or "CENTER", relativeFrame or fallback, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
 end
@@ -1305,7 +1338,7 @@ end
 
 local function SaveAuraTrackingFramePosition(self, frame, settings)
     if not frame or not settings then return end
-    local relativeFrame = GetAuraTrackingAnchorFrame(settings, UIParent)
+    local relativeFrame = GetAuraTrackingAnchorFrame(self, settings, UIParent, frame)
     local point = settings.Anchor or "CENTER"
     local relativePoint = settings.relativeTo or "CENTER"
     local frameX, frameY = GetPointCoordinate(frame, point)
@@ -1623,6 +1656,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, previousStat
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
     state.active = true
+    self.AuraTrackingStateOrder[#self.AuraTrackingStateOrder + 1] = key
 
     if isCustom then
         -- Blizzard only populates processedAuraType while this policy is active.
@@ -1817,6 +1851,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
     self.PendingAuraTrackingUpdate = nil
     self.PendingAuraTrackingReconfigure = nil
+    self.AuraTrackingStateOrder = {}
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         state.active = false
@@ -1846,6 +1881,19 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 break
             end
             previousTankState = InitAuraTrackingContainer(self, tankUnit, NSRT.AuraTrackingSettings.Tank, index == 1 and "Tank" or ("Tank" .. index), previousTankState, reconfigureButtons)
+        end
+    end
+
+    for _, key in ipairs(self.AuraTrackingStateOrder) do
+        local state = self.AuraTrackingState[key]
+        local settings = state and state.settings
+        if state and state.active and settings and settings.CustomAnchorFrame and settings.CustomAnchorFrame:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) == AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+            local anchorFrame = GetAuraTrackingAnchorFrame(self, settings, UIParent, state.anchorFrame)
+            state.anchorFrame:ClearAllPoints()
+            state.anchorFrame:SetPoint(settings.Anchor or "CENTER", anchorFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
+            local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
+            state.container:ClearAllPoints()
+            state.container:SetPoint(layoutAnchorPoint, state.anchorFrame, layoutAnchorPoint, 0, 0)
         end
     end
 
