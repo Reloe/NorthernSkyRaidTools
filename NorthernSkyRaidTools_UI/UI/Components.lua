@@ -1625,7 +1625,7 @@ end
 --    :SetPoint(…)
 --    :SetSize(w, h)
 -- ============================================================
-local function CreateLabel(parent, text, width, height, name, highlighted)
+local function CreateLabel(parent, text, width, height, name, highlighted, textColor)
     local totalW = width  or 220
     local totalH = height or 16
 
@@ -1635,10 +1635,13 @@ local function CreateLabel(parent, text, width, height, name, highlighted)
     local lbl = MakeFontString(container, highlighted and 14 or 12)
     if highlighted then
         lbl:SetTextColor(0, 1, 1, 1)
+    elseif textColor then
+        lbl:SetTextColor(unpack(textColor))
     else
         lbl:SetTextColor(0.55, 0.55, 0.55, 1)
     end
     lbl:SetText(text or "")
+    lbl:SetWordWrap(true)
     lbl:SetJustifyH("LEFT")
     lbl:SetJustifyV("MIDDLE")
     lbl:SetAllPoints(container)
@@ -1962,7 +1965,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
                 width, h, def.numeric, def.min, def.max, wName, def.tooltip)
 
         elseif t == "Label" then
-            ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight)
+            ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight, def.textColor)
 
         elseif t == "Breakline" then
             ctrl = C.CreateBreakline(parent, width, h, wName)
