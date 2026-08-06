@@ -813,7 +813,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                         ShowContextMenu({
                             { type = "button", label = NSI:Loc("Export Group"), fnc = function()
                                 local str = NSI:ExportGroupString(gencID, gname, filterDiffID)
-                                ShowExportPopup(str, "Group: " .. gname)
+                                ShowExportPopup(str, NSI:Loc("Group") .. ": " .. gname)
                             end },
                             { type = "separator" },
                             { type = "button", label = NSI:Loc("Enable All"), fnc = function()
