@@ -35,6 +35,12 @@ local GROW_DIRECTIONS = {
     { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
 }
 
+local MULTI_TANK_GROW_DIRECTIONS = {
+    { label = "Same as Regular Grow", value = "Same" },
+    { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
+    { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
+}
+
 local FRAME_STRATA = {
     { label = "BACKGROUND", value = "BACKGROUND" },
     { label = "LOW", value = "LOW" },
@@ -964,6 +970,17 @@ local function BuildAuraTrackingUI(screen)
             add({ Type = "Checkbox", label = "Only show first tank",
                 tooltip = tip("Only show first tank", "Only creates one co-tank tracking container instead of one for every co-tank found in your group."),
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
+            if s.Unit == "cotank" or s.builtin == "Tank" then
+                add({ Type = "Dropdown", label = "Multi-Tank Grow", values = MULTI_TANK_GROW_DIRECTIONS,
+                    tooltip = tip("Multi-Tank Grow", "Controls the direction in which the aura icons in the second co-tank display grow. Same as Regular Grow follows the first co-tank's grow direction."),
+                    get = function() return s.MultiTankGrow or "Same" end, set = function(_, v) s.MultiTankGrow = v or "Same"; apply(key) end })
+                add({ Type = "Slider", label = "Multi-Tank X-Offset", min = -2000, max = 2000, step = 1,
+                    tooltip = tip("Multi-Tank X-Offset", "Horizontal offset of the second co-tank display relative to the first."),
+                    get = function() return s.MultiTankXOffset or 0 end, set = function(_, v) s.MultiTankXOffset = v; apply(key) end })
+                add({ Type = "Slider", label = "Multi-Tank Y-Offset", min = -2000, max = 2000, step = 1,
+                    tooltip = tip("Multi-Tank Y-Offset", "Vertical offset of the second co-tank display relative to the first."),
+                    get = function() return s.MultiTankYOffset or 0 end, set = function(_, v) s.MultiTankYOffset = v; apply(key) end })
+            end
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
             tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which usually follows application order and uses the aura instance ID as a final tie-breaker. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first. Aura Instance ID sorts only by aura instance ID."),
