@@ -320,6 +320,7 @@ local function BuildAuraTrackingUI(screen)
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
     local nameEntry, groupDD, anchorEntry
+    local resetTriggerScroll = false
 
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
@@ -1241,7 +1242,11 @@ local function BuildAuraTrackingUI(screen)
                 tooltip = { title = "Tracking Mode", desc = "Choose whether this custom Aura Tracking display uses a spell-ID whitelist or Blizzard aura filters." },
                 get = function() return s.TrackingMode or "SpellIDs" end,
                 set = function(_, v)
+                    local previousMode = s.TrackingMode or "SpellIDs"
                     s.TrackingMode = v or "SpellIDs"
+                    if previousMode ~= s.TrackingMode then
+                        resetTriggerScroll = true
+                    end
                     apply(key); RebuildCurrentTab()
                 end },
             { Type = "Label", text = "Preview Spell ID" },
@@ -1313,7 +1318,13 @@ local function BuildAuraTrackingUI(screen)
                         return "Disabled"
                     end,
                     set = function(_, v)
-                        candidateFilters[filterKey] = v == "Enabled" and true or (v == "Inverted" and false or nil)
+                        if v == "Enabled" then
+                            candidateFilters[filterKey] = true
+                        elseif v == "Inverted" then
+                            candidateFilters[filterKey] = false
+                        else
+                            candidateFilters[filterKey] = nil
+                        end
                         apply(key)
                     end }
             end
@@ -1394,6 +1405,10 @@ local function BuildAuraTrackingUI(screen)
         local scrollPosition = 0
         if tabScroll[activeTab] then
             scrollPosition = tabScroll[activeTab].frame:GetVerticalScroll() or 0
+        end
+        if activeTab == "Trigger" and resetTriggerScroll then
+            scrollPosition = 0
+            resetTriggerScroll = false
         end
         container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
         for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
@@ -1773,6 +1788,12 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── SelectEntry ─────────────────────────────────────────────────────────
     SelectEntry = function(key, shouldAutoPreview)
+        local previousSettings = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
+        local nextSettings = key and NSI:GetAuraTrackingSettings(key)
+        if previousSettings and nextSettings
+            and (previousSettings.TrackingMode or "SpellIDs") ~= (nextSettings.TrackingMode or "SpellIDs") then
+            resetTriggerScroll = true
+        end
         if shouldAutoPreview ~= false then
             SwitchAutoPreview(key)
         end
