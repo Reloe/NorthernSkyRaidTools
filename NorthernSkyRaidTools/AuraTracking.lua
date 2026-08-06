@@ -190,7 +190,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         UnitType = "Automatic",
         OnlyShowFirstTank = false,
         MultiTankGrow = "Same",
-        loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
+        loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {} },
     }
     for key, value in pairs(overrides or {}) do
         settings[key] = value
@@ -1603,7 +1603,10 @@ end
 
 local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons)
     if not unit or not settings or not settings.enabled then return end
-    if not self:EvaluateLoad(settings) then return end
+    local loadMatches = self:EvaluateLoad(settings)
+    local encounterConditions = settings.loadConditions and settings.loadConditions.EncounterIDs
+    local hasEncounterConditions = encounterConditions and next(encounterConditions) ~= nil
+    if not loadMatches and not hasEncounterConditions then return end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
         C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
@@ -1644,6 +1647,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     state.settings = settings
     state.unit = unit
     state.key = key
+    state.encounterConditioned = hasEncounterConditions
     state.width = width
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
@@ -1821,12 +1825,28 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 
     container:Show()
     container:SetEnabled(true)
+    if not loadMatches then
+        container:SetEnabled(false)
+        container:Hide()
+        anchorFrame:Hide()
+    end
     if reconfigureButtons then
         for button in pairs(state.buttonRegions or {}) do
             ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
         end
     end
     return state
+end
+
+function NSI:UpdateAuraTrackingEncounterVisibility()
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        if state.encounterConditioned and state.container then
+            local shouldShow = self:EvaluateLoad(state.settings)
+            state.container:SetEnabled(shouldShow)
+            state.container:SetShown(shouldShow)
+            state.anchorFrame:SetShown(shouldShow)
+        end
+    end
 end
 
 local function InitAuraTrackingTankSet(self, settings, firstKey, reconfigureButtons)
