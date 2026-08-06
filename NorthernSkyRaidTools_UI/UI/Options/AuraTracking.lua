@@ -650,6 +650,14 @@ local function BuildAuraTrackingUI(screen)
             ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingEntry(sk), string.format(NSI:Loc("Exporting Aura Tracking display: |cFF00FFFF%s|r"), s.Name or NSI:Loc("Unnamed")))
         end }
 
+        if item.builtin then
+            items[#items + 1] = { type = "button", label = NSI:Loc("Reset"), fnc = function()
+                StopPreview(sk)
+                NSI:ResetBuiltinAuraTracking(sk)
+                RebuildList()
+            end }
+        end
+
         if not item.builtin then
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                 local newKey = NSI:DuplicateCustomAuraTracking(sk)

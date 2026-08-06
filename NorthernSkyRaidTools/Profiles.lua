@@ -34,6 +34,70 @@ local function CopyPrivateAuraSettingsToAuraTracking(source, target)
     end
 end
 
+local AuraTrackingBuiltinDefaultOverrides = {
+    Player = {
+        Name = "Player Debuffs",
+        builtin = "Player",
+        HideLongDurationAuras = false,
+        ShowWhitelistedPlayerBuffs = true,
+        DispelBorderMode = "ColoredWithIcon",
+        DispelBorderSize = 3,
+    },
+    Tank = {
+        Name = "Co-Tank Debuffs",
+        builtin = "Tank",
+        GrowDirection = "LEFT",
+        xOffset = -242,
+        yOffset = -590,
+        NameEnabled = true,
+        Unit = "cotank",
+        OnlyShowFirstTank = false,
+        MultiTankGrow = "RIGHT",
+        MultiTankXOffset = 500,
+        MultiTankYOffset = 0,
+        HideLongDurationAuras = false,
+        DispelBorderMode = "ColoredWithIcon",
+        DispelBorderSize = 3,
+    },
+    External = {
+        Name = "External & Immunity",
+        builtin = "External",
+        Width = 120,
+        Height = 120,
+        GrowDirection = "UP",
+        xOffset = 319,
+        yOffset = 152,
+        DurationFontSize = 50,
+        StackFontSize = 50,
+        HideStackText = true,
+        HideTooltip = true,
+        IncludeImmunities = true,
+        NameEnabled = true,
+        NamePosition = "LEFT",
+        NameXOffset = 0,
+        NameYOffset = 0,
+    },
+}
+
+function NSI:GetDefaultAuraTrackingSettings(settingsKey)
+    local overrides = AuraTrackingBuiltinDefaultOverrides[settingsKey]
+    return overrides and self:CreateAuraTrackingSettingsDefaults(overrides)
+end
+
+function NSI:ResetBuiltinAuraTracking(settingsKey)
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    local defaults = self:GetDefaultAuraTrackingSettings(settingsKey)
+    if not settings or not settings.builtin or not defaults then return end
+    for key in pairs(settings) do
+        settings[key] = nil
+    end
+    for key, value in pairs(defaults) do
+        settings[key] = value
+    end
+    self:InitAuraTracking()
+    self:RefreshAuraTrackingUI()
+end
+
 function NSI:ConvertPrivateAuraSettingsToAuraTracking()
     if NSRT.PASounds then
         if NSRT.PASounds.UseDefaultPASounds ~= nil then
@@ -314,48 +378,9 @@ function NSI:AddMissingDefaults()
                 Selected = "Player",
                 StyleCopySource = "Player",
             },
-            Player = self:CreateAuraTrackingSettingsDefaults({
-                Name = "Player Debuffs",
-                builtin = "Player",
-                HideLongDurationAuras = false,
-                ShowWhitelistedPlayerBuffs = true,
-                DispelBorderMode = "ColoredWithIcon",
-                DispelBorderSize = 3,
-            }),
-            Tank = self:CreateAuraTrackingSettingsDefaults({
-                Name = "Co-Tank Debuffs",
-                builtin = "Tank",
-                GrowDirection = "LEFT",
-                xOffset = -549,
-                yOffset = -199,
-                NameEnabled = true,
-                Unit = "cotank",
-                OnlyShowFirstTank = false,
-                MultiTankGrow = "Same",
-                MultiTankXOffset = 500,
-                MultiTankYOffset = 0,
-                HideLongDurationAuras = false,
-                DispelBorderMode = "ColoredWithIcon",
-                DispelBorderSize = 3,
-            }),
-            External = self:CreateAuraTrackingSettingsDefaults({
-                Name = "External & Immunity",
-                builtin = "External",
-                Width = 120,
-                Height = 120,
-                GrowDirection = "UP",
-                xOffset = 319,
-                yOffset = 152,
-                DurationFontSize = 50,
-                StackFontSize = 50,
-                HideStackText = true,
-                HideTooltip = true,
-                IncludeImmunities = true,
-                NameEnabled = true,
-                NamePosition = "LEFT",
-                NameXOffset = 0,
-                NameYOffset = 0,
-            }),
+            Player = self:GetDefaultAuraTrackingSettings("Player"),
+            Tank = self:GetDefaultAuraTrackingSettings("Tank"),
+            External = self:GetDefaultAuraTrackingSettings("External"),
             Custom = {},
             Groups = {
                 ["Built-in"] = { collapsed = false },
