@@ -2316,7 +2316,29 @@ function NSI:PreviewAuraTracking(key, show)
 
     if not self[iconKey] then self[iconKey] = {} end
     local fontPath = GetAuraTrackingFontPath(self, settings)
-    local previewPlayerName = NSAPI:Shorten(previewData and previewData.unit or "player", nil, false, "GlobalNickNames") or "player"
+    local previewUnit = previewData and previewData.unit or "player"
+    local previewPlayerName = UnitName(previewUnit) or previewUnit
+    local previewClass = select(2, UnitClass(previewUnit))
+    local previewColor = GetClassColorObj(previewClass)
+    local firstPreviewName = previewPlayerName
+    local secondPreviewName
+    local firstPreviewSuffix
+    local secondPreviewSuffix
+    if key == "Tank" then
+        local cotankPreviewName = NSAPI:GetName(previewPlayerName, "GlobalNickNames") or previewPlayerName
+        firstPreviewName = cotankPreviewName
+        secondPreviewName = cotankPreviewName
+        firstPreviewSuffix = " 1"
+        secondPreviewSuffix = " 2"
+    end
+    if previewColor then
+        firstPreviewName = previewColor:WrapTextInColorCode(firstPreviewName)
+        if secondPreviewName then
+            secondPreviewName = previewColor:WrapTextInColorCode(secondPreviewName)
+        end
+    end
+    firstPreviewName = firstPreviewName .. (firstPreviewSuffix or "")
+    secondPreviewName = secondPreviewName and (secondPreviewName .. secondPreviewSuffix) or nil
     local xDirection = (settings.GrowDirection == "RIGHT" and 1) or (settings.GrowDirection == "LEFT" and -1) or 0
     local yDirection = (settings.GrowDirection == "DOWN" and -1) or (settings.GrowDirection == "UP" and 1) or 0
     local secondXDirection = secondMover and (secondMover.GrowDirection == "RIGHT" and 1 or secondMover.GrowDirection == "LEFT" and -1 or 0)
@@ -2338,7 +2360,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, key == "Tank" and (previewPlayerName .. " 1") or nil)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
             icon:Show()
         else
             icon.PreviewExpires = nil
@@ -2362,7 +2384,7 @@ function NSI:PreviewAuraTracking(key, show)
                 local yOffset = (i - 1) * (settings.Height + settings.Spacing) * secondYDirection
                 icon:ClearAllPoints()
                 icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
-                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, previewPlayerName .. " 2")
+                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
                 icon:Show()
             else
                 icon.PreviewExpires = nil
