@@ -190,8 +190,6 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         UnitType = "Automatic",
         OnlyShowFirstTank = false,
         MultiTankGrow = "Same",
-        MultiTankXOffset = 500,
-        MultiTankYOffset = 0,
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {} },
     }
     for key, value in pairs(overrides or {}) do
@@ -592,6 +590,8 @@ local AuraTrackingPreviewData = {
         frameKey = "AuraTrackingTankPreviewMover",
         iconKey = "AuraTrackingTankPreviewIcons",
         timerKey = "AuraTrackingTankPreviewTimer",
+        secondFrameKey = "AuraTrackingTankPreviewMover2",
+        secondIconKey = "AuraTrackingTankPreviewIcons2",
         texture = 236318,
         unit = "player",
         previewSpellIDs = {1291929, 1295858, 1280934, 1303230, 1282873, 1277051},
@@ -631,6 +631,8 @@ local function GetAuraTrackingPreviewData(key)
             frameKey = "AuraTrackingCustom" .. customIndex .. "PreviewMover",
             iconKey = "AuraTrackingCustom" .. customIndex .. "PreviewIcons",
             timerKey = "AuraTrackingCustom" .. customIndex .. "PreviewTimer",
+            secondFrameKey = "AuraTrackingCustom" .. customIndex .. "PreviewMover2",
+            secondIconKey = "AuraTrackingCustom" .. customIndex .. "PreviewIcons2",
             texture = 136076,
             unit = "player",
         }
@@ -1613,7 +1615,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     if isExternal then
         spellIDMap = GetAuraTrackingSpellIDMap(settings, "External")
     elseif isCustom then
-        local customIndex = tostring(key):match("^Custom(%d+)$")
+        local customIndex = tostring(key):match("^Custom(%d+)")
         if customIndex then
             spellIDMap = GetAuraTrackingSpellIDMap(settings, "Custom:" .. customIndex)
         end
@@ -1827,6 +1829,37 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     return state
 end
 
+local function InitAuraTrackingTankSet(self, settings, firstKey, reconfigureButtons)
+    local firstTankState
+    for index, tankUnit in ipairs(self:GetCoTankUnits()) do
+        if index > 2 or (settings.OnlyShowFirstTank and index > 1) then
+            break
+        end
+        local tankKey = index == 1 and firstKey or (firstKey .. "Tank2")
+        local containerSettings = settings
+        if index == 2 then
+            containerSettings = CopyTable(settings)
+            local multiTankGrow = settings.MultiTankGrow or "Same"
+            containerSettings.GrowDirection = multiTankGrow == "Same" and settings.GrowDirection or multiTankGrow
+            containerSettings.CustomAnchorFrame = nil
+        end
+        local tankState = InitAuraTrackingContainer(self, tankUnit, containerSettings, tankKey, reconfigureButtons)
+        if tankState then
+            if not firstTankState then
+                firstTankState = tankState
+            elseif firstTankState.anchorFrame then
+                local frame = tankState.anchorFrame
+                local xOffset = settings.MultiTankXOffset
+                local yOffset = settings.MultiTankYOffset
+                if xOffset == nil then xOffset = settings.Width end
+                if yOffset == nil then yOffset = settings.Height end
+                frame:ClearAllPoints()
+                frame:SetPoint("CENTER", firstTankState.anchorFrame, "CENTER", xOffset, yOffset)
+            end
+        end
+    end
+end
+
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
@@ -1851,44 +1884,23 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
         local key = "Custom" .. index
         local unit, needsRosterUpdate = ResolveAuraTrackingUnit(self, settings)
+        local isCustomCotank = type(settings.Unit) == "string" and string.lower(strtrim(settings.Unit)) == "cotank"
         if needsRosterUpdate then
             rosterRefreshStates[#rosterRefreshStates + 1] = {
                 key = key,
                 settings = settings,
+                multiTank = isCustomCotank,
             }
         end
-        InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons)
+        if isCustomCotank then
+            InitAuraTrackingTankSet(self, settings, key, reconfigureButtons)
+        else
+            InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons)
+        end
     end
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
-        local firstTankState
-        local tankSettings = NSRT.AuraTrackingSettings.Tank
-        for index, tankUnit in ipairs(self:GetCoTankUnits()) do
-            if index > 2 or (tankSettings.OnlyShowFirstTank and index > 1) then
-                break
-            end
-            local tankKey = index == 1 and "Tank" or ("Tank" .. index)
-            local containerSettings = tankSettings
-            if index == 2 then
-                containerSettings = CopyTable(tankSettings)
-                local multiTankGrow = tankSettings.MultiTankGrow or "Same"
-                containerSettings.GrowDirection = multiTankGrow == "Same" and tankSettings.GrowDirection or multiTankGrow
-                containerSettings.CustomAnchorFrame = nil
-            end
-            local tankState = InitAuraTrackingContainer(self, tankUnit, containerSettings, tankKey, reconfigureButtons)
-            if tankState then
-                if not firstTankState then
-                    firstTankState = tankState
-                elseif firstTankState.anchorFrame then
-                    local xOffset = tankSettings.MultiTankXOffset or 0
-                    local yOffset = tankSettings.MultiTankYOffset or 0
-                    local frame = tankState.anchorFrame
-                    local base = firstTankState.anchorFrame
-                    frame:ClearAllPoints()
-                    frame:SetPoint("CENTER", base, "CENTER", xOffset, yOffset)
-                end
-            end
-        end
+        InitAuraTrackingTankSet(self, NSRT.AuraTrackingSettings.Tank, "Tank", reconfigureButtons)
     end
 
     for _, key in ipairs(self.AuraTrackingStateOrder) do
@@ -1949,6 +1961,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                         return
                     end
                     for _, entry in ipairs(AuraTrackingUnitRefreshStates.roster) do
+                        if entry.multiTank then
+                            NSI:InitAuraTracking(false, true)
+                            return
+                        end
                         local unit = ResolveAuraTrackingUnit(NSI, entry.settings)
                         if unit then
                             InitAuraTrackingContainer(NSI, unit, entry.settings, entry.key)
@@ -2086,7 +2102,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
     self[timerKey] = C_Timer.NewTicker(0.05, function()
         local now = GetTime()
         local iconKey = previewData.iconKey
-        local secondIconKey = key == "Tank" and "AuraTrackingTankPreviewIcons2"
+        local secondIconKey = previewData.secondIconKey
         for listIndex = 1, 2 do
             local icons = self[listIndex == 1 and iconKey or secondIconKey]
             if icons then
@@ -2257,9 +2273,9 @@ function NSI:PreviewAuraTracking(key, show)
                 icon:Hide()
             end
         end
-        if key == "Tank" then
-            local secondIconKey = "AuraTrackingTankPreviewIcons2"
-            local secondFrameKey = "AuraTrackingTankPreviewMover2"
+        if previewData.secondIconKey then
+            local secondIconKey = previewData.secondIconKey
+            local secondFrameKey = previewData.secondFrameKey
             if self[secondIconKey] then
                 for _, icon in ipairs(self[secondIconKey]) do
                     icon.PreviewExpires = nil
@@ -2281,31 +2297,34 @@ function NSI:PreviewAuraTracking(key, show)
 
     local secondMover
     local secondIconKey
-    if key == "Tank" and settings.OnlyShowFirstTank then
-        if self.AuraTrackingTankPreviewMover2 then
-            self.AuraTrackingTankPreviewMover2:Hide()
+    local isCotankTracking = key == "Tank" or (settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank")
+    if previewData.secondFrameKey and settings.OnlyShowFirstTank then
+        if self[previewData.secondFrameKey] then
+            self[previewData.secondFrameKey]:Hide()
         end
-        if self.AuraTrackingTankPreviewIcons2 then
-            for _, icon in ipairs(self.AuraTrackingTankPreviewIcons2) do
+        if self[previewData.secondIconKey] then
+            for _, icon in ipairs(self[previewData.secondIconKey]) do
                 icon.PreviewExpires = nil
                 icon:Hide()
             end
         end
     end
-    if key == "Tank" and not settings.OnlyShowFirstTank then
-        secondIconKey = "AuraTrackingTankPreviewIcons2"
-        secondMover = self.AuraTrackingTankPreviewMover2
+    if isCotankTracking and previewData.secondFrameKey and not settings.OnlyShowFirstTank then
+        secondIconKey = previewData.secondIconKey
+        secondMover = self[previewData.secondFrameKey]
         if not secondMover then
             secondMover = CreateFrame("Frame", nil, self.NSRTFrame)
-            self.AuraTrackingTankPreviewMover2 = secondMover
+            self[previewData.secondFrameKey] = secondMover
         end
         secondMover:SetFrameStrata(frameStrata)
         secondMover:SetSize(settings.Width, settings.Height)
         secondMover:ClearAllPoints()
         local grow = settings.MultiTankGrow or "Same"
         local secondGrow = grow == "Same" and settings.GrowDirection or grow
-        local xOffset = settings.MultiTankXOffset or 0
-        local yOffset = settings.MultiTankYOffset or 0
+        local xOffset = settings.MultiTankXOffset
+        local yOffset = settings.MultiTankYOffset
+        if xOffset == nil then xOffset = settings.Width end
+        if yOffset == nil then yOffset = settings.Height end
         secondMover:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
         secondMover:Show()
         if not self[secondIconKey] then self[secondIconKey] = {} end
@@ -2324,7 +2343,7 @@ function NSI:PreviewAuraTracking(key, show)
     local secondPreviewName
     local firstPreviewSuffix
     local secondPreviewSuffix
-    if key == "Tank" then
+    if isCotankTracking then
         local cotankPreviewName = NSAPI:GetName(previewPlayerName, "GlobalNickNames") or previewPlayerName
         firstPreviewName = cotankPreviewName
         secondPreviewName = cotankPreviewName

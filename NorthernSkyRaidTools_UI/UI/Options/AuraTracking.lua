@@ -974,7 +974,8 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
             tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
-        if key == "Tank" then
+        local isCotankTracking = key == "Tank" or (s.Unit and string.lower(strtrim(s.Unit)) == "cotank")
+        if isCotankTracking then
             add({ Type = "Checkbox", label = "Only show first tank",
                 tooltip = tip("Only show first tank", "Only creates one co-tank tracking container instead of one for every co-tank found in your group."),
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
@@ -984,10 +985,10 @@ local function BuildAuraTrackingUI(screen)
                     get = function() return s.MultiTankGrow or "Same" end, set = function(_, v) s.MultiTankGrow = v or "Same"; apply(key) end })
                 add({ Type = "Slider", label = "Multi-Tank X-Offset", min = -2000, max = 2000, step = 1,
                     tooltip = tip("Multi-Tank X-Offset", "Horizontal offset of the second co-tank display relative to the first."),
-                    get = function() return s.MultiTankXOffset or 0 end, set = function(_, v) s.MultiTankXOffset = v; apply(key) end })
+                    get = function() return s.MultiTankXOffset ~= nil and s.MultiTankXOffset or s.Width end, set = function(_, v) s.MultiTankXOffset = v; apply(key) end })
                 add({ Type = "Slider", label = "Multi-Tank Y-Offset", min = -2000, max = 2000, step = 1,
                     tooltip = tip("Multi-Tank Y-Offset", "Vertical offset of the second co-tank display relative to the first."),
-                    get = function() return s.MultiTankYOffset or 0 end, set = function(_, v) s.MultiTankYOffset = v; apply(key) end })
+                    get = function() return s.MultiTankYOffset ~= nil and s.MultiTankYOffset or s.Height end, set = function(_, v) s.MultiTankYOffset = v; apply(key) end })
             end
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
