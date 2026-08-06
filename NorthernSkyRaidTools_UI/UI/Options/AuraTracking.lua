@@ -1247,7 +1247,7 @@ local function BuildAuraTrackingUI(screen)
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
                 and "This built-in display tracks a curated list of external/immunity buffs."
-                or  "This uses a built-in filter that filters out most of the junk debuff you don't care about.\nIt should already be the best default for raiding.\nAlternatively you can try to create your own tracking with your own filter settings.",
+                or  "This uses a built-in filter that filters out most of the junk debuffs you don't care about.\nIt should already be the best default for raiding.\nAlternatively you can try to create your own tracking with your own filter settings.",
                 height = key == "External" and 24 or 58,
                 textColor = {0.9, 0.9, 0.9, 1} } }
         end
