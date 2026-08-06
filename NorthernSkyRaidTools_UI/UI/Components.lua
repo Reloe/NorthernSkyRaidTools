@@ -953,6 +953,29 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         end
     end
 
+    local function GetOwningScrollFrame()
+        local frame = container:GetParent()
+        while frame do
+            if frame.IsObjectType and frame:IsObjectType("ScrollFrame") then
+                return frame
+            end
+            frame = frame:GetParent()
+        end
+    end
+
+    popup:SetScript("OnUpdate", function()
+        if not popup:IsShown() then return end
+        local scrollFrame = GetOwningScrollFrame()
+        if not scrollFrame then return end
+
+        local buttonTop, buttonBottom = dropBtn:GetTop(), dropBtn:GetBottom()
+        local viewportTop, viewportBottom = scrollFrame:GetTop(), scrollFrame:GetBottom()
+        if not buttonTop or not buttonBottom or not viewportTop or not viewportBottom
+            or buttonBottom >= viewportTop or buttonTop <= viewportBottom then
+            Close()
+        end
+    end)
+
     container:SetScript("OnHide", Close)
 
     local allItems = {}
