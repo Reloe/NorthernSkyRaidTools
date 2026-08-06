@@ -2409,9 +2409,9 @@ local function BuildEncounterAlertsUI(parentFrame)
     dispF.barFillColorsLbl    = barFillColorsLbl
 
     -- Patch SetDisplayType to toggle type-specific sections and relabel the color picker
-    local _prevSetDisplayType = SetDisplayType
+    local previousSetDisplayType = SetDisplayType
     SetDisplayType = function(t)
-        _prevSetDisplayType(t)
+        previousSetDisplayType(t)
         local isBar    = t == "Bar"
         local isCircle = t == "Circle"
         -- Shared color row: hide for Bar (replaced by two bar-specific rows)

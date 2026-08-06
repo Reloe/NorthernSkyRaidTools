@@ -35,6 +35,12 @@ local GROW_DIRECTIONS = {
     { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
 }
 
+local MULTI_TANK_GROW_DIRECTIONS = {
+    { label = "Same as Regular Grow", value = "Same" },
+    { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
+    { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
+}
+
 local FRAME_STRATA = {
     { label = "BACKGROUND", value = "BACKGROUND" },
     { label = "LOW", value = "LOW" },
@@ -320,6 +326,7 @@ local function BuildAuraTrackingUI(screen)
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
     local nameEntry, groupDD, anchorEntry
+    local resetTriggerScroll = false
 
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
@@ -643,6 +650,14 @@ local function BuildAuraTrackingUI(screen)
             ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingEntry(sk), string.format(NSI:Loc("Exporting Aura Tracking display: |cFF00FFFF%s|r"), s.Name or NSI:Loc("Unnamed")))
         end }
 
+        if item.builtin then
+            items[#items + 1] = { type = "button", label = NSI:Loc("Reset"), fnc = function()
+                StopPreview(sk)
+                NSI:ResetBuiltinAuraTracking(sk)
+                RebuildList()
+            end }
+        end
+
         if not item.builtin then
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                 local newKey = NSI:DuplicateCustomAuraTracking(sk)
@@ -892,7 +907,8 @@ local function BuildAuraTrackingUI(screen)
             end
             s.CustomAnchorFrame = v; apply(selectedKey)
         end,
-        rightW, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry")
+        rightW, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry",
+        { title = NSI:Loc("Anchor Frame"), desc = NSI:Loc("Aura Tracking Anchor Frame Tooltip") })
     anchorEntry:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -18)
 
     -- ── Definition builders (Display / Trigger via BuildWidgets) ─────
@@ -962,6 +978,17 @@ local function BuildAuraTrackingUI(screen)
             add({ Type = "Checkbox", label = "Only show first tank",
                 tooltip = tip("Only show first tank", "Only creates one co-tank tracking container instead of one for every co-tank found in your group."),
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
+            if s.Unit == "cotank" or s.builtin == "Tank" then
+                add({ Type = "Dropdown", label = "Multi-Tank Grow", values = MULTI_TANK_GROW_DIRECTIONS,
+                    tooltip = tip("Multi-Tank Grow", "Controls the direction in which the aura icons in the second co-tank display grow. Same as Regular Grow follows the first co-tank's grow direction."),
+                    get = function() return s.MultiTankGrow or "Same" end, set = function(_, v) s.MultiTankGrow = v or "Same"; apply(key) end })
+                add({ Type = "Slider", label = "Multi-Tank X-Offset", min = -2000, max = 2000, step = 1,
+                    tooltip = tip("Multi-Tank X-Offset", "Horizontal offset of the second co-tank display relative to the first."),
+                    get = function() return s.MultiTankXOffset or 0 end, set = function(_, v) s.MultiTankXOffset = v; apply(key) end })
+                add({ Type = "Slider", label = "Multi-Tank Y-Offset", min = -2000, max = 2000, step = 1,
+                    tooltip = tip("Multi-Tank Y-Offset", "Vertical offset of the second co-tank display relative to the first."),
+                    get = function() return s.MultiTankYOffset or 0 end, set = function(_, v) s.MultiTankYOffset = v; apply(key) end })
+            end
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
             tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which usually follows application order and uses the aura instance ID as a final tie-breaker. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first. Aura Instance ID sorts only by aura instance ID."),
@@ -1220,7 +1247,9 @@ local function BuildAuraTrackingUI(screen)
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
                 and "This built-in display tracks a curated list of external/immunity buffs."
-                or  "This built-in display tracks all relevant debuffs automatically." } }
+                or  "This uses a built-in filter that filters out most of the junk debuff you don't care about.\nIt should already be the best default for raiding.\nAlternatively you can try to create your own tracking with your own filter settings.",
+                height = key == "External" and 24 or 58,
+                textColor = {0.9, 0.9, 0.9, 1} } }
         end
         local defs = {
             -- No inline `label` on these TextEntries: CreateTextEntry only
@@ -1240,7 +1269,11 @@ local function BuildAuraTrackingUI(screen)
                 tooltip = { title = "Tracking Mode", desc = "Choose whether this custom Aura Tracking display uses a spell-ID whitelist or Blizzard aura filters." },
                 get = function() return s.TrackingMode or "SpellIDs" end,
                 set = function(_, v)
+                    local previousMode = s.TrackingMode or "SpellIDs"
                     s.TrackingMode = v or "SpellIDs"
+                    if previousMode ~= s.TrackingMode then
+                        resetTriggerScroll = true
+                    end
                     apply(key); RebuildCurrentTab()
                 end },
             { Type = "Label", text = "Preview Spell ID" },
@@ -1312,7 +1345,13 @@ local function BuildAuraTrackingUI(screen)
                         return "Disabled"
                     end,
                     set = function(_, v)
-                        candidateFilters[filterKey] = v == "Enabled" and true or (v == "Inverted" and false or nil)
+                        if v == "Enabled" then
+                            candidateFilters[filterKey] = true
+                        elseif v == "Inverted" then
+                            candidateFilters[filterKey] = false
+                        else
+                            candidateFilters[filterKey] = nil
+                        end
                         apply(key)
                     end }
             end
@@ -1393,6 +1432,10 @@ local function BuildAuraTrackingUI(screen)
         local scrollPosition = 0
         if tabScroll[activeTab] then
             scrollPosition = tabScroll[activeTab].frame:GetVerticalScroll() or 0
+        end
+        if activeTab == "Trigger" and resetTriggerScroll then
+            scrollPosition = 0
+            resetTriggerScroll = false
         end
         container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
         for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
@@ -1772,6 +1815,12 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── SelectEntry ─────────────────────────────────────────────────────────
     SelectEntry = function(key, shouldAutoPreview)
+        local previousSettings = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
+        local nextSettings = key and NSI:GetAuraTrackingSettings(key)
+        if previousSettings and nextSettings
+            and (previousSettings.TrackingMode or "SpellIDs") ~= (nextSettings.TrackingMode or "SpellIDs") then
+            resetTriggerScroll = true
+        end
         if shouldAutoPreview ~= false then
             SwitchAutoPreview(key)
         end
