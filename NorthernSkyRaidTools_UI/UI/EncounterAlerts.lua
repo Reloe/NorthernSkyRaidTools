@@ -3518,6 +3518,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         innerTabBtns["Options"].frame:SetShown(hasOptions)
         if hasOptions then
             RebuildOptionsContent(entry)
+            activeInnerTab = "Options"
         else
             if activeInnerTab == "Options" then activeInnerTab = "Display" end
         end
