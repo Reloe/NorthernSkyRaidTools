@@ -429,7 +429,7 @@ function NSI:DuplicateAuraTrackingGroup(groupName)
     root.Custom = root.Custom or {}
     root.Groups = root.Groups or {}
 
-    local newName = groupName .. " Copy"
+    local newName = groupName .. NSI:Loc("DUPLICATE_SUFFIX")
     local suffix = 2
     local function GroupNameExists(name)
         if root.Groups[name] then return true end
@@ -439,7 +439,7 @@ function NSI:DuplicateAuraTrackingGroup(groupName)
         return false
     end
     while GroupNameExists(newName) do
-        newName = groupName .. " Copy " .. suffix
+        newName = groupName .. NSI:Loc("DUPLICATE_SUFFIX") .. " " .. suffix
         suffix = suffix + 1
     end
 
@@ -509,7 +509,7 @@ function NSI:DuplicateCustomAuraTracking(settingsKey)
     copy.builtin = nil
     copy.pinned = nil
     copy.GroupOrder = nil
-    copy.Name = (settings.Name or "Aura") .. " " .. NSI:Loc("Copy")
+    copy.Name = (settings.Name or "Aura") .. NSI:Loc("DUPLICATE_SUFFIX")
     local index = #NSRT.AuraTrackingSettings.Custom + 1
     NSRT.AuraTrackingSettings.Custom[index] = copy
     self:InitAuraTracking()
