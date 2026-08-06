@@ -206,7 +206,7 @@ function NSI:GetNote() -- simply for note comparison now
     return _G.VMRT.Note.Text1 or ""
 end
 
-function NSI:DifficultyCheck(diffs) -- check if current difficulty is a Normal/Heroic/Mythic raid and also allow checking if we are currently in an encounter
+function NSI:DifficultyCheck(diffs) -- check if current difficulty is a Normal/Heroic/Mythic raid. Mythic Flex is treated as Mythic, atleast for now.
     local diff = select(3, GetInstanceInfo()) or 0
     if diff == 233 then diff = 16 end -- Just treat Flex myth as normal myth
     return (tContains(diffs, diff) and diff) or (NSRT.Settings.Debug and 16)
