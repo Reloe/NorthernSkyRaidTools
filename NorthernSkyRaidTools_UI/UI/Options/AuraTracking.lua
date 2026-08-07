@@ -17,6 +17,7 @@ local CreateScrollBox          = NSI.UI.Components.CreateScrollBox
 local BuildWidgets             = NSI.UI.Components.BuildWidgets
 local ReskinScrollbar          = NSI.UI.Components.ReskinScrollbar
 local ShowContextMenu          = NSI.UI.Components.ShowContextMenu
+local BossData                 = NSI.UI.BossData
 
 -- ============================================================================
 -- Static option data
@@ -1489,7 +1490,7 @@ local function BuildAuraTrackingUI(screen)
     loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
     loadScroll:SetScrollChild(loadChild)
 
-    local loadCollapsed = { Roles = true, Classes = true, Specs = true }
+    local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true }
     local loadRowW = tabScrollW - 22
     local hdrPool, chkPool = {}, {}
 
@@ -1537,6 +1538,7 @@ local function BuildAuraTrackingUI(screen)
         row.fill:SetColorTexture(0, 1, 1, 0.85)
         row.fill:Hide()
         local lblFrame = CreateFrame("Frame", nil, row)
+        row.labelFrame = lblFrame
         lblFrame:EnableMouse(false)
         lblFrame:SetPoint("LEFT", row, "LEFT", 22, 0)
         lblFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
@@ -1546,6 +1548,10 @@ local function BuildAuraTrackingUI(screen)
         row.label:SetAllPoints(lblFrame)
         row.label:SetJustifyH("LEFT")
         row.label:SetJustifyV("MIDDLE")
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(16, 16)
+        row.icon:SetPoint("LEFT", row, "LEFT", 22, 0)
+        row.icon:Hide()
         row:SetScript("OnEnter", function()
             UIFrameFadeIn(hoverBg, 0.12, hoverBg:GetAlpha(), 1)
         end)
@@ -1728,11 +1734,11 @@ local function BuildAuraTrackingUI(screen)
         end
         s.loadConditions = s.loadConditions or {}
         local cond = s.loadConditions
-        cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}
+        cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}; cond.EncounterIDs = cond.EncounterIDs or {}
 
         local chkIdx = 0
         local function CountSel(tbl) local n = 0; for _ in pairs(tbl) do n = n + 1 end; return n end
-        local function AddCheck(y, label, checked, onToggle, r, g, b)
+        local function AddCheck(y, label, checked, onToggle, r, g, b, icon, texcoord)
             chkIdx = chkIdx + 1
             chkPool[chkIdx] = chkPool[chkIdx] or MakeCheckRow()
             local row = chkPool[chkIdx]
@@ -1741,6 +1747,16 @@ local function BuildAuraTrackingUI(screen)
             row:SetWidth(loadRowW)
             row.label:SetText(label)
             row.label:SetTextColor(r or 1, g or 1, b or 1, 1)
+            row.labelFrame:ClearAllPoints()
+            row.labelFrame:SetPoint("LEFT", row, "LEFT", icon and 42 or 22, 0)
+            row.labelFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+            if icon then
+                row.icon:SetTexture(icon)
+                if texcoord then row.icon:SetTexCoord(unpack(texcoord)) else row.icon:SetTexCoord(0, 1, 0, 1) end
+                row.icon:Show()
+            else
+                row.icon:Hide()
+            end
             if checked then
                 row.fill:Show(); row.box:SetBackdropBorderColor(0, 1, 1, 0.9)
                 row.bg:SetColorTexture((r or 0) * 0.3, (g or 0) * 0.3, (b or 0) * 0.3, 0.85)
@@ -1758,6 +1774,17 @@ local function BuildAuraTrackingUI(screen)
         end
 
         local y = 0
+        local encounterData = BossData.BuildBossDropdownOptions(nil, false)
+        y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSel(cond.EncounterIDs))
+        if not loadCollapsed.Encounters then
+            for _, encounter in ipairs(encounterData) do
+                local encounterID = encounter.value
+                y = AddCheck(y, encounter.label, cond.EncounterIDs[encounterID],
+                    function() cond.EncounterIDs[encounterID] = (not cond.EncounterIDs[encounterID]) or nil end,
+                    0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+            end
+        end
+        y = y + 4
         -- Roles
         y = LoadSection(y, "Roles", NSI:Loc("Roles (leave all unchecked for any role)"), CountSel(cond.Roles))
         if not loadCollapsed.Roles then

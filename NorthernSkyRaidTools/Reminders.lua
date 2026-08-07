@@ -2172,6 +2172,12 @@ function NSI:EvaluateLoad(info)
         local myName = UnitName("player")
         if cond.Names[myName] then return true end
     end
+    if cond.EncounterIDs and next(cond.EncounterIDs) then
+        shouldLoad = false
+        if self.EncounterID and (cond.EncounterIDs[self.EncounterID] or cond.EncounterIDs[tostring(self.EncounterID)]) then
+            return true
+        end
+    end
     return shouldLoad
 end
 
