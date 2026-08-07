@@ -65,11 +65,11 @@ function NSI:ToggleQoLTextPreview()
         local ResetBossIcon = "\124T"..C_Spell.GetSpellTexture(57724)..":12:12:0:0:64:64:4:60:4:60\124t"
         local CrestIcon = "\124T"..C_CurrencyInfo.GetCurrencyInfo(3347).iconFileID..":12:12:0:0:64:64:4:60:4:60\124t"
         local PrevieWTexts = {
-            "This is a preview of the QoL Text Display.",
-            NSRT.QoL.GatewayUseableDisplay and GatewayIcon.."Gateway Useable"..GatewayIcon or "",
-            NSRT.QoL.ResetBossDisplay and ResetBossIcon.."Reset Boss"..ResetBossIcon or "",
-            NSRT.QoL.LootBossReminder and CrestIcon.."Loot Boss"..CrestIcon or "",
-            "All enabled Text Displays will show here.",
+            NSI:Loc("This is a preview of the QoL Text Display."),
+            NSRT.QoL.GatewayUseableDisplay and GatewayIcon..NSI:Loc("Gateway Useable")..GatewayIcon or "",
+            NSRT.QoL.ResetBossDisplay and ResetBossIcon..NSI:Loc("Reset Boss")..ResetBossIcon or "",
+            NSRT.QoL.LootBossReminder and CrestIcon..NSI:Loc("Loot Boss")..CrestIcon or "",
+            NSI:Loc("All enabled Text Displays will show here."),
         }
         local text = ""
         for _, v in ipairs(PrevieWTexts) do -- table structure: {enabled = bool, text = string}
