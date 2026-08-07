@@ -14,13 +14,13 @@ local CauldronIcon = "\124T"..C_Spell.GetSpellTexture(448001)..":12:12:0:0:64:64
 local SoulwellIcon = "\124T"..C_Spell.GetSpellTexture(6262)..":12:12:0:0:64:64:4:60:4:60\124t"
 local RepairIcon = "\124T"..C_Spell.GetSpellTexture(126462)..":12:12:0:0:64:64:4:60:4:60\124t"
 local TextDisplays = {
-    Gateway = GatewayIcon.."Gateway Useable"..GatewayIcon,
-    ResetBoss = ResetBossIcon.."Reset Boss"..ResetBossIcon,
-    LootBoss = CrestIcon.."Loot Boss"..CrestIcon,
-    SoulwellDropped = SoulwellIcon.."%s Dropped a Soulwell"..SoulwellIcon,
-    FeastDropped = FeastIcon.."%s Dropped a Feast"..FeastIcon,
-    RepairDropped = RepairIcon.."%s Dropped a Repair"..RepairIcon,
-    CauldronDropped = CauldronIcon.."%s Dropped a Cauldron"..CauldronIcon,
+    Gateway = GatewayIcon..NSI:Loc("Gateway Useable")..GatewayIcon,
+    ResetBoss = ResetBossIcon..NSI:Loc("Reset Boss")..ResetBossIcon,
+    LootBoss = CrestIcon..NSI:Loc("Loot Boss")..CrestIcon,
+    SoulwellDropped = SoulwellIcon..NSI:Loc("%s Dropped a Soulwell")..SoulwellIcon,
+    FeastDropped = FeastIcon..NSI:Loc("%s Dropped a Feast")..FeastIcon,
+    RepairDropped = RepairIcon..NSI:Loc("%s Dropped a Repair")..RepairIcon,
+    CauldronDropped = CauldronIcon..NSI:Loc("%s Dropped a Cauldron")..CauldronIcon,
 }
 
 local ConsumableSpells = {
@@ -354,10 +354,10 @@ function NSI:VantusRuneCheck()
         end
     end
     if text ~= "" then
-        text = "Missing Vantus Runes: "..text
+        text = NSI:Loc("Missing Vantus Runes: ")..text
         print(text)
     else
-        print("Everyone has a Vantus Rune!")
+        print(NSI:Loc("Everyone has a Vantus Rune!"))
     end
 end
 
