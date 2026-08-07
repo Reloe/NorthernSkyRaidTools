@@ -826,11 +826,57 @@ local function CreateContainer()
     container:SetScript("OnDragStart", function(self) self:StartMoving() end)
     container:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
-    container.closeButton = CreateFrame("Button", nil, container, "UIPanelButtonTemplate,SecureHandlerClickTemplate")
-    container.closeButton:SetText(CLOSE)
+    container.closeButton = CreateFrame("Button", nil, container, "BackdropTemplate,SecureHandlerClickTemplate")
+    container.closeButton:SetSize(90, 24)
+    container.closeButton:SetFrameLevel(container:GetFrameLevel() + 1)
+    container.closeButton:SetBackdrop({
+        bgFile = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Buttons\WHITE8x8]],
+        edgeSize = 1,
+        tile = true,
+        tileSize = 64,
+    })
+    container.closeButton:SetBackdropColor(unpack(COLOR_BG))
+    container.closeButton:SetBackdropBorderColor(unpack(COLOR_BORDER))
+
+    local closeHover = CreateFrame("Frame", nil, container.closeButton)
+    closeHover:SetAllPoints(container.closeButton)
+    closeHover:SetFrameLevel(container.closeButton:GetFrameLevel() + 1)
+    closeHover:EnableMouse(false)
+    local closeHoverTexture = closeHover:CreateTexture(nil, "background")
+    closeHoverTexture:SetAllPoints()
+    closeHoverTexture:SetColorTexture(0, 1, 1, 0.13)
+    closeHover:SetAlpha(0)
+
+    local closeSelected = CreateFrame("Frame", nil, container.closeButton)
+    closeSelected:SetAllPoints(container.closeButton)
+    closeSelected:SetFrameLevel(container.closeButton:GetFrameLevel() + 1)
+    closeSelected:EnableMouse(false)
+    local closeSelectedTexture = closeSelected:CreateTexture(nil, "background")
+    closeSelectedTexture:SetAllPoints()
+    closeSelectedTexture:SetColorTexture(0, 1, 1, 0.20)
+    closeSelected:SetAlpha(0)
+
+    local closeLabelFrame = CreateFrame("Frame", nil, container.closeButton)
+    closeLabelFrame:SetFrameLevel(container.closeButton:GetFrameLevel() + 2)
+    closeLabelFrame:EnableMouse(false)
+    closeLabelFrame:SetAllPoints(container.closeButton)
+    local closeLabel = closeLabelFrame:CreateFontString(nil, "OVERLAY")
+    closeLabel:SetFont(NSI:ValidateFontPath(NSI:GetUIFontPath()), 14, NSI:GetUIFontFlags())
+    closeLabel:SetTextColor(1, 1, 1, 1)
+    closeLabel:SetJustifyH("CENTER")
+    closeLabel:SetJustifyV("MIDDLE")
+    closeLabel:SetAllPoints(closeLabelFrame)
+    closeLabel:SetText(CLOSE)
+
+    container.closeButton:SetScript("OnEnter", function()
+        UIFrameFadeIn(closeHover, 0.12, closeHover:GetAlpha(), 1)
+    end)
+    container.closeButton:SetScript("OnLeave", function()
+        UIFrameFadeOut(closeHover, 0.20, closeHover:GetAlpha(), 0)
+    end)
     container.closeButton:SetFrameRef("displayAnchor", displayAnchor)
     container.closeButton:SetAttribute("_onclick", [[self:GetFrameRef("displayAnchor"):Hide()]])
-    container.closeButton:SetSize(90, 24)
     container.closeButton:SetPoint("TOP", container, "BOTTOM", 0, -6)
 
     -- Tick the buff timers / glow while the box is visible.
