@@ -7,7 +7,7 @@ local function CopyAuraTrackingSetting(source, target, key)
 end
 
 local function CopyPrivateAuraSettingsToAuraTracking(source, target)
-    if not source or not target then return end
+    if not source or not target or source.enabled ~= true then return end
     for _, key in ipairs({
         "Spacing",
         "Limit",

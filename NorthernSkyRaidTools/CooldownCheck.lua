@@ -159,7 +159,7 @@ function NSI:CheckCooldowns()
         end
         if highest.time > 0 then
             if NSRT.Settings["UnreadyOnCooldown"] then ReadyCheckFrameNoButton:Click() end
-            C_ChatInfo.SendChatMessage("NSRT: My "..highest.name.." is on cooldown for "..Round(highest.time).." seconds.", "RAID")
+            C_ChatInfo.SendChatMessage(string.format(NSI:Loc("NSRT: My %s is on cooldown for %d seconds."), highest.name, Round(highest.time)), "RAID")
         end
     end
 end

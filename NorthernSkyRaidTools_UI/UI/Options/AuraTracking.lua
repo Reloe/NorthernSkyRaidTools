@@ -17,6 +17,7 @@ local CreateScrollBox          = NSI.UI.Components.CreateScrollBox
 local BuildWidgets             = NSI.UI.Components.BuildWidgets
 local ReskinScrollbar          = NSI.UI.Components.ReskinScrollbar
 local ShowContextMenu          = NSI.UI.Components.ShowContextMenu
+local BossData                 = NSI.UI.BossData
 
 -- ============================================================================
 -- Static option data
@@ -974,7 +975,8 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
             tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
-        if key == "Tank" then
+        local isCotankTracking = key == "Tank" or (s.Unit and string.lower(strtrim(s.Unit)) == "cotank")
+        if isCotankTracking then
             add({ Type = "Checkbox", label = "Only show first tank",
                 tooltip = tip("Only show first tank", "Only creates one co-tank tracking container instead of one for every co-tank found in your group."),
                 get = function() return s.OnlyShowFirstTank end, set = function(_, v) s.OnlyShowFirstTank = v; apply(key) end })
@@ -984,10 +986,10 @@ local function BuildAuraTrackingUI(screen)
                     get = function() return s.MultiTankGrow or "Same" end, set = function(_, v) s.MultiTankGrow = v or "Same"; apply(key) end })
                 add({ Type = "Slider", label = "Multi-Tank X-Offset", min = -2000, max = 2000, step = 1,
                     tooltip = tip("Multi-Tank X-Offset", "Horizontal offset of the second co-tank display relative to the first."),
-                    get = function() return s.MultiTankXOffset or 0 end, set = function(_, v) s.MultiTankXOffset = v; apply(key) end })
+                    get = function() return s.MultiTankXOffset ~= nil and s.MultiTankXOffset or s.Width end, set = function(_, v) s.MultiTankXOffset = v; apply(key) end })
                 add({ Type = "Slider", label = "Multi-Tank Y-Offset", min = -2000, max = 2000, step = 1,
                     tooltip = tip("Multi-Tank Y-Offset", "Vertical offset of the second co-tank display relative to the first."),
-                    get = function() return s.MultiTankYOffset or 0 end, set = function(_, v) s.MultiTankYOffset = v; apply(key) end })
+                    get = function() return s.MultiTankYOffset ~= nil and s.MultiTankYOffset or s.Height end, set = function(_, v) s.MultiTankYOffset = v; apply(key) end })
             end
         end
         add({ Type = "Dropdown", label = "Sort Order", values = SORT_MODES,
@@ -1247,7 +1249,7 @@ local function BuildAuraTrackingUI(screen)
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
                 and "This built-in display tracks a curated list of external/immunity buffs."
-                or  "This uses a built-in filter that filters out most of the junk debuff you don't care about.\nIt should already be the best default for raiding.\nAlternatively you can try to create your own tracking with your own filter settings.",
+                or  "This uses a built-in filter that filters out most of the junk debuffs you don't care about.\nIt should already be the best default for raiding.\nAlternatively you can try to create your own tracking with your own filter settings.",
                 height = key == "External" and 24 or 58,
                 textColor = {0.9, 0.9, 0.9, 1} } }
         end
@@ -1488,7 +1490,7 @@ local function BuildAuraTrackingUI(screen)
     loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
     loadScroll:SetScrollChild(loadChild)
 
-    local loadCollapsed = { Roles = true, Classes = true, Specs = true }
+    local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true }
     local loadRowW = tabScrollW - 22
     local hdrPool, chkPool = {}, {}
 
@@ -1536,6 +1538,7 @@ local function BuildAuraTrackingUI(screen)
         row.fill:SetColorTexture(0, 1, 1, 0.85)
         row.fill:Hide()
         local lblFrame = CreateFrame("Frame", nil, row)
+        row.labelFrame = lblFrame
         lblFrame:EnableMouse(false)
         lblFrame:SetPoint("LEFT", row, "LEFT", 22, 0)
         lblFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
@@ -1545,6 +1548,10 @@ local function BuildAuraTrackingUI(screen)
         row.label:SetAllPoints(lblFrame)
         row.label:SetJustifyH("LEFT")
         row.label:SetJustifyV("MIDDLE")
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(16, 16)
+        row.icon:SetPoint("LEFT", row, "LEFT", 22, 0)
+        row.icon:Hide()
         row:SetScript("OnEnter", function()
             UIFrameFadeIn(hoverBg, 0.12, hoverBg:GetAlpha(), 1)
         end)
@@ -1727,11 +1734,11 @@ local function BuildAuraTrackingUI(screen)
         end
         s.loadConditions = s.loadConditions or {}
         local cond = s.loadConditions
-        cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}
+        cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}; cond.EncounterIDs = cond.EncounterIDs or {}
 
         local chkIdx = 0
         local function CountSel(tbl) local n = 0; for _ in pairs(tbl) do n = n + 1 end; return n end
-        local function AddCheck(y, label, checked, onToggle, r, g, b)
+        local function AddCheck(y, label, checked, onToggle, r, g, b, icon, texcoord)
             chkIdx = chkIdx + 1
             chkPool[chkIdx] = chkPool[chkIdx] or MakeCheckRow()
             local row = chkPool[chkIdx]
@@ -1740,6 +1747,16 @@ local function BuildAuraTrackingUI(screen)
             row:SetWidth(loadRowW)
             row.label:SetText(label)
             row.label:SetTextColor(r or 1, g or 1, b or 1, 1)
+            row.labelFrame:ClearAllPoints()
+            row.labelFrame:SetPoint("LEFT", row, "LEFT", icon and 42 or 22, 0)
+            row.labelFrame:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+            if icon then
+                row.icon:SetTexture(icon)
+                if texcoord then row.icon:SetTexCoord(unpack(texcoord)) else row.icon:SetTexCoord(0, 1, 0, 1) end
+                row.icon:Show()
+            else
+                row.icon:Hide()
+            end
             if checked then
                 row.fill:Show(); row.box:SetBackdropBorderColor(0, 1, 1, 0.9)
                 row.bg:SetColorTexture((r or 0) * 0.3, (g or 0) * 0.3, (b or 0) * 0.3, 0.85)
@@ -1757,6 +1774,17 @@ local function BuildAuraTrackingUI(screen)
         end
 
         local y = 0
+        local encounterData = BossData.BuildBossDropdownOptions(nil, false)
+        y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSel(cond.EncounterIDs))
+        if not loadCollapsed.Encounters then
+            for _, encounter in ipairs(encounterData) do
+                local encounterID = encounter.value
+                y = AddCheck(y, encounter.label, cond.EncounterIDs[encounterID],
+                    function() cond.EncounterIDs[encounterID] = (not cond.EncounterIDs[encounterID]) or nil end,
+                    0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+            end
+        end
+        y = y + 4
         -- Roles
         y = LoadSection(y, "Roles", NSI:Loc("Roles (leave all unchecked for any role)"), CountSel(cond.Roles))
         if not loadCollapsed.Roles then
