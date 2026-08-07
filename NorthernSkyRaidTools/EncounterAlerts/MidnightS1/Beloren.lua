@@ -139,18 +139,11 @@ local function InitFeatherColorContainer(self, settings)
 
     if not self.FeatherColorAuraContainer then
         self.FeatherColorAuraContainer = CreateFrame("AuraContainer", "NSRTFeatherColorAuraContainer", self.NSRTFrame, "CustomAuraContainerTemplate")
-        self.FeatherColorAuraButtonRegions = {}
     end
 
     local container = self.FeatherColorAuraContainer
-    local groupKey = "NSRTBelorenFeatherColor"
     local size = settings.Size or 100
-    local layout = {
-        elementWidth = size,
-        elementHeight = size,
-        elementSpacingX = 0,
-        elementSpacingY = 0,
-    }
+    local slotKey = "NSRTBelorenFeatherColor"
 
     container:SetEnabled(false)
     container:Hide()
@@ -158,45 +151,30 @@ local function InitFeatherColorContainer(self, settings)
     container:SetPoint(settings.Anchor or "CENTER", self.NSRTFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
     container:SetSize(size, size)
     container:SetUnit("player")
-    container:SetAuraLayoutAnchorPoint("CENTER")
-    container:SetAuraLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Down)
-    container:SetAuraLayoutRowWidth(size)
-
-    if container:HasAuraGroup(groupKey) then
-        container:SetAuraGroupMaxFrameCount(groupKey, 1)
-        container:SetAuraGroupLayout(groupKey, layout)
-        container:SetAuraGroupSortMethod(groupKey, AuraContainerSortMethod.ExpirationOnly, AuraContainerSortDirection.Reverse)
-    else
-        container:AddAuraGroup(groupKey, "HARMFUL|!PLAYER", {
-            maxFrameCount = 1,
+    if not self.FeatherColorAuraSlotFrame then
+        self.FeatherColorAuraSlotFrame = container:AddAuraSlot(slotKey, "HARMFUL|!PLAYER", {
             sortMethod = AuraContainerSortMethod.ExpirationOnly,
             sortDirection = AuraContainerSortDirection.Reverse,
             initializeFrame = function(button)
-                self.FeatherColorAuraButtonRegions = self.FeatherColorAuraButtonRegions or {}
-                if not self.FeatherColorAuraButtonRegions[button] then
-                    local icon = button:CreateTexture(nil, "ARTWORK")
-                    icon:SetAllPoints(button)
-                    button:SetIcon(icon)
-                    self.FeatherColorAuraButtonRegions[button] = icon
-                end
+                local icon = button:CreateTexture(nil, "ARTWORK")
+                icon:SetAllPoints(button)
+                button:SetIcon(icon)
                 button:SetSize(size, size)
+                button:ClearAllPoints()
+                button:SetPoint("CENTER", container, "CENTER")
                 button:ClearApplicationCount()
                 button:ClearDurationText()
                 button:ClearDurationCooldown()
-                button:ClearAuraBorder()
-                button:ClearAuraSymbol()
+                button:ClearDispelTypeTextures()
+                button:ClearDispelTypeText()
                 button:SetMouseMotionEnabled(false)
             end,
-            layout = layout,
         })
-    end
-
-    if not self:Restricted() and self.FeatherColorAuraButtonRegions then
-        for button, icon in pairs(self.FeatherColorAuraButtonRegions) do
-            button:SetSize(size, size)
-            icon:ClearAllPoints()
-            icon:SetAllPoints(button)
-        end
+    elseif not self:Restricted() then
+        local button = self.FeatherColorAuraSlotFrame
+        button:SetSize(size, size)
+        button:ClearAllPoints()
+        button:SetPoint("CENTER", container, "CENTER")
     end
 
     container:Show()
