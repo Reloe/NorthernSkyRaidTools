@@ -139,6 +139,7 @@ local OFFHAND_SLOT  = 17
 local WEAPON_CLASS  = 2 -- Enum.ItemClass.Weapon
 
 local container
+local displayAnchor
 local buttons       = {}
 local hideTimer
 local updateElapsed = 0
@@ -625,13 +626,14 @@ local function StopAllGlows()
 end
 
 local function Button_OnEnter(self)
-    if self.currentSpell then
+    local button = self.parentButton
+    if button.currentSpell then
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetSpellByID(self.currentSpell)
+        GameTooltip:SetSpellByID(button.currentSpell)
         GameTooltip:Show()
-    elseif self.currentItem then
+    elseif button.currentItem then
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetItemByID(self.currentItem)
+        GameTooltip:SetItemByID(button.currentItem)
         GameTooltip:Show()
     end
 end
@@ -643,15 +645,16 @@ end
 -- Record which TYPE (variant) the player just used, as their "last used".
 -- Also prints a diagnostic so we can see whether the click even reaches here.
 local function Button_PostClick(self)
-    if self.chosenVariant and self.slot then
-        SetRemembered(self.slot.cat.key, VariantKey(self.chosenVariant))
+    local button = self.parentButton
+    if button.chosenVariant and button.slot then
+        SetRemembered(button.slot.cat.key, VariantKey(button.chosenVariant))
     end
     if NSRTConsumablesDebug then -- toggle with: /run NSRTConsumablesDebug = true
-        local name = self.chosenID and (C_Item.GetItemInfo(self.chosenID) or ("item:" .. self.chosenID))
+        local name = button.chosenID and (C_Item.GetItemInfo(button.chosenID) or ("item:" .. button.chosenID))
         print(("|cFF00FFFFNSRT|r click: slot=%s type=%s chosenID=%s name=%s owned=%s macro=%q item=%s"):format(
-            tostring(self.slot and self.slot.cat.key), tostring(self:GetAttribute("type")),
-            tostring(self.chosenID), tostring(name),
-            tostring(self.chosenID and C_Item.GetItemCount(self.chosenID)),
+            tostring(button.slot and button.slot.cat.key), tostring(self:GetAttribute("type")),
+            tostring(button.chosenID), tostring(name),
+            tostring(button.chosenID and C_Item.GetItemCount(button.chosenID)),
             tostring(self:GetAttribute("macrotext")), tostring(self:GetAttribute("item"))))
     end
 end
@@ -660,11 +663,15 @@ end
 local function AcquireButton(i)
     if buttons[i] then return buttons[i] end
 
-    local btn = CreateFrame("Button", "NSIReadyCheckConsumable" .. i, container, "SecureActionButtonTemplate")
+    local btn = CreateFrame("Frame", "NSIReadyCheckConsumable" .. i, container)
     btn:SetSize(ICON_SIZE, ICON_SIZE)
-    btn:EnableMouse(true)
-    btn:RegisterForClicks("AnyUp", "AnyDown")
     btn:SetFrameLevel(container:GetFrameLevel() + 5)
+
+    btn.click = CreateFrame("Button", nil, btn, "SecureActionButtonTemplate")
+    btn.click:SetAllPoints(btn)
+    btn.click:SetFrameLevel(btn:GetFrameLevel() + 1)
+    btn.click:RegisterForClicks("AnyUp", "AnyDown")
+    btn.click.parentButton = btn
 
     btn.icon = btn:CreateTexture(nil, "ARTWORK")
     btn.icon:SetAllPoints(btn)
@@ -688,10 +695,10 @@ local function AcquireButton(i)
     btn.duration:SetPoint("CENTER", btn, "CENTER", 0, 0)
     btn.duration:Hide()
 
-    btn:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-    btn:SetScript("OnEnter", Button_OnEnter)
-    btn:SetScript("OnLeave", Button_OnLeave)
-    btn:SetScript("PostClick", Button_PostClick)
+    btn.click:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    btn.click:SetScript("OnEnter", Button_OnEnter)
+    btn.click:SetScript("OnLeave", Button_OnLeave)
+    btn.click:SetScript("PostClick", Button_PostClick)
 
     buttons[i] = btn
     return btn
@@ -705,11 +712,11 @@ local function ConfigureButton(btn, slot, index)
     btn.override = slot.override
 
     -- Reset stale action attributes (pooled buttons switch slot types).
-    btn:SetAttribute("type", nil)
-    btn:SetAttribute("macrotext", nil)
-    btn:SetAttribute("item", nil)
-    btn:SetAttribute("target-slot", nil)
-    btn:SetAttribute("spell", nil)
+    btn.click:SetAttribute("type", nil)
+    btn.click:SetAttribute("macrotext", nil)
+    btn.click:SetAttribute("item", nil)
+    btn.click:SetAttribute("target-slot", nil)
+    btn.click:SetAttribute("spell", nil)
 
     if slot.override then
         -- Class/spec ability: a single button that casts a self-buff / weapon rite
@@ -728,12 +735,12 @@ local function ConfigureButton(btn, slot, index)
         if ov.applyToSlot then
             -- Spell creates a pending weapon enchant (like an oil): cast it, then
             -- apply it to the given weapon slot so it lands without a target cursor.
-            btn:SetAttribute("type", "macro")
-            btn:SetAttribute("macrotext",
+            btn.click:SetAttribute("type", "macro")
+            btn.click:SetAttribute("macrotext",
                 "/stopmacro [combat]\n/cast " .. spellName .. "\n/use " .. ov.applyToSlot)
         else
-            btn:SetAttribute("type", "spell")
-            btn:SetAttribute("spell", spellName)
+            btn.click:SetAttribute("type", "spell")
+            btn.click:SetAttribute("spell", spellName)
         end
     else
         local chosenID, displayID, variant = ResolveCategory(cat)
@@ -755,22 +762,22 @@ local function ConfigureButton(btn, slot, index)
             local itemName = C_Item.GetItemInfo(chosenID)
             if slot.weaponSlot then
                 -- Apply the oil to that specific weapon via the secure target-slot.
-                btn:SetAttribute("type", "item")
-                btn:SetAttribute("item", itemName or ("item:" .. chosenID))
-                btn:SetAttribute("target-slot", tostring(slot.weaponSlot))
+                btn.click:SetAttribute("type", "item")
+                btn.click:SetAttribute("item", itemName or ("item:" .. chosenID))
+                btn.click:SetAttribute("target-slot", tostring(slot.weaponSlot))
             elseif itemName then
-                btn:SetAttribute("type", "macro")
-                btn:SetAttribute("macrotext", "/stopmacro [combat]\n/use " .. itemName)
+                btn.click:SetAttribute("type", "macro")
+                btn.click:SetAttribute("macrotext", "/stopmacro [combat]\n/use " .. itemName)
             else
-                btn:SetAttribute("type", "item")
-                btn:SetAttribute("item", "item:" .. chosenID)
+                btn.click:SetAttribute("type", "item")
+                btn.click:SetAttribute("item", "item:" .. chosenID)
             end
             btn.icon:SetDesaturated(false)
             local count = C_Item.GetItemCount(chosenID)
             btn.count:SetText(count > 1 and count or "")
         else
-            btn:SetAttribute("type", "macro")
-            btn:SetAttribute("macrotext", "") -- greyed-out: clicking does nothing
+            btn.click:SetAttribute("type", "macro")
+            btn.click:SetAttribute("macrotext", "") -- greyed-out: clicking does nothing
             btn.icon:SetDesaturated(true)
             btn.count:SetText("")
         end
@@ -786,13 +793,18 @@ local function ConfigureButton(btn, slot, index)
     btn:ClearAllPoints()
     btn:SetPoint("LEFT", container, "LEFT", PADDING + (index - 1) * (ICON_SIZE + SPACING), 0)
     btn:Show()
+    btn.click:Show()
     UpdateButtonBuff(btn)
 end
 
 local function CreateContainer()
     if container then return end
 
-    container = CreateFrame("Frame", "NSIReadyCheckConsumables", UIParent, "BackdropTemplate")
+    displayAnchor = CreateFrame("Frame", nil, UIParent)
+    displayAnchor:SetSize(1, 1)
+    displayAnchor:Hide()
+
+    container = CreateFrame("Frame", "NSIReadyCheckConsumables", displayAnchor, "BackdropTemplate")
     container:SetFrameStrata("DIALOG")
     container:SetToplevel(true)
     container:Hide()
@@ -814,21 +826,16 @@ local function CreateContainer()
     container:SetScript("OnDragStart", function(self) self:StartMoving() end)
     container:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
 
-    -- Keep this runtime display independent from the optional options UI.
-    container.closeButton = CreateFrame("Button", nil, container, "UIPanelButtonTemplate")
-    container.closeButton.frame = container.closeButton
+    container.closeButton = CreateFrame("Button", nil, container, "UIPanelButtonTemplate,SecureHandlerClickTemplate")
     container.closeButton:SetText(CLOSE)
-    container.closeButton:SetScript("OnClick", function()
-        if hideTimer then
-            hideTimer:Cancel()
-            hideTimer = nil
-        end
-        container:Hide()
-    end)
+    container.closeButton:SetFrameRef("displayAnchor", displayAnchor)
+    container.closeButton:SetAttribute("_onclick", [[self:GetFrameRef("displayAnchor"):Hide()]])
     container.closeButton:SetSize(90, 24)
     container.closeButton:SetPoint("TOP", container, "BOTTOM", 0, -6)
+
     -- Tick the buff timers / glow while the box is visible.
     container:SetScript("OnUpdate", function(_, dt)
+        if NSI:Restricted() then return end
         updateElapsed = updateElapsed + dt
         if updateElapsed < 0.5 then return end
         updateElapsed = 0
@@ -848,18 +855,14 @@ local function CreateContainer()
     -- shown for everyone including the initiator, so it's the anchor we use too.
     if ReadyCheckListenerFrame then
         ReadyCheckListenerFrame:HookScript("OnHide", function()
-            if hideTimer then
-                hideTimer:Cancel()
-                hideTimer = nil
-            end
-            if container then container:Hide() end
+            NSI:HideReadyCheckConsumables()
         end)
     end
 end
 
-function NSI:ShowReadyCheckConsumables(initiator)
+function NSI:ShowReadyCheckConsumables(initiator, force)
     if self:Restricted() then return end  -- auras are secret, do nothing
-    if not NSRT.ReadyCheckSettings.ConsumablesDisplay then return end
+    if not force and not NSRT.ReadyCheckSettings.ConsumablesDisplay then return end
     if InCombatLockdown() then return end -- can't configure secure buttons in combat
 
     CreateContainer()
@@ -885,25 +888,44 @@ function NSI:ShowReadyCheckConsumables(initiator)
     local width = PADDING * 2 + shown * ICON_SIZE + (shown - 1) * SPACING
     container:SetSize(width, ICON_SIZE + PADDING * 2)
     container.closeButton:SetSize(width, 24)
+    local isInitiator = IsPlayerTheInitiator(initiator)
     -- Only the initiator (who gets no ready check popup to answer) needs Close.
-    if IsPlayerTheInitiator(initiator) then
-        container.closeButton.frame:Show()
+    if isInitiator or not ReadyCheckListenerFrame then
+        container:SetParent(displayAnchor)
+        displayAnchor:ClearAllPoints()
+        if ReadyCheckListenerFrame then
+            displayAnchor:SetPoint("BOTTOM", ReadyCheckListenerFrame, "TOP", 0, 12)
+        else
+            displayAnchor:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        end
+        container:ClearAllPoints()
+        container:SetPoint("BOTTOM", displayAnchor, "BOTTOM")
+        displayAnchor:Show()
+        container.closeButton:Show()
     else
-        container.closeButton.frame:Hide()
-    end
-    container:ClearAllPoints()
-    if ReadyCheckListenerFrame then
+        displayAnchor:Hide()
+        container:SetParent(ReadyCheckListenerFrame)
+        container:ClearAllPoints()
         container:SetPoint("BOTTOM", ReadyCheckListenerFrame, "TOP", 0, 12)
-    else
-        container:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        container.closeButton:Hide()
     end
     container:Show()
 
     -- Fallback hide in case the ready check UI's OnHide doesn't fire.
     if hideTimer then hideTimer:Cancel() end
     hideTimer = C_Timer.NewTimer(READY_CHECK_TIMEOUT or 35, function()
-        if container then container:Hide() end
+        NSI:HideReadyCheckConsumables()
     end)
+end
+
+function NSI:HideReadyCheckConsumables()
+    if hideTimer then
+        hideTimer:Cancel()
+        hideTimer = nil
+    end
+    if displayAnchor and not InCombatLockdown() and not self:Restricted() then
+        displayAnchor:Hide()
+    end
 end
 
 -- Warm the item cache so icons/tooltips are ready on the first ready check.

@@ -4,6 +4,7 @@ local debugLogFrame = CreateFrame("Frame")
 f:RegisterEvent("ENCOUNTER_START")
 f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("READY_CHECK")
+f:RegisterEvent("READY_CHECK_FINISHED")
 f:RegisterEvent("GROUP_FORMED")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
@@ -115,6 +116,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             end
         end)
+    elseif e == "READY_CHECK_FINISHED" and wowevent then
+        self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
