@@ -225,7 +225,7 @@ local function BuildQoLOptions()
             type = "toggle",
             boxfirst = true,
             name = "Add SpellID to Tooltips",
-            desc = "Adds spell IDs to aura tooltips until the next logout or reload.",
+            desc = "Automatically enables the cvar to display spellids in tooltips on every reload/login.",
             get = function() return NSRT.QoL.AddSpellIDToTooltips end,
             set = function(self, fixedparam, value)
                 NSRT.QoL.AddSpellIDToTooltips = value

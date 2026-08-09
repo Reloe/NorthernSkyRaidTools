@@ -55,8 +55,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.BlizzardNickNamesHook = false
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}
-            self.PlayedSound = {}
-            self.StartedCountdown = {}
             self.GlowStarted = {}
             self:InitNickNames()
             if self:GetProfileKey() then
@@ -142,8 +140,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.ReminderBar = self.ReminderBar or {}
         self.ReminderTimer = self.ReminderTimer or {}
         self.AllGlows = self.AllGlows or {}
-        self.PlayedSound = {}
-        self.StartedCountdown = {}
         self.GlowStarted = {}
         self.Timelines = {}
         self.RemovedTimelines = {}

@@ -20,8 +20,6 @@ local CreateLocalizedButton = NSI.UI.Components.CreateLocalizedButton
 function NSI:SpawnPreviewReminders()
     self:HideAllReminders()
     self.AllGlows = self.AllGlows or {}
-    self.PlayedSound = {}
-    self.StartedCountdown = {}
     self.GlowStarted = {}
     self.LGF.GetUnitFrame("player")
     local info1 = {
