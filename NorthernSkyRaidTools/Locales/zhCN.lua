@@ -979,6 +979,8 @@ L["|cFF00FFFFEncounter|r Alerts"] = "|cFF00FFFF首领|r预警"
 L["Export Alerts"] = "导出预警"
 L["Import Alerts"] = "导入预警"
 L["Paste an alerts export string below and click Import."] = "在下方粘贴预警字符串并点击导入。"
+L["Imported %d alert(s)."] = "已导入%d个预警。"
+L["Overwritten %d alert(s)."] = "已覆盖%d个预警。"
 L["All encounter alerts"] = "所有首领预警"
 -- Left panel
 L["+ Create Alert"] = "+ 创建预警"
