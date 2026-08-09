@@ -653,10 +653,7 @@ function NSI:ArrangeStates(DisplayType)
     end
 end
 
-function NSI:SetProperties(F, info, skipsound, s)
-    -- Active reminders tick frequently for sound timing, but their visible text
-    -- usually changes only once per second. Keep the last values on the pooled
-    -- frame so repeated ticks do not issue redundant region updates.
+function NSI:SetProperties(F, info, s)
     F.lastReminderText = nil
     F.lastReminderTimerText = nil
     F.lastReminderDisplayBucket = nil
@@ -665,10 +662,17 @@ function NSI:SetProperties(F, info, skipsound, s)
         self.elapsed = (self.elapsed or 0) + elapsed
         if self.elapsed < 0.025 then return end
         self.elapsed = 0
-        NSI:UpdateReminderDisplay(info, F, skipsound)
+        NSI:UpdateReminderDisplay(info, F)
     end)
     F.info = info
     F:SetScript("OnHide", function()
+        local timers = self.ReminderSoundTimers and self.ReminderSoundTimers[info]
+        if timers then
+            for _, timer in pairs(timers) do
+                timer:Cancel()
+            end
+            self.ReminderSoundTimers[info] = nil
+        end
         if not F.IsUnitFrameIcon and info.glowunit then
             self:HideGlows(info.glowunit, "p"..info.phase.."id"..info.id)
         end
@@ -781,7 +785,7 @@ function NSI:CreateText(info)
     local s = NSRT.ReminderSettings.TextSettings
     for i=1, #self.ReminderText+1 do
         if self.ReminderText[i] and not self.ReminderText[i]:IsShown() then
-            self:SetProperties(self.ReminderText[i], info, false, s)
+            self:SetProperties(self.ReminderText[i], info, s)
             return self.ReminderText[i]
         end
         if not self.ReminderText[i] then
@@ -796,7 +800,7 @@ function NSI:CreateText(info)
             F.Text:SetPoint(anchor, F, anchor, 0, 0)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
-            self:SetProperties(F, info, false, s)
+            self:SetProperties(F, info, s)
             self.ReminderText[i] = F
             return F
         end
@@ -808,7 +812,7 @@ function NSI:CreateIcon(info)
     local s = NSRT.ReminderSettings.IconSettings
     for i=1, #self.ReminderIcon+1 do
         if self.ReminderIcon[i] and not self.ReminderIcon[i]:IsShown() then
-            self:SetProperties(self.ReminderIcon[i], info, false, s)
+            self:SetProperties(self.ReminderIcon[i], info, s)
             return self.ReminderIcon[i]
         end
         if not self.ReminderIcon[i] then
@@ -848,7 +852,7 @@ function NSI:CreateIcon(info)
             F.TimerText = F.TimerOverlay:CreateFontString(nil, "OVERLAY")
             F.TimerText:SetPoint("CENTER", F, "CENTER", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
-            self:SetProperties(F, info, false, s)
+            self:SetProperties(F, info, s)
             self.ReminderIcon[i] = F
             return F
         end
@@ -871,7 +875,7 @@ function NSI:CreateUnitFrameIcon(info, name)
             self.UnitIcon[i]:ClearAllPoints()
             self.UnitIcon[i]:SetPoint(s.Position, UnitFrame, s.Position, s.xOffset, s.yOffset)
             self.UnitIcon[i].IsUnitFrameIcon = true
-            self:SetProperties(self.UnitIcon[i], info, true, s)
+            self:SetProperties(self.UnitIcon[i], info, s)
             return self.UnitIcon[i]
         end
         if not self.UnitIcon[i] then
@@ -890,7 +894,7 @@ function NSI:CreateUnitFrameIcon(info, name)
             })
             F.Border:SetBackdropBorderColor(0, 0, 0, 1)
             F.IsUnitFrameIcon = true
-            self:SetProperties(F, info, true, s)
+            self:SetProperties(F, info, s)
             self.UnitIcon[i] = F
             return F
         end
@@ -902,7 +906,7 @@ function NSI:CreateBar(info)
     local s = NSRT.ReminderSettings.BarSettings
     for i=1, #self.ReminderBar+1 do
         if self.ReminderBar[i] and not self.ReminderBar[i]:IsShown() then
-            self:SetProperties(self.ReminderBar[i], info, false, s)
+            self:SetProperties(self.ReminderBar[i], info, s)
             return self.ReminderBar[i]
         end
         if not self.ReminderBar[i] then
@@ -936,7 +940,7 @@ function NSI:CreateBar(info)
             F.TimerText = F:CreateFontString(nil, "OVERLAY")
             F.TimerText:SetPoint("RIGHT", F, "RIGHT", s.xTimer, s.yTimer)
             F.TimerText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
-            self:SetProperties(F, info, false, s)
+            self:SetProperties(F, info, s)
             self.ReminderBar[i] = F
             return F
         end
@@ -948,7 +952,7 @@ function NSI:CreateCircle(info)
     local s = NSRT.ReminderSettings.CircleSettings
     for i = 1, #self.ReminderCircle + 1 do
         if self.ReminderCircle[i] and not self.ReminderCircle[i]:IsShown() then
-            self:SetProperties(self.ReminderCircle[i], info, false, s)
+            self:SetProperties(self.ReminderCircle[i], info, s)
             return self.ReminderCircle[i]
         end
         if not self.ReminderCircle[i] then
@@ -984,7 +988,7 @@ function NSI:CreateCircle(info)
             F:SetPoint("BOTTOMLEFT", "NSUIReminderCircleMover", "BOTTOMLEFT", xoff, yoff)
             F:SetPoint("TOPRIGHT",   "NSUIReminderCircleMover", "TOPRIGHT",   xoff, yoff)
             self.ReminderCircle[i] = F
-            self:SetProperties(F, info, false, s)
+            self:SetProperties(F, info, s)
             return F
         end
     end
@@ -1061,6 +1065,41 @@ function NSI:GetDisplayedText(rem, info, F)
     end
 end
 
+function NSI:ScheduleReminderSoundTimers(info)
+    self.ReminderSoundTimers = self.ReminderSoundTimers or {}
+    local existingTimers = self.ReminderSoundTimers[info]
+    if existingTimers then
+        for _, timer in pairs(existingTimers) do
+            timer:Cancel()
+        end
+    end
+
+    local timers = {}
+    local remainingDuration = info.dur - (GetTime() - info.startTime)
+    if info.sound or info.TTS then
+        local soundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
+        timers.sound = C_Timer.NewTimer(math.max(remainingDuration - soundTimer - 0.25, 0), function()
+            self:PlayReminderSound(info)
+            timers.sound = nil
+            if not timers.countdown then
+                self.ReminderSoundTimers[info] = nil
+            end
+        end)
+    end
+    if info.countdown then
+        timers.countdown = C_Timer.NewTimer(math.max(remainingDuration - info.countdown - 0.25, 0), function()
+            NSAPI:TTSCountdown(info.countdown)
+            timers.countdown = nil
+            if not timers.sound then
+                self.ReminderSoundTimers[info] = nil
+            end
+        end)
+    end
+    if next(timers) then
+        self.ReminderSoundTimers[info] = timers
+    end
+end
+
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
@@ -1073,6 +1112,7 @@ function NSI:DisplayReminder(info, bypass)
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
     end
+    self:ScheduleReminderSoundTimers(info)
     local F
     local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
@@ -1126,21 +1166,12 @@ function NSI:DisplayReminder(info, bypass)
     return F
 end
 
-function NSI:UpdateReminderDisplay(info, F, skipsound)
+function NSI:UpdateReminderDisplay(info, F)
     local now = GetTime()
     local elapsed = now - info.startTime
     local rem = info.dur - elapsed
     local encId = info.encID or 0
     local phase = info.phase or 0
-    local SoundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
-    if rem-0.25 <= SoundTimer and (not self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id]) and (not skipsound) then
-        self:PlayReminderSound(info)
-        self.PlayedSound["enc"..encId.."ph"..phase.."id"..info.id] = true
-    end
-    if info.countdown and rem-0.25 <= info.countdown and (not self.StartedCountdown["enc"..encId.."ph"..info.phase.."id"..info.id]) and (not skipsound) then
-        NSAPI:TTSCountdown(info.countdown)
-        self.StartedCountdown["enc"..encId.."ph"..phase.."id"..info.id] = true
-    end
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
         F:Hide()
@@ -1373,6 +1404,7 @@ function NSI:DelayAllReminders(delay)
                     if F.info and F.info.dur then
                         F.info.expires = F.info.expires + delay
                         F.info.startTime = F.info.startTime + delay
+                        self:ScheduleReminderSoundTimers(F.info)
                         self:UpdateReminderDisplay(F.info, F)
                     end
                 end
@@ -1392,9 +1424,15 @@ function NSI:DelayAllReminders(delay)
 end
 
 function NSI:HideAllReminders(FullReset)
-    self.PlayedSound = {}
-    self.StartedCountdown = {}
     self.GlowStarted = {}
+    if self.ReminderSoundTimers then
+        for _, timers in pairs(self.ReminderSoundTimers) do
+            for _, timer in pairs(timers) do
+                timer:Cancel()
+            end
+        end
+        self.ReminderSoundTimers = {}
+    end
     if self.ReminderTimer then
         for i, v in ipairs(self.ReminderTimer) do
             v:Cancel()
