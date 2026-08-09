@@ -1909,22 +1909,27 @@ function NSAPI:DebugNextPhase(num)
     end
 end
 
+-- /run NSAPI:DebugEncounter(3306)
 function NSAPI:DebugEncounter(EncounterID, Stop)
-    if not NSRT.Settings["Debug"] then return end
+    local current = NSRT.Settings.Debug
+    NSRT.Settings.Debug = true
     if Stop then
-        NSI.EncounterAlertStop[EncounterID](NSI, 16)
         NSI:EventHandler("ENCOUNTER_END", true, true, EncounterID)
+        NSRT.Settings.Debug = current
         return
     end
     NSI.ProcessedReminder = nil
     NSI.Assignments = NSRT.AssignmentSettings
     NSI:EventHandler("ENCOUNTER_START", true, true, EncounterID)
+    NSRT.Settings.Debug = current
 end
--- /run NSAPI:DebugEncounter(3306)
+
 -- /run NSAPI:DebugTimeline("ENCOUNTER_TIMELINE_EVENT_ADDED", 120.9)
 function NSAPI:DebugTimeline(e, dur)
-    if not NSRT.Settings["Debug"] then return end
+    local current = NSRT.Settings.Debug
+    NSRT.Settings.Debug = true
     NSI:EventHandler(e, true, true, {duration = dur})
+    NSRT.Settings.Debug = current
 end
 
 function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID) -- only used for Assignments now
