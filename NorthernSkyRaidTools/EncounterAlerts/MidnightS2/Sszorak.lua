@@ -109,7 +109,6 @@ NSI.InitializeAlerts[encID] = function(self)
                 tooltip = {title = "ShowSenderNames", desc = "Shows the sender next to each entered number."}},
             { Type = "Button", label = "Create Macros", width = 150,
                 func = [[return function()
-                    
                     local iconIDs = {"137001", "137002", "137003", "137004", "137005", "137006", "137007", "137008"}
                     for i=1, 8 do
                         local macroName = "NSRT_SSZORAK_" .. i
