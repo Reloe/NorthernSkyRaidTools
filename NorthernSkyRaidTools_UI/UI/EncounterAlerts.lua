@@ -205,9 +205,9 @@ local function ShowImportPopup()
             local str = alertsImportPopup.textbox:GetText()
             local count, overwriteCount = NSAPI:ImportAlertsString(str)
             if count then
-                print("|cFF00FFFFNSRT:|r Imported " .. count .. " alert(s).")
+                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d alert(s)."), count))
                 if overwriteCount and overwriteCount > 0 then
-                    print("|cFFFFFF00NSRT:|r Overwritten " .. overwriteCount .. " alert(s).")
+                    print("|cFFFFFF00NSRT:|r " .. string.format(NSI:Loc("Overwritten %d alert(s)."), overwriteCount))
                 end
                 alertsImportPopup:Hide()
                 local enc = NSUI.encounters_frame
