@@ -323,15 +323,15 @@ local function BuildEncounterAlertsUI(parentFrame)
             if screen.RebuildList then screen.RebuildList() end
         end
         return {
-            { label = "M", value = 16, onclick = function() switchDiff(16) end },
-            { label = "H", value = 15, onclick = function() switchDiff(15) end },
-            { label = "N", value = 14, onclick = function() switchDiff(14) end },
+            { label = NSI:Loc("M"), value = 16, onclick = function() switchDiff(16) end },
+            { label = NSI:Loc("H"), value = 15, onclick = function() switchDiff(15) end },
+            { label = NSI:Loc("N"), value = 14, onclick = function() switchDiff(14) end },
         }
     end
 
     local function getDiffSelected()
         local names = { [16] = "M", [15] = "H", [14] = "N" }
-        return names[filterDiffID] or tostring(filterDiffID)
+        return NSI:Loc(names[filterDiffID]) or tostring(filterDiffID)
     end
 
     local diffDD = CreateDropdown(screen, nil, BuildDiffOptions, getDiffSelected,

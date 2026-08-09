@@ -102,6 +102,9 @@ L["Normal"] = "普通"
 L["Heroic"] = "英雄"
 L["Mythic"] = "史诗"
 L["All Bosses"] = "所有首领"
+L["N"] = "普通"
+L["H"] = "困难"
+L["M"] = "史诗"
 L["Imperator Averzian"] = "元首阿福扎恩"
 L["Vorasius"] = "弗拉希乌斯"
 L["Fallen-King Salhadaar"] = "堕落之王萨哈达尔"
@@ -1088,6 +1091,7 @@ L["Create Macros"] = "创建宏"
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "自动创建用于记忆游戏的宏。需要下载并替换图标文件才能显示正确的宏图标。"
 L["FontSize"] = "字体大小"
 L["relativeTo"] = "附着点"
+L["Winds Helper"] = "狂风助手"
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
 -- ============================================================================

@@ -102,6 +102,9 @@ L["Normal"] = "Normal"
 L["Heroic"] = "Heroic"
 L["Mythic"] = "Mythic"
 L["All Bosses"] = "All Bosses"
+L["N"] = "N"
+L["H"] = "H"
+L["M"] = "M"
 L["Imperator Averzian"] = "Imperator Averzian"
 L["Vorasius"] = "Vorasius"
 L["Fallen-King Salhadaar"] = "Fallen-King Salhadaar"
@@ -1088,6 +1091,7 @@ L["Create Macros"] = "Create Macros"
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"
 L["FontSize"] = "FontSize"
 L["relativeTo"] = "relativeTo"
+L["Winds Helper"] = "Winds Helper"
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
 -- ============================================================================
