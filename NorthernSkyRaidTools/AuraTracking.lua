@@ -1683,9 +1683,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     container:SetFlowLayoutAnchorPoint(layoutAnchorPoint)
     container:SetFlowLayoutGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
     container:SetFlowLayoutMaximumLineSize(rowWidth)
-    if container.MarkDirty and AuraContainerDirtyMask then
-        container:MarkDirty(AuraContainerDirtyMask.AuraFrameLayout)
-    end
 
     local auraGroups = {}
     if isExternal then
