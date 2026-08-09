@@ -390,11 +390,11 @@ local function GetSoundPath(sound)
     return lsmKey and NSI.LSM:Fetch("sound", lsmKey, true)
 end
 
-local UnitAuraSoundTrigger = Enum and Enum.UnitAuraSoundTrigger
+local UnitAuraSoundTrigger = Enum.UnitAuraSoundTrigger
 local AuraSoundEventTriggers = {
-    applied = UnitAuraSoundTrigger and UnitAuraSoundTrigger.Added or 0,
-    stackGain = UnitAuraSoundTrigger and UnitAuraSoundTrigger.ApplicationsIncreased or 1,
-    removed = UnitAuraSoundTrigger and UnitAuraSoundTrigger.Removed or 2,
+    applied = UnitAuraSoundTrigger.Added,
+    stackGain = UnitAuraSoundTrigger.ApplicationsIncreased,
+    removed = UnitAuraSoundTrigger.Removed,
 }
 
 local function RemoveRegisteredAuraSound(soundID)

@@ -2234,11 +2234,7 @@ end
 
 local function ResolveCtxIcon(item)
     if item.spellIcon then
-        if C_Spell and C_Spell.GetSpellTexture then
-            return C_Spell.GetSpellTexture(item.spellIcon)
-        elseif GetSpellTexture then
-            return GetSpellTexture(item.spellIcon)
-        end
+        return C_Spell.GetSpellTexture(item.spellIcon)
     end
     return item.icon or nil
 end

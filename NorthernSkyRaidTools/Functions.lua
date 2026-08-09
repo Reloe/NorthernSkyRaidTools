@@ -85,7 +85,7 @@ function NSI:GetSortedPhaseKeys(phaseTimers)
 end
 
 function NSI:GetActiveEncounterTimelineEventCount()
-    return C_EncounterTimeline and C_EncounterTimeline.GetEventCountBySource and C_EncounterTimeline.GetEventCountBySource(0) or 0
+    return C_EncounterTimeline.GetEventCountBySource(0)
 end
 
 function NSI:SortTable(t, reversed)
@@ -150,10 +150,7 @@ end
 function NSAPI:GetRange(unit)
     if not unit or not UnitExists(unit) then return false end
 
-    local lib = LibStub and LibStub("LibRangeCheck-3.0", true)
-    if not lib then return false end
-
-    return lib:GetRange(unit, true)
+    return LibStub("LibRangeCheck-3.0"):GetRange(unit, true)
 end
 
 function NSI:GetSpecs(unit)
@@ -286,7 +283,7 @@ function NSAPI:TTS(sound, voice) -- NSAPI:TTS("Bait Frontal")
             C_VoiceChat.SpeakText(
                 num,
                 sound,
-                C_TTSSettings and C_TTSSettings.GetSpeechRate() or 0,
+                C_TTSSettings.GetSpeechRate(),
                 NSRT.Settings.TTSVolume,
                 NSRT.Settings.TTSOverlap
             )

@@ -580,11 +580,7 @@ function NSI:AutoPromotePass(force)
         C_Timer.After((idx - 1) * 0.1, function()
             if not UnitExists(unit) then return end
             if UnitIsGroupAssistant(unit) or UnitIsGroupLeader(unit) then return end
-            if C_PartyInfo and C_PartyInfo.PromoteToAssistant then
-                C_PartyInfo.PromoteToAssistant(unit)
-            elseif PromoteToAssistant then
-                PromoteToAssistant(unit)
-            end
+            C_PartyInfo.PromoteToAssistant(unit)
         end)
     end
 end

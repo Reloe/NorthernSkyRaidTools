@@ -2196,7 +2196,7 @@ function NSI:EvaluateLoad(info)
     local shouldLoad = true
     if cond.Roles and next(cond.Roles) then
         shouldLoad = false
-        self.LS = self.LS or LibStub("LibSpecialization", true)
+        self.LS = self.LS or LibStub("LibSpecialization")
         local myRole, myPos = select(2, self.LS.MySpecialization())
         if cond.Roles[myRole] or cond.Roles[myPos] then return true end
     end
