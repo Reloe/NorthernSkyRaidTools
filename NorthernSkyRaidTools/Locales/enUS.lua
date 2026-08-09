@@ -979,6 +979,8 @@ L["|cFF00FFFFEncounter|r Alerts"] = "|cFF00FFFFEncounter|r Alerts"
 L["Export Alerts"] = "Export Alerts"
 L["Import Alerts"] = "Import Alerts"
 L["Paste an alerts export string below and click Import."] = "Paste an alerts export string below and click Import."
+L["Imported %d alert(s)."] = "Imported %d alert(s)."
+L["Overwritten %d alert(s)."] = "Overwritten %d alert(s)."
 L["All encounter alerts"] = "All encounter alerts"
 -- Left panel
 L["+ Create Alert"] = "+ Create Alert"
