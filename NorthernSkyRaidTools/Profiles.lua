@@ -289,6 +289,8 @@ function NSI:AddMissingDefaults()
                 GrowDirection = "Up",
                 TextFormat = "%text",
                 TimerFormat = "%p",
+                HiddenTextFormat = "%text",
+                HiddenTimerFormat = "",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
                 Sticky = 5,
@@ -317,6 +319,7 @@ function NSI:AddMissingDefaults()
             TextSettings = {
                 textColors = { 1, 1, 1, 1 },
                 TextFormat = "%icon%text (%p)",
+                HiddenTextFormat = "%icon%text",
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
@@ -332,6 +335,7 @@ function NSI:AddMissingDefaults()
             CircleSettings = {
                 GrowDirection = "Up",
                 TextFormat = "%icon%text (%p)",
+                HiddenTextFormat = "%icon%text",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
                 Sticky = 0,
