@@ -12,3 +12,4 @@
 - Add Pace Comparison Module (similar to the Pace WeakAuras back in Manaforge but bit more restricted)
 - Add QoL setting to show aura spell IDs in tooltips
 - Add S2 Sound Data for Raids & Dungeons
+- Add Manual Translation option for Encounter Alerts
