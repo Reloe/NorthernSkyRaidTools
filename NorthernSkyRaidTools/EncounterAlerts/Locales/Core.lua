@@ -1,4 +1,5 @@
 local _, NSI = ...
+local DF = _G["DetailsFramework"]
 
 -- ============================================================================
 -- Encounter Alert Translation System
@@ -11,22 +12,26 @@ local _, NSI = ...
 
 NSI.EncounterAlertLocales = NSI.EncounterAlertLocales or {}
 
+function NSI:EncounterAlertLoc(key)
+    local locale = NSRT.Alerts and NSRT.Alerts.Language
+    if not locale or locale == "Auto" then
+        locale = self:GetSelectedLanguage()
+    end
+
+    local languageTable = DF.Language.GetLanguageTable("NorthernSkyRaidTools", locale)
+    local text = languageTable and languageTable[key]
+    if text == true then return key end
+    if text then return text end
+
+    local englishTable = DF.Language.GetLanguageTable("NorthernSkyRaidTools", "enUS")
+    text = englishTable and englishTable[key]
+    if text == true then return key end
+    return text or key
+end
+
 -- ============================================================================
 -- Internal Helpers
 -- ============================================================================
-
-local function GetTranslation(encID, internalID, locale)
-    local translations = NSI.EncounterAlertLocales[locale]
-    if not translations then return nil end
-    local encTranslations = translations[encID]
-    if not encTranslations then return nil end
-    return encTranslations[internalID]
-end
-
-local function GetEnglishOriginal(encID, internalID)
-    local originals = NSRT.EncounterAlertOriginals
-    return originals and originals[encID] and originals[encID][internalID]
-end
 
 local function StoreEnglishOriginals(encID, alertTable)
     if not NSRT.EncounterAlertOriginals then
@@ -38,7 +43,7 @@ local function StoreEnglishOriginals(encID, alertTable)
         NSRT.EncounterAlertOriginals[encID] = encOriginals
     end
     for internalID, alert in pairs(alertTable) do
-        if type(alert) == "table" and alert.IsAlert and not encOriginals[internalID] then
+        if type(alert) == "table" and alert.ReloeReminder == true and not encOriginals[internalID] then
             encOriginals[internalID] = {
                 text  = alert.text,
                 name  = alert.name,
@@ -55,7 +60,7 @@ local function ApplyTranslation(alert, original, translation)
     if translation.name and original.name then
         alert.name = translation.name
     end
-    if translation.group and original.group then
+    if not alert.UserModifiedGroup and translation.group and original.group then
         alert.group = translation.group
     end
 end
@@ -68,7 +73,7 @@ local function RestoreToEnglish(alert, original)
     if original.name then
         alert.name = original.name
     end
-    if original.group then
+    if not alert.UserModifiedGroup and original.group then
         alert.group = original.group
     end
 end
@@ -88,10 +93,13 @@ function NSI:TranslateAllEncounterAlerts(locale)
                 if type(alertTable) == "table" then
                     StoreEnglishOriginals(encID, alertTable)
                     for internalID, alert in pairs(alertTable) do
-                        if type(alert) == "table" and alert.IsAlert then
-                            local translation = GetTranslation(encID, internalID, locale)
+                        if type(alert) == "table" and alert.ReloeReminder == true then
+                            local translations = NSI.EncounterAlertLocales[locale]
+                            local encTranslations = translations and translations[encID]
+                            local translation = encTranslations and encTranslations[internalID]
                             if translation then
-                                local original = GetEnglishOriginal(encID, internalID)
+                                local originals = NSRT.EncounterAlertOriginals
+                                local original = originals and originals[encID] and originals[encID][internalID]
                                 ApplyTranslation(alert, original, translation)
                                 translatedCount = translatedCount + 1
                             end
@@ -110,8 +118,9 @@ function NSI:RestoreAllEncounterAlerts()
             for _, alertTable in pairs(diffTable) do
                 if type(alertTable) == "table" then
                     for internalID, alert in pairs(alertTable) do
-                        if type(alert) == "table" and alert.IsAlert then
-                            local original = GetEnglishOriginal(encID, internalID)
+                        if type(alert) == "table" and alert.ReloeReminder == true then
+                            local originals = NSRT.EncounterAlertOriginals
+                            local original = originals and originals[encID] and originals[encID][internalID]
                             RestoreToEnglish(alert, original)
                         end
                     end

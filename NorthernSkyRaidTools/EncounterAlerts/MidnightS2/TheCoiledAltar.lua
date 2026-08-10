@@ -145,14 +145,14 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     for index, timer in ipairs(p1SoakTimers[diff]) do
         local shouldSoak = (index == 1 and group == 1) or (index == 2 and group == 2)
         alert.time = timer
-        alert.text = shouldSoak and NSI:Loc("|cFF00FF00SOAK") or NSI:Loc("|cFFFF0000DON'T SOAK")
-        alert.TTS = shouldSoak and NSI:Loc("Soak") or NSI:Loc("Don't soak")
+        alert.text = shouldSoak and NSI:EncounterAlertLoc("|cFF00FF00SOAK") or NSI:EncounterAlertLoc("|cFFFF0000DON'T SOAK")
+        alert.TTS = shouldSoak and NSI:EncounterAlertLoc("Soak") or NSI:EncounterAlertLoc("Don't soak")
         self:AddToReminder(alert)
     end
 
     if NSRT.AssignmentSettings.OnPull then
         local side = group == 1 and "First" or "Second"
-        self:DisplayText(string.format(NSI:Loc("You are assigned to the |cFF00FF00%s|r Coiled Altar soak"), NSI:Loc(side)), 5)
+        self:DisplayText(string.format(NSI:EncounterAlertLoc("You are assigned to the |cFF00FF00%s|r Coiled Altar soak"), NSI:EncounterAlertLoc(side)), 5)
     end
 end
 

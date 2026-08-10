@@ -291,13 +291,13 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     alert.TTSTimer = 0
     for _, timer in ipairs(tankComboTimers[diff]) do
         alert.time = timer
-        alert.text = group == 1 and NSI:Loc("|cFF00FF00Soak Left") or NSI:Loc("|cFF00FF00Soak Right")
-        alert.TTS = group == 1 and NSI:Loc("Soak Left") or NSI:Loc("Soak Right")
+        alert.text = group == 1 and NSI:EncounterAlertLoc("|cFF00FF00Soak Left") or NSI:EncounterAlertLoc("|cFF00FF00Soak Right")
+        alert.TTS = group == 1 and NSI:EncounterAlertLoc("Soak Left") or NSI:EncounterAlertLoc("Soak Right")
         self:AddToReminder(alert)
     end
 
     if NSRT.AssignmentSettings.OnPull then
         local side = group == 1 and "Left" or "Right"
-        self:DisplayText(string.format(NSI:Loc("You are assigned to soak |cFF00FF00%s|r"), NSI:Loc(side)), 5)
+        self:DisplayText(string.format(NSI:EncounterAlertLoc("You are assigned to soak |cFF00FF00%s|r"), NSI:EncounterAlertLoc(side)), 5)
     end
 end
