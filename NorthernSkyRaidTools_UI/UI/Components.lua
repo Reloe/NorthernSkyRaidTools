@@ -1822,6 +1822,12 @@ local function CreateScrollBox(parent, width, height)
     child:SetWidth(width - SB_W - 2)
     child:SetHeight(1)
     scrollFrame:SetScrollChild(child)
+    local scrollBar = _G[boxName .. "ScrollBar"]
+    if scrollBar then
+        scrollBar:ClearAllPoints()
+        scrollBar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 0, -16)
+        scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", 0, 16)
+    end
     ReskinScrollbar(scrollFrame)
 
     local obj = { frame = scrollFrame, scrollChild = child }

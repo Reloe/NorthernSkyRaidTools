@@ -277,14 +277,20 @@ local function RebuildWindowContent(win, settingsName, rowW)
         win.Title:SetText(T(settingsName:gsub("Settings", " Settings")))
     end
 
-    local content = CreateFrame("Frame", nil, win)
-    content:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
-    content:SetWidth(rowW)
+    local scrollBox
+    local visibleHeight = 420
 
-    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), rowW)
+    scrollBox = NSI.UI.Components.CreateScrollBox(win, rowW, visibleHeight)
+    scrollBox:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
+    local content = scrollBox.scrollChild
+
+    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), content:GetWidth())
     content:SetHeight(contentH)
-    win:SetHeight(PAD_TOP + contentH + 8)
-    win.Content = content
+    local scrollHeight = math.min(visibleHeight, math.max(contentH, 1))
+    scrollBox:SetSize(rowW, scrollHeight)
+    scrollBox:UpdateScrollBar()
+    win:SetHeight(PAD_TOP + scrollHeight + 8)
+    win.Content = scrollBox.frame
     win.LanguageId = NSI:GetSelectedLanguage()
 end
 
