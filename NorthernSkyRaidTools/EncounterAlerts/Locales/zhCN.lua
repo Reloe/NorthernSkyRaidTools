@@ -160,8 +160,9 @@ L[3470] = {
 L[3445] = {
     ["PoisonHits"] = {text = "坦克打击", name = "强化猛击（坦克）", group = "哨兵"},
     ["BloodHits"] = {text = "坦克打击", name = "鲜血毒液注射（坦克）", group = "哨兵"},
-    ["BloodDropPool"] = {text = "鲜血放水", name = "鲜血毒液（放水）", group = "哨兵"},
+    ["BloodDropPool"] = {text = "坦克放水", name = "鲜血毒液注射（放水）", group = "哨兵"},
     ["BloodSoak"] = {text = "鲜血分摊", name = "不稳定的瘴气（分摊）", group = "哨兵"},
+    ["BloodSoakPool"] = {text = "分摊放水", name = "不稳定的瘴气（放水）", group = "哨兵"},
     ["BloodDispels"] = {text = "鲜血驱散", name = "凋零之血（驱散）", group = "哨兵"},
     ["PoisonAdd"] = {text = "毒液小怪刷新", name = "毒液凝块（小怪）", group = "哨兵"},
     ["OrbSpawn"] = {text = "引水滴", name = "剧毒水滴（引诱）", group = "哨兵"},
