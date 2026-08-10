@@ -603,10 +603,10 @@ end
 --    :IsEnabled() → bool
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
-                               width, height, numeric, minVal, maxVal, name, tooltip)
+                               width, height, numeric, minVal, maxVal, name, tooltip, inputWidth)
     local totalW    = width or 220
     local totalH    = height or 22
-    local BOX_W     = 60
+    local BOX_W     = inputWidth or 60
     local GAP       = 8
     local hasLabel  = label and label ~= ""
     local baseLevel = parent:GetFrameLevel() + 1
@@ -1962,7 +1962,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         elseif t == "TextEntry" then
             ctrl = C.CreateTextEntry(parent, def.label,
                 ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.numeric, def.min, def.max, wName, def.tooltip)
+                width, h, def.numeric, def.min, def.max, wName, def.tooltip, def.inputWidth)
 
         elseif t == "Label" then
             ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight, def.textColor)

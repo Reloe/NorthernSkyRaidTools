@@ -162,7 +162,7 @@ function NSI:CreateReminder(info, preview)
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.countdown = info.countdown and tonumber(info.countdown)
     info.dur = info.dur or 8
-    if info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings[settingsRef[info.DisplayType]].HideTimerText end
+    if info.DisplayType == "Icon" and info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings.IconSettings.HideTimerText end
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
     info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
@@ -509,7 +509,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Text:ClearAllPoints()
             F.Text:SetPoint(anchor, F, relativePoint, s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
-            if s.HideTimerText then
+            if s.HideTimerText or F.info.HideTimer then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -543,7 +543,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             F.Icon:SetSize(s.Height, s.Height)
             F.Text:SetPoint("LEFT", F.Icon, "RIGHT", s.xTextOffset, s.yTextOffset)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
-            if s.HideTimerText then
+            if F.info and F.info.HideTimer and F.info.text and F.info.text ~= "" and not s.TimerFormat:find("%text", 1, true) then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -658,6 +658,9 @@ function NSI:SetProperties(F, info, s)
     F.lastReminderTimerText = nil
     F.lastReminderDisplayBucket = nil
     F.reminderTimerTextIsRed = nil
+    F.reminderTextTemplate = nil
+    F.reminderTimerTemplate = nil
+    F.reminderTimerHidden = nil
     F:SetScript("OnUpdate", function(self, elapsed)
         self.elapsed = (self.elapsed or 0) + elapsed
         if self.elapsed < 0.025 then return end
@@ -690,10 +693,10 @@ function NSI:SetProperties(F, info, s)
         end
     end)
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
+    F.SpellIconText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
     if F.IsUnitFrameIcon then
         F.Icon:SetTexture(spellInfo and spellInfo.iconID or 134400)
     elseif info.DisplayType == "Text" then
-        F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
         F.Text:SetTextColor(unpack(info.textColors or s.textColors))
     elseif info.DisplayType == "Circle" then
         local s = NSRT.ReminderSettings.CircleSettings
@@ -710,7 +713,6 @@ function NSI:SetProperties(F, info, s)
         F.Swipe:SetCooldown(info.startTime, info.dur)
         F.Swipe:SetSwipeTexture(texture)
         F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
-        F.SpellText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
     elseif info.DisplayType == "Icon" then
         if not spellInfo then spellInfo = { iconID = 134400 } end
         F.Icon:SetTexture(spellInfo.iconID)
@@ -746,7 +748,7 @@ function NSI:SetProperties(F, info, s)
         if F.Text then F.Text:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1})) end
         if F.TimerText then
             F.TimerText:SetTextColor(unpack(info.textColors or s.textColors or {1,1,1,1}))
-            if info.HideTimer then
+            if info.HideTimer and info.text and info.text ~= "" and not s.TimerFormat:find("%text", 1, true) then
                 F.TimerText:Hide()
             else
                 F.TimerText:Show()
@@ -1040,12 +1042,7 @@ function NSI:CheckReminderLogic(info)
     return true
 end
 
-function NSI:GetDisplayedText(rem, info, F)
-    local displayType = info.DisplayType
-    if info.HideTimer and (displayType == "Text" or displayType == "Circle") and info.text ~= nil then
-        return (F and F.SpellText or "")..info.text
-    end
-
+function NSI:GetRemainingText(rem, info)
     local remString
     if rem <= info.Decimals then
         if rem < 0 then
@@ -1057,12 +1054,68 @@ function NSI:GetDisplayedText(rem, info, F)
     else
         remString = tostring(math.ceil(rem))
     end
-    if info.DisplayType == "Text" or info.DisplayType == "Circle" then
-        local text = (info.HideTimer and info.text) or (info.text and info.text ~= "" and (remString == "" and info.text or info.text.." ("..remString..")")) or remString
-        return (F and F.SpellText or "")..text
-    else
-        return info.text or "", remString
+    return remString
+end
+
+local function ReplaceReminderDuration(text, remString)
+    if text:find("%p", 1, true) then
+        return text:gsub("%%p", remString)
     end
+    return text
+end
+
+local function BuildReminderTextTemplate(format, reminderText, iconText)
+    return format:gsub("%%(%a+)", function(token)
+        if token == "text" then return reminderText or "" end
+        if token == "icon" then return iconText or "" end
+        if token == "p" then return "%p" end
+        return "%"..token
+    end)
+end
+
+function NSI:GetDisplayedText(remString, info, F, timerHidden)
+    timerHidden = timerHidden == nil and (info.HideTimer or false) or timerHidden
+    if not F.reminderTextTemplate or F.reminderTimerHidden ~= timerHidden then
+        F.reminderTimerHidden = timerHidden
+        local displayType = info.DisplayType
+        local reminderText = info.text
+        local hasReminderText = reminderText and reminderText ~= ""
+        local iconText = F.SpellIconText or ""
+        local textHasIconToken = reminderText and reminderText:find("%icon", 1, true) ~= nil
+        if textHasIconToken then
+            reminderText = reminderText:gsub("%%icon", iconText)
+        end
+        if displayType == "Text" or displayType == "Circle" then
+            local settings = displayType == "Circle" and NSRT.ReminderSettings.CircleSettings or NSRT.ReminderSettings.TextSettings
+            if timerHidden and hasReminderText then
+                local hideIconText = textHasIconToken and "" or iconText
+                F.reminderTextTemplate = settings.TextFormat:find("%text", 1, true) and hideIconText..reminderText or ""
+            elseif hasReminderText or iconText ~= "" then
+                F.reminderTextTemplate = BuildReminderTextTemplate(settings.TextFormat, reminderText, iconText)
+            else
+                F.reminderTextTemplate = "%p"
+            end
+        elseif displayType == "Bar" then
+            local settings = NSRT.ReminderSettings.BarSettings
+            if timerHidden and hasReminderText then
+                local hideIconText = textHasIconToken and "" or iconText
+                F.reminderTextTemplate = settings.TextFormat:find("%text", 1, true) and hideIconText..reminderText or ""
+                F.reminderTimerTemplate = settings.TimerFormat:find("%text", 1, true) and hideIconText..reminderText or ""
+            else
+                F.reminderTextTemplate = BuildReminderTextTemplate(settings.TextFormat, reminderText, iconText)
+                F.reminderTimerTemplate = BuildReminderTextTemplate(settings.TimerFormat, reminderText, iconText)
+            end
+        elseif displayType == "Icon" then
+            F.reminderTextTemplate = BuildReminderTextTemplate(reminderText or "", reminderText, iconText)
+            F.reminderTimerTemplate = timerHidden and hasReminderText and "" or "%p"
+        else
+            F.reminderTextTemplate = BuildReminderTextTemplate(reminderText or "", reminderText, iconText)
+            F.reminderTimerTemplate = "%p"
+        end
+    end
+    local text = ReplaceReminderDuration(F.reminderTextTemplate, remString)
+    local timerText = F.reminderTimerTemplate and ReplaceReminderDuration(F.reminderTimerTemplate, remString)
+    return text, timerText
 end
 
 function NSI:ScheduleReminderSoundTimers(info)
@@ -1113,38 +1166,42 @@ function NSI:DisplayReminder(info, bypass)
         return
     end
     self:ScheduleReminderSoundTimers(info)
+    local remString = self:GetRemainingText(rem, info)
     local F
-    local text, remString = self:GetDisplayedText(rem, info, F)
     if info.DisplayType == "Circle" then
         F = self:CreateCircle(info)
         F.DisplayType = "Circles"
+        local text = self:GetDisplayedText(remString, info, F)
         F.Text:SetText(text)
         F:Show()
         self:ArrangeStates("Circles")
     elseif info.DisplayType == "Text" then
         F = self:CreateText(info)
         F.DisplayType = "Texts"
+        local text = self:GetDisplayedText(remString, info, F)
         F.Text:SetText(text)
         F:Show()
         self:ArrangeStates("Texts")
     else
         if info.DisplayType == "Bar" then
             F = self:CreateBar(info)
+            local text, timerText = self:GetDisplayedText(remString, info, F)
             F:SetMinMaxValues(0, info.dur)
             F:SetValue(0)
             F:Show()
             self:ArrangeStates("Bars")
             F.DisplayType = "Bars"
             F.Text:SetText(text)
-            F.TimerText:SetText(remString)
+            F.TimerText:SetText(timerText)
             if not info.spellID then F.Icon:Hide() else F.Icon:Show() end
         elseif info.DisplayType == "Icon" then
             F = self:CreateIcon(info)
+            local text, timerText = self:GetDisplayedText(remString, info, F)
             F:Show()
             self:ArrangeStates("Icons")
             F.DisplayType = "Icons"
             F.Text:SetText(text)
-            F.TimerText:SetText(remString)
+            F.TimerText:SetText(timerText)
         end
     end
     if info.Ticks then
@@ -1177,8 +1234,11 @@ function NSI:UpdateReminderDisplay(info, F)
         F:Hide()
         return
     end
+    local stickyActive = rem < 0 and info.sticky and rem > (0-info.sticky)
+    local timerHidden = info.HideTimer or stickyActive
+    local timerHiddenChanged = F.reminderTimerHidden ~= timerHidden
     if F.IsUnitFrameIcon then return end
-    if info.HideTimer and (info.DisplayType == "Text" or info.DisplayType == "Circle") and info.text ~= nil then return end
+    if timerHidden and F.reminderTimerHidden == timerHidden and (info.DisplayType == "Text" or info.DisplayType == "Circle") and info.text ~= nil and not info.text:find("%p", 1, true) then return end
 
     local displayBucket
     if rem <= info.Decimals then
@@ -1190,11 +1250,22 @@ function NSI:UpdateReminderDisplay(info, F)
     F.lastReminderDisplayBucket = displayBucket
     local text, remString
     if displayBucketChanged then
-        text, remString = self:GetDisplayedText(rem, info, F)
+        remString = self:GetRemainingText(rem, info)
+        text, remString = self:GetDisplayedText(remString, info, F, timerHidden)
     elseif info.DisplayType == "Text" or info.DisplayType == "Circle" then
         return
     else
         remString = F.lastReminderTimerText
+    end
+    if timerHiddenChanged and info.DisplayType == "Bar" and F.TimerText then
+        local timerFormat = NSRT.ReminderSettings.BarSettings.TimerFormat
+        local showTimer = not timerHidden
+        if timerHidden and info.text and info.text ~= "" then
+            showTimer = timerFormat:find("%text", 1, true) ~= nil
+        end
+        F.TimerText:SetShown(showTimer)
+    elseif timerHiddenChanged and info.DisplayType == "Icon" and F.TimerText then
+        F.TimerText:SetShown(not timerHidden)
     end
     if info.DisplayType == "Circle" then
         if F.lastReminderText ~= text then
@@ -1218,12 +1289,20 @@ function NSI:UpdateReminderDisplay(info, F)
                 end
             end
         end
+        if displayBucketChanged and F.Text and F.lastReminderText ~= text then
+            F.Text:SetText(text)
+            F.lastReminderText = text
+        end
         if F.TimerText and F.lastReminderTimerText ~= remString then
             F.TimerText:SetText(remString)
             F.lastReminderTimerText = remString
         end
         return
     elseif info.DisplayType == "Icon" then
+        if displayBucketChanged and F.Text and F.lastReminderText ~= text then
+            F.Text:SetText(text)
+            F.lastReminderText = text
+        end
         if rem <= 3 and F.TimerText and not F.reminderTimerTextIsRed then
             F.TimerText:SetTextColor(1, 0, 0, 1)
             F.reminderTimerTextIsRed = true
