@@ -1001,6 +1001,7 @@ L["This will delete all Alerts from previous Seasons. Continue?"] = "This will d
 L["Enable Selected Boss Alerts"] = "Enable Selected Boss Alerts"
 L["Disable Selected Boss Alerts"] = "Disable Selected Boss Alerts"
 L["Alerts Language"] = "Alerts Language"
+L["Encounter alert translations are not available for %s yet."] = "Encounter alert translations are not available for %s yet."
 L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"] = "This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"
 L["New Alert"] = "New Alert"
 L["Unnamed"] = "Unnamed"
