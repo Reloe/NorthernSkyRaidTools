@@ -441,10 +441,10 @@ local function BuildSlotList()
                 slots[#slots + 1] = { cat = cat, override = replacer }
             elseif #cat._allItems > 0 then
                 if IsWeaponInSlot(MAINHAND_SLOT) then
-                    slots[#slots + 1] = { cat = cat, weaponSlot = MAINHAND_SLOT, handLabel = "MH" }
+                    slots[#slots + 1] = { cat = cat, weaponSlot = MAINHAND_SLOT, handLabel = NSI:Loc("MH") }
                 end
                 if IsWeaponInSlot(OFFHAND_SLOT) then
-                    slots[#slots + 1] = { cat = cat, weaponSlot = OFFHAND_SLOT, handLabel = "OH" }
+                    slots[#slots + 1] = { cat = cat, weaponSlot = OFFHAND_SLOT, handLabel = NSI:Loc("OH") }
                 end
             end
             -- Additive class buttons shown alongside the oils (e.g. Lightning Shield).

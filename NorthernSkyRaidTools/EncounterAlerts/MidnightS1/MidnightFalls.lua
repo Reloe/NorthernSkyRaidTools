@@ -65,7 +65,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Tank-Hits", name = {"P1 Tank-Hits", nil, "P2 Tank-Hits"}, text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = nil,
         textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
         isConditional = {
-            text = "This Alert only shows if you have threat on the Boss.",
+            text = "This Alert only shows if you have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
@@ -89,7 +89,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {Version = {versionNumber = 2, [1] = {isTaunt = true}, [2] = {sticky = 3}}, group = {"Lura Tanks", nil, "Lura Tanks"}, internalID = "Lura Taunts", name = {"P1 Taunts", nil, "P2 Taunts"}, text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTSTimer = 0, TTS = true, dur = 6, sticky = 3, spellID = nil,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
-            text = "This Alert only shows if you do not have threat on the Boss.",
+            text = "This Alert only shows if you do not have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
@@ -340,8 +340,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {text = nil, internalID = "InterruptDisplay", name = "Interrupt Display", DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, spellID = nil,
         customIcon = 6552, id = 0.1, timers = nil, difficulties = {16},
         pinned = true, BlockCopy = true, enabled = true,
-        Preview = [[return function()
-            print("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu.")
+        Preview = [[return function(NSI)
+            print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."))
         end]],
     }
     self:AddEncounterAlert(data)

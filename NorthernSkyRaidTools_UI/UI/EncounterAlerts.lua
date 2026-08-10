@@ -14,6 +14,7 @@ local CreateDropdown      = NSI.UI.Components.CreateDropdown
 local CreateTextEntry     = NSI.UI.Components.CreateTextEntry
 local CreateCheckButton   = NSI.UI.Components.CreateCheckButton
 local CreateColorPicker   = NSI.UI.Components.CreateColorPicker
+local CreateLabel         = NSI.UI.Components.CreateLabel
 local ReskinScrollbar     = NSI.UI.Components.ReskinScrollbar
 local ShowContextMenu     = NSI.UI.Components.ShowContextMenu
 local CreateStyledFrame   = NSI.UI.Components.CreateFrame
@@ -258,6 +259,9 @@ local function BuildEncounterAlertsUI(parentFrame)
     function NSI:SaveAlertData(alert, dataKey, newData)
         if alert then
             alert[dataKey] = newData
+            if dataKey == "text" and alert.ReloeReminder == true then
+                alert.UserModifiedText = true
+            end
             if selectedEncID and selectedDiffID and selectedKey then
                 if not self._saveAlertDebounce then
                     self._saveAlertDebounce = true
@@ -323,15 +327,15 @@ local function BuildEncounterAlertsUI(parentFrame)
             if screen.RebuildList then screen.RebuildList() end
         end
         return {
-            { label = "M", value = 16, onclick = function() switchDiff(16) end },
-            { label = "H", value = 15, onclick = function() switchDiff(15) end },
-            { label = "N", value = 14, onclick = function() switchDiff(14) end },
+            { label = NSI:Loc("M"), value = 16, onclick = function() switchDiff(16) end },
+            { label = NSI:Loc("H"), value = 15, onclick = function() switchDiff(15) end },
+            { label = NSI:Loc("N"), value = 14, onclick = function() switchDiff(14) end },
         }
     end
 
     local function getDiffSelected()
         local names = { [16] = "M", [15] = "H", [14] = "N" }
-        return names[filterDiffID] or tostring(filterDiffID)
+        return NSI:Loc(names[filterDiffID]) or tostring(filterDiffID)
     end
 
     local diffDD = CreateDropdown(screen, nil, BuildDiffOptions, getDiffSelected,
@@ -517,7 +521,10 @@ local function BuildEncounterAlertsUI(parentFrame)
         if enc then
             for _, diffTable in pairs(enc) do
                 for _, alert in pairs(type(diffTable) == "table" and diffTable or {}) do
-                    if type(alert) == "table" and alert.group == name then alert.group = nil end
+                    if type(alert) == "table" and alert.group == name then
+                        alert.group = nil
+                        if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
+                    end
                 end
             end
         end
@@ -539,6 +546,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             for _, entry in ipairs(groupAlerts) do
                 if not NSI:CanDeleteEncounterAlert(entry.alert, encID) then
                     entry.alert.group = nil
+                    if entry.alert.ReloeReminder == true then entry.alert.UserModifiedGroup = true end
                 else
                     entry.diffTable[entry.key] = nil
                 end
@@ -983,6 +991,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                       and NSRT.EncounterAlerts[eid_ug][filterDiffID]
                         if diffTable and diffTable[akey_ug] then
                             diffTable[akey_ug].group = nil
+                            if diffTable[akey_ug].ReloeReminder == true then diffTable[akey_ug].UserModifiedGroup = true end
                         end
                         RebuildList()
                     end)
@@ -1043,7 +1052,12 @@ local function BuildEncounterAlertsUI(parentFrame)
                             for _, gname in ipairs(GetGroupsForEnc(eid)) do
                                 local gn = gname
                                 table.insert(groupSubItems, { type = "button", label = gn, fnc = function()
-                                    if alert then alert.group = gn; EnsureGroup(eid, gn); RebuildList() end
+                                    if alert then
+                                        alert.group = gn
+                                        if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
+                                        EnsureGroup(eid, gn)
+                                        RebuildList()
+                                    end
                                 end })
                             end
                             table.insert(groupSubItems, { type = "button", label = NSI:Loc("New Group..."), fnc = function()
@@ -1058,7 +1072,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     OnAccept = function(self)
                                         local newName = self.EditBox:GetText()
                                         if newName and newName ~= "" then
-                                            if alert then alert.group = newName end
+                                            if alert then
+                                                alert.group = newName
+                                                if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
+                                            end
                                             EnsureGroup(eid, newName)
                                             RebuildList()
                                         end
@@ -1087,6 +1104,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
                                     if diffTable then diffTable[akey] = nil end
                                     NSI:ImportReloeReminders(eid)
+                                    if NSRT.Alerts.Language ~= "enUS" then
+                                        NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
+                                    end
                                     RebuildList()
                                     local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                                     and NSRT.EncounterAlerts[eid][did]
@@ -1158,6 +1178,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                             if alert and alert.group then
                                 table.insert(menuItems, { type = "button", label = NSI:Loc("Remove from Group"), fnc = function()
                                     alert.group = nil
+                                    if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
                                     RebuildList()
                                 end })
                             end
@@ -1275,7 +1296,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2 + 10
     local ADDOPT_INNER_W = ADDOPT_W - ADDOPT_PAD * 2
-    local ADDOPT_H   = 250
+    local ADDOPT_H   = 300
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
@@ -1325,6 +1346,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                 end
             end
             NSI:ImportReloeReminders()
+            if NSRT.Alerts.Language ~= "enUS" then
+                NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
+            end
             RebuildList()
             if selectedEncID and selectedKey then
                 SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
@@ -1384,6 +1408,67 @@ local function BuildEncounterAlertsUI(parentFrame)
     end, ADDOPT_INNER_W, 22)
     disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)
 
+    -- Language dropdown for alert translation
+    do
+        local languagesAvailable = {
+            enUS = { text = "English (US)", font = "Fonts\\FRIZQT__.TTF" },
+            deDE = { text = "Deutsch",       font = "Fonts\\FRIZQT__.TTF" },
+            koKR = { text = "한국어",         font = "Fonts\\2002.TTF" },
+            ruRU = { text = "Русский",       font = "Fonts\\FRIZQT___CYR.TTF" },
+            zhCN = { text = "简体中文",       font = "Fonts\\ARHei.ttf" },
+            zhTW = { text = "繁體中文",       font = "Fonts\\ARHei.ttf" },
+        }
+
+        local function ApplyAlertLanguage(locale)
+            if locale ~= "enUS" and not NSI.EncounterAlertLocales[locale] then
+                NSI:RestoreAllEncounterAlerts()
+                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Encounter alert translations are not available for %s yet."), languagesAvailable[locale].text))
+            elseif locale == "enUS" then
+                NSI:RestoreAllEncounterAlerts()
+            else
+                if NSRT.Alerts.Language ~= "enUS" then
+                    NSI:RestoreAllEncounterAlerts()
+                end
+                NSI:TranslateAllEncounterAlerts(locale)
+            end
+            NSRT.Alerts.Language = locale
+        end
+
+        if NSRT.Alerts.Language == "Auto" then
+            local locale = GetLocale()
+            NSRT.Alerts.Language = languagesAvailable[locale] and locale or "enUS"
+        end
+        ApplyAlertLanguage(NSRT.Alerts.Language)
+
+        local languageLabel = CreateLabel(addOptFrame, NSI:Loc("Alerts Language"), ADDOPT_INNER_W, 16)
+        languageLabel:SetPoint("TOPLEFT", disableAllBtn.frame, "BOTTOMLEFT", 0, -8)
+
+        local function BuildLanguageOptions()
+            local opts = {}
+            local languageOrder = { "enUS", "deDE", "koKR", "ruRU", "zhCN", "zhTW" }
+            for languageIndex in ipairs(languageOrder) do
+                local locale = languageOrder[languageIndex]
+                local info = languagesAvailable[locale]
+                local loc = locale
+                table.insert(opts, { label = info.text, font = info.font, value = loc, onclick = function()
+                    ApplyAlertLanguage(loc)
+                    RebuildList()
+                    if selectedEncID and selectedKey then
+                        SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+                    end
+                end })
+            end
+            return opts
+        end
+        local function getLanguageSelected()
+            local lang = NSRT.Alerts.Language
+            return languagesAvailable[lang] and languagesAvailable[lang].text or languagesAvailable.enUS.text
+        end
+        local languageDD = CreateDropdown(addOptFrame, nil, BuildLanguageOptions, getLanguageSelected,
+            ADDOPT_INNER_W, 22, "NSUIEncAlertLanguageDD")
+        languageDD:SetPoint("TOPLEFT", languageLabel.frame, "BOTTOMLEFT", 0, -4)
+    end
+
     -- "Additional Options" button replaces the two rows that moved into the popup
     local addOptY = ioY + 18 + 2
     local addOptBtn = CreateLocalizedButton(screen, "Additional Options", function()
@@ -1431,12 +1516,23 @@ local function BuildEncounterAlertsUI(parentFrame)
                   and NSRT.EncounterAlerts[eid][did][akey]
         local items = {}
         table.insert(items, { label = NSI:Loc("— No Group —"), onclick = function()
-            if alert then alert.group = nil; RebuildList(); groupDD:Refresh() end
+            if alert then
+                alert.group = nil
+                if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
+                RebuildList()
+                groupDD:Refresh()
+            end
         end })
         for _, gname in ipairs(GetGroupsForEnc(eid or 0)) do
             local gn = gname
             table.insert(items, { label = gn, onclick = function()
-                if alert then alert.group = gn; EnsureGroup(eid, gn); RebuildList(); groupDD:Refresh() end
+                if alert then
+                    alert.group = gn
+                    if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
+                    EnsureGroup(eid, gn)
+                    RebuildList()
+                    groupDD:Refresh()
+                end
             end })
         end
         table.insert(items, { label = NSI:Loc("New Group..."), onclick = function()
@@ -1451,7 +1547,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                 OnAccept = function(self)
                     local newName = self.EditBox:GetText()
                     if newName and newName ~= "" then
-                        if alert then alert.group = newName end
+                        if alert then
+                            alert.group = newName
+                            if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
+                        end
                         EnsureGroup(eid, newName)
                         RebuildList()
                         groupDD:Refresh()
@@ -1542,7 +1641,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local hasCondition = type(conditionText) == "string" and conditionText ~= ""
 
         if hasCondition then
-            conditionHint:SetText("|cFFFFD100" .. NSI:Loc("Condition") .. ":|r " .. conditionText)
+            conditionHint:SetText("|cFFFFD100" .. NSI:Loc("Condition") .. ":|r " .. NSI:EncounterAlertLoc(conditionText))
             conditionHint:Show()
             local hintHeight = math.max(conditionHint:GetStringHeight() or 16, 16)
             conditionHint:SetHeight(hintHeight)
@@ -3401,7 +3500,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             return
         end
-        if NSI:IsUsingTLAlerts() then print("|cFFFF0000NSRT :|r Preview is disabled because you are displaying alerts through TimelineReminders.") return end
+        if NSI:IsUsingTLAlerts() then print(NSI:Loc("|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders.")) return end
         local info = NSI:CreateReminder(dispF._alert, true)
         NSI:HideAllReminders()
         NSI:DisplayReminder(info, true)

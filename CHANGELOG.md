@@ -12,4 +12,5 @@
 - Add Pace Comparison Module (similar to the Pace WeakAuras back in Manaforge but bit more restricted)
 - Add QoL setting to show aura spell IDs in tooltips
 - Add S2 Sound Data for Raids & Dungeons
+- Add Manual Translation option for Encounter Alerts
 - Add Option to change the text format of Reminders - so for example displaying "Stack - 3" instead of the current default "Stack (3)"

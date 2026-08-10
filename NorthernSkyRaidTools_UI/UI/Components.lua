@@ -937,10 +937,14 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     clickaway:EnableMouse(true)
     clickaway:Hide()
 
+    local selectedFont = nil
+
     local function RefreshDisplay()
         if getSelected then
             local v = getSelected()
             valText:SetText(v ~= nil and tostring(v) or "")
+            local _, size, flags = valText:GetFont()
+            valText:SetFont(selectedFont or ValidateFont(NSI:GetUIFontPath()), size, flags)
         end
     end
 
@@ -1045,6 +1049,8 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         for i, item in ipairs(items) do
             local row = content._rows[i]
             row.rlbl:SetText(item.label or "")
+            local _, size, flags = row.rlbl:GetFont()
+            row.rlbl:SetFont(item.font or ValidateFont(NSI:GetUIFontPath()), size, flags)
             -- Icon
             if item.icon then
                 local sz = item.iconsize or { ROW_H - 6, ROW_H - 6 }
@@ -1075,6 +1081,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
                 UIFrameFadeOut(row.rowHover, STYLE.hover_out, row.rowHover:GetAlpha(), 0)
             end)
             row:SetScript("OnClick", function()
+                selectedFont = item.font
                 if item.onclick then item.onclick(nil, nil, item.value) end
                 RefreshDisplay()
                 Close()

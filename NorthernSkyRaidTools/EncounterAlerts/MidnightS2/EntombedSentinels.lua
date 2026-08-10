@@ -60,7 +60,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sentinels", internalID = "BloodDropPool", name = "Tank Drop Pool", text = "Drop-Pool", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         spellID = 1284487, isSpecialDisplay = true,
         isConditional = {
-            text = "This Alert only shows if you do not have threat on Boss2.",
+            text = "This Alert only shows if you do not have threat on boss2.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss2") return (threat and threat < 2) or not threat end]],
         },
         phaseTimers = {
