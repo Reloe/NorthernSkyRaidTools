@@ -27,7 +27,7 @@ NSI.InitializeAlerts[encID] = function(self)
     data.timers = nil
     data.id = 0
     data.phase = nil
-    data.Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.") end]]
+    data.Preview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab.")) end]]
     data.difficulties = {14, 15, 16}
     data.BlockCopy = true
     self:AddEncounterAlert(data)
@@ -81,21 +81,21 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     local timers = {14.2, 114.2, 213, 314.6, 409.7}
     for i, v in ipairs(timers) do
         Soak.time = v
-        Soak.text = subgroup <= 2 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-        Soak.TTS = subgroup <= 2 and "Soak" or "Don't soak"
+        Soak.text = subgroup <= 2 and NSI:Loc("|cFF00FF00SOAK") or NSI:Loc("|cFFFF0000DON'T SOAK")
+        Soak.TTS = subgroup <= 2 and NSI:Loc("Soak") or NSI:Loc("Don't soak")
         self:AddToReminder(Soak)
     end
     timers = {64.2, 262, 359.6, 479.2}
     for i, v in ipairs(timers) do
         Soak.time = v
-        Soak.text = subgroup >= 3 and "|cFF00FF00SOAK" or "|cFFFF0000DON'T SOAK"
-        Soak.TTS = subgroup >= 3 and "Soak" or "Don't soak"
+        Soak.text = subgroup >= 3 and NSI:Loc("|cFF00FF00SOAK") or NSI:Loc("|cFFFF0000DON'T SOAK")
+        Soak.TTS = subgroup >= 3 and NSI:Loc("Soak") or NSI:Loc("Don't soak")
         self:AddToReminder(Soak)
     end
 
     if NSRT.AssignmentSettings.OnPull then
         local group = (subgroup <= 2 and "First") or (subgroup >= 3 and "Second")
-        self:DisplayText("You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00" .. group .. "|r Group", 5)
+        self:DisplayText(string.format(NSI:Loc("You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00%s|r Group"), NSI:Loc(group)), 5)
     end
 end
 

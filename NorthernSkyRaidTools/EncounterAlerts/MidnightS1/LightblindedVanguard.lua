@@ -43,8 +43,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {Version = {versionNumber = 1, [1] = {loadConditions = tankConditions}}, internalID = "TauntAlerts", text = "Taunt", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 3, spellID = nil, id = 0, customIcon = 355,
         enabled = true, isSpecialDisplay = true, loadConditions = tankConditions, Font = "Expressway", FontSize = 50, Anchor = "TOP", relativeTo = "BOTTOM", xOffset = 0, yOffset = 0, BlockCopy = true,
-        Preview = [[return function()
-            print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")
+        Preview = [[return function(NSI)
+            print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"))
         end]],
         timers = {
             [15] = {29, 71, 113, 127, 151, 191, 243, 303, 323, 346, 33, 75, 115, 131, 155, 175, 195, 247, 307, 327, 350},
@@ -211,8 +211,8 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     end
     if not mygroup then return end
     local pos = (mygroup == 1 and "Front Left") or (mygroup == 2 and "Front Right") or (mygroup == 3 and "Back Left") or (mygroup == 4 and "Back Right") or "Flex Spot"
-    local text = (IsHealer and "Go to "..pos) or "Soak "..pos
-    local TTS = (IsHealer and "Go to "..pos) or "Soak "..pos
+    local text = (IsHealer and NSI:Loc("Go to ")..NSI:Loc(pos)) or NSI:Loc("Soak ")..NSI:Loc(pos)
+    local TTS = (IsHealer and NSI:Loc("Go to ")..NSI:Loc(pos)) or NSI:Loc("Soak ")..NSI:Loc(pos)
     Alert.TTS, Alert.text = TTS, text
 
     local timers = { 90.5, 145.9, 249.4, 305.4 }
@@ -220,6 +220,6 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
 
     if NSRT.AssignmentSettings.OnPull then
         local text = mygroup == 1 and "Front Left" or mygroup == 2 and "Front Right" or mygroup == 3 and "Back Left" or mygroup == 4 and "Back Right" or ""
-        self:DisplayText("You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000"..text.."|r Group", 5)
+        self:DisplayText(string.format(NSI:Loc("You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"), NSI:Loc(text)), 5)
     end
 end

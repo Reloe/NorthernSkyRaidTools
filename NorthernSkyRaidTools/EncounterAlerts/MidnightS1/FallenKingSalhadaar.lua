@@ -30,7 +30,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {internalID = "CC Display", text = nil, DisplayType = "Text", timers = nil, encID = encID, phase = 1, TTS = false, dur = nil, spellID = nil,
-        Preview = [[return function() print("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate") end]],
+        Preview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate")) end]],
         enabled = true,
         BlockCopy = true,
         difficulties = {16},

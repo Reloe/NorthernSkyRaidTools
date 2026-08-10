@@ -14,6 +14,7 @@ local CreateDropdown      = NSI.UI.Components.CreateDropdown
 local CreateTextEntry     = NSI.UI.Components.CreateTextEntry
 local CreateCheckButton   = NSI.UI.Components.CreateCheckButton
 local CreateColorPicker   = NSI.UI.Components.CreateColorPicker
+local CreateLabel         = NSI.UI.Components.CreateLabel
 local ReskinScrollbar     = NSI.UI.Components.ReskinScrollbar
 local ShowContextMenu     = NSI.UI.Components.ShowContextMenu
 local CreateStyledFrame   = NSI.UI.Components.CreateFrame
@@ -1087,6 +1088,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
                                     if diffTable then diffTable[akey] = nil end
                                     NSI:ImportReloeReminders(eid)
+                                    if NSRT.Alerts.Language ~= "enUS" then
+                                        NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
+                                    end
                                     RebuildList()
                                     local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                                     and NSRT.EncounterAlerts[eid][did]
@@ -1275,7 +1279,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2 + 10
     local ADDOPT_INNER_W = ADDOPT_W - ADDOPT_PAD * 2
-    local ADDOPT_H   = 250
+    local ADDOPT_H   = 300
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
@@ -1325,6 +1329,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                 end
             end
             NSI:ImportReloeReminders()
+            if NSRT.Alerts.Language ~= "enUS" then
+                NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
+            end
             RebuildList()
             if selectedEncID and selectedKey then
                 SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
@@ -1383,6 +1390,58 @@ local function BuildEncounterAlertsUI(parentFrame)
         SetReloeAlertsEnabled(false)
     end, ADDOPT_INNER_W, 22)
     disableAllBtn:SetPoint("TOPLEFT", enableAllBtn.frame, "BOTTOMLEFT", 0, -8)
+
+    -- Language dropdown for alert translation
+    do
+        local languagesAvailable = {
+            enUS = { text = "English (US)", font = "Fonts\\FRIZQT__.TTF" },
+            koKR = { text = "한국어",       font = "Fonts\\2002.TTF" },
+            zhCN = { text = "简体中文",     font = "Fonts\\ARHei.ttf" },
+        }
+
+        if NSRT.Alerts.Language == "Auto" then
+            local locale = GetLocale()
+            NSRT.Alerts.Language = languagesAvailable[locale] and locale or "enUS"
+        end
+        if NSRT.Alerts.Language == "enUS" then
+            NSI:RestoreAllEncounterAlerts()
+        else
+            NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
+        end
+
+        local languageLabel = CreateLabel(addOptFrame, NSI:Loc("Alerts Language"), ADDOPT_INNER_W, 16)
+        languageLabel:SetPoint("TOPLEFT", disableAllBtn.frame, "BOTTOMLEFT", 0, -8)
+
+        local function BuildLanguageOptions()
+            local opts = {}
+            for locale, info in pairs(languagesAvailable) do
+                local loc = locale
+                table.insert(opts, { label = info.text, font = info.font, value = loc, onclick = function()
+                    if loc == "enUS" then
+                        NSI:RestoreAllEncounterAlerts()
+                    else
+                        if NSRT.Alerts.Language ~= "enUS" then
+                            NSI:RestoreAllEncounterAlerts()
+                        end
+                        NSI:TranslateAllEncounterAlerts(loc)
+                    end
+                    NSRT.Alerts.Language = loc
+                    RebuildList()
+                    if selectedEncID and selectedKey then
+                        SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+                    end
+                end })
+            end
+            return opts
+        end
+        local function getLanguageSelected()
+            local lang = NSRT.Alerts.Language
+            return languagesAvailable[lang] and languagesAvailable[lang].text or languagesAvailable.enUS.text
+        end
+        local languageDD = CreateDropdown(addOptFrame, nil, BuildLanguageOptions, getLanguageSelected,
+            ADDOPT_INNER_W, 22, "NSUIEncAlertLanguageDD")
+        languageDD:SetPoint("TOPLEFT", languageLabel.frame, "BOTTOMLEFT", 0, -4)
+    end
 
     -- "Additional Options" button replaces the two rows that moved into the popup
     local addOptY = ioY + 18 + 2
@@ -1542,7 +1601,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local hasCondition = type(conditionText) == "string" and conditionText ~= ""
 
         if hasCondition then
-            conditionHint:SetText("|cFFFFD100" .. NSI:Loc("Condition") .. ":|r " .. conditionText)
+            conditionHint:SetText("|cFFFFD100" .. NSI:Loc("Condition") .. ":|r " .. NSI:Loc(conditionText))
             conditionHint:Show()
             local hintHeight = math.max(conditionHint:GetStringHeight() or 16, 16)
             conditionHint:SetHeight(hintHeight)
@@ -3403,7 +3462,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             return
         end
-        if NSI:IsUsingTLAlerts() then print("|cFFFF0000NSRT :|r Preview is disabled because you are displaying alerts through TimelineReminders.") return end
+        if NSI:IsUsingTLAlerts() then print(NSI:Loc("|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders.")) return end
         local info = NSI:CreateReminder(dispF._alert, true)
         NSI:HideAllReminders()
         NSI:DisplayReminder(info, true)

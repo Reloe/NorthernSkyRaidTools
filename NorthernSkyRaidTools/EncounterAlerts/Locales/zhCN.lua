@@ -1,4 +1,3 @@
--- Translation by (Sanxy)
 local _, NSI = ...
 
 NSI.EncounterAlertLocales = NSI.EncounterAlertLocales or {}
@@ -24,10 +23,7 @@ L[3179] = {
     ["Beams"] = {text = "射线", name = "熵能瓦解"},
     ["Orbs"] = {text = "宝珠刷新", name = "虚空融合（宝珠）"},
     ["CC Adds"] = {text = "控制小怪", name = "破碎投影（控制）"},
-    ["CC Display"] = {
-        name = "控制显示（姓名板）",
-        preview = [[return function() print("|cFF00FFFFNSRT:|r 此预警无预览，固定在敌方姓名板上。") end]],
-    },
+    ["CC Display"] = {name = "控制显示（姓名板）"},
 }
 
 -- Vaelgor & Ezzorak (3178)
@@ -35,19 +31,7 @@ L[3178] = {
     ["Spread"] = {text = "分散", name = "虚空嚎叫（分散）"},
     ["Tether"] = {text = "锁链", name = "虚界（锁链）"},
     ["Breath"] = {text = "恐惧吐息", name = "亡者吐息（恐惧）"},
-    ["HealthDisplay"] = {
-        name = "生命值对比",
-        preview = [[return function() print("|cFF00FFFFNSRT:|r 此预警无预览，在“常规 > 文本显示”中设置。") end]],
-    },
-    assignments = {
-        display = "威厄高尔和艾佐拉克|cFF71D5FF[阴霾]|r - 分配到|cFF00FF00%s|r分摊",
-        ["|cFF00FF00SOAK"] = "|cFF00FF00分摊",
-        ["|cFFFF0000DON'T SOAK"] = "|cFFFF0000不要分摊",
-        ["Soak"] = "分摊",
-        ["Don't soak"] = "不要分摊",
-        ["First"] = "第一次",
-        ["Second"] = "第二次",
-    },
+    ["HealthDisplay"] = {name = "生命值对比"},
 }
 
 -- Lightblinded Vanguard (3180)
@@ -57,20 +41,7 @@ L[3180] = {
     ["Peace Aura"] = {text = "平心光环", name = "平心光环", group = "圣骑士光环"},
     ["Devotion Aura"] = {text = "虔诚光环", name = "虔诚光环", group = "圣骑士光环"},
     ["Aura of Wrath"] = {text = "愤怒光环", name = "愤怒光环", group = "圣骑士光环"},
-    ["TauntAlerts"] = {
-        text = "嘲讽", name = "嘲讽提示（姓名板）",
-        preview = [[return function() print("|cFF00FFFFNSRT:|r 此预警无预览，固定在敌方姓名板上。") end]],
-    },
-    assignments = {
-        display = "光盲先锋军|cFF71D5FF[处决宣判]|r - 分配到|cFF00FF00%s|r分摊",
-        ["Soak "] = "分摊",
-        ["Go to "] = "去",
-        ["Front Left"] = "左前",
-        ["Front Right"] = "右前",
-        ["Back Left"] = "左后",
-        ["Back Right"] = "右后",
-        ["Flex Spot"] = "补位",
-    },
+    ["TauntAlerts"] = {text = "嘲讽", name = "嘲讽提示（姓名板）"},
 }
 
 -- Crown of the Cosmos (3181)
@@ -99,23 +70,8 @@ L[3181] = {
 
 -- Chimaerus (3306)
 L[3306] = {
-    ["Debuffs_P1"] = {
-        text = "点名救人", name = "裂隙疯狂（点名）",
-        condition = "玩家处于内场",
-    },
-    ["Debuffs_P2"] = {
-        text = "点名救人", name = "裂隙疯狂（点名）",
-        condition = "玩家处于内场",
-    },
-    assignments = {
-        display = "奇美鲁斯|cFF71D5FF[艾林之尘剧变]|r - 分配到|cFF00FF00%s|r分摊",
-        ["|cFF00FF00SOAK"] = "|cFF00FF00分摊",
-        ["|cFFFF0000DON'T SOAK"] = "|cFFFF0000不要分摊",
-        ["Soak"] = "分摊",
-        ["Don't soak"] = "不要分摊",
-        ["First"] = "第一次",
-        ["Second"] = "第二次",
-    },
+    ["Debuffs_P1"] = {text = "点名救人", name = "裂隙疯狂（点名）"},
+    ["Debuffs_P2"] = {text = "点名救人", name = "裂隙疯狂（点名）"},
 }
 
 -- Belo'ren (3182)
@@ -139,28 +95,13 @@ L[3183] = {
     ["Interrupts"] = {text = "打断", name = "终结棱柱（打断）", group = "鲁拉 P1"},
     ["Beams"] = {text = "射线", name = "黑暗类星体", group = "鲁拉 P1"},
     ["Transition Beams"] = {text = "射线", name = "黑暗类星体", group = "鲁拉 P1 阶段转换"},
-    ["Lura Tank-Hits_P1"] = {
-        text = "坦克打击", name = "P1 天穹之枪（坦克）", group = "鲁拉 坦克",
-        condition = "玩家是首领的当前目标",
-    },
-    ["Lura Tank-Hits_P3"] = {
-        text = "坦克打击", name = "P2 天穹之枪（坦克）", group = "鲁拉 坦克",
-        condition = "玩家是首领的当前目标",
-    },
+    ["Lura Tank-Hits_P1"] = {text = "坦克打击", name = "P1 天穹之枪（坦克）", group = "鲁拉 坦克"},
+    ["Lura Tank-Hits_P3"] = {text = "坦克打击", name = "P2 天穹之枪（坦克）", group = "鲁拉 坦克"},
     ["Lura Tank-Hits_P4"] = {text = "坦克打击", name = "P3 天穹之枪（坦克）", group = "鲁拉 坦克"},
-    ["Lura Taunts_P1"] = {
-        text = "嘲讽", name = "P1 嘲讽", group = "鲁拉 坦克",
-        condition = "玩家不是首领的当前目标",
-    },
-    ["Lura Taunts_P3"] = {
-        text = "嘲讽", name = "P3 嘲讽", group = "鲁拉 坦克",
-        condition = "玩家不是首领的当前目标",
-    },
+    ["Lura Taunts_P1"] = {text = "嘲讽", name = "P1 嘲讽", group = "鲁拉 坦克"},
+    ["Lura Taunts_P3"] = {text = "嘲讽", name = "P3 嘲讽", group = "鲁拉 坦克"},
     ["Full Blaze"] = {text = "全团裂片", name = "星辰裂片（全团）", group = "鲁拉 P1 阶段转换"},
-    ["Seed-Drop"] = {
-        text = "丢下水晶", name = "丢下水晶", group = "鲁拉 P2",
-        condition = "玩家持有水晶",
-    },
+    ["Seed-Drop"] = {text = "丢下水晶", name = "丢下水晶", group = "鲁拉 P2"},
     ["Old-Seed-Drop"] = {text = "丢下水晶", name = "丢下水晶（无条件）", group = "鲁拉 P2"},
     ["Galvanize"] = {text = "分摊", name = "充电（通用分摊）", group = "鲁拉 P2 分摊"},
     ["Soak Star"] = {text = "分摊 {rt1}", name = "充电（星星分摊）", group = "鲁拉 P2 分摊"},
@@ -184,10 +125,7 @@ L[3183] = {
     ["P4 Move"] = {text = "移动", name = "P4 移动", group = "鲁拉 P4"},
     ["CrystalDropTimer"] = {text = "拾取水晶", name = "拾取水晶倒计时"},
     ["RunesDisplay"] = {name = "符文显示"},
-    ["InterruptDisplay"] = {
-        name = "打断显示",
-        preview = [[return function() print("|cFF00FFFFNSRT:|r 此预警无预览，在“打断显示”中设置。") end]],
-    },
+    ["InterruptDisplay"] = {name = "打断显示"},
 }
 
 -- Rotmire (3159)
@@ -195,18 +133,9 @@ L[3159] = {
     ["Adds"] = {text = "小怪刷新", name = "唤醒真菌（小怪）"},
     ["Shrooms"] = {text = "蘑菇刷新", name = "真菌绽放（蘑菇）"},
     ["BurstingPustules"] = {text = "全团伤害", name = "脓包破裂（AoE）"},
-    ["InterruptDisplay"] = {
-        name = "打断显示",
-        preview = [[return function() print("|cFF00FFFFNSRT:|r 此预警无预览，在“打断显示”中设置。") end]],
-    },
-    ["Taunts"] = {
-        text = "嘲讽", name = "嘲讽", group = "腐沼 坦克",
-        condition = "玩家不是首领的当前目标",
-    },
-    ["Tankhits"] = {
-        text = "坦克打击", name = "腐烂之拳（坦克）", group = "腐沼 坦克",
-        condition = "玩家是首领的当前目标",
-    },
+    ["InterruptDisplay"] = {name = "打断显示"},
+    ["Taunts"] = {text = "嘲讽", name = "嘲讽", group = "腐沼 坦克"},
+    ["Tankhits"] = {text = "坦克打击", name = "腐烂之拳（坦克）", group = "腐沼 坦克"},
 }
 
 -- ============================================================================
@@ -229,30 +158,12 @@ L[3470] = {
 
 -- Entombed Sentinels (3445)
 L[3445] = {
-    ["PoisonHits"] = {
-        text = "坦克打击", name = "强化猛击（坦克）", group = "哨兵",
-        condition = "玩家是boss1的当前目标",
-    },
-    ["BloodHits"] = {
-        text = "坦克打击", name = "鲜血毒液注射（坦克）", group = "哨兵",
-        condition = "玩家是boss2的当前目标",
-    },
-    ["BloodDropPool"] = {
-        text = "鲜血放水", name = "鲜血毒液（放水）", group = "哨兵",
-        condition = "玩家不是boss2的当前目标",
-    },
-    ["BloodSoak"] = {
-        text = "鲜血分摊", name = "不稳定的瘴气（分摊）", group = "哨兵",
-        condition = "玩家处于boss2的40码内",
-    },
-    ["BloodDispels"] = {
-        text = "鲜血驱散", name = "凋零之血（驱散）", group = "哨兵",
-        condition = "玩家处于boss2的40码内",
-    },
-    ["PoisonAdd"] = {
-        text = "毒液小怪刷新", name = "毒液凝块（小怪）", group = "哨兵",
-        condition = "玩家处于boss1的40码内",
-    },
+    ["PoisonHits"] = {text = "坦克打击", name = "强化猛击（坦克）", group = "哨兵"},
+    ["BloodHits"] = {text = "坦克打击", name = "鲜血毒液注射（坦克）", group = "哨兵"},
+    ["BloodDropPool"] = {text = "鲜血放水", name = "鲜血毒液（放水）", group = "哨兵"},
+    ["BloodSoak"] = {text = "鲜血分摊", name = "不稳定的瘴气（分摊）", group = "哨兵"},
+    ["BloodDispels"] = {text = "鲜血驱散", name = "凋零之血（驱散）", group = "哨兵"},
+    ["PoisonAdd"] = {text = "毒液小怪刷新", name = "毒液凝块（小怪）", group = "哨兵"},
     ["OrbSpawn"] = {text = "引水滴", name = "剧毒水滴（引诱）", group = "哨兵"},
     ["ShiftingProtovenom"] = {text = "分散", name = "变幻的原型毒液（分散）", group = "哨兵"},
     ["TransitionDebuffs"] = {text = "数字星座", name = "螺旋毒素（星座）", group = "哨兵"},
@@ -260,14 +171,8 @@ L[3445] = {
 
 -- Vashnik the Malignant (3455)
 L[3455] = {
-    ["TankHits"] = {
-        text = "坦克打击", name = "滴毒之牙（坦克）", group = "瓦什尼克",
-        condition = "玩家是boss1的当前目标",
-    },
-    ["Taunts"] = {
-        text = "嘲讽", name = "嘲讽", group = "瓦什尼克",
-        condition = "玩家不是boss1的当前目标",
-    },
+    ["TankHits"] = {text = "坦克打击", name = "滴毒之牙（坦克）", group = "瓦什尼克"},
+    ["Taunts"] = {text = "嘲讽", name = "嘲讽", group = "瓦什尼克"},
     ["Adds"] = {text = "小怪刷新", name = "痛饮（小怪）", group = "瓦什尼克"},
     ["Infection"] = {text = "点名感染", name = "适应性感染（点名）", group = "瓦什尼克"},
     ["AoE"] = {text = "全团伤害", name = "恶性催化剂（AOE）", group = "瓦什尼克"},
@@ -278,48 +183,18 @@ L[3455] = {
 
 -- The Lost Explorers (3497)
 L[3497] = {
-    ["ShreddingShards"] = {
-        text = "坦克打击", name = "撕裂碎片（坦克）", group = "书卷贤者技能",
-        condition = "玩家是boss4的当前目标",
-    },
-    ["BlinkNova"] = {
-        text = "点名远离", name = "闪现新星（点名）", group = "书卷贤者技能",
-        condition = "书卷贤者伊库被强化",
-    },
-    ["FrostfireVolley"] = {
-        text = "点名放圈", name = "霜火连射（点名）", group = "书卷贤者技能",
-        condition = "书卷贤者伊库被强化",
-    },
+    ["ShreddingShards"] = {text = "坦克打击", name = "撕裂碎片（坦克）", group = "书卷贤者技能"},
+    ["BlinkNova"] = {text = "点名远离", name = "闪现新星（点名）", group = "书卷贤者技能"},
+    ["FrostfireVolley"] = {text = "点名放圈", name = "霜火连射（点名）", group = "书卷贤者技能"},
     ["ShellSpinNormal"] = {text = "引龟壳", name = "旋壳（引诱）", group = "大副技能"},
-    ["ShellSpinScroll"] = {
-        text = "引龟壳", name = "旋壳（书卷强化）", group = "大副技能",
-        condition = "书卷贤者伊库被强化",
-    },
-    ["ShellSpinTrader"] = {
-        text = "引龟壳", name = "旋壳（商人强化）", group = "大副技能",
-        condition = "商人盖博被强化",
-    },
-    ["MightyThud"] = {
-        text = "分摊", name = "巨力重击（分摊）", group = "大副技能",
-        condition = "大副纳玛被强化",
-    },
+    ["ShellSpinScroll"] = {text = "引龟壳", name = "旋壳（书卷强化）", group = "大副技能"},
+    ["ShellSpinTrader"] = {text = "引龟壳", name = "旋壳（商人强化）", group = "大副技能"},
+    ["MightyThud"] = {text = "分摊", name = "巨力重击（分摊）", group = "大副技能"},
     ["Fish-Spawn"] = {text = "鱼刷新", name = "投掷垃圾（鱼）", group = "商人技能"},
-    ["MushroomBait"] = {
-        text = "引蘑菇", name = "蘑菇投掷（引诱）", group = "商人技能",
-        condition = "商人盖博被强化",
-    },
-    ["ExplosiveSurprise"] = {
-        text = "点名炸弹", name = "爆炸惊喜（点名）", group = "商人技能",
-        condition = "商人盖博被强化",
-    },
-    ["MushroomJump"] = {
-        text = "踩蘑菇", name = "弹跳蘑菇", group = "商人技能",
-        condition = "商人盖博被强化",
-    },
-    ["TimeToThrow"] = {
-        text = "扔鱼", name = "扔鱼倒计时", group = "商人技能",
-        condition = "玩家持有鱼",
-    },
+    ["MushroomBait"] = {text = "引蘑菇", name = "蘑菇投掷（引诱）", group = "商人技能"},
+    ["ExplosiveSurprise"] = {text = "点名炸弹", name = "爆炸惊喜（点名）", group = "商人技能"},
+    ["MushroomJump"] = {text = "踩蘑菇", name = "弹跳蘑菇", group = "商人技能"},
+    ["TimeToThrow"] = {text = "扔鱼", name = "扔鱼倒计时", group = "商人技能"},
     ["TimeToThrowNonConditional"] = {text = "扔鱼", name = "扔鱼倒计时（无条件）", group = "商人技能"},
 }
 
@@ -332,15 +207,6 @@ L[3420] = {
     ["Debuffs"] = {text = "点名囊肿", name = "剧毒涌动（点名）", group = "斯索拉克"},
     ["SerpentsFury"] = {text = "集合", name = "毒蛇之怒（集合）", group = "斯索拉克"},
     ["WindsHelper"] = {name = "狂风助手", group = "斯索拉克"},
-    assignments = {
-        display = "斯索拉克|cFF71D5FF[毁伤]|r - 分配到|cFF00FF00%s|r分摊",
-        ["|cFF00FF00Soak Left"] = "|cFF00FF00左侧分摊",
-        ["|cFF00FF00Soak Right"] = "|cFF00FF00右侧分摊",
-        ["Soak Left"] = "左侧分摊",
-        ["Soak Right"] = "右侧分摊",
-        ["Left"] = "左侧",
-        ["Right"] = "右侧",
-    },
 }
 
 -- The Twin Fangs (3421)
@@ -351,65 +217,29 @@ L[3421] = {
     ["WatchSide"] = {text = "观察方向", name = "邪恶洪流（观察）", group = "双子毒牙"},
     ["Adds"] = {text = "小怪刷新", name = "剧毒涌现（小怪）", group = "双子毒牙"},
     ["Orbs"] = {text = "吃球", name = "腐蚀洪流（吃球）", group = "双子毒牙"},
-    ["TankSoak"] = {
-        text = "踩圈", name = "碎石击（坦克踩圈）", group = "双子毒牙",
-        condition = "玩家是boss2的当前目标",
-    },
-    ["WatchSpawns"] = {
-        text = "观察顺序", name = "碎石击（观察）", group = "双子毒牙",
-        condition = "玩家是boss2的当前目标",
-    },
-    ["Knock"] = {
-        text = "击退", name = "腐蚀洪流（击退）", group = "双子毒牙",
-        condition = "玩家是boss1的当前目标",
-    },
+    ["TankSoak"] = {text = "踩圈", name = "碎石击（坦克踩圈）", group = "双子毒牙"},
+    ["WatchSpawns"] = {text = "观察顺序", name = "碎石击（观察）", group = "双子毒牙"},
+    ["Knock"] = {text = "击退", name = "腐蚀洪流（击退）", group = "双子毒牙"},
 }
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    ["P1Frontal"] = {
-        text = "正面顺劈", name = "撕裂", group = "盘卷祭坛 P1",
-        condition = "玩家是boss1的当前目标或不是坦克",
-    },
-    ["P1Taunt"] = {
-        text = "嘲讽", name = "P1 嘲讽", group = "盘卷祭坛 坦克",
-        condition = "玩家不是boss1的当前目标",
-    },
+    ["P1Frontal"] = {text = "正面顺劈", name = "撕裂", group = "盘卷祭坛 P1"},
+    ["P1Taunt"] = {text = "嘲讽", name = "P1 嘲讽", group = "盘卷祭坛 坦克"},
     ["P1Soak"] = {text = "分摊", name = "处斩（分摊）", group = "盘卷祭坛 P1"},
     ["MindControls"] = {text = "心控", name = "恐惧行军（心控）", group = "盘卷祭坛 P2"},
-    ["P2Frontal"] = {
-        text = "正面顺劈", name = "灵魂撕裂", group = "盘卷祭坛 P2",
-        condition = "玩家是boss2的当前目标或不是坦克",
-    },
-    ["P2Taunt"] = {
-        text = "嘲讽", name = "P2 嘲讽", group = "盘卷祭坛 坦克",
-        condition = "玩家不是boss2的当前目标",
-    },
+    ["P2Frontal"] = {text = "正面顺劈", name = "灵魂撕裂", group = "盘卷祭坛 P2"},
+    ["P2Taunt"] = {text = "嘲讽", name = "P2 嘲讽", group = "盘卷祭坛 坦克"},
     ["P2Debuffs"] = {text = "点名炸弹", name = "幽暗炸弹（点名）", group = "盘卷祭坛 P2"},
     ["P2Shield"] = {text = "破盾", name = "永恒夜幕（破盾）", group = "盘卷祭坛 P2"},
     ["InterruptAdds"] = {text = "精魂", name = "恐惧哀嚎（打断）", group = "盘卷祭坛 P2"},
-    assignments = {
-        display = "盘卷祭坛|cFF71D5FF[处斩]|r - 分配到|cFF00FF00%s|r分摊",
-        ["|cFF00FF00SOAK"] = "|cFF00FF00分摊",
-        ["|cFFFF0000DON'T SOAK"] = "|cFFFF0000不要分摊",
-        ["Soak"] = "分摊",
-        ["Don't soak"] = "不要分摊",
-        ["First"] = "第一次",
-        ["Second"] = "第二次",
-    },
 }
 
 -- Ula'tek (3492)
 L[3492] = {
     --[[
-    ["TankHits"] = {
-        text = "坦克打击", name = "蛇母之怒（坦克）", group = "乌拉特克 坦克",
-        condition = "玩家是boss1的当前目标",
-    },
-    ["Taunt"] = {
-        text = "嘲讽", name = "嘲讽", group = "乌拉特克 坦克",
-        condition = "玩家不是boss1的当前目标",
-    },
+    ["TankHits"] = {text = "坦克打击", name = "蛇母之怒（坦克）", group = "乌拉特克 坦克"},
+    ["Taunt"] = {text = "嘲讽", name = "嘲讽", group = "乌拉特克 坦克"},
     ["Waves"] = {text = "波浪", name = "腐蚀浪潮", group = "乌拉特克"},
     ["Adds"] = {text = "小怪刷新", name = "腐蚀浪潮（小怪）", group = "乌拉特克"},
     ["DamageAmpIn"] = {text = "准备易伤", name = "被缚之怒（易伤）", group = "乌拉特克"},

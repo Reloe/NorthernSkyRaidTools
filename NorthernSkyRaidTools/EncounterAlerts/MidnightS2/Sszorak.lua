@@ -109,6 +109,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 tooltip = {title = "ShowSenderNames", desc = "Shows the sender next to each entered number."}},
             { Type = "Button", label = "Create Macros", width = 150,
                 func = [[return function()
+                    
                     local iconIDs = {"137001", "137002", "137003", "137004", "137005", "137006", "137007", "137008"}
                     for i=1, 8 do
                         local macroName = "NSRT_SSZORAK_" .. i
@@ -290,13 +291,13 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     alert.TTSTimer = 0
     for _, timer in ipairs(tankComboTimers[diff]) do
         alert.time = timer
-        alert.text = group == 1 and "|cFF00FF00Soak Left" or "|cFF00FF00Soak Right"
-        alert.TTS = group == 1 and "Soak Left" or "Soak Right"
+        alert.text = group == 1 and NSI:Loc("|cFF00FF00Soak Left") or NSI:Loc("|cFF00FF00Soak Right")
+        alert.TTS = group == 1 and NSI:Loc("Soak Left") or NSI:Loc("Soak Right")
         self:AddToReminder(alert)
     end
 
     if NSRT.AssignmentSettings.OnPull then
         local side = group == 1 and "Left" or "Right"
-        self:DisplayText("You are assigned to soak |cFF00FF00" .. side .. "|r", 5)
+        self:DisplayText(string.format(NSI:Loc("You are assigned to soak |cFF00FF00%s|r"), NSI:Loc(side)), 5)
     end
 end
