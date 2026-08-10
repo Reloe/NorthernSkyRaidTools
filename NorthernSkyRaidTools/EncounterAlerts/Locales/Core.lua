@@ -17,6 +17,7 @@ function NSI:EncounterAlertLoc(key)
     if not locale or locale == "Auto" then
         locale = self:GetSelectedLanguage()
     end
+    if locale == "enUS" then return key end
 
     local languageTable = DF.Language.GetLanguageTable("NorthernSkyRaidTools", locale)
     local text = languageTable and languageTable[key]
