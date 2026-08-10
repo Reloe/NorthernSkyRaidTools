@@ -57,7 +57,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Sentinels", internalID = "BloodDropPool", name = "Blood Drop Pool", text = "Drop-Pool", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {group = "Sentinels", internalID = "BloodDropPool", name = "Tank Drop Pool", text = "Drop-Pool", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         spellID = 1284487, isSpecialDisplay = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss2.",
@@ -102,6 +102,31 @@ NSI.InitializeAlerts[encID] = function(self)
                 {26.25, 67.5},
                 {26.25, 67.5},
                 {26.25, 67.5},
+            }
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Sentinels", internalID = "BloodSoakPool", name = "Soak-Pool", text = "Drop Pool", DisplayType = "Circle", encID = encID, phase = 1, TTS = false, dur = 8,
+        textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
+        isConditional = {
+            text = "This Alert only shows if you are within 40y of boss2.",
+            func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss2") return minRange and minRange < 40 end]],
+        },
+        phaseTimers = {
+            [15] ={
+                {32.25},
+                {32.25, 73.5},
+                {32.25, 73.5},
+                {32.25, 73.5},
+                {32.25, 73.5},
+            },
+            [16] ={
+                {32.25},
+                {32.25, 73.5},
+                {32.25, 73.5},
+                {32.25, 73.5},
+                {32.25, 73.5},
             }
         },
     }
@@ -178,7 +203,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Sentinels", internalID = "ShiftingProtovenom", name = "Shifting Protovenom", text = "Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 6,
+    local data = {group = "Sentinels", internalID = "ShiftingProtovenom", name = "Shifting Protovenom", text = "Spread", DisplayType = "Circle", encID = encID, phase = 1, TTS = "Spread", dur = 6,
         spellID = 1296878,
         phaseTimers = {
             [16] ={
@@ -192,7 +217,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Sentinels", internalID = "TransitionDebuffs", name = "Transition Debuffs", text = "Number Game", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 8,
+    local data = {group = "Sentinels", internalID = "TransitionDebuffs", name = "Transition Debuffs", text = "Number Game", DisplayType = "Circle", encID = encID, phase = 1, TTS = "Spread", dur = 8,
         spellID = 1284590,
         phaseTimers = {
             [15] ={

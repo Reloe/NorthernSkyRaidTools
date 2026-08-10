@@ -3,7 +3,7 @@ local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
 local DF = _G["DetailsFramework"]
 local LDB = LibStub("LibDataBroker-1.1")
-local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
+local LDBIcon = LibStub("LibDBIcon-1.0")
 
 -- Window dimensions
 local window_width  = 1200

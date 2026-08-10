@@ -170,6 +170,14 @@ local function GetWidgetDefs(settingsName)
             DD    (T("Texture"),            "Texture",       MediaValuesFn(true)),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
             DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
+            {Type="TextEntry", label=T("Left Text Format"), inputWidth=180, get=function() return R("TextFormat") end, set=function(_, v) W("TextFormat", v) end,
+                tooltip={title="Left Text Format", desc=T("Use %icon for the spell icon, %text for the reminder text and %p for the remaining duration.")}},
+            {Type="TextEntry", label=T("Right Text Format"), inputWidth=180, get=function() return R("TimerFormat") end, set=function(_, v) W("TimerFormat", v) end,
+                tooltip={title="Right Text Format", desc=T("Use %icon for the spell icon, %text for the reminder text and %p for the remaining duration.")}},
+            {Type="TextEntry", label=T("Hidden Left Text Format"), inputWidth=180, get=function() return R("HiddenTextFormat") end, set=function(_, v) W("HiddenTextFormat", v) end,
+                tooltip={title="Hidden Left Text Format", desc=T("Used when the timer is hidden or the reminder is sticky. Use %icon for the spell icon and %text for the reminder text.")}},
+            {Type="TextEntry", label=T("Hidden Right Text Format"), inputWidth=180, get=function() return R("HiddenTimerFormat") end, set=function(_, v) W("HiddenTimerFormat", v) end,
+                tooltip={title="Hidden Right Text Format", desc=T("Used when the timer is hidden or the reminder is sticky. Use %icon for the spell icon and %text for the reminder text.")}},
             Slider(T("Font Size"),          "FontSize",      5,    200),
             Slider(T("Timer Font Size"),    "TimerFontSize", 5,    200),
             Slider(T("Decimals Threshold"), "Decimals",      0,    10),
@@ -179,11 +187,10 @@ local function GetWidgetDefs(settingsName)
             {Type="Color", label=T("Border Color"), get=GetBorderColor, set=SetBorderColor},
             Slider(T("Icon X Offset"),      "xIcon",         -100, 100),
             Slider(T("Icon Y Offset"),      "yIcon",         -100, 100),
-            Slider(T("Text X Offset"),      "xTextOffset",   -500, 500),
-            Slider(T("Text Y Offset"),      "yTextOffset",   -500, 500),
-            Slider(T("Timer X"),            "xTimer",        -100, 100),
-            Slider(T("Timer Y"),            "yTimer",        -100, 100),
-            Chk   (T("Hide Timer Text"),    "HideTimerText"),
+            Slider(T("Left Text X Offset"),  "xTextOffset",  -500, 500),
+            Slider(T("Left Text Y Offset"),  "yTextOffset",  -500, 500),
+            Slider(T("Right Text X Offset"), "xTimer",       -100, 100),
+            Slider(T("Right Text Y Offset"), "yTimer",       -100, 100),
         }
 
     elseif settingsName == "TextSettings" then
@@ -191,13 +198,16 @@ local function GetWidgetDefs(settingsName)
             DDGrow(false),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
             DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
+            {Type="TextEntry", label=T("Text Format"), inputWidth=180, get=function() return R("TextFormat") end, set=function(_, v) W("TextFormat", v) end,
+                tooltip={title="Text Format", desc=T("Use %icon for the spell icon, %text for the reminder text and %p for the remaining duration.")}},
+            {Type="TextEntry", label=T("Hidden Timer Format"), inputWidth=180, get=function() return R("HiddenTextFormat") end, set=function(_, v) W("HiddenTextFormat", v) end,
+                tooltip={title="Hidden Timer Format", desc=T("Used when the timer is hidden or the reminder is sticky. Use %icon for the spell icon and %text for the reminder text.")}},
             Slider(T("Font Size"),          "FontSize",      5,  200),
             Slider(T("Decimals Threshold"), "Decimals",      0,    10),
             {Type="Color", label=T("Text Color"), get=GetColor, set=SetColor},
             Slider(T("Spacing"),            "Spacing",       -5, 20),
             Slider(T("Sticky Duration"),    "Sticky",        0,  30),
             Chk   (T("Center Aligned"),     "CenterAligned"),
-            Chk   (T("Hide Timer Text"),    "HideTimerText"),
         }
 
     elseif settingsName == "CircleSettings" then
@@ -215,6 +225,10 @@ local function GetWidgetDefs(settingsName)
             DD    (T("Font"),               "Font",          MediaValuesFn()),
             DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
             Slider(T("Font Size"),          "FontSize",      5,   80),
+            {Type="TextEntry", label=T("Text Format"), inputWidth=180, get=function() return R("TextFormat") end, set=function(_, v) W("TextFormat", v) end,
+                tooltip={title="Text Format", desc=T("Use %icon for the spell icon, %text for the reminder text and %p for the remaining duration.")}},
+            {Type="TextEntry", label=T("Hidden Timer Format"), inputWidth=180, get=function() return R("HiddenTextFormat") end, set=function(_, v) W("HiddenTextFormat", v) end,
+                tooltip={title="Hidden Timer Format", desc=T("Used when the timer is hidden or the reminder is sticky. Use %icon for the spell icon and %text for the reminder text.")}},
             DD    (T("Text Position"),       "TextPosition",  CircleTextPositionValues),
             Slider(T("Text X Offset"),      "xTextOffset",   -500, 500),
             Slider(T("Text Y Offset"),      "yTextOffset",   -500, 500),
@@ -223,7 +237,6 @@ local function GetWidgetDefs(settingsName)
             {Type="Color", label=T("Text Color"),  get=GetColor,     set=SetColor},
             {Type="Color", label=T("Ring Color"),  get=GetRingColor, set=SetRingColor},
             Chk   (T("Show Background Ring"), "showBackground"),
-            Chk   (T("Hide Timer Text"),    "HideTimerText"),
         }
     end
 
@@ -264,14 +277,20 @@ local function RebuildWindowContent(win, settingsName, rowW)
         win.Title:SetText(T(settingsName:gsub("Settings", " Settings")))
     end
 
-    local content = CreateFrame("Frame", nil, win)
-    content:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
-    content:SetWidth(rowW)
+    local scrollBox
+    local visibleHeight = 420
 
-    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), rowW)
+    scrollBox = NSI.UI.Components.CreateScrollBox(win, rowW, visibleHeight)
+    scrollBox:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
+    local content = scrollBox.scrollChild
+
+    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), content:GetWidth())
     content:SetHeight(contentH)
-    win:SetHeight(PAD_TOP + contentH + 8)
-    win.Content = content
+    local scrollHeight = math.min(visibleHeight, math.max(contentH, 1))
+    scrollBox:SetSize(rowW, scrollHeight)
+    scrollBox:UpdateScrollBar()
+    win:SetHeight(PAD_TOP + scrollHeight + 8)
+    win.Content = scrollBox.frame
     win.LanguageId = NSI:GetSelectedLanguage()
 end
 

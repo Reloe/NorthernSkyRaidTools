@@ -2175,9 +2175,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         function()
             if not dispF._alert then return false end
             if dispF._alert.HideTimer ~= nil then return dispF._alert.HideTimer end
-            local typeMap = { Text="TextSettings", Icon="IconSettings", Circle="CircleSettings", Bar="BarSettings" }
-            local s = NSRT.ReminderSettings[typeMap[dispF._alert.DisplayType or "Text"] or "TextSettings"]
-            return s and s.HideTimerText or false
+            return false
         end,
         function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideTimer", v or nil) end end,
         135, 22, "NSUIEncAlertHideTimer",
@@ -3576,9 +3574,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         dispF.customIconEntry:SetValue(entry.customIcon and tostring(entry.customIcon) or "")
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
         dispF.stickyEntry:SetValue(entry.sticky and tostring(entry.sticky) or "")
-        local typeMap = { Text="TextSettings", Icon="IconSettings", Circle="CircleSettings", Bar="BarSettings" }
-        local s = NSRT.ReminderSettings[typeMap[entry.DisplayType or "Text"] or "TextSettings"]
-        dispF.hideTimerCB:SetValue(entry.HideTimer ~= nil and entry.HideTimer or (s and s.HideTimerText or false))
+        dispF.hideTimerCB:SetValue(entry.HideTimer ~= nil and entry.HideTimer or false)
         dispF.hideSwipeCB:SetValue(entry.HideSwipe ~= nil and entry.HideSwipe or (NSRT.ReminderSettings.IconSettings.HideSwipe or false))
         local showBg = entry.showBackground ~= nil and entry.showBackground or NSRT.ReminderSettings.CircleSettings.showBackground
         dispF.showBgCB:SetValue(showBg ~= false)

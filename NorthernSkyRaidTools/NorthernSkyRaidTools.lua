@@ -10,7 +10,7 @@ NSI.NSRTFrame:SetAllPoints(UIParent)
 NSI.NSRTFrame:SetFrameStrata("BACKGROUND")
 
 local LDB = LibStub("LibDataBroker-1.1")
-local LDBIcon = LDB and LibStub("LibDBIcon-1.0")
+local LDBIcon = LibStub("LibDBIcon-1.0")
 local DF = _G["DetailsFramework"]
 
 local supportedLanguages = {

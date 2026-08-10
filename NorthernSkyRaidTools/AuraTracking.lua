@@ -77,7 +77,10 @@ end
 local function GetAuraTrackingRowWidth(settings)
     local width = settings.Width or 1
     if settings.GrowDirection == "UP" or settings.GrowDirection == "DOWN" then
-        return width
+        local height = settings.Height or 1
+        local limit = settings.Limit or 1
+        local spacing = settings.Spacing or 0
+        return math.max(height, (height * limit) + (spacing * math.max(limit - 1, 0)))
     end
 
     local limit = settings.Limit or 1
@@ -1676,21 +1679,10 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     container:SetUnit(unit)
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection)
     local rowWidth = GetAuraTrackingRowWidth(settings)
-    local flowLayout = (container.GetFlowLayout and container:GetFlowLayout()) or container.flowLayout
-    if flowLayout then
-        flowLayout:SetLayoutAxis(GetAuraTrackingLayoutAxis(settings))
-        flowLayout:SetAnchorPoint(layoutAnchorPoint)
-        flowLayout:SetGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
-        flowLayout:SetMaximumLineSize(rowWidth)
-    else
-        container.layoutAnchorPoint = layoutAnchorPoint
-        container.layoutHorizontalGrowthDirection = horizontalGrowthDirection
-        container.layoutVerticalGrowthDirection = verticalGrowthDirection
-        container.layoutRowWidth = rowWidth
-    end
-    if container.MarkDirty and AuraContainerDirtyMask then
-        container:MarkDirty(AuraContainerDirtyMask.AuraFrameLayout)
-    end
+    container:SetFlowLayoutAxis(GetAuraTrackingLayoutAxis(settings))
+    container:SetFlowLayoutAnchorPoint(layoutAnchorPoint)
+    container:SetFlowLayoutGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
+    container:SetFlowLayoutMaximumLineSize(rowWidth)
 
     local auraGroups = {}
     if isExternal then

@@ -131,9 +131,7 @@ local function ShowAuraSoundSpellTooltip(icon, spellID)
     GameTooltip:SetSpellByID(spellID)
     GameTooltip:Show()
 
-    if C_Spell and C_Spell.RequestLoadSpellData then
-        C_Spell.RequestLoadSpellData(spellID)
-    end
+    C_Spell.RequestLoadSpellData(spellID)
 
     C_Timer.After(0.1, function()
         if icon:IsMouseOver() and icon:GetParent() and icon:GetParent().spellID == spellID then

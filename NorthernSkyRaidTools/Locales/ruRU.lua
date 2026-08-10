@@ -459,7 +459,7 @@ L["Check the Vantus Rune status for all raid members."] = "Проверяет с
 L["Missing Vantus Runes: "] = "Отсутствуют Ванитийские руны: "
 L["Everyone has a Vantus Rune!"] = "У всех есть Ванитийские руны!"
 L["Add SpellID to Tooltips"] = "Добавить ID заклинания в подсказки"
-L["Adds spell IDs to aura tooltips until the next logout or reload."] = "Добавляет ID заклинаний в подсказки аур до следующего выхода из игры или перезагрузки."
+L["Automatically enables the cvar to display spellids in tooltips on every reload/login."] = "Автоматически включает отображение ID заклинаний в подсказках при каждой перезагрузке интерфейса и входе в игру."
 L["Auto-Repair"] = "Авторемонт"
 L["Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs)."] = "Автоматически ремонтировать экипировку при посещении торговца (с приоритетом ремонта за счёт гильдии)."
 L["Raid Group Tools"] = "Инструменты рейдовой группы"
@@ -1000,6 +1000,8 @@ L["|cFF00FFFFEncounter|r Alerts"] = "|cFF00FFFFОповещения о сраж�
 L["Export Alerts"] = "Экспортировать оповещения"
 L["Import Alerts"] = "Импортировать оповещения"
 L["Paste an alerts export string below and click Import."] = "Вставьте строку экспорта оповещений ниже и нажмите 'Импортировать'."
+L["Imported %d alert(s)."] = "Импортировано оповещений: %d."
+L["Overwritten %d alert(s)."] = "Перезаписано оповещений: %d."
 L["All encounter alerts"] = "Все оповещения о сражениях"
 -- Left panel
 L["+ Create Alert"] = "+ Создать оповещение"

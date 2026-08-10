@@ -31,7 +31,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Twin Fangs", internalID = "PreSpread", name = "Pre-Spread", text = "Pre-Spread", DisplayType = "Text", encID = encID, phase = 1, TTS = "Spread", dur = 6,
+    local data = {group = "Twin Fangs", internalID = "PreSpread", name = "Pre-Spread", text = "Pre-Spread", DisplayType = "Circle", encID = encID, phase = 1, TTS = "Spread", dur = 6,
         loadConditions = nonTankConditions, spellID = 1290809,
         timers = {
             [15] = {48.5, 116.2, 218, 285.7, 387.4, 455.1},

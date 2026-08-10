@@ -973,6 +973,8 @@ L["|cFF00FFFFEncounter|r Alerts"] = "|cFF00FFFF공격대|r 경고"
 L["Export Alerts"] = "경고 내보내기"
 L["Import Alerts"] = "경고 가져오기"
 L["Paste an alerts export string below and click Import."] = "아래에 경고 내보내기 문자열을 붙여넣고 가져오기를 클릭하세요."
+L["Imported %d alert(s)."] = "경고를 %d개 가져왔습니다."
+L["Overwritten %d alert(s)."] = "경고를 %d개 덮어씌웠습니다."
 L["All encounter alerts"] = "모든 공격대 경고"
 -- Left panel
 L["+ Create Alert"] = "+ 경고 만들기"

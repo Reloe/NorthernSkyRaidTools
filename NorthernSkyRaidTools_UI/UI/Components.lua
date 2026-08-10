@@ -603,10 +603,10 @@ end
 --    :IsEnabled() → bool
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
-                               width, height, numeric, minVal, maxVal, name, tooltip)
+                               width, height, numeric, minVal, maxVal, name, tooltip, inputWidth)
     local totalW    = width or 220
     local totalH    = height or 22
-    local BOX_W     = 60
+    local BOX_W     = inputWidth or 60
     local GAP       = 8
     local hasLabel  = label and label ~= ""
     local baseLevel = parent:GetFrameLevel() + 1
@@ -1829,6 +1829,12 @@ local function CreateScrollBox(parent, width, height)
     child:SetWidth(width - SB_W - 2)
     child:SetHeight(1)
     scrollFrame:SetScrollChild(child)
+    local scrollBar = _G[boxName .. "ScrollBar"]
+    if scrollBar then
+        scrollBar:ClearAllPoints()
+        scrollBar:SetPoint("TOPRIGHT", scrollFrame, "TOPRIGHT", 0, -16)
+        scrollBar:SetPoint("BOTTOMRIGHT", scrollFrame, "BOTTOMRIGHT", 0, 16)
+    end
     ReskinScrollbar(scrollFrame)
 
     local obj = { frame = scrollFrame, scrollChild = child }
@@ -1969,7 +1975,7 @@ local function BuildWidgets(parent, definitions, width, namePrefix)
         elseif t == "TextEntry" then
             ctrl = C.CreateTextEntry(parent, def.label,
                 ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.numeric, def.min, def.max, wName, def.tooltip)
+                width, h, def.numeric, def.min, def.max, wName, def.tooltip, def.inputWidth)
 
         elseif t == "Label" then
             ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight, def.textColor)
@@ -2241,11 +2247,7 @@ end
 
 local function ResolveCtxIcon(item)
     if item.spellIcon then
-        if C_Spell and C_Spell.GetSpellTexture then
-            return C_Spell.GetSpellTexture(item.spellIcon)
-        elseif GetSpellTexture then
-            return GetSpellTexture(item.spellIcon)
-        end
+        return C_Spell.GetSpellTexture(item.spellIcon)
     end
     return item.icon or nil
 end

@@ -121,6 +121,22 @@ local function BuildReadyCheckOptions()
             end,
             nocombat = true,
         },
+        {
+            type = "button",
+            name = "Move Text Display",
+            desc = "This lets you move the generic text display used for example the ready check module or the assignments on pull.",
+            func = function(self)
+                if NSI.NSRTFrame.generic_display:IsMovable() then
+                    NSI:MakeDraggable(NSI.NSRTFrame.generic_display, NSRT.Settings.GenericDisplay, false)
+                else
+                    NSI.NSRTFrame.generic_display.Text:SetText(NSI:Loc("Things that might be displayed here:\nReady Check Module\nAssignments on Pull\n"))
+                    NSI.NSRTFrame.generic_display:SetSize(NSI.NSRTFrame.generic_display.Text:GetStringWidth(), NSI.NSRTFrame.generic_display.Text:GetStringHeight())
+                    NSI:MakeDraggable(NSI.NSRTFrame.generic_display, NSRT.Settings.GenericDisplay, true)
+                end
+            end,
+            nocombat = true,
+            spacement = true,
+        },
 
         {
             type = "label",

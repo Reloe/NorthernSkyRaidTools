@@ -109,6 +109,9 @@ function NSI:ConvertPrivateAuraSettingsToAuraTracking()
     end
     CopyPrivateAuraSettingsToAuraTracking(NSRT.PASettings, NSRT.AuraTrackingSettings.Player)
     CopyPrivateAuraSettingsToAuraTracking(NSRT.PATankSettings, NSRT.AuraTrackingSettings.Tank)
+    NSRT.ReminderSettings.BarSettings.HideTimerText = nil
+    NSRT.ReminderSettings.TextSettings.HideTimerText = nil
+    NSRT.ReminderSettings.CircleSettings.HideTimerText = nil
     NSRT.PASettings = nil
     NSRT.PATankSettings = nil
     NSRT.PARaidSettings = nil
@@ -285,6 +288,10 @@ function NSI:AddMissingDefaults()
             },
             BarSettings = {
                 GrowDirection = "Up",
+                TextFormat = "%text",
+                TimerFormat = "%p",
+                HiddenTextFormat = "%text",
+                HiddenTimerFormat = "",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
                 Sticky = 5,
@@ -308,11 +315,12 @@ function NSI:AddMissingDefaults()
                 FontSize = 22,
                 TimerFontSize = 22,
                 Spacing = -1,
-                HideTimerText = false,
                 Decimals = 3,
             },
             TextSettings = {
                 textColors = { 1, 1, 1, 1 },
+                TextFormat = "%icon%text (%p)",
+                HiddenTextFormat = "%icon%text",
                 GrowDirection = "Up",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
@@ -323,11 +331,12 @@ function NSI:AddMissingDefaults()
                 FontFlags = "OUTLINE",
                 FontSize = 50,
                 Spacing = 1,
-                HideTimerText = false,
                 Decimals = 3,
             },
             CircleSettings = {
                 GrowDirection = "Up",
+                TextFormat = "%icon%text (%p)",
+                HiddenTextFormat = "%icon%text",
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
                 Sticky = 0,
@@ -345,7 +354,6 @@ function NSI:AddMissingDefaults()
                 yTextOffset = 4,
                 Spacing = 5,
                 showBackground = false,
-                HideTimerText = false,
                 Decimals = 3,
             },
             UnitIconSettings = {

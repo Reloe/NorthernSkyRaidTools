@@ -205,14 +205,12 @@ end
 
 local function SpellTexture(id)
     if not id then return nil end
-    return (C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(id))
-        or (GetSpellTexture and GetSpellTexture(id))
+    return C_Spell.GetSpellTexture(id)
 end
 
 local function SpellName(id)
     if not id then return nil end
-    return (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id))
-        or (GetSpellInfo and GetSpellInfo(id))
+    return C_Spell.GetSpellName(id)
 end
 
 -- Each override: `cast`/`icon` = the spell shown/cast, `requires` = the set that
@@ -398,7 +396,7 @@ end
 -- ---------------------------------------------------------------------------
 local function GetRememberTable()
     NSRT.LastUsedConsumables = NSRT.LastUsedConsumables or {}
-    local key = (NSI.GetProfileKey and NSI:GetProfileKey()) or "default"
+    local key = NSI:GetProfileKey()
     NSRT.LastUsedConsumables[key] = NSRT.LastUsedConsumables[key] or {}
     return NSRT.LastUsedConsumables[key]
 end
