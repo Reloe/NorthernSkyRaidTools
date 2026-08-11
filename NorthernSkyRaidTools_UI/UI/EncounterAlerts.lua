@@ -1420,17 +1420,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         }
 
         local function ApplyAlertLanguage(locale)
-            if locale ~= "enUS" and not NSI.EncounterAlertLocales[locale] then
-                NSI:RestoreAllEncounterAlerts()
-                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Encounter alert translations are not available for %s yet."), languagesAvailable[locale].text))
-            elseif locale == "enUS" then
-                NSI:RestoreAllEncounterAlerts()
-            else
-                if NSRT.Alerts.Language ~= "enUS" then
-                    NSI:RestoreAllEncounterAlerts()
-                end
-                NSI:TranslateAllEncounterAlerts(locale)
-            end
+            NSI:TranslateAllEncounterAlerts(locale)
             NSRT.Alerts.Language = locale
         end
 
