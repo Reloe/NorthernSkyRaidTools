@@ -1,4 +1,3 @@
-local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
 local DF = _G["DetailsFramework"]
 
