@@ -79,6 +79,7 @@ EncounterAlerts/MidnightS2/Ulatek.lua
 
 # Encounter Alerts Localization
 EncounterAlerts\Locales\Core.lua
+EncounterAlerts\Locales\enUS.lua
 EncounterAlerts\Locales\zhCN.lua
 
 # The options UI is provided by the separate load-on-demand
