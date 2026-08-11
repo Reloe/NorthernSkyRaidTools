@@ -41,28 +41,28 @@ end
 local function ApplyTranslation(alert, translation)
     local english = GetEnglishAlert(alert.encID, alert.internalID)
     if not english then return end
-    if not alert.UserModifiedText and translation.text and english.text then
-        alert.text = translation.text
+    if not alert.UserModifiedGroup and translation.group and english.group then
+        alert.group = translation.group
     end
     if translation.name and english.name then
         alert.name = translation.name
     end
-    if not alert.UserModifiedGroup and translation.group and english.group then
-        alert.group = translation.group
+    if not alert.UserModifiedText and translation.text and english.text then
+        alert.text = translation.text
     end
 end
 
 local function RestoreToEnglish(alert)
     local english = GetEnglishAlert(alert.encID, alert.internalID)
     if not english then return end
-    if not alert.UserModifiedText and english.text then
-        alert.text = english.text
+    if not alert.UserModifiedGroup and english.group then
+        alert.group = english.group
     end
     if english.name then
         alert.name = english.name
     end
-    if not alert.UserModifiedGroup and english.group then
-        alert.group = english.group
+    if not alert.UserModifiedText and english.text then
+        alert.text = english.text
     end
 end
 
