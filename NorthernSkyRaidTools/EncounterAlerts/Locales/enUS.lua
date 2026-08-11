@@ -76,7 +76,6 @@ L[3182] = {
     ["Soaks_P1"] = {text = "Soaks", name = "Soaks", group = "Beloren P1"},
     ["Soaks_P2"] = {text = "Soaks", name = "Soaks", group = "Beloren P2"},
     ["Color Swap"] = {text = "SWAPPED", name = "Color Swap"},
-    ["Next Hit_P1"] = {text = "Next Hit", name = "Next Hit"},
     ["Next Hit_P2"] = {text = "Next Hit", name = "Next Hit", group = "Beloren P2"},
     ["Next Hit_P3"] = {text = "Next Hit", name = "Next Hit", group = "Beloren P2"},
     ["Quills_P1"] = {text = "Quills", name = "Quills", group = "Beloren P1"},
