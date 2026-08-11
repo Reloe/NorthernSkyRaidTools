@@ -9,39 +9,39 @@ NSI.EncounterAlertLocales["deDE"] = L
 -- ============================================================================
 -- Imperator Averzian (3176)
 L[3176] = {
-    -- ["Soaks"] = {group = "", name = "Soaks", text = "Soak"},
+    -- ["Soaks"] = {name = "Soaks", text = "Soak"},
 }
 
 -- Vorasius (3177)
 L[3177] = {
-    -- ["Knock"]  = {group = "", name = "Knock", text = "Knock"},
-    -- ["Breath"] = {group = "", name = "Breath", text = "Breath"},
+    -- ["Knock"]  = {name = "Knock", text = "Knock"},
+    -- ["Breath"] = {name = "Breath", text = "Breath"},
 }
 
 -- Fallen King Salhadaar (3179)
 L[3179] = {
-    -- ["Beams"]      = {group = "", name = "Beams", text = "Beams"},
-    -- ["Orbs"]       = {group = "", name = "Orbs", text = "Orbs"},
-    -- ["CC Adds"]    = {group = "", name = "CC Adds", text = "CC Adds"},
-    -- ["CC Display"] = {group = "", name = "CC Display", text = ""},
+    -- ["Beams"]      = {name = "Beams", text = "Beams"},
+    -- ["Orbs"]       = {name = "Orbs", text = "Orbs"},
+    -- ["CC Adds"]    = {name = "CC Adds", text = "CC Adds"},
+    -- ["CC Display"] = {name = "CC Display"},
 }
 
 -- Vaelgor & Ezzorak (3178)
 L[3178] = {
-    -- ["Spread"]        = {group = "", name = "Spread", text = "Spread"},
-    -- ["Tether"]        = {group = "", name = "Tether", text = "Tether"},
-    -- ["Breath"]        = {group = "", name = "Breath", text = "Breath"},
-    -- ["HealthDisplay"] = {group = "", name = "HealthDisplay", text = ""},
+    -- ["Spread"]        = {name = "Spread", text = "Spread"},
+    -- ["Tether"]        = {name = "Tether", text = "Tether"},
+    -- ["Breath"]        = {name = "Breath", text = "Breath"},
+    -- ["HealthDisplay"] = {name = "HealthDisplay"},
 }
 
 -- Lightblinded Vanguard (3180)
 L[3180] = {
-    -- ["Sacred Toll"]       = {group = "", name = "Sacred Toll", text = "Sacred Toll"},
-    -- ["Heal Absorb Ticks"] = {group = "", name = "Heal Absorb Ticks", text = ""},
+    -- ["Sacred Toll"]       = {name = "Sacred Toll", text = "Sacred Toll"},
+    -- ["Heal Absorb Ticks"] = {name = "Heal Absorb Ticks"},
     -- ["Peace Aura"]        = {group = "Paladin Auras", name = "Peace Aura", text = "Peace Aura"},
     -- ["Devotion Aura"]     = {group = "Paladin Auras", name = "Devotion Aura", text = "Devotion Aura"},
     -- ["Aura of Wrath"]     = {group = "Paladin Auras", name = "Aura of Wrath", text = "Aura of Wrath"},
-    -- ["TauntAlerts"]       = {group = "", name = "TauntAlerts", text = "Taunt"},
+    -- ["TauntAlerts"]       = {name = "TauntAlerts", text = "Taunt"},
 }
 
 -- Crown of the Cosmos (3181)
@@ -60,20 +60,20 @@ L[3181] = {
     -- ["Explosion_P1"]       = {group = "Alleria P1", name = "Explosion", text = "Explosion"},
     -- ["Explosion_P3"]       = {group = "Alleria P2", name = "Explosion", text = "Explosion"},
     -- ["Explosion_P5"]       = {group = "Alleria P3", name = "Explosion", text = "Explosion"},
-    -- ["Boss-Immune"]        = {group = "", name = "Boss-Immune", text = "Immune"},
+    -- ["Boss-Immune"]        = {name = "Boss-Immune", text = "Immune"},
     -- ["Tether"]             = {group = "Alleria P3", name = "Tether", text = "Tether"},
 }
 
 -- Chimaerus (3306)
 L[3306] = {
-    -- ["Debuffs_P1"] = {group = "", name = "Debuffs", text = "Debuffs"},
-    -- ["Debuffs_P2"] = {group = "", name = "Debuffs", text = "Debuffs"},
+    -- ["Debuffs_P1"] = {name = "Debuffs", text = "Debuffs"},
+    -- ["Debuffs_P2"] = {name = "Debuffs", text = "Debuffs"},
 }
 
 -- Belo'ren (3182)
 L[3182] = {
-    -- ["Feather Color"] = {group = "", name = "Feather Color", text = ""},
-    -- ["Color Swap"]    = {group = "", name = "Color Swap", text = "SWAPPED"},
+    -- ["Feather Color"] = {name = "Feather Color"},
+    -- ["Color Swap"]    = {name = "Color Swap", text = "SWAPPED"},
     -- ["Gateway_P2"]    = {group = "Beloren P1", name = "Gateway", text = "Gateway"},
     -- ["Gateway_P3"]    = {group = "Beloren P2", name = "Gateway", text = "Gateway"},
     -- ["Next Hit_P2"]   = {group = "Beloren P2", name = "Next Hit", text = "Next Hit"},
@@ -119,17 +119,17 @@ L[3183] = {
     -- ["Final Slice Stars"]     = {group = "Lura P3", name = "Final Slice Stars", text = "Stars"},
     -- ["Blazes"]                = {group = "Lura P4", name = "Blazes", text = "Blazes"},
     -- ["P4 Move"]               = {group = "Lura P4", name = "Move", text = "Move"},
-    -- ["CrystalDropTimer"]      = {group = "", name = "Time to Pick Crystal", text = "PICK UP"},
-    -- ["RunesDisplay"]          = {group = "", name = "RunesDisplay", text = ""},
-    -- ["InterruptDisplay"]      = {group = "", name = "Interrupt Display", text = ""},
+    -- ["CrystalDropTimer"]      = {name = "Time to Pick Crystal", text = "PICK UP"},
+    -- ["RunesDisplay"]          = {name = "RunesDisplay"},
+    -- ["InterruptDisplay"]      = {name = "Interrupt Display"},
 }
 
 -- Rotmire (3159)
 L[3159] = {
-    -- ["Adds"]             = {group = "", name = "Adds", text = "Adds"},
-    -- ["Shrooms"]          = {group = "", name = "Shrooms", text = "Shrooms"},
-    -- ["BurstingPustules"] = {group = "", name = "AoE", text = "AoE"},
-    -- ["InterruptDisplay"] = {group = "", name = "Interrupt Display", text = ""},
+    -- ["Adds"]             = {name = "Adds", text = "Adds"},
+    -- ["Shrooms"]          = {name = "Shrooms", text = "Shrooms"},
+    -- ["BurstingPustules"] = {name = "AoE", text = "AoE"},
+    -- ["InterruptDisplay"] = {name = "Interrupt Display"},
     -- ["Taunts"]           = {group = "Rotmire Tanks", name = "Taunts", text = "Taunt"},
     -- ["Tankhits"]         = {group = "Rotmire Tanks", name = "Tankhits", text = "Tank-Hit"},
 }
@@ -203,7 +203,7 @@ L[3420] = {
     -- ["WindDebuffs"]  = {group = "Sszorak", name = "WindDebuffs", text = "Wind-Debuffs"},
     -- ["Debuffs"]      = {group = "Sszorak", name = "Debuffs", text = "Debuffs"},
     -- ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
-    -- ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper", text = ""},
+    -- ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
 }
 
 -- The Twin Fangs (3421)
