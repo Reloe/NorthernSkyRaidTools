@@ -997,7 +997,6 @@ L["This will delete all Alerts from previous Seasons. Continue?"] = "이전 시�
 L["Enable Selected Boss Alerts"] = "선택한 보스 경고 활성화"
 L["Disable Selected Boss Alerts"] = "선택한 보스 경고 비활성화"
 L["Alerts Language"] = "경고 언어"
-L["Encounter alert translations are not available for %s yet."] = "%s 공격대 경고 번역은 아직 준비되지 않았습니다."
 L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"] = "모든 공격대 경고 데이터를 삭제한 후 Reloe 경고를 가져옵니다.(활성화된 경우) 계속할까요?"
 L["New Alert"] = "새 경고"
 L["Unnamed"] = "이름 없음"
