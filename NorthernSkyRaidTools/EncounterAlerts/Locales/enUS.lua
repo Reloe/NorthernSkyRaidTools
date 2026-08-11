@@ -5,7 +5,7 @@ local L = {}
 NSI.EncounterAlertLocales["enUS"] = L
 
 -- English reference data for encounter alert translators.
--- Keep encounter IDs and internal IDs unchanged when creating another locale.
+-- Keep encounter IDs and internal IDs unchanged when translating.
 
 -- Imperator Averzian (3176)
 L[3176] = {
