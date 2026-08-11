@@ -34,12 +34,16 @@ local FONT_FLAGS = {
 local GROW_DIRECTIONS = {
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
     { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
+    { label = "CENTERED HORIZONTAL", value = "CENTER_HORIZONTAL" },
+    { label = "CENTERED VERTICAL", value = "CENTER_VERTICAL" },
 }
 
 local MULTI_TANK_GROW_DIRECTIONS = {
     { label = "Same as Regular Grow", value = "Same" },
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
     { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
+    { label = "CENTERED HORIZONTAL", value = "CENTER_HORIZONTAL" },
+    { label = "CENTERED VERTICAL", value = "CENTER_VERTICAL" },
 }
 
 local FRAME_STRATA = {

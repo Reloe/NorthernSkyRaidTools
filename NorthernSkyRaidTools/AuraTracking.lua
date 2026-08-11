@@ -78,7 +78,7 @@ end
 
 local function GetAuraTrackingRowWidth(settings)
     local width = settings.Width or 1
-    if settings.GrowDirection == "UP" or settings.GrowDirection == "DOWN" then
+    if settings.GrowDirection == "UP" or settings.GrowDirection == "DOWN" or settings.GrowDirection == "CENTER_VERTICAL" then
         local height = settings.Height or 1
         local limit = settings.Limit or 1
         local spacing = settings.Spacing or 0
@@ -96,13 +96,25 @@ local function GetAuraTrackingLayoutAnchorPoint(settings)
         return "TOPRIGHT"
     elseif growDirection == "UP" then
         return "BOTTOMLEFT"
+    elseif growDirection == "CENTER_HORIZONTAL" then
+        return "LEFT"
+    elseif growDirection == "CENTER_VERTICAL" then
+        return "TOP"
     end
     return "TOPLEFT"
 end
 
+local function GetAuraTrackingContainerAnchorPoint(settings)
+    local growDirection = settings and settings.GrowDirection
+    if growDirection == "CENTER_HORIZONTAL" or growDirection == "CENTER_VERTICAL" then
+        return "CENTER"
+    end
+    return GetAuraTrackingLayoutAnchorPoint(settings)
+end
+
 local function GetAuraTrackingLayoutAxis(settings)
     local growDirection = settings and settings.GrowDirection or "RIGHT"
-    if growDirection == "UP" or growDirection == "DOWN" then
+    if growDirection == "UP" or growDirection == "DOWN" or growDirection == "CENTER_VERTICAL" then
         return AnchorUtil.FlowLayoutAxis.Vertical
     end
     return AnchorUtil.FlowLayoutAxis.Horizontal
@@ -1677,7 +1689,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 
     container:ClearAllPoints()
     container:SetSize(width, height)
-    container:SetPoint(layoutAnchorPoint, anchorFrame, layoutAnchorPoint, 0, 0)
+    local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
+    container:SetPoint(containerAnchorPoint, anchorFrame, containerAnchorPoint, 0, 0)
     container:SetUnit(unit)
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection)
     local rowWidth = GetAuraTrackingRowWidth(settings)
@@ -1926,7 +1939,8 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             state.anchorFrame:SetPoint(settings.Anchor or "CENTER", anchorFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
             local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
             state.container:ClearAllPoints()
-            state.container:SetPoint(layoutAnchorPoint, state.anchorFrame, layoutAnchorPoint, 0, 0)
+            local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
+            state.container:SetPoint(containerAnchorPoint, state.anchorFrame, containerAnchorPoint, 0, 0)
         end
     end
 
@@ -2391,6 +2405,13 @@ function NSI:PreviewAuraTracking(key, show)
         if entry then
             local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
+            if settings.GrowDirection == "CENTER_HORIZONTAL" then
+                xOffset = (i - (#entries + 1) / 2) * (settings.Width + settings.Spacing)
+                yOffset = 0
+            elseif settings.GrowDirection == "CENTER_VERTICAL" then
+                xOffset = 0
+                yOffset = -(i - (#entries + 1) / 2) * (settings.Height + settings.Spacing)
+            end
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
             UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
@@ -2415,6 +2436,13 @@ function NSI:PreviewAuraTracking(key, show)
             if entry then
                 local xOffset = (i - 1) * (settings.Width + settings.Spacing) * secondXDirection
                 local yOffset = (i - 1) * (settings.Height + settings.Spacing) * secondYDirection
+                if secondMover.GrowDirection == "CENTER_HORIZONTAL" then
+                    xOffset = (i - (#entries + 1) / 2) * (settings.Width + settings.Spacing)
+                    yOffset = 0
+                elseif secondMover.GrowDirection == "CENTER_VERTICAL" then
+                    xOffset = 0
+                    yOffset = -(i - (#entries + 1) / 2) * (settings.Height + settings.Spacing)
+                end
                 icon:ClearAllPoints()
                 icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
                 UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
