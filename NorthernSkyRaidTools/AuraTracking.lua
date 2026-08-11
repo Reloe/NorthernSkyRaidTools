@@ -12,8 +12,10 @@ local AuraTrackingExcludedSpellIDs = {
     [71041] = true, -- Dungeon Deserter
     [206151] = true, -- Challenger's Burden
     [264689] = true, -- Fatigued
+    [80354] = true, -- Time Warp
+    [95809] = true, -- Insanity
+    [160455] = true, -- Fatigued
 }
-
 NSI.AuraTrackingFilterDefinitions = {
     { key = "Helpful", value = "HELPFUL" },
     { key = "Harmful", value = "HARMFUL" },

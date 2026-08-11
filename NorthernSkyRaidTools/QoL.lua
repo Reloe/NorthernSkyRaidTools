@@ -51,6 +51,8 @@ local LustDebuffs = {
     80354, -- Time Warp
     264689, -- Fatigued
     390435, -- Exhaustion
+    95809, -- Insanity
+    160455, -- Fatigued
 }
 
 local function ParseCommaList(str)
