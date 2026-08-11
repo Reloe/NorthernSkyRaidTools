@@ -210,16 +210,12 @@ L[3429] = {
 }
 
 L[3492] = {
-}
-
--- Legacy Ula'tek placeholders are kept commented until the alert data is enabled.
-L[3492] = {
-    ["HitKnock"] = {text = "공격+넉백", name = "1페 공격+넉백", group = "울라텍 탱커"},
-    ["Taunt"] = {text = "도발", name = "1페 도발", group = "울라텍 탱커"},
-    ["Waves"] = {text = "파도", name = "파도", group = "울라텍 1페"},
-    ["Adds"] = {text = "쫄", name = "쫄", group = "울라텍 1페"},
-    ["DamageAmpIn"] = {text = "피해 증가", name = "피해 증가", group = "울라텍 1페"},
-    ["DamageAmp"] = {text = "피해 증가", name = "피해 증가 바", group = "울라텍 1페"},
-    ["PlatformBreak"] = {text = "바닥 파괴 + 넉백", name = "바닥 파괴", group = "울라텍 3페"},
-    ["Debuffs"] = {text = "디버프", name = "디버프", group = "울라텍 3페"},
+   -- ["HitKnock"] = {text = "공격+넉백", name = "1페 공격+넉백", group = "울라텍 탱커"},
+   -- ["Taunt"] = {text = "도발", name = "1페 도발", group = "울라텍 탱커"},
+   -- ["Waves"] = {text = "파도", name = "파도", group = "울라텍 1페"},
+   -- ["Adds"] = {text = "쫄", name = "쫄", group = "울라텍 1페"},
+   -- ["DamageAmpIn"] = {text = "피해 증가", name = "피해 증가", group = "울라텍 1페"},
+   -- ["DamageAmp"] = {text = "피해 증가", name = "피해 증가 바", group = "울라텍 1페"},
+   -- ["PlatformBreak"] = {text = "바닥 파괴 + 넉백", name = "바닥 파괴", group = "울라텍 3페"},
+   -- ["Debuffs"] = {text = "디버프", name = "디버프", group = "울라텍 3페"},
 }
