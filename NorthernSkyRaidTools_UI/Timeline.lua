@@ -1,5 +1,5 @@
-local _, NSI = ... -- Internal namespace
-
+local addonId = "NorthernSkyRaidTools"
+local NSI = _G.NorthernSkyRaidTools
 local DF = _G["DetailsFramework"]
 
 local function T(key)
