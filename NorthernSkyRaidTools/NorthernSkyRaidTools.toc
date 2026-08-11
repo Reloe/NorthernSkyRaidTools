@@ -85,3 +85,7 @@ EncounterAlerts\Locales\zhCN.lua
 # The options UI is provided by the separate load-on-demand
 # NorthernSkyRaidTools_UI addon.
 SlashCommands.lua
+EncounterAlerts\Locales\deDE.lua
+EncounterAlerts\Locales\koKR.lua
+EncounterAlerts\Locales\ruRU.lua
+EncounterAlerts\Locales\zhTW.lua
