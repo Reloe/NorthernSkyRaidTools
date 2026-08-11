@@ -1887,6 +1887,17 @@ local function InitAuraTrackingTankSet(self, settings, firstKey, reconfigureButt
     end
 end
 
+local function SetAuraTrackingPlayerVehicleState(self, disabled)
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        if state.active and state.unit == "player" then
+            local shouldShow = not disabled and state.settings.enabled and self:EvaluateLoad(state.settings)
+            state.container:SetEnabled(shouldShow)
+            state.container:SetShown(shouldShow)
+            state.anchorFrame:SetShown(shouldShow)
+        end
+    end
+end
+
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
@@ -1898,13 +1909,13 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     self.PendingAuraTrackingUpdate = nil
     self.PendingAuraTrackingReconfigure = nil
     self.AuraTrackingStateOrder = {}
+    local playerControlLost = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         state.active = false
     end
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", reconfigureButtons)
-
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External", reconfigureButtons)
 
     local rosterRefreshStates = {}
@@ -1928,6 +1939,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
     if self:DifficultyCheck({14, 15, 16}) and UnitGroupRolesAssigned("player") == "TANK" then
         InitAuraTrackingTankSet(self, NSRT.AuraTrackingSettings.Tank, "Tank", reconfigureButtons)
+    end
+
+    if playerControlLost then
+        SetAuraTrackingPlayerVehicleState(self, true)
     end
 
     for _, key in ipairs(self.AuraTrackingStateOrder) do
@@ -1963,7 +1978,13 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         mouseover = {},
         boss = {},
         roster = rosterRefreshStates,
+        playerControl = false,
     }
+
+    if (NSRT.AuraTrackingSettings.Player and NSRT.AuraTrackingSettings.Player.enabled)
+        or (NSRT.AuraTrackingSettings.External and NSRT.AuraTrackingSettings.External.enabled) then
+        AuraTrackingUnitRefreshStates.playerControl = true
+    end
 
     if self.AuraTrackingState then
         for _, state in pairs(self.AuraTrackingState) do
@@ -1978,11 +1999,30 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
     end
 
-    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 then
+    for _, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
+        local unit = settings.enabled and ResolveAuraTrackingUnit(self, settings)
+        if unit == "player" then
+            AuraTrackingUnitRefreshStates.playerControl = true
+            break
+        end
+    end
+
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 or AuraTrackingUnitRefreshStates.playerControl then
         if not AuraTrackingUnitRefreshFrame then
             AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
                 if NSI.IsBuilding then return end
+                if event == "UNIT_ENTERED_VEHICLE" then
+                    NSI.AuraTrackingPlayerVehicleDisabled = true
+                    SetAuraTrackingPlayerVehicleState(NSI, true)
+                    return
+                elseif event == "UNIT_EXITED_VEHICLE" then
+                    C_Timer.After(0.1, function()
+                        NSI.AuraTrackingPlayerVehicleDisabled = UnitHasVehicleUI("player") or nil
+                        SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
+                    end)
+                    return
+                end
                 if event == "GROUP_ROSTER_UPDATE" then
                     if NSI:Restricted() then
                         NSI.PendingAuraTrackingUpdate = true
@@ -2049,6 +2089,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
         if #AuraTrackingUnitRefreshStates.roster > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+        end
+        if AuraTrackingUnitRefreshStates.playerControl then
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
         end
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
