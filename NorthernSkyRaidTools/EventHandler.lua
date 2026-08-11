@@ -14,6 +14,7 @@ f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
+f:RegisterEvent("CINEMATIC_STOP")
 f:RegisterEvent("PLAYER_LOGOUT")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
 f:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
@@ -114,6 +115,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             end
         end)
+    elseif e == "CINEMATIC_STOP" and wowevent then
+        self:InitAuraSystem()
     elseif e == "READY_CHECK_FINISHED" and wowevent then
         self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
