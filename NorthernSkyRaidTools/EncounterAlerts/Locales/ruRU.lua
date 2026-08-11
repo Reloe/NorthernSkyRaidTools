@@ -10,7 +10,7 @@ L[3176] = {
 
 L[3177] = {
     ["Breath"] = {text = "Дыхание", name = "Дыхание"},
-    ["Knock"] = {text = "Стук", name = "Стук"},
+    ["Knock"] = {text = "Удар", name = "Удар"},
 }
 
 L[3179] = {
@@ -148,14 +148,14 @@ L[3445] = {
 }
 
 L[3455] = {
-    -- ["Taunts"] = {text = "Taunt", name = "Taunt", group = "Вашник"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Вашник"},
-    -- ["TankHits"] = {text = "Tank-Hit", name = "Tank-Hits", group = "Вашник"},
-    -- ["Infection"] = {text = "Infection", name = "Infection", group = "Вашник"},
-    -- ["WaveSpread"] = {text = "Pre-Spread", name = "Wave-Spread", group = "Вашник"},
-    -- ["Waves"] = {text = "Waves", name = "Waves", group = "Вашник"},
-    -- ["Soaks"] = {text = "Soaks", name = "Soaks", group = "Вашник"},
-    -- ["AoE"] = {text = "AoE", name = "AoE", group = "Вашник"},
+    ["Taunts"] = {text = "Провокация", name = "Таунт", group = "Вашник"},
+    ["Adds"] = {text = "Адды", name = "Адды", group = "Вашник"},
+    ["TankHits"] = {text = "Урон по танку", name = "Урон по танку", group = "Вашник"},
+    ["Infection"] = {text = "Заражение", name = "Заражение", group = "Вашник"},
+    ["WaveSpread"] = {text = "Предварительное рассредоточение", name = "Разойтись от волны", group = "Вашник"},
+    ["Waves"] = {text = "Волны", name = "Волны", group = "Вашник"},
+    ["Soaks"] = {text = "Поглощения", name = "Поглощения", group = "Вашник"},
+    ["AoE"] = {text = "АоЕ", name = "АоЕ", group = "Вашник"},
 }
 
 L[3497] = {
@@ -175,46 +175,46 @@ L[3497] = {
 }
 
 L[3420] = {
-    -- ["DamageAmp"] = {text = "Damage Amp", name = "Damage Amp", group = "Ссзорак"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Debuffs", group = "Ссзорак"},
-    -- ["WindDebuffs"] = {text = "Wind-Debuffs", name = "WindDebuffs", group = "Ссзорак"},
-    -- ["TankCombo"] = {text = "Tank Combo", name = "Tank Combo", group = "Ссзорак"},
-    -- ["Bait"] = {text = "Bait", name = "Bait", group = "Ссзорак"},
-    -- ["WindsHelper"] = {text = "", name = "Winds Helper", group = "Ссзорак"},
-    -- ["SerpentsFury"] = {text = "Stack Up", name = "Serpent's Fury", group = "Ссзорак"},
+    ["DamageAmp"] = {text = "Усиление урона", name = "Усиление урона", group = "Ссзорак"},
+    ["Debuffs"] = {text = "Дебаффы", name = "Дебаффы", group = "Ссзорак"},
+    ["WindDebuffs"] = {text = "Дебаффы ветра", name = "Дебаффы ветра", group = "Ссзорак"},
+    ["TankCombo"] = {text = "Танковое комбо", name = "Танковое комбо", group = "Ссзорак"},
+    ["Bait"] = {text = "Байт", name = "Байт", group = "Ссзорак"},
+    ["WindsHelper"] = {name = "Помощник ветров", group = "Ссзорак"},
+    ["SerpentsFury"] = {text = "Собраться", name = "Змеиное неистовство", group = "Ссзорак"},
 }
 
 L[3421] = {
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Два Клыка"},
-    -- ["Soak"] = {text = "Soak", name = "Soak", group = "Два Клыка"},
-    -- ["TankSoak"] = {text = "Soak", name = "Tank Soak", group = "Два Клыка"},
-    -- ["PreSpread"] = {text = "Pre-Spread", name = "Pre-Spread", group = "Два Клыка"},
-    -- ["WatchSide"] = {text = "Watch Side", name = "Watch Side", group = "Два Клыка"},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = "Два Клыка"},
-    -- ["WatchSpawns"] = {text = "Watch Spawns", name = "Watch Spawns", group = "Два Клыка"},
-    -- ["Defensives"] = {text = "Defensives", name = "Defensives", group = "Два Клыка"},
-    -- ["Knock"] = {text = "Knock", name = "Knock", group = "Два Клыка"},
+    ["Adds"] = {text = "Адды", name = "Адды", group = "Два Клыка"},
+    ["Soak"] = {text = "Поглощение", name = "Поглощение", group = "Два Клыка"},
+    ["TankSoak"] = {text = "Поглощение", name = "Поглощение танка", group = "Два Клыка"},
+    ["PreSpread"] = {text = "Предварительное рассредоточение", name = "Предварительное рассредоточение", group = "Два Клыка"},
+    ["WatchSide"] = {text = "Смотреть по сторонам", name = "Смотреть по сторонам", group = "Два Клыка"},
+    ["Orbs"] = {text = "Сферы", name = "Сферы", group = "Два Клыка"},
+    ["WatchSpawns"] = {text = "Следить за появлением", name = "Следить за появлением", group = "Два Клыка"},
+    ["Defensives"] = {text = "Защитные способности", name = "Защитные способности", group = "Два Клыка"},
+    ["Knock"] = {text = "Удар", name = "Удар", group = "Два Клыка"},
 }
 
 L[3429] = {
-    -- ["InterruptAdds"] = {text = "Ghosts", name = "P2 Interrupt Adds", group = "Coiled Altar P2"},
-    -- ["P2Taunt"] = {text = "Taunt", name = "P2 Taunt", group = "Coiled Altar Tanks"},
-    -- ["P2Frontal"] = {text = "Frontal", name = "P2 Frontal", group = "Coiled Altar P2"},
-    -- ["P1Soak"] = {text = "Soak", name = "P1 Soak", group = "Coiled Altar P1"},
-    -- ["P2Shield"] = {text = "Shield", name = "P2 Shield", group = "Coiled Altar P2"},
-    -- ["MindControls"] = {text = "Mind Controls", name = "Mind Controls", group = "Coiled Altar P2"},
-    -- ["P2Debuffs"] = {text = "Debuffs", name = "P2 Debuffs", group = "Coiled Altar P2"},
-    -- ["P1Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Coiled Altar Tanks"},
-    -- ["P1Frontal"] = {text = "Frontal", name = "P1 Frontal", group = "Coiled Altar P1"},
+    ["InterruptAdds"] = {text = "Призраки", name = "Прерывание аддов (2-я фаза)", group = "Спиральный алтарь [2-я фаза]"},
+    ["P2Taunt"] = {text = "Провокация", name = "Таунт (2-я фаза)", group = "Спиральный алтарь [Танки]"},
+    ["P2Frontal"] = {text = "Фронтальный удар", name = "Фронтальный удар (2-я фаза)", group = "Спиральный алтарь [2-я фаза]"},
+    ["P1Soak"] = {text = "Поглощение", name = "Поглощение (1-я фаза)", group = "Спиральный алтарь [1-я фаза]"},
+    ["P2Shield"] = {text = "Щит", name = "Щит (2-я фаза)", group = "Спиральный алтарь [2-я фаза]"},
+    ["MindControls"] = {text = "Контроль над разумом", name = "Контроль над разумом", group = "Спиральный алтарь [2-я фаза]"},
+    ["P2Debuffs"] = {text = "Дебаффы", name = "Дебаффы (2-я фаза)", group = "Спиральный алтарь [2-я фаза]"},
+    ["P1Taunt"] = {text = "Провокация", name = "Таунт (1-я фаза)", group = "Спиральный алтарь [Танки]"},
+    ["P1Frontal"] = {text = "Фронтальный удар", name = "Фронтальный удар (1-я фаза)", group = "Спиральный алтарь [1-я фаза]"},
 }
 
 L[3492] = {
-    -- ["HitKnock"] = {text = "Hit+Knock", name = "P1 Hit+Knock", group = "Ula'tek Tanks"},
-    -- ["Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Ula'tek Tanks"},
-    -- ["Waves"] = {text = "Waves", name = "Waves", group = "Ula'tek P1"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Ula'tek P1"},
-    -- ["DamageAmpIn"] = {text = "Dmg amp in", name = "Dmg amp", group = "Ula'tek P1"},
-    -- ["DamageAmp"] = {text = "Dmg amp", name = "Dmg amp Bar", group = "Ula'tek P1"},
-    -- ["PlatformBreak"] = {text = "Platform Break + Knock", name = "Platform Break", group = "Ula'tek P3"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Debuffs", group = "Ula'tek P3"},
+    -- ["HitKnock"] = {text = "Урон + удар", name = "Урон + удар (1-я фаза)", group = "Ула'тек [Танки]"},
+    -- ["Taunt"] = {text = "Провокация", name = "Таунт (1-я фаза)", group = "Ула'тек [Танки]"},
+    -- ["Waves"] = {text = "Волны", name = "Волны", group = "Ула'тек [1-я фаза]"},
+    -- ["Adds"] = {text = "Адды", name = "Адды", group = "Ула'тек [1-я фаза]"},
+    -- ["DamageAmpIn"] = {text = "Усиление урона через", name = "Усиление урона", group = "Ула'тек [1-я фаза]"},
+    -- ["DamageAmp"] = {text = "Усиление урона", name = "Полоса усиления урона", group = "Ула'тек [1-я фаза]"},
+    -- ["PlatformBreak"] = {text = "Разрушение платформы + удар", name = "Разрушение платформы", group = "Ула'тек [3-я фаза]"},
+    -- ["Debuffs"] = {text = "Дебаффы", name = "Дебаффы", group = "Ула'тек [3-я фаза]"},
 }
