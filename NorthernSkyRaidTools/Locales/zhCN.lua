@@ -1015,7 +1015,6 @@ L["This will delete all Alerts from previous Seasons. Continue?"] = "这将删�
 L["Enable Selected Boss Alerts"] = "启用所选首领预警"
 L["Disable Selected Boss Alerts"] = "禁用所选首领预警"
 L["Alerts Language"] = "预警语言"
-L["Encounter alert translations are not available for %s yet."] = "暂无%s的首领预警翻译。"
 L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"] = "这将清空所有首领预警数据，并重新导入作者预设的预警（如果已启用）。是否继续？"
 L["New Alert"] = "新预警"
 L["Unnamed"] = "未命名"
