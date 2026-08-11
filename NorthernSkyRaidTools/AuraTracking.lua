@@ -2142,7 +2142,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
     end)
 end
 
-local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType, fontPath, previewData, previewUnitName)
+local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
     fontPath = fontPath or GetAuraTrackingFontPath(self, settings)
@@ -2393,7 +2393,7 @@ function NSI:PreviewAuraTracking(key, show)
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
             icon:Show()
         else
             icon.PreviewExpires = nil
@@ -2417,7 +2417,7 @@ function NSI:PreviewAuraTracking(key, show)
                 local yOffset = (i - 1) * (settings.Height + settings.Spacing) * secondYDirection
                 icon:ClearAllPoints()
                 icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
-                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
+                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
                 icon:Show()
             else
                 icon.PreviewExpires = nil
