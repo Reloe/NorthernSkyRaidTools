@@ -209,10 +209,6 @@ L[3429] = {
 }
 
 L[3492] = {
-}
-
--- Legacy Ula'tek placeholders are kept commented until the alert data is enabled.
-L[3492] = {
     -- ["HitKnock"] = {text = "Hit+Knock", name = "P1 Hit+Knock", group = "Ula'tek Tanks"},
     -- ["Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Ula'tek Tanks"},
     -- ["Waves"] = {text = "Waves", name = "Waves", group = "Ula'tek P1"},
