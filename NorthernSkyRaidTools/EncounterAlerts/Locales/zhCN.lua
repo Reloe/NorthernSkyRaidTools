@@ -29,7 +29,7 @@ L[3179] = {
 -- Vaelgor & Ezzorak (3178)
 L[3178] = {
     ["Spread"] = {text = "分散", name = "虚空嚎叫（分散）"},
-    ["Tether"] = {text = "锁链", name = "虚界（锁链）"},
+    ["Tether"] = {text = "锁链", name = "虚无光束（锁链）"},
     ["Breath"] = {text = "恐惧吐息", name = "亡者吐息（恐惧）"},
     ["HealthDisplay"] = {name = "生命值对比"},
 }
@@ -178,8 +178,8 @@ L[3455] = {
     ["Infection"] = {text = "点名感染", name = "适应性感染（点名）", group = "瓦什尼克"},
     ["AoE"] = {text = "全团伤害", name = "恶性催化剂（AOE）", group = "瓦什尼克"},
     ["Soaks"] = {text = "踩圈", name = "催化胆汁（踩圈）", group = "瓦什尼克"},
+    ["Waves"] = {text = "波浪", name = "瘟疫泡沫", group = "瓦什尼克"},
     ["WaveSpread"] = {text = "预分散", name = "瘟疫泡沫（分散）", group = "瓦什尼克"},
-    ["Waves"] = {text = "波浪", name = "瘟疫浪潮", group = "瓦什尼克"},
 }
 
 -- The Lost Explorers (3497)
@@ -191,17 +191,17 @@ L[3497] = {
     ["ShellSpinScroll"] = {text = "引龟壳", name = "旋壳（书卷强化）", group = "大副技能"},
     ["ShellSpinTrader"] = {text = "引龟壳", name = "旋壳（商人强化）", group = "大副技能"},
     ["MightyThud"] = {text = "分摊", name = "巨力重击（分摊）", group = "大副技能"},
-    ["Fish-Spawn"] = {text = "鱼刷新", name = "投掷垃圾（鱼）", group = "商人技能"},
+    ["Fish-Spawn"] = {text = "鱼刷新", name = "投掷垃圾（抛鱼）", group = "商人技能"},
     ["MushroomBait"] = {text = "引蘑菇", name = "蘑菇投掷（引诱）", group = "商人技能"},
     ["ExplosiveSurprise"] = {text = "点名炸弹", name = "爆炸惊喜（点名）", group = "商人技能"},
     ["MushroomJump"] = {text = "踩蘑菇", name = "弹跳蘑菇", group = "商人技能"},
-    ["TimeToThrow"] = {text = "扔鱼", name = "扔鱼倒计时", group = "商人技能"},
-    ["TimeToThrowNonConditional"] = {text = "扔鱼", name = "扔鱼倒计时（无条件）", group = "商人技能"},
+    ["TimeToThrow"] = {text = "喂鱼", name = "喂鱼倒计时", group = "商人技能"},
+    ["TimeToThrowNonConditional"] = {text = "喂鱼", name = "喂鱼倒计时（无条件）", group = "商人技能"},
 }
 
 -- Sszorak (3420)
 L[3420] = {
-    ["TankCombo"] = {text = "坦克连击", name = "顶级掠食者（坦克）", group = "斯索拉克"},
+    ["TankCombo"] = {text = "坦克连击", name = "劫掠（坦克）", group = "斯索拉克"},
     ["DamageAmp"] = {text = "易伤", name = "掘地固守（易伤）", group = "斯索拉克"},
     ["Bait"] = {text = "引水", name = "剧毒涌动（引诱）", group = "斯索拉克"},
     ["WindDebuffs"] = {text = "点名狂风", name = "狂怒侧风（点名）", group = "斯索拉克"},
@@ -242,10 +242,10 @@ L[3492] = {
     ["TankHits"] = {text = "坦克打击", name = "蛇母之怒（坦克）", group = "乌拉特克 坦克"},
     ["Taunt"] = {text = "嘲讽", name = "嘲讽", group = "乌拉特克 坦克"},
     ["Waves"] = {text = "波浪", name = "腐蚀浪潮", group = "乌拉特克"},
-    ["Adds"] = {text = "小怪刷新", name = "腐蚀浪潮（小怪）", group = "乌拉特克"},
+    ["Adds"] = {text = "小怪刷新", name = "毒蛇呼唤（小怪）", group = "乌拉特克"},
     ["DamageAmpIn"] = {text = "准备易伤", name = "被缚之怒（易伤）", group = "乌拉特克"},
     ["DamageAmp"] = {text = "易伤", name = "易伤倒计时", group = "乌拉特克"},
-    ["PlatformBreak"] = {text = "摧毁平台+击退", name = "盘绕猎物（平台）", group = "乌拉特克 P3"},
+    ["PlatformBreak"] = {text = "摧毁平台+击退", name = "盘绕猎物（场地）", group = "乌拉特克 P3"},
     ["Debuffs"] = {text = "点名毒液", name = "毒蛇之咬（点名）", group = "乌拉特克 P3"},
     ]]
 }
