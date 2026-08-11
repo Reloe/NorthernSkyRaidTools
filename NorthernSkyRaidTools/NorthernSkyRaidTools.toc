@@ -81,6 +81,7 @@ EncounterAlerts/MidnightS2/Ulatek.lua
 EncounterAlerts\Locales\Core.lua
 EncounterAlerts\Locales\enUS.lua
 EncounterAlerts\Locales\zhCN.lua
+EncounterAlerts\Locales\ruRU.lua
 
 # The options UI is provided by the separate load-on-demand
 # NorthernSkyRaidTools_UI addon.
