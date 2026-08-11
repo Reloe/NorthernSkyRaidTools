@@ -1036,7 +1036,6 @@ L["This will delete all Alerts from previous Seasons. Continue?"] = "Это уд
 L["Enable Selected Boss Alerts"] = "Включить оповещения для выбранных боссов"
 L["Disable Selected Boss Alerts"] = "Отключить оповещения для выбранных боссов"
 L["Alerts Language"] = "Язык оповещений"
-L["Encounter alert translations are not available for %s yet."] = "Переводы оповещений для боя %s пока недоступны."
 L["This will wipe all Encounter Alert data and re-import Reloe Alerts (if enabled). Continue?"] = "Это удалит все данные оповещений о сражениях и повторно импортирует оповещения от Reloe (если включено). Продолжить?"
 L["New Alert"] = "Новое оповещение"
 L["Unnamed"] = "Без названия"
