@@ -57,7 +57,7 @@ end
 
 local function buildSoundOptions()
     local t = {}
-    for _, name in ipairs(NSI.LSM:List("sound")) do
+    for _, name in ipairs(NSI:GetOrderedSoundList()) do
         tinsert(t, {
             label = name,
             value = name,

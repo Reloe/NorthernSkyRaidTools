@@ -16,7 +16,7 @@ function NSI:BuildSoundDropdown(getValue, setValue)
                 end,
             },
         }
-        for _, sound in ipairs(NSI.LSM:List("sound")) do
+        for _, sound in ipairs(NSI:GetOrderedSoundList()) do
             t[#t + 1] = {
                 label   = sound,
                 value   = sound,

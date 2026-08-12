@@ -214,7 +214,23 @@ local function build_raidframeicon_options()
     return t
 end
 
-local soundlist = NSI.LSM:List("sound")
+function NSI:GetOrderedSoundList()
+    local addonSounds = {}
+    local otherSounds = {}
+    for _, soundName in ipairs(NSI.LSM:List("sound")) do
+        local soundPath = NSI.LSM:Fetch("sound", soundName)
+        local soundList = soundPath and string.lower(soundPath):find("interface\\addons\\northernskyraidtools\\media\\sounds\\", 1, true) and addonSounds or otherSounds
+        soundList[#soundList + 1] = soundName
+    end
+    table.sort(addonSounds)
+    table.sort(otherSounds)
+    for _, soundName in ipairs(otherSounds) do
+        addonSounds[#addonSounds + 1] = soundName
+    end
+    return addonSounds
+end
+
+local soundlist = NSI:GetOrderedSoundList()
 local function build_sound_dropdown()
     local t = {}
     for i, sound in ipairs(soundlist) do

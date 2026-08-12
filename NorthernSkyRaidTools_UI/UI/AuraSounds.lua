@@ -29,7 +29,7 @@ local function CreateLabel(parent, text, size, flags)
     return label
 end
 
-local soundlist = NSI.LSM:List("sound")
+local soundlist = NSI:GetOrderedSoundList()
 
 local function StripSoundColor(sound)
     if type(sound) ~= "string" then return sound end
