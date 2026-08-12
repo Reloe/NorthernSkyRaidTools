@@ -887,16 +887,21 @@ local function BuildAuraSoundsUI(parent)
         })
     end
 
+    local defaultSoundsTooltip = {
+        title = T("Use Reloe Aura Sounds"),
+        desc = T("This applies my selected aura sounds to the selected category. You can still edit them later. If you made changes, added or deleted one of these spell IDs yourself previously this option will NOT overwrite that."),
+    }
+
     function screen:RefreshCategoryControls()
         local isCustom = self.categoryType == "Custom"
         newCategoryButton.frame:SetShown(isCustom)
         newSubCategoryButton.frame:SetShown(isCustom)
         defaultSoundsCB.frame:SetShown(not isCustom)
         if self.categoryType == "Raid" then
-            defaultSoundsCB.label:SetText(T("Use Default Raid Aura Sounds"))
+            defaultSoundsTooltip.desc = T("This applies my selected aura sounds to all raid auras. You can still edit them later. If you made changes, added or deleted one of these spell IDs yourself previously this option will NOT overwrite that.")
             defaultSoundsCB:SetValue(NSRT.AuraSounds.UseDefaultRaidAuraSounds)
         elseif self.categoryType == "Dungeons" then
-            defaultSoundsCB.label:SetText(T("Use Default Dungeon Aura Sounds"))
+            defaultSoundsTooltip.desc = T("This applies my selected aura sounds to all dungeon auras. You can still edit them later. If you made changes, added or deleted one of these spell IDs yourself previously this option will NOT overwrite that.")
             defaultSoundsCB:SetValue(NSRT.AuraSounds.UseDefaultDungeonAuraSounds)
         end
         if resetCategoryButton then
@@ -905,7 +910,7 @@ local function BuildAuraSoundsUI(parent)
         end
     end
 
-    defaultSoundsCB = CreateCheckButton(screen, T("Use Default Raid Aura Sounds"), function()
+    defaultSoundsCB = CreateCheckButton(screen, T("Use Reloe Aura Sounds"), function()
         if screen.categoryType == "Dungeons" then
             return NSRT.AuraSounds.UseDefaultDungeonAuraSounds
         end
@@ -921,10 +926,7 @@ local function BuildAuraSoundsUI(parent)
         if screen.scrollbox then
             screen.scrollbox:MasterRefresh()
         end
-    end, 250, 18, "$parentDefaultSounds", {
-        title = T("Use Default Dungeon Aura Sounds"),
-        desc = T("This applies sounds to all dungeon auras based on my personal selection. You can still edit them later. If you made changes, added or deleted one of these spell IDs yourself previously this option will NOT overwrite that."),
-    })
+    end, 250, 18, "$parentDefaultSounds", defaultSoundsTooltip)
     defaultSoundsCB:SetPoint("LEFT", customTypeButton.frame, "RIGHT", 14, 0)
     NSI:SetUIFont(defaultSoundsCB.label, 11, "")
 
