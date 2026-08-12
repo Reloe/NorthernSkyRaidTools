@@ -12,8 +12,10 @@ local AuraTrackingExcludedSpellIDs = {
     [71041] = true, -- Dungeon Deserter
     [206151] = true, -- Challenger's Burden
     [264689] = true, -- Fatigued
+    [80354] = true, -- Time Warp
+    [95809] = true, -- Insanity
+    [160455] = true, -- Fatigued
 }
-
 NSI.AuraTrackingFilterDefinitions = {
     { key = "Helpful", value = "HELPFUL" },
     { key = "Harmful", value = "HARMFUL" },
@@ -76,7 +78,7 @@ end
 
 local function GetAuraTrackingRowWidth(settings)
     local width = settings.Width or 1
-    if settings.GrowDirection == "UP" or settings.GrowDirection == "DOWN" then
+    if settings.GrowDirection == "UP" or settings.GrowDirection == "DOWN" or settings.GrowDirection == "CENTER_VERTICAL" then
         local height = settings.Height or 1
         local limit = settings.Limit or 1
         local spacing = settings.Spacing or 0
@@ -94,13 +96,25 @@ local function GetAuraTrackingLayoutAnchorPoint(settings)
         return "TOPRIGHT"
     elseif growDirection == "UP" then
         return "BOTTOMLEFT"
+    elseif growDirection == "CENTER_HORIZONTAL" then
+        return "LEFT"
+    elseif growDirection == "CENTER_VERTICAL" then
+        return "TOP"
     end
     return "TOPLEFT"
 end
 
+local function GetAuraTrackingContainerAnchorPoint(settings)
+    local growDirection = settings and settings.GrowDirection
+    if growDirection == "CENTER_HORIZONTAL" or growDirection == "CENTER_VERTICAL" then
+        return "CENTER"
+    end
+    return GetAuraTrackingLayoutAnchorPoint(settings)
+end
+
 local function GetAuraTrackingLayoutAxis(settings)
     local growDirection = settings and settings.GrowDirection or "RIGHT"
-    if growDirection == "UP" or growDirection == "DOWN" then
+    if growDirection == "UP" or growDirection == "DOWN" or growDirection == "CENTER_VERTICAL" then
         return AnchorUtil.FlowLayoutAxis.Vertical
     end
     return AnchorUtil.FlowLayoutAxis.Horizontal
@@ -1675,7 +1689,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 
     container:ClearAllPoints()
     container:SetSize(width, height)
-    container:SetPoint(layoutAnchorPoint, anchorFrame, layoutAnchorPoint, 0, 0)
+    local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
+    container:SetPoint(containerAnchorPoint, anchorFrame, containerAnchorPoint, 0, 0)
     container:SetUnit(unit)
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection)
     local rowWidth = GetAuraTrackingRowWidth(settings)
@@ -1815,13 +1830,11 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         end
     end
 
-    container:Show()
-    container:SetEnabled(true)
-    if not loadMatches then
-        container:SetEnabled(false)
-        container:Hide()
-        anchorFrame:Hide()
-    end
+    local playerVehicleDisabled = unit == "player" and (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
+    local shouldShow = loadMatches and not playerVehicleDisabled
+    container:SetShown(shouldShow)
+    container:SetEnabled(shouldShow)
+    anchorFrame:SetShown(shouldShow)
     if reconfigureButtons then
         for button in pairs(state.buttonRegions or {}) do
             ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
@@ -1831,9 +1844,13 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 end
 
 function NSI:UpdateAuraTrackingEncounterVisibility()
+    local playerVehicleDisabled = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
     for _, state in pairs(self.AuraTrackingState or {}) do
         if state.encounterConditioned and state.container then
             local shouldShow = self:EvaluateLoad(state.settings)
+            if state.unit == "player" and playerVehicleDisabled then
+                shouldShow = false
+            end
             state.container:SetEnabled(shouldShow)
             state.container:SetShown(shouldShow)
             state.anchorFrame:SetShown(shouldShow)
@@ -1872,6 +1889,17 @@ local function InitAuraTrackingTankSet(self, settings, firstKey, reconfigureButt
     end
 end
 
+local function SetAuraTrackingPlayerVehicleState(self, disabled)
+    for _, state in pairs(self.AuraTrackingState or {}) do
+        if state.active and state.unit == "player" then
+            local shouldShow = not disabled and state.settings.enabled and self:EvaluateLoad(state.settings)
+            state.container:SetEnabled(shouldShow)
+            state.container:SetShown(shouldShow)
+            state.anchorFrame:SetShown(shouldShow)
+        end
+    end
+end
+
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
@@ -1883,13 +1911,13 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     self.PendingAuraTrackingUpdate = nil
     self.PendingAuraTrackingReconfigure = nil
     self.AuraTrackingStateOrder = {}
+    local playerControlLost = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         state.active = false
     end
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", reconfigureButtons)
-
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External", reconfigureButtons)
 
     local rosterRefreshStates = {}
@@ -1915,6 +1943,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         InitAuraTrackingTankSet(self, NSRT.AuraTrackingSettings.Tank, "Tank", reconfigureButtons)
     end
 
+    if playerControlLost then
+        SetAuraTrackingPlayerVehicleState(self, true)
+    end
+
     for _, key in ipairs(self.AuraTrackingStateOrder) do
         local state = self.AuraTrackingState[key]
         local settings = state and state.settings
@@ -1924,7 +1956,8 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             state.anchorFrame:SetPoint(settings.Anchor or "CENTER", anchorFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
             local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
             state.container:ClearAllPoints()
-            state.container:SetPoint(layoutAnchorPoint, state.anchorFrame, layoutAnchorPoint, 0, 0)
+            local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
+            state.container:SetPoint(containerAnchorPoint, state.anchorFrame, containerAnchorPoint, 0, 0)
         end
     end
 
@@ -1947,7 +1980,13 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         mouseover = {},
         boss = {},
         roster = rosterRefreshStates,
+        playerControl = false,
     }
+
+    if (NSRT.AuraTrackingSettings.Player and NSRT.AuraTrackingSettings.Player.enabled)
+        or (NSRT.AuraTrackingSettings.External and NSRT.AuraTrackingSettings.External.enabled) then
+        AuraTrackingUnitRefreshStates.playerControl = true
+    end
 
     if self.AuraTrackingState then
         for _, state in pairs(self.AuraTrackingState) do
@@ -1962,11 +2001,34 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
     end
 
-    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 then
+    for _, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
+        local unit = settings.enabled and ResolveAuraTrackingUnit(self, settings)
+        if unit == "player" then
+            AuraTrackingUnitRefreshStates.playerControl = true
+            break
+        end
+    end
+
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 or AuraTrackingUnitRefreshStates.playerControl then
         if not AuraTrackingUnitRefreshFrame then
             AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
                 if NSI.IsBuilding then return end
+                if event == "UNIT_ENTERED_VEHICLE" then
+                    NSI.AuraTrackingPlayerVehicleDisabled = true
+                    SetAuraTrackingPlayerVehicleState(NSI, true)
+                    return
+                elseif event == "UNIT_EXITED_VEHICLE" then
+                    C_Timer.After(0.1, function()
+                        NSI.AuraTrackingPlayerVehicleDisabled = UnitHasVehicleUI("player") or nil
+                        SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
+                    end)
+                    return
+                elseif event == "PLAYER_ENTERING_WORLD" then
+                    NSI.AuraTrackingPlayerVehicleDisabled = UnitHasVehicleUI("player") or nil
+                    SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
+                    return
+                end
                 if event == "GROUP_ROSTER_UPDATE" then
                     if NSI:Restricted() then
                         NSI.PendingAuraTrackingUpdate = true
@@ -2033,6 +2095,11 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
         if #AuraTrackingUnitRefreshStates.roster > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+        end
+        if AuraTrackingUnitRefreshStates.playerControl then
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
+            AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         end
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
@@ -2140,7 +2207,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
     end)
 end
 
-local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, duration, dispelType, fontPath, previewData, previewUnitName)
+local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
     fontPath = fontPath or GetAuraTrackingFontPath(self, settings)
@@ -2389,9 +2456,16 @@ function NSI:PreviewAuraTracking(key, show)
         if entry then
             local xOffset = (i - 1) * (settings.Width + settings.Spacing) * xDirection
             local yOffset = (i - 1) * (settings.Height + settings.Spacing) * yDirection
+            if settings.GrowDirection == "CENTER_HORIZONTAL" then
+                xOffset = (i - (#entries + 1) / 2) * (settings.Width + settings.Spacing)
+                yOffset = 0
+            elseif settings.GrowDirection == "CENTER_VERTICAL" then
+                xOffset = 0
+                yOffset = -(i - (#entries + 1) / 2) * (settings.Height + settings.Spacing)
+            end
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
             icon:Show()
         else
             icon.PreviewExpires = nil
@@ -2413,9 +2487,16 @@ function NSI:PreviewAuraTracking(key, show)
             if entry then
                 local xOffset = (i - 1) * (settings.Width + settings.Spacing) * secondXDirection
                 local yOffset = (i - 1) * (settings.Height + settings.Spacing) * secondYDirection
+                if secondMover.GrowDirection == "CENTER_HORIZONTAL" then
+                    xOffset = (i - (#entries + 1) / 2) * (settings.Width + settings.Spacing)
+                    yOffset = 0
+                elseif secondMover.GrowDirection == "CENTER_VERTICAL" then
+                    xOffset = 0
+                    yOffset = -(i - (#entries + 1) / 2) * (settings.Height + settings.Spacing)
+                end
                 icon:ClearAllPoints()
                 icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
-                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
+                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
                 icon:Show()
             else
                 icon.PreviewExpires = nil

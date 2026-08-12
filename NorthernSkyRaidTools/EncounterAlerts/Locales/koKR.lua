@@ -1,224 +1,248 @@
+-- Credit by Elarfim
 local _, NSI = ...
 
 NSI.EncounterAlertLocales = NSI.EncounterAlertLocales or {}
 local L = {}
 NSI.EncounterAlertLocales["koKR"] = L
 
+-- ============================================================================
+-- MidnightS1
+-- ============================================================================
+-- Imperator Averzian (3176)
 L[3176] = {
-    -- ["Soaks"] = {text = "Soak", name = "Soaks", group = ""},
+    ["Soaks"] = {name = "스킬 맞기", text = "스킬 맞기"},
 }
 
+-- Vorasius (3177)
 L[3177] = {
-    -- ["Breath"] = {text = "Breath", name = "Breath", group = ""},
-    -- ["Knock"] = {text = "Knock", name = "Knock", group = ""},
+    ["Knock"] = {name = "넉백", text = "넉백"},
+    ["Breath"] = {name = "브레스", text = "브레스"},
 }
 
+-- Fallen King Salhadaar (3179)
 L[3179] = {
-    -- ["CC Display"] = {text = "", name = "CC Display", group = ""},
-    -- ["Beams"] = {text = "Beams", name = "Beams", group = ""},
-    -- ["CC Adds"] = {text = "CC Adds", name = "CC Adds", group = ""},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = ""},
+    ["Beams"]       = {name = "레이저", text = "레이저"},
+    ["Orbs"]        = {name = "구슬", text = "구슬"},
+    ["CC Adds"]     = {name = "쫄 메즈", text = "쫄 메즈"},
+    ["CC Display"] = {name = "메즈 현황"},
 }
 
+-- Vaelgor & Ezzorak (3178)
 L[3178] = {
-    -- ["Breath"] = {text = "Breath", name = "Breath", group = ""},
-    -- ["HealthDisplay"] = {text = "", name = "HealthDisplay", group = ""},
-    -- ["Spread"] = {text = "Spread", name = "Spread", group = ""},
-    -- ["Tether"] = {text = "Tether", name = "Tether", group = ""},
+    ["Spread"]      = {name = "산개", text = "산개"},
+    ["Tether"]      = {name = "사슬", text = "사슬"},
+    ["Breath"]      = {name = "브레스", text = "브레스"},
+    ["HealthDisplay"] = {name = "생명력 현황"},
 }
 
+-- Lightblinded Vanguard (3180)
 L[3180] = {
-    -- ["Aura of Wrath"] = {text = "Aura of Wrath", name = "Aura of Wrath", group = "Paladin Auras"},
-    -- ["TauntAlerts"] = {text = "Taunt", name = "TauntAlerts", group = ""},
-    -- ["Heal Absorb Ticks"] = {text = "", name = "Heal Absorb Ticks", group = ""},
-    -- ["Peace Aura"] = {text = "Peace Aura", name = "Peace Aura", group = "Paladin Auras"},
-    -- ["Sacred Toll"] = {text = "Sacred Toll", name = "Sacred Toll", group = ""},
-    -- ["Devotion Aura"] = {text = "Devotion Aura", name = "Devotion Aura", group = "Paladin Auras"},
+    ["Sacred Toll"]     = {name = "신성한 종", text = "신성한 종"},
+    ["Heal Absorb Ticks"] = {name = "치유 흡수 틱"},
+    ["Peace Aura"]      = {group = "성기사 오라", name = "평화의 오라", text = "평화의 오라"},
+    ["Devotion Aura"]   = {group = "성기사 오라", name = "헌신의 오라", text = "헌신의 오라"},
+    ["Aura of Wrath"]   = {group = "성기사 오라", name = "진노의 오라", text = "진노의 오라"},
+    ["TauntAlerts"]     = {name = "도발 알림", text = "도발"},
 }
 
+-- Crown of the Cosmos (3181)
 L[3181] = {
-    -- ["Tether"] = {text = "Tether", name = "Tether", group = "Alleria P3"},
-    -- ["Bait_P1"] = {text = "Bait", name = "Bait", group = "Alleria P1"},
-    -- ["Bait_P3"] = {text = "Bait", name = "Bait", group = "Alleria P2"},
-    -- ["Bait_P5"] = {text = "Bait", name = "Bait", group = "Alleria P3"},
-    -- ["Explosion_P1"] = {text = "Explosion", name = "Explosion", group = "Alleria P1"},
-    -- ["Explosion_P3"] = {text = "Explosion", name = "Explosion", group = "Alleria P2"},
-    -- ["Explosion_P5"] = {text = "Explosion", name = "Explosion", group = "Alleria P3"},
-    -- ["Arrows"] = {text = "Arrows", name = "Arrows", group = "Alleria P1"},
-    -- ["Ranged Obelisk_P1"] = {text = "Obelisk", name = "Ranged Obelisk", group = "Alleria P1"},
-    -- ["Ranged Obelisk_P3"] = {text = "Obelisk", name = "Ranged Obelisk", group = "Alleria P2"},
-    -- ["Ranged Obelisk_P5"] = {text = "Obelisk", name = "Ranged Obelisk", group = "Alleria P3"},
-    -- ["Boss-Immune"] = {text = "Immune", name = "Boss-Immune", group = ""},
-    -- ["Melee Obelisk_P1"] = {text = "Obelisk", name = "Melee Obelisk", group = "Alleria P1"},
-    -- ["Melee Obelisk_P3"] = {text = "Obelisk", name = "Melee Obelisk", group = "Alleria P2"},
-    -- ["Melee Obelisk_P5"] = {text = "Obelisk", name = "Melee Obelisk", group = "Alleria P3"},
-    -- ["Stop Cast"] = {text = "Stop Cast", name = "Stop Cast", group = "Alleria P1"},
+    ["Stop Cast"]       = {group = "알레리아 1페", name = "시전 중지", text = "시전 중지"},
+    ["Ranged Obelisk_P1"] = {group = "알레리아 1페", name = "원거리 방첨탑", text = "방첨탑"},
+    ["Ranged Obelisk_P3"] = {group = "알레리아 2페", name = "원거리 방첨탑", text = "방첨탑"},
+    ["Ranged Obelisk_P5"] = {group = "알레리아 3페", name = "원거리 방첨탑", text = "방첨탑"},
+    ["Melee Obelisk_P1"] = {group = "알레리아 1페", name = "근접 방첨탑", text = "방첨탑"},
+    ["Melee Obelisk_P3"] = {group = "알레리아 2페", name = "근접 방첨탑", text = "방첨탑"},
+    ["Melee Obelisk_P5"] = {group = "알레리아 3페", name = "근접 방첨탑", text = "방첨탑"},
+    ["Bait_P1"]         = {group = "알레리아 1페", name = "유도", text = "유도"},
+    ["Bait_P3"]         = {group = "알레리아 2페", name = "유도", text = "유도"},
+    ["Bait_P5"]         = {group = "알레리아 3페", name = "유도", text = "유도"},
+    ["Arrows"]          = {group = "알레리아 1페", name = "화살", text = "화살"},
+    ["Explosion_P1"]    = {group = "알레리아 1페", name = "폭발", text = "폭발"},
+    ["Explosion_P3"]    = {group = "알레리아 2페", name = "폭발", text = "폭발"},
+    ["Explosion_P5"]    = {group = "알레리아 3페", name = "폭발", text = "폭발"},
+    ["Boss-Immune"]     = {name = "보스 무적", text = "무적"},
+    ["Tether"]          = {group = "알레리아 3페", name = "사슬", text = "사슬"},
 }
 
+-- Chimaerus (3306)
 L[3306] = {
-    -- ["Debuffs_P1"] = {text = "Debuffs", name = "Debuffs", group = ""},
-    -- ["Debuffs_P2"] = {text = "Debuffs", name = "Debuffs", group = ""},
+    ["Debuffs_P1"] = {name = "디버프", text = "디버프"},
+    ["Debuffs_P2"] = {name = "디버프", text = "디버프"},
 }
 
+-- Belo'ren (3182)
 L[3182] = {
-    -- ["Feather Color"] = {text = "", name = "Feather Color", group = ""},
-    -- ["Soaks_P1"] = {text = "Soaks", name = "Soaks", group = "Beloren P1"},
-    -- ["Soaks_P2"] = {text = "Soaks", name = "Soaks", group = "Beloren P2"},
-    -- ["Color Swap"] = {text = "SWAPPED", name = "Color Swap", group = ""},
-    -- ["Next Hit_P2"] = {text = "Next Hit", name = "Next Hit", group = "Beloren P2"},
-    -- ["Next Hit_P3"] = {text = "Next Hit", name = "Next Hit", group = "Beloren P2"},
-    -- ["Quills_P1"] = {text = "Quills", name = "Quills", group = "Beloren P1"},
-    -- ["Quills_P2"] = {text = "Quills", name = "Quills", group = "Beloren P2"},
-    -- ["Gateway_P2"] = {text = "Gateway", name = "Gateway", group = "Beloren P1"},
-    -- ["Gateway_P3"] = {text = "Gateway", name = "Gateway", group = "Beloren P2"},
+    ["Feather Color"] = {name = "깃털색"},
+    ["Color Swap"]      = {name = "색 교체", text = "색 교체"},
+    ["Gateway_P2"]      = {group = "벨로렌 1페", name = "관문", text = "관문"},
+    ["Gateway_P3"]      = {group = "벨로렌 2페", name = "관문", text = "관문"},
+    ["Next Hit_P2"]     = {group = "벨로렌 1페", name = "다음 바닥", text = "다음 바닥"},
+    ["Next Hit_P3"]     = {group = "벨로렌 2페", name = "다음 바닥", text = "다음 바닥"},
+    ["Soaks_P1"]        = {group = "벨로렌 1페", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Soaks_P2"]        = {group = "벨로렌 2페", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Quills_P1"]       = {group = "벨로렌 1페", name = "깃털", text = "깃털"},
+    ["Quills_P2"]       = {group = "벨로렌 2페", name = "깃털", text = "깃털"},
 }
 
+-- Midnight Falls (3183)
 L[3183] = {
-    -- ["HC Soaks"] = {text = "Soaks", name = "HC Soaks", group = "Lura P3"},
-    -- ["Right Stars"] = {text = "Stars", name = "Right Stars", group = "Lura P3 Right"},
-    -- ["Left Memory Game"] = {text = "Memory Game", name = "Left Memory Game", group = "Lura P3 Left"},
-    -- ["Right Soak-Time"] = {text = "Soak-Time", name = "Right Soak-Time", group = "Lura P3 Right"},
-    -- ["Left Stars"] = {text = "Stars", name = "Left Stars", group = "Lura P3 Left"},
-    -- ["Lura Tank-Hits_P4"] = {text = "Tank-Hit", name = "P3 Tank-Hits", group = "Lura Tanks"},
-    -- ["Spread"] = {text = "Spread", name = "Spread", group = "Lura P2"},
-    -- ["Transition Beams"] = {text = "Beams", name = "Beams", group = "Lura P1 Transition"},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = "Lura P2"},
-    -- ["Soak Cross"] = {text = "Soak {rt7}", name = "Cross Soak", group = "Lura P2 Soaks"},
-    -- ["Right Soaks"] = {text = "Soaks", name = "Right Soaks", group = "Lura P3 Right"},
-    -- ["MemoryGame"] = {text = "Memory Game", name = "MemoryGame", group = "Lura P1"},
-    -- ["InterruptDisplay"] = {text = "", name = "Interrupt Display", group = ""},
-    -- ["Glaives"] = {text = "Glaives", name = "Glaives", group = "Lura P1"},
-    -- ["Interrupts"] = {text = "Interrupts", name = "Interrupts", group = "Lura P1"},
-    -- ["Old-Seed-Drop"] = {text = "Seed-Drop", name = "non-conditional Seed-Drop", group = "Lura P2"},
-    -- ["Right Memory Game"] = {text = "Memory Game", name = "Right Memory Game", group = "Lura P3 Right"},
-    -- ["Left Soaks"] = {text = "Soaks", name = "Left Soaks", group = "Lura P3 Left"},
-    -- ["CrystalDropTimer"] = {text = "PICK UP", name = "Time to Pick Crystal", group = ""},
-    -- ["Beams"] = {text = "Beams", name = "Beams", group = "Lura P1"},
-    -- ["Galvanize"] = {text = "Soaks", name = "Generic Soak", group = "Lura P2 Soaks"},
-    -- ["Blazes"] = {text = "Blazes", name = "Blazes", group = "Lura P4"},
-    -- ["P4 Move"] = {text = "Move", name = "Move", group = "Lura P4"},
-    -- ["Move"] = {text = "Move", name = "Move", group = "Lura P3"},
-    -- ["RunesDisplay"] = {text = "", name = "RunesDisplay", group = ""},
-    -- ["Soak Skull"] = {text = "Soak {rt8}", name = "Skull Soak", group = "Lura P2 Soaks"},
-    -- ["Seed-Drop"] = {text = "Seed-Drop", name = "Seed-Drop", group = "Lura P2"},
-    -- ["Left Soak-Time"] = {text = "Soak-Time", name = "Left Soak-Time", group = "Lura P3 Left"},
-    -- ["Lura Taunts_P1"] = {text = "Taunt", name = "P1 Taunts", group = "Lura Tanks"},
-    -- ["Lura Taunts_P3"] = {text = "Taunt", name = "P2 Taunts", group = "Lura Tanks"},
-    -- ["Full Blaze"] = {text = "Full Blaze", name = "Full Blaze", group = "Lura P1 Transition"},
-    -- ["Lura Tank-Hits_P1"] = {text = "Tank-Hit", name = "P1 Tank-Hits", group = "Lura Tanks"},
-    -- ["Lura Tank-Hits_P3"] = {text = "Tank-Hit", name = "P2 Tank-Hits", group = "Lura Tanks"},
-    -- ["Soak Star"] = {text = "Soak {rt1}", name = "Star Soak", group = "Lura P2 Soaks"},
-    -- ["Final Slice Stars"] = {text = "Stars", name = "Final Slice Stars", group = "Lura P3"},
-    -- ["Soak Orange"] = {text = "Soak {rt2}", name = "Orange Soak", group = "Lura P2 Soaks"},
+    ["MemoryGame"]              = {group = "르우라 1페", name = "메모리 게임", text = "메모리 게임"},
+    ["Glaives"]                 = {group = "르우라 1페", name = "글레이브", text = "글레이브"},
+    ["Interrupts"]              = {group = "르우라 1페", name = "차단", text = "차단"},
+    ["Beams"]                   = {group = "르우라 1페", name = "레이저", text = "레이저"},
+    ["Transition Beams"]        = {group = "르우라 1사이페", name = "레이저", text = "레이저"},
+    ["Lura Tank-Hits_P1"]       = {group = "르우라 탱커", name = "1페 탱커 공격", text = "탱커 공격"},
+    ["Lura Tank-Hits_P3"]       = {group = "르우라 탱커", name = "2페 탱커 공격", text = "탱커 공격"},
+    ["Lura Tank-Hits_P4"]       = {group = "르우라 탱커", name = "3페 탱커 공격", text = "탱커 공격"},
+    ["Lura Taunts_P1"]          = {group = "르우라 탱커", name = "1페 도발", text = "도발"},
+    ["Lura Taunts_P3"]          = {group = "르우라 탱커", name = "2페 도발", text = "도발"},
+    ["Full Blaze"]              = {group = "르우라 1사이페", name = "전원 가시", text = "전원 가시"},
+    ["Seed-Drop"]               = {group = "르우라 2페", name = "수정 떨구기", text = "수정 떨구기"},
+    ["Old-Seed-Drop"]           = {group = "르우라 2페", name = "무조건 수정 떨구기", text = "수정 떨구기"},
+    ["Galvanize"]               = {group = "르우라 2페 바닥 맞기", name = "일반 바닥 맞기", text = "바닥 맞기"},
+    ["Soak Star"]               = {group = "르우라 2페 바닥 맞기", name = "별 맞기", text = "{rt1} 맞기"},
+    ["Soak Orange"]             = {group = "르우라 2페 바닥 맞기", name = "동글 맞기", text = "{rt2} 맞기"},
+    ["Soak Skull"]              = {group = "르우라 2페 바닥 맞기", name = "해골 맞기", text = "{rt8} 맞기"},
+    ["Soak Cross"]              = {group = "르우라 2페 바닥 맞기", name = "엑스 맞기", text = "{rt7} 맞기"},
+    ["Spread"]                  = {group = "르우라 2페", name = "산개", text = "산개"},
+    ["Orbs"]                    = {group = "르우라 2페", name = "구슬", text = "구슬"},
+    ["HC Soaks"]                = {group = "르우라 3페", name = "바닥 흡수", text = "바닥 흡수"},
+    ["Move"]                    = {group = "르우라 3페", name = "이동", text = "이동"},
+    ["Left Memory Game"]        = {group = "르우라 3페 왼쪽", name = "왼쪽 메모리 게임", text = "메모리 게임"},
+    ["Right Memory Game"]       = {group = "르우라 3페 오른쪽", name = "오른쪽 메모리 게임", text = "메모리 게임"},
+    ["Left Soaks"]              = {group = "르우라 3페 왼쪽", name = "왼쪽 바닥 흡수", text = "바닥 흡수"},
+    ["Right Soaks"]             = {group = "르우라 3페 오른쪽", name = "오른쪽 바닥 흡수", text = "바닥 흡수"},
+    ["Left Soak-Time"]          = {group = "르우라 3페 왼쪽", name = "왼쪽 흡수 남은 시간", text = "흡수 남은 시간"},
+    ["Right Soak-Time"]         = {group = "르우라 3페 오른쪽", name = "오른쪽 흡수 남은 시간", text = "흡수 남은 시간"},
+    ["Left Stars"]              = {group = "르우라 3페 왼쪽", name = "왼쪽 별자리", text = "별자리"},
+    ["Right Stars"]             = {group = "르우라 3페 오른쪽", name = "오른쪽 별자리", text = "별자리"},
+    ["Final Slice Stars"]       = {group = "르우라 3페", name = "마지막 별자리", text = "별자리"},
+    ["Blazes"]                  = {group = "르우라 4페", name = "별빛파열", text = "좌우좌"},
+    ["P4 Move"]                 = {group = "르우라 4페", name = "4페 이동", text = "이동"},
+    ["CrystalDropTimer"]        = {name = "수정 줍기 시간", text = "수정 줍기"},
+    ["RunesDisplay"]            = {name = "룬 표시"},
+    ["InterruptDisplay"]        = {name = "차단 표시"},
 }
 
+-- Rotmire (3159)
 L[3159] = {
-    -- ["BurstingPustules"] = {text = "AoE", name = "AoE", group = ""},
-    -- ["Shrooms"] = {text = "Shrooms", name = "Shrooms", group = ""},
-    -- ["InterruptDisplay"] = {text = "", name = "Interrupt Display", group = ""},
-    -- ["Taunts"] = {text = "Taunt", name = "Taunts", group = "Rotmire Tanks"},
-    -- ["Tankhits"] = {text = "Tank-Hit", name = "Tankhits", group = "Rotmire Tanks"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = ""},
+    ["Adds"]            = {name = "쫄", text = "쫄"},
+    ["Shrooms"]         = {name = "버섯", text = "버섯"},
+    ["BurstingPustules"] = {name = "광역뎀", text = "광역뎀"},
+    ["InterruptDisplay"] = {name = "차단 현황"},
+    ["Taunts"]          = {group = "부식수렁 탱커", name = "도발", text = "도발"},
+    ["Tankhits"]        = {group = "부식수렁 탱커", name = "탱커 공격", text = "탱커 공격"},
 }
 
+-- ============================================================================
+-- MidnightS2
+-- ============================================================================
+-- Nymrissa Wavecaller (3379)
 L[3379] = {
 }
 
+-- Nek'zali the Soulcoiler (3470)
 L[3470] = {
-    -- ["RestlessAmani"] = {text = "Adds", name = "Add-Spawn", group = "Nek'zali"},
-    -- ["Barrage"] = {text = "Frontal", name = "Barrage", group = "Nek'zali"},
-    -- ["HungeringPyre"] = {text = "Soak", name = "Hungering Pyre", group = "Nek'zali"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Essence Rend", group = "Nek'zali"},
-    -- ["SoulcoilIgnition"] = {text = "AoE", name = "Soulcoil Ignition", group = "Nek'zali"},
-    -- ["InvokeMythic"] = {text = "Stop Cast", name = "Invoke", group = "Nek'zali"},
-    -- ["Invoke"] = {text = "Dodge", name = "Invoke", group = "Nek'zali"},
+    ["Barrage"]             = {group = "네크잘리", name = "포화", text = "전방스킬"},
+    ["Debuffs"]             = {group = "네크잘리", name = "정수 분쇄", text = "디버프"},
+    ["SoulcoilIgnition"]    = {group = "네크잘리", name = "영혼똬리 점화", text = "광역뎀"},
+    ["HungeringPyre"]       = {group = "네크잘리", name = "굶주린 장작더미", text = "스킬 맞기"},
+    ["RestlessAmani"]       = {group = "네크잘리", name = "쫄 등장", text = "쫄"},
+    ["Invoke"]              = {group = "네크잘리", name = "기원", text = "피하기"},
+    ["InvokeMythic"]        = {group = "네크잘리", name = "기원", text = "시전 중지"},
 }
 
+-- Entombed Sentinels (3445)
 L[3445] = {
-    -- ["BloodSoakPool"] = {text = "Drop Pool", name = "Soak-Pool", group = "Sentinels"},
-    -- ["BloodHits"] = {text = "Tank-Hit", name = "Blood Tank-Hit", group = "Sentinels"},
-    -- ["BloodDispels"] = {text = "Dispels", name = "Blood Dispels", group = "Sentinels"},
-    -- ["TransitionDebuffs"] = {text = "Number Game", name = "Transition Debuffs", group = "Sentinels"},
-    -- ["PoisonHits"] = {text = "Tank-Hit", name = "Poison Tank-Hit", group = "Sentinels"},
-    -- ["ShiftingProtovenom"] = {text = "Spread", name = "Shifting Protovenom", group = "Sentinels"},
-    -- ["OrbSpawn"] = {text = "Bait Orbs", name = "Orb Spawn", group = "Sentinels"},
-    -- ["BloodDropPool"] = {text = "Drop-Pool", name = "Tank Drop Pool", group = "Sentinels"},
-    -- ["PoisonAdd"] = {text = "Poison Add", name = "Poison Add", group = "Sentinels"},
-    -- ["BloodSoak"] = {text = "Blood-Soak", name = "Blood Soak", group = "Sentinels"},
+    ["PoisonHits"]      = {group = "파수꾼", name = "독 탱커 공격", text = "탱커 공격"},
+    ["BloodHits"]       = {group = "파수꾼", name = "피 탱커 공격", text = "탱커 공격"},
+    ["BloodDropPool"]   = {group = "파수꾼", name = "탱커 바닥 깔림", text = "바닥 깔림"},
+    ["BloodSoak"]       = {group = "파수꾼", name = "피 스킬 맞기", text = "피 스킬 맞기"},
+    ["BloodSoakPool"]   = {group = "파수꾼", name = "스킬 맞고 바닥 깔림", text = "바닥 깔림"},
+    ["BloodDispels"]    = {group = "파수꾼", name = "피 해제", text = "해제"},
+    ["PoisonAdd"]       = {group = "파수꾼", name = "독 쫄", text = "독 쫄"},
+    ["OrbSpawn"]        = {group = "파수꾼", name = "구슬 등장", text = "구슬 유도"},
+    ["ShiftingProtovenom"] = {group = "파수꾼", name = "변화무쌍한 원시맹독", text = "산개"},
+    ["TransitionDebuffs"] = {group = "파수꾼", name = "사이페 디버프", text = "숫자 게임"},
 }
 
+-- Vashnik the Malignant (3455)
 L[3455] = {
-    -- ["Taunts"] = {text = "Taunt", name = "Taunt", group = "Vashnik"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Vashnik"},
-    -- ["TankHits"] = {text = "Tank-Hit", name = "Tank-Hits", group = "Vashnik"},
-    -- ["Infection"] = {text = "Infection", name = "Infection", group = "Vashnik"},
-    -- ["WaveSpread"] = {text = "Pre-Spread", name = "Wave-Spread", group = "Vashnik"},
-    -- ["Waves"] = {text = "Waves", name = "Waves", group = "Vashnik"},
-    -- ["Soaks"] = {text = "Soaks", name = "Soaks", group = "Vashnik"},
-    -- ["AoE"] = {text = "AoE", name = "AoE", group = "Vashnik"},
+    ["TankHits"]    = {group = "바쉬니크", name = "탱커 공격", text = "탱커 공격"},
+    ["Taunts"]      = {group = "바쉬니크", name = "Taunt", text = "도발"},
+    ["Adds"]        = {group = "바쉬니크", name = "쫄", text = "쫄"},
+    ["Infection"]   = {group = "바쉬니크", name = "감염", text = "감염"},
+    ["AoE"]         = {group = "바쉬니크", name = "광역뎀", text = "광역뎀"},
+    ["Soaks"]       = {group = "바쉬니크", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Waves"]       = {group = "바쉬니크", name = "파도", text = "파도"},
+    ["WaveSpread"] = {group = "바쉬니크", name = "파도 산개", text = "미리 산개"},
 }
 
+-- The Lost Explorers (3497)
 L[3497] = {
-    -- ["MushroomJump"] = {text = "Jump", name = "Mushroom Jump", group = "Trader Abilities"},
-    -- ["ShreddingShards"] = {text = "Tank-Hit", name = "Tank-Hit", group = "Scrollsage Abilities"},
-    -- ["Fish-Spawn"] = {text = "Fish Spawn", name = "Fish Spawn", group = "Trader Abilities"},
-    -- ["FrostfireVolley"] = {text = "Frostfire Debuffs", name = "Frostfire Volley", group = "Scrollsage Abilities"},
-    -- ["ShellSpinScroll"] = {text = "Bait", name = "Shell Spin - Scroll Empowered", group = "First Mate Abilities"},
-    -- ["MushroomBait"] = {text = "Bait", name = "Mushroom Bait", group = "Trader Abilities"},
-    -- ["BlinkNova"] = {text = "Blink Nova", name = "Blink Nova", group = "Scrollsage Abilities"},
-    -- ["ShellSpinTrader"] = {text = "Bait", name = "Shell Spin - Trader Empowered", group = "First Mate Abilities"},
-    -- ["TimeToThrowNonConditional"] = {text = "Time to Throw", name = "non-conditional Time to throw Fish", group = "Trader Abilities"},
-    -- ["TimeToThrow"] = {text = "Time to Throw", name = "Time to throw Fish", group = "Trader Abilities"},
-    -- ["ShellSpinNormal"] = {text = "Bait", name = "Shell Spin Normal", group = "First Mate Abilities"},
-    -- ["ExplosiveSurprise"] = {text = "Bomb inc", name = "Bomb Debuff", group = "Trader Abilities"},
-    -- ["MightyThud"] = {text = "Soaks", name = "Soaks", group = "First Mate Abilities"},
+    ["ShreddingShards"]         = {group = "두루마리현자 스킬", name = "탱커 공격", text = "탱커 공격"},
+    ["BlinkNova"]               = {group = "두루마리현자 스킬", name = "점멸 회오리", text = "점멸 회오리"},
+    ["FrostfireVolley"]         = {group = "두루마리현자 스킬", name = "서리불꽃 연사", text = "서리불꽃 디버프"},
+    ["ShellSpinNormal"]         = {group = "일등항해사 스킬", name = "등껍질 회전 일반", text = "유도"},
+    ["ShellSpinScroll"]         = {group = "일등항해사 스킬", name = "등껍질 회전 - 두루마리 강화됨", text = "유도"},
+    ["ShellSpinTrader"]         = {group = "일등항해사 스킬", name = "등껍질 회전 - 무역상 강화됨", text = "유도"},
+    ["MightyThud"]              = {group = "일등항해사 스킬", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Fish-Spawn"]              = {group = "무역상 스킬", name = "물고기 생성", text = "물고기 생성"},
+    ["MushroomBait"]            = {group = "무역상 스킬", name = "버섯 유도", text = "유도"},
+    ["ExplosiveSurprise"]       = {group = "무역상 스킬", name = "폭탄 디버프", text = "폭탄 걸림"},
+    ["MushroomJump"]            = {group = "무역상 스킬", name = "버섯 점프", text = "점프"},
+    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던지기 시간", text = "던지기 시간"},
+    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던지기 시간", text = "던지기 시간"},
 }
 
+-- Sszorak (3420)
 L[3420] = {
-    -- ["DamageAmp"] = {text = "Damage Amp", name = "Damage Amp", group = "Sszorak"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Debuffs", group = "Sszorak"},
-    -- ["WindDebuffs"] = {text = "Wind-Debuffs", name = "WindDebuffs", group = "Sszorak"},
-    -- ["TankCombo"] = {text = "Tank Combo", name = "Tank Combo", group = "Sszorak"},
-    -- ["Bait"] = {text = "Bait", name = "Bait", group = "Sszorak"},
-    -- ["WindsHelper"] = {text = "", name = "Winds Helper", group = "Sszorak"},
-    -- ["SerpentsFury"] = {text = "Stack Up", name = "Serpent's Fury", group = "Sszorak"},
+    ["TankCombo"]   = {group = "스조라크", name = "탱커 연속 공격", text = "탱커 연속 공격"},
+    ["DamageAmp"]   = {group = "스조라크", name = "피해 증가", text = "피해 증가"},
+    ["Bait"]        = {group = "스조라크", name = "유도", text = "유도"},
+    ["WindDebuffs"] = {group = "스조라크", name = "바람 디버프", text = "바람 디버프"},
+    ["Debuffs"]     = {group = "스조라크", name = "디버프", text = "디버프"},
+    ["SerpentsFury"] = {group = "스조라크", name = "뱀의 격노", text = "뭉치기"},
+    ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
 }
 
+-- The Twin Fangs (3421)
 L[3421] = {
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Twin Fangs"},
-    -- ["Soak"] = {text = "Soak", name = "Soak", group = "Twin Fangs"},
-    -- ["TankSoak"] = {text = "Soak", name = "Tank Soak", group = "Twin Fangs"},
-    -- ["PreSpread"] = {text = "Pre-Spread", name = "Pre-Spread", group = "Twin Fangs"},
-    -- ["WatchSide"] = {text = "Watch Side", name = "Watch Side", group = "Twin Fangs"},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = "Twin Fangs"},
-    -- ["WatchSpawns"] = {text = "Watch Spawns", name = "Watch Spawns", group = "Twin Fangs"},
-    -- ["Defensives"] = {text = "Defensives", name = "Defensives", group = "Twin Fangs"},
-    -- ["Knock"] = {text = "Knock", name = "Knock", group = "Twin Fangs"},
+    ["Defensives"] = {group = "쌍둥이 송곳니", name = "생존기", text = "생존기"},
+    ["Soak"]        = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    ["PreSpread"]   = {group = "쌍둥이 송곳니", name = "미리 산개", text = "미리 산개"},
+    ["WatchSide"]   = {group = "쌍둥이 송곳니", name = "머리 방향", text = "머리 방향"},
+    ["Adds"]        = {group = "쌍둥이 송곳니", name = "쫄", text = "쫄"},
+    ["Orbs"]        = {group = "쌍둥이 송곳니", name = "구슬", text = "구슬"},
+    ["TankSoak"]    = {group = "쌍둥이 송곳니", name = "탱커와 같이 맞기", text = "스킬 맞기"},
+    ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "브레스 머리 나옴", text = "브레스 머리 나옴"},
+    ["Knock"]       = {group = "쌍둥이 송곳니", name = "넉백", text = "넉백"},
 }
 
+-- The Coiled Altar (3429)
 L[3429] = {
-    -- ["InterruptAdds"] = {text = "Ghosts", name = "P2 Interrupt Adds", group = "Coiled Altar P2"},
-    -- ["P2Taunt"] = {text = "Taunt", name = "P2 Taunt", group = "Coiled Altar Tanks"},
-    -- ["P2Frontal"] = {text = "Frontal", name = "P2 Frontal", group = "Coiled Altar P2"},
-    -- ["P1Soak"] = {text = "Soak", name = "P1 Soak", group = "Coiled Altar P1"},
-    -- ["P2Shield"] = {text = "Shield", name = "P2 Shield", group = "Coiled Altar P2"},
-    -- ["MindControls"] = {text = "Mind Controls", name = "Mind Controls", group = "Coiled Altar P2"},
-    -- ["P2Debuffs"] = {text = "Debuffs", name = "P2 Debuffs", group = "Coiled Altar P2"},
-    -- ["P1Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Coiled Altar Tanks"},
-    -- ["P1Frontal"] = {text = "Frontal", name = "P1 Frontal", group = "Coiled Altar P1"},
+    ["P1Frontal"]       = {group = "똬리의 제단 1페", name = "1페 전방스킬", text = "전방스킬"},
+    ["P1Taunt"]         = {group = "똬리의 제단 탱커", name = "1페 도발", text = "도발"},
+    ["P1Soak"]          = {group = "똬리의 제단 1페", name = "1페 스킬 맞기", text = "스킬 맞기"},
+    ["MindControls"] = {group = "똬리의 제단 2페", name = "정신 지배", text = "정신 지배"},
+    ["P2Frontal"]       = {group = "똬리의 제단 2페", name = "2페 전방스킬", text = "전방스킬"},
+    ["P2Taunt"]         = {group = "똬리의 제단 탱커", name = "2페 도발", text = "도발"},
+    ["P2Debuffs"]       = {group = "똬리의 제단 2페", name = "2페 디버프", text = "디버프"},
+    ["P2Shield"]        = {group = "똬리의 제단 2페", name = "2페 보호막", text = "보호막"},
+    ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
 }
 
+-- Ula'tek (3492)
 L[3492] = {
-}
-
--- Legacy Ula'tek placeholders are kept commented until the alert data is enabled.
-L[3492] = {
-    -- ["HitKnock"] = {text = "Hit+Knock", name = "P1 Hit+Knock", group = "Ula'tek Tanks"},
-    -- ["Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Ula'tek Tanks"},
-    -- ["Waves"] = {text = "Waves", name = "Waves", group = "Ula'tek P1"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Ula'tek P1"},
-    -- ["DamageAmpIn"] = {text = "Dmg amp in", name = "Dmg amp", group = "Ula'tek P1"},
-    -- ["DamageAmp"] = {text = "Dmg amp", name = "Dmg amp Bar", group = "Ula'tek P1"},
-    -- ["PlatformBreak"] = {text = "Platform Break + Knock", name = "Platform Break", group = "Ula'tek P3"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Debuffs", group = "Ula'tek P3"},
+    --[[
+   ["HitKnock"]     = {group = "울라텍 탱커", name = "1페 공격+넉백", text = "공격+넉백"},
+   ["Taunt"]        = {group = "울라텍 탱커", name = "1페 도발", text = "도발"},
+   ["Waves"]        = {group = "울라텍 1페", name = "파도", text = "파도"},
+   ["Adds"]         = {group = "울라텍 1페", name = "쫄", text = "쫄"},
+   ["DamageAmpIn"]  = {group = "울라텍 1페", name = "피해 증가", text = "피해 증가"},
+   ["DamageAmp"]    = {group = "울라텍 1페", name = "피해 증가 바", text = "피해 증가"},
+   ["PlatformBreak"] = {group = "울라텍 3페", name = "바닥 파괴", text = "바닥 파괴 + 넉백"},
+   ["Debuffs"]      = {group = "울라텍 3페", name = "디버프", text = "디버프"},
+    ]]
 }

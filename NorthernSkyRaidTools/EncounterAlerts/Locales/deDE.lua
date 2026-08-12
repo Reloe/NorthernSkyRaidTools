@@ -4,221 +4,242 @@ NSI.EncounterAlertLocales = NSI.EncounterAlertLocales or {}
 local L = {}
 NSI.EncounterAlertLocales["deDE"] = L
 
+-- ============================================================================
+-- MidnightS1
+-- ============================================================================
+-- Imperator Averzian (3176)
 L[3176] = {
-    -- ["Soaks"] = {text = "Soak", name = "Soaks", group = ""},
+    -- ["Soaks"] = {name = "Soaks", text = "Soak"},
 }
 
+-- Vorasius (3177)
 L[3177] = {
-    -- ["Breath"] = {text = "Breath", name = "Breath", group = ""},
-    -- ["Knock"] = {text = "Knock", name = "Knock", group = ""},
+    -- ["Knock"]  = {name = "Knock", text = "Knock"},
+    -- ["Breath"] = {name = "Breath", text = "Breath"},
 }
 
+-- Fallen King Salhadaar (3179)
 L[3179] = {
-    -- ["CC Display"] = {text = "", name = "CC Display", group = ""},
-    -- ["Beams"] = {text = "Beams", name = "Beams", group = ""},
-    -- ["CC Adds"] = {text = "CC Adds", name = "CC Adds", group = ""},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = ""},
+    -- ["Beams"]      = {name = "Beams", text = "Beams"},
+    -- ["Orbs"]       = {name = "Orbs", text = "Orbs"},
+    -- ["CC Adds"]    = {name = "CC Adds", text = "CC Adds"},
+    -- ["CC Display"] = {name = "CC Display"},
 }
 
+-- Vaelgor & Ezzorak (3178)
 L[3178] = {
-    -- ["Breath"] = {text = "Breath", name = "Breath", group = ""},
-    -- ["HealthDisplay"] = {text = "", name = "HealthDisplay", group = ""},
-    -- ["Spread"] = {text = "Spread", name = "Spread", group = ""},
-    -- ["Tether"] = {text = "Tether", name = "Tether", group = ""},
+    -- ["Spread"]        = {name = "Spread", text = "Spread"},
+    -- ["Tether"]        = {name = "Tether", text = "Tether"},
+    -- ["Breath"]        = {name = "Breath", text = "Breath"},
+    -- ["HealthDisplay"] = {name = "HealthDisplay"},
 }
 
+-- Lightblinded Vanguard (3180)
 L[3180] = {
-    -- ["Aura of Wrath"] = {text = "Aura of Wrath", name = "Aura of Wrath", group = "Paladin Auras"},
-    -- ["TauntAlerts"] = {text = "Taunt", name = "TauntAlerts", group = ""},
-    -- ["Heal Absorb Ticks"] = {text = "", name = "Heal Absorb Ticks", group = ""},
-    -- ["Peace Aura"] = {text = "Peace Aura", name = "Peace Aura", group = "Paladin Auras"},
-    -- ["Sacred Toll"] = {text = "Sacred Toll", name = "Sacred Toll", group = ""},
-    -- ["Devotion Aura"] = {text = "Devotion Aura", name = "Devotion Aura", group = "Paladin Auras"},
+    -- ["Sacred Toll"]       = {name = "Sacred Toll", text = "Sacred Toll"},
+    -- ["Heal Absorb Ticks"] = {name = "Heal Absorb Ticks"},
+    -- ["Peace Aura"]        = {group = "Paladin Auras", name = "Peace Aura", text = "Peace Aura"},
+    -- ["Devotion Aura"]     = {group = "Paladin Auras", name = "Devotion Aura", text = "Devotion Aura"},
+    -- ["Aura of Wrath"]     = {group = "Paladin Auras", name = "Aura of Wrath", text = "Aura of Wrath"},
+    -- ["TauntAlerts"]       = {name = "TauntAlerts", text = "Taunt"},
 }
 
+-- Crown of the Cosmos (3181)
 L[3181] = {
-    -- ["Tether"] = {text = "Tether", name = "Tether", group = "Alleria P3"},
-    -- ["Bait_P1"] = {text = "Bait", name = "Bait", group = "Alleria P1"},
-    -- ["Bait_P3"] = {text = "Bait", name = "Bait", group = "Alleria P2"},
-    -- ["Bait_P5"] = {text = "Bait", name = "Bait", group = "Alleria P3"},
-    -- ["Explosion_P1"] = {text = "Explosion", name = "Explosion", group = "Alleria P1"},
-    -- ["Explosion_P3"] = {text = "Explosion", name = "Explosion", group = "Alleria P2"},
-    -- ["Explosion_P5"] = {text = "Explosion", name = "Explosion", group = "Alleria P3"},
-    -- ["Arrows"] = {text = "Arrows", name = "Arrows", group = "Alleria P1"},
-    -- ["Ranged Obelisk_P1"] = {text = "Obelisk", name = "Ranged Obelisk", group = "Alleria P1"},
-    -- ["Ranged Obelisk_P3"] = {text = "Obelisk", name = "Ranged Obelisk", group = "Alleria P2"},
-    -- ["Ranged Obelisk_P5"] = {text = "Obelisk", name = "Ranged Obelisk", group = "Alleria P3"},
-    -- ["Boss-Immune"] = {text = "Immune", name = "Boss-Immune", group = ""},
-    -- ["Melee Obelisk_P1"] = {text = "Obelisk", name = "Melee Obelisk", group = "Alleria P1"},
-    -- ["Melee Obelisk_P3"] = {text = "Obelisk", name = "Melee Obelisk", group = "Alleria P2"},
-    -- ["Melee Obelisk_P5"] = {text = "Obelisk", name = "Melee Obelisk", group = "Alleria P3"},
-    -- ["Stop Cast"] = {text = "Stop Cast", name = "Stop Cast", group = "Alleria P1"},
+    -- ["Stop Cast"]          = {group = "Alleria P1", name = "Stop Cast", text = "Stop Cast"},
+    -- ["Ranged Obelisk_P1"]  = {group = "Alleria P1", name = "Ranged Obelisk", text = "Obelisk"},
+    -- ["Ranged Obelisk_P3"]  = {group = "Alleria P2", name = "Ranged Obelisk", text = "Obelisk"},
+    -- ["Ranged Obelisk_P5"]  = {group = "Alleria P3", name = "Ranged Obelisk", text = "Obelisk"},
+    -- ["Melee Obelisk_P1"]   = {group = "Alleria P1", name = "Melee Obelisk", text = "Obelisk"},
+    -- ["Melee Obelisk_P3"]   = {group = "Alleria P2", name = "Melee Obelisk", text = "Obelisk"},
+    -- ["Melee Obelisk_P5"]   = {group = "Alleria P3", name = "Melee Obelisk", text = "Obelisk"},
+    -- ["Bait_P1"]            = {group = "Alleria P1", name = "Bait", text = "Bait"},
+    -- ["Bait_P3"]            = {group = "Alleria P2", name = "Bait", text = "Bait"},
+    -- ["Bait_P5"]            = {group = "Alleria P3", name = "Bait", text = "Bait"},
+    -- ["Arrows"]             = {group = "Alleria P1", name = "Arrows", text = "Arrows"},
+    -- ["Explosion_P1"]       = {group = "Alleria P1", name = "Explosion", text = "Explosion"},
+    -- ["Explosion_P3"]       = {group = "Alleria P2", name = "Explosion", text = "Explosion"},
+    -- ["Explosion_P5"]       = {group = "Alleria P3", name = "Explosion", text = "Explosion"},
+    -- ["Boss-Immune"]        = {name = "Boss-Immune", text = "Immune"},
+    -- ["Tether"]             = {group = "Alleria P3", name = "Tether", text = "Tether"},
 }
 
+-- Chimaerus (3306)
 L[3306] = {
-    -- ["Debuffs_P1"] = {text = "Debuffs", name = "Debuffs", group = ""},
-    -- ["Debuffs_P2"] = {text = "Debuffs", name = "Debuffs", group = ""},
+    -- ["Debuffs_P1"] = {name = "Debuffs", text = "Debuffs"},
+    -- ["Debuffs_P2"] = {name = "Debuffs", text = "Debuffs"},
 }
 
+-- Belo'ren (3182)
 L[3182] = {
-    -- ["Feather Color"] = {text = "", name = "Feather Color", group = ""},
-    -- ["Soaks_P1"] = {text = "Soaks", name = "Soaks", group = "Beloren P1"},
-    -- ["Soaks_P2"] = {text = "Soaks", name = "Soaks", group = "Beloren P2"},
-    -- ["Color Swap"] = {text = "SWAPPED", name = "Color Swap", group = ""},
-    -- ["Next Hit_P2"] = {text = "Next Hit", name = "Next Hit", group = "Beloren P2"},
-    -- ["Next Hit_P3"] = {text = "Next Hit", name = "Next Hit", group = "Beloren P2"},
-    -- ["Quills_P1"] = {text = "Quills", name = "Quills", group = "Beloren P1"},
-    -- ["Quills_P2"] = {text = "Quills", name = "Quills", group = "Beloren P2"},
-    -- ["Gateway_P2"] = {text = "Gateway", name = "Gateway", group = "Beloren P1"},
-    -- ["Gateway_P3"] = {text = "Gateway", name = "Gateway", group = "Beloren P2"},
+    -- ["Feather Color"] = {name = "Feather Color"},
+    -- ["Color Swap"]    = {name = "Color Swap", text = "SWAPPED"},
+    -- ["Gateway_P2"]    = {group = "Beloren P1", name = "Gateway", text = "Gateway"},
+    -- ["Gateway_P3"]    = {group = "Beloren P2", name = "Gateway", text = "Gateway"},
+    -- ["Next Hit_P2"]   = {group = "Beloren P2", name = "Next Hit", text = "Next Hit"},
+    -- ["Next Hit_P3"]   = {group = "Beloren P2", name = "Next Hit", text = "Next Hit"},
+    -- ["Soaks_P1"]      = {group = "Beloren P1", name = "Soaks", text = "Soaks"},
+    -- ["Soaks_P2"]      = {group = "Beloren P2", name = "Soaks", text = "Soaks"},
+    -- ["Quills_P1"]     = {group = "Beloren P1", name = "Quills", text = "Quills"},
+    -- ["Quills_P2"]     = {group = "Beloren P2", name = "Quills", text = "Quills"},
 }
 
+-- Midnight Falls (3183)
 L[3183] = {
-    -- ["HC Soaks"] = {text = "Soaks", name = "HC Soaks", group = "Lura P3"},
-    -- ["Right Stars"] = {text = "Stars", name = "Right Stars", group = "Lura P3 Right"},
-    -- ["Left Memory Game"] = {text = "Memory Game", name = "Left Memory Game", group = "Lura P3 Left"},
-    -- ["Right Soak-Time"] = {text = "Soak-Time", name = "Right Soak-Time", group = "Lura P3 Right"},
-    -- ["Left Stars"] = {text = "Stars", name = "Left Stars", group = "Lura P3 Left"},
-    -- ["Lura Tank-Hits_P4"] = {text = "Tank-Hit", name = "P3 Tank-Hits", group = "Lura Tanks"},
-    -- ["Spread"] = {text = "Spread", name = "Spread", group = "Lura P2"},
-    -- ["Transition Beams"] = {text = "Beams", name = "Beams", group = "Lura P1 Transition"},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = "Lura P2"},
-    -- ["Soak Cross"] = {text = "Soak {rt7}", name = "Cross Soak", group = "Lura P2 Soaks"},
-    -- ["Right Soaks"] = {text = "Soaks", name = "Right Soaks", group = "Lura P3 Right"},
-    -- ["MemoryGame"] = {text = "Memory Game", name = "MemoryGame", group = "Lura P1"},
-    -- ["InterruptDisplay"] = {text = "", name = "Interrupt Display", group = ""},
-    -- ["Glaives"] = {text = "Glaives", name = "Glaives", group = "Lura P1"},
-    -- ["Interrupts"] = {text = "Interrupts", name = "Interrupts", group = "Lura P1"},
-    -- ["Old-Seed-Drop"] = {text = "Seed-Drop", name = "non-conditional Seed-Drop", group = "Lura P2"},
-    -- ["Right Memory Game"] = {text = "Memory Game", name = "Right Memory Game", group = "Lura P3 Right"},
-    -- ["Left Soaks"] = {text = "Soaks", name = "Left Soaks", group = "Lura P3 Left"},
-    -- ["CrystalDropTimer"] = {text = "PICK UP", name = "Time to Pick Crystal", group = ""},
-    -- ["Beams"] = {text = "Beams", name = "Beams", group = "Lura P1"},
-    -- ["Galvanize"] = {text = "Soaks", name = "Generic Soak", group = "Lura P2 Soaks"},
-    -- ["Blazes"] = {text = "Blazes", name = "Blazes", group = "Lura P4"},
-    -- ["P4 Move"] = {text = "Move", name = "Move", group = "Lura P4"},
-    -- ["Move"] = {text = "Move", name = "Move", group = "Lura P3"},
-    -- ["RunesDisplay"] = {text = "", name = "RunesDisplay", group = ""},
-    -- ["Soak Skull"] = {text = "Soak {rt8}", name = "Skull Soak", group = "Lura P2 Soaks"},
-    -- ["Seed-Drop"] = {text = "Seed-Drop", name = "Seed-Drop", group = "Lura P2"},
-    -- ["Left Soak-Time"] = {text = "Soak-Time", name = "Left Soak-Time", group = "Lura P3 Left"},
-    -- ["Lura Taunts_P1"] = {text = "Taunt", name = "P1 Taunts", group = "Lura Tanks"},
-    -- ["Lura Taunts_P3"] = {text = "Taunt", name = "P2 Taunts", group = "Lura Tanks"},
-    -- ["Full Blaze"] = {text = "Full Blaze", name = "Full Blaze", group = "Lura P1 Transition"},
-    -- ["Lura Tank-Hits_P1"] = {text = "Tank-Hit", name = "P1 Tank-Hits", group = "Lura Tanks"},
-    -- ["Lura Tank-Hits_P3"] = {text = "Tank-Hit", name = "P2 Tank-Hits", group = "Lura Tanks"},
-    -- ["Soak Star"] = {text = "Soak {rt1}", name = "Star Soak", group = "Lura P2 Soaks"},
-    -- ["Final Slice Stars"] = {text = "Stars", name = "Final Slice Stars", group = "Lura P3"},
-    -- ["Soak Orange"] = {text = "Soak {rt2}", name = "Orange Soak", group = "Lura P2 Soaks"},
+    -- ["MemoryGame"]            = {group = "Lura P1", name = "MemoryGame", text = "Memory Game"},
+    -- ["Glaives"]               = {group = "Lura P1", name = "Glaives", text = "Glaives"},
+    -- ["Interrupts"]            = {group = "Lura P1", name = "Interrupts", text = "Interrupts"},
+    -- ["Beams"]                 = {group = "Lura P1", name = "Beams", text = "Beams"},
+    -- ["Transition Beams"]      = {group = "Lura P1 Transition", name = "Beams", text = "Beams"},
+    -- ["Lura Tank-Hits_P1"]     = {group = "Lura Tanks", name = "P1 Tank-Hits", text = "Tank-Hit"},
+    -- ["Lura Tank-Hits_P3"]     = {group = "Lura Tanks", name = "P2 Tank-Hits", text = "Tank-Hit"},
+    -- ["Lura Tank-Hits_P4"]     = {group = "Lura Tanks", name = "P3 Tank-Hits", text = "Tank-Hit"},
+    -- ["Lura Taunts_P1"]        = {group = "Lura Tanks", name = "P1 Taunts", text = "Taunt"},
+    -- ["Lura Taunts_P3"]        = {group = "Lura Tanks", name = "P2 Taunts", text = "Taunt"},
+    -- ["Full Blaze"]            = {group = "Lura P1 Transition", name = "Full Blaze", text = "Full Blaze"},
+    -- ["Seed-Drop"]             = {group = "Lura P2", name = "Seed-Drop", text = "Seed-Drop"},
+    -- ["Old-Seed-Drop"]         = {group = "Lura P2", name = "non-conditional Seed-Drop", text = "Seed-Drop"},
+    -- ["Galvanize"]             = {group = "Lura P2 Soaks", name = "Generic Soak", text = "Soaks"},
+    -- ["Soak Star"]             = {group = "Lura P2 Soaks", name = "Star Soak", text = "Soak {rt1}"},
+    -- ["Soak Orange"]           = {group = "Lura P2 Soaks", name = "Orange Soak", text = "Soak {rt2}"},
+    -- ["Soak Skull"]            = {group = "Lura P2 Soaks", name = "Skull Soak", text = "Soak {rt8}"},
+    -- ["Soak Cross"]            = {group = "Lura P2 Soaks", name = "Cross Soak", text = "Soak {rt7}"},
+    -- ["Spread"]                = {group = "Lura P2", name = "Spread", text = "Spread"},
+    -- ["Orbs"]                  = {group = "Lura P2", name = "Orbs", text = "Orbs"},
+    -- ["HC Soaks"]              = {group = "Lura P3", name = "HC Soaks", text = "Soaks"},
+    -- ["Move"]                  = {group = "Lura P3", name = "Move", text = "Move"},
+    -- ["Left Memory Game"]      = {group = "Lura P3 Left", name = "Left Memory Game", text = "Memory Game"},
+    -- ["Right Memory Game"]     = {group = "Lura P3 Right", name = "Right Memory Game", text = "Memory Game"},
+    -- ["Left Soaks"]            = {group = "Lura P3 Left", name = "Left Soaks", text = "Soaks"},
+    -- ["Right Soaks"]           = {group = "Lura P3 Right", name = "Right Soaks", text = "Soaks"},
+    -- ["Left Soak-Time"]        = {group = "Lura P3 Left", name = "Left Soak-Time", text = "Soak-Time"},
+    -- ["Right Soak-Time"]       = {group = "Lura P3 Right", name = "Right Soak-Time", text = "Soak-Time"},
+    -- ["Left Stars"]            = {group = "Lura P3 Left", name = "Left Stars", text = "Stars"},
+    -- ["Right Stars"]           = {group = "Lura P3 Right", name = "Right Stars", text = "Stars"},
+    -- ["Final Slice Stars"]     = {group = "Lura P3", name = "Final Slice Stars", text = "Stars"},
+    -- ["Blazes"]                = {group = "Lura P4", name = "Blazes", text = "Blazes"},
+    -- ["P4 Move"]               = {group = "Lura P4", name = "Move", text = "Move"},
+    -- ["CrystalDropTimer"]      = {name = "Time to Pick Crystal", text = "PICK UP"},
+    -- ["RunesDisplay"]          = {name = "RunesDisplay"},
+    -- ["InterruptDisplay"]      = {name = "Interrupt Display"},
 }
 
+-- Rotmire (3159)
 L[3159] = {
-    -- ["BurstingPustules"] = {text = "AoE", name = "AoE", group = ""},
-    -- ["Shrooms"] = {text = "Shrooms", name = "Shrooms", group = ""},
-    -- ["InterruptDisplay"] = {text = "", name = "Interrupt Display", group = ""},
-    -- ["Taunts"] = {text = "Taunt", name = "Taunts", group = "Rotmire Tanks"},
-    -- ["Tankhits"] = {text = "Tank-Hit", name = "Tankhits", group = "Rotmire Tanks"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = ""},
+    -- ["Adds"]             = {name = "Adds", text = "Adds"},
+    -- ["Shrooms"]          = {name = "Shrooms", text = "Shrooms"},
+    -- ["BurstingPustules"] = {name = "AoE", text = "AoE"},
+    -- ["InterruptDisplay"] = {name = "Interrupt Display"},
+    -- ["Taunts"]           = {group = "Rotmire Tanks", name = "Taunts", text = "Taunt"},
+    -- ["Tankhits"]         = {group = "Rotmire Tanks", name = "Tankhits", text = "Tank-Hit"},
 }
 
+-- ============================================================================
+-- MidnightS2
+-- ============================================================================
+-- Nymrissa Wavecaller (3379)
 L[3379] = {
 }
 
+-- Nek'zali the Soulcoiler (3470)
 L[3470] = {
-    -- ["RestlessAmani"] = {text = "Adds", name = "Add-Spawn", group = "Nek'zali"},
-    -- ["Barrage"] = {text = "Frontal", name = "Barrage", group = "Nek'zali"},
-    -- ["HungeringPyre"] = {text = "Soak", name = "Hungering Pyre", group = "Nek'zali"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Essence Rend", group = "Nek'zali"},
-    -- ["SoulcoilIgnition"] = {text = "AoE", name = "Soulcoil Ignition", group = "Nek'zali"},
-    -- ["InvokeMythic"] = {text = "Stop Cast", name = "Invoke", group = "Nek'zali"},
-    -- ["Invoke"] = {text = "Dodge", name = "Invoke", group = "Nek'zali"},
+    -- ["Barrage"]          = {group = "Nek'zali", name = "Barrage", text = "Frontal"},
+    -- ["Debuffs"]          = {group = "Nek'zali", name = "Essence Rend", text = "Debuffs"},
+    -- ["SoulcoilIgnition"] = {group = "Nek'zali", name = "Soulcoil Ignition", text = "AoE"},
+    -- ["HungeringPyre"]    = {group = "Nek'zali", name = "Hungering Pyre", text = "Soak"},
+    -- ["RestlessAmani"]    = {group = "Nek'zali", name = "Add-Spawn", text = "Adds"},
+    -- ["Invoke"]           = {group = "Nek'zali", name = "Invoke", text = "Dodge"},
+    -- ["InvokeMythic"]     = {group = "Nek'zali", name = "Invoke", text = "Stop Cast"},
 }
 
+-- Entombed Sentinels (3445)
 L[3445] = {
-    -- ["BloodSoakPool"] = {text = "Drop Pool", name = "Soak-Pool", group = "Sentinels"},
-    -- ["BloodHits"] = {text = "Tank-Hit", name = "Blood Tank-Hit", group = "Sentinels"},
-    -- ["BloodDispels"] = {text = "Dispels", name = "Blood Dispels", group = "Sentinels"},
-    -- ["TransitionDebuffs"] = {text = "Number Game", name = "Transition Debuffs", group = "Sentinels"},
-    -- ["PoisonHits"] = {text = "Tank-Hit", name = "Poison Tank-Hit", group = "Sentinels"},
-    -- ["ShiftingProtovenom"] = {text = "Spread", name = "Shifting Protovenom", group = "Sentinels"},
-    -- ["OrbSpawn"] = {text = "Bait Orbs", name = "Orb Spawn", group = "Sentinels"},
-    -- ["BloodDropPool"] = {text = "Drop-Pool", name = "Tank Drop Pool", group = "Sentinels"},
-    -- ["PoisonAdd"] = {text = "Poison Add", name = "Poison Add", group = "Sentinels"},
-    -- ["BloodSoak"] = {text = "Blood-Soak", name = "Blood Soak", group = "Sentinels"},
+    -- ["PoisonHits"]         = {group = "Sentinels", name = "Poison Tank-Hit", text = "Tank-Hit"},
+    -- ["BloodHits"]          = {group = "Sentinels", name = "Blood Tank-Hit", text = "Tank-Hit"},
+    -- ["BloodDropPool"]      = {group = "Sentinels", name = "Tank Drop Pool", text = "Drop-Pool"},
+    -- ["BloodSoak"]          = {group = "Sentinels", name = "Blood Soak", text = "Blood-Soak"},
+    -- ["BloodSoakPool"]      = {group = "Sentinels", name = "Soak-Pool", text = "Drop Pool"},
+    -- ["BloodDispels"]       = {group = "Sentinels", name = "Blood Dispels", text = "Dispels"},
+    -- ["PoisonAdd"]          = {group = "Sentinels", name = "Poison Add", text = "Poison Add"},
+    -- ["OrbSpawn"]           = {group = "Sentinels", name = "Orb Spawn", text = "Bait Orbs"},
+    -- ["ShiftingProtovenom"] = {group = "Sentinels", name = "Shifting Protovenom", text = "Spread"},
+    -- ["TransitionDebuffs"]  = {group = "Sentinels", name = "Transition Debuffs", text = "Number Game"},
 }
 
+-- Vashnik the Malignant (3455)
 L[3455] = {
-    -- ["Taunts"] = {text = "Taunt", name = "Taunt", group = "Vashnik"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Vashnik"},
-    -- ["TankHits"] = {text = "Tank-Hit", name = "Tank-Hits", group = "Vashnik"},
-    -- ["Infection"] = {text = "Infection", name = "Infection", group = "Vashnik"},
-    -- ["WaveSpread"] = {text = "Pre-Spread", name = "Wave-Spread", group = "Vashnik"},
-    -- ["Waves"] = {text = "Waves", name = "Waves", group = "Vashnik"},
-    -- ["Soaks"] = {text = "Soaks", name = "Soaks", group = "Vashnik"},
-    -- ["AoE"] = {text = "AoE", name = "AoE", group = "Vashnik"},
+    -- ["TankHits"]   = {group = "Vashnik", name = "Tank-Hits", text = "Tank-Hit"},
+    -- ["Taunts"]     = {group = "Vashnik", name = "Taunt", text = "Taunt"},
+    -- ["Adds"]       = {group = "Vashnik", name = "Adds", text = "Adds"},
+    -- ["Infection"]  = {group = "Vashnik", name = "Infection", text = "Infection"},
+    -- ["AoE"]        = {group = "Vashnik", name = "AoE", text = "AoE"},
+    -- ["Soaks"]      = {group = "Vashnik", name = "Soaks", text = "Soaks"},
+    -- ["Waves"]      = {group = "Vashnik", name = "Waves", text = "Waves"},
+    -- ["WaveSpread"] = {group = "Vashnik", name = "Wave-Spread", text = "Pre-Spread"},
 }
 
+-- The Lost Explorers (3497)
 L[3497] = {
-    -- ["MushroomJump"] = {text = "Jump", name = "Mushroom Jump", group = "Trader Abilities"},
-    -- ["ShreddingShards"] = {text = "Tank-Hit", name = "Tank-Hit", group = "Scrollsage Abilities"},
-    -- ["Fish-Spawn"] = {text = "Fish Spawn", name = "Fish Spawn", group = "Trader Abilities"},
-    -- ["FrostfireVolley"] = {text = "Frostfire Debuffs", name = "Frostfire Volley", group = "Scrollsage Abilities"},
-    -- ["ShellSpinScroll"] = {text = "Bait", name = "Shell Spin - Scroll Empowered", group = "First Mate Abilities"},
-    -- ["MushroomBait"] = {text = "Bait", name = "Mushroom Bait", group = "Trader Abilities"},
-    -- ["BlinkNova"] = {text = "Blink Nova", name = "Blink Nova", group = "Scrollsage Abilities"},
-    -- ["ShellSpinTrader"] = {text = "Bait", name = "Shell Spin - Trader Empowered", group = "First Mate Abilities"},
-    -- ["TimeToThrowNonConditional"] = {text = "Time to Throw", name = "non-conditional Time to throw Fish", group = "Trader Abilities"},
-    -- ["TimeToThrow"] = {text = "Time to Throw", name = "Time to throw Fish", group = "Trader Abilities"},
-    -- ["ShellSpinNormal"] = {text = "Bait", name = "Shell Spin Normal", group = "First Mate Abilities"},
-    -- ["ExplosiveSurprise"] = {text = "Bomb inc", name = "Bomb Debuff", group = "Trader Abilities"},
-    -- ["MightyThud"] = {text = "Soaks", name = "Soaks", group = "First Mate Abilities"},
+    -- ["ShreddingShards"]           = {group = "Scrollsage Abilities", name = "Tank-Hit", text = "Tank-Hit"},
+    -- ["BlinkNova"]                 = {group = "Scrollsage Abilities", name = "Blink Nova", text = "Blink Nova"},
+    -- ["FrostfireVolley"]           = {group = "Scrollsage Abilities", name = "Frostfire Volley", text = "Frostfire Debuffs"},
+    -- ["ShellSpinNormal"]           = {group = "First Mate Abilities", name = "Shell Spin Normal", text = "Bait"},
+    -- ["ShellSpinScroll"]           = {group = "First Mate Abilities", name = "Shell Spin - Scroll Empowered", text = "Bait"},
+    -- ["ShellSpinTrader"]           = {group = "First Mate Abilities", name = "Shell Spin - Trader Empowered", text = "Bait"},
+    -- ["MightyThud"]                = {group = "First Mate Abilities", name = "Soaks", text = "Soaks"},
+    -- ["Fish-Spawn"]                = {group = "Trader Abilities", name = "Fish Spawn", text = "Fish Spawn"},
+    -- ["MushroomBait"]              = {group = "Trader Abilities", name = "Mushroom Bait", text = "Bait"},
+    -- ["ExplosiveSurprise"]         = {group = "Trader Abilities", name = "Bomb Debuff", text = "Bomb inc"},
+    -- ["MushroomJump"]              = {group = "Trader Abilities", name = "Mushroom Jump", text = "Jump"},
+    -- ["TimeToThrow"]               = {group = "Trader Abilities", name = "Time to throw Fish", text = "Time to Throw"},
+    -- ["TimeToThrowNonConditional"] = {group = "Trader Abilities", name = "non-conditional Time to throw Fish", text = "Time to Throw"},
 }
 
+-- Sszorak (3420)
 L[3420] = {
-    -- ["DamageAmp"] = {text = "Damage Amp", name = "Damage Amp", group = "Sszorak"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Debuffs", group = "Sszorak"},
-    -- ["WindDebuffs"] = {text = "Wind-Debuffs", name = "WindDebuffs", group = "Sszorak"},
-    -- ["TankCombo"] = {text = "Tank Combo", name = "Tank Combo", group = "Sszorak"},
-    -- ["Bait"] = {text = "Bait", name = "Bait", group = "Sszorak"},
-    -- ["WindsHelper"] = {text = "", name = "Winds Helper", group = "Sszorak"},
-    -- ["SerpentsFury"] = {text = "Stack Up", name = "Serpent's Fury", group = "Sszorak"},
+    -- ["TankCombo"]    = {group = "Sszorak", name = "Tank Combo", text = "Tank Combo"},
+    -- ["DamageAmp"]    = {group = "Sszorak", name = "Damage Amp", text = "Damage Amp"},
+    -- ["Bait"]         = {group = "Sszorak", name = "Bait", text = "Bait"},
+    -- ["WindDebuffs"]  = {group = "Sszorak", name = "WindDebuffs", text = "Wind-Debuffs"},
+    -- ["Debuffs"]      = {group = "Sszorak", name = "Debuffs", text = "Debuffs"},
+    -- ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
+    -- ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
 }
 
+-- The Twin Fangs (3421)
 L[3421] = {
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Twin Fangs"},
-    -- ["Soak"] = {text = "Soak", name = "Soak", group = "Twin Fangs"},
-    -- ["TankSoak"] = {text = "Soak", name = "Tank Soak", group = "Twin Fangs"},
-    -- ["PreSpread"] = {text = "Pre-Spread", name = "Pre-Spread", group = "Twin Fangs"},
-    -- ["WatchSide"] = {text = "Watch Side", name = "Watch Side", group = "Twin Fangs"},
-    -- ["Orbs"] = {text = "Orbs", name = "Orbs", group = "Twin Fangs"},
-    -- ["WatchSpawns"] = {text = "Watch Spawns", name = "Watch Spawns", group = "Twin Fangs"},
-    -- ["Defensives"] = {text = "Defensives", name = "Defensives", group = "Twin Fangs"},
-    -- ["Knock"] = {text = "Knock", name = "Knock", group = "Twin Fangs"},
+    -- ["Defensives"]  = {group = "Twin Fangs", name = "Defensives", text = "Defensives"},
+    -- ["Soak"]        = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["PreSpread"]   = {group = "Twin Fangs", name = "Pre-Spread", text = "Pre-Spread"},
+    -- ["WatchSide"]   = {group = "Twin Fangs", name = "Watch Side", text = "Watch Side"},
+    -- ["Adds"]        = {group = "Twin Fangs", name = "Adds", text = "Adds"},
+    -- ["Orbs"]        = {group = "Twin Fangs", name = "Orbs", text = "Orbs"},
+    -- ["TankSoak"]    = {group = "Twin Fangs", name = "Tank Soak", text = "Soak"},
+    -- ["WatchSpawns"] = {group = "Twin Fangs", name = "Watch Spawns", text = "Watch Spawns"},
+    -- ["Knock"]       = {group = "Twin Fangs", name = "Knock", text = "Knock"},
 }
 
+-- The Coiled Altar (3429)
 L[3429] = {
-    -- ["InterruptAdds"] = {text = "Ghosts", name = "P2 Interrupt Adds", group = "Coiled Altar P2"},
-    -- ["P2Taunt"] = {text = "Taunt", name = "P2 Taunt", group = "Coiled Altar Tanks"},
-    -- ["P2Frontal"] = {text = "Frontal", name = "P2 Frontal", group = "Coiled Altar P2"},
-    -- ["P1Soak"] = {text = "Soak", name = "P1 Soak", group = "Coiled Altar P1"},
-    -- ["P2Shield"] = {text = "Shield", name = "P2 Shield", group = "Coiled Altar P2"},
-    -- ["MindControls"] = {text = "Mind Controls", name = "Mind Controls", group = "Coiled Altar P2"},
-    -- ["P2Debuffs"] = {text = "Debuffs", name = "P2 Debuffs", group = "Coiled Altar P2"},
-    -- ["P1Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Coiled Altar Tanks"},
-    -- ["P1Frontal"] = {text = "Frontal", name = "P1 Frontal", group = "Coiled Altar P1"},
+    -- ["P1Frontal"]     = {group = "Coiled Altar P1", name = "P1 Frontal", text = "Frontal"},
+    -- ["P1Taunt"]       = {group = "Coiled Altar Tanks", name = "P1 Taunt", text = "Taunt"},
+    -- ["P1Soak"]        = {group = "Coiled Altar P1", name = "P1 Soak", text = "Soak"},
+    -- ["MindControls"]  = {group = "Coiled Altar P2", name = "Mind Controls", text = "Mind Controls"},
+    -- ["P2Frontal"]     = {group = "Coiled Altar P2", name = "P2 Frontal", text = "Frontal"},
+    -- ["P2Taunt"]       = {group = "Coiled Altar Tanks", name = "P2 Taunt", text = "Taunt"},
+    -- ["P2Debuffs"]     = {group = "Coiled Altar P2", name = "P2 Debuffs", text = "Debuffs"},
+    -- ["P2Shield"]      = {group = "Coiled Altar P2", name = "P2 Shield", text = "Shield"},
+    -- ["InterruptAdds"] = {group = "Coiled Altar P2", name = "P2 Interrupt Adds", text = "Ghosts"},
 }
 
+-- Ula'tek (3492)
 L[3492] = {
-}
-
--- Legacy Ula'tek placeholders are kept commented until the alert data is enabled.
-L[3492] = {
-    -- ["HitKnock"] = {text = "Hit+Knock", name = "P1 Hit+Knock", group = "Ula'tek Tanks"},
-    -- ["Taunt"] = {text = "Taunt", name = "P1 Taunt", group = "Ula'tek Tanks"},
-    -- ["Waves"] = {text = "Waves", name = "Waves", group = "Ula'tek P1"},
-    -- ["Adds"] = {text = "Adds", name = "Adds", group = "Ula'tek P1"},
-    -- ["DamageAmpIn"] = {text = "Dmg amp in", name = "Dmg amp", group = "Ula'tek P1"},
-    -- ["DamageAmp"] = {text = "Dmg amp", name = "Dmg amp Bar", group = "Ula'tek P1"},
-    -- ["PlatformBreak"] = {text = "Platform Break + Knock", name = "Platform Break", group = "Ula'tek P3"},
-    -- ["Debuffs"] = {text = "Debuffs", name = "Debuffs", group = "Ula'tek P3"},
+    -- ["HitKnock"]      = {group = "Ula'tek Tanks", name = "P1 Hit+Knock", text = "Hit+Knock"},
+    -- ["Taunt"]         = {group = "Ula'tek Tanks", name = "P1 Taunt", text = "Taunt"},
+    -- ["Waves"]         = {group = "Ula'tek P1", name = "Waves", text = "Waves"},
+    -- ["Adds"]          = {group = "Ula'tek P1", name = "Adds", text = "Adds"},
+    -- ["DamageAmpIn"]   = {group = "Ula'tek P1", name = "Dmg amp", text = "Dmg amp in"},
+    -- ["DamageAmp"]     = {group = "Ula'tek P1", name = "Dmg amp Bar", text = "Dmg amp"},
+    -- ["PlatformBreak"] = {group = "Ula'tek P3", name = "Platform Break", text = "Platform Break + Knock"},
+    -- ["Debuffs"]       = {group = "Ula'tek P3", name = "Debuffs", text = "Debuffs"},
 }

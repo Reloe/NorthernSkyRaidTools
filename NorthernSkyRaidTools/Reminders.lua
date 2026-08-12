@@ -1164,11 +1164,14 @@ local function ResolveReminderText(text, iconText, hideBarIcon)
 end
 
 function NSI:GetDisplayedText(remString, info, F, timerHidden)
+    local reminderText = info.text or ""
+    if issecretvalue(reminderText) then
+        return reminderText, ""
+    end
     timerHidden = timerHidden == nil and (info.HideTimer or false) or timerHidden
     if not F.reminderTextParts or F.reminderTimerHidden ~= timerHidden then
         F.reminderTimerHidden = timerHidden
         local displayType = info.DisplayType
-        local reminderText = info.text or ""
         local hasReminderText = reminderText and reminderText ~= ""
         local iconText = F.SpellIconText or ""
         local textFormat
@@ -1345,19 +1348,20 @@ function NSI:UpdateReminderDisplay(info, F)
     else
         timerText = F.lastReminderTimerText
     end
+    local textChanged = issecretvalue(text) or issecretvalue(F.lastReminderText) or F.lastReminderText ~= text
     if timerHiddenChanged and info.DisplayType == "Bar" and F.TimerText then
         F.TimerText:SetShown(timerText ~= nil and timerText ~= "")
     elseif timerHiddenChanged and info.DisplayType == "Icon" and F.TimerText then
         F.TimerText:SetShown(not timerHidden)
     end
     if info.DisplayType == "Circle" then
-        if F.lastReminderText ~= text then
+        if textChanged then
             F.Text:SetText(text)
             F.lastReminderText = text
         end
         return
     elseif info.DisplayType == "Text" then
-        if F.lastReminderText ~= text then
+        if textChanged then
             F.Text:SetText(text)
             F.lastReminderText = text
         end
@@ -1372,7 +1376,7 @@ function NSI:UpdateReminderDisplay(info, F)
                 end
             end
         end
-        if displayBucketChanged and F.Text and F.lastReminderText ~= text then
+        if displayBucketChanged and F.Text and textChanged then
             F.Text:SetText(text)
             F.lastReminderText = text
         end
@@ -1382,7 +1386,7 @@ function NSI:UpdateReminderDisplay(info, F)
         end
         return
     elseif info.DisplayType == "Icon" then
-        if displayBucketChanged and F.Text and F.lastReminderText ~= text then
+        if displayBucketChanged and F.Text and textChanged then
             F.Text:SetText(text)
             F.lastReminderText = text
         end
