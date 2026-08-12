@@ -55,6 +55,7 @@ NSI.AuraTrackingCandidateDispelTypes = {
 }
 
 local AuraTrackingUnitRefreshFrame
+local AuraTrackingVehicleStateTimer
 local AuraTrackingUnitRefreshStates = {
     target = {},
     focus = {},
@@ -2015,18 +2016,32 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event)
                 if NSI.IsBuilding then return end
                 if event == "UNIT_ENTERED_VEHICLE" then
+                    if AuraTrackingVehicleStateTimer then
+                        AuraTrackingVehicleStateTimer:Cancel()
+                        AuraTrackingVehicleStateTimer = nil
+                    end
                     NSI.AuraTrackingPlayerVehicleDisabled = true
                     SetAuraTrackingPlayerVehicleState(NSI, true)
                     return
-                elseif event == "UNIT_EXITED_VEHICLE" then
-                    C_Timer.After(0.1, function()
-                        NSI.AuraTrackingPlayerVehicleDisabled = UnitHasVehicleUI("player") or nil
-                        SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
+                elseif event == "UNIT_EXITED_VEHICLE" or event == "PLAYER_ENTERING_WORLD" then
+                    if AuraTrackingVehicleStateTimer then
+                        AuraTrackingVehicleStateTimer:Cancel()
+                    end
+                    local checks = 0
+                    AuraTrackingVehicleStateTimer = C_Timer.NewTicker(0.1, function(timer)
+                        checks = checks + 1
+                        if checks < 5 or UnitHasVehicleUI("player") then
+                            if checks >= 20 then
+                                timer:Cancel()
+                                AuraTrackingVehicleStateTimer = nil
+                            end
+                            return
+                        end
+                        timer:Cancel()
+                        AuraTrackingVehicleStateTimer = nil
+                        NSI.AuraTrackingPlayerVehicleDisabled = nil
+                        SetAuraTrackingPlayerVehicleState(NSI, false)
                     end)
-                    return
-                elseif event == "PLAYER_ENTERING_WORLD" then
-                    NSI.AuraTrackingPlayerVehicleDisabled = UnitHasVehicleUI("player") or nil
-                    SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
                     return
                 end
                 if event == "GROUP_ROSTER_UPDATE" then
