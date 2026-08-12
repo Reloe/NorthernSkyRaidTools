@@ -2087,7 +2087,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     return
                 end
                 if event == "UNIT_FACTION" then
-                    print("ey")
                     if AuraTrackingFactionRefreshPending then return end
                     AuraTrackingFactionRefreshPending = true
                     C_Timer.After(0, function()
