@@ -236,13 +236,13 @@ L[3429] = {
 -- Ula'tek (3492)
 L[3492] = {
     --[[
-   ["HitKnock"]     = {group = "울라텍 탱커", name = "1페 공격+넉백", text = "공격+넉백"},
-   ["Taunt"]        = {group = "울라텍 탱커", name = "1페 도발", text = "도발"},
-   ["Waves"]        = {group = "울라텍 1페", name = "파도", text = "파도"},
-   ["Adds"]         = {group = "울라텍 1페", name = "쫄", text = "쫄"},
-   ["DamageAmpIn"]  = {group = "울라텍 1페", name = "피해 증가", text = "피해 증가"},
-   ["DamageAmp"]    = {group = "울라텍 1페", name = "피해 증가 바", text = "피해 증가"},
-   ["PlatformBreak"] = {group = "울라텍 3페", name = "바닥 파괴", text = "바닥 파괴 + 넉백"},
-   ["Debuffs"]      = {group = "울라텍 3페", name = "디버프", text = "디버프"},
+    ["HitKnock"]      = {group = "울라텍 탱커", name = "1페 공격+넉백", text = "공격+넉백"},
+    ["Taunt"]         = {group = "울라텍 탱커", name = "1페 도발", text = "도발"},
+    ["Waves"]         = {group = "울라텍 1페", name = "파도", text = "파도"},
+    ["Adds"]          = {group = "울라텍 1페", name = "쫄", text = "쫄"},
+    ["DamageAmpIn"]   = {group = "울라텍 1페", name = "피해 증가", text = "피해 증가"},
+    ["DamageAmp"]     = {group = "울라텍 1페", name = "피해 증가 바", text = "피해 증가"},
+    ["PlatformBreak"] = {group = "울라텍 3페", name = "바닥 파괴", text = "바닥 파괴 + 넉백"},
+    ["Debuffs"]       = {group = "울라텍 3페", name = "디버프", text = "디버프"},
     ]]
 }

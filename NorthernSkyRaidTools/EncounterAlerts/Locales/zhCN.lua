@@ -19,7 +19,7 @@ L[3177] = {
     ["Breath"] = {name = "虚空吐息", text = "吐息"},
 }
 
--- Fallen-King Salhadaar (3179)
+-- Fallen King Salhadaar (3179)
 L[3179] = {
     ["Beams"]      = {name = "熵能瓦解", text = "射线"},
     ["Orbs"]       = {name = "虚空融合（宝珠）", text = "宝珠刷新"},
