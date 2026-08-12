@@ -1830,13 +1830,11 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         end
     end
 
-    container:Show()
-    container:SetEnabled(true)
-    if not loadMatches then
-        container:SetEnabled(false)
-        container:Hide()
-        anchorFrame:Hide()
-    end
+    local playerVehicleDisabled = unit == "player" and (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
+    local shouldShow = loadMatches and not playerVehicleDisabled
+    container:SetShown(shouldShow)
+    container:SetEnabled(shouldShow)
+    anchorFrame:SetShown(shouldShow)
     if reconfigureButtons then
         for button in pairs(state.buttonRegions or {}) do
             ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
@@ -1846,9 +1844,13 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 end
 
 function NSI:UpdateAuraTrackingEncounterVisibility()
+    local playerVehicleDisabled = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
     for _, state in pairs(self.AuraTrackingState or {}) do
         if state.encounterConditioned and state.container then
             local shouldShow = self:EvaluateLoad(state.settings)
+            if state.unit == "player" and playerVehicleDisabled then
+                shouldShow = false
+            end
             state.container:SetEnabled(shouldShow)
             state.container:SetShown(shouldShow)
             state.anchorFrame:SetShown(shouldShow)
@@ -2022,6 +2024,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                         SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
                     end)
                     return
+                elseif event == "PLAYER_ENTERING_WORLD" then
+                    NSI.AuraTrackingPlayerVehicleDisabled = UnitHasVehicleUI("player") or nil
+                    SetAuraTrackingPlayerVehicleState(NSI, NSI.AuraTrackingPlayerVehicleDisabled)
+                    return
                 end
                 if event == "GROUP_ROSTER_UPDATE" then
                     if NSI:Restricted() then
@@ -2093,6 +2099,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         if AuraTrackingUnitRefreshStates.playerControl then
             AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
             AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
+            AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         end
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
