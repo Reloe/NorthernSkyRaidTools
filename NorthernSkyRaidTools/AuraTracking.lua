@@ -181,7 +181,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         DecimalThreshold = 3,
         ColorDurationUnderThreshold = false,
         ColorDurationThreshold = 3,
-        DurationThresholdColor = {1, 0.25, 0.25, 1},
+        DurationThresholdColor = {1, 0, 0, 1},
         StackColor = {1, 1, 1, 1},
         DurationFontSize = 32,
         StackFontSize = 32,
@@ -749,7 +749,7 @@ local function GetAuraTrackingDurationTextColor(settings)
     local threshold = math.min(math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1), 59.9)
     local cache = AuraTrackingDurationFormatterCache[settings]
     local normalColor = settings.DurationColor or {1, 1, 0.25, 1}
-    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0, 0, 1}
     if cache and cache.colorThreshold == threshold
         and cache.normalColor == normalColor and cache.thresholdColor == thresholdColor then
         return cache.textColor
@@ -2189,7 +2189,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
     if not previewData then return end
     local settings = NSI:GetAuraTrackingSettings(key)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
-    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0, 0, 1}
     local colorUnderThreshold = settings.ColorDurationUnderThreshold
     local durationThreshold = math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1)
     local timerKey = previewData.timerKey
@@ -2224,7 +2224,7 @@ end
 
 local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
-    local thresholdColor = settings.DurationThresholdColor or {1, 0.25, 0.25, 1}
+    local thresholdColor = settings.DurationThresholdColor or {1, 0, 0, 1}
     fontPath = fontPath or GetAuraTrackingFontPath(self, settings)
     local now = GetTime()
     duration = duration or 10
