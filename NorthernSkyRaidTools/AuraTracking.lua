@@ -168,6 +168,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         FrameStrata = "MEDIUM",
         BorderSize = 1,
         BorderColor = {0, 0, 0, 1},
+        BorderSwipeMode = "Static",
         DispelBorderMode = "ColoredWithIcon",
         DispelBorderSize = 3,
         HideTooltip = false,
@@ -545,7 +546,7 @@ local AuraTrackingSectionFields = {
 local AuraTrackingDisplayFields = {
     "Spacing", "Limit", "GrowDirection", "Width", "Height", "Zoom",
     "Anchor", "relativeTo", "CustomAnchorFrame", "xOffset", "yOffset",
-    "FrameStrata", "BorderSize", "BorderColor", "DispelBorderMode", "DispelBorderSize",
+    "FrameStrata", "BorderSize", "BorderColor", "BorderSwipeMode", "DispelBorderMode", "DispelBorderSize",
     "HideTooltip", "HideDurationText", "HideLongDurationAuras", "ShowWhitelistedPlayerBuffs", "IncludeImmunities", "HideStackText",
     "EnableCooldownSwipe", "InverseCooldownSwipe", "SortMode",
     "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
@@ -1028,7 +1029,6 @@ function NSI:AddCustomAuraTracking(group)
         Name = NSI:Loc("Custom Aura Tracking") .. " " .. index,
         xOffset = 0,
         yOffset = 0,
-        HideStackText = true,
         HideTooltip = true,
         DispelBorderMode = "ColoredWithIcon",
         SpellIDsEdited = true,
@@ -1203,6 +1203,10 @@ local function CreateAuraTrackingBorder(parent)
     return border
 end
 
+local function IsAuraTrackingBorderFollowingSwipe(settings)
+    return settings.BorderSwipeMode == "FollowSwipe"
+end
+
 local function UpdateAuraTrackingBorder(border, parent, size, color)
     if not border then return end
     size = size or 1
@@ -1230,6 +1234,24 @@ local function UpdateAuraTrackingBorder(border, parent, size, color)
     border.right:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, 0)
     border.right:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     border.right:SetWidth(size)
+end
+
+local function UpdateAuraTrackingBorderLayer(frame, frameLevel, border, borderParent, size, color)
+    frame:SetFrameLevel(frameLevel)
+    if (size or 1) <= 0 then
+        if border then
+            for _, texture in pairs(border) do texture:Hide() end
+        end
+        return border, borderParent
+    end
+    if borderParent ~= frame then
+        if border then
+            for _, texture in pairs(border) do texture:Hide() end
+        end
+        border = CreateAuraTrackingBorder(frame)
+    end
+    UpdateAuraTrackingBorder(border, frame, size, color)
+    return border, frame
 end
 
 local function AddAuraTrackingCustomDispelBorder(button, border)
@@ -1478,18 +1500,24 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     local zoom = ((settings.Zoom or 0) * 0.25) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
     regions.textOverlay:SetFrameLevel(buttonLevel + 3)
-    if (settings.BorderSize or 0) > 0 and not regions.border then
-        regions.border = CreateAuraTrackingBorder(button)
+    if not regions.borderOverlay then
+        regions.borderOverlay = CreateFrame("Frame", nil, button)
+        regions.borderOverlay:SetAllPoints(button)
+        regions.borderOverlay:EnableMouse(false)
     end
-    UpdateAuraTrackingBorder(regions.border, button, settings.BorderSize, settings.BorderColor)
+    local followSwipe = IsAuraTrackingBorderFollowingSwipe(settings)
+    local borderLevel = buttonLevel + (followSwipe and 0 or 2)
+    regions.border, regions.borderParent = UpdateAuraTrackingBorderLayer(
+        regions.borderOverlay, borderLevel, regions.border, regions.borderParent,
+        settings.BorderSize, settings.BorderColor
+    )
 
     if AuraTrackingWantsDispelBorder(settings, key) then
         if not regions.dispelOverlay then
             regions.dispelOverlay = CreateFrame("Frame", nil, button)
             regions.dispelOverlay:SetAllPoints(regions.icon)
-            regions.dispelOverlay:SetFrameLevel(buttonLevel + 2)
         end
-        regions.dispelOverlay:SetFrameLevel(buttonLevel + 2)
+        regions.dispelOverlay:SetFrameLevel(buttonLevel + (followSwipe and 1 or 3))
         regions.dispelOverlay:ClearAllPoints()
         regions.dispelOverlay:SetAllPoints(regions.icon)
         regions.dispelOverlay:Show()
@@ -1507,12 +1535,17 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
             for _, texture in pairs(regions.customDispelBorder) do texture:Hide() end
         end
         if AuraTrackingUsesCustomDispelIcon(settings) then
+            if not regions.dispelIconOverlay then
+                regions.dispelIconOverlay = CreateFrame("Frame", nil, button)
+                regions.dispelIconOverlay:SetAllPoints(regions.icon)
+            end
+            regions.dispelIconOverlay:SetFrameLevel(buttonLevel + (followSwipe and 3 or 4))
             if not regions.customDispelIcon then
-                regions.customDispelIcon = regions.dispelOverlay:CreateTexture(nil, "OVERLAY")
+                regions.customDispelIcon = regions.dispelIconOverlay:CreateTexture(nil, "OVERLAY")
             end
             local iconSize = math.min(width, height) * 0.35
             regions.customDispelIcon:ClearAllPoints()
-            regions.customDispelIcon:SetPoint("TOPRIGHT", regions.dispelOverlay, "TOPRIGHT", -2, -2)
+            regions.customDispelIcon:SetPoint("TOPRIGHT", regions.dispelIconOverlay, "TOPRIGHT", -2, -2)
             regions.customDispelIcon:SetSize(iconSize, iconSize)
             button:AddDispelTypeTexture(regions.customDispelIcon, {
                 style = Enum.CustomAuraButtonDispelTypeTextureStyle.Icon,
@@ -1595,10 +1628,10 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         if not regions.cooldown then
             regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
             regions.cooldown:SetAllPoints(regions.icon)
-            regions.cooldown:SetFrameLevel(buttonLevel + 1)
             regions.cooldown:SetDrawEdge(false)
             regions.cooldown:SetHideCountdownNumbers(true)
         end
+        regions.cooldown:SetFrameLevel(buttonLevel + (followSwipe and 2 or 1))
         regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
         regions.cooldown:Show()
         button:SetDurationCooldown(regions.cooldown)
@@ -2234,18 +2267,24 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     local zoom = ((settings.Zoom or 0) * 0.25) / 100
     frame.Icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
 
-    if (settings.BorderSize or 0) > 0 and not frame.Border then
-        frame.Border = CreateAuraTrackingBorder(frame)
+    if not frame.BorderOverlay then
+        frame.BorderOverlay = CreateFrame("Frame", nil, frame)
+        frame.BorderOverlay:SetAllPoints(frame)
+        frame.BorderOverlay:EnableMouse(false)
     end
-    UpdateAuraTrackingBorder(frame.Border, frame, settings.BorderSize, settings.BorderColor)
+    local followSwipe = IsAuraTrackingBorderFollowingSwipe(settings)
+    local borderLevel = frame:GetFrameLevel() + (followSwipe and 0 or 2)
+    frame.Border, frame.BorderParent = UpdateAuraTrackingBorderLayer(
+        frame.BorderOverlay, borderLevel, frame.Border, frame.BorderParent,
+        settings.BorderSize, settings.BorderColor
+    )
 
     if AuraTrackingWantsDispelBorder(settings, key) and dispelType then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
-            frame.DispelOverlay:SetFrameLevel(frame:GetFrameLevel() + 2)
         end
-        frame.DispelOverlay:SetFrameLevel(frame:GetFrameLevel() + 2)
+        frame.DispelOverlay:SetFrameLevel(frame:GetFrameLevel() + (followSwipe and 1 or 3))
         frame.DispelOverlay:ClearAllPoints()
         frame.DispelOverlay:SetAllPoints(frame.Icon)
         frame.DispelOverlay:Show()
@@ -2262,12 +2301,17 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
             for _, texture in pairs(frame.CustomDispelBorder) do texture:Hide() end
         end
         if AuraTrackingUsesCustomDispelIcon(settings) then
+            if not frame.DispelIconOverlay then
+                frame.DispelIconOverlay = CreateFrame("Frame", nil, frame)
+                frame.DispelIconOverlay:SetAllPoints(frame.Icon)
+            end
+            frame.DispelIconOverlay:SetFrameLevel(frame:GetFrameLevel() + (followSwipe and 3 or 4))
             if not frame.CustomDispelIcon then
-                frame.CustomDispelIcon = frame.DispelOverlay:CreateTexture(nil, "OVERLAY")
+                frame.CustomDispelIcon = frame.DispelIconOverlay:CreateTexture(nil, "OVERLAY")
             end
             local iconSize = math.min(settings.Width, settings.Height) * 0.35
             frame.CustomDispelIcon:ClearAllPoints()
-            frame.CustomDispelIcon:SetPoint("TOPRIGHT", frame.DispelOverlay, "TOPRIGHT", -2, -2)
+            frame.CustomDispelIcon:SetPoint("TOPRIGHT", frame.DispelIconOverlay, "TOPRIGHT", -2, -2)
             frame.CustomDispelIcon:SetSize(iconSize, iconSize)
             AuraUtil.SetAuraDispelTypeIcon(frame.CustomDispelIcon, dispelType)
             frame.CustomDispelIcon:Show()
@@ -2284,8 +2328,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
             frame.Cooldown:SetAllPoints(frame.Icon)
             frame.Cooldown:SetDrawEdge(false)
             frame.Cooldown:SetHideCountdownNumbers(true)
-            frame.Cooldown:SetFrameLevel(frame:GetFrameLevel() + 1)
         end
+        frame.Cooldown:SetFrameLevel(frame:GetFrameLevel() + (followSwipe and 2 or 1))
         frame.Cooldown:SetCooldown(now, duration)
         frame.Cooldown:SetReverse(settings.InverseCooldownSwipe)
         frame.Cooldown:Show()

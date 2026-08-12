@@ -106,6 +106,11 @@ local DISPEL_BORDER_MODES = {
     { label = "No Dispel Border", value = "None" },
 }
 
+local BORDER_SWIPE_MODES = {
+    { label = "Static", value = "Static" },
+    { label = "Follow along the swipe", value = "FollowSwipe" },
+}
+
 local ANCHOR_POINTS = {
     { label = "TOPLEFT", value = "TOPLEFT" }, { label = "TOP", value = "TOP" }, { label = "TOPRIGHT", value = "TOPRIGHT" },
     { label = "LEFT", value = "LEFT" }, { label = "CENTER", value = "CENTER" }, { label = "RIGHT", value = "RIGHT" },
@@ -1007,6 +1012,10 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Color", label = "Border Color",
             tooltip = tip("Border Color", "Color of the border around tracked aura icons."),
             get = function() return unpack(s.BorderColor) end, set = function(_, r, g, b, a) s.BorderColor = {r, g, b, a}; apply(key) end })
+        add({ Type = "Dropdown", label = "Border Behavior", values = BORDER_SWIPE_MODES,
+            tooltip = tip("Border Behavior", "Choose whether the regular and dispel borders remain fully visible or follow the cooldown swipe."),
+            get = function() return s.BorderSwipeMode or "Static" end,
+            set = function(_, v) s.BorderSwipeMode = v or "Static"; apply(key) end })
         if key ~= "External" then
             add({ Type = "Dropdown", label = "Dispel Border", values = DISPEL_BORDER_MODES,
                 tooltip = tip("Dispel Border", "Select a colored border, a colored border with a dispel icon, an icon without a border, or no dispel indicator."),
