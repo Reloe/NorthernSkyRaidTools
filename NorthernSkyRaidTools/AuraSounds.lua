@@ -214,7 +214,6 @@ NSI.AuraSoundCategories = {
             {spellID = 1240222, sound = "Targeted"}, -- Pulverizing Strikes
         }},
         {key = "murder_row", label = "Murder Row", entries = {
-            {spellID = 1214352, sound = "Spread"}, -- Fire Bomb
             {spellID = 474545, sound = "Hide"}, -- Murder in a Row
             {spellID = 1218187, sound = "Beam"}, -- Fel Beam
             {spellID = 1214352, sound = "Bomb"}, -- Fire Bomb
