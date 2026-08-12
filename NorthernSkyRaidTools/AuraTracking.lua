@@ -1075,6 +1075,14 @@ function NSI:StopAllAuraTrackingPreviews()
                 icon:Hide()
             end
         end
+        if previewData and previewData.secondFrameKey and self[previewData.secondFrameKey] then
+            self[previewData.secondFrameKey]:Hide()
+        end
+        if previewData and previewData.secondIconKey and self[previewData.secondIconKey] then
+            for _, icon in ipairs(self[previewData.secondIconKey]) do
+                icon:Hide()
+            end
+        end
     end
 
     self:InitAuraTracking()
