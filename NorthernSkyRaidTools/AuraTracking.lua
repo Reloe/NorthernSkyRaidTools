@@ -56,6 +56,7 @@ NSI.AuraTrackingCandidateDispelTypes = {
 
 local AuraTrackingUnitRefreshFrame
 local AuraTrackingVehicleStateTimer
+local AuraTrackingFactionRefreshPending
 local AuraTrackingUnitRefreshStates = {
     target = {},
     focus = {},
@@ -2085,6 +2086,21 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     end)
                     return
                 end
+                if event == "UNIT_FACTION" then
+                    print("ey")
+                    if AuraTrackingFactionRefreshPending then return end
+                    AuraTrackingFactionRefreshPending = true
+                    C_Timer.After(0, function()
+                        AuraTrackingFactionRefreshPending = nil
+                        if NSI.IsBuilding then return end
+                        for _, state in pairs(NSI.AuraTrackingState or {}) do
+                            if state.active and state.unit == "player" and state.container and state.container:IsShown() and state.container:IsEnabled() then
+                                state.container:UpdateAllAuras()
+                            end
+                        end
+                    end)
+                    return
+                end
                 if event == "GROUP_ROSTER_UPDATE" then
                     if NSI:Restricted() then
                         NSI.PendingAuraTrackingUpdate = true
@@ -2155,6 +2171,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         if AuraTrackingUnitRefreshStates.playerControl then
             AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
             AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_FACTION", "player")
             AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         end
     elseif AuraTrackingUnitRefreshFrame then
