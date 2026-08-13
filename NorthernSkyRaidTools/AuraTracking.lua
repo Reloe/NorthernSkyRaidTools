@@ -137,6 +137,7 @@ NSI.DefaultExternalAuraTrackingSpellIDs = {
     116849, -- Life Cocoon
     357170, -- Time Dilation
     53480, -- Roar of Sacrifice
+    33206, -- Pain Suppression
 }
 
 NSI.DefaultExternalAuraTrackingImmunitySpellIDs = {
