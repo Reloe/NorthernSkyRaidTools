@@ -210,7 +210,7 @@ NSI.AuraSoundCategories = {
             {spellID = 1240222, sound = "Targeted"}, -- Pulverizing Strikes
             {spellID = 1236747, sound = "Root"}, -- Verdant Stomp
             {spellID = 1238368, sound = "Spread"}, -- Lightmaw Beams
-            {spellID = 1239825, sound = "Stack"}, -- Lightfire
+            {spellID = 1239825, sound = "Spread"}, -- Lightfire
             {spellID = 1240222, sound = "Targeted"}, -- Pulverizing Strikes
         }},
         {key = "murder_row", label = "Murder Row", entries = {
