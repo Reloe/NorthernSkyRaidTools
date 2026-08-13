@@ -180,6 +180,7 @@ NSI.AuraSoundCategories = {
         -- Season 2
         {key = "altar_of_fangs", label = "Altar of Fangs", entries = {
             {spellID = 1308865, sound = "Adds"}, -- Infest
+            {spellID = 1297876, sound = "Spread"}, -- Triple Shot
         }},
         {key = "temple_of_sethraliss", label = "Temple of Sethraliss", entries = {
             {spellID = 1300704, sound = "Fixate"}, -- Fixate
