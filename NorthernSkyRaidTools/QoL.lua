@@ -404,7 +404,8 @@ function NSI:HandleQoLComm(unitName, type)
         end)
     elseif type == "SOULWELL" then
         local healthstoneCharges = C_Item.GetItemCount(5512, false, true)
-        if healthstoneCharges == 3 then
+        local warlockHealthstoneCharges = C_Item.GetItemCount(224464, false, true)
+        if healthstoneCharges == 3 or warlockHealthstoneCharges == 3 then
             return
         end
         self.QoLTextDisplays.SoulwellDropped = {SettingsName = "SoulwellDropped", text = string.format(TextDisplays.SoulwellDropped, displayName)}
