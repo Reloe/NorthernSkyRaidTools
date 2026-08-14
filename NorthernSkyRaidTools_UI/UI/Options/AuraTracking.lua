@@ -1426,19 +1426,6 @@ local function BuildAuraTrackingUI(screen)
 
     local DEF_BUILDERS = { Display = BuildDisplayDefs, Trigger = BuildTriggerDefs }
 
-    local function HideWidgetScroll(scrollObj)
-        if not scrollObj then return end
-        if scrollObj.scrollChild then
-            local children = { scrollObj.scrollChild:GetChildren() }
-            for _, child in ipairs(children) do
-                child:Hide()
-            end
-        end
-        if scrollObj.frame then
-            scrollObj.frame:Hide()
-        end
-    end
-
     local function RebuildWidgetTab()
         if not selectedKey then return end
         local settings = NSI:GetAuraTrackingSettings(selectedKey)
@@ -1452,16 +1439,10 @@ local function BuildAuraTrackingUI(screen)
             scrollPosition = 0
             resetTriggerScroll = false
         end
-        container._auraTrackingWidgetScrolls = container._auraTrackingWidgetScrolls or {}
-        for _, scrollObj in ipairs(container._auraTrackingWidgetScrolls) do
-            HideWidgetScroll(scrollObj)
+        local previousScroll = tabScroll[activeTab]
+        if previousScroll then
+            previousScroll.frame:Hide()
         end
-        for _, child in ipairs({container:GetChildren()}) do
-            if child:IsObjectType("ScrollFrame") then
-                child:Hide()
-            end
-        end
-        container._auraTrackingWidgetScrolls = {}
         local topPad = (activeTab == "Display") and DISPLAY_TOP or 0
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
         local scrollObj = tabScroll[activeTab]
@@ -1470,6 +1451,12 @@ local function BuildAuraTrackingUI(screen)
             tabScroll[activeTab] = scrollObj
         else
             scrollObj:SetSize(tabScrollW, tabContentH - topPad)
+            scrollObj.scrollChild:Hide()
+            local newScrollChild = CreateFrame("Frame", nil, scrollObj.frame)
+            newScrollChild:SetWidth(tabScrollW - 18)
+            newScrollChild:SetHeight(1)
+            scrollObj.frame:SetScrollChild(newScrollChild)
+            scrollObj.scrollChild = newScrollChild
             scrollObj.frame:Show()
         end
         scrollObj.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -topPad)
@@ -1478,7 +1465,6 @@ local function BuildAuraTrackingUI(screen)
         scrollObj:UpdateScrollBar()
         scrollObj.frame:SetVerticalScroll(scrollPosition)
         tabScroll[activeTab] = scrollObj
-        container._auraTrackingWidgetScrolls[1] = scrollObj
     end
 
     -- ========================================================================

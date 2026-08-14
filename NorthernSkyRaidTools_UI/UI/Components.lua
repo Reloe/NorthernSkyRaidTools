@@ -1848,7 +1848,7 @@ local function CreateScrollBox(parent, width, height)
     function obj:UpdateScrollBar()
         local bar = _G[boxName .. "ScrollBar"]
         if not bar then return end
-        local maxScroll = math.max(0, child:GetHeight() - scrollFrame:GetHeight())
+        local maxScroll = math.max(0, self.scrollChild:GetHeight() - scrollFrame:GetHeight())
         bar:SetMinMaxValues(0, maxScroll)
         if bar:GetValue() > maxScroll then bar:SetValue(0) end
 
