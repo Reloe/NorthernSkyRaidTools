@@ -6,7 +6,7 @@ local heroicData = {
     duration = 700,
     phases = {
         [1] = {start = 0},
-        [2] = {start = 227},
+        [2] = {start = 238},
         [3] = {start = 454},
         [4] = {start = 681},
         [5] = {start = 908},
@@ -58,7 +58,7 @@ local mythicData = {
     duration = 400,
     phases = {
         [1] = {start = 0},
-        [2] = {start = 240},
+        [2] = {start = 250},
         [3] = {start = 395},
     },
     abilities = {

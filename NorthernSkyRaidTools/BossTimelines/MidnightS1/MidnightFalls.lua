@@ -28,7 +28,7 @@ local heroicData = {
         {name = "Core Harvest", spellID = 1282412, category = "raid damage", phase = 3, times = {34, 64, 94}, duration = 0},
         {name = "Dark Meltdown", spellID = 1281123, category = "raid damage, phase change", phase = 3, times = {103}, duration = 0},
         {name = "Heaven's Lance", spellID = 1267049, category = "tankbuster", phase = 4, times = {23, 43, 63, 83, 103, 123}, duration = 0},
-        {name = "Dark Constellation", spellID = 1266344, category = "movement, raid damage", phase = 4, times = {37, 48, 75, 86, 113, 124}, duration = 0},
+        {name = "Dark Constellation", spellID = 1266344, category = "raid damage, movement", phase = 4, times = {37, 48, 75, 86, 113, 124}, duration = 0},
         {name = "Dawnlight Barrier", spellID = 1253104, category = "event", phase = 4, times = {19, 57, 95, 133}, duration = 6},
         {name = "The Dark Archangel", spellID = 1251331, category = "raid damage", phase = 4, times = {22, 60, 98, 136}, duration = 0},
         {name = "Light Siphon", spellID = 1266810, category = "group soak", phase = 4, times = {26, 64, 102, 140}, duration = 20},
@@ -40,10 +40,10 @@ local mythicData = {
     duration = 630,
     phases = {
         [1] = {start = 0},
-        [2] = {start = 180},
-        [3] = {start = 225},
+        [2] = {start = 184},
+        [3] = {start = 227},
         [4] = {start = 330},
-        [5] = {start = 522},
+        [5] = {start = 462},
         [6] = {start = 624},
     },
     abilities = {
