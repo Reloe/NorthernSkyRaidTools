@@ -90,8 +90,9 @@ NSI.AuraSoundCategories = {
         {key = 3497, entries = { -- The Lost Explorers
             {spellID = 1295886, sound = "Fire"}, -- Frostfire Volley (Fire)
             {spellID = 1295935, sound = "Frost"}, -- Frostfire Volley (Frost)
-            {spellID = 1297625, sound = "Targeted"}, -- Explosive Surprise
+            {spellID = 1297625, sound = "Bomb"}, -- Explosive Surprise
             {spellID = 1296092, sound = "Targeted"}, -- Mighty Thud
+            {spellID = 1296025, sound = "Targeted"}, -- Blink Nova
         }},
         {key = 3420, entries = { -- Sszorak
             {spellID = 1305963, sound = "Debuff"}, -- Venomous Surge
