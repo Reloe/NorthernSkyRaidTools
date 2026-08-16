@@ -700,8 +700,7 @@ function NSI:SetProperties(F, info, s)
         end
     end)
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
-    local iconTextInfo = (info.customIcon and C_Spell.GetSpellInfo(info.customIcon)) or spellInfo
-    F.SpellIconText = iconTextInfo and "|T"..iconTextInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
+    F.SpellIconText = spellInfo and "|T"..spellInfo.iconID..":0:0:0:0:64:64:4:60:4:60|t " or ""
     if F.IsUnitFrameIcon then
         F.Icon:SetTexture(spellInfo and spellInfo.iconID or 134400)
     elseif info.DisplayType == "Text" then
