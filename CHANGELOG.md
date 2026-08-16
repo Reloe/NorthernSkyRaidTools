@@ -1,16 +1,7 @@
 ## Changelog
-- Improved Addon Performance, specifically when displaying Reminders or using the note-countdown functionality
-- Improved Addon load-time by making the UI load on-demand
-- Add configurable keywords and guild-only toggle to Auto-Invite on Whisper
-- Add Auto-Promote Assistants QoL setting (guild rank threshold + always-promote name list)
-- Add clickable consumeable frame on ready check
-- Add Aura Tracking which includes builtin replacements for what was previously private auras but also allows custom tracking
-- Rework Aura Sounds to new 12.1 API and seperate it by bosses/dungeons + allow custom entries and sounds on removed/stack gain
-- Allow textures to be displayed through note / alerts if the texture path was manually entered
-- Add FontFlag Options for Reminders
-- Add Setting to overwrite existing Notes when importing a new one
-- Add Pace Comparison Module (similar to the Pace WeakAuras back in Manaforge but bit more restricted)
-- Add QoL setting to show aura spell IDs in tooltips
-- Add S2 Sound Data for Raids & Dungeons
-- Add Manual Translation option for Encounter Alerts
-- Add Option to change the text format of Reminders - so for example displaying "Stack - 3" instead of the current default "Stack (3)"
+- Added Sound for Blink Nova
+- Update boss data in timeline
+- add missing pain suppression spellid to external tracker
+- safety UnitCanAssist check on aura trackers
+- change Lightfire (m+ sound) from Stack to Spread (fixed from ptr)
+- check warlock specific healthstone as well and not send alert if they have 3 charges of that
