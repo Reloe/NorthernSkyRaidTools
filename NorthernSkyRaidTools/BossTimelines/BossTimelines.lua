@@ -63,6 +63,17 @@ local _, NSI = ... -- Internal namespace
 -- Initialize the BossTimelines table
 NSI.BossTimelines = NSI.BossTimelines or {}
 
+-- Boss-mod phase LABELS in encounter order, for bosses whose labels are not
+-- plain 1..N. Note "ph:" values and live phase detection use these labels
+-- (1, 1.5, 2, ...), while BossTimelines.phases is keyed by contiguous segment
+-- index [1..N]: the k-th label corresponds to phases[k]. Encounters not listed
+-- here have labels identical to their segment indices. Trailing segments
+-- without a label (e.g. an end-of-fight marker) are display-only.
+NSI.BossPhaseLabels = {
+    [3470] = {1, 1.5, 2},    -- Nek'zali the Soulcoiler: Stage One, Ritual of Awakening, Stage Two
+    [3429] = {1, 2, 2.5, 3}, -- The Coiled Altar: Zul'jan, Hex Lord, Soul Bind, Coiled Union
+}
+
 -- Category colors for timeline display
 -- Maps category keywords to colors (supports compound categories like "raid damage, debuff")
 -- Colors match wowutils colorMap
@@ -298,7 +309,38 @@ function NSI:GetBossTimeline(encounterID, difficulty)
     return nil
 end
 
+-- Resolve a phase LABEL (as used in note "ph:" fields and live phase
+-- detection, e.g. 1.5) to its segment index in BossTimelines.phases.
+-- Returns nil for labels the encounter does not have.
+function NSI:PhaseLabelToSegment(encounterID, phaseLabel)
+    local labels = self.BossPhaseLabels[encounterID]
+    if not labels then return phaseLabel end
+    for segment, label in ipairs(labels) do
+        if label == phaseLabel then return segment end
+    end
+    return nil
+end
+
+-- Inverse of PhaseLabelToSegment. Returns nil for segments without a label
+-- (e.g. a trailing end-of-fight marker).
+function NSI:SegmentToPhaseLabel(encounterID, segmentIndex)
+    local labels = self.BossPhaseLabels[encounterID]
+    if not labels then return segmentIndex end
+    return labels[segmentIndex]
+end
+
+-- GetPhaseStart for a phase LABEL rather than a segment index. Never index
+-- BossTimelines.phases with a raw "ph:" value: on bosses with .5 labels the
+-- label and the segment index diverge (Nek'zali label 2 is segment 3).
+function NSI:GetPhaseLabelStart(encounterID, phaseLabel, difficulty)
+    local segment = self:PhaseLabelToSegment(encounterID, phaseLabel)
+    if not segment then return 0 end
+    return self:GetPhaseStart(encounterID, segment, difficulty)
+end
+
 -- Get user-adjusted phase start time, or default if not set
+-- phaseNum is a SEGMENT index into BossTimelines.phases, not a "ph:" label —
+-- use GetPhaseLabelStart to resolve note phase values.
 function NSI:GetPhaseStart(encounterID, phaseNum, difficulty)
     -- Phase 1 always starts at 0
     if phaseNum == 1 then return 0 end

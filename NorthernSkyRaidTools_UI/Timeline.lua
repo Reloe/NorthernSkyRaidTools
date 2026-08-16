@@ -382,7 +382,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
     -- Pre-calculate all phase start times for converting phase-relative times to absolute times
     local phaseStarts = {}
     for phase, _ in pairs(self.ProcessedReminder[encID]) do
-        phaseStarts[phase] = self:GetPhaseStart(encID, phase, reminderDifficulty) or 0
+        phaseStarts[phase] = self:GetPhaseLabelStart(encID, phase, reminderDifficulty) or 0
     end
 
     -- Iterate through all phases
@@ -557,19 +557,22 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
     }, encID, phases, difficulty
 end
 
--- Return the phase number and its absolute start time for a given absolute time.
--- Picks the greatest phase start <= absoluteTime.
+-- Return the phase LABEL (the value used in note "ph:" fields, may be
+-- fractional like 1.5) and its absolute start time for a given absolute time.
+-- Picks the greatest phase start <= absoluteTime; segments without a label
+-- (trailing end-of-fight markers) are skipped.
 function NSI:PhaseFromTime(encID, absoluteTime, difficulty)
     local bestPhase = 1
     local bestStart = 0
     if encID then
         local timeline = self:GetBossTimeline(encID, difficulty)
         if timeline and timeline.phases then
-            for ph, _ in pairs(timeline.phases) do
-                local phStart = self:GetPhaseStart(encID, ph, difficulty)
-                if phStart <= absoluteTime and phStart >= bestStart then
+            for segment, _ in pairs(timeline.phases) do
+                local label = self:SegmentToPhaseLabel(encID, segment)
+                local phStart = self:GetPhaseStart(encID, segment, difficulty)
+                if label and phStart <= absoluteTime and phStart >= bestStart then
                     bestStart = phStart
-                    bestPhase = ph
+                    bestPhase = label
                 end
             end
         end
@@ -736,7 +739,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
     -- Pre-calculate phase start times for converting phase-relative times to absolute times
     local phaseStarts = {}
     for phase, _ in pairs(discoveredPhases) do
-        phaseStarts[phase] = encID and self:GetPhaseStart(encID, phase, reminderDifficulty) or 0
+        phaseStarts[phase] = encID and self:GetPhaseLabelStart(encID, phase, reminderDifficulty) or 0
     end
 
     -- Convert to timeline format
@@ -1724,7 +1727,7 @@ function NSI:CreateTimelineWindow()
                                 if bd and bd.payload and bd.payload.srcLineIndex and timelineWindow.editNote then
                                     local p = bd.payload
                                     local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
-                                    newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
+                                    newRaw = newRaw:gsub("ph:%d*%.?%d+", "ph:" .. phase)
                                     NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
                                     -- Must be set BEFORE SetReminder: with skipupdate=false, SetReminder
                                     -- calls ProcessReminder(), which itself refreshes the timeline
@@ -2184,7 +2187,7 @@ function NSI:CreateTimelineWindow()
                     if bd and bd.payload and bd.payload.srcLineIndex and timelineWindow.editNote then
                         local p = bd.payload
                         local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
-                        newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
+                        newRaw = newRaw:gsub("ph:%d*%.?%d+", "ph:" .. phase)
                         NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
                         -- Set before SetReminder — see the drag-retime comment above.
                         timelineWindow.preserveZoom = true
@@ -2811,7 +2814,8 @@ function NSI:UpdatePhaseMarkers()
                 -- Tooltip
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. self.phaseNum)
+                    local phaseLabel = NSI:SegmentToPhaseLabel(self.encID, self.phaseNum) or self.phaseNum
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. phaseLabel)
                     local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
@@ -3097,7 +3101,8 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
 
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. self.phaseNum)
+                    local phaseLabel = NSI:SegmentToPhaseLabel(self.encID, self.phaseNum) or self.phaseNum
+                    local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. phaseLabel)
                     local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
@@ -3158,9 +3163,9 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
 
     -- Derive absolute time from the block's stored phase/time when not supplied
     if isEdit and not absoluteTime then
-        local phase   = tonumber(srcRaw:match("ph:(%d+)") or "1") or 1
+        local phase   = tonumber(srcRaw:match("ph:(%d*%.?%d+)") or "1") or 1
         local relTime = tonumber(srcRaw:match("time:(%d*%.?%d+)") or "0") or 0
-        local phStart = NSI:GetPhaseStart(window.currentEncounterID, phase, window.currentDifficulty) or 0
+        local phStart = NSI:GetPhaseLabelStart(window.currentEncounterID, phase, window.currentDifficulty) or 0
         absoluteTime  = phStart + relTime
     end
     absoluteTime = absoluteTime or 0
@@ -3402,15 +3407,16 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
 
         -- Phase / time-in-phase: manual override from the editable fields, falling
         -- back to the cursor/block-derived defaults if left blank or invalid.
-        local newPhase = math.max(1, math.floor(tonumber(popup.phaseEntry:GetValue()) or phase))
+        -- Phase is a boss-mod LABEL and may be fractional (1.5) — never floor it.
+        local newPhase = math.max(1, tonumber(popup.phaseEntry:GetValue()) or phase)
         local newRelTime = math.max(0, tonumber(popup.timeEntry:GetValue()) or relTime)
 
         if isEdit and payload and payload.srcLineIndex then
             -- Rebuild the line, preserving tag; updating time/ph/spell/text/dur/glowunit
             local newRaw = srcRaw
             newRaw = newRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
-            if newRaw:find("ph:%d+") then
-                newRaw = newRaw:gsub("ph:%d+", "ph:" .. newPhase)
+            if newRaw:find("ph:%d*%.?%d+") then
+                newRaw = newRaw:gsub("ph:%d*%.?%d+", "ph:" .. newPhase)
             else
                 newRaw = newRaw .. ";ph:" .. newPhase
             end
