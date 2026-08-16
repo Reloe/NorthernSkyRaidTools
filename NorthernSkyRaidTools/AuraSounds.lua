@@ -69,7 +69,7 @@ NSI.AuraSoundCategories = {
         -- Season 2
         {key = 3379, entries = { -- Nymrissa Wavecaller
             {spellID = 1258901, sound = "Targeted"}, -- Water Jet
-            {spellID = 1257608, sound = "Targeted"}, -- Frost Barrage
+            {spellID = 1313393, sound = "Debuff"}, -- Chilling Frost
         }},
         {key = 3470, entries = { -- Nek'zali the Soulcoiler
             {spellID = 1306666, sound = "Targeted"}, -- Hungering Pyre
