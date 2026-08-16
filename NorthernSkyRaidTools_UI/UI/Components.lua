@@ -1256,12 +1256,20 @@ local function CreateSlider(parent, label, getValue, setValue,
 
     -- Value text (right side)
     local valText = MakeFontString(container, 11)
-    valText:SetTextColor(0.65, 0.65, 0.65, 1)
+    valText:SetTextColor(1, 1, 1, 1)
     valText:SetJustifyH("RIGHT")
     valText:SetJustifyV("MIDDLE")
     valText:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     valText:SetWidth(VAL_W)
     valText:SetHeight(totalH)
+
+    local valueBorder = CreateFrame("Frame", nil, container, "BackdropTemplate")
+    valueBorder:SetPoint("RIGHT", container, "RIGHT", 0, 0)
+    valueBorder:SetSize(VAL_W, totalH)
+    valueBorder:SetFrameLevel(baseLevel + 1)
+    valueBorder:SetBackdrop({ edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
+    valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
+    valueBorder:EnableMouse(false)
 
     local function GetDecimalPlaces(v)
         local text = tostring(v or "")
@@ -1345,12 +1353,18 @@ local function CreateSlider(parent, label, getValue, setValue,
     UpdateVisual(initVal)
     initialized = true
 
-    -- Right-click on value label → inline EditBox to type a number
+    -- The displayed value is also the manual input affordance.
     local valBtn = CreateFrame("Button", nil, container)
     valBtn:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     valBtn:SetSize(VAL_W, totalH)
     valBtn:SetFrameLevel(baseLevel + 4)
-    valBtn:RegisterForClicks("RightButtonUp")
+    valBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    valBtn:SetScript("OnEnter", function()
+        valueBorder:SetBackdropBorderColor(0, 1, 1, 1)
+    end)
+    valBtn:SetScript("OnLeave", function()
+        valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
+    end)
 
     local typeBox = CreateFrame("EditBox", nil, container, "BackdropTemplate")
     typeBox:SetSize(VAL_W, totalH - 4)
@@ -1423,7 +1437,8 @@ local function CreateSlider(parent, label, getValue, setValue,
         slider:EnableMouse(true)
         valBtn:EnableMouse(true)
         lbl:SetTextColor(unpack(STYLE.text_color))
-        valText:SetTextColor(0.65, 0.65, 0.65, 1)
+        valText:SetTextColor(1, 1, 1, 1)
+        valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
         thumb:SetVertexColor(0, 1, 1, 1)
         fillTex:SetColorTexture(0, 1, 1, 0.45)
     end
@@ -1438,6 +1453,7 @@ local function CreateSlider(parent, label, getValue, setValue,
         valText:Show()
         lbl:SetTextColor(unpack(STYLE.text_disabled))
         valText:SetTextColor(unpack(STYLE.text_disabled))
+        valueBorder:SetBackdropBorderColor(unpack(STYLE.text_disabled))
         thumb:SetVertexColor(unpack(STYLE.text_disabled))
         fillTex:SetColorTexture(unpack(STYLE.text_disabled))
     end
