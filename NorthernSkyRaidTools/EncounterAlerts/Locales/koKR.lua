@@ -140,6 +140,12 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
+    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
+    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
+    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
+    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
+    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
+    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
