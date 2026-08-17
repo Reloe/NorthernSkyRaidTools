@@ -3,11 +3,12 @@ local _, NSI = ... -- Internal namespace
 -- NekzaliTheSoulcoiler (3470)
 
 local heroicData = {
-    duration = 640,
+    duration = 657,
     phases = {
         [1] = {start = 0},
         [1.5] = {start = 248},
         [2] = {start = 437},
+        [3] = {start = 657},
     },
     abilities = {
         {name = "Soulcoil Rite", spellID = 1288772, category = "raid aoe, raid dot", phase = 1, times = {3.03, 84.83, 166.68}, duration = 44},
@@ -17,10 +18,9 @@ local heroicData = {
         {name = "Corpse Blight", spellID = 1307939, category = "raid damage, raid dot", phase = 1, times = {75.78}, duration = 184},
         {name = "Ritual of Awakening", spellID = 1295124, category = "phase change", phase = 1.5, times = {0}, duration = 0},
         {name = "Soul Transfer", spellID = 1289902, category = "event", phase = 1.5, times = {19.96}, duration = 0},
-        {name = "Residual Toll", spellID = 1305993, category = "raid damage", phase = 1.5, times = {33.09, 55.13, 90.11, 100.05, 122.95, 144.85}, duration = 0},
         {name = "Hungering Pyre", spellID = 1305421, category = "raid aoe", phase = 1.5, times = {52.1, 74.09, 96.03, 141.88, 163.85}, duration = 0},
         {name = "Restless Amani", spellID = 1289919, category = "add spawn", phase = 1.5, times = {2.72}, duration = 0},
-        {name = "Corpse Blight", spellID = 1307939, category = "raid damage, raid dot", phase = 1.5, times = {25.27}, duration = 98},
+        {name = "Corpse Blight", spellID = 1307939, category = "raid damage, raid dot", phase = 1.5, times = {25.27}, duration = 195},
         {name = "Uncoiling", spellID = 1292315, category = "ramping rot, raid dot", phase = 2, times = {0}, duration = 220},
         {name = "Invoke", spellID = 1299673, category = "add spawn", phase = 2, times = {0, 27.99, 50.01, 78.03, 100.04, 128.02, 151.55, 178}, duration = 0},
         {name = "Soulcoil Rite", spellID = 1288772, category = "raid aoe, raid dot", phase = 2, times = {0, 27.99, 50.01, 78.03, 100.04, 128.02, 151.55, 178}, duration = 44},
@@ -31,11 +31,12 @@ local heroicData = {
 }
 
 local mythicData = {
-    duration = 420,
+    duration = 429,
     phases = {
         [1] = {start = 0},
         [1.5] = {start = 102},
         [2] = {start = 229},
+        [3] = {start = 429},
     },
     abilities = {
         {name = "Soulcoil Rite", spellID = 1288772, category = "raid aoe, raid dot", phase = 1, times = {3.02, 75.08}, duration = 44},
