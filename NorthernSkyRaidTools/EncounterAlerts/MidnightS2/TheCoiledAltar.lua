@@ -20,6 +20,17 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
+    --[[
+    local data = {group = "Coiled Altar P1", internalID = "DreadmarchTargeted", name = "Dreadmarch Target", text = "Targeted", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 4,
+        textColors = {1, 0, 0, 1}, spellID = 1297445, isSpecialDisplay = true,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+    ]]
+
     local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8,
         textColors = {1, 0, 0, 1}, spellID = 1299684,
         isConditional = {
@@ -115,6 +126,26 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+end
+
+NSI.EncounterAlertStart[encID] = function(self, id)
+    local difficulty = id or self:DifficultyCheck({15, 16})
+    local alert = difficulty and NSRT.EncounterAlerts[encID][difficulty].DreadmarchTargeted
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+
+    self:EncounterFunction("CoiledAltarTargeted", function(_, event)
+        if event ~= "ENCOUNTER_WARNING" or self.Phase ~= alert.phase or not self.PhaseSwapTime then return end
+
+        local elapsed = GetTime() - self.PhaseSwapTime
+        for _, timer in ipairs(alert.timers[difficulty]) do
+            if ApproximatelyEqual(elapsed, timer, 1) then
+                local info = self:CreateReminder(CopyTable(alert), true)
+                self:DisplayReminder(info)
+                return
+            end
+        end
+    end)
+    self:EncounterRegister("CoiledAltarTargeted", "ENCOUNTER_WARNING", true)
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START

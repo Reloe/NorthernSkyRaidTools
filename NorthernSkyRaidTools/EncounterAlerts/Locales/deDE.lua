@@ -236,6 +236,7 @@ L[3429] = {
     -- ["P2Debuffs"]     = {group = "Coiled Altar P2", name = "P2 Debuffs", text = "Debuffs"},
     -- ["P2Shield"]      = {group = "Coiled Altar P2", name = "P2 Shield", text = "Shield"},
     -- ["InterruptAdds"] = {group = "Coiled Altar P2", name = "P2 Interrupt Adds", text = "Ghosts"},
+    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
 }
 
 -- Ula'tek (3492)

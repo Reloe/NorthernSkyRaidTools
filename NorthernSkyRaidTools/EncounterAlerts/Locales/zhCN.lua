@@ -237,6 +237,7 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]      = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "精魂"},
+    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
 }
 
 -- Ula'tek (3492)

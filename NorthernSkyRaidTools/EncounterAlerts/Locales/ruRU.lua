@@ -236,6 +236,7 @@ L[3429] = {
     ["P2Debuffs"] = {group = "Спиральный алтарь [2-я фаза]", name = "Дебаффы (2-я фаза)", text = "Дебаффы"},
     ["P1Taunt"] = {group = "Спиральный алтарь [Танки]", name = "Таунт (1-я фаза)", text = "Провокация"},
     ["P1Frontal"] = {group = "Спиральный алтарь [1-я фаза]", name = "Фронтальный удар (1-я фаза)", text = "Фронтальный удар"},
+    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
 }
 
 -- Ula'tek (3492)
