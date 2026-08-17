@@ -316,12 +316,21 @@ end
 
 -- Set user-adjusted phase start time
 -- Also shifts all subsequent phases by the same delta
-function NSI:SetPhaseStart(encounterID, phaseNum, time)
+function NSI:SetPhaseStart(encounterID, phaseNum, time, difficulty)
     -- Cannot adjust phase 1
     if phaseNum == 1 then return end
 
     -- Reject move if it would go before the previous phase
-    local prevPhaseTime = self:GetPhaseStart(encounterID, phaseNum - 1)
+    local timeline = self:GetBossTimeline(encounterID, difficulty)
+    local previousPhase = 1
+    if timeline and timeline.phases then
+        for otherPhaseNum in pairs(timeline.phases) do
+            if otherPhaseNum < phaseNum and otherPhaseNum > previousPhase then
+                previousPhase = otherPhaseNum
+            end
+        end
+    end
+    local prevPhaseTime = self:GetPhaseStart(encounterID, previousPhase, difficulty)
     if time <= prevPhaseTime then
         return
     end
@@ -334,7 +343,7 @@ function NSI:SetPhaseStart(encounterID, phaseNum, time)
     end
 
     -- Get the old time to calculate delta
-    local oldTime = self:GetPhaseStart(encounterID, phaseNum)
+    local oldTime = self:GetPhaseStart(encounterID, phaseNum, difficulty)
     local delta = time - oldTime
 
     -- Set the moved phase's new time
@@ -342,11 +351,10 @@ function NSI:SetPhaseStart(encounterID, phaseNum, time)
 
     -- Shift all subsequent phases by the same delta
     if delta ~= 0 then
-        local timeline = self:GetBossTimeline(encounterID)
         if timeline and timeline.phases then
             for otherPhaseNum, _ in pairs(timeline.phases) do
                 if otherPhaseNum > phaseNum then
-                    local otherOldTime = self:GetPhaseStart(encounterID, otherPhaseNum)
+                    local otherOldTime = self:GetPhaseStart(encounterID, otherPhaseNum, difficulty)
                     local newOtherTime = math.max(0, otherOldTime + delta)
                     NSRT.PhaseTimings[encounterID][otherPhaseNum] = newOtherTime
                 end

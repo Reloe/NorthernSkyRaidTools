@@ -193,7 +193,7 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
                 table.insert(allTimes, {
                     time = time,
                     dur = ability.duration or 3,
-                    spellID = ability.spellID,
+                    spellID = ability.spellID and C_Spell.GetSpellInfo(ability.spellID) and ability.spellID or nil,
                     name = ability.name,
                     category = ability.category,
                     color = ability.color,
@@ -239,8 +239,8 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
         if not abilityGroups[key] then
             -- Get name
             local lineName = ability.name
+            local spellInfo = ability.spellID and C_Spell.GetSpellInfo(ability.spellID)
             if (GetLocale() ~= "enUS") then
-                local spellInfo = C_Spell.GetSpellInfo(ability.spellID)
                 if spellInfo then
                     lineName = spellInfo.name
                 end
@@ -248,7 +248,7 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
 
             abilityGroups[key] = {
                 name = lineName,
-                spellID = ability.spellID,
+                spellID = spellInfo and ability.spellID or nil,
                 category = ability.category,
                 color = ability.color,
                 sortOrder = ability.sortOrder,
@@ -305,13 +305,8 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
         end
 
         -- Get icon
-        local lineIcon = nil
-        if abilityData.spellID then
-            local spellInfo = C_Spell.GetSpellInfo(abilityData.spellID)
-            if spellInfo then
-                lineIcon = spellInfo.iconID
-            end
-        end
+        local spellInfo = abilityData.spellID and C_Spell.GetSpellInfo(abilityData.spellID)
+        local lineIcon = spellInfo and spellInfo.iconID
 
         -- Color-code the name by category
         local color = abilityData.color or {0.7, 0.7, 0.7}
@@ -328,7 +323,7 @@ function NSI:GetBossAbilityLines(encounterID, displayMode, requestedDifficulty)
 
         table.insert(lines, {
             spellId = abilityData.spellID,
-            icon = nil, -- We'll use custom icons on the right instead
+            icon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark",
             text = coloredName,
             timeline = timeline,
             isBossAbility = true,
@@ -468,6 +463,8 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
     for _, ability in ipairs(sortedAbilities) do
         local abilityData = ability.data
         local spellID = abilityData.spellID
+        local spellInfo = spellID and C_Spell.GetSpellInfo(spellID)
+        local displaySpellID = spellInfo and spellID or nil
         local timeline = {}
 
         -- Sort entries by time
@@ -480,30 +477,29 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
                 0,
                 true,
                 entry.dur,
-                spellID,
+                displaySpellID,
                 payload = { phase = entry.phase, text = entry.text, glowUnit = entry.glowUnit },
             })
         end
 
         -- Get display info
-        local lineIcon = nil
+        local lineIcon = spellInfo and spellInfo.iconID
         local lineName = ""
-        local lineSpellId = spellID
+        local lineSpellId = displaySpellID
 
         if spellID then
-            local spellInfo = C_Spell.GetSpellInfo(spellID)
             if spellInfo then
-                lineIcon = spellInfo.iconID
                 lineName = spellInfo.name or ""
             end
         else
             lineName = T("Notes")
             lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
         end
+        lineIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark"
 
         table.insert(lines, {
             spellId = lineSpellId,
-            icon = nil, -- We'll use custom icons on the right instead
+            icon = lineIcon,
             text = lineName,
             timeline = timeline,
             isYourReminder = true,
@@ -781,6 +777,8 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
         for _, ability in ipairs(sortedAbilities) do
             local abilityData = ability.data
             local spellID = abilityData.spellID
+            local spellInfo = spellID and C_Spell.GetSpellInfo(spellID)
+            local displaySpellID = spellInfo and spellID or nil
             local timeline = {}
 
             -- Sort entries by phase-relative time for consistent ordering
@@ -806,7 +804,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                     0,              -- [2] length (0 for icon-based display)
                     true,           -- [3] isAura (shows duration bar)
                     entry.dur,      -- [4] auraDuration
-                    spellID,        -- [5] blockSpellId
+                    displaySpellID, -- [5] blockSpellId
                     payload = {
                         phase = entry.phase, text = entry.text, glowUnit = entry.glowUnit,
                         srcLineIndex = entry.srcLineIndex, srcRaw = entry.srcRaw,
@@ -815,14 +813,12 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
             end
 
             -- Get display info
-            local lineIcon = nil
+            local lineIcon = spellInfo and spellInfo.iconID
             local lineName = ""
-            local lineSpellId = spellID
+            local lineSpellId = displaySpellID
 
             if spellID then
-                local spellInfo = C_Spell.GetSpellInfo(spellID)
                 if spellInfo then
-                    lineIcon = spellInfo.iconID
                     lineName = spellInfo.name or ""
                 end
             else
@@ -830,6 +826,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
                 lineName = T("Notes")
                 lineIcon = "Interface\\ICONS\\INV_Misc_Note_01"
             end
+            lineIcon = lineIcon or "Interface\\ICONS\\INV_Misc_QuestionMark"
 
             -- Get shortened player name
             local shortPlayer = NSAPI:Shorten(player, 12, false, "GlobalNickNames") or player
@@ -849,7 +846,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
 
             table.insert(lines, {
                 spellId = lineSpellId,
-                icon = nil, -- We'll use custom icons on the right instead
+                icon = lineIcon,
                 text = lineName, -- Spell name left-anchored
                 timeline = timeline,
                 isPlayerAssignment = true,
@@ -1724,7 +1721,7 @@ function NSI:CreateTimelineWindow()
                                 if bd and bd.payload and bd.payload.srcLineIndex and timelineWindow.editNote then
                                     local p = bd.payload
                                     local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
-                                    newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
+                                    newRaw = newRaw:gsub("ph:%d*%.?%d+", "ph:" .. phase)
                                     NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
                                     -- Must be set BEFORE SetReminder: with skipupdate=false, SetReminder
                                     -- calls ProcessReminder(), which itself refreshes the timeline
@@ -2184,7 +2181,7 @@ function NSI:CreateTimelineWindow()
                     if bd and bd.payload and bd.payload.srcLineIndex and timelineWindow.editNote then
                         local p = bd.payload
                         local newRaw = p.srcRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
-                        newRaw = newRaw:gsub("ph:%d+", "ph:" .. phase)
+                        newRaw = newRaw:gsub("ph:%d*%.?%d+", "ph:" .. phase)
                         NSI:RewriteNoteLine(timelineWindow.editNote.name, true, p.srcLineIndex, p.srcRaw, newRaw)
                         -- Set before SetReminder — see the drag-retime comment above.
                         timelineWindow.preserveZoom = true
@@ -2802,7 +2799,7 @@ function NSI:UpdatePhaseMarkers()
                     newTime = math.floor(newTime) -- Round to nearest second
 
                     -- Save the new phase timing
-                    NSI:SetPhaseStart(self.encID, self.phaseNum, newTime)
+                    NSI:SetPhaseStart(self.encID, self.phaseNum, newTime, window.currentDifficulty)
 
                     -- Refresh the timeline
                     NSI:RefreshTimelineForMode()
@@ -2812,7 +2809,7 @@ function NSI:UpdatePhaseMarkers()
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. self.phaseNum)
-                    local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
+                    local time = NSI:GetPhaseStart(self.encID, self.phaseNum, window.currentDifficulty)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
@@ -2838,7 +2835,7 @@ function NSI:UpdatePhaseMarkers()
             end
 
             -- Position the marker
-            local phaseStart = self:GetPhaseStart(encID, phaseNum)
+            local phaseStart = self:GetPhaseStart(encID, phaseNum, window.currentDifficulty)
             local xPos = phaseStart * pixelsPerSecond
 
             -- Set color from phase data (default to red for visibility)
@@ -3091,14 +3088,14 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
                     local newTime = math.max(0, xOffset / currentPPS)
                     newTime = math.floor(newTime)
 
-                    NSI:SetPhaseStart(self.encID, self.phaseNum, newTime)
+                    NSI:SetPhaseStart(self.encID, self.phaseNum, newTime, tab.currentDifficulty)
                     NSI:RefreshEmbeddedTimeline(self.parentTab)
                 end)
 
                 marker:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
                     local phaseName = phases[self.phaseNum] and phases[self.phaseNum].name or (T("Phase") .. " " .. self.phaseNum)
-                    local time = NSI:GetPhaseStart(self.encID, self.phaseNum)
+                    local time = NSI:GetPhaseStart(self.encID, self.phaseNum, tab.currentDifficulty)
                     local minutes = math.floor(time / 60)
                     local seconds = math.floor(time % 60)
                     GameTooltip:AddLine(phaseName, 1, 1, 1)
@@ -3122,7 +3119,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
                 tab.phaseMarkers[phaseNum] = marker
             end
 
-            local phaseStart = self:GetPhaseStart(encID, phaseNum)
+            local phaseStart = self:GetPhaseStart(encID, phaseNum, tab.currentDifficulty)
             local xPos = phaseStart * pixelsPerSecond
 
             local color = phaseData.color or {0.8, 0.2, 0.2}
@@ -3155,13 +3152,19 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     local existingText     = srcRaw:match("text:([^;]+)") or ""
     local existingDur      = srcRaw:match("dur:(%d+)") or tostring(NSRT.ReminderSettings.SpellDuration or 5)
     local existingGlowUnit = srcRaw:match("glowunit:([^;]+)") or ""
+    local existingPhase    = isEdit and payload and tonumber(payload.phase)
+        or (isEdit and tonumber(srcRaw:match("ph:(%d*%.?%d+)")))
 
     -- Derive absolute time from the block's stored phase/time when not supplied
     if isEdit and not absoluteTime then
-        local phase   = tonumber(srcRaw:match("ph:(%d+)") or "1") or 1
-        local relTime = tonumber(srcRaw:match("time:(%d*%.?%d+)") or "0") or 0
-        local phStart = NSI:GetPhaseStart(window.currentEncounterID, phase, window.currentDifficulty) or 0
-        absoluteTime  = phStart + relTime
+        if bd and tonumber(bd[1]) then
+            absoluteTime = tonumber(bd[1])
+        else
+            local phase   = tonumber(srcRaw:match("ph:(%d*%.?%d+)") or "1") or 1
+            local relTime = tonumber(srcRaw:match("time:(%d*%.?%d+)") or "0") or 0
+            local phStart = NSI:GetPhaseStart(window.currentEncounterID, phase, window.currentDifficulty) or 0
+            absoluteTime  = phStart + relTime
+        end
     end
     absoluteTime = absoluteTime or 0
 
@@ -3331,7 +3334,13 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     -- Time info
     local encID    = window.currentEncounterID
     local difficulty = window.currentDifficulty
-    local phase, phaseStart = self:PhaseFromTime(encID, absoluteTime, difficulty)
+    local phase, phaseStart
+    if existingPhase then
+        phase = existingPhase
+        phaseStart = self:GetPhaseStart(encID, phase, difficulty) or 0
+    else
+        phase, phaseStart = self:PhaseFromTime(encID, absoluteTime, difficulty)
+    end
     local relTime  = math.max(0, math.floor(absoluteTime - phaseStart))
     popup._phase   = phase
     popup._relTime = relTime
@@ -3402,15 +3411,15 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
 
         -- Phase / time-in-phase: manual override from the editable fields, falling
         -- back to the cursor/block-derived defaults if left blank or invalid.
-        local newPhase = math.max(1, math.floor(tonumber(popup.phaseEntry:GetValue()) or phase))
+        local newPhase = math.max(1, tonumber(popup.phaseEntry:GetValue()) or phase)
         local newRelTime = math.max(0, tonumber(popup.timeEntry:GetValue()) or relTime)
 
         if isEdit and payload and payload.srcLineIndex then
             -- Rebuild the line, preserving tag; updating time/ph/spell/text/dur/glowunit
             local newRaw = srcRaw
             newRaw = newRaw:gsub("time:[%d%.]+", "time:" .. newRelTime)
-            if newRaw:find("ph:%d+") then
-                newRaw = newRaw:gsub("ph:%d+", "ph:" .. newPhase)
+            if newRaw:find("ph:%d*%.?%d+") then
+                newRaw = newRaw:gsub("ph:%d*%.?%d+", "ph:" .. newPhase)
             else
                 newRaw = newRaw .. ";ph:" .. newPhase
             end
