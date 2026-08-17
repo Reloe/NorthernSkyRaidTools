@@ -256,6 +256,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local groupsByEnc        = {}    -- [encID] = { [groupName] = true } — populated each RebuildScrollData
     local copiedAlertSection = nil
     local SharedAlertDataKeys = {
+        enabled = true,
         DisplayType = true,
         text = true,
         spellID = true,
@@ -293,6 +294,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 sibling[dataKey] = type(newData) == "table" and CopyTable(newData) or newData
                                 if dataKey == "text" and sibling.ReloeReminder == true then
                                     sibling.UserModifiedText = true
+                                end
+                                if dataKey == "enabled" and sibling.ReloeReminder == true then
+                                    sibling.UserModifiedEnabled = true
                                 end
                             end
                         end
