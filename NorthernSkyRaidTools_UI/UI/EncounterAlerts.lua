@@ -2983,7 +2983,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     )
     local soundDD = CreateDropdown(sndF, nil, soundGetItems, soundGetSelected,
         rightW, 22, "NSUIEncAlertSound",
-        { title = "Sound File", desc = "If you select a sound here it will take priority over any configured TTS. It will still use the TTS-Timer field to determine when to play" })
+        { title = "Sound File", desc = "If you select a sound here it will take priority over any configured TTS. It will still use the TTS-Timer field to determine when to play" },
+        nil, nil, true)
     soundDD:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -178)
     sndF.soundDD = soundDD
     end -- SOUND TAB
