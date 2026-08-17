@@ -141,10 +141,12 @@ L[3159] = {
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
     -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
+    -- ["Waves"]         = {group = "Nymrissa", name = "Waves", text = "Waves"},
     -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
     -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
     -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
     -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
+    -- ["WaterFlurry"]   = {group = "Nymrissa", name = "Iceblade Flurry", text = "Tank-Hit"},
     -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
 }
 
@@ -238,6 +240,14 @@ L[3429] = {
     ["P2Shield"]        = {group = "똬리의 제단 2페", name = "2페 보호막", text = "보호막"},
     ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
     -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
+    -- ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
+    -- ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
+    -- ["DreadmarchTargetedP3"] = {group = "Coiled Altar P3", name = "Dreadmarch Target", text = "Targeted"},
+    -- ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
+    -- ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
+    -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
+    -- ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
+    -- ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
 }
 
 -- Ula'tek (3492)
