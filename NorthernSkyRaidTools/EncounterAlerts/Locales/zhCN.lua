@@ -140,12 +140,12 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
-    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
-    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
-    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
-    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
-    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
+    -- ["Adds"]          = {group = "尼姆瑞莎", name = "诱人水泡（小怪）", text = "小怪刷新"},
+    -- ["Knockback"]     = {group = "尼姆瑞莎", name = "嘭！（击退）", text = "击退"},
+    -- ["ChillingFrost"] = {group = "尼姆瑞莎", name = "刺骨寒霜（点名）", text = "点名宝珠"},
+    -- ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
+    -- ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
+    -- ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
@@ -237,7 +237,7 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]      = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "精魂"},
-    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
+    -- ["DreadmarchTargeted"] = {group = "盘卷祭坛 P1", name = "恐惧行军（锁定）", text = "被锁定"},
 }
 
 -- Ula'tek (3492)
