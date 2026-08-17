@@ -48,6 +48,12 @@ L["Name:"] = "Имя:"
 L["Sync Nicknames"] = "Синхронизировать никнеймы"
 L["%s is attempting to sync their nicknames with you."] = "%s пытается синхронизировать свои никнеймы с Вашими."
 L["Cancel"] = "Отмена"
+L["Proceed"] = "Продолжить"
+L["This import will overwrite your settings for Encounter Alerts, Aura Sounds and Aura Tracking, proceed?"] = "Этот импорт перезапишет Ваши настройки оповещений боёв, звуков аур и отслеживания аур. Продолжить?"
+L["Export Profile + Shared Data"] = "Экспорт профиля и общих данных"
+L["Export Profile + Data"] = "Экспорт профиля и данных"
+L["Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "Экспортирует Ваш профиль вместе с оповещениями боёв, звуками аур и отслеживанием аур. Никнеймы никогда не включаются."
+L["Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "Включает оповещения боёв, звуки аур и отслеживание аур. Никнеймы никогда не включаются."
 L["Accept"] = "Принять"
 L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCFЛКМ|r: Показать/скрыть окно настроек"
 
@@ -1184,7 +1190,7 @@ L["You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00%s|r Group"] = "�
 L["You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"] = "Вам назначено поглощать |cFF00FF00Смертный приговор|r в группе |cFFFF0000%s|r"
 L["You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00%s|r Group"] = "Вам назначено поглощать |cFF00FF00Встряска пыли Альн|r в группе |cFF00FF00%s|r"
 L["You are assigned to soak |cFF00FF00%s|r"] = "Вам назначено поглощать |cFF00FF00%s|r"
-L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "Вам назначено поглощение на Спиральном Алтаре |cFF00FF00%s|r"
+L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "Вам назначено поглощать Гильотину |cFF00FF00%s|r"
 
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
