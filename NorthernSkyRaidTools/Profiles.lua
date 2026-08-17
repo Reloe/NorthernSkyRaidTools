@@ -572,6 +572,12 @@ local ignored = {
     ["NickNames"]        = true,
 }
 
+local ProfileSharedDataKeys = {
+    EncounterAlerts = true,
+    AuraSounds = true,
+    AuraTrackingSettings = true,
+}
+
 local function CopyProfileValue(key, value)
     local copy = type(value) == "table" and CopyTable(value) or value
     if key == "Settings" and type(copy) == "table" then
@@ -687,7 +693,7 @@ function NSI:CopyFromProfile(name)
     end
 end
 
-function NSI:ExportProfileString()
+function NSI:ExportProfileString(includeSharedData)
     local profileData = NSRT.Profiles[NSRT.CurrentProfile]
     if not profileData then return nil end
     local exportData = {}
@@ -700,12 +706,23 @@ function NSI:ExportProfileString()
         profileName = NSRT.CurrentProfile,
         data = exportData,
     }
+    if includeSharedData then
+        local sharedData = {}
+        for key in pairs(ProfileSharedDataKeys) do
+            sharedData[key] = CopyProfileValue(key, NSRT[key])
+        end
+        exportTable.sharedData = sharedData
+    end
     return self:EncodeExportData(exportTable)
 end
 
-function NSAPI:ImportProfileString(importString, name) -- name is optional
+function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name is optional
     local exportTable = NSI:DecodeExportData(importString)
     if type(exportTable) ~= "table" then return nil end
+    local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
+    if sharedData and next(sharedData) and not allowSharedData then
+        return nil, "shared_data"
+    end
     local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
         if NSRT.Profiles[name] then
@@ -724,6 +741,23 @@ function NSAPI:ImportProfileString(importString, name) -- name is optional
         end
     end
     NSI:LoadProfile(name)
+    if sharedData then
+        for key in pairs(ProfileSharedDataKeys) do
+            if sharedData[key] ~= nil then
+                NSRT[key] = CopyProfileValue(key, sharedData[key])
+            end
+        end
+        if sharedData.EncounterAlerts then
+            NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+        end
+        if sharedData.AuraSounds then
+            NSI:RebuildAuraSounds()
+        end
+        if sharedData.AuraTrackingSettings then
+            NSI:InitAuraTracking()
+            NSI:RefreshAuraTrackingUI()
+        end
+    end
     return name
 end
 

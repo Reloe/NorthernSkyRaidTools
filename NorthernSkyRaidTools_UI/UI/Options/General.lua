@@ -319,6 +319,22 @@ local function BuildGeneralOptions()
             name = "Export Profile",
             desc = "Exports your currently active profile to a string that can be shared with others.",
             func = function(self)
+                NSUI.export_string_popup.IncludeSharedData = false
+                if NSUI.export_string_popup:IsShown() then
+                    NSUI.export_string_popup:Hide()
+                else
+                    NSUI.export_string_popup:Show()
+                end
+            end,
+            nocombat = true,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Export Profile + Data",
+            desc = "Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included.",
+            func = function(self)
+                NSUI.export_string_popup.IncludeSharedData = true
                 if NSUI.export_string_popup:IsShown() then
                     NSUI.export_string_popup:Hide()
                 else
