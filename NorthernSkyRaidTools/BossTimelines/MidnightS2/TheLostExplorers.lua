@@ -9,6 +9,7 @@ local heroicData = {
         [2] = {start = 54},
         [3] = {start = 177},
         [4] = {start = 301},
+        [5] = {start = 436},
     },
     abilities = {
         {name = "Malevolent Presence", spellID = 1295450, category = "raid dot", phase = 1, times = {2.01}, duration = 178},
@@ -89,6 +90,7 @@ local mythicData = {
         [2] = {start = 53},
         [3] = {start = 172},
         [4] = {start = 295},
+        [5] = {start = 430},
     },
     abilities = {
         {name = "Malevolent Presence", spellID = 1295450, category = "raid dot", phase = 1, times = {2.01}, duration = 178},
