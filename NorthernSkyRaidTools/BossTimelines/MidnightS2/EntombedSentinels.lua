@@ -11,6 +11,7 @@ local heroicData = {
         [4] = {start = 258},
         [5] = {start = 359},
         [6] = {start = 460},
+        [7] = {start = 545},
     },
     abilities = {
         {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 1, times = {6.58, 28.65}, duration = 0},
@@ -71,6 +72,7 @@ local mythicData = {
         [3] = {start = 157},
         [4] = {start = 258},
         [5] = {start = 359},
+        [6] = {start = 453},
     },
     abilities = {
         {name = "Empowering Slam", spellID = 1284458, category = "tankbuster", phase = 1, times = {6.2, 28.06}, duration = 0},
