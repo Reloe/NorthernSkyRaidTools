@@ -200,15 +200,12 @@ end
 local detectedDurations = {
     [14] = {
         [1] = { time = 70, phase = function() return 2 end },
-        [2.5] = { time = 94.1, phase = function() return 3 end },
     },
     [15] = {
         [1] = { time = 70, phase = function() return 2 end },
-        [2.5] = { time = 94.1, phase = function() return 3 end },
     },
     [16] = {
         [1] = { time = 70, phase = function() return 2 end },
-        [2.5] = { time = 94.1, phase = function() return 3 end },
     },
 }
 
@@ -218,6 +215,22 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
 
     local difficultyID = self:DifficultyCheck({14, 15, 16})
     if (not difficultyID) or (not detectedDurations[difficultyID]) then return end
+
+    if self.Phase == 2.5 then
+        table.insert(self.Timelines, now)
+
+        local addedcount = 0
+        for _, timestamp in ipairs(self.Timelines) do
+            if now < timestamp + 0.3 then addedcount = addedcount + 1 end
+        end
+        if addedcount < 4 then return end
+
+        self.Phase = 3
+        self:StartReminders(self.Phase)
+        self.PhaseSwapTime = now
+        return
+    end
+
     local phaseinfo = detectedDurations[difficultyID][self.Phase]
     if not phaseinfo then return end
 
