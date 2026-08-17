@@ -110,12 +110,13 @@ NSI.AuraSoundCategories = {
         }},
         {key = 3429, entries = { -- The Coiled Altar
             {spellID = 1283485, sound = "Targeted"}, -- Guillotine
+            {spellID = 1299266, sound = "Targeted"}, -- Grim Guillotine
             {spellID = 1282419, sound = "Orb"}, -- Volatile Venom
             {spellID = 1310498, sound = "Spread"}, -- Mutagenic Venom
             {spellID = 1282419, sound = "Move", eventType = "removed"}, -- Volatile Venom
             {spellID = 1310498, sound = "Move", eventType = "removed"}, -- Mutagenic Venom
             {spellID = 1286901, sound = "Bomb"}, -- Gloombomb
-            {spellID = 1286901, sound = "Collect", eventType = "removed"}, -- Gloombomb
+            {spellID = 1286837, sound = "Collect"}, -- Gravebound
             {spellID = 1285911, sound = "Fixate"}, -- Unnerving Fixation
         }},
         {key = 3492, entries = { -- Ula'tek
