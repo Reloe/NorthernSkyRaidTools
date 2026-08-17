@@ -1168,7 +1168,7 @@ L["You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00%s|r Group"] = "Y
 L["You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"] = "You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"
 L["You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00%s|r Group"] = "You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00%s|r Group"
 L["You are assigned to soak |cFF00FF00%s|r"] = "You are assigned to soak |cFF00FF00%s|r"
-L["You are assigned to the |cFF00FF00%s|r Coiled Altar soak"] = "You are assigned to the |cFF00FF00%s|r Coiled Altar soak"
+L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "You are assigned to the |cFF00FF00%s|r Guillotine Soak"
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
 -- ============================================================================
