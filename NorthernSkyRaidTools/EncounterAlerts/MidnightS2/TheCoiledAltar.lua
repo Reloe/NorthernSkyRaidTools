@@ -10,6 +10,11 @@ local p1SoakTimers = {
     [16] = {48, 133},
 }
 
+local p3SoakTimers = {
+    [15] = {},
+    [16] = {},
+}
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -126,6 +131,87 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    --[=[
+    local data = {group = "Coiled Altar P3", internalID = "P3Frontal", name = "P3 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 6,
+        textColors = {1, 0, 0, 1}, spellID = 1307292,
+        isConditional = {
+            text = "This Alert only shows if you are not a tank or have threat on boss1.",
+            func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
+        },
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "P3Soak", name = "P3 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 8, spellID = 1299266,
+        loadConditions = tankConditions,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "DreadmarchTargetedP3", name = "Dreadmarch Target", text = "Targeted", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 4,
+        textColors = {1, 0, 0, 1}, spellID = 1297445, isSpecialDisplay = true,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
+        spellID = 1286918,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "P3Debuffs", name = "P3 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
+        loadConditions = nonTankConditions, spellID = 1286895,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "P3InterruptAdds", name = "P3 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
+        spellID = 1286399,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1285643,
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar Tanks", internalID = "P3Taunt", name = "P3 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 3, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
+        textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
+        isConditional = {
+            text = "This Alert only shows if you do not have threat on boss1.",
+            func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
+        },
+        timers = {
+            [15] = {},
+            [16] = {},
+        },
+    }
+    self:AddEncounterAlert(data)
+    ]=]
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id)
@@ -170,20 +256,23 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
             end
         end
     end
-
-    local alert = self:CreateDefaultAlert("", "Text", nil, nil, 1, encID)
-    alert.dur = 8
-    for index, timer in ipairs(p1SoakTimers[diff]) do
-        local shouldSoak = (index == 1 and group == 1) or (index == 2 and group == 2)
-        alert.time = timer
-        alert.text = shouldSoak and NSI:EncounterAlertLoc("|cFF00FF00SOAK") or NSI:EncounterAlertLoc("|cFFFF0000DON'T SOAK")
-        alert.TTS = shouldSoak and NSI:EncounterAlertLoc("Soak") or NSI:EncounterAlertLoc("Don't soak")
-        self:AddToReminder(alert)
+    for phase, timers in pairs({[1] = p1SoakTimers[diff], [3] = p3SoakTimers[diff]}) do
+        if #timers > 0 then
+            local alert = self:CreateDefaultAlert("", "Text", nil, nil, phase, encID)
+            alert.dur = 8
+            for index, timer in ipairs(timers) do
+                local shouldSoak = (index == 1 and group == 1) or (index == 2 and group == 2)
+                alert.time = timer
+                alert.text = shouldSoak and NSI:EncounterAlertLoc("|cFF00FF00SOAK") or NSI:EncounterAlertLoc("|cFFFF0000DON'T SOAK")
+                alert.TTS = shouldSoak and NSI:EncounterAlertLoc("Soak") or NSI:EncounterAlertLoc("Don't soak")
+                self:AddToReminder(alert)
+            end
+        end
     end
 
     if NSRT.AssignmentSettings.OnPull then
         local side = group == 1 and "First" or "Second"
-        self:DisplayText(string.format(NSI:EncounterAlertLoc("You are assigned to the |cFF00FF00%s|r Coiled Altar soak"), NSI:EncounterAlertLoc(side)), 5)
+        self:DisplayText(string.format(NSI:EncounterAlertLoc("You are assigned to the |cFF00FF00%s|r Guillotine Soak"), NSI:EncounterAlertLoc(side)), 5)
     end
 end
 
