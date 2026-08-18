@@ -48,6 +48,12 @@ L["Name:"] = "이름:"
 L["Sync Nicknames"] = "닉네임 동기화"
 L["%s is attempting to sync their nicknames with you."] = "%s|1이;가; 닉네임을 동기화하려 합니다."
 L["Cancel"] = "취소"
+L["Proceed"] = "실행"
+L["This import will overwrite your settings for Encounter Alerts, Aura Sounds and Aura Tracking, proceed?"] = "이 가져오기는 현재 공격대 경고, 오라 효과음, 오라 트래킹 설정을 덮어쓰게 됩니다. 실행할까요?"
+L["Export Profile + Shared Data"] = "프로필 + 공유 데이터 내보내기"
+L["Export Profile + Data"] = "프로필 + 데이터 내보내기"
+L["Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "프로필에 공격대 경고, 오라 효과음, 오라 트래킹을 같이 내보냅니다. 닉네임은 포함되지 않습니다."
+L["Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "공격대 경고, 오라 효과음, 오라 트래킹을 포함합니다. 닉네임은 포함되지 않습니다."
 L["Accept"] = "수락"
 L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCF왼쪽 클릭|r: 옵션 창 표시/숨기기"
 -- ============================================================================
@@ -1143,7 +1149,7 @@ L["You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00%s|r Group"] = "�
 L["You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"] = "당신은 |cFF00FF00사형 선고|r 맞기 |cFFFF0000%s|r조로 배정됐습니다"
 L["You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00%s|r Group"] = "당신은 |cFF00FF00알른가루 지각 변동|r 맞기 |cFF00FF00%s|r조로 배정됐습니다"
 L["You are assigned to soak |cFF00FF00%s|r"] = "당신은 |cFF00FF00%s|r 맞기에 배정됐습니다"
-L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "당신은 |cFF00FF00%s|r 똬리의 제단 스킬 맞기에 배정됐습니다"
+L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "당신은 |cFF00FF00%s|r 단두대 맞기에 배정됐습니다"
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
 -- ============================================================================

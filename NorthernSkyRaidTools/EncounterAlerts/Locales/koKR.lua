@@ -140,14 +140,14 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
-    -- ["Waves"]         = {group = "Nymrissa", name = "Waves", text = "Waves"},
-    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
-    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
-    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
-    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
-    -- ["WaterFlurry"]   = {group = "Nymrissa", name = "Iceblade Flurry", text = "Tank-Hit"},
-    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
+    ["Adds"]          = {group = "님리사", name = "쫄 등장", text = "쫄"},
+    ["Waves"]         = {group = "님리사", name = "파도", text = "파도"},
+    ["Knockback"]     = {group = "님리사", name = "넉백", text = "넉백"},
+    ["ChillingFrost"] = {group = "님리사", name = "오싹한 서리", text = "디버프"},
+    ["AbyssalRain"]   = {group = "님리사", name = "심연의 비", text = "광역뎀"},
+    ["WaterJet"]      = {group = "님리사", name = "물 분출", text = "전방스킬"},
+    ["WaterFlurry"]   = {group = "님리사", name = "질풍의 얼음칼날", text = "탱커 공격"},
+    ["Taunt"]         = {group = "님리사", name = "도발", text = "도발"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
