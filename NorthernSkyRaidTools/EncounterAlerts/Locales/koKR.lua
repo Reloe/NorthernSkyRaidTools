@@ -178,7 +178,7 @@ L[3445] = {
 -- Vashnik the Malignant (3455)
 L[3455] = {
     ["TankHits"]    = {group = "바쉬니크", name = "탱커 공격", text = "탱커 공격"},
-    ["Taunts"]      = {group = "바쉬니크", name = "Taunt", text = "도발"},
+    ["Taunts"]      = {group = "바쉬니크", name = "도발", text = "도발"},
     ["Adds"]        = {group = "바쉬니크", name = "쫄", text = "쫄"},
     ["Infection"]   = {group = "바쉬니크", name = "감염", text = "감염"},
     ["AoE"]         = {group = "바쉬니크", name = "광역뎀", text = "광역뎀"},
