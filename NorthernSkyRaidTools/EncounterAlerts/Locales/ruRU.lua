@@ -30,7 +30,7 @@ L[3179] = {
 L[3178] = {
     ["Breath"] = {name = "Дыхание", text = "Дыхание"},
     ["HealthDisplay"] = {name = "Отображение здоровья"},
-    ["Spread"] = {name = "Рассредоточение", text = "Рассредоточение"},
+    ["Spread"] = {name = "Разойтись", text = "Разойтись"},
     ["Tether"] = {name = "Узы", text = "Узы"},
 }
 
@@ -61,7 +61,7 @@ L[3181] = {
     ["Melee Obelisk_P1"] = {group = "Аллерия [1-я фаза]", name = "Ближний обелиск", text = "Обелиск"},
     ["Melee Obelisk_P3"] = {group = "Аллерия [2-я фаза]", name = "Ближний обелиск", text = "Обелиск"},
     ["Melee Obelisk_P5"] = {group = "Аллерия [3-я фаза]", name = "Ближний обелиск", text = "Обелиск"},
-    ["Stop Cast"] = {group = "Аллерия [1-я фаза]", name = "Прекратить чтение заклинания", text = "Прекратить чтение заклинания"},
+    ["Stop Cast"] = {group = "Аллерия [1-я фаза]", name = "Прекратить чтение заклинаний", text = "Прекратить чтение заклинаний"},
 }
 
 -- Chimaerus (3306)
@@ -92,7 +92,7 @@ L[3183] = {
     ["Right Soak-Time"] = {group = "Л'ура [3-я фаза, справа]", name = "Поглощение (справа)", text = "Поглощение"},
     ["Left Stars"] = {group = "Л'ура [3-я фаза, слева]", name = "Звёзды (слева)", text = "Звёзды"},
     ["Lura Tank-Hits_P4"] = {group = "Л'ура [Танки]", name = "Урон по танкам (3-я фаза)", text = "Урон по танку"},
-    ["Spread"] = {group = "Л'ура [2-я фаза]", name = "Рассредоточение", text = "Рассредоточение"},
+    ["Spread"] = {group = "Л'ура [2-я фаза]", name = "Разойтись", text = "Разойтись"},
     ["Transition Beams"] = {group = "Л'ура [1-я фаза, переходка]", name = "Лучи", text = "Лучи"},
     ["Orbs"] = {group = "Л'ура [2-я фаза]", name = "Сферы", text = "Сферы"},
     ["Soak Cross"] = {group = "Л'ура [2-я фаза, поглощения]", name = "Поглощение (крест)", text = "Поглощение {rt7}"},
@@ -129,7 +129,7 @@ L[3159] = {
     ["BurstingPustules"] = {name = "АоЕ", text = "АоЕ"},
     ["Shrooms"] = {name = "Грибы", text = "Грибы"},
     ["InterruptDisplay"] = {name = "Отображение прерываний"},
-    ["Taunts"] = {group = "Гнилотоп [Танки]", name = "Провокация (таунт)", text = "Провокация"},
+    ["Taunts"] = {group = "Гнилотоп [Танки]", name = "Таунт", text = "Провокация"},
     ["Tankhits"] = {group = "Гнилотоп [Танки]", name = "Урон по танкам", text = "Урон по танку"},
     ["Adds"] = {name = "Адды", text = "Адды"},
 }
@@ -139,14 +139,14 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
-    -- ["Waves"]         = {group = "Nymrissa", name = "Waves", text = "Waves"},
-    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
-    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
-    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
-    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
-    -- ["WaterFlurry"]   = {group = "Nymrissa", name = "Iceblade Flurry", text = "Tank-Hit"},
-    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
+    ["Adds"]          = {group = "Нимрисса", name = "Появление аддов", text = "Адды"},
+    ["Waves"]         = {group = "Нимрисса", name = "Волны", text = "Волны"},
+    ["Knockback"]     = {group = "Нимрисса", name = "Отбрасывание", text = "Удар"},
+    ["ChillingFrost"] = {group = "Нимрисса", name = "Леденящий холод", text = "Дебаффы"},
+    ["AbyssalRain"]   = {group = "Нимрисса", name = "Глубинный дождь", text = "АоЕ"},
+    ["WaterJet"]      = {group = "Нимрисса", name = "Сильная струя воды", text = "Фронтальный удар"},
+    ["WaterFlurry"]   = {group = "Нимрисса", name = "Шквал ледяных клинков", text = "Урон по танку"},
+    ["Taunt"]         = {group = "Нимрисса", name = "Таунт", text = "Таунт"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
@@ -154,24 +154,24 @@ L[3470] = {
     ["RestlessAmani"] = {group = "Нек'зали", name = "Появление аддов", text = "Адды"},
     ["Barrage"] = {group = "Нек'зали", name = "Шквал", text = "Фронтальный удар"},
     ["HungeringPyre"] = {group = "Нек'зали", name = "Алчущий костер", text = "Поглощение"},
-    ["Debuffs"] = {group = "Нек'зали", name = "Essence Rend", text = "Дебаффы"},
-    ["SoulcoilIgnition"] = {group = "Нек'зали", name = "Soulcoil Ignition", text = "АоЕ"},
-    ["InvokeMythic"] = {group = "Нек'зали", name = "Invoke", text = "Прекратить чтение заклинаний"},
-    ["Invoke"] = {group = "Нек'зали", name = "Invoke", text = "Уклонение"},
+    ["Debuffs"] = {group = "Нек'зали", name = "Раздирание сущности", text = "Дебаффы"},
+    ["SoulcoilIgnition"] = {group = "Нек'зали", name = "Поджигание плененных душ", text = "АоЕ"},
+    ["InvokeMythic"] = {group = "Нек'зали", name = "Воззвание", text = "Прекратить чтение заклинаний"},
+    ["Invoke"] = {group = "Нек'зали", name = "Воззвание", text = "Уклонение"},
 }
 
 -- Entombed Sentinels (3445)
 L[3445] = {
-    -- ["BloodSoakPool"] = {group = "Стражи", name = "Soak-Pool", text = "Drop Pool"},
-    -- ["BloodHits"] = {group = "Стражи", name = "Blood Tank-Hit", text = "Tank-Hit"},
-    -- ["BloodDispels"] = {group = "Стражи", name = "Blood Dispels", text = "Dispels"},
-    -- ["TransitionDebuffs"] = {group = "Стражи", name = "Transition Debuffs", text = "Number Game"},
-    -- ["PoisonHits"] = {group = "Стражи", name = "Poison Tank-Hit", text = "Tank-Hit"},
-    -- ["ShiftingProtovenom"] = {group = "Стражи", name = "Shifting Protovenom", text = "Spread"},
-    -- ["OrbSpawn"] = {group = "Стражи", name = "Orb Spawn", text = "Bait Orbs"},
-    -- ["BloodDropPool"] = {group = "Стражи", name = "Tank Drop Pool", text = "Drop-Pool"},
-    -- ["PoisonAdd"] = {group = "Стражи", name = "Poison Add", text = "Poison Add"},
-    -- ["BloodSoak"] = {group = "Стражи", name = "Blood Soak", text = "Blood-Soak"},
+    ["BloodSoakPool"] = {group = "Стражи", name = "Поглощение лужи", text = "Оставить лужу"},
+    ["BloodHits"] = {group = "Стражи", name = "Урон по танку (кровь)", text = "Урон по танку"},
+    ["BloodDispels"] = {group = "Стражи", name = "Рассеивания (кровь)", text = "Рассеивания"},
+    ["TransitionDebuffs"] = {group = "Стражи", name = "Дебаффы (переходная фаза)", text = "Игра чисел"},
+    ["PoisonHits"] = {group = "Стражи", name = "Урон по танку (яд)", text = "Урон по танку"},
+    ["ShiftingProtovenom"] = {group = "Стражи", name = "Изменчивый протояд", text = "Разойтись"},
+    ["OrbSpawn"] = {group = "Стражи", name = "Появление сферы", text = "Байт сферы"},
+    ["BloodDropPool"] = {group = "Стражи", name = "Оставить лужу (танк)", text = "Оставить лужу"},
+    ["PoisonAdd"] = {group = "Стражи", name = "Ядовитый адд", text = "Ядовитый адд"},
+    ["BloodSoak"] = {group = "Стражи", name = "Поглощение (кровь)", text = "Поглощение (кровь)"},
 }
 
 -- Vashnik the Malignant (3455)
@@ -180,7 +180,7 @@ L[3455] = {
     ["Adds"] = {group = "Вашник", name = "Адды", text = "Адды"},
     ["TankHits"] = {group = "Вашник", name = "Урон по танку", text = "Урон по танку"},
     ["Infection"] = {group = "Вашник", name = "Заражение", text = "Заражение"},
-    ["WaveSpread"] = {group = "Вашник", name = "Разойтись от волны", text = "Предварительное рассредоточение"},
+    ["WaveSpread"] = {group = "Вашник", name = "Разойтись от волны", text = "Заранее разойтись"},
     ["Waves"] = {group = "Вашник", name = "Волны", text = "Волны"},
     ["Soaks"] = {group = "Вашник", name = "Поглощения", text = "Поглощения"},
     ["AoE"] = {group = "Вашник", name = "АоЕ", text = "АоЕ"},
@@ -188,19 +188,19 @@ L[3455] = {
 
 -- The Lost Explorers (3497)
 L[3497] = {
-    -- ["MushroomJump"] = {group = "Trader Abilities", name = "Mushroom Jump", text = "Jump"},
-    -- ["ShreddingShards"] = {group = "Scrollsage Abilities", name = "Tank-Hit", text = "Tank-Hit"},
-    -- ["Fish-Spawn"] = {group = "Trader Abilities", name = "Fish Spawn", text = "Fish Spawn"},
-    -- ["FrostfireVolley"] = {group = "Scrollsage Abilities", name = "Frostfire Volley", text = "Frostfire Debuffs"},
-    -- ["ShellSpinScroll"] = {group = "First Mate Abilities", name = "Shell Spin - Scroll Empowered", text = "Bait"},
-    -- ["MushroomBait"] = {group = "Trader Abilities", name = "Mushroom Bait", text = "Bait"},
-    -- ["BlinkNova"] = {group = "Scrollsage Abilities", name = "Blink Nova", text = "Blink Nova"},
-    -- ["ShellSpinTrader"] = {group = "First Mate Abilities", name = "Shell Spin - Trader Empowered", text = "Bait"},
-    -- ["TimeToThrowNonConditional"] = {group = "Trader Abilities", name = "non-conditional Time to throw Fish", text = "Time to Throw"},
-    -- ["TimeToThrow"] = {group = "Trader Abilities", name = "Time to throw Fish", text = "Time to Throw"},
-    -- ["ShellSpinNormal"] = {group = "First Mate Abilities", name = "Shell Spin Normal", text = "Bait"},
-    -- ["ExplosiveSurprise"] = {group = "Trader Abilities", name = "Bomb Debuff", text = "Bomb inc"},
-    -- ["MightyThud"] = {group = "First Mate Abilities", name = "Soaks", text = "Soaks"},
+    -- ["MushroomJump"] = {group = "Trader Abilities", name = "Прыжок на грибе", text = "Прыжок"},
+    -- ["ShreddingShards"] = {group = "Scrollsage Abilities", name = "Урон по танку", text = "Урон по танку"},
+    -- ["Fish-Spawn"] = {group = "Trader Abilities", name = "Появление рыбы", text = "Появление рыбы"},
+    -- ["FrostfireVolley"] = {group = "Scrollsage Abilities", name = "Залп ледяного огня", text = "Дебаффы (залп ледяного огня)"},
+    -- ["ShellSpinScroll"] = {group = "First Mate Abilities", name = "Крутящийся панцирь - Scroll Empowered", text = "Байт"},
+    -- ["MushroomBait"] = {group = "Trader Abilities", name = "Байт гриба", text = "Байт"},
+    -- ["BlinkNova"] = {group = "Scrollsage Abilities", name = "Скачок-вспышка", text = "Скачок-вспышка"},
+    -- ["ShellSpinTrader"] = {group = "First Mate Abilities", name = "Крутящийся панцирь - Trader Empowered", text = "Байт"},
+    -- ["TimeToThrowNonConditional"] = {group = "Trader Abilities", name = "Пора бросать рыбу (безусловно)", text = "Время для броска"},
+    -- ["TimeToThrow"] = {group = "Trader Abilities", name = "Пора бросать рыбу", text = "Время для броска"},
+    -- ["ShellSpinNormal"] = {group = "First Mate Abilities", name = "Крутящийся панцирь (обычный режим)", text = "Байт"},
+    -- ["ExplosiveSurprise"] = {group = "Trader Abilities", name = "Дебафф бомбы", text = "Бомба"},
+    -- ["MightyThud"] = {group = "First Mate Abilities", name = "Поглощения", text = "Поглощения"},
 }
 
 -- Sszorak (3420)
@@ -219,7 +219,7 @@ L[3421] = {
     ["Adds"] = {group = "Два Клыка", name = "Адды", text = "Адды"},
     ["Soak"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
     ["TankSoak"] = {group = "Два Клыка", name = "Поглощение танка", text = "Поглощение"},
-    ["PreSpread"] = {group = "Два Клыка", name = "Предварительное рассредоточение", text = "Предварительное рассредоточение"},
+    ["PreSpread"] = {group = "Два Клыка", name = "Заранее разойтись", text = "Заранее разойтись"},
     ["WatchSide"] = {group = "Два Клыка", name = "Смотреть по сторонам", text = "Смотреть по сторонам"},
     ["Orbs"] = {group = "Два Клыка", name = "Сферы", text = "Сферы"},
     ["WatchSpawns"] = {group = "Два Клыка", name = "Следить за появлением", text = "Следить за появлением"},
@@ -238,15 +238,15 @@ L[3429] = {
     ["P2Debuffs"] = {group = "Спиральный алтарь [2-я фаза]", name = "Дебаффы (2-я фаза)", text = "Дебаффы"},
     ["P1Taunt"] = {group = "Спиральный алтарь [Танки]", name = "Таунт (1-я фаза)", text = "Провокация"},
     ["P1Frontal"] = {group = "Спиральный алтарь [1-я фаза]", name = "Фронтальный удар (1-я фаза)", text = "Фронтальный удар"},
-    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
-    -- ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
-    -- ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
-    -- ["DreadmarchTargetedP3"] = {group = "Coiled Altar P3", name = "Dreadmarch Target", text = "Targeted"},
-    -- ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
-    -- ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
-    -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
-    -- ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
-    -- ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
+    ["DreadmarchTargeted"] = {group = "Спиральный алтарь [1-я фаза]", name = "Марш ужаса (цель)", text = "Цель"},
+    ["P3Frontal"] = {group = "Спиральный алтарь [3-я фаза]", name = "Фронтальный удар (3-я фаза)", text = "Фронтальный удар"},
+    ["P3Soak"] = {group = "Спиральный алтарь [3-я фаза]", name = "Поглощение (3-я фаза)", text = "Поглощение"},
+    ["DreadmarchTargetedP3"] = {group = "Спиральный алтарь [3-я фаза]", name = "Марш ужаса (цель)", text = "Цель"},
+    ["P3Shield"] = {group = "Спиральный алтарь [3-я фаза]", name = "Щит (3-я фаза)", text = "Щит"},
+    ["P3Debuffs"] = {group = "Спиральный алтарь [3-я фаза]", name = "Дебаффы (3-я фаза)", text = "Дебаффы"},
+    ["P3InterruptAdds"] = {group = "Спиральный алтарь [3-я фаза]", name = "Прерывания у аддов (3-я фаза)", text = "Призраки"},
+    ["P3MindControls"] = {group = "Спиральный алтарь [3-я фаза]", name = "Контроль над разумом (3-я фаза)", text = "Контроль над разумом"},
+    ["P3Taunt"] = {group = "Спиральный алтарь [Танки]", name = "Таунт (3-я фаза)", text = "Провокация"},
 }
 
 -- Ula'tek (3492)
