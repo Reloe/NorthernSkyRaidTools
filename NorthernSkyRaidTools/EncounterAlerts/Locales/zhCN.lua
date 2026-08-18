@@ -140,14 +140,14 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
-    -- ["Waves"]         = {group = "Nymrissa", name = "Waves", text = "Waves"},
-    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
-    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
-    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
-    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
-    -- ["WaterFlurry"]   = {group = "Nymrissa", name = "Iceblade Flurry", text = "Tank-Hit"},
-    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
+     ["Adds"]          = {group = "尼姆瑞莎", name = "诱人水泡（小怪）", text = "小怪刷新"},
+     ["Waves"]         = {group = "尼姆瑞莎", name = "激荡漩涡（观察）", text = "找缺口"},
+     ["Knockback"]     = {group = "尼姆瑞莎", name = "嘭！（击退）", text = "击退"},
+     ["ChillingFrost"] = {group = "尼姆瑞莎", name = "刺骨寒霜（点名）", text = "点名宝珠"},
+     ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
+     ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
+     ["WaterFlurry"]   = {group = "尼姆瑞莎", name = "冰刃乱舞（坦克）", text = "坦克打击"},
+     ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
@@ -220,11 +220,11 @@ L[3421] = {
     ["Defensives"]  = {group = "双子毒牙", name = "搅动深渊（减伤）", text = "减伤"},
     ["Soak"]        = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
     ["PreSpread"]   = {group = "双子毒牙", name = "盘卷脓液（分散）", text = "预分散"},
-    ["WatchSide"]   = {group = "双子毒牙", name = "邪恶洪流（观察）", text = "观察方向"},
+    ["WatchSide"]   = {group = "双子毒牙", name = "邪恶洪流（观察）", text = "看方向"},
     ["Adds"]        = {group = "双子毒牙", name = "剧毒涌现（小怪）", text = "小怪刷新"},
     ["Orbs"]        = {group = "双子毒牙", name = "腐蚀洪流（吃球）", text = "吃球"},
     ["TankSoak"]    = {group = "双子毒牙", name = "碎石击（坦克踩圈）", text = "踩圈"},
-    ["WatchSpawns"] = {group = "双子毒牙", name = "碎石击（观察）", text = "观察顺序"},
+    ["WatchSpawns"] = {group = "双子毒牙", name = "碎石击（观察）", text = "看顺序"},
     ["Knock"]       = {group = "双子毒牙", name = "腐蚀洪流（击退）", text = "击退"},
 }
 
@@ -238,16 +238,16 @@ L[3429] = {
     ["P2Taunt"]       = {group = "盘卷祭坛 坦克", name = "P2 嘲讽", text = "嘲讽"},
     ["P2Debuffs"]     = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]      = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
-    ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "精魂"},
-    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
-    -- ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
-    -- ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
-    -- ["DreadmarchTargetedP3"] = {group = "Coiled Altar P3", name = "Dreadmarch Target", text = "Targeted"},
-    -- ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
-    -- ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
-    -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
-    -- ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
-    -- ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
+    ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
+    -- ["DreadmarchTargeted"]   = {group = "盘卷祭坛 P1", name = "恐惧行军（锁定）", text = "被锁定"},
+    -- ["P3Frontal"]            = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
+    -- ["P3Soak"]               = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
+    -- ["DreadmarchTargetedP3"] = {group = "盘卷祭坛 P3", name = "恐惧行军（锁定）", text = "被锁定"},
+    -- ["P3Shield"]             = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
+    -- ["P3Debuffs"]            = {group = "盘卷祭坛 P3", name = "幽暗炸弹（点名）", text = "点名炸弹"},
+    -- ["P3InterruptAdds"]      = {group = "盘卷祭坛 P3", name = "恐惧哀嚎（打断）", text = "打断小怪"},
+    -- ["P3MindControls"]       = {group = "盘卷祭坛 P3", name = "恐惧行军（心控）", text = "心控"},
+    -- ["P3Taunt"]              = {group = "盘卷祭坛 坦克", name = "P3 嘲讽", text = "嘲讽"},
 }
 
 -- Ula'tek (3492)
