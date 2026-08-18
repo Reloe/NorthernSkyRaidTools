@@ -6,3 +6,4 @@
 - Add some placeholder alerts for Coiled Altar
 - Add search function for sounds on encounter alerts
 - Add setting to allow a Grid-Style Layout for Aura Containers
+- Fix a few Alert Timers for Heroic
