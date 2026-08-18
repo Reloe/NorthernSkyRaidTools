@@ -107,7 +107,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, [1] = {dur = 6}}group = "Sentinels", internalID = "BloodSoakPool", name = "Soak-Pool", text = "Drop Pool", DisplayType = "Circle", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 6}}, group = "Sentinels", internalID = "BloodSoakPool", name = "Soak-Pool", text = "Drop Pool", DisplayType = "Circle", encID = encID, phase = 1, TTS = false, dur = 6,
         textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss2.",
