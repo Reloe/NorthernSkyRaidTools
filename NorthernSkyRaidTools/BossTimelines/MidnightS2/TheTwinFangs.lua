@@ -33,7 +33,7 @@ local mythicData = {
         {name = "Caustic Deluge", spellID = 1289192, category = "tank debuff, spread", phase = 1, times = {9.01, 70.05, 164.06, 225.1, 319.11, 380.15}, duration = 5},
         {name = "Blood Torrent", spellID = 1303230, category = "tank debuff, healing absorb", phase = 1, times = {9.01, 70.05, 164.06, 225.1, 319.11, 380.15}, duration = 5},
         {name = "Stone Breaker", spellID = 1288538, category = "soak, knock", phase = 1, times = {24.52, 27.52, 30.52, 85.53, 88.53, 91.53, 179.58, 182.57, 185.59, 240.6, 243.6, 246.6, 334.61, 337.61, 340.61, 395.65, 398.65, 401.65}, duration = 0},
-        {name = "Venomous Emergence", spellID = 1291404, category = "raid damage, add spawn", phase = 1, times = {36.03, 97.02, 191.08, 252.1, 346.11, 407.15}, duration = 0},
+        {name = "Venomous Emergence", spellID = 1291404, category = "raid damage, add spawn", phase = 1, times = {36.03, 97.02, 191.08, 252.1, 346.11, 407.15}, duration = 20},
         {name = "Coiling Ichor", spellID = 1290809, category = "raid debuff, spread", phase = 1, times = {43.03, 104.03, 198.06, 259.1, 353.11, 414.15}, duration = 12},
         {name = "Stir the Depths", spellID = 1290956, category = "raid aoe", phase = 1, times = {47.05, 108.03, 202.07, 263.11, 357.12, 418.16}, duration = 6},
         {name = "Ravenous Feast", spellID = 1290516, category = "group soak", phase = 1, times = {61.27, 122.28, 216.31, 277.35, 371.36, 432.4}, duration = 0},
