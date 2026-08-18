@@ -1143,7 +1143,7 @@ L["You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00%s|r Group"] = "�
 L["You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"] = "당신은 |cFF00FF00사형 선고|r 맞기 |cFFFF0000%s|r조로 배정됐습니다"
 L["You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00%s|r Group"] = "당신은 |cFF00FF00알른가루 지각 변동|r 맞기 |cFF00FF00%s|r조로 배정됐습니다"
 L["You are assigned to soak |cFF00FF00%s|r"] = "당신은 |cFF00FF00%s|r 맞기에 배정됐습니다"
-L["You are assigned to the |cFF00FF00%s|r Coiled Altar soak"] = "당신은 |cFF00FF00%s|r 똬리의 제단 스킬 맞기에 배정됐습니다"
+L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "당신은 |cFF00FF00%s|r 똬리의 제단 스킬 맞기에 배정됐습니다"
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
 -- ============================================================================

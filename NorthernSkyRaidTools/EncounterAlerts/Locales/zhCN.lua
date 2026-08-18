@@ -146,6 +146,14 @@ L[3379] = {
     -- ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
     -- ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
     -- ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
+    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
+    -- ["Waves"]         = {group = "Nymrissa", name = "Waves", text = "Waves"},
+    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
+    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
+    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
+    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
+    -- ["WaterFlurry"]   = {group = "Nymrissa", name = "Iceblade Flurry", text = "Tank-Hit"},
+    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
@@ -238,6 +246,15 @@ L[3429] = {
     ["P2Shield"]      = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "精魂"},
     -- ["DreadmarchTargeted"] = {group = "盘卷祭坛 P1", name = "恐惧行军（锁定）", text = "被锁定"},
+    -- ["DreadmarchTargeted"] = {group = "Coiled Altar P1", name = "Dreadmarch Target", text = "Targeted"},
+    -- ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
+    -- ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
+    -- ["DreadmarchTargetedP3"] = {group = "Coiled Altar P3", name = "Dreadmarch Target", text = "Targeted"},
+    -- ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
+    -- ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
+    -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
+    -- ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
+    -- ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
 }
 
 -- Ula'tek (3492)

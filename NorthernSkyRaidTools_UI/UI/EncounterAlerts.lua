@@ -256,6 +256,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local groupsByEnc        = {}    -- [encID] = { [groupName] = true } — populated each RebuildScrollData
     local copiedAlertSection = nil
     local SharedAlertDataKeys = {
+        enabled = true,
         DisplayType = true,
         text = true,
         spellID = true,
@@ -293,6 +294,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 sibling[dataKey] = type(newData) == "table" and CopyTable(newData) or newData
                                 if dataKey == "text" and sibling.ReloeReminder == true then
                                     sibling.UserModifiedText = true
+                                end
+                                if dataKey == "enabled" and sibling.ReloeReminder == true then
+                                    sibling.UserModifiedEnabled = true
                                 end
                             end
                         end
@@ -2979,7 +2983,8 @@ local function BuildEncounterAlertsUI(parentFrame)
     )
     local soundDD = CreateDropdown(sndF, nil, soundGetItems, soundGetSelected,
         rightW, 22, "NSUIEncAlertSound",
-        { title = "Sound File", desc = "If you select a sound here it will take priority over any configured TTS. It will still use the TTS-Timer field to determine when to play" })
+        { title = "Sound File", desc = "If you select a sound here it will take priority over any configured TTS. It will still use the TTS-Timer field to determine when to play" },
+        nil, nil, true)
     soundDD:SetPoint("TOPLEFT", sndF, "TOPLEFT", 0, -178)
     sndF.soundDD = soundDD
     end -- SOUND TAB

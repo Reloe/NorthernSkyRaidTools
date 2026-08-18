@@ -27,13 +27,15 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "TankCombo", name = "Tank Combo", text = "Tank Combo", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1277002,
         loadConditions = tankConditions,
         textColors = {1, 0, 0, 1},
-        timers = tankComboTimers,
+        timers = {
+            [15] = tankComboTimers[15],
+            [16] = tankComboTimers[16],
+        },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Sszorak", internalID = "DamageAmp", name = "Damage Amp", text = "Damage Amp", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1286033,
         timers = {
-            [14] = damageAmpTimers[14],
             [15] = damageAmpTimers[15],
             [16] = damageAmpTimers[16],
         },
@@ -109,7 +111,6 @@ NSI.InitializeAlerts[encID] = function(self)
                 tooltip = {title = "ShowSenderNames", desc = "Shows the sender next to each entered number."}},
             { Type = "Button", label = "Create Macros", width = 150,
                 func = [[return function()
-                    
                     local iconIDs = {"137001", "137002", "137003", "137004", "137005", "137006", "137007", "137008"}
                     for i=1, 8 do
                         local macroName = "NSRT_SSZORAK_" .. i

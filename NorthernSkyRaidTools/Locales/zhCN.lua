@@ -1168,7 +1168,7 @@ L["You are assigned to soak |cFF00FF00Gloom|r in the |cFF00FF00%s|r Group"] = "�
 L["You are assigned to soak |cFF00FF00Execution Sentence|r in the |cFFFF0000%s|r Group"] = "光盲先锋军|cFF71D5FF[处决宣判]|r - 分配到|cFFFF0000%s|r分摊"
 L["You are assigned to soak |cFF00FF00Alndust Upheaval|r in the |cFF00FF00%s|r Group"] = "奇美鲁斯|cFF71D5FF[艾林之尘剧变]|r - 分配到|cFF00FF00%s|r分摊"
 L["You are assigned to soak |cFF00FF00%s|r"] = "斯索拉克|cFF71D5FF[毁伤]|r - 分配到|cFF00FF00%s侧|r分摊"
-L["You are assigned to the |cFF00FF00%s|r Coiled Altar soak"] = "盘卷祭坛|cFF71D5FF[处斩]|r - 分配到|cFF00FF00%s|r分摊"
+L["You are assigned to the |cFF00FF00%s|r Guillotine Soak"] = "盘卷祭坛|cFF71D5FF[处斩]|r - 分配到|cFF00FF00%s|r分摊"
 -- ============================================================================
 -- NSUI.lua (Tabs & Sync Popup)
 -- ============================================================================
