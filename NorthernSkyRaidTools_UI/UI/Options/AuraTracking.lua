@@ -38,6 +38,11 @@ local GROW_DIRECTIONS = {
     { label = "CENTERED VERTICAL", value = "CENTER_VERTICAL" },
 }
 
+local GridGrowDirections = {
+    { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
+    { label = "UP", value = "UP" }, { label = "DOWN", value = "DOWN" },
+}
+
 local MULTI_TANK_GROW_DIRECTIONS = {
     { label = "Same as Regular Grow", value = "Same" },
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
@@ -984,6 +989,18 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
             tooltip = tip("Max Icons", "Maximum number of auras to display"),
             get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
+        add({ Type = "Slider", label = "Auras per Row/Column", min = 1, max = 20, step = 1,
+            tooltip = tip("Auras per Row/Column", "Maximum number of aura icons placed in each row or column before the grid grows in its Grid-Grow Direction."),
+            get = function() return s.AurasPerRowColumn or 20 end,
+            set = function(_, v) s.AurasPerRowColumn = v; apply(key) end })
+        add({ Type = "Dropdown", label = "Grid-Grow Direction", values = GridGrowDirections,
+            tooltip = tip("Grid-Grow Direction", "Direction in which the next grid row or column is placed."),
+            get = function() return s.GridGrowDirection or "UP" end,
+            set = function(_, v) s.GridGrowDirection = v; apply(key) end })
+        add({ Type = "Slider", label = "Grid-Spacing", min = -5, max = 50, step = 1,
+            tooltip = tip("Grid-Spacing", "Spacing between rows or columns in the Aura Tracking grid."),
+            get = function() return s.GridSpacing ~= nil and s.GridSpacing or s.Spacing end,
+            set = function(_, v) s.GridSpacing = v; apply(key) end })
         local isCotankTracking = key == "Tank" or (s.Unit and string.lower(strtrim(s.Unit)) == "cotank")
         if isCotankTracking then
             add({ Type = "Checkbox", label = "Only show first tank",
