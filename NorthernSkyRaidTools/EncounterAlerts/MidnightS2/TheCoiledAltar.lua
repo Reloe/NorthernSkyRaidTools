@@ -73,7 +73,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
-            [15] = {7.2, 43.3, 92.3, 128.3, 177.3, 213.3},
+            [15] = {8, 44, 93, 129, 178, 214},
             [16] = {8, 44.6, 93, 129.6, 178, 214.6},
         },
     }
@@ -108,7 +108,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P2", internalID = "P2Debuffs", name = "P2 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
-            [15] = {23.7, 61.7, 108.8, 146.8, 193.8, 231.8},
+            [15] = {24, 62, 109, 147, 194, 232},
             [16] = {20, 55, 105, 140, 190, 225},
         },
     }
