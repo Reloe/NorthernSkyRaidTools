@@ -85,7 +85,7 @@ function NSI:GetSortedPhaseKeys(phaseTimers)
 end
 
 function NSI:GetActiveEncounterTimelineEventCount()
-    return C_EncounterTimeline.GetEventCountBySource(0)
+    return C_EncounterTimeline.GetEventCountBySource(Enum.EncounterTimelineEventSource.Encounter)
 end
 
 function NSI:SortTable(t, reversed)
