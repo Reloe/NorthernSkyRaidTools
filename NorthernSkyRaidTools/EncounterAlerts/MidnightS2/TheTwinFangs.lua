@@ -25,7 +25,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Twin Fangs", internalID = "Soak", text = "Soak", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1290516,
     Ticks = {4.5, 6.5}, barColors = {1, 0, 0, 1},
         timers = {
-            [15] = {67.9, 135.6, 237.3, 305.1, 406.8, 474.6},
+            [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
             [16] = {64.7, 125.7, 216.1, 277.1, 371.1, 432.1},
         },
     }
