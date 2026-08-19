@@ -48,9 +48,15 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Nek'zali", internalID = "HungeringPyre", name = "Hungering Pyre", text = "Soak", DisplayType = "Text", encID = encID, phase = 1.5, TTS = true, dur = 7.5, spellID = 1289855,
-        timers = {
-            [15] = {58.7, 102.7},
-            [16] = {41, 72},
+        phaseTimers = {
+            [15] = {
+                [1.5] =  {58.7, 102.7},
+                [1.75] =  {58.7, 102.7},
+            },
+            [16] = {
+                [1.5] =  {41, 72},
+                [1.75] =  {41, 72},
+            },
         },
     }
     self:AddEncounterAlert(data)
@@ -60,11 +66,13 @@ NSI.InitializeAlerts[encID] = function(self)
             [15] = {
                 [1] = {53, 113},
                 [1.5] = {38, 68},
+                [1.75] = {38, 68},
                 [2] = {23, 63},
             },
             [16] = {
                 [1] = {43, 113},
                 [1.5] = {38, 68},
+                [1.75] = {38, 68},
                 [2] = {28, 68},
             },
         },
@@ -92,7 +100,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
     self:EncounterRegister("NekzaliPhaseDetect", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_SUCCEEDED"}, true, "boss1")
     self:EncounterFunction("NekzaliPhaseDetect", function(_, e, unit)
         local now = GetTime()
-        if e == "UNIT_SPELLCAST_START" then
+        if e == "UNIT_SPELLCAST_START" and self.Phase ~= 1.5 then
             self.NekzaliBoss1SpellcastStartTime = now
             return
         end
@@ -105,27 +113,37 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
             end
             return
         end
-        if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
         local newPhase
-        if self.Phase == 1 then
-            if not self.NekzaliBoss1SpellcastStartTime or not ApproximatelyEqual(now - self.NekzaliBoss1SpellcastStartTime, 1.5, 0.2) then return end
-            local hasSucceededInWindow = false
-            for _, timestamp in ipairs(self.NekzaliBoss1SpellcastSucceededTimes) do
-                local timeSinceSucceeded = now - timestamp
-                if timeSinceSucceeded >= 0.2 and timeSinceSucceeded <= 2 then
-                    hasSucceededInWindow = true
-                    break
+        if e == "UNIT_SPELLCAST_CHANNEL_START" then
+            if self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
+            if self.Phase == 1 then
+                if not self.NekzaliBoss1SpellcastStartTime or not ApproximatelyEqual(now - self.NekzaliBoss1SpellcastStartTime, 1.5, 0.2) then return end
+                local hasSucceededInWindow = false
+                for _, timestamp in ipairs(self.NekzaliBoss1SpellcastSucceededTimes) do
+                    local timeSinceSucceeded = now - timestamp
+                    if timeSinceSucceeded >= 0.2 and timeSinceSucceeded <= 2 then
+                        hasSucceededInWindow = true
+                        break
+                    end
                 end
+                if not hasSucceededInWindow then return end
+                newPhase = 1.5
+            elseif self.Phase == 1.75 then
+                newPhase = 2
             end
-            if not hasSucceededInWindow then return end
-            newPhase = 1.5
-        elseif self.Phase == 1.5 then
-            newPhase = 2
+        elseif e == "UNIT_SPELLCAST_START" and self.Phase == 1.5 then
+            if self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
+            newPhase = 1.75
+        else
+            return
         end
         if not newPhase then return end
         self.Phase = newPhase
         if newPhase == 1.5 then
             self:EncounterRegister("NekzaliPhaseDetect", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_SUCCEEDED"}, false)
+            self:EncounterRegister("NekzaliPhaseDetect", "UNIT_SPELLCAST_START", true, "boss2")
+        elseif newPhase == 1.75 then
+            self:EncounterRegister("NekzaliPhaseDetect", "UNIT_SPELLCAST_START", false)
         end
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
