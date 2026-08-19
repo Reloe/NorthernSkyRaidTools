@@ -74,7 +74,7 @@ NSI.AuraSoundCategories = {
         {key = 3470, entries = { -- Nek'zali the Soulcoiler
             {spellID = 1306666, sound = "Targeted"}, -- Hungering Pyre
             {spellID = 1294933, sound = "Clear"}, -- Slithering Flame
-            {spellID = 1287434, sound = "Debuff"}, -- Essence Rend
+            {spellID = 1287427, sound = "Debuff"}, -- Essence Rend
         }},
         {key = 3445, entries = { -- Entombed Sentinels
             {spellID = 1288260, sound = "Targeted"}, -- Unstable Miasma
