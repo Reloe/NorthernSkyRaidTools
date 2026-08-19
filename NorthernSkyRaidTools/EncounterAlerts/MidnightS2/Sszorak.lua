@@ -21,9 +21,9 @@ local venomousSurgeCastTimers = {
     [16] = {}, -- TODO
 }
 
--- measured on normal and heroic
--- TODO: mythic?
-local venomousSurgeSampleOffsets = {3, 5}
+-- boss1target briefly changes to the bomb target during the venomous surge cast.
+-- these offsets are the midpoint of when the target change happens. First one is ~halfway, 2nd one is ~on complete
+local venomousSurgeSampleOffsets = {2.35, 4.35}
 local bombDuration = 10
 
 NSI.InitializeAlerts[encID] = function(self)
