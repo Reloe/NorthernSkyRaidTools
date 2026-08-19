@@ -25,17 +25,6 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    --[[
-    local data = {group = "Coiled Altar P1", internalID = "DreadmarchTargeted", name = "Dreadmarch Target", text = "Targeted", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 4,
-        textColors = {1, 0, 0, 1}, spellID = 1297445, isSpecialDisplay = true,
-        timers = {
-            [15] = {},
-            [16] = {},
-        },
-    }
-    self:AddEncounterAlert(data)
-    ]]
-
     local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8,
         textColors = {1, 0, 0, 1}, spellID = 1299684,
         isConditional = {
@@ -73,7 +62,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
-            [15] = {7.2, 43.3, 92.3, 128.3, 177.3, 213.3},
+            [15] = {8, 44, 93, 129, 178, 214},
             [16] = {8, 44.6, 93, 129.6, 178, 214.6},
         },
     }
@@ -108,7 +97,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P2", internalID = "P2Debuffs", name = "P2 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
-            [15] = {23.7, 61.7, 108.8, 146.8, 193.8, 231.8},
+            [15] = {24, 62, 109, 147, 194, 232},
             [16] = {20, 55, 105, 140, 190, 225},
         },
     }
@@ -148,15 +137,6 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P3", internalID = "P3Soak", name = "P3 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 8, spellID = 1299266,
         loadConditions = tankConditions,
-        timers = {
-            [15] = {},
-            [16] = {},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Coiled Altar P3", internalID = "DreadmarchTargetedP3", name = "Dreadmarch Target", text = "Targeted", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 4,
-        textColors = {1, 0, 0, 1}, spellID = 1297445, isSpecialDisplay = true,
         timers = {
             [15] = {},
             [16] = {},
@@ -212,26 +192,6 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
     ]=]
-end
-
-NSI.EncounterAlertStart[encID] = function(self, id)
-    local difficulty = id or self:DifficultyCheck({15, 16})
-    local alert = difficulty and NSRT.EncounterAlerts[encID][difficulty].DreadmarchTargeted
-    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
-
-    self:EncounterFunction("CoiledAltarTargeted", function(_, event)
-        if event ~= "ENCOUNTER_WARNING" or self.Phase ~= alert.phase or not self.PhaseSwapTime then return end
-
-        local elapsed = GetTime() - self.PhaseSwapTime
-        for _, timer in ipairs(alert.timers[difficulty]) do
-            if ApproximatelyEqual(elapsed, timer, 1) then
-                local info = self:CreateReminder(CopyTable(alert), true)
-                self:DisplayReminder(info)
-                return
-            end
-        end
-    end)
-    self:EncounterRegister("CoiledAltarTargeted", "ENCOUNTER_WARNING", true)
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START

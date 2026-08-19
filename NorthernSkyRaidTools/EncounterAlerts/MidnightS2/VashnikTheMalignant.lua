@@ -48,7 +48,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Vashnik", internalID = "Infection", name = "Infection", text = "Infection", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1282114,
         timers = {
-            [15] = {42.3, 101.8, 126.1, 185.8, 210.3, 269.5, 294.6, 353.2, 378.1, 437.2, 462.3},
+            [15] = {42.3, 95, 126, 171, 210.3, 263, 294.6, 347, 378.1, 431, 462.3},
             [16] = {42.3, 101.8, 126.1, 185.8, 210.3, 269.5, 294.6, 353.2, 378.1, 437.2, 462.3},
         },
     }
@@ -72,16 +72,16 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Vashnik", internalID = "Waves", name = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1281908,
         timers = {
-            [15] = {21.1, 62.1, 98.1, 146.1, 182.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
-            [16] = {21.1, 62.1, 98.1, 146.1, 182.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
+            [15] = {21, 62, 95, 146, 179, 230, 263, 314, 347, 398, 431, 482},
+            [16] = {21.1, 62.1, 98.1, 146.1, 179.1, 230.1, 266.1, 314.1, 350.1, 398.1, 434.2, 482},
         },
     }
     self:AddEncounterAlert(data)
     local data = {group = "Vashnik", internalID = "WaveSpread", name = "Wave-Spread", text = "Pre-Spread", DisplayType = "Circle", encID = encID, phase = 1, TTS = "Spread", dur = 6, spellID = 1281908,
         loadConditions = nontankConditions,
         timers = {
-            [15] = {13.1, 54.1, 90, 138, 174.1, 222.1, 258.1, 306.1, 342.1, 390.1, 426.2, 474.2},
-            [16] = {13.1, 54.1, 90, 138, 174.1, 222.1, 258.1, 306.1, 342.1, 390.1, 426.2, 474.2},
+            [15] = {13, 54, 87, 138, 171, 222, 255, 306, 339, 390, 423, 474},
+            [16] = {13.1, 54.1, 90, 138, 171.1, 222.1, 258.1, 306.1, 342.1, 390.1, 426.2, 474.2},
         },
     }
     self:AddEncounterAlert(data)
