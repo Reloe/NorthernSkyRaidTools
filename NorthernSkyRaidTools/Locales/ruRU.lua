@@ -1165,9 +1165,9 @@ L["This Alert only shows if you are not a tank or have threat on boss2."] = "Э�
 L["This Alert only shows if you are within 40y of boss1."] = "Это оповещение отображается только тогда, если Вы находитесь в радиусе 40 ярдов от босса 1."
 L["This Alert only shows if you are within 40y of boss2."] = "Это оповещение отображается только тогда, если Вы находитесь в радиусе 40 ярдов от босса 2."
 L["This Alert only shows if you are holding a crystal at that time."] = "Это оповещение отображается только тогда, если Вы в этот момент держите кристалл."
-L["This Alert only shows if Trader Gebbo was empowered"] = "Это оповещение отображается только тогда, если Trader Gebbo был усилен."
-L["This Alert only shows if First Mate Nama was empowered"] = "Это оповещение отображается только тогда, если First Mate Nama был усилен."
-L["This Alert only shows if Scrollsage Iku was empowered"] = "Это оповещение отображается только тогда, если Scrollsage Iku был усилен."
+L["This Alert only shows if Trader Gebbo was empowered"] = "Это оповещение отображается только тогда, если Торговец Геббо был усилен."
+L["This Alert only shows if First Mate Nama was empowered"] = "Это оповещение отображается только тогда, если Первый помощник Нама был усилен."
+L["This Alert only shows if Scrollsage Iku was empowered"] = "Это оповещение отображается только тогда, если Хранительница свитков Ику была усилена."
 L["This Alert only shows if you are holding the fish at the time."] = "Это оповещение отображается только тогда, если Вы в этот момент держите рыбу."
 -- Preview
 L["|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders."] = "|cFFFF0000NSRT:|r предпросмотр отключен, так как у Вас оповещения отображаются через TimelineReminders."
