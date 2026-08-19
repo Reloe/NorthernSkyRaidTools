@@ -163,15 +163,15 @@ L[3470] = {
 -- Entombed Sentinels (3445)
 L[3445] = {
     ["BloodSoakPool"] = {group = "Стражи", name = "Поглощение лужи", text = "Оставить лужу"},
-    ["BloodHits"] = {group = "Стражи", name = "Урон по танку (кровь)", text = "Урон по танку"},
-    ["BloodDispels"] = {group = "Стражи", name = "Рассеивания (кровь)", text = "Рассеивания"},
+    ["BloodHits"] = {group = "Стражи", name = "Урон по танку (Кровь)", text = "Урон по танку"},
+    ["BloodDispels"] = {group = "Стражи", name = "Рассеивания (Кровь)", text = "Рассеивания"},
     ["TransitionDebuffs"] = {group = "Стражи", name = "Дебаффы (переходная фаза)", text = "Игра чисел"},
     ["PoisonHits"] = {group = "Стражи", name = "Урон по танку (яд)", text = "Урон по танку"},
     ["ShiftingProtovenom"] = {group = "Стражи", name = "Изменчивый протояд", text = "Разойтись"},
     ["OrbSpawn"] = {group = "Стражи", name = "Появление сферы", text = "Байт сферы"},
     ["BloodDropPool"] = {group = "Стражи", name = "Оставить лужу (танк)", text = "Оставить лужу"},
     ["PoisonAdd"] = {group = "Стражи", name = "Ядовитый адд", text = "Ядовитый адд"},
-    ["BloodSoak"] = {group = "Стражи", name = "Поглощение (кровь)", text = "Поглощение (кровь)"},
+    ["BloodSoak"] = {group = "Стражи", name = "Поглощение (Кровь)", text = "Поглощение (Кровь)"},
 }
 
 -- Vashnik the Malignant (3455)
@@ -188,19 +188,19 @@ L[3455] = {
 
 -- The Lost Explorers (3497)
 L[3497] = {
-    -- ["MushroomJump"] = {group = "Trader Abilities", name = "Прыжок на грибе", text = "Прыжок"},
-    -- ["ShreddingShards"] = {group = "Scrollsage Abilities", name = "Урон по танку", text = "Урон по танку"},
-    -- ["Fish-Spawn"] = {group = "Trader Abilities", name = "Появление рыбы", text = "Появление рыбы"},
-    -- ["FrostfireVolley"] = {group = "Scrollsage Abilities", name = "Залп ледяного огня", text = "Дебаффы (залп ледяного огня)"},
-    -- ["ShellSpinScroll"] = {group = "First Mate Abilities", name = "Крутящийся панцирь - Scroll Empowered", text = "Байт"},
-    -- ["MushroomBait"] = {group = "Trader Abilities", name = "Байт гриба", text = "Байт"},
-    -- ["BlinkNova"] = {group = "Scrollsage Abilities", name = "Скачок-вспышка", text = "Скачок-вспышка"},
-    -- ["ShellSpinTrader"] = {group = "First Mate Abilities", name = "Крутящийся панцирь - Trader Empowered", text = "Байт"},
-    -- ["TimeToThrowNonConditional"] = {group = "Trader Abilities", name = "Пора бросать рыбу (безусловно)", text = "Время для броска"},
-    -- ["TimeToThrow"] = {group = "Trader Abilities", name = "Пора бросать рыбу", text = "Время для броска"},
-    -- ["ShellSpinNormal"] = {group = "First Mate Abilities", name = "Крутящийся панцирь (обычный режим)", text = "Байт"},
-    -- ["ExplosiveSurprise"] = {group = "Trader Abilities", name = "Дебафф бомбы", text = "Бомба"},
-    -- ["MightyThud"] = {group = "First Mate Abilities", name = "Поглощения", text = "Поглощения"},
+    ["MushroomJump"] = {group = "Способности Торговца Геббо", name = "Прыжок на грибе", text = "Прыжок"},
+    ["ShreddingShards"] = {group = "Способности Хранительницы свитков Ику", name = "Урон по танку", text = "Урон по танку"},
+    ["Fish-Spawn"] = {group = "Способности Торговца Геббо", name = "Появление рыбы", text = "Появление рыбы"},
+    ["FrostfireVolley"] = {group = "Способности Хранительницы свитков Ику", name = "Залп ледяного огня", text = "Дебаффы (залп ледяного огня)"},
+    ["ShellSpinScroll"] = {group = "Способности Первого помощника Нама", name = "Крутящийся панцирь - Scroll Empowered", text = "Байт"},
+    ["MushroomBait"] = {group = "Способности Торговца Геббо", name = "Байт гриба", text = "Байт"},
+    ["BlinkNova"] = {group = "Способности Хранительницы свитков Ику", name = "Скачок-вспышка", text = "Скачок-вспышка"},
+    ["ShellSpinTrader"] = {group = "Способности Первого помощника Нама", name = "Крутящийся панцирь - Trader Empowered", text = "Байт"},
+    ["TimeToThrowNonConditional"] = {group = "Способности Торговца Геббо", name = "Пора бросать рыбу (безусловно)", text = "Время для броска"},
+    ["TimeToThrow"] = {group = "Способности Торговца Геббо", name = "Пора бросать рыбу", text = "Время для броска"},
+    ["ShellSpinNormal"] = {group = "Способности Первого помощника Нама", name = "Крутящийся панцирь (обычный режим)", text = "Байт"},
+    ["ExplosiveSurprise"] = {group = "Способности Торговца Геббо", name = "Дебафф бомбы", text = "Бомба"},
+    ["MightyThud"] = {group = "Способности Первого помощника Нама", name = "Поглощения", text = "Поглощения"},
 }
 
 -- Sszorak (3420)
