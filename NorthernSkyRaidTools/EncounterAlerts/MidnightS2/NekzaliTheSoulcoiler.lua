@@ -13,12 +13,12 @@ NSI.InitializeAlerts[encID] = function(self)
         textColors = {1, 0, 0, 1}, spellID = 1284103,
         phaseTimers = {
             [15] ={
-                {34.1, 70, 116.9, 146, 198.8, 227.9},
-                {56.1, 106.1, 156.1, 205.1}
+                {34, 70, 105, 141, 176, 212},
+                {51, 79},
             },
             [16] ={
-                {34, 70},
-                {50, 78}
+                {34, 70, 105, 141, 176, 212},
+                {51, 79},
             }
         },
     }
@@ -29,10 +29,11 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {14.5, 54.5, 85.5, 125.5},
+                {54.6},
             },
             [16] = {
-                {20, 60.5, 91},
-                {54},
+                {14.5, 54.5, 85.5, 125.5},
+                {54.6},
             },
         },
     }
@@ -41,8 +42,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "SoulcoilIgnition", name = "Soulcoil Ignition", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
         loadConditions = nonTankConditions, spellID = 1293664,
         timers = {
-            [15] = {77.8},
-            [16] = {75.1},
+            [15] = {76.8},
+            [16] = {76.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -50,12 +51,12 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "HungeringPyre", name = "Hungering Pyre", text = "Soak", DisplayType = "Text", encID = encID, phase = 1.5, TTS = true, dur = 7.5, spellID = 1289855,
         phaseTimers = {
             [15] = {
-                [1.5] =  {58.7, 102.7},
-                [1.75] =  {58.7, 102.7},
+                [1.5] =  {35},
+                [1.75] =  {35},
             },
             [16] = {
-                [1.5] =  {41, 72},
-                [1.75] =  {41, 72},
+                [1.5] =  {35},
+                [1.75] =  {35},
             },
         },
     }
@@ -64,16 +65,16 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "RestlessAmani", name = "Add-Spawn", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1295397,
         phaseTimers = {
             [15] = {
-                [1] = {53, 113},
-                [1.5] = {38, 68},
-                [1.75] = {38, 68},
-                [2] = {23, 63},
+                [1] = {54, 121},
+                [1.5] = {56.6},
+                [1.75] = {56.6},
+                [2] = {35, 75, 115},
             },
             [16] = {
-                [1] = {43, 113},
-                [1.5] = {38, 68},
-                [1.75] = {38, 68},
-                [2] = {28, 68},
+                [1] = {54, 121},
+                [1.5] = {56.6},
+                [1.75] = {56.6},
+                [2] = {35, 75, 115},
             },
         },
     }
@@ -81,14 +82,14 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nek'zali", internalID = "Invoke", name = "Invoke", text = "Dodge", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 8, spellID = 1299673,
         timers = {
-            [15] = {22, 50, 72, 100, 122, 150, 172, 200, 222},
+            [15] = {18, 66, 98},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Nek'zali", internalID = "InvokeMythic", name = "Invoke", text = "Stop Cast", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 8, spellID = 1299673,
         timers = {
-            [16] = {15, 65, 95},
+            [16] = {18, 66, 98},
         },
     }
     self:AddEncounterAlert(data)
