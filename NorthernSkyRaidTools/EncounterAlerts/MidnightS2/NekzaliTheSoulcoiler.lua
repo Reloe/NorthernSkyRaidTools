@@ -122,6 +122,7 @@ NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
                 newPhase = 2
             end
         elseif e == "UNIT_SPELLCAST_START" and self.Phase == 1.5 then
+            if GetTime() - self.PhaseSwapTime < 25 then return end
             if self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
             newPhase = 1.75
         else
