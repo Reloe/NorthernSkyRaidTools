@@ -10,7 +10,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nymrissa", internalID = "Adds", name = "Add-Spawn", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = 208309,
         timers = {
-            [15] = {32, 149, 266, 383, 500},
+            [15] = {26.2, 70.1, 137.1, 180.1, 246.3, 290, 356.2, 401.2},
             [16] = {32, 149, 266, 383, 500},
         },
     }
@@ -26,7 +26,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nymrissa", internalID = "Knockback", name = "Knockback", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = 1258150,
         timers = {
-            [15] = {77, 194, 311, 428, 545},
+            [15] = {120, 230, 340.1, 450.1},
             [16] = {81, 198, 315, 432, 549},
         },
     }
@@ -34,7 +34,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nymrissa", internalID = "ChillingFrost", name = "Chilling Frost", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = 1313393,
         timers = {
-            [15] = {33, 53, 104, 150, 170, 220, 267, 287, 338, 384, 404, 454, 501, 521, 572},
+            [15] = {37, 81, 147, 191, 257, 301, 367, 411},
             [16] = {3, 34, 58, 104, 120, 151, 175, 221, 237, 268, 292, 338, 354, 385, 409, 455, 471, 502, 526},
         },
     }
@@ -42,7 +42,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nymrissa", internalID = "AbyssalRain", name = "Abyssal Rain", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = 1260837,
         timers = {
-            [15] = {5, 122, 239, 356, 473, 590},
+            [15] = {10, 43, 87, 153, 197, 263, 307, 373.1, 417},
             [16] = {11, 128, 245, 362, 479, 596},
         },
     }
@@ -60,14 +60,14 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Nymrissa", internalID = "WaterFlurry", name = "Iceblade Flurry", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = 1282937,
+    local data = {Version = {versionNumber = 1, [1] = {name = "Iceblade Flurry"}}, group = "Nymrissa", internalID = "WaterFlurry", name = "Iceblade Flurry", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5, spellID = 1282937,
         textColors = {1, 0, 0, 1},
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
             func = [=[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]=],
         },
         timers = {
-            [15] = {16, 46, 95, 133, 163, 212, 250, 280, 329, 367, 397, 446, 484, 514, 563},
+            [15] = {29, 51, 73, 95, 139, 161, 183, 205, 249, 271, 293, 315, 359, 381.1, 403, 425},
         },
     }
     self:AddEncounterAlert(data)
@@ -79,7 +79,7 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [=[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]=],
         },
         timers = {
-            [15] = {23, 53, 102, 140, 170, 219, 257, 287, 336, 374, 404, 453, 491, 521, 570},
+            [15] = {35, 57, 79, 101, 145, 167, 189, 211, 255, 277, 299, 321, 365, 387.1, 409, 431},
             [16] = {27, 56, 96, 144, 173, 213, 261, 290, 330, 378, 407, 447, 495, 524, 564},
         },
     }
