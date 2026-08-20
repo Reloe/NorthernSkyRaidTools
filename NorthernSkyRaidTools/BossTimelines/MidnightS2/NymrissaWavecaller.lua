@@ -15,6 +15,7 @@ local heroicData = {
         {name = "Frost Orb", spellID = 1313448, category = "raid damage, soak, raid dot", phase = 1, times = {43, 87, 153, 197, 263.03, 307.02, 373.03, 417.04, 483.05, 527.06}, duration = 20},
         {name = "Swirling Whirlpools", spellID = 1258673, category = "movement", phase = 1, times = {110.96, 221, 331.02, 441.03}, duration = 0},
         {name = "Pop!", spellID = 1258150, category = "raid damage, knock", phase = 1, times = {119.96, 230.01, 340.03, 450.05}, duration = 0},
+        {name = "Murloc Wave", spellID = 1259098, category = "add spawn", phase = 1, times = {24.99, 68.99, 135.01, 179, 245.01, 289.02, 355.04, 399.04}, duration = 0},
     },
 }
 
@@ -31,6 +32,7 @@ local mythicData = {
         {name = "Frost Orb", spellID = 1313448, category = "raid damage, soak, raid dot", phase = 1, times = {44.07, 88.06, 154.05, 198.06, 264.09, 308.09, 374.09, 418.07, 484.11, 528.09}, duration = 20},
         {name = "Swirling Whirlpools", spellID = 1258673, category = "movement", phase = 1, times = {110.96, 221, 331.02, 441.03}, duration = 0},
         {name = "Pop!", spellID = 1258150, category = "raid damage, knock", phase = 1, times = {119.96, 230.01, 340.03, 450.05}, duration = 0},
+        {name = "Murloc Wave", spellID = 1259098, category = "add spawn", phase = 1, times = {24.99, 68.99, 135.01, 179, 245.01, 289.02, 355.04, 399.04}, duration = 0},
     },
 }
 
