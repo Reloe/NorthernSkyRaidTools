@@ -251,14 +251,16 @@ L[3429] = {
 
 -- Ula'tek (3492)
 L[3492] = {
-    --[[
-    ["HitKnock"]      = {group = "乌拉特克 坦克", name = "蛇母之怒（坦克）", text = "坦克打击"},
-    ["Taunt"]         = {group = "乌拉特克 坦克", name = "嘲讽", text = "嘲讽"},
-    ["Waves"]         = {group = "乌拉特克 P1", name = "腐蚀浪潮", text = "波浪"},
-    ["Adds"]          = {group = "乌拉特克 P1", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
-    ["DamageAmpIn"]   = {group = "乌拉特克 P1", name = "被缚之怒（易伤）", text = "准备易伤"},
-    ["DamageAmp"]     = {group = "乌拉特克 P1", name = "易伤倒计时", text = "易伤"},
-    ["PlatformBreak"] = {group = "乌拉特克 P3", name = "盘绕猎物（场地）", text = "摧毁平台+击退"},
-    ["Debuffs"]       = {group = "乌拉特克 P3", name = "毒蛇之咬（点名）", text = "点名毒液"},
-    ]]
+    -- ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
+    -- ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
+    -- ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
+    -- ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
+    -- ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
+    -- ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
+    -- ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
+    -- ["Adds"]                = {group = "Ula'tek", name = "P3 Adds", text = "Adds"},
+    -- ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
+    -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
+    -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
+    -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
 }

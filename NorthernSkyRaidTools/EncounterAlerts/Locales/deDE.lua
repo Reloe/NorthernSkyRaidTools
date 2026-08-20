@@ -250,12 +250,16 @@ L[3429] = {
 
 -- Ula'tek (3492)
 L[3492] = {
-    -- ["HitKnock"]      = {group = "Ula'tek Tanks", name = "P1 Hit+Knock", text = "Hit+Knock"},
-    -- ["Taunt"]         = {group = "Ula'tek Tanks", name = "P1 Taunt", text = "Taunt"},
-    -- ["Waves"]         = {group = "Ula'tek P1", name = "Waves", text = "Waves"},
-    -- ["Adds"]          = {group = "Ula'tek P1", name = "Adds", text = "Adds"},
-    -- ["DamageAmpIn"]   = {group = "Ula'tek P1", name = "Dmg amp", text = "Dmg amp in"},
-    -- ["DamageAmp"]     = {group = "Ula'tek P1", name = "Dmg amp Bar", text = "Dmg amp"},
-    -- ["PlatformBreak"] = {group = "Ula'tek P3", name = "Platform Break", text = "Platform Break + Knock"},
-    -- ["Debuffs"]       = {group = "Ula'tek P3", name = "Debuffs", text = "Debuffs"},
+    -- ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
+    -- ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
+    -- ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
+    -- ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
+    -- ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
+    -- ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
+    -- ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
+    -- ["Adds"]                = {group = "Ula'tek", name = "P3 Adds", text = "Adds"},
+    -- ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
+    -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
+    -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
+    -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
 }
