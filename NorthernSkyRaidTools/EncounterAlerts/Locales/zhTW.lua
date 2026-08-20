@@ -230,6 +230,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]     = {group = "盤蛇祭壇 P1", name = "P1 頭前", text = "頭前"},
+    -- ["P1OrbDeadline"] = {group = "Coiled Altar P1", name = "Orb deadline", text = "Orb deadline"},
     ["P1Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P1 嘲諷", text = "嘲諷"},
     ["P1Soak"]        = {group = "盤蛇祭壇 P1", name = "P1 分傷", text = "分傷"},
     ["MindControls"]  = {group = "盤蛇祭壇 P2", name = "心控", text = "心控"},

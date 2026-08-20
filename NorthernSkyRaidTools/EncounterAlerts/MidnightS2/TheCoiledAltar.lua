@@ -32,8 +32,16 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {23, 40.0, 60.0, 77.1, 108.1, 125, 145, 162.1},
-            [16] = {23, 40.0, 60.0, 77.1, 108.1, 125, 145, 162.1},
+            [15] = {23, 40, 60, 77.1, 108.1, 125, 145, 162.1},
+            [16] = {23, 40, 60, 77.1, 108.1, 125, 145, 162.1},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P1", internalID = "P1OrbDeadline", name = "Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
+        timers = {
+            [15] = {17, 34, 54, 71.1, 102.1, 119, 139, 156.1},
+            [16] = {17, 34, 54, 71.1, 102.1, 119, 139, 156.1},
         },
     }
     self:AddEncounterAlert(data)
@@ -45,8 +53,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {23.6, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
-            [16] = {23.6, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
+            [15] = {40.5, 77.6, 125.5, 162.6},
+            [16] = {40.5, 77.6, 125.5, 162.6},
         },
     }
     self:AddEncounterAlert(data)
