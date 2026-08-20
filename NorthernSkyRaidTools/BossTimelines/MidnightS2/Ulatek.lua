@@ -19,6 +19,8 @@ local heroicData = {
         {name = "Venomous Heart", spellID = 1299526, category = "damage amp", phase = 1, times = {135.52, 284.57}, duration = 20},
         {name = "Hatching Doom", spellID = 1306862, category = "add spawn", phase = 1, times = {164.17}, duration = 0},
         {name = "Malice", spellID = 1290779, category = "raid aoe, interrupt", phase = 1, times = {175.05, 202.58}, duration = 0},
+        {name = "Grasping Fangs", spellID = 1301117, category = "debuffs, movement", phase = 1, times = {190.1, 199.6, 209.1, 218.6, 228.1, 237.6, 247.1, 256.6}, duration = 4},
+        {name = "Blight Vein", spellID = 1311609, category = "raid damage", phase = 1, times = {194.1, 203.6, 213.1, 222.6, 232.1, 241.6, 251.1, 260.6}, duration = 6},
         {name = "Malignant Shell", spellID = 1295360, category = "movement", phase = 1, times = {220}, duration = 10},
         {name = "Call of the Serpent", spellID = 1300751, category = "add spawn", phase = 1, times = {371.23, 401.23, 446.24, 506.26}, duration = 0},
         {name = "Writhing Gestation", spellID = 1290990, category = "add spawn", phase = 1, times = {372.26, 402.25, 447.25, 507.26}, duration = 0},
