@@ -221,7 +221,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local initiator = ...
         self.ProcessDone = false
         if self:DifficultyCheck({14, 15, 16, 23}) then
-            self:ShowReadyCheckConsumables(initiator)
+            if NSRT.ReadyCheckSettings.ConsumablesDisplay then
+                self:ShowReadyCheckConsumables(initiator)
+            else
+                self:HideReadyCheckConsumables()
+            end
             C_Timer.After(1, function()
                 self:EventHandler("NSI_READY_CHECK", false, true)
             end)
