@@ -244,6 +244,8 @@ NSI.EncounterAlertStop[encID] = function(self)
     self:EncounterRegister("SszorakWinds", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
     if self.IsSszorakWindsPreview and self.WindsFrame then
         self:MakeDraggable(self.WindsFrame, nil, false)
+        NSRT.EncounterAlerts[encID][15].WindsHelper = NSRT.EncounterAlerts[encID][16].WindsHelper
+        NSRT.EncounterAlerts[encID][14].WindsHelper = NSRT.EncounterAlerts[encID][16].WindsHelper
     end
     self.IsSszorakWindsPreview = false
     if self.WindsResetTimers then
