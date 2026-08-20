@@ -252,6 +252,9 @@ local function BuildReadyCheckOptions()
             get = function() return NSRT.ReadyCheckSettings.ConsumablesDisplay end,
             set = function(self, fixedparam, value)
                 NSRT.ReadyCheckSettings.ConsumablesDisplay = value
+                if not value then
+                    NSI:HideReadyCheckConsumables()
+                end
             end,
             nocombat = true,
         },
