@@ -240,13 +240,13 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "똬리의 제단 2페", name = "2페 디버프", text = "디버프"},
     ["P2Shield"]        = {group = "똬리의 제단 2페", name = "2페 보호막", text = "보호막"},
     ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
-    -- ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
-    -- ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
-    -- ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
-    -- ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
+    ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
+    ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
+    ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
+    ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
     -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
-    -- ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
-    -- ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
+    ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
+    ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
 }
 
 -- Ula'tek (3492)

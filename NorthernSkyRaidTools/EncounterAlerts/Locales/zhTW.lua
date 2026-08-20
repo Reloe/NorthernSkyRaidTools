@@ -239,13 +239,13 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "盤蛇祭壇 P2", name = "P2 Debuff", text = "Debuff"},
     ["P2Shield"]      = {group = "盤蛇祭壇 P2", name = "P2 盾", text = "P2 盾"},
     ["InterruptAdds"] = {group = "盤蛇祭壇 P2", name = "P2 打斷小怪", text = "鬼"},
-    -- ["P3Frontal"] = {group = "盤蛇祭壇 P3", name = "P3 頭前", text = "頭前"},
-    -- ["P3Soak"] = {group = "盤蛇祭壇 P3", name = "P3 分傷", text = "分傷"},
-    -- ["P3Shield"] = {group = "盤蛇祭壇 P3", name = "P3 盾", text = "盾"},
-    -- ["P3Debuffs"] = {group = "盤蛇祭壇 P3", name = "P3 Debuff", text = "Debuff"},
+    ["P3Frontal"] = {group = "盤蛇祭壇 P3", name = "P3 頭前", text = "頭前"},
+    ["P3Soak"] = {group = "盤蛇祭壇 P3", name = "P3 分傷", text = "分傷"},
+    ["P3Shield"] = {group = "盤蛇祭壇 P3", name = "P3 盾", text = "盾"},
+    ["P3Debuffs"] = {group = "盤蛇祭壇 P3", name = "P3 Debuff", text = "Debuff"},
     -- ["P3InterruptAdds"] = {group = "盤蛇祭壇 P3", name = "P3 打斷小怪", text = "鬼"},
-    -- ["P3MindControls"] = {group = "盤蛇祭壇 P3", name = "P3 心控", text = "心控"},
-    -- ["P3Taunt"] = {group = "盤蛇祭壇 坦克", name = "P3 嘲諷", text = "嘲諷"},
+    ["P3MindControls"] = {group = "盤蛇祭壇 P3", name = "P3 心控", text = "心控"},
+    ["P3Taunt"] = {group = "盤蛇祭壇 坦克", name = "P3 嘲諷", text = "嘲諷"},
 }
 
 -- Ula'tek (3492)

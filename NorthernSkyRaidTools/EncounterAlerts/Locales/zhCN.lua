@@ -240,13 +240,13 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]      = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    -- ["P3Frontal"]            = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
-    -- ["P3Soak"]               = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
-    -- ["P3Shield"]             = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
-    -- ["P3Debuffs"]            = {group = "盘卷祭坛 P3", name = "幽暗炸弹（点名）", text = "点名炸弹"},
+    ["P3Frontal"]            = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
+    ["P3Soak"]               = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
+    ["P3Shield"]             = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
+    ["P3Debuffs"]            = {group = "盘卷祭坛 P3", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     -- ["P3InterruptAdds"]      = {group = "盘卷祭坛 P3", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    -- ["P3MindControls"]       = {group = "盘卷祭坛 P3", name = "恐惧行军（心控）", text = "心控"},
-    -- ["P3Taunt"]              = {group = "盘卷祭坛 坦克", name = "P3 嘲讽", text = "嘲讽"},
+    ["P3MindControls"]       = {group = "盘卷祭坛 P3", name = "恐惧行军（心控）", text = "心控"},
+    ["P3Taunt"]              = {group = "盘卷祭坛 坦克", name = "P3 嘲讽", text = "嘲讽"},
 }
 
 -- Ula'tek (3492)

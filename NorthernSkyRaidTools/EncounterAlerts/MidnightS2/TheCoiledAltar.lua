@@ -11,8 +11,8 @@ local p1SoakTimers = {
 }
 
 local p3SoakTimers = {
-    [15] = {},
-    [16] = {},
+    [15] = {22.3, 191.3},
+    [16] = {22.3, 191.3},
 }
 
 NSI.InitializeAlerts[encID] = function(self)
@@ -70,8 +70,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
-            [15] = {8, 44, 93, 129, 178, 214},
-            [16] = {8, 44.6, 93, 129.6, 178, 214.6},
+            [15] = {8.1, 44.7, 93.1, 129},
+            [16] = {8.1, 44.7, 93.1, 129},
         },
     }
     self:AddEncounterAlert(data)
@@ -83,8 +83,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {37.7, 68.7, 122.8, 153.8, 207.8, 238.8},
-            [16] = {38, 69, 123, 154, 208, 239},
+            [15] = {38.1, 69, 100},
+            [16] = {38.1, 69, 100},
         },
     }
     self:AddEncounterAlert(data)
@@ -96,8 +96,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {38.2, 69.2, 123.3, 154.3, 208.3, 239.3},
-            [16] = {38.5, 69.5, 123.5, 154.5, 208.5, 239.5},
+            [15] = {38.6, 69.5, 100.5},
+            [16] = {38.6, 69.5, 100.5},
         },
     }
     self:AddEncounterAlert(data)
@@ -105,8 +105,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P2", internalID = "P2Debuffs", name = "P2 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
-            [15] = {24, 62, 109, 147, 194, 232},
-            [16] = {20, 55, 105, 140, 190, 225},
+            [15] = {24.1, 62.1, 109, 147},
+            [16] = {24.1, 62.1, 109, 147},
         },
     }
     self:AddEncounterAlert(data)
@@ -123,13 +123,12 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P2", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         spellID = 1286399,
         timers = {
-            [15] = {18, 51, 103, 136, 188, 221},
-            [16] = {18, 51, 103, 136, 188, 221},
+            [15] = {13, 46.1, 98},
+            [16] = {13, 46.1, 98},
         },
     }
     self:AddEncounterAlert(data)
 
-    --[=[
     local data = {group = "Coiled Altar P3", internalID = "P3Frontal", name = "P3 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 6,
         textColors = {1, 0, 0, 1}, spellID = 1307292,
         isConditional = {
@@ -137,8 +136,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {},
-            [16] = {},
+            [15] = {36.3, 68.5, 103, 140.9, 173.1},
+            [16] = {36.3, 68.5, 103, 140.9, 173.1},
         },
     }
     self:AddEncounterAlert(data)
@@ -146,43 +145,44 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P3", internalID = "P3Soak", name = "P3 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 8, spellID = 1299266,
         loadConditions = tankConditions,
         timers = {
-            [15] = {},
-            [16] = {},
+            [15] = {22.3, 191.3},
+            [16] = {22.3, 191.3},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P3", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
-        spellID = 1286918,
+        spellID = 1310752,
         timers = {
-            [15] = {},
-            [16] = {},
+            [15] = {39.1, 139.1},
+            [16] = {39.1, 139.1},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P3", internalID = "P3Debuffs", name = "P3 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
-        loadConditions = nonTankConditions, spellID = 1286895,
+        loadConditions = nonTankConditions, spellID = 1310881,
         timers = {
-            [15] = {},
-            [16] = {},
+            [15] = {28.4, 64.4, 112.3, 179.1},
+            [16] = {28.4, 64.4, 112.3, 179.1},
         },
     }
     self:AddEncounterAlert(data)
 
+    --[=[
     local data = {group = "Coiled Altar P3", internalID = "P3InterruptAdds", name = "P3 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1286399,
         timers = {
-            [15] = {},
             [16] = {},
         },
     }
     self:AddEncounterAlert(data)
+    ]=]
 
-    local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1285643,
+    local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
         timers = {
-            [15] = {},
-            [16] = {},
+            [15] = {63.5, 164.7},
+            [16] = {63.5, 164.7},
         },
     }
     self:AddEncounterAlert(data)
@@ -194,12 +194,11 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {},
-            [16] = {},
+            [15] = {36.8, 69, 103.5, 141.4, 173.6},
+            [16] = {36.8, 69, 103.5, 141.4, 173.6},
         },
     }
     self:AddEncounterAlert(data)
-    ]=]
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
