@@ -969,6 +969,9 @@ function NSI:HideReadyCheckConsumables()
     end
     if displayAnchor and not InCombatLockdown() and not self:Restricted() then
         displayAnchor:Hide()
+        if container then
+            container:Hide()
+        end
     end
 end
 
