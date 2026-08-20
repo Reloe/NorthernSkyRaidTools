@@ -16,14 +16,15 @@ local damageAmpTimers = {
 }
 
 local venomousSurgeCastTimers = {
-    [14] = {36.25, 95, 188.3, 247},
+    [14] = {36.25, 95, 188.3, 247, 340.3},
     [15] = {32.2, 84.4, 170.3, 222.6, 308.5, 360.8},
     [16] = {}, -- TODO
 }
 
--- boss1target briefly changes to the bomb target during the venomous surge cast.
--- these offsets are the midpoint of when the target change happens. First one is ~halfway, 2nd one is ~on complete
-local venomousSurgeSampleOffsets = {2.35, 4.35}
+-- boss1target briefly changes to each bomb target during the bomb cast.
+-- cast start -> target cleared -> bomb 1 (~+1.6s, held 0.4-1.2s) -> cleared -> bomb 2 (~+3.6s, held ~0.4s) -> cleared -> back to active tank.
+-- We use boss1 UNIT_TARGET events to determine the bomb targets.
+local venomousSurgeBombsPerCast = 2
 local bombDuration = 10
 
 NSI.InitializeAlerts[encID] = function(self)
@@ -337,13 +338,23 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             return
         end
 
-        self.BombSampleTimers = {}
-        for _, castTime in ipairs(venomousSurgeCastTimers[id] or {}) do
-            for _, offset in ipairs(venomousSurgeSampleOffsets) do
-                self.BombSampleTimers[#self.BombSampleTimers + 1] = C_Timer.NewTimer(castTime + offset, function()
-                    DisplayBomb("boss1target")
-                end)
+        self:EncounterFunction("SszorakBombTargets", function()
+            local exists = UnitExists("boss1target")
+            if issecretvalue(exists) or not exists then return end -- the boss drops its target between each bomb
+            self.BombWindowCaptures = (self.BombWindowCaptures or 0) + 1
+            DisplayBomb("boss1target")
+            if self.BombWindowCaptures >= venomousSurgeBombsPerCast then
+                self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
             end
+        end)
+
+        self.BombWindowCaptures = 0
+        self.BombWindowTimers = {}
+        for _, castTime in ipairs(venomousSurgeCastTimers[id] or {}) do
+            self.BombWindowTimers[#self.BombWindowTimers + 1] = C_Timer.NewTimer(castTime, function()
+                self.BombWindowCaptures = 0
+                self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", true, "boss1")
+            end)
         end
     end
 end
@@ -373,11 +384,13 @@ NSI.EncounterAlertStop[encID] = function(self)
     self.WindsOrderCount = 0
 
     self.IsSszorakBombPreview = false
-    if self.BombSampleTimers then
-        for _, timer in ipairs(self.BombSampleTimers) do
+    self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
+    self.BombWindowCaptures = 0
+    if self.BombWindowTimers then
+        for _, timer in ipairs(self.BombWindowTimers) do
             timer:Cancel()
         end
-        self.BombSampleTimers = nil
+        self.BombWindowTimers = nil
     end
     self.BombCount = 0
 end
