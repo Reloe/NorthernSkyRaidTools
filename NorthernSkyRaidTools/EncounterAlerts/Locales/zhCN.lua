@@ -140,14 +140,14 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-     ["Adds"]          = {group = "尼姆瑞莎", name = "诱人水泡（小怪）", text = "小怪刷新"},
-     ["Waves"]         = {group = "尼姆瑞莎", name = "激荡漩涡（观察）", text = "找缺口"},
-     ["Knockback"]     = {group = "尼姆瑞莎", name = "嘭！（击退）", text = "击退"},
-     ["ChillingFrost"] = {group = "尼姆瑞莎", name = "刺骨寒霜（点名）", text = "点名宝珠"},
-     ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
-     ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
-     ["WaterFlurry"]   = {group = "尼姆瑞莎", name = "冰刃乱舞（坦克）", text = "坦克打击"},
-     ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
+    ["Adds"]          = {group = "尼姆瑞莎", name = "诱人水泡（小怪）", text = "小怪刷新"},
+    ["Waves"]         = {group = "尼姆瑞莎", name = "激荡漩涡（观察）", text = "找缺口"},
+    ["Knockback"]     = {group = "尼姆瑞莎", name = "嘭！（击退）", text = "击退"},
+    ["ChillingFrost"] = {group = "尼姆瑞莎", name = "刺骨寒霜（点名）", text = "点名宝珠"},
+    ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
+    ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
+    ["WaterFlurry"]   = {group = "尼姆瑞莎", name = "冰刃乱舞（坦克）", text = "坦克打击"},
+    ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
