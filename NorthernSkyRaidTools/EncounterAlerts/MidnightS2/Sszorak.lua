@@ -302,6 +302,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             info.text = unitName
             local F = self:DisplayReminder(info)
             if not F then return end
+            if preview then
+                self.SszorakBombPreviewFrames = self.SszorakBombPreviewFrames or {}
+                self.SszorakBombPreviewFrames[#self.SszorakBombPreviewFrames + 1] = F
+            end
 
             if not windsActive then -- Just show names (no markers) if winds helper is disabled.
                 if F.SszorakBombMarker then F.SszorakBombMarker:Hide() end
@@ -325,6 +329,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 
         if preview then
             self.IsSszorakBombPreview = true
+            self.SszorakBombPreviewFrames = {}
             if windsActive and (self.WindsOrderCount or 0) < 3 then
                 self.WindsOrder = {}
                 for index = 1, 3 do
@@ -386,6 +391,12 @@ NSI.EncounterAlertStop[encID] = function(self)
     self.WindsOrderCount = 0
 
     self.IsSszorakBombPreview = false
+    if self.SszorakBombPreviewFrames then
+        for _, frame in ipairs(self.SszorakBombPreviewFrames) do
+            frame:Hide()
+        end
+        self.SszorakBombPreviewFrames = nil
+    end
     self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
     self.BombWindowCaptures = 0
     if self.BombWindowTimers then
