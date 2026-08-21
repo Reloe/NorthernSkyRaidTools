@@ -39,7 +39,7 @@ function NSI:MakeEncounterAlert(data, timers)
         a[k] = v
     end
 
-    a.phase = data.phaseTimers and (data.phases or self:GetSortedPhaseKeys(data.phaseTimers)) or (data.phases or data.phase)
+    a.phase = data.phaseTimers and (data.phases or self:GetSortedPhaseKeys(data.phaseTimers)) or (data.phases or data.phase) or 1
     a.phases = nil
     local primaryPhase = self:GetPrimaryPhase(a.phase)
     local group = data.group
