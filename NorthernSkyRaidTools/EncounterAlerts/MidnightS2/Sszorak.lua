@@ -15,6 +15,18 @@ local damageAmpTimers = {
     [16] = {100, 227.1, 354.2},
 }
 
+local venomousSurgeCastTimers = {
+    [14] = {36.25, 95, 188.3, 247, 340.3},
+    [15] = {32.2, 84.4, 170.3, 222.6, 308.5, 360.8},
+    [16] = {32, 79.8, 159, 206.8, 286, 333.8},
+}
+
+-- boss1target briefly changes to each bomb target during the bomb cast.
+-- cast start -> target cleared -> bomb 1 (~+1.6s, held 0.4-1.2s) -> cleared -> bomb 2 (~+3.6s, held ~0.4s) -> cleared -> back to active tank.
+-- We use boss1 UNIT_TARGET events to determine the bomb targets.
+local venomousSurgeBombsPerCast = 2
+local bombDuration = 10
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -125,6 +137,24 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local BombPreview = [[
+        return function(self, update)
+            if self.IsSszorakBombPreview then
+                self.EncounterAlertStop[3420](self, true)
+                self.IsSszorakBombPreview = false
+            else
+                self.EncounterAlertStart[3420](self, 16, "Debuff Targets")
+                self.IsSszorakBombPreview = true
+            end
+        end
+    ]]
+
+    local data = {group = "Sszorak", internalID = "VenomousSurgeTargets", name = "Debuff Targets", text = nil, DisplayType = "Bar", encID = encID, phase = nil, TTS = false, dur = bombDuration,
+        spellID = 1305959, id = 0.1, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, Preview = BombPreview,
+        customIcon = 1305959,
+    }
+    self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview)
@@ -168,6 +198,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 self.WindsSenderNames[index]:Hide()
             end
             self.WindsCount = 0
+            self.WindsOrder = {}
+            self.WindsOrderCount = 0
+            self.BombCount = 0
         end
 
         local function DisplayWind(pos, text, sender, senderGUID, senderDisplayName)
@@ -179,6 +212,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 end
                 pos = self.WindsCount
             end
+
+            self.WindsOrder = self.WindsOrder or {}
+            self.WindsOrder[pos] = text
+            self.WindsOrderCount = math.max(self.WindsOrderCount or 0, pos)
 
             self.WindsFrame:Show()
             self.WindsDisplay[pos]:SetFormattedText("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:48:48|t", text)
@@ -238,6 +275,88 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             end)
         end
     end
+
+    local bombs = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].VenomousSurgeTargets
+    if bombs and ((bombs.enabled and self:EvaluateLoad(bombs) and realpull) or (preview and preview == "Debuff Targets")) then
+        local windsActive = (winds and winds.enabled and self:EvaluateLoad(winds)) and true or false
+        local function DisplayBomb(unit)
+            if not UnitExists(unit) then return end
+            self.BombCount = (self.BombCount or 0) + 1
+            local pos = self.BombCount
+            local unitName = preview and secretwrap(UnitName(unit)) or UnitName(unit)
+            local classFilename = select(2, UnitClass(unit))
+            local classColor = C_ClassColor.GetClassColor(classFilename)
+            unitName = C_ColorUtil.WrapTextInColor(unitName, classColor)
+            local info = self:CreateReminder({
+                text = "",
+                DisplayType = "Bar",
+                spellID = 1305959,
+                dur = bombDuration,
+                encID = encID,
+                phase = self.Phase,
+                TTS = false,
+                sticky = 0,
+                IsAlert = true,
+            }, true)
+            if not info then return end
+            info.text = unitName
+            local F = self:DisplayReminder(info)
+            if not F then return end
+
+            if not windsActive then -- Just show names (no markers) if winds helper is disabled.
+                if F.SszorakBombMarker then F.SszorakBombMarker:Hide() end
+                return
+            end
+            if not F.SszorakBombMarker then
+                F.SszorakBombMarker = F:CreateFontString(nil, "OVERLAY")
+                F.SszorakBombMarker:SetFont(self:GetGlobalFontPath(), NSRT.ReminderSettings.BarSettings.FontSize, "OUTLINE")
+                F.SszorakBombMarker:SetPoint("RIGHT", F.Icon, "LEFT", -4, 0)
+                F:HookScript("OnHide", function() F.SszorakBombMarker:Hide() end)
+            end
+
+            if pos <= (self.WindsOrderCount or 0) then
+                F.SszorakBombMarker:SetFormattedText("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", self.WindsOrder[pos])
+            else
+                F.SszorakBombMarker:SetText(NSI:EncounterAlertLoc("Backup"))
+            end
+            F.SszorakBombMarker:Show()
+        end
+        self.BombCount = 0
+
+        if preview then
+            self.IsSszorakBombPreview = true
+            if windsActive and (self.WindsOrderCount or 0) < 3 then
+                self.WindsOrder = {}
+                for index = 1, 3 do
+                    self.WindsOrder[index] = secretwrap(index)
+                end
+                self.WindsOrderCount = 3
+            end
+            for _ = 1, 4 do -- 2 sets of bombs so we can see the "backup" text.
+                DisplayBomb("player")
+            end
+            return
+        end
+
+        self:EncounterFunction("SszorakBombTargets", function()
+            local exists = UnitExists("boss1target")
+            if issecretvalue(exists) or not exists then return end -- the boss drops its target between each bomb
+            self.BombWindowCaptures = (self.BombWindowCaptures or 0) + 1
+            DisplayBomb("boss1target")
+            if self.BombWindowCaptures >= venomousSurgeBombsPerCast then
+                self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
+            end
+        end)
+
+        self.BombWindowCaptures = 0
+        self.BombWindowTimers = {}
+        for _, castTime in ipairs(venomousSurgeCastTimers[id] or {}) do
+            self.BombWindowTimers[#self.BombWindowTimers + 1] = C_Timer.NewTimer(castTime, function()
+                self.BombWindowCaptures = 0
+                self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", true, "boss1")
+            end)
+        end
+    end
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
@@ -263,6 +382,19 @@ NSI.EncounterAlertStop[encID] = function(self)
         end
         self.WindsCount = 0
     end
+    self.WindsOrder = {}
+    self.WindsOrderCount = 0
+
+    self.IsSszorakBombPreview = false
+    self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
+    self.BombWindowCaptures = 0
+    if self.BombWindowTimers then
+        for _, timer in ipairs(self.BombWindowTimers) do
+            timer:Cancel()
+        end
+        self.BombWindowTimers = nil
+    end
+    self.BombCount = 0
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
