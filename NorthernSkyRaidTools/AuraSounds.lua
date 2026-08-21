@@ -79,6 +79,7 @@ NSI.AuraSoundCategories = {
         {key = 3445, entries = { -- Entombed Sentinels
             {spellID = 1288260, sound = "Targeted"}, -- Unstable Miasma
             {spellID = 1288297, sound = "DropPool"}, -- Clinging Murk
+            {spellID = 1288297, sound = "Move", eventType = "removed"}, -- Clinging Murk
             {spellID = 1296880, sound = "Debuff"}, -- Shifting Protovenom
         }},
         {key = 3455, entries = { -- Vashnik the Malignant
