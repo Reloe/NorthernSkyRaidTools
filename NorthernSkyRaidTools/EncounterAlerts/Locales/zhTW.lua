@@ -22,7 +22,7 @@ L[3177] = {
 L[3179] = {
     -- ["Beams"]      = {name = "Beams", text = "Beams"},
     -- ["Orbs"]       = {name = "Orbs", text = "Orbs"},
-    -- ["CC Adds"]    = {name = "CC Adds", text = "CC Adds"},
+    -- ["CC 小怪"]    = {name = "CC 小怪", text = "CC 小怪"},
     -- ["CC Display"] = {name = "CC Display"},
 }
 
@@ -126,7 +126,7 @@ L[3183] = {
 
 -- Rotmire (3159)
 L[3159] = {
-    -- ["Adds"]             = {name = "Adds", text = "Adds"},
+    -- ["小怪"]             = {name = "小怪", text = "小怪"},
     -- ["Shrooms"]          = {name = "Shrooms", text = "Shrooms"},
     -- ["BurstingPustules"] = {name = "AoE", text = "AoE"},
     -- ["InterruptDisplay"] = {name = "Interrupt Display"},
@@ -139,123 +139,125 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-    -- ["Adds"]          = {group = "Nymrissa", name = "Add-Spawn", text = "Adds"},
-    -- ["Waves"]         = {group = "Nymrissa", name = "Waves", text = "Waves"},
-    -- ["Knockback"]     = {group = "Nymrissa", name = "Knockback", text = "Knock"},
-    -- ["ChillingFrost"] = {group = "Nymrissa", name = "Chilling Frost", text = "Debuffs"},
-    -- ["AbyssalRain"]   = {group = "Nymrissa", name = "Abyssal Rain", text = "AoE"},
-    -- ["WaterJet"]      = {group = "Nymrissa", name = "Water Jet", text = "Frontal"},
-    -- ["WaterFlurry"]   = {group = "Nymrissa", name = "Iceblade Flurry", text = "Tank-Hit"},
-    -- ["Taunt"]         = {group = "Nymrissa", name = "Taunt", text = "Taunt"},
+    ["Adds"]          = {group = "妮莉莎", name = "出小怪", text = "小怪"},
+    ["Waves"]         = {group = "妮莉莎", name = "波浪", text = "波浪"},
+    ["Knockback"]     = {group = "妮莉莎", name = "擊退", text = "擊退"},
+    ["ChillingFrost"] = {group = "妮莉莎", name = "刺骨冰霜", text = "Debuff"},
+    ["AbyssalRain"]   = {group = "妮莉莎", name = "深淵之雨", text = "AE"},
+    ["WaterJet"]      = {group = "妮莉莎", name = "水流噴射", text = "頭前"},
+    ["WaterFlurry"]   = {group = "妮莉莎", name = "脈動浪潮", text = "打坦技"},
+    ["Taunt"]         = {group = "妮莉莎", name = "嘲諷", text = "嘲諷"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
 L[3470] = {
-    -- ["Barrage"]          = {group = "Nek'zali", name = "Barrage", text = "Frontal"},
-    -- ["Debuffs"]          = {group = "Nek'zali", name = "Essence Rend", text = "Debuffs"},
-    -- ["SoulcoilIgnition"] = {group = "Nek'zali", name = "Soulcoil Ignition", text = "AoE"},
-    -- ["HungeringPyre"]    = {group = "Nek'zali", name = "Hungering Pyre", text = "Soak"},
-    -- ["RestlessAmani"]    = {group = "Nek'zali", name = "Add-Spawn", text = "Adds"},
-    -- ["Invoke"]           = {group = "Nek'zali", name = "Invoke", text = "Dodge"},
-    -- ["InvokeMythic"]     = {group = "Nek'zali", name = "Invoke", text = "Stop Cast"},
+    ["Barrage"]          = {group = "尼札利", name = "彈幕", text = "頭前"},
+    ["Debuffs"]          = {group = "尼札利", name = "精華撕裂", text = "Debuff"},
+    ["SoulcoilIgnition"] = {group = "尼札利", name = "纏魂點燃", text = "AE"},
+    ["HungeringPyre"]    = {group = "尼札利", name = "飢饞蛇火", text = "分傷"},
+    ["RestlessAmani"]    = {group = "尼札利", name = "出小怪", text = "小怪"},
+    ["Invoke"]           = {group = "尼札利", name = "祈求", text = "躲"},
+    ["InvokeMythic"]     = {group = "尼札利", name = "祈求", text = "停止唱法"},
 }
 
 -- Entombed Sentinels (3445)
 L[3445] = {
-    -- ["PoisonHits"]         = {group = "Sentinels", name = "Poison Tank-Hit", text = "Tank-Hit"},
-    -- ["BloodHits"]          = {group = "Sentinels", name = "Blood Tank-Hit", text = "Tank-Hit"},
-    -- ["BloodDropPool"]      = {group = "Sentinels", name = "Tank Drop Pool", text = "Drop-Pool"},
-    -- ["BloodSoak"]          = {group = "Sentinels", name = "Blood Soak", text = "Blood-Soak"},
-    -- ["BloodSoakPool"]      = {group = "Sentinels", name = "Soak-Pool", text = "Drop Pool"},
-    -- ["BloodDispels"]       = {group = "Sentinels", name = "Blood Dispels", text = "Dispels"},
-    -- ["PoisonAdd"]          = {group = "Sentinels", name = "Poison Add", text = "Poison Add"},
-    -- ["OrbSpawn"]           = {group = "Sentinels", name = "Orb Spawn", text = "Bait Orbs"},
-    -- ["ShiftingProtovenom"] = {group = "Sentinels", name = "Shifting Protovenom", text = "Spread"},
-    -- ["TransitionDebuffs"]  = {group = "Sentinels", name = "Transition Debuffs", text = "Number Game"},
+    ["PoisonHits"]         = {group = "衛哨", name = "毒 打坦技", text = "打坦技"},
+    ["BloodHits"]          = {group = "衛哨", name = "血 打坦技", text = "打坦技"},
+    ["BloodDropPool"]      = {group = "衛哨", name = "坦克放水", text = "放水"},
+    ["BloodSoak"]          = {group = "衛哨", name = "血 分傷", text = "血 分傷"},
+    ["BloodSoakPool"]      = {group = "衛哨", name = "血 分傷放水", text = "放水"},
+    ["BloodDispels"]       = {group = "衛哨", name = "血 驅散", text = "驅散"},
+    ["PoisonAdd"]          = {group = "衛哨", name = "毒 小怪", text = "毒 小怪"},
+    ["OrbSpawn"]           = {group = "衛哨", name = "出球", text = "Bait球"},
+    ["ShiftingProtovenom"] = {group = "衛哨", name = "移轉原型毒液", text = "分散"},
+    ["TransitionDebuffs"]  = {group = "衛哨", name = "轉階 Debuff", text = "數字遊戲"},
 }
 
 -- Vashnik the Malignant (3455)
 L[3455] = {
-    -- ["TankHits"]   = {group = "Vashnik", name = "Tank-Hits", text = "Tank-Hit"},
-    -- ["Taunts"]     = {group = "Vashnik", name = "Taunt", text = "Taunt"},
-    -- ["Adds"]       = {group = "Vashnik", name = "Adds", text = "Adds"},
-    -- ["Infection"]  = {group = "Vashnik", name = "Infection", text = "Infection"},
-    -- ["AoE"]        = {group = "Vashnik", name = "AoE", text = "AoE"},
-    -- ["Soaks"]      = {group = "Vashnik", name = "Soaks", text = "Soaks"},
-    -- ["Waves"]      = {group = "Vashnik", name = "Waves", text = "Waves"},
-    -- ["WaveSpread"] = {group = "Vashnik", name = "Wave-Spread", text = "Pre-Spread"},
+    ["TankHits"]   = {group = "伐許尼克", name = "打坦技", text = "打坦技"},
+    ["Taunts"]     = {group = "伐許尼克", name = "嘲諷", text = "嘲諷"},
+    ["Adds"]       = {group = "伐許尼克", name = "小怪", text = "小怪"},
+    ["Infection"]  = {group = "伐許尼克", name = "感染", text = "感染"},
+    ["AoE"]        = {group = "伐許尼克", name = "AE", text = "AE"},
+    ["Soaks"]      = {group = "伐許尼克", name = "分傷", text = "分傷"},
+    ["Waves"]      = {group = "伐許尼克", name = "波", text = "波"},
+    ["WaveSpread"] = {group = "伐許尼克", name = "波 分散", text = "分散"},
 }
 
 -- The Lost Explorers (3497)
 L[3497] = {
-    -- ["ShreddingShards"]           = {group = "Scrollsage Abilities", name = "Tank-Hit", text = "Tank-Hit"},
-    -- ["BlinkNova"]                 = {group = "Scrollsage Abilities", name = "Blink Nova", text = "Blink Nova"},
-    -- ["FrostfireVolley"]           = {group = "Scrollsage Abilities", name = "Frostfire Volley", text = "Frostfire Debuffs"},
-    -- ["ShellSpinNormal"]           = {group = "First Mate Abilities", name = "Shell Spin Normal", text = "Bait"},
-    -- ["ShellSpinScroll"]           = {group = "First Mate Abilities", name = "Shell Spin - Scroll Empowered", text = "Bait"},
-    -- ["ShellSpinTrader"]           = {group = "First Mate Abilities", name = "Shell Spin - Trader Empowered", text = "Bait"},
-    -- ["MightyThud"]                = {group = "First Mate Abilities", name = "Soaks", text = "Soaks"},
-    -- ["Fish-Spawn"]                = {group = "Trader Abilities", name = "Fish Spawn", text = "Fish Spawn"},
-    -- ["MushroomBait"]              = {group = "Trader Abilities", name = "Mushroom Bait", text = "Bait"},
-    -- ["ExplosiveSurprise"]         = {group = "Trader Abilities", name = "Bomb Debuff", text = "Bomb inc"},
-    -- ["MushroomJump"]              = {group = "Trader Abilities", name = "Mushroom Jump", text = "Jump"},
-    -- ["TimeToThrow"]               = {group = "Trader Abilities", name = "Time to throw Fish", text = "Time to Throw"},
-    -- ["TimeToThrowNonConditional"] = {group = "Trader Abilities", name = "non-conditional Time to throw Fish", text = "Time to Throw"},
+    ["ShreddingShards"]           = {group = "卷軸先知 技能", name = "打坦技", text = "打坦技"},
+    ["BlinkNova"]                 = {group = "卷軸先知 技能", name = "閃現新星", text = "閃現新星"},
+    ["FrostfireVolley"]           = {group = "卷軸先知 技能", name = "冰縛烈焰", text = "冰焰 Debuff"},
+    ["ShellSpinNormal"]           = {group = "大副 技能", name = "旋殼擊 正常", text = "Bait"},
+    ["ShellSpinScroll"]           = {group = "大副 技能", name = "旋殼擊 - 卷軸增強", text = "Bait"},
+    ["ShellSpinTrader"]           = {group = "大副 技能", name = "旋殼擊 - 商人增強", text = "Bait"},
+    ["MightyThud"]                = {group = "大副 技能", name = "分傷", text = "分傷"},
+    ["Fish-Spawn"]                = {group = "商人 技能", name = "出魚", text = "出魚"},
+    ["MushroomBait"]              = {group = "商人 技能", name = "蘑菇 Bait", text = "Bait"},
+    ["ExplosiveSurprise"]         = {group = "商人 技能", name = "炸彈 Debuff", text = "炸彈"},
+    ["MushroomJump"]              = {group = "商人 技能", name = "蘑菇彈跳", text = "跳"},
+    ["TimeToThrow"]               = {group = "商人 技能", name = "丟魚時間", text = "丟魚"},
+    ["TimeToThrowNonConditional"] = {group = "商人 技能", name = "無條件 丟魚時間", text = "丟魚"},
 }
 
 -- Sszorak (3420)
 L[3420] = {
-    -- ["TankCombo"]    = {group = "Sszorak", name = "Tank Combo", text = "Tank Combo"},
-    -- ["DamageAmp"]    = {group = "Sszorak", name = "Damage Amp", text = "Damage Amp"},
-    -- ["Bait"]         = {group = "Sszorak", name = "Bait", text = "Bait"},
-    -- ["WindDebuffs"]  = {group = "Sszorak", name = "WindDebuffs", text = "Wind-Debuffs"},
-    -- ["Debuffs"]      = {group = "Sszorak", name = "Debuffs", text = "Debuffs"},
-    -- ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
-    -- ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
-    -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    ["TankCombo"]    = {group = "司佐拉", name = "坦克連擊", text = "坦克連擊"},
+    ["DamageAmp"]    = {group = "司佐拉", name = "增傷", text = "增傷"},
+    ["Bait"]         = {group = "司佐拉", name = "Bait", text = "Bait"},
+    ["WindDebuffs"]  = {group = "司佐拉", name = "風 Debuff", text = "風 Debuff"},
+    ["Debuffs"]      = {group = "司佐拉", name = "Debuff", text = "Debuff"},
+    ["SerpentsFury"] = {group = "司佐拉", name = "毒蛇之怒", text = "集中"},
+    ["WindsHelper"]  = {group = "司佐拉", name = "吹風方向"},
+    ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
-    -- ["Defensives"]  = {group = "Twin Fangs", name = "Defensives", text = "Defensives"},
-    -- ["Soak"]        = {group = "Twin Fangs", name = "Soak", text = "Soak"},
-    -- ["PreSpread"]   = {group = "Twin Fangs", name = "Pre-Spread", text = "Pre-Spread"},
-    -- ["WatchSide"]   = {group = "Twin Fangs", name = "Watch Side", text = "Watch Side"},
-    -- ["Adds"]        = {group = "Twin Fangs", name = "Adds", text = "Adds"},
-    -- ["Orbs"]        = {group = "Twin Fangs", name = "Orbs", text = "Orbs"},
-    -- ["TankSoak"]    = {group = "Twin Fangs", name = "Tank Soak", text = "Soak"},
-    -- ["WatchSpawns"] = {group = "Twin Fangs", name = "Watch Spawns", text = "Watch Spawns"},
-    -- ["Knock"]       = {group = "Twin Fangs", name = "Knock", text = "Knock"},
+    ["Defensives"]  = {group = "雙生毒牙", name = "個減", text = "個減"},
+    ["Soak"]        = {group = "雙生毒牙", name = "分傷", text = "分傷"},
+    ["PreSpread"]   = {group = "雙生毒牙", name = "分散", text = "分散"},
+    ["WatchSide"]   = {group = "雙生毒牙", name = "看左右邊", text = "看左右邊"},
+    ["Adds"]        = {group = "雙生毒牙", name = "小怪", text = "小怪"},
+    ["Orbs"]        = {group = "雙生毒牙", name = "球", text = "球"},
+    ["TankSoak"]    = {group = "雙生毒牙", name = "坦克吃圈", text = "吃圈"},
+    ["WatchSpawns"] = {group = "雙生毒牙", name = "看圈", text = "看圈"},
+    ["Knock"]       = {group = "雙生毒牙", name = "擊退", text = "擊退"},
 }
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    -- ["P1Frontal"]     = {group = "Coiled Altar P1", name = "P1 Frontal", text = "Frontal"},
-    -- ["P1Taunt"]       = {group = "Coiled Altar Tanks", name = "P1 Taunt", text = "Taunt"},
-    -- ["P1Soak"]        = {group = "Coiled Altar P1", name = "P1 Soak", text = "Soak"},
-    -- ["MindControls"]  = {group = "Coiled Altar P2", name = "Mind Controls", text = "Mind Controls"},
-    -- ["P2Frontal"]     = {group = "Coiled Altar P2", name = "P2 Frontal", text = "Frontal"},
-    -- ["P2Taunt"]       = {group = "Coiled Altar Tanks", name = "P2 Taunt", text = "Taunt"},
-    -- ["P2Debuffs"]     = {group = "Coiled Altar P2", name = "P2 Debuffs", text = "Debuffs"},
-    -- ["P2Shield"]      = {group = "Coiled Altar P2", name = "P2 Shield", text = "Shield"},
-    -- ["InterruptAdds"] = {group = "Coiled Altar P2", name = "P2 Interrupt Adds", text = "Ghosts"},
-    -- ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
-    -- ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
-    -- ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
-    -- ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
-    -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
-    -- ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
-    -- ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
+    ["P1Frontal"]     = {group = "盤蛇祭壇 P1", name = "P1 頭前", text = "頭前"},
+    ["P1Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P1 嘲諷", text = "嘲諷"},
+    ["P1Soak"]        = {group = "盤蛇祭壇 P1", name = "P1 分傷", text = "分傷"},
+    ["MindControls"]  = {group = "盤蛇祭壇 P2", name = "心控", text = "心控"},
+    ["P2Frontal"]     = {group = "盤蛇祭壇 P2", name = "P2 頭前", text = "頭前"},
+    ["P2Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P2 嘲諷", text = "嘲諷"},
+    ["P2Debuffs"]     = {group = "盤蛇祭壇 P2", name = "P2 Debuff", text = "Debuff"},
+    ["P2Shield"]      = {group = "盤蛇祭壇 P2", name = "P2 盾", text = "P2 盾"},
+    ["InterruptAdds"] = {group = "盤蛇祭壇 P2", name = "P2 打斷小怪", text = "鬼"},
+    -- ["P3Frontal"] = {group = "盤蛇祭壇 P3", name = "P3 頭前", text = "頭前"},
+    -- ["P3Soak"] = {group = "盤蛇祭壇 P3", name = "P3 分傷", text = "分傷"},
+    -- ["P3Shield"] = {group = "盤蛇祭壇 P3", name = "P3 盾", text = "盾"},
+    -- ["P3Debuffs"] = {group = "盤蛇祭壇 P3", name = "P3 Debuff", text = "Debuff"},
+    -- ["P3InterruptAdds"] = {group = "盤蛇祭壇 P3", name = "P3 打斷小怪", text = "鬼"},
+    -- ["P3MindControls"] = {group = "盤蛇祭壇 P3", name = "P3 心控", text = "心控"},
+    -- ["P3Taunt"] = {group = "盤蛇祭壇 坦克", name = "P3 嘲諷", text = "嘲諷"},
 }
 
 -- Ula'tek (3492)
 L[3492] = {
-    -- ["HitKnock"]      = {group = "Ula'tek Tanks", name = "P1 Hit+Knock", text = "Hit+Knock"},
-    -- ["Taunt"]         = {group = "Ula'tek Tanks", name = "P1 Taunt", text = "Taunt"},
-    -- ["Waves"]         = {group = "Ula'tek P1", name = "Waves", text = "Waves"},
-    -- ["Adds"]          = {group = "Ula'tek P1", name = "Adds", text = "Adds"},
-    -- ["DamageAmpIn"]   = {group = "Ula'tek P1", name = "Dmg amp", text = "Dmg amp in"},
-    -- ["DamageAmp"]     = {group = "Ula'tek P1", name = "Dmg amp Bar", text = "Dmg amp"},
-    -- ["PlatformBreak"] = {group = "Ula'tek P3", name = "Platform Break", text = "Platform Break + Knock"},
-    -- ["Debuffs"]       = {group = "Ula'tek P3", name = "Debuffs", text = "Debuffs"},
+    --[[
+    ["HitKnock"]      = {group = "Ula'tek Tanks", name = "P1 Hit+Knock", text = "Hit+Knock"},
+    ["Taunt"]         = {group = "Ula'tek Tanks", name = "P1 嘲諷", text = "嘲諷"},
+    ["Waves"]         = {group = "Ula'tek P1", name = "Waves", text = "Waves"},
+    ["Adds"]          = {group = "Ula'tek P1", name = "Adds", text = "Adds"},
+    ["DamageAmpIn"]   = {group = "Ula'tek P1", name = "Dmg amp", text = "Dmg amp in"},
+    ["DamageAmp"]     = {group = "Ula'tek P1", name = "Dmg amp Bar", text = "Dmg amp"},
+    ["PlatformBreak"] = {group = "Ula'tek P3", name = "Platform Break", text = "Platform Break + Knock"},
+    ["Debuffs"]       = {group = "Ula'tek P3", name = "Debuffs", text = "Debuffs"},
+    ]]
 }

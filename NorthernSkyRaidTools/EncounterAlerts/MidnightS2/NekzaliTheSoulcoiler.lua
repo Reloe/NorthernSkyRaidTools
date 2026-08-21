@@ -28,7 +28,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1287434,
         phaseTimers = {
             [15] = {
-                {14.5, 60.5, 100.1, 158.3, 181.9},
+                {14.5, 54.5, 85.5, 125.5},
             },
             [16] = {
                 {20, 60.5, 91},
@@ -41,7 +41,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "SoulcoilIgnition", name = "Soulcoil Ignition", text = "AoE", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
         loadConditions = nonTankConditions, spellID = 1293664,
         timers = {
-            [15] = {85.5, 167.35, 249.2},
+            [15] = {77.8},
             [16] = {75.1},
         },
     }
@@ -95,38 +95,28 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
-    self.NekzaliBoss1SpellcastSucceededTimes = {}
-    self.NekzaliBoss1SpellcastStartTime = nil
+    self.NekzaliBoss1SpellcastStartTimes = {}
+    self.NekzaliBoss1ValidCastSequence = false
     self:EncounterRegister("NekzaliPhaseDetect", {"UNIT_SPELLCAST_CHANNEL_START", "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_SUCCEEDED"}, true, "boss1")
     self:EncounterFunction("NekzaliPhaseDetect", function(_, e, unit)
         local now = GetTime()
-        if e == "UNIT_SPELLCAST_START" and self.Phase ~= 1.5 then
-            self.NekzaliBoss1SpellcastStartTime = now
+        if e == "UNIT_SPELLCAST_START" and self.Phase == 1 then
+            self.NekzaliBoss1SpellcastStartTimes[#self.NekzaliBoss1SpellcastStartTimes + 1] = now
             return
         end
         if e == "UNIT_SPELLCAST_SUCCEEDED" then
-            table.insert(self.NekzaliBoss1SpellcastSucceededTimes, now)
-            for i = #self.NekzaliBoss1SpellcastSucceededTimes, 1, -1 do
-                if now - self.NekzaliBoss1SpellcastSucceededTimes[i] > 2 then
-                    table.remove(self.NekzaliBoss1SpellcastSucceededTimes, i)
+            for _, startTime in ipairs(self.NekzaliBoss1SpellcastStartTimes) do
+                if ApproximatelyEqual(now - startTime, 1.5, 0.2) then
+                    self.NekzaliBoss1ValidCastSequence = true
+                    break
                 end
             end
             return
         end
         local newPhase
         if e == "UNIT_SPELLCAST_CHANNEL_START" then
-            if self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
             if self.Phase == 1 then
-                if not self.NekzaliBoss1SpellcastStartTime or not ApproximatelyEqual(now - self.NekzaliBoss1SpellcastStartTime, 1.5, 0.2) then return end
-                local hasSucceededInWindow = false
-                for _, timestamp in ipairs(self.NekzaliBoss1SpellcastSucceededTimes) do
-                    local timeSinceSucceeded = now - timestamp
-                    if timeSinceSucceeded >= 0.2 and timeSinceSucceeded <= 2 then
-                        hasSucceededInWindow = true
-                        break
-                    end
-                end
-                if not hasSucceededInWindow then return end
+                if not self.NekzaliBoss1ValidCastSequence then return end
                 newPhase = 1.5
             elseif self.Phase == 1.75 then
                 newPhase = 2

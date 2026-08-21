@@ -164,9 +164,9 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {17.6, 47.6},
-                {17.6, 47.6},
-                {17.6, 47.6},
+                {17.6, 50.1},
+                {17.6, 50.1},
+                {17.6, 50.1},
             },
             [16] = {
                 {},
@@ -241,9 +241,9 @@ NSI.InitializeAlerts[encID] = function(self)
         phaseTimers = {
             [15] = {
                 {},
-                {36, 67},
-                {36, 67},
-                {36, 67},
+                {34, 65},
+                {34, 65},
+                {34, 65},
             },
             [16] = {
                 {},
@@ -317,7 +317,7 @@ end
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
     local now = GetTime()
-    local requiredDiff = self.Phase == 1 and 30 or 90
+    local requiredDiff = self.Phase == 1 and 40 or 100
     if e ~= "ENCOUNTER_TIMELINE_EVENT_ADDED" or (not info) or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + requiredDiff)) or (not self.EncounterID) or (not self.Phase) then return end
 
     table.insert(self.Timelines, {timestamp = now, duration = info.duration})
@@ -327,7 +327,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
     for _, timelineInfo in ipairs(self.Timelines) do
         if now < timelineInfo.timestamp + 0.3 then
             addedcount = addedcount + 1
-            if ApproximatelyEqual(timelineInfo.duration, 17, 0.2) or ApproximatelyEqual(timelineInfo.duration, 11, 0.2) or ApproximatelyEqual(timelineInfo.duration, 13, 0.2) then
+            if ApproximatelyEqual(timelineInfo.duration, 16, 0.2) or ApproximatelyEqual(timelineInfo.duration, 11, 0.2) or ApproximatelyEqual(timelineInfo.duration, 13, 0.2) then
                 hasRequiredDuration = true
             end
         end

@@ -223,8 +223,8 @@ function NSUI:Init()
     local NOTES_HEADER_BTN_Y = -38
 
     local notesTabs = {
-        { name = "SharedNotes",   textKey = "Shared Notes",   icon = "users_icon" },
-        { name = "PersonalNotes", textKey = "Personal Notes", icon = "user_icon" },
+        { name = "SharedNotes",   textKey = "Shared Notes",   icon = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\users-round.png]] },
+        { name = "PersonalNotes", textKey = "Personal Notes", icon = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\user-round.png]] },
     }
 
     for i, nt in ipairs(notesTabs) do
