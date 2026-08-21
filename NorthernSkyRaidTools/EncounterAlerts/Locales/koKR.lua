@@ -213,7 +213,7 @@ L[3420] = {
     ["Debuffs"]     = {group = "스조라크", name = "디버프", text = "디버프"},
     ["SerpentsFury"] = {group = "스조라크", name = "뱀의 격노", text = "뭉치기"},
     ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
-    -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    ["VenomousSurgeTargets"] = {group = "스조라크", name = "디버프 대상"},
 }
 
 -- The Twin Fangs (3421)
@@ -232,7 +232,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]       = {group = "똬리의 제단 1페", name = "1페 전방스킬", text = "전방스킬"},
-    -- ["P1OrbDeadline"] = {group = "Coiled Altar P1", name = "Orb deadline", text = "Orb deadline"},
+    ["P1OrbDeadline"] = {group = "똬리의 제단 1페", name = "구슬 데드라인", text = "구슬 데드라인"},
     ["P1Taunt"]         = {group = "똬리의 제단 탱커", name = "1페 도발", text = "도발"},
     ["P1Soak"]          = {group = "똬리의 제단 1페", name = "1페 스킬 맞기", text = "스킬 맞기"},
     ["MindControls"] = {group = "똬리의 제단 2페", name = "정신 지배", text = "정신 지배"},
@@ -241,27 +241,27 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "똬리의 제단 2페", name = "2페 디버프", text = "디버프"},
     ["P2Shield"]        = {group = "똬리의 제단 2페", name = "2페 보호막", text = "보호막"},
     ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
-    ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
-    ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
-    ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},
-    ["P3Debuffs"] = {group = "Coiled Altar P3", name = "P3 Debuffs", text = "Debuffs"},
-    -- ["P3InterruptAdds"] = {group = "Coiled Altar P3", name = "P3 Interrupt Adds", text = "Ghosts"},
-    ["P3MindControls"] = {group = "Coiled Altar P3", name = "P3 Mind Controls", text = "Mind Controls"},
-    ["P3Taunt"] = {group = "Coiled Altar Tanks", name = "P3 Taunt", text = "Taunt"},
+    ["P3Frontal"] = {group = "똬리의 제단 3페", name = "3페 전방스킬", text = "전방스킬"},
+    ["P3Soak"] = {group = "똬리의 제단 3페", name = "3페 스킬 맞기", text = "스킬 맞기"},
+    ["P3Shield"] = {group = "똬리의 제단 3페", name = "3페 보호막", text = "보호막"},
+    ["P3Debuffs"] = {group = "똬리의 제단 3페", name = "3페 디버프", text = "디버프"},
+    ["P3InterruptAdds"] = {group = "똬리의 제단 3페", name = "3페 쫄 차단", text = "유령"},
+    ["P3MindControls"] = {group = "똬리의 제단 3페", name = "3페 정신 지배", text = "정신 지배"},
+    ["P3Taunt"] = {group = "똬리의 제단 탱커", name = "3페 도발", text = "도발"},
 }
 
 -- Ula'tek (3492)
 L[3492] = {
-    -- ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
-    -- ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
-    -- ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
-    -- ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
-    -- ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
-    -- ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
-    -- ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
-    -- ["Adds"]                = {group = "Ula'tek", name = "P3 Adds", text = "Adds"},
-    -- ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
-    -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
-    -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
-    -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
+    ["HitKnock"]            = {group = "울라텍", name = "어미의 분노", text = "공격+넉백"},
+    ["Waves"]               = {group = "울라텍", name = "부식의 파도", text = "파도"},
+    ["DamageAmpIn"]         = {group = "울라텍", name = "맹독의 심장", text = "곧 약화"},
+    ["DamageAmp"]           = {group = "울라텍", name = "맹독의 심장", text = "약화됨"},
+    ["PlatformBreak"]       = {group = "울라텍", name = "사냥감 포위", text = "바닥 꺼짐"},
+    ["Debuffs"]             = {group = "울라텍", name = "뱀의 물어뜯기", text = "디버프"},
+    ["Eggs"]                = {group = "울라텍", name = "알", text = "알"},
+    ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
+    ["Sweep"]               = {group = "울라텍", name = "꼬리 휩쓸기", text = "꼬리"},
+    ["Soak"]                = {group = "울라텍", name = "스킬 맞기", text = "스킬 맞기"},
+    ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
+    ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
 }
