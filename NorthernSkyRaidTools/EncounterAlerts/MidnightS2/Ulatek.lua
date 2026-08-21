@@ -24,16 +24,16 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Ula'tek", internalID = "Waves", name = "Caustic Wave", text = "Waves", DisplayType = "Text", encID = encID, TTS = "Waves", dur = 5, spellID = 1292403, phase = 1,
         timers = {
-            [15] = {48, 100, 416.7, 471.7, 521.7},
-            [16] = {48, 100, 416.7, 471.7, 521.7},
+            [15] = {48, 100, 416.7, 471.7, 521.7, 566.7},
+            [16] = {48, 100, 416.7, 471.7, 521.7, 566.7},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1286860, phase = 1,
         timers = {
-            [15] = {135.5, 284.6},
-            [16] = {135.5, 284.6},
+            [15] = {135.5, 284.6, 573.7},
+            [16] = {135.5, 284.6, 573.7},
         },
     }
     self:AddEncounterAlert(data)
@@ -41,8 +41,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "DamageAmp", name = "Venomous Heart", text = "Dmg amp", DisplayType = "Bar", encID = encID, TTS = false, dur = 20, spellID = 1299526, phase = 1,
         barColors = {1, 0, 0, 1},
         timers = {
-            [15] = {155.5, 304.6},
-            [16] = {155.5, 304.6},
+            [15] = {155.5, 304.6, 593.7},
+            [16] = {155.5, 304.6, 593.7},
         },
     }
     self:AddEncounterAlert(data)
@@ -57,8 +57,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Ula'tek", internalID = "Debuffs", name = "Serpent's Bite", text = "Debuffs", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1293046, phase = 1,
         timers = {
-            [15] = {392.2, 463.2, 500.2},
-            [16] = {392.2, 463.2, 500.2},
+            [15] = {392.2, 463.2, 500.2, 555.5},
+            [16] = {392.2, 463.2, 500.2, 555.5},
         },
     }
     self:AddEncounterAlert(data)
