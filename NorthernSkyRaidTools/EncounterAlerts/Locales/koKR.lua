@@ -141,7 +141,7 @@ L[3159] = {
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
     ["Adds"]          = {group = "님리사", name = "쫄 등장", text = "쫄"},
-    ["Waves"]         = {group = "님리사", name = "파도", text = "파도"},
+    ["Waves"]         = {group = "님리사", name = "물결", text = "물결"},
     ["Knockback"]     = {group = "님리사", name = "넉백", text = "넉백"},
     ["ChillingFrost"] = {group = "님리사", name = "오싹한 서리", text = "디버프"},
     ["AbyssalRain"]   = {group = "님리사", name = "심연의 비", text = "광역뎀"},
@@ -183,8 +183,8 @@ L[3455] = {
     ["Infection"]   = {group = "바쉬니크", name = "감염", text = "감염"},
     ["AoE"]         = {group = "바쉬니크", name = "광역뎀", text = "광역뎀"},
     ["Soaks"]       = {group = "바쉬니크", name = "스킬 맞기", text = "스킬 맞기"},
-    ["Waves"]       = {group = "바쉬니크", name = "파도", text = "파도"},
-    ["WaveSpread"] = {group = "바쉬니크", name = "파도 산개", text = "미리 산개"},
+    ["Waves"]       = {group = "바쉬니크", name = "물결", text = "물결"},
+    ["WaveSpread"] = {group = "바쉬니크", name = "물결 산개", text = "미리 산개"},
 }
 
 -- The Lost Explorers (3497)
