@@ -84,8 +84,7 @@ NSI.AuraSoundCategories = {
         }},
         {key = 3455, entries = { -- Vashnik the Malignant
             {spellID = 1295224, sound = "Suck"}, -- Siphoning Infection
-            {spellID = 1295173, sound = "RunOut"}, -- Exploding Infection
-            {spellID = 1294994, sound = "HealAbsorb"}, -- Stygian Infusion
+            {spellID = 1294994, sound = "Move"}, -- Stygian Infusion
             {spellID = 1281908, sound = "Targeted"}, -- Plague Froth
         }},
         {key = 3497, entries = { -- The Lost Explorers
