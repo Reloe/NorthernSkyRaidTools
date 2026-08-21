@@ -18,7 +18,7 @@ local damageAmpTimers = {
 local venomousSurgeCastTimers = {
     [14] = {36.25, 95, 188.3, 247, 340.3},
     [15] = {32.2, 84.4, 170.3, 222.6, 308.5, 360.8},
-    [16] = {}, -- TODO
+    [16] = {32, 79.8, 159, 206.8, 286, 333.8},
 }
 
 -- boss1target briefly changes to each bomb target during the bomb cast.
@@ -151,7 +151,7 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Sszorak", internalID = "VenomousSurgeTargets", name = "Debuff Targets", text = nil, DisplayType = "Bar", encID = encID, phase = nil, TTS = false, dur = bombDuration,
-        spellID = 1305959, id = 0.1, difficulties = {14, 15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, Preview = BombPreview,
+        spellID = 1305959, id = 0.1, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, Preview = BombPreview,
         customIcon = 1305959,
     }
     self:AddEncounterAlert(data)
