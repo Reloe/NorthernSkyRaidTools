@@ -1128,6 +1128,9 @@ L["Will automatically create the correct macros for the memory game. You will on
 L["FontSize"] = "字体大小"
 L["relativeTo"] = "附着点"
 L["Winds Helper"] = "狂风助手"
+L["Shows the sender next to each entered number."] = "在输入的数字旁显示发送者名称。"
+L["Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."] = "创建一组宏，用于发送标记对应的数字1-8，并激活显示。按吹风阶段踩囊肿的顺序点击宏。如果填满3个后收到新消息，则会清空并从头开始，方便纠错。"
+L["Backup"] = "补位"
 -- ============================================================================
 -- EncounterAlerts.lua
 -- ============================================================================

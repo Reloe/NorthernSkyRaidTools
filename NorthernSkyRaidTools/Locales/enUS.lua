@@ -1128,6 +1128,9 @@ L["Will automatically create the correct macros for the memory game. You will on
 L["FontSize"] = "FontSize"
 L["relativeTo"] = "relativeTo"
 L["Winds Helper"] = "Winds Helper"
+L["Shows the sender next to each entered number."] = "Shows the sender next to each entered number."
+L["Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."] = "Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."
+L["Backup"] = "Backup"
 -- ============================================================================
 -- EncounterAlerts.lua
 -- ============================================================================
