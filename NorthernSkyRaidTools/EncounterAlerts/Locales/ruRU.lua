@@ -212,6 +212,7 @@ L[3420] = {
     ["Bait"] = {group = "Ссзорак", name = "Байт", text = "Байт"},
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
+    -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
 }
 
 -- The Twin Fangs (3421)

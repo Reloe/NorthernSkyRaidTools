@@ -212,6 +212,7 @@ L[3420] = {
     ["Debuffs"]      = {group = "司佐拉", name = "Debuff", text = "Debuff"},
     ["SerpentsFury"] = {group = "司佐拉", name = "毒蛇之怒", text = "集中"},
     ["WindsHelper"]  = {group = "司佐拉", name = "吹風方向"},
+    ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
 }
 
 -- The Twin Fangs (3421)
