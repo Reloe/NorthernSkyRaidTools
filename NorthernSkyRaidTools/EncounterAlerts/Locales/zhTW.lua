@@ -4,6 +4,9 @@ NSI.EncounterAlertLocales = NSI.EncounterAlertLocales or {}
 local L = {}
 NSI.EncounterAlertLocales["zhTW"] = L
 
+
+
+
 -- ============================================================================
 -- MidnightS1
 -- ============================================================================
@@ -212,7 +215,7 @@ L[3420] = {
     ["Debuffs"]      = {group = "司佐拉", name = "Debuff", text = "Debuff"},
     ["SerpentsFury"] = {group = "司佐拉", name = "毒蛇之怒", text = "集中"},
     ["WindsHelper"]  = {group = "司佐拉", name = "吹風方向"},
-    ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    ["VenomousSurgeTargets"] = {group = "司佐拉", name = "Debuff 目標"},
 }
 
 -- The Twin Fangs (3421)
@@ -231,7 +234,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]     = {group = "盤蛇祭壇 P1", name = "P1 頭前", text = "頭前"},
-    -- ["P1OrbDeadline"] = {group = "Coiled Altar P1", name = "Orb deadline", text = "Orb deadline"},
+    ["P1OrbDeadline"] = {group = "盤蛇祭壇 P1", name = "停止搬球", text = "停止搬球"},
     ["P1Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P1 嘲諷", text = "嘲諷"},
     ["P1Soak"]        = {group = "盤蛇祭壇 P1", name = "P1 分傷", text = "分傷"},
     ["MindControls"]  = {group = "盤蛇祭壇 P2", name = "心控", text = "心控"},
@@ -251,16 +254,16 @@ L[3429] = {
 
 -- Ula'tek (3492)
 L[3492] = {
-    -- ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
-    -- ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
-    -- ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
-    -- ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
-    -- ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
-    -- ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
-    -- ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
-    -- ["Adds"]                = {group = "Ula'tek", name = "P3 Adds", text = "Adds"},
-    -- ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
-    -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
-    -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
-    -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
+    ["HitKnock"]            = {group = "烏拉特克", name = "蛇母之怒", text = "擊退"},
+    ["Waves"]               = {group = "烏拉特克", name = "腐蝕波", text = "波"},
+    ["DamageAmpIn"]         = {group = "烏拉特克", name = "劇毒心臟", text = "準備增傷"},
+    ["DamageAmp"]           = {group = "烏拉特克", name = "劇毒心臟", text = "增傷"},
+    ["PlatformBreak"]       = {group = "烏拉特克", name = "包圍獵物", text = "平台裂開"},
+    ["Debuffs"]             = {group = "烏拉特克", name = "毒蛇之咬", text = "Debuff"},
+    ["Eggs"]                = {group = "烏拉特克", name = "蛋", text = "蛋"},
+    ["Adds"]                = {group = "烏拉特克", name = "P3 小怪", text = "小怪"},
+    ["Sweep"]               = {group = "烏拉特克", name = "Sweep", text = "Sweep"},
+    ["Soak"]                = {group = "烏拉特克", name = "分傷", text = "分傷"},
+    ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
+    ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
 }
