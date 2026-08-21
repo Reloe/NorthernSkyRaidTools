@@ -1149,6 +1149,9 @@ L["Will automatically create the correct macros for the memory game. You will on
 L["FontSize"] = "Размер шрифта"
 L["relativeTo"] = "относительно"
 L["Winds Helper"] = "Winds Helper"
+L["Shows the sender next to each entered number."] = "Показывает отправителя рядом с каждым введённым номером."
+L["Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."] = "Создаёт макросы, которые отправляют в чат числа от 1 до 8 с соответствующими значками рейдовых меток и запускают отображение во время боя. Вам нужно всего лишь нажать кнопки макроса в том порядке, в котором Вы хотите, чтобы срабатывали эффекты 'Ударов' во время усиления урона. Если новые сообщения поступают после того, как уже заполнено 3, они просто начнут заполнение сначала, что позволяет исправлять ошибки."
+L["Backup"] = "Резервная копия"
 
 -- ============================================================================
 -- EncounterAlerts.lua

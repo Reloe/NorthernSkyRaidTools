@@ -212,7 +212,7 @@ L[3420] = {
     ["Bait"] = {group = "Ссзорак", name = "Байт", text = "Байт"},
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
-    -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
 }
 
 -- The Twin Fangs (3421)
@@ -239,7 +239,7 @@ L[3429] = {
     ["P2Debuffs"] = {group = "Спиральный алтарь [2-я фаза]", name = "Дебаффы (2-я фаза)", text = "Дебаффы"},
     ["P1Taunt"] = {group = "Спиральный алтарь [Танки]", name = "Таунт (1-я фаза)", text = "Провокация"},
     ["P1Frontal"] = {group = "Спиральный алтарь [1-я фаза]", name = "Фронтальный удар (1-я фаза)", text = "Фронтальный удар"},
-    -- ["P1OrbDeadline"] = {group = "Coiled Altar P1", name = "Orb deadline", text = "Orb deadline"},
+    ["P1OrbDeadline"] = {group = "Спиральный алтарь [1-я фаза]", name = "Горящая сфера", text = "Горящая сфера"},
     ["P3Frontal"] = {group = "Спиральный алтарь [3-я фаза]", name = "Фронтальный удар (3-я фаза)", text = "Фронтальный удар"},
     ["P3Soak"] = {group = "Спиральный алтарь [3-я фаза]", name = "Поглощение (3-я фаза)", text = "Поглощение"},
     ["P3Shield"] = {group = "Спиральный алтарь [3-я фаза]", name = "Щит (3-я фаза)", text = "Щит"},
@@ -251,16 +251,16 @@ L[3429] = {
 
 -- Ula'tek (3492)
 L[3492] = {
-    -- ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
-    -- ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
-    -- ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
-    -- ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
-    -- ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
-    -- ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
-    -- ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
-    -- ["Adds"]                = {group = "Ula'tek", name = "P3 Adds", text = "Adds"},
-    -- ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
-    -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
-    -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
-    -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
+    ["HitKnock"]            = {group = "Ула'тек", name = "Гнев матери", text = "Урон + удар"},
+    ["Waves"]               = {group = "Ула'тек", name = "Едкие волны", text = "Волны"},
+    ["DamageAmpIn"]         = {group = "Ула'тек", name = "Ядовитое сердце", text = "Усиление урона через"},
+    ["DamageAmp"]           = {group = "Ула'тек", name = "Ядовитое сердце", text = "Усиление урона"},
+    ["PlatformBreak"]       = {group = "Ула'тек", name = "Обвивание добычи", text = "Разрушение платформы"},
+    ["Debuffs"]             = {group = "Ула'тек", name = "Змеиный укус", text = "Дебаффы"},
+    ["Eggs"]                = {group = "Ула'тек", name = "Яйца", text = "Яйца"},
+    ["Adds"]                = {group = "Ула'тек", name = "Адды (3-я фаза)", text = "Адды"},
+    ["Sweep"]               = {group = "Ула'тек", name = "Сбивание", text = "Сбивание"},
+    ["Soak"]                = {group = "Ула'тек", name = "Поглощение", text = "Поглощение"},
+    ["TransitionSoakFirst"] = {group = "Ула'тек", name = "Первое поглощение", text = "Первое поглощение"},
+    ["TransitionSoakSecond"] = {group = "Ула'тек", name = "Второе поглощение", text = "Второе поглощение"},
 }
