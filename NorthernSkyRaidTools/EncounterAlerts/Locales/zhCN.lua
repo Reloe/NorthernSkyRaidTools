@@ -140,14 +140,14 @@ L[3159] = {
 -- ============================================================================
 -- Nymrissa Wavecaller (3379)
 L[3379] = {
-     ["Adds"]          = {group = "尼姆瑞莎", name = "诱人水泡（小怪）", text = "小怪刷新"},
-     ["Waves"]         = {group = "尼姆瑞莎", name = "激荡漩涡（观察）", text = "找缺口"},
-     ["Knockback"]     = {group = "尼姆瑞莎", name = "嘭！（击退）", text = "击退"},
-     ["ChillingFrost"] = {group = "尼姆瑞莎", name = "刺骨寒霜（点名）", text = "点名宝珠"},
-     ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
-     ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
-     ["WaterFlurry"]   = {group = "尼姆瑞莎", name = "冰刃乱舞（坦克）", text = "坦克打击"},
-     ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
+    ["Adds"]          = {group = "尼姆瑞莎", name = "诱人水泡（小怪）", text = "小怪刷新"},
+    ["Waves"]         = {group = "尼姆瑞莎", name = "激荡漩涡（观察）", text = "找缺口"},
+    ["Knockback"]     = {group = "尼姆瑞莎", name = "嘭！（击退）", text = "击退"},
+    ["ChillingFrost"] = {group = "尼姆瑞莎", name = "刺骨寒霜（点名）", text = "点名宝珠"},
+    ["AbyssalRain"]   = {group = "尼姆瑞莎", name = "深渊之雨（AoE）", text = "全团伤害"},
+    ["WaterJet"]      = {group = "尼姆瑞莎", name = "水流喷射", text = "正面喷射"},
+    ["WaterFlurry"]   = {group = "尼姆瑞莎", name = "冰刃乱舞（坦克）", text = "坦克打击"},
+    ["Taunt"]         = {group = "尼姆瑞莎", name = "嘲讽", text = "嘲讽"},
 }
 
 -- Nek'zali the Soulcoiler (3470)
@@ -213,7 +213,7 @@ L[3420] = {
     ["Debuffs"]      = {group = "斯索拉克", name = "剧毒涌动（点名）", text = "点名囊肿"},
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "狂风助手"},
-    -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    ["VenomousSurgeTargets"] = {group = "斯索拉克", name = "剧毒涌动目标"},
 }
 
 -- The Twin Fangs (3421)
@@ -231,37 +231,37 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    ["P1Frontal"]     = {group = "盘卷祭坛 P1", name = "撕裂", text = "正面顺劈"},
-    -- ["P1OrbDeadline"] = {group = "Coiled Altar P1", name = "Orb deadline", text = "Orb deadline"},
-    ["P1Taunt"]       = {group = "盘卷祭坛 坦克", name = "P1 嘲讽", text = "嘲讽"},
-    ["P1Soak"]        = {group = "盘卷祭坛 P1", name = "处斩（分摊）", text = "分摊"},
-    ["MindControls"]  = {group = "盘卷祭坛 P2", name = "恐惧行军（心控）", text = "心控"},
-    ["P2Frontal"]     = {group = "盘卷祭坛 P2", name = "灵魂撕裂", text = "正面顺劈"},
-    ["P2Taunt"]       = {group = "盘卷祭坛 坦克", name = "P2 嘲讽", text = "嘲讽"},
-    ["P2Debuffs"]     = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
-    ["P2Shield"]      = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
-    ["InterruptAdds"] = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    ["P3Frontal"]            = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
-    ["P3Soak"]               = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
-    ["P3Shield"]             = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
-    ["P3Debuffs"]            = {group = "盘卷祭坛 P3", name = "幽暗炸弹（点名）", text = "点名炸弹"},
-    -- ["P3InterruptAdds"]      = {group = "盘卷祭坛 P3", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    ["P3MindControls"]       = {group = "盘卷祭坛 P3", name = "恐惧行军（心控）", text = "心控"},
-    ["P3Taunt"]              = {group = "盘卷祭坛 坦克", name = "P3 嘲讽", text = "嘲讽"},
+    ["P1Frontal"]       = {group = "盘卷祭坛 P1", name = "撕裂", text = "正面顺劈"},
+    ["P1OrbDeadline"]   = {group = "盘卷祭坛 P1", name = "搬球时限", text = "搬球时限"},
+    ["P1Taunt"]         = {group = "盘卷祭坛 坦克", name = "P1 嘲讽", text = "嘲讽"},
+    ["P1Soak"]          = {group = "盘卷祭坛 P1", name = "处斩（分摊）", text = "分摊"},
+    ["MindControls"]    = {group = "盘卷祭坛 P2", name = "恐惧行军（心控）", text = "心控"},
+    ["P2Frontal"]       = {group = "盘卷祭坛 P2", name = "灵魂撕裂", text = "正面顺劈"},
+    ["P2Taunt"]         = {group = "盘卷祭坛 坦克", name = "P2 嘲讽", text = "嘲讽"},
+    ["P2Debuffs"]       = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
+    ["P2Shield"]        = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
+    ["InterruptAdds"]   = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
+    ["P3Frontal"]       = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
+    ["P3Soak"]          = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
+    ["P3Shield"]        = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
+    ["P3Debuffs"]       = {group = "盘卷祭坛 P3", name = "幽暗炸弹（点名）", text = "点名炸弹"},
+    -- ["P3InterruptAdds"] = {group = "盘卷祭坛 P3", name = "恐惧哀嚎（打断）", text = "打断小怪"},
+    ["P3MindControls"]  = {group = "盘卷祭坛 P3", name = "恐惧行军（心控）", text = "心控"},
+    ["P3Taunt"]         = {group = "盘卷祭坛 坦克", name = "P3 嘲讽", text = "嘲讽"},
 }
 
 -- Ula'tek (3492)
 L[3492] = {
-    -- ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
-    -- ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
-    -- ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
-    -- ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
-    -- ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
-    -- ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
-    -- ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
-    -- ["Adds"]                = {group = "Ula'tek", name = "P3 Adds", text = "Adds"},
-    -- ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
-    -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
-    -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
-    -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
+    ["HitKnock"]            = {group = "乌拉特克", name = "蛇母之怒（坦克）", text = "坦克击退"},
+    ["Waves"]               = {group = "乌拉特克", name = "腐蚀浪潮", text = "波浪"},
+    ["DamageAmpIn"]         = {group = "乌拉特克", name = "被缚之怒（易伤）", text = "准备易伤"},
+    ["DamageAmp"]           = {group = "乌拉特克", name = "易伤倒计时", text = "易伤"},
+    ["PlatformBreak"]       = {group = "乌拉特克", name = "盘绕猎物（场地）", text = "摧毁平台"},
+    ["Debuffs"]             = {group = "乌拉特克", name = "毒蛇之咬（点名）", text = "点名毒液"},
+    ["Eggs"]                = {group = "乌拉特克", name = "毒蛇呼唤（蛋）", text = "蛋刷新"},
+    ["Adds"]                = {group = "乌拉特克", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
+    ["Sweep"]               = {group = "乌拉特克", name = "恶臭痛击", text = "范围横扫"},
+    ["Soak"]                = {group = "乌拉特克", name = "幽魂盘卷（分摊）", text = "分摊"},
+    ["TransitionSoakFirst"] = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
+    ["TransitionSoakSecond"] = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
 }
