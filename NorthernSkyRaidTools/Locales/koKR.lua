@@ -1109,6 +1109,9 @@ L["Will automatically create the correct macros for the memory game. You will on
 L["FontSize"] = "글꼴 크기"
 L["relativeTo"] = "상대 위치 지점"
 L["Winds Helper"] = "바람 기믹 헬퍼"
+L["Shows the sender next to each entered number."] = "번호를 입력한 사람 이름을 표시합니다."
+L["Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."] = "공격대 징표 아이콘에 맞춰 1~8의 숫자를 쓰는 매크로를 생성하고 전투 도중 발동됩니다. 약화 상태가 시작된 동안 매크로를 누른 순서대로 넉백을 당하면 됩니다. 매크로 3번 이후 누르게 되면 실수로 눌렀을 때의 복구를 위해 처음부터 다시 시작됩니다."
+L["Backup"] = "예비조"
 -- ============================================================================
 -- EncounterAlerts.lua
 -- ============================================================================
