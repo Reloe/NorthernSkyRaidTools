@@ -53,8 +53,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {40.5, 77.6, 125.5, 162.6},
-            [16] = {40.5, 77.6, 125.5, 162.6},
+            [15] = {23.5, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
+            [16] = {23.5, 40.5, 60.5, 77.6, 108.6, 125.5, 145.5, 162.6},
         },
     }
     self:AddEncounterAlert(data)
