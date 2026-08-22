@@ -18,7 +18,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nymrissa", internalID = "Waves", name = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = "Dodge", dur = 5, spellID = 1258673,
         timers = {
-            [15] = {68, 185, 302, 419, 536},
+            [15] = {111, 221, 331, 441},
             [16] = {72, 189, 306, 423, 540},
         },
     }
@@ -26,7 +26,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Nymrissa", internalID = "Knockback", name = "Knockback", text = "Knock", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = 1258150,
         timers = {
-            [15] = {120, 230, 340.1, 450.1},
+            [15] = {120, 230, 340, 450},
             [16] = {81, 198, 315, 432, 549},
         },
     }
