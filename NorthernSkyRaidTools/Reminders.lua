@@ -586,6 +586,62 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     if self.CircleMover then
         self:MoveFrameSettings(self.CircleMover, NSRT.ReminderSettings.CircleSettings, nil, true)
     end
+    local F = self.DebuffOverviewMover
+    if F then
+        local s = NSRT.ReminderSettings.DebuffOverviewSettings
+        local previewDurations = {8, 7, 6}
+        F:SetSize(s.Width, s.Height)
+        F.Border:SetBackdropBorderColor(unpack(s.borderColors))
+        local iconOnRight = s.IconPosition == "Right"
+        local growUp = s.GrowDirection == "Up"
+        for index, row in ipairs(F.PreviewRows) do
+            row:SetSize(s.Width, s.Height)
+            row:ClearAllPoints()
+            if growUp then
+                row:SetPoint("BOTTOMLEFT", F, "TOPLEFT", 0, 8 + (index - 1) * (s.Height + s.Spacing))
+            else
+                row:SetPoint("TOPLEFT", F, "BOTTOMLEFT", 0, -8 - (index - 1) * (s.Height + s.Spacing))
+            end
+            row.Bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", s.Texture))
+            row.Bar:SetStatusBarColor(unpack(s.barColors))
+            row.Bar:SetBackdropColor(unpack(s.backgroundColors))
+            row.Bar:SetMinMaxValues(0, previewDurations[index])
+            row.Border:SetBackdropBorderColor(unpack(s.borderColors))
+            row.Icon:ClearAllPoints()
+            row.Icon:SetPoint(iconOnRight and "LEFT" or "RIGHT", row.Bar, iconOnRight and "RIGHT" or "LEFT", 0, 0)
+            row.Icon:SetSize(s.Height, s.Height)
+            row.LeftText:ClearAllPoints()
+            row.LeftText:SetPoint("LEFT", row.Bar, "LEFT", s.xTextOffset, s.yTextOffset)
+            row.LeftText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
+            row.LeftText:SetTextColor(unpack(s.textColors))
+            row.RightText:ClearAllPoints()
+            row.RightText:SetPoint("RIGHT", row.Bar, "RIGHT", s.xTimer, s.yTimer)
+            row.RightText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
+            row.RightText:SetTextColor(unpack(s.textColors))
+        end
+        if not F.PreviewUpdateInitialized then
+            F.PreviewUpdateInitialized = true
+            F.PreviewTicker = 0
+            F:SetScript("OnUpdate", function(frame, elapsed)
+                if not NSI.IsInPreview then return end
+                frame.PreviewTicker = frame.PreviewTicker + elapsed
+                if frame.PreviewTicker < 0.025 then return end
+                frame.PreviewTicker = 0
+                local elapsedTime = GetTime() - (frame.PreviewStartedAt or GetTime())
+                for index, row in ipairs(frame.PreviewRows) do
+                    local remaining = math.max(0, previewDurations[index] - elapsedTime)
+                    row.Bar:SetValue(remaining)
+                    row.RightText:SetText(string.format("%.0f", remaining))
+                end
+            end)
+        end
+        F.Border:ClearAllPoints()
+        local borderTop = growUp and 3 * (s.Height + s.Spacing) - s.Spacing + 6 or -6
+        local borderBottom = growUp and 6 or -(3 * (s.Height + s.Spacing) - s.Spacing + 6)
+        F.Border:SetPoint("TOPLEFT", F, "TOPLEFT", iconOnRight and -6 or -6 - s.Height, borderTop)
+        F.Border:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", iconOnRight and 6 + s.Height or 6, borderBottom)
+        self:MoveFrameSettings(F, s, false, false)
+    end
 end
 
 function NSI:ArrangeStates(DisplayType)
@@ -1952,16 +2008,63 @@ function NSI:CreateMoveFrames()
     self:CreateReminderMoverFrame("BarMover",    NSRT.ReminderSettings.BarSettings,    "BarSettings")
     self:CreateReminderMoverFrame("TextMover",   NSRT.ReminderSettings.TextSettings,   "TextSettings", true)
     self:CreateReminderMoverFrame("CircleMover", NSRT.ReminderSettings.CircleSettings, "CircleSettings")
+    self:CreateReminderMoverFrame("DebuffOverviewMover", NSRT.ReminderSettings.DebuffOverviewSettings, "DebuffOverviewSettings")
     self:CreateNoteMoverFrame("ReminderFrame", NSRT.ReminderSettings.ReminderFrame, true, false, false)
     self:CreateNoteMoverFrame("PersonalReminderFrame", NSRT.ReminderSettings.PersonalReminderFrame, false, true, false)
     self:CreateNoteMoverFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, false, false, true)
 end
 
-local ANCHOR_TITLES = {IconMover="Icons", BarMover="Bars", TextMover="Texts", CircleMover="Circles"}
+local ANCHOR_TITLES = {IconMover="Icons", BarMover="Bars", TextMover="Texts", CircleMover="Circles", DebuffOverviewMover="Debuff Overview"}
 
 function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
     if not self[Name] then
         self[Name] = CreateFrame("Frame", 'NSUIReminder'..Name, UIParent, "BackdropTemplate")
+        local IsDebuffOverview = SettingsName == "DebuffOverviewSettings"
+        self[Name].IsDebuffOverview = IsDebuffOverview
+        if IsDebuffOverview then
+            local F = self[Name]
+            F.PreviewRows = {}
+            local previewSpellIDs = {102342, 204018, 116849}
+            local playerName = NSAPI:GetName("player") or UnitName("player") or "Player"
+            local classFile = select(2, UnitClass("player"))
+            local classColor = classFile and RAID_CLASS_COLORS[classFile]
+            local coloredPlayerName = classColor and classColor:WrapTextInColorCode(playerName) or playerName
+            for index, spellID in ipairs(previewSpellIDs) do
+                local row = CreateFrame("Frame", nil, F)
+                row:SetFrameLevel(F:GetFrameLevel() + 10)
+                row:SetSize(SettingsTable.Width, SettingsTable.Height)
+                row.Bar = CreateFrame("StatusBar", nil, row, "BackdropTemplate")
+                row.Bar:SetAllPoints(row)
+                row.Bar:SetFrameLevel(row:GetFrameLevel())
+                row.Bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", SettingsTable.Texture))
+                row.Bar:SetStatusBarColor(unpack(SettingsTable.barColors))
+                row.Bar:SetMinMaxValues(0, 8)
+                row.Bar:SetValue(8 - index)
+                row.Bar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8", tileSize = 0})
+                row.Bar:SetBackdropColor(unpack(SettingsTable.backgroundColors))
+                row.Border = CreateFrame("Frame", nil, row, "BackdropTemplate")
+                row.Border:SetAllPoints(row)
+                row.Border:SetFrameLevel(row:GetFrameLevel() + 1)
+                row.Border:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+                row.Border:SetBackdropBorderColor(unpack(SettingsTable.borderColors))
+                row.TextLayer = CreateFrame("Frame", nil, row)
+                row.TextLayer:SetAllPoints(row)
+                row.TextLayer:SetFrameLevel(row:GetFrameLevel() + 2)
+                row.Icon = row:CreateTexture(nil, "ARTWORK")
+                local spellInfo = C_Spell.GetSpellInfo(spellID)
+                row.Icon:SetTexture(spellInfo and spellInfo.iconID)
+                row.LeftText = row.TextLayer:CreateFontString(nil, "OVERLAY")
+                row.LeftText:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
+                row.LeftText:SetTextColor(unpack(SettingsTable.textColors))
+                row.LeftText:SetText(coloredPlayerName)
+                row.RightText = row.TextLayer:CreateFontString(nil, "OVERLAY")
+                row.RightText:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.TimerFontSize, GetReminderFontFlags(SettingsTable))
+                row.RightText:SetTextColor(unpack(SettingsTable.textColors))
+                row.RightText:SetText(tostring(8 - index))
+                row:Hide()
+                F.PreviewRows[index] = row
+            end
+        end
         if IsText then
             self[Name].Text = self[Name]:CreateFontString(Name..'Text', "OVERLAY")
             self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
@@ -1970,7 +2073,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             self[Name].Text:SetTextColor(1, 1, 1, 0)
         end
         self:MoveFrameInit(self[Name], SettingsName)
-        self:MoveFrameSettings(self[Name], SettingsTable, IsText, true)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText, not IsDebuffOverview)
 
         -- Title label (shown when unlocked)
         local title = ANCHOR_TITLES[Name] or Name
@@ -1999,7 +2102,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         gear:SetScript("OnLeave", function(self) gearTexture:SetVertexColor(0.8, 0.8, 0.8, 1) end)
         gear:SetScript("OnClick", function()
             -- Close any other open windows first
-            for _, n in ipairs({"IconMover","BarMover","TextMover","CircleMover"}) do
+            for _, n in ipairs({"IconMover","BarMover","TextMover","CircleMover","DebuffOverviewMover"}) do
                 if NSI[n] and NSI[n].SettingsWindow and NSI[n] ~= self[Name] then
                     NSI[n].SettingsWindow:Hide()
                 end
@@ -2010,9 +2113,13 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         end)
         self[Name].GearButton = gear
     else
-        self:MoveFrameSettings(self[Name], SettingsTable, IsText, true)
+        self:MoveFrameSettings(self[Name], SettingsTable, IsText, not self[Name].IsDebuffOverview)
     end
-    self[Name]:Show()
+    if self[Name].IsDebuffOverview then
+        self[Name]:Hide()
+    else
+        self[Name]:Show()
+    end
 end
 
 function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
@@ -2050,9 +2157,17 @@ end
 function NSI:MoveFrameInit(F, s, ReminderColor)
     if F then
         F.Border = CreateFrame("Frame", nil, F, "BackdropTemplate")
-        local x = s == "BarSettings" and -6-NSRT.ReminderSettings[s].Height or -6 -- extra offset for bars to account for the icon
-        F.Border:SetPoint("TOPLEFT", F, "TOPLEFT", x, 6)
-        F.Border:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", 6, -6)
+        local isDebuffOverview = s == "DebuffOverviewSettings"
+        local iconOnRight = isDebuffOverview and NSRT.ReminderSettings[s].IconPosition == "Right"
+        local leftOffset = -6
+        local rightOffset = 6
+        if s == "BarSettings" or (isDebuffOverview and not iconOnRight) then
+            leftOffset = -6 - NSRT.ReminderSettings[s].Height
+        elseif isDebuffOverview then
+            rightOffset = 6 + NSRT.ReminderSettings[s].Height
+        end
+        F.Border:SetPoint("TOPLEFT", F, "TOPLEFT", leftOffset, 6)
+        F.Border:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", rightOffset, -6)
         F.Border:SetBackdrop({
                 bgFile = "Interface\\Buttons\\WHITE8x8",
                 tileSize = 0,

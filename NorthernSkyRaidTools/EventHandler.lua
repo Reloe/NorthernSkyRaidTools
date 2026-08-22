@@ -130,7 +130,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.TestingReminder = false
         self.IsInPreview = false
         self:UpdateAuraTrackingEncounterVisibility()
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover"}) do
+        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
             self:MakeDraggable(self[v], nil, false)
         end
         self.Phase = 1

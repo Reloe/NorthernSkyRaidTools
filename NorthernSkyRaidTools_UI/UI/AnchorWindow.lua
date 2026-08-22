@@ -19,6 +19,11 @@ local TYPE_MAP = {
     BarSettings    = "Bars",
     TextSettings   = "Texts",
     CircleSettings = "Circles",
+    DebuffOverviewSettings = "Debuff Overview",
+}
+
+local ANCHOR_SETTING_TITLES = {
+    DebuffOverviewSettings = "Debuff Overview",
 }
 
 -- Returns {label, value} pairs for grow-direction dropdowns.
@@ -193,6 +198,40 @@ local function GetWidgetDefs(settingsName)
             Slider(T("Right Text Y Offset"), "yTimer",       -100, 100),
         }
 
+    elseif settingsName == "DebuffOverviewSettings" then
+        local function GetBarFillColor()
+            local c = S.barColors
+            return c[1] or 1, c[2] or 0, c[3] or 0, c[4] or 1
+        end
+        local function GetBarBackgroundColor()
+            local c = S.backgroundColors
+            return c[1] or 0, c[2] or 0, c[3] or 0, c[4] or 0.8
+        end
+        local function SetBarFillColor(_, r, g, b, a) W("barColors", {r, g, b, a}) end
+        local function SetBarBackgroundColor(_, r, g, b, a) W("backgroundColors", {r, g, b, a}) end
+        return {
+            DDGrow(false),
+            Slider(T("Width"),              "Width",         80,   500),
+            Slider(T("Height"),             "Height",        10,   100),
+            Slider(T("Spacing"),            "Spacing",       -5,   20),
+            DD    (T("Texture"),            "Texture",       MediaValuesFn(true)),
+            DD    (T("Font"),               "Font",          MediaValuesFn()),
+            DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
+            DD    (T("Icon Position"),      "IconPosition",  function()
+                return {{label=T("Left"), value="Left"}, {label=T("Right"), value="Right"}}
+            end),
+            Slider(T("Font Size"),          "FontSize",      5,    200),
+            Slider(T("Timer Font Size"),    "TimerFontSize", 5,    200),
+            {Type="Color", label=T("Bar Fill Color"), get=GetBarFillColor, set=SetBarFillColor},
+            {Type="Color", label=T("Bar Background Color"), get=GetBarBackgroundColor, set=SetBarBackgroundColor},
+            {Type="Color", label=T("Bar Text Color"), get=GetColor, set=SetColor},
+            {Type="Color", label=T("Border Color"), get=GetBorderColor, set=SetBorderColor},
+            Slider(T("Left Text X Offset"),  "xTextOffset",   -500, 500),
+            Slider(T("Left Text Y Offset"),  "yTextOffset",   -500, 500),
+            Slider(T("Right Text X Offset"), "xTimer",        -100, 100),
+            Slider(T("Right Text Y Offset"), "yTimer",        -100, 100),
+        }
+
     elseif settingsName == "TextSettings" then
         return {
             DDGrow(false),
@@ -341,7 +380,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     local title = win:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 11, "")
     title:SetTextColor(0, 1, 1, 0.85)
-    title:SetText(T(settingsName:gsub("Settings", " Settings")))
+    title:SetText(T(ANCHOR_SETTING_TITLES[settingsName] or settingsName:gsub("Settings", " Settings")))
     title:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -7)
     win.Title = title
 

@@ -439,6 +439,11 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         if F.Border and isNote then F.Border:Show() end
         if F.dragBorder then F.dragBorder:Show() end
         if F.Text then F.Text:Show() end
+        if F.IsDebuffOverview then
+            for _, row in ipairs(F.PreviewRows) do
+                row:Show()
+            end
+        end
         if F.TitleLabel then F.TitleLabel:Show() end
         if F.GearButton then F.GearButton:Show() end
 
@@ -467,6 +472,11 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
         if F.Border and isNote then F.Border:Hide() end
         if F.dragBorder then F.dragBorder:Hide() end
         if F.Text then F.Text:Hide() end
+        if F.IsDebuffOverview then
+            for _, row in ipairs(F.PreviewRows) do
+                row:Hide()
+            end
+        end
         if F.TitleLabel then F.TitleLabel:Hide() end
         if F.GearButton then F.GearButton:Hide() end
         if F.SettingsWindow then F.SettingsWindow:Hide() end
