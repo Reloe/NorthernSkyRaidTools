@@ -115,7 +115,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local UlatekGraspingFangsPreview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings.")) end]]
     local data = {group = "Ula'tek", internalID = "GraspingFangsOverview", name = "Grasping Fangs Overview", text = nil, DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 40,
-        spellID = 1311611, id = 0.2, difficulties = {15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview,
+        spellID = 1311611, id = 0.2, difficulties = {15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
         timers = {
             [15] = {189},
             [16] = {189},
