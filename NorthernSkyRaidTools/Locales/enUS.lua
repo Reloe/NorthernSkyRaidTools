@@ -1113,7 +1113,7 @@ L["Roles (leave all unchecked for any role)"] = "Roles (leave all unchecked for 
 L["Character Names (no server name)"] = "Character Names (no server name)"
 L["Read-only"] = "Read-only"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "Class / spec filters do not apply\nto addon-created alerts."
-L["Sound settings are fixed\nfor addon-created alerts."] = "Sound settings are fixed\nfor addon-created alerts."
+L["Sound settings are fixed\nfor this alert."] = "Sound settings are fixed\nfor this alert."
 -- Extra Options
 L["Feather Color Icon"] = "Feather Color Icon"
 L["Runes Display"] = "Runes Display"
@@ -1158,6 +1158,7 @@ L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the 
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."
+L["Display settings are fixed\nfor this alert."] = "Display settings are fixed\nfor this alert."
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00SOAK"
 L["|cFFFF0000DON'T SOAK"] = "|cFFFF0000DON'T SOAK"

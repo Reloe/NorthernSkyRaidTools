@@ -1092,7 +1092,6 @@ L["Roles (leave all unchecked for any role)"] = "역할 (전부 체크 해제하
 L["Character Names (no server name)"] = "캐릭터 이름 (서버명 제외)"
 L["Read-only"] = "읽기 전용"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "직업 / 전문화 필터는 애드온이\n생성한 경고에는 적용되지 않습니다."
-L["Sound settings are fixed\nfor addon-created alerts."] = "효과음 설정은 애드온이 생성한\n경고에 같이 되어 있습니다."
 -- Extra Options
 L["Feather Color Icon"] = "깃털색 아이콘"
 L["Runes Display"] = "룬 표시"

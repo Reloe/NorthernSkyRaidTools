@@ -1111,7 +1111,6 @@ L["Roles (leave all unchecked for any role)"] = "职责（全不选则不限职�
 L["Character Names (no server name)"] = "角色名称（不含服务器）"
 L["Read-only"] = "只读"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "职业/专精过滤\n不适用于插件创建的预警。"
-L["Sound settings are fixed\nfor addon-created alerts."] = "插件创建的预警\n音效设置是固定的。"
 -- Extra Options
 L["Feather Color Icon"] = "羽毛颜色图标"
 L["Runes Display"] = "符文显示"

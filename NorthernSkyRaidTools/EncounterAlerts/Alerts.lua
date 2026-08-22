@@ -239,6 +239,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         existing.isSpecialDisplay = alertDef.isSpecialDisplay
         existing.DefaultEnabled = alertDef.DefaultEnabled
         existing.BlockCopy = alertDef.BlockCopy
+        existing.NoEdit = alertDef.NoEdit
         if applyDefaultEnabled and not existing.UserModifiedEnabled then
             existing.enabled = alertDef.DefaultEnabled ~= false
         end

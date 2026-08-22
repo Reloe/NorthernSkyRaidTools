@@ -1856,6 +1856,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     CanCopySection = function(sectionName, alert)
         if not alert then return false end
         if sectionName == "Options" then return false end
+        if alert.NoEdit and (sectionName == "Display" or sectionName == "Sound") then return false end
         if sectionName == "Trigger" and alert.ReloeReminder then return false end
         return sectionName == "Display" or sectionName == "Trigger" or sectionName == "Sound" or sectionName == "Load"
     end
@@ -2564,6 +2565,8 @@ local function BuildEncounterAlertsUI(parentFrame)
         if dispF.colorsPicker then dispF.colorsPicker:Refresh() end
     end
     dispF.SetDisplayType = SetDisplayType
+    dispF.lockOverlay = MakeLockOverlay(dispF,
+        "Display settings are fixed\nfor this alert.")
     end -- DISPLAY TAB
 
     -- ================================================================
@@ -3464,7 +3467,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     -- Lock overlay for Sound tab (reloeCreated alerts — sound is managed by the addon)
     sndF.lockOverlay = MakeLockOverlay(sndF,
-        "Sound settings are fixed\nfor addon-created alerts.")
+        "Sound settings are fixed\nfor this alert.")
     end -- LOAD TAB
 
     -- ================================================================
@@ -3497,6 +3500,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function SetCustomMode()
         trigF.lockOverlay:Hide()
         loadF.lockOverlay:Hide()
+        dispF.lockOverlay:Hide()
         sndF.lockOverlay:Hide()
         dispHint:Hide()
         sndHint:Hide()
@@ -3506,11 +3510,12 @@ local function BuildEncounterAlertsUI(parentFrame)
         if activeInnerTab == "Options" then activeInnerTab = "Display" end
     end
 
-    local function SetReloeCreatedMode()
+    local function SetReloeCreatedMode(alert)
         trigF.lockOverlay:Show()
         loadF.lockOverlay:Hide()
-        sndF.lockOverlay:Hide()
-        dispHint:Hide()
+        dispF.lockOverlay:SetShown(alert and alert.NoEdit == true)
+        sndF.lockOverlay:SetShown(alert and alert.NoEdit == true)
+        dispHint:SetShown(false)
         sndHint:Hide()
         nameEntry.editBox:SetEnabled(false)
         nameEntry.editBox:SetAlpha(0.45)
@@ -3561,7 +3566,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         local isReloe = entry.ReloeReminder == true
         rightPanel:Show()
-        if isReloe then SetReloeCreatedMode() else SetCustomMode() end
+        if isReloe then SetReloeCreatedMode(entry) else SetCustomMode() end
         PositionInnerTabLayout(GetConditionText(entry.isConditional))
 
         dispF._alert = entry; dispF._hardcodedEncID = nil

@@ -892,7 +892,6 @@ L["Roles (leave all unchecked for any role)"] = "Rollen (leer lassen für alle R
 L["Character Names (no server name)"] = "Charakternamen (ohne Servernamen)"
 L["Read-only"] = "Schreibgeschützt"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "Klassen- und Spezialisierungsfilter gelten nicht\nfür vom Addon erstellte Warnungen."
-L["Sound settings are fixed\nfor addon-created alerts."] = "Die Soundeinstellungen sind für\nvom Addon erstellte Warnungen fest vorgegeben."
 -- Extra Options
 L["Feather Color Icon"] = "Federfarbensymbol"
 L["Runes Display"] = "Runenanzeige"

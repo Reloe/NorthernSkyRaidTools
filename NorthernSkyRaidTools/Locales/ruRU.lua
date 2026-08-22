@@ -1132,7 +1132,6 @@ L["Roles (leave all unchecked for any role)"] = "Роли (оставьте вс
 L["Character Names (no server name)"] = "Имена персонажей (без названия сервера)"
 L["Read-only"] = "Только для чтения"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "Фильтры по классу/специализации не применяются\nк оповещениям, созданным аддоном."
-L["Sound settings are fixed\nfor addon-created alerts."] = "Настройки звука зафиксированы\nдля оповещений, созданных аддоном."
 -- Extra Options
 L["Feather Color Icon"] = "Цветная иконка пера"
 L["Runes Display"] = "Отображение рун"

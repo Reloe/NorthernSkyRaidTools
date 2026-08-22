@@ -1097,7 +1097,6 @@ L["Sound File"] = "音效檔案"
 -- Load tab
 L["Read-only"] = "唯讀"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "職業/專精過濾不會套用\n至插件建立的警報。"
-L["Sound settings are fixed\nfor addon-created alerts."] = "插件建立的警報的音效設定\n已被固定。"
 -- Extra Options
 L["Feather Color Icon"] = "羽毛顏色圖示"
 L["Runes Display"] = "符文顯示"
