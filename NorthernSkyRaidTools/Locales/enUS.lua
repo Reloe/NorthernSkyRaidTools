@@ -1157,6 +1157,7 @@ L["|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts throu
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."
+L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00SOAK"
 L["|cFFFF0000DON'T SOAK"] = "|cFFFF0000DON'T SOAK"

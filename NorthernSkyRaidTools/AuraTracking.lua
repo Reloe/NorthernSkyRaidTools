@@ -1666,6 +1666,202 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     return button
 end
 
+local function ConfigureDebuffOverviewButton(self, state, button, unit)
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
+    local width = settings.Width
+    local height = settings.Height
+    local buttonWidth = width + height
+    local fontPath = self.LSM:Fetch("font", settings.Font)
+    local buttonLevel = button:GetFrameLevel()
+
+    if not state.buttonRegions[button] then
+        local regions = {}
+        regions.bar = CreateFrame("StatusBar", nil, button, "BackdropTemplate")
+        regions.bar:SetFrameLevel(buttonLevel)
+        regions.icon = button:CreateTexture(nil, "ARTWORK")
+        regions.icon:SetSize(height, height)
+        button:SetIcon(regions.icon)
+
+        regions.border = CreateFrame("Frame", nil, button, "BackdropTemplate")
+        regions.border:SetAllPoints(button)
+        regions.border:SetFrameLevel(buttonLevel + 1)
+        regions.border:SetBackdrop({
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+
+        regions.textLayer = CreateFrame("Frame", nil, button)
+        regions.textLayer:SetAllPoints(button)
+        regions.textLayer:SetFrameLevel(buttonLevel + 2)
+        regions.name = regions.textLayer:CreateFontString(nil, "OVERLAY")
+        regions.duration = regions.textLayer:CreateFontString(nil, "OVERLAY")
+        state.buttonRegions[button] = regions
+    end
+
+    local regions = state.buttonRegions[button]
+    button:SetSize(buttonWidth, height)
+    regions.bar:SetFrameLevel(button:GetFrameLevel())
+    regions.border:SetFrameLevel(button:GetFrameLevel() + 1)
+    regions.textLayer:SetFrameLevel(button:GetFrameLevel() + 2)
+    regions.bar:SetSize(width, height)
+    regions.bar:ClearAllPoints()
+    regions.icon:ClearAllPoints()
+    if settings.IconPosition == "Right" then
+        regions.bar:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+        regions.icon:SetPoint("RIGHT", button, "RIGHT", 0, 0)
+    else
+        regions.bar:SetPoint("TOPLEFT", button, "TOPLEFT", height, 0)
+        regions.icon:SetPoint("LEFT", button, "LEFT", 0, 0)
+    end
+    regions.bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", settings.Texture))
+    regions.bar:SetStatusBarColor(unpack(settings.barColors))
+    regions.bar:SetBackdropColor(unpack(settings.backgroundColors))
+    regions.border:SetBackdropBorderColor(unpack(settings.borderColors))
+    regions.textLayer:SetFrameLevel(button:GetFrameLevel() + 2)
+
+    regions.name:ClearAllPoints()
+    regions.name:SetPoint("LEFT", regions.bar, "LEFT", settings.xTextOffset, settings.yTextOffset)
+    regions.name:SetFont(fontPath, settings.FontSize, settings.FontFlags)
+    regions.name:SetTextColor(unpack(settings.textColors))
+    regions.name:SetText(state.displayName)
+    regions.name:Show()
+
+    regions.duration:ClearAllPoints()
+    regions.duration:SetPoint("RIGHT", regions.bar, "RIGHT", settings.xTimer, settings.yTimer)
+    regions.duration:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
+    regions.duration:SetTextColor(unpack(settings.textColors))
+    regions.duration:Show()
+    button:SetDurationText(regions.duration, {})
+    button:SetDurationBar(regions.bar, {})
+end
+
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+    containerName = containerName or "Default"
+    self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
+    local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
+    if existingSet then
+        self.DebuffOverviewContainerSets = existingSet
+        return existingSet
+    end
+    if regularFilter == nil and candidateFilters == nil then
+        return self.DebuffOverviewContainerSetsByName[containerName]
+    end
+    assert(type(regularFilter) == "string" and AuraUtil.IsValidFilterString(regularFilter), "regularFilter must be a valid aura filter string")
+    assert(candidateFilters == nil or type(candidateFilters) == "table", "candidateFilters must be a table or nil")
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    end
+
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
+    local anchor = self.DebuffOverviewMover
+    local copies = math.max(1, math.floor(containersPerUnit or 1))
+    local frameCount = maxFrameCount or 1
+    local growUp = settings.GrowDirection == "Up"
+    local previousContainer
+    local containerStates = {}
+
+    for raidIndex = 1, 30 do
+        local unit = "raid" .. raidIndex
+        local playerName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or UnitName(unit) or unit
+        local classFile = select(2, UnitClass(unit))
+        local classColor = classFile and RAID_CLASS_COLORS[classFile]
+        local displayName = classColor and classColor:WrapTextInColorCode(playerName) or playerName
+        for copyIndex = 1, copies do
+            local state = {
+                unit = unit,
+                displayName = displayName,
+                buttonRegions = {},
+            }
+            local container = CreateFrame(
+                "AuraContainer",
+                nil,
+                self.NSRTFrame,
+                "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate"
+            )
+            state.container = container
+            container:SetFrameStrata("HIGH")
+            container:SetSize(settings.Width + settings.Height, settings.Height)
+            container:SetUnit(unit)
+            container:SetFlowLayoutAnchorPoint("BOTTOMLEFT")
+            container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up)
+            if previousContainer then
+                container:SetPoint(
+                    growUp and "BOTTOMLEFT" or "TOPLEFT",
+                    previousContainer,
+                    growUp and "TOPLEFT" or "BOTTOMLEFT",
+                    0,
+                    growUp and (settings.Spacing or 0) or -(settings.Spacing or 0)
+                )
+            else
+                container:SetPoint(
+                    growUp and "BOTTOMLEFT" or "TOPLEFT",
+                    anchor,
+                    growUp and "TOPLEFT" or "BOTTOMLEFT",
+                    0,
+                    growUp and 8 or -8
+                )
+            end
+            container:AddAuraGroup("DebuffOverview", regularFilter, {
+                maxFrameCount = frameCount,
+                candidateFilters = candidateFilters or {},
+                initializeFrame = function(button)
+                    ConfigureDebuffOverviewButton(self, state, button, unit)
+                end,
+                layout = {
+                    elementWidth = settings.Width + settings.Height,
+                    elementHeight = settings.Height,
+                    elementSpacing = 0,
+                    lineSpacing = 0,
+                },
+            })
+            container:Hide()
+            container:SetEnabled(false)
+            containerStates[#containerStates + 1] = state
+            previousContainer = container
+        end
+    end
+    self.DebuffOverviewContainerSetsByName[containerName] = containerStates
+    self.DebuffOverviewContainerSets = containerStates
+    return containerStates
+end
+
+function NSI:SetDebuffOverviewContainersShown(shown, containerName)
+    local sets = self.DebuffOverviewContainerSetsByName or {}
+    if not containerName then
+        if self.DebuffOverviewContainerSets then sets.Default = self.DebuffOverviewContainerSets end
+        containerName = "Default"
+    end
+    local states = sets[containerName]
+    if not states then return end
+    self.DebuffOverviewShownSets = self.DebuffOverviewShownSets or {}
+    self.DebuffOverviewShownSets[containerName] = shown
+    if self.DebuffOverviewMover then
+        local anyShown = false
+        for _, isShown in pairs(self.DebuffOverviewShownSets) do
+            if isShown then anyShown = true break end
+        end
+        self.DebuffOverviewMover:SetShown(anyShown)
+    end
+    for _, state in ipairs(states) do
+        local visible = shown and UnitIsVisible(state.unit)
+        state.container:SetShown(visible)
+        state.container:SetEnabled(visible)
+    end
+end
+
+function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+    if self.DebuffOverviewContainerPreviewActive then
+        self.DebuffOverviewContainerPreviewActive = false
+        self:SetDebuffOverviewContainersShown(false)
+        return
+    end
+    if regularFilter ~= nil or candidateFilters ~= nil then
+        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+    end
+    self.DebuffOverviewContainerPreviewActive = true
+    self:SetDebuffOverviewContainersShown(true, containerName)
+end
+
 local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     if not state or not state.container or not groupKey then return end
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
