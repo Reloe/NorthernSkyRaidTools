@@ -6,9 +6,9 @@ local heroicData = {
     duration = 530,
     phases = {
         [1] = {start = 0},
-        [1.5] = {start = 147.03},
-        [1.75] = {start = 222.06},
-        [2] = {start = 320.18},
+        [1.5] = {start = 147},
+        [1.75] = {start = 222},
+        [2] = {start = 320},
         [3] = {start = 530},
     },
     abilities = {

@@ -3,13 +3,13 @@ local _, NSI = ... -- Internal namespace
 -- TheCoiledAltar (3429)
 
 local heroicData = {
-    duration = 588.29,
+    duration = 588,
     phases = {
         [1] = {start = 0},
-        [2] = {start = 167.29},
-        [2.5] = {start = 293.29},
-        [3] = {start = 328.29},
-        [4] = {start = 588.29},
+        [2] = {start = 167},
+        [2.5] = {start = 293},
+        [3] = {start = 328},
+        [4] = {start = 588},
     },
     abilities = {
         {name = "Coalesced Venom", spellID = 1282408, category = "raid dot", phase = 1, times = {7.09}, duration = 233},
