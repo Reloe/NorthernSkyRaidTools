@@ -207,7 +207,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     ["TankCombo"]   = {group = "스조라크", name = "탱커 연속 공격", text = "탱커 연속 공격"},
-    ["DamageAmp"]   = {group = "스조라크", name = "피해 증가", text = "피해 증가"},
+    ["DamageAmp"]   = {group = "스조라크", name = "약화됨", text = "약화됨"},
     ["Bait"]        = {group = "스조라크", name = "유도", text = "유도"},
     ["WindDebuffs"] = {group = "스조라크", name = "바람 디버프", text = "바람 디버프"},
     ["Debuffs"]     = {group = "스조라크", name = "디버프", text = "디버프"},
@@ -221,7 +221,7 @@ L[3421] = {
     ["Defensives"] = {group = "쌍둥이 송곳니", name = "생존기", text = "생존기"},
     ["Soak"]        = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
     ["PreSpread"]   = {group = "쌍둥이 송곳니", name = "미리 산개", text = "미리 산개"},
-    ["WatchSide"]   = {group = "쌍둥이 송곳니", name = "머리 방향", text = "머리 방향"},
+    ["WatchSide"]   = {group = "쌍둥이 송곳니", name = "브레스 방향", text = "브레스 방향"},
     ["Adds"]        = {group = "쌍둥이 송곳니", name = "쫄", text = "쫄"},
     ["Orbs"]        = {group = "쌍둥이 송곳니", name = "구슬", text = "구슬"},
     ["TankSoak"]    = {group = "쌍둥이 송곳니", name = "탱커와 같이 맞기", text = "스킬 맞기"},
