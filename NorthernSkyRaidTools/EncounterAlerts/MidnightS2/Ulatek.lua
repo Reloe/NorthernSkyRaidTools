@@ -124,8 +124,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "GraspingFangsOverview", name = "Grasping Fangs Overview", text = nil, DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 40,
         spellID = 1311611, id = 0.2, difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
         timers = {
-            [15] = {189},
-            [16] = {189},
+            [15] = {195},
+            [16] = {195},
         },
     }
     self:AddEncounterAlert(data)
