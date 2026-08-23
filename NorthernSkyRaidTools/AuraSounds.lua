@@ -118,6 +118,7 @@ NSI.AuraSoundCategories = {
             {spellID = 1310498, sound = "Move", eventType = "removed"}, -- Mutagenic Venom
             {spellID = 1286901, sound = "Bomb"}, -- Gloombomb
             {spellID = 1286837, sound = "Collect"}, -- Gravebound
+            {spellID = 1286837, sound = "Done", eventType = "removed"}, -- Gravebound
             {spellID = 1285911, sound = "Fixate"}, -- Unnerving Fixation
         }},
         {key = 3492, entries = { -- Ula'tek
