@@ -1634,7 +1634,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     local isCustom = tostring(key):match("^Custom") and true or false
     if (key == "External" or isCustom) and settings.NameEnabled then]]
     -- if blizzard adds this just need to support it here
-    if tostring(key or ""):match("^Tank") and settings.NameEnabled then
+    local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
+    if (tostring(key or ""):match("^Tank") or isCotankTracking) and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
