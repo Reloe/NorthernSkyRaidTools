@@ -264,4 +264,5 @@ L[3492] = {
     ["Soak"]                = {group = "乌拉特克", name = "幽魂盘卷（分摊）", text = "分摊"},
     ["TransitionSoakFirst"] = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
     ["TransitionSoakSecond"] = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
+    -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
 }

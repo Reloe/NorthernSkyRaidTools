@@ -30,6 +30,10 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local UlatekDamageAmpTimers = {
+        [15] = {155.4, 304.5, 593.7},
+        [16] = {155.4, 304.5, 593.7},
+    }
     local data = {group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1286860, phase = 1,
         timers = {
             [15] = {135.4, 284.5, 573.7},
@@ -40,10 +44,13 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Ula'tek", internalID = "DamageAmp", name = "Venomous Heart", text = "Dmg amp", DisplayType = "Bar", encID = encID, TTS = false, dur = 20, spellID = 1299526, phase = 1,
         barColors = {1, 0, 0, 1},
-        timers = {
-            [15] = {155.4, 304.5, 593.7},
-            [16] = {155.4, 304.5, 593.7},
-        },
+        timers = UlatekDamageAmpTimers,
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Ula'tek", internalID = "WrongTarget", name = "Wrong Target", text = "WRONG TARGET", DisplayType = "Text", encID = encID, TTS = false, dur = 20, sticky = 20, phase = 1,
+        textColors = {1, 0, 0, 1}, HideTimer = true, isSpecialDisplay = true, BlockCopy = true,
+        timers = UlatekDamageAmpTimers,
     }
     self:AddEncounterAlert(data)
 
@@ -115,7 +122,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local UlatekGraspingFangsPreview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings.")) end]]
     local data = {group = "Ula'tek", internalID = "GraspingFangsOverview", name = "Grasping Fangs Overview", text = nil, DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 40,
-        spellID = 1311611, id = 0.2, difficulties = {15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
+        spellID = 1311611, id = 0.2, difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
         timers = {
             [15] = {189},
             [16] = {189},
@@ -126,22 +133,103 @@ end
 
 NSI.EncounterAlertStart[encID] = function(self, id)
     id = id or self:DifficultyCheck({15, 16})
-    local alert = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].GraspingFangsOverview
-    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+    local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
+    local overviewAlert = diffData and diffData.GraspingFangsOverview
+    local wrongTargetAlert = diffData and diffData.WrongTarget
 
     if self.UlatekGraspingFangsTimers then
         for _, timer in ipairs(self.UlatekGraspingFangsTimers) do timer:Cancel() end
         self.UlatekGraspingFangsTimers = nil
     end
 
-    self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER", {isBossOrRoleAura = true}, 1, 1, "UlatekGraspingFangsOverview")
-    self.UlatekGraspingFangsTimers = {}
-    for _, applyTime in ipairs(alert.timers or {}) do
-        self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime, function()
-            if self.EncounterID == encID then self:SetDebuffOverviewContainersShown(true, "UlatekGraspingFangsOverview") end
+    if overviewAlert and overviewAlert.enabled and self:EvaluateLoad(overviewAlert) then
+        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER", {isBossOrRoleAura = true}, 1, 1, "UlatekGraspingFangsOverview")
+        self.UlatekGraspingFangsTimers = {}
+        for _, applyTime in ipairs(overviewAlert.timers or {}) do
+            self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime, function()
+                if self.EncounterID == encID then self:SetDebuffOverviewContainersShown(true, "UlatekGraspingFangsOverview") end
+            end)
+            self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime + (overviewAlert.dur or 40), function()
+                if self.EncounterID == encID then self:SetDebuffOverviewContainersShown(false, "UlatekGraspingFangsOverview") end
+            end)
+        end
+    else
+        self:SetDebuffOverviewContainersShown(false, "UlatekGraspingFangsOverview")
+    end
+
+    if not wrongTargetAlert or not wrongTargetAlert.enabled or not self:EvaluateLoad(wrongTargetAlert) then return end
+
+    if self.UlatekWrongTargetTimers then
+        for _, timer in ipairs(self.UlatekWrongTargetTimers) do timer:Cancel() end
+        self.UlatekWrongTargetTimers = nil
+    end
+    self.UlatekWrongTargetEndTime = nil
+    self:EncounterRegister("UlatekWrongTarget", "PLAYER_TARGET_CHANGED", false)
+
+    local UpdateWrongTarget = function()
+        if not self.UlatekWrongTargetEndTime or GetTime() >= self.UlatekWrongTargetEndTime then
+            if self.UlatekWrongTargetFrame then
+                self.UlatekWrongTargetFrame:Hide()
+                self.UlatekWrongTargetFrame = nil
+            end
+            return
+        end
+
+        local targetExists = UnitExists("target")
+        if issecretvalue(targetExists) or not targetExists then
+            if self.UlatekWrongTargetFrame then
+                self.UlatekWrongTargetFrame:Hide()
+                self.UlatekWrongTargetFrame = nil
+            end
+            return
+        end
+
+        local isBossTarget = UnitIsUnit("target", "boss2")
+        if issecretvalue(isBossTarget) then return end
+        if isBossTarget then
+            if self.UlatekWrongTargetFrame then
+                self.UlatekWrongTargetFrame:Hide()
+                self.UlatekWrongTargetFrame = nil
+            end
+            return
+        end
+
+        if self.UlatekWrongTargetFrame and self.UlatekWrongTargetFrame:IsShown() then return end
+        local remainingDuration = self.UlatekWrongTargetEndTime - GetTime()
+        local info = self:CreateReminder({
+            text = wrongTargetAlert.text,
+            DisplayType = wrongTargetAlert.DisplayType,
+            textColors = wrongTargetAlert.textColors,
+            dur = remainingDuration,
+            time = remainingDuration,
+            encID = encID,
+            phase = self.Phase,
+            HideTimer = true,
+            sticky = wrongTargetAlert.sticky,
+            TTS = false,
+            IsAlert = false,
+            ReloeReminder = true,
+        })
+        self.UlatekWrongTargetFrame = info and self:DisplayReminder(info)
+    end
+
+    self:EncounterFunction("UlatekWrongTarget", UpdateWrongTarget)
+    self:EncounterRegister("UlatekWrongTarget", "PLAYER_TARGET_CHANGED", true)
+    self.UlatekWrongTargetTimers = {}
+    for _, ampTime in ipairs(wrongTargetAlert.timers or {}) do
+        self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = C_Timer.NewTimer(ampTime, function()
+            if self.EncounterID ~= encID then return end
+            self.UlatekWrongTargetEndTime = GetTime() + (wrongTargetAlert.dur or 20)
+            if self.UlatekWrongTargetFrame then
+                self.UlatekWrongTargetFrame:Hide()
+                self.UlatekWrongTargetFrame = nil
+            end
+            UpdateWrongTarget()
         end)
-        self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime + (alert.dur or 40), function()
-            if self.EncounterID == encID then self:SetDebuffOverviewContainersShown(false, "UlatekGraspingFangsOverview") end
+        self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = C_Timer.NewTimer(ampTime + (wrongTargetAlert.dur or 20), function()
+            if self.EncounterID ~= encID then return end
+            self.UlatekWrongTargetEndTime = nil
+            UpdateWrongTarget()
         end)
     end
 end
@@ -152,4 +240,14 @@ NSI.EncounterAlertStop[encID] = function(self)
         self.UlatekGraspingFangsTimers = nil
     end
     self:SetDebuffOverviewContainersShown(false, "UlatekGraspingFangsOverview")
+    if self.UlatekWrongTargetTimers then
+        for _, timer in ipairs(self.UlatekWrongTargetTimers) do timer:Cancel() end
+        self.UlatekWrongTargetTimers = nil
+    end
+    self:EncounterRegister("UlatekWrongTarget", "PLAYER_TARGET_CHANGED", false)
+    self.UlatekWrongTargetEndTime = nil
+    if self.UlatekWrongTargetFrame then
+        self.UlatekWrongTargetFrame:Hide()
+        self.UlatekWrongTargetFrame = nil
+    end
 end

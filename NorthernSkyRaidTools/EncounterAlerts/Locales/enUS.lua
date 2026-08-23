@@ -267,4 +267,5 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
     ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
     ["GraspingFangsOverview"] = {group = "Ula'tek", name = "Grasping Fangs Overview", text = ""},
+    ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
 }
