@@ -1678,6 +1678,7 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
         local regions = {}
         regions.bar = CreateFrame("StatusBar", nil, button, "BackdropTemplate")
         regions.bar:SetFrameLevel(buttonLevel)
+        regions.bar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
         regions.icon = button:CreateTexture(nil, "ARTWORK")
         regions.icon:SetSize(height, height)
         button:SetIcon(regions.icon)
@@ -1731,7 +1732,10 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
     regions.duration:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
     regions.duration:SetTextColor(unpack(settings.textColors))
     regions.duration:Show()
-    button:SetDurationText(regions.duration, {})
+    button:SetDurationText(regions.duration, {
+        textFormatter = GetAuraTrackingDurationFormatter(settings),
+        textColor = GetAuraTrackingDurationTextColor(settings),
+    })
     button:SetDurationBar(regions.bar, {})
 end
 
