@@ -1766,10 +1766,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
 
     for raidIndex = 1, 30 do
         local unit = "raid" .. raidIndex
-        local playerName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or UnitName(unit) or unit
-        local classFile = select(2, UnitClass(unit))
-        local classColor = classFile and RAID_CLASS_COLORS[classFile]
-        local displayName = classColor and classColor:WrapTextInColorCode(playerName) or playerName
+        local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
         for copyIndex = 1, copies do
             local state = {
                 unit = unit,
@@ -1847,6 +1844,15 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
         self.DebuffOverviewMover:SetShown(anyShown)
     end
     for _, state in ipairs(states) do
+        local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
+        if state.displayName ~= displayName then
+            state.displayName = displayName
+            for button, regions in pairs(state.buttonRegions) do
+                if regions.name then
+                    regions.name:SetText(displayName)
+                end
+            end
+        end
         local visible = shown and UnitIsVisible(state.unit)
         state.container:SetShown(visible)
         state.container:SetEnabled(visible)
