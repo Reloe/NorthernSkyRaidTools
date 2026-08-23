@@ -154,8 +154,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P3", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1310752,
         timers = {
-            [15] = {39.1, 139.1},
-            [16] = {39.1, 139.1},
+            [15] = {41.9, 141.8},
+            [16] = {41.9, 141.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -163,8 +163,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P3", internalID = "P3Debuffs", name = "P3 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1310881,
         timers = {
-            [15] = {28.4, 64.4, 112.3, 179.1},
-            [16] = {28.4, 64.4, 112.3, 179.1},
+            [15] = {31.2, 81.8, 115.1, 181.8},
+            [16] = {31.2, 81.8, 115.1, 181.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -181,8 +181,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
         timers = {
-            [15] = {63.5, 164.7},
-            [16] = {63.5, 164.7},
+            [15] = {66.3, 167.5},
+            [16] = {66.3, 167.5},
         },
     }
     self:AddEncounterAlert(data)
@@ -194,8 +194,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {36.8, 69, 103.5, 141.4, 173.6},
-            [16] = {36.8, 69, 103.5, 141.4, 173.6},
+            [15] = {39.6, 71.8, 106.3, 144.2, 176.4},
+            [16] = {39.6, 71.8, 106.3, 144.2, 176.4},
         },
     }
     self:AddEncounterAlert(data)
