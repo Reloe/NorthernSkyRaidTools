@@ -1736,10 +1736,12 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
         textFormatter = GetAuraTrackingDurationFormatter(settings),
         textColor = GetAuraTrackingDurationTextColor(settings),
     })
-    button:SetDurationBar(regions.bar, {})
+    button:SetDurationBar(regions.bar, {
+        direction = state.invertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
+    })
 end
 
-function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
     containerName = containerName or "Default"
     self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
     local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
@@ -1771,6 +1773,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             local state = {
                 unit = unit,
                 displayName = displayName,
+                invertFill = invertFill == true,
                 buttonRegions = {},
             }
             local container = CreateFrame(
@@ -1859,14 +1862,14 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
 end
 
-function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
     if self.DebuffOverviewContainerPreviewActive then
         self.DebuffOverviewContainerPreviewActive = false
         self:SetDebuffOverviewContainersShown(false)
         return
     end
     if regularFilter ~= nil or candidateFilters ~= nil then
-        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
     end
     self.DebuffOverviewContainerPreviewActive = true
     self:SetDebuffOverviewContainersShown(true, containerName)
