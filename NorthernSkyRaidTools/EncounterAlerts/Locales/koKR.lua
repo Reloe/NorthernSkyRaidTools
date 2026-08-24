@@ -185,6 +185,7 @@ L[3455] = {
     ["Soaks"]       = {group = "바쉬니크", name = "스킬 맞기", text = "스킬 맞기"},
     ["Waves"]       = {group = "바쉬니크", name = "물결", text = "물결"},
     ["WaveSpread"] = {group = "바쉬니크", name = "물결 산개", text = "미리 산개"},
+    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -266,5 +267,6 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
     ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
+    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
     ["WrongTarget"] = {group = "울라텍", name = "대상 잘못 잡음", text = "대상 잘못 잡음"},
 }

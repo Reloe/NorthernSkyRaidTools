@@ -184,6 +184,7 @@ L[3455] = {
     -- ["Soaks"]      = {group = "Vashnik", name = "Soaks", text = "Soaks"},
     -- ["Waves"]      = {group = "Vashnik", name = "Waves", text = "Waves"},
     -- ["WaveSpread"] = {group = "Vashnik", name = "Wave-Spread", text = "Pre-Spread"},
+    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -264,5 +265,6 @@ L[3492] = {
     -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
     -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
     -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
+    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
     -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
 }

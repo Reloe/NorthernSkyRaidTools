@@ -185,6 +185,7 @@ L[3455] = {
     ["Soaks"]      = {group = "瓦什尼克", name = "催化胆汁（踩圈）", text = "踩圈"},
     ["Waves"]      = {group = "瓦什尼克", name = "瘟疫泡沫", text = "波浪"},
     ["WaveSpread"] = {group = "瓦什尼克", name = "瘟疫泡沫（分散）", text = "预分散"},
+    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -266,5 +267,6 @@ L[3492] = {
     ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
     ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
     ["GraspingFangsOverview"] = {group = "乌拉特克", name = "攫取毒牙总览", text = ""},
+    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
     ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
 }

@@ -184,6 +184,7 @@ L[3455] = {
     ["Waves"] = {group = "Вашник", name = "Волны", text = "Волны"},
     ["Soaks"] = {group = "Вашник", name = "Поглощения", text = "Поглощения"},
     ["AoE"] = {group = "Вашник", name = "АоЕ", text = "АоЕ"},
+    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -265,5 +266,6 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "Ула'тек", name = "Первое поглощение", text = "Первое поглощение"},
     ["TransitionSoakSecond"] = {group = "Ула'тек", name = "Второе поглощение", text = "Второе поглощение"},
     ["GraspingFangsOverview"] = {group = "Ула'тек", name = "Обзор Хватающих клыков"},
+    ["TankDrag"] = {group = "Ула'тек", name = "Перетаскивание адда танком", text = "Перетащить адда"},
     ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
 }

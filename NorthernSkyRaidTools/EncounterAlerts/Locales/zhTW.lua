@@ -187,6 +187,7 @@ L[3455] = {
     ["Soaks"]      = {group = "伐許尼克", name = "分傷", text = "分傷"},
     ["Waves"]      = {group = "伐許尼克", name = "波", text = "波"},
     ["WaveSpread"] = {group = "伐許尼克", name = "波 分散", text = "分散"},
+    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -267,5 +268,6 @@ L[3492] = {
     ["Soak"]                = {group = "烏拉特克", name = "分傷", text = "分傷"},
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
     ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
+    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
     -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
 }
