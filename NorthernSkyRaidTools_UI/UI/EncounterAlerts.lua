@@ -874,7 +874,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 if diffTable then
                                     for akey, alert in pairs(diffTable) do
                                         if type(alert) == "table" and alert.group == gname then
-                                            alert.enabled = true
+                                            NSI:SaveAlertData(alert, "enabled", true)
                                             NSI:FireCallback("NSRT_ALERT_CHANGED", gencID, filterDiffID, akey)
                                         end
                                     end
@@ -887,7 +887,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 if diffTable then
                                     for akey, alert in pairs(diffTable) do
                                         if type(alert) == "table" and alert.group == gname then
-                                            alert.enabled = false
+                                            NSI:SaveAlertData(alert, "enabled", false)
                                             NSI:FireCallback("NSRT_ALERT_CHANGED", gencID, filterDiffID, akey)
                                         end
                                     end
@@ -1002,7 +1002,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                    and NSRT.EncounterAlerts[eid][did]
                                    and NSRT.EncounterAlerts[eid][did][akey]
                         if e then
-                            e.enabled = v
+                            NSI:SaveAlertData(e, "enabled", v)
                             e.UserModifiedEnabled = true
                             if selectedEncID == eid and selectedDiffID == did and selectedKey == akey then
                                 enabledCB:SetValue(v)
@@ -1016,7 +1016,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     local aencID  = entry.encID
                     local adid    = entry.diffID
                     row.enabledCB:SetOnChange(function(nsi, v)
-                        alert.enabled = v
+                        NSI:SaveAlertData(alert, "enabled", v)
                         if selectedKey == akey and selectedEncID == aencID then
                             enabledCB:SetValue(v)
                         end
@@ -1431,7 +1431,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 if type(diffTable) == "table" then
                     for akey, alert in pairs(diffTable) do
                         if type(alert) == "table" and alert.ReloeReminder then
-                            alert.enabled = enabled
+                            NSI:SaveAlertData(alert, "enabled", enabled)
                             alert.UserModifiedEnabled = true
                             NSI:FireCallback("NSRT_ALERT_CHANGED", encID, filterDiffID, akey)
                         end

@@ -1634,7 +1634,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     local isCustom = tostring(key):match("^Custom") and true or false
     if (key == "External" or isCustom) and settings.NameEnabled then]]
     -- if blizzard adds this just need to support it here
-    if tostring(key or ""):match("^Tank") and settings.NameEnabled then
+    local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
+    if (tostring(key or ""):match("^Tank") or isCotankTracking) and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
@@ -1736,10 +1737,12 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
         textFormatter = GetAuraTrackingDurationFormatter(settings),
         textColor = GetAuraTrackingDurationTextColor(settings),
     })
-    button:SetDurationBar(regions.bar, {})
+    button:SetDurationBar(regions.bar, {
+        direction = state.invertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
+    })
 end
 
-function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
     containerName = containerName or "Default"
     self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
     local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
@@ -1766,14 +1769,12 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
 
     for raidIndex = 1, 30 do
         local unit = "raid" .. raidIndex
-        local playerName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or UnitName(unit) or unit
-        local classFile = select(2, UnitClass(unit))
-        local classColor = classFile and RAID_CLASS_COLORS[classFile]
-        local displayName = classColor and classColor:WrapTextInColorCode(playerName) or playerName
+        local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
         for copyIndex = 1, copies do
             local state = {
                 unit = unit,
                 displayName = displayName,
+                invertFill = invertFill == true,
                 buttonRegions = {},
             }
             local container = CreateFrame(
@@ -1847,20 +1848,29 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
         self.DebuffOverviewMover:SetShown(anyShown)
     end
     for _, state in ipairs(states) do
+        local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
+        if state.displayName ~= displayName and not self:Restricted() then
+            state.displayName = displayName
+            for button, regions in pairs(state.buttonRegions) do
+                if regions.name then
+                    regions.name:SetText(displayName)
+                end
+            end
+        end
         local visible = shown and UnitIsVisible(state.unit)
         state.container:SetShown(visible)
         state.container:SetEnabled(visible)
     end
 end
 
-function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
     if self.DebuffOverviewContainerPreviewActive then
         self.DebuffOverviewContainerPreviewActive = false
         self:SetDebuffOverviewContainersShown(false)
         return
     end
     if regularFilter ~= nil or candidateFilters ~= nil then
-        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName)
+        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
     end
     self.DebuffOverviewContainerPreviewActive = true
     self:SetDebuffOverviewContainersShown(true, containerName)

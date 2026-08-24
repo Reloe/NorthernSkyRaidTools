@@ -263,6 +263,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_READY_CHECK" and internal then
         self:InitAuraSystem()
         self:RebuildAuraSounds()
+        if self:DifficultyCheck({14, 15, 16}) then
+            for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
+                local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
+                self:SetDebuffOverviewContainersShown(shown, containerName)
+            end
+        end
         if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
@@ -340,6 +346,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.GroupUpdateTimer = C_Timer.After(2, function()
             self.GroupUpdateTimer = nil
             self:InitAuraSystem()
+            if self:DifficultyCheck({14, 15, 16}) then
+                for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
+                    local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
+                    self:SetDebuffOverviewContainersShown(shown, containerName)
+                end
+            end
             self:UpdateRaidBuffFrame()
         end)
         if self:Restricted() then return end

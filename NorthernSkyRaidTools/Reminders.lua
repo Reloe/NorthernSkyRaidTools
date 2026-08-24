@@ -2025,10 +2025,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             local F = self[Name]
             F.PreviewRows = {}
             local previewSpellIDs = {102342, 204018, 116849}
-            local playerName = NSAPI:GetName("player") or UnitName("player") or "Player"
-            local classFile = select(2, UnitClass("player"))
-            local classColor = classFile and RAID_CLASS_COLORS[classFile]
-            local coloredPlayerName = classColor and classColor:WrapTextInColorCode(playerName) or playerName
+            local coloredPlayerName = NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
             for index, spellID in ipairs(previewSpellIDs) do
                 local row = CreateFrame("Frame", nil, F)
                 row:SetFrameLevel(F:GetFrameLevel() + 10)

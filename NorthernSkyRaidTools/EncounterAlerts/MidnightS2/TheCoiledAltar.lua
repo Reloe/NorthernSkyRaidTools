@@ -83,8 +83,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {38.1, 69, 100},
-            [16] = {38.1, 69, 100},
+            [15] = {38.1, 69, 123.1, 154},
+            [16] = {38.1, 69, 123.1, 154},
         },
     }
     self:AddEncounterAlert(data)
@@ -96,8 +96,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {38.6, 69.5, 100.5},
-            [16] = {38.6, 69.5, 100.5},
+            [15] = {38.6, 69.5, 123.6, 154.5},
+            [16] = {38.6, 69.5, 123.6, 154.5},
         },
     }
     self:AddEncounterAlert(data)
@@ -154,8 +154,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P3", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1310752,
         timers = {
-            [15] = {39.1, 139.1},
-            [16] = {39.1, 139.1},
+            [15] = {41.9, 141.8},
+            [16] = {41.9, 141.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -163,8 +163,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P3", internalID = "P3Debuffs", name = "P3 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1310881,
         timers = {
-            [15] = {28.4, 64.4, 112.3, 179.1},
-            [16] = {28.4, 64.4, 112.3, 179.1},
+            [15] = {31.2, 81.8, 115.1, 181.8},
+            [16] = {31.2, 81.8, 115.1, 181.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -181,8 +181,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
         timers = {
-            [15] = {63.5, 164.7},
-            [16] = {63.5, 164.7},
+            [15] = {66.3, 167.5},
+            [16] = {66.3, 167.5},
         },
     }
     self:AddEncounterAlert(data)
@@ -194,11 +194,74 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [15] = {36.8, 69, 103.5, 141.4, 173.6},
-            [16] = {36.8, 69, 103.5, 141.4, 173.6},
+            [15] = {39.6, 71.8, 106.3, 144.2, 176.4},
+            [16] = {39.6, 71.8, 106.3, 144.2, 176.4},
         },
     }
     self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P2.5", internalID = "P2_5WrongTarget", name = "Wrong Target", text = "WRONG TARGET", DisplayType = "Text", encID = encID, phase = 2.5, TTS = false, dur = 50, sticky = 50,
+        enabled = true, textColors = {1, 0, 0, 1}, HideTimer = true, isSpecialDisplay = true, BlockCopy = true,
+    }
+    self:AddEncounterAlert(data)
+end
+
+local function HideCoiledAltarWrongTarget(self)
+    self:EncounterRegister("CoiledAltarWrongTarget", "PLAYER_TARGET_CHANGED", false)
+    self.CoiledAltarWrongTargetEndTime = nil
+    if self.CoiledAltarWrongTargetTimer then
+        self.CoiledAltarWrongTargetTimer:Cancel()
+        self.CoiledAltarWrongTargetTimer = nil
+    end
+    if self.CoiledAltarWrongTargetFrame then
+        self.CoiledAltarWrongTargetFrame:Hide()
+        self.CoiledAltarWrongTargetFrame = nil
+    end
+end
+
+local function UpdateCoiledAltarWrongTarget(self)
+    if self.Phase ~= 2.5 or not self.CoiledAltarWrongTargetEndTime or GetTime() >= self.CoiledAltarWrongTargetEndTime then
+        HideCoiledAltarWrongTarget(self)
+        return
+    end
+
+    local targetExists = UnitExists("target")
+    if issecretvalue(targetExists) or not targetExists then
+        if self.CoiledAltarWrongTargetFrame then
+            self.CoiledAltarWrongTargetFrame:Hide()
+            self.CoiledAltarWrongTargetFrame = nil
+        end
+        return
+    end
+
+    local isBossTarget = UnitIsUnit("target", "boss1")
+    if issecretvalue(isBossTarget) then return end
+    if isBossTarget then
+        if self.CoiledAltarWrongTargetFrame then
+            self.CoiledAltarWrongTargetFrame:Hide()
+            self.CoiledAltarWrongTargetFrame = nil
+        end
+        return
+    end
+
+    if self.CoiledAltarWrongTargetFrame and self.CoiledAltarWrongTargetFrame:IsShown() then return end
+    local remainingDuration = self.CoiledAltarWrongTargetEndTime - GetTime()
+    local alert = self.CoiledAltarWrongTargetAlert
+    local info = self:CreateReminder({
+        text = alert.text,
+        DisplayType = alert.DisplayType,
+        textColors = alert.textColors,
+        dur = remainingDuration,
+        time = remainingDuration,
+        encID = encID,
+        phase = self.Phase,
+        HideTimer = true,
+        sticky = alert.sticky,
+        TTS = false,
+        IsAlert = false,
+        ReloeReminder = true,
+    })
+    self.CoiledAltarWrongTargetFrame = info and self:DisplayReminder(info)
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
@@ -243,14 +306,34 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     end
 end
 
-NSI.EncounterAlertStart[encID] = function(self) -- on ENCOUNTER_START
+NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
+    id = id or self:DifficultyCheck({15, 16})
+    local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
+    self.CoiledAltarWrongTargetAlert = diffData and diffData.P2_5WrongTarget
+    HideCoiledAltarWrongTarget(self)
+    self:EncounterFunction("CoiledAltarWrongTarget", function()
+        UpdateCoiledAltarWrongTarget(self)
+    end)
     self:EncounterRegister("CoiledAltarPhaseDetect", "UNIT_SPELLCAST_CHANNEL_START", true, "boss2")
     self:EncounterFunction("CoiledAltarPhaseDetect", function(_, e, unit)
         if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self.Phase ~= 2 or self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
         self.Phase = 2.5
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
+        local alert = self.CoiledAltarWrongTargetAlert
+        if alert and alert.enabled and self:EvaluateLoad(alert) then
+            self.CoiledAltarWrongTargetEndTime = GetTime() + (alert.dur or 50)
+            self:EncounterRegister("CoiledAltarWrongTarget", "PLAYER_TARGET_CHANGED", true)
+            self.CoiledAltarWrongTargetTimer = C_Timer.NewTimer(alert.dur or 50, function()
+                HideCoiledAltarWrongTarget(self)
+            end)
+            UpdateCoiledAltarWrongTarget(self)
+        end
     end)
+end
+
+NSI.EncounterAlertStop[encID] = function(self)
+    HideCoiledAltarWrongTarget(self)
 end
 
 local detectedDurations = {
@@ -284,6 +367,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = 3
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = now
+        HideCoiledAltarWrongTarget(self)
         return
     end
 
