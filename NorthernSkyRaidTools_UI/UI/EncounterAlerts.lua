@@ -1281,6 +1281,13 @@ local function BuildEncounterAlertsUI(parentFrame)
         end
     end
 
+    NSI.RefreshEncounterAlertsUIHandler = function()
+        if screen:IsShown() then
+            RebuildList()
+            screen.RefreshSelected()
+        end
+    end
+
     -- Create Alert button
     local createBtn = CreateLocalizedButton(screen, "+ Create Alert", function()
         -- Resolve which encID to create under: current filter or first available boss

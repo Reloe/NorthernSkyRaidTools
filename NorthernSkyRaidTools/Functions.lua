@@ -380,6 +380,36 @@ function NSAPI.UnregisterAllCallbacks(target)
     return NSI.UnregisterAllCallbacks(target)
 end
 
+function NSI:RefreshEncounterAlertsUI()
+    if self.RefreshEncounterAlertsUIHandler then
+        self.RefreshEncounterAlertsUIHandler()
+    end
+end
+
+function NSAPI:SetEncounterAlertState(encID, internalID, enabled)
+    local alertTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
+    if not alertTable then return false end
+
+    local newState = enabled == true
+    local found = false
+    for difficultyID, difficultyAlerts in pairs(alertTable) do
+        local alert = difficultyAlerts[internalID]
+        if alert then
+            found = true
+            alert.enabled = newState
+            if alert.ReloeReminder == true then
+                alert.UserModifiedEnabled = true
+            end
+            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, difficultyID, internalID)
+        end
+    end
+
+    if found then
+        NSI:RefreshEncounterAlertsUI()
+    end
+    return found
+end
+
 local ExportSerializer = LibStub("LibSerialize")
 local ExportDeflate = LibStub("LibDeflate")
 
