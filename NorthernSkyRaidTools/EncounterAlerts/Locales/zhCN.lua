@@ -241,7 +241,7 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]        = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"]   = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    -- ["P2_5WrongTarget"] = {group = "Coiled Altar P2.5", name = "Wrong Target", text = "WRONG TARGET"},
+    ["P2_5WrongTarget"] = {group = "盘卷祭坛 P2.5", name = "易伤目标错误", text = "目标错误"},
     ["P3Frontal"]       = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
     ["P3Soak"]          = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
     ["P3Shield"]        = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
