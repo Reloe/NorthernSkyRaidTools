@@ -85,4 +85,62 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local VashnikWavesLinePreview = [[return function(NSI)
+        print(NSI:EncounterAlertLoc("|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."))
+    end]]
+    local data = {group = "Vashnik", internalID = "WavesLine", name = "Waves Line", text = "", DisplayType = "Text", encID = encID,
+        difficulties = {14, 15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview,
+    }
+    self:AddEncounterAlert(data)
+end
+
+NSI.EncounterAlertStart[encID] = function(self, id)
+    id = id or self:DifficultyCheck({14, 15, 16})
+    local alert = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WavesLine
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    end
+
+    if not self.VashnikBossAuraLineContainer then
+        self.VashnikBossAuraLineContainer = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate")
+        self.VashnikBossAuraLineContainer:SetAllPoints(self.NSRTFrame)
+        self.VashnikBossAuraLineContainer:SetFrameStrata("HIGH")
+        self.VashnikBossAuraLineContainer:AddAuraGroup("VashnikBossAuras", "HARMFUL", {
+            maxFrameCount = 1,
+            candidateFilters = {
+                maxDuration = 10,
+                isBossAura = true,
+            },
+            initializeFrame = function(button)
+                button:SetSize(1, 1)
+                button:ClearApplicationCount()
+                button:ClearDurationText()
+                button:ClearDurationCooldown()
+                button:ClearDispelTypeTextures()
+                button:ClearDispelTypeText()
+                button:SetMouseMotionEnabled(false)
+                if not button.WavesLine then
+                    button.WavesLine = button:CreateTexture(nil, "ARTWORK")
+                    button.WavesLine:SetColorTexture(0, 1, 0, 1)
+                    button.WavesLine:SetWidth(5)
+                    button.WavesLine:SetPoint("BOTTOM", self.VashnikBossAuraLineContainer, "CENTER")
+                    button.WavesLine:SetPoint("TOP", self.VashnikBossAuraLineContainer, "TOP")
+                end
+            end,
+        })
+    end
+
+    self.VashnikBossAuraLineContainer:SetUnit("player")
+    self.VashnikBossAuraLineContainer:SetEnabled(true)
+    self.VashnikBossAuraLineContainer:Show()
+end
+
+NSI.EncounterAlertStop[encID] = function(self)
+    if self.VashnikBossAuraLineContainer then
+        self.VashnikBossAuraLineContainer:SetEnabled(false)
+        self.VashnikBossAuraLineContainer:Hide()
+    end
 end
