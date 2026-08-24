@@ -243,6 +243,7 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "盤蛇祭壇 P2", name = "P2 Debuff", text = "Debuff"},
     ["P2Shield"]      = {group = "盤蛇祭壇 P2", name = "P2 盾", text = "P2 盾"},
     ["InterruptAdds"] = {group = "盤蛇祭壇 P2", name = "P2 打斷小怪", text = "鬼"},
+    -- ["P2_5WrongTarget"] = {group = "Coiled Altar P2.5", name = "Wrong Target", text = "WRONG TARGET"},
     ["P3Frontal"] = {group = "盤蛇祭壇 P3", name = "P3 頭前", text = "頭前"},
     ["P3Soak"] = {group = "盤蛇祭壇 P3", name = "P3 分傷", text = "分傷"},
     ["P3Shield"] = {group = "盤蛇祭壇 P3", name = "P3 盾", text = "盾"},

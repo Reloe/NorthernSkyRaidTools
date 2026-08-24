@@ -85,7 +85,7 @@ NSI.AuraSoundCategories = {
         {key = 3455, entries = { -- Vashnik the Malignant
             {spellID = 1295224, sound = "Suck"}, -- Siphoning Infection
             {spellID = 1294994, sound = "Move"}, -- Stygian Infusion
-            {spellID = 1281908, sound = "Targeted"}, -- Plague Froth
+            {spellID = 1281913, sound = "Targeted"}, -- Plague Froth
         }},
         {key = 3497, entries = { -- The Lost Explorers
             {spellID = 1295886, sound = "Fire"}, -- Frostfire Volley (Fire)
@@ -117,7 +117,9 @@ NSI.AuraSoundCategories = {
             {spellID = 1282419, sound = "Move", eventType = "removed"}, -- Volatile Venom
             {spellID = 1310498, sound = "Move", eventType = "removed"}, -- Mutagenic Venom
             {spellID = 1286901, sound = "Bomb"}, -- Gloombomb
+            {spellID = 1310881, sound = "Bomb"}, -- Gloombomb
             {spellID = 1286837, sound = "Collect"}, -- Gravebound
+            {spellID = 1286837, sound = "Done", eventType = "removed"}, -- Gravebound
             {spellID = 1285911, sound = "Fixate"}, -- Unnerving Fixation
         }},
         {key = 3492, entries = { -- Ula'tek

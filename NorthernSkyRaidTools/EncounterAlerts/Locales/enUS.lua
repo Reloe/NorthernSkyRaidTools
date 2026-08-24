@@ -243,6 +243,7 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "Coiled Altar P2", name = "P2 Debuffs", text = "Debuffs"},
     ["P2Shield"]      = {group = "Coiled Altar P2", name = "P2 Shield", text = "Shield"},
     ["InterruptAdds"] = {group = "Coiled Altar P2", name = "P2 Interrupt Adds", text = "Ghosts"},
+    ["P2_5WrongTarget"] = {group = "Coiled Altar P2.5", name = "Wrong Target", text = "WRONG TARGET"},
     ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
     ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},
     ["P3Shield"] = {group = "Coiled Altar P3", name = "P3 Shield", text = "Shield"},

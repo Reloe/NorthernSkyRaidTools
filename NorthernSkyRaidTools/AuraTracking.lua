@@ -1634,7 +1634,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     local isCustom = tostring(key):match("^Custom") and true or false
     if (key == "External" or isCustom) and settings.NameEnabled then]]
     -- if blizzard adds this just need to support it here
-    if tostring(key or ""):match("^Tank") and settings.NameEnabled then
+    local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
+    if (tostring(key or ""):match("^Tank") or isCotankTracking) and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
@@ -1848,7 +1849,7 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
     for _, state in ipairs(states) do
         local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
-        if state.displayName ~= displayName then
+        if state.displayName ~= displayName and not self:Restricted() then
             state.displayName = displayName
             for button, regions in pairs(state.buttonRegions) do
                 if regions.name then
