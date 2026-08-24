@@ -27,6 +27,49 @@ local venomousSurgeCastTimers = {
 local venomousSurgeBombsPerCast = 2
 local bombDuration = 10
 
+-- Native visual planner for Winds Helper. Players click the vortex sectors;
+-- the first three orb destinations are calculated on the opposite side.
+local windsPlannerSectors = {2, 3, 4, 6, 7, 8}
+local windsPlannerOpposite = {
+    [2] = 6, [3] = 7, [4] = 8,
+    [6] = 2, [7] = 3, [8] = 4,
+}
+local windsPlannerMarkers = {
+    [2] = 3, -- diamond
+    [3] = 2, -- circle
+    [4] = 5, -- moon
+    [6] = 6, -- square
+    [7] = 7, -- cross
+    [8] = 1, -- star
+}
+local windsPlannerMarkerSectors = {}
+for sector, marker in pairs(windsPlannerMarkers) do
+    windsPlannerMarkerSectors[marker] = sector
+end
+local windsPlannerPositions = {
+    [8] = {-72, 72}, [2] = {72, 72},
+    [7] = {-98, 2},  [3] = {98, 2},
+    [6] = {-72, -68}, [4] = {72, -68},
+}
+
+-- Normal/Heroic timings supplied from live pulls. Each row is one wind
+-- pattern and contains the three vortex activations.
+local windsPlannerSphereTimers = {
+    {111, 120, 129},
+    {249, 258, 267},
+    {384, 397, 405},
+}
+local windsPlannerEndTimers = {136, 274, 413}
+
+-- Hardware-triggered macro entry point. The fixed numeric argument comes from
+-- the macro itself, so the planner never has to inspect a secret combat chat
+-- payload in order to identify the vortex sector.
+function NSAPI:SszorakWindsMacro(marker)
+    if NSI.SszorakWindsMacroInput then
+        return NSI.SszorakWindsMacroInput(marker)
+    end
+end
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -102,6 +145,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "WindsHelper", name = "Winds Helper", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5,
         spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, Preview = WindsPreview,
         Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, BackgroundColor = {0.2, 0.2, 0.2, 1}, ShowSenderNames = false,
+        PlannerEnabled = true,
         customIcon = 1285732,
         extraOptions = {
             { Type = "Label", text = "Winds Helper" },
@@ -121,15 +165,21 @@ NSI.InitializeAlerts[encID] = function(self)
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3420][16].WindsHelper.ShowSenderNames  or false  end]],
                 set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].WindsHelper.ShowSenderNames  = v end NSI.EncounterAlertStop[3420](NSI, true) NSI.EncounterAlertStart[3420](NSI, 16, "Winds Helper") end]],
                 tooltip = {title = "ShowSenderNames", desc = "Shows the sender next to each entered number."}},
+            { Type = "Checkbox", label = "Visual Planner",
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3420][16].WindsHelper.PlannerEnabled ~= false end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].WindsHelper.PlannerEnabled = v end NSI.EncounterAlertStop[3420](NSI, true) NSI.EncounterAlertStart[3420](NSI, 16, "Winds Helper") end]],
+                tooltip = {title = "Visual Planner", desc = "Press the existing NSRT macro for the marker where the vortex spawned. The planner shows the vortex and places the first three orb markers automatically on the opposite side."}},
             { Type = "Button", label = "Create Macros", width = 150,
                 func = [[return function()
                     local iconIDs = {"137001", "137002", "137003", "137004", "137005", "137006", "137007", "137008"}
+                    local oppositeMarkers = {5, 7, 6, 4, 1, 3, 2, 8}
                     for i=1, 8 do
                         local macroName = "NSRT_SSZORAK_" .. i
+                        local macroBody = "/run NSAPI:SszorakWindsMacro(" .. i .. ")\n/raid " .. oppositeMarkers[i]
                         if not GetMacroInfo(macroName) then
-                            CreateMacro(macroName, iconIDs[i], "/raid " .. i)
+                            CreateMacro(macroName, iconIDs[i], macroBody)
                         else
-                            EditMacro(macroName, macroName, iconIDs[i], "/raid " .. i)
+                            EditMacro(macroName, macroName, iconIDs[i], macroBody)
                         end
                     end
                 end]],
@@ -165,7 +215,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
         local s = winds
         if not self.WindsFrame then
             self.WindsFrame = CreateFrame("Frame", nil, self.NSRTFrame, "BackdropTemplate")
-            self.WindsFrame:SetSize(180, 80)
             self.WindsFrame:SetFrameStrata("MEDIUM")
             self.WindsDisplay = {}
             self.WindsNumbers = {}
@@ -191,7 +240,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
         end
 
         local function HideAllWinds()
-            self.WindsFrame:Hide()
+            if s.PlannerEnabled ~= false then
+                self.WindsFrame:Show()
+            else
+                self.WindsFrame:Hide()
+            end
             for index = 1, 3 do
                 self.WindsDisplay[index]:Hide()
                 self.WindsNumbers[index]:Hide()
@@ -232,6 +285,295 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 self.WindsSenderNames[pos]:Hide()
             end
         end
+
+        local function GetPlannerTarget(source, index)
+            return index == 4 and source or windsPlannerOpposite[source]
+        end
+
+        local function SetPlannerStatus(text, r, g, b)
+            if not self.WindsPlannerStatus then return end
+            self.WindsPlannerStatus:SetText(text)
+            self.WindsPlannerStatus:SetTextColor(r or 0.25, g or 1, b or 0.8)
+        end
+
+        local function EnsurePlannerUI()
+            if self.WindsPlannerButtons then return end
+
+            self.WindsPlannerMap = self.WindsFrame:CreateTexture(nil, "BACKGROUND", nil, 7)
+            self.WindsPlannerMap:SetAllPoints(self.WindsFrame)
+            self.WindsPlannerMap:SetTexture("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\SszorakPlanner")
+            self.WindsPlannerMap:SetDrawLayer("BACKGROUND", 7)
+            self.WindsPlannerMap:SetAlpha(0.78)
+
+            self.WindsPlannerTitle = self.WindsFrame:CreateFontString(nil, "OVERLAY")
+            self.WindsPlannerTitle:SetFont(self:GetGlobalFontPath(), 15, "OUTLINE")
+            self.WindsPlannerTitle:SetPoint("TOP", self.WindsFrame, "TOP", 0, -8)
+            self.WindsPlannerTitle:SetText("SSZORAK - WINDS PLANNER")
+            self.WindsPlannerTitle:SetTextColor(0.25, 1, 0.82)
+
+            self.WindsPlannerStatus = self.WindsFrame:CreateFontString(nil, "OVERLAY")
+            self.WindsPlannerStatus:SetFont(self:GetGlobalFontPath(), 12, "OUTLINE")
+            self.WindsPlannerStatus:SetPoint("BOTTOM", self.WindsFrame, "BOTTOM", 0, 4)
+
+            self.WindsPlannerOrderLabel = self.WindsFrame:CreateFontString(nil, "OVERLAY")
+            self.WindsPlannerOrderLabel:SetFont(self:GetGlobalFontPath(), 10, "OUTLINE")
+            self.WindsPlannerOrderLabel:SetPoint("BOTTOM", self.WindsFrame, "BOTTOM", 0, 76)
+            self.WindsPlannerOrderLabel:SetText("NSRT ORDER (OPPOSITE MARKERS)")
+            self.WindsPlannerOrderLabel:SetTextColor(1, 0.82, 0.1)
+
+            self.WindsPlannerButtons = {}
+            for _, sector in ipairs(windsPlannerSectors) do
+                local button = CreateFrame("Button", nil, self.WindsFrame, "BackdropTemplate")
+                button:SetSize(58, 58)
+                button:SetBackdrop({
+                    bgFile = [[Interface\Buttons\WHITE8X8]],
+                    edgeFile = [[Interface\Buttons\WHITE8X8]],
+                    edgeSize = 2,
+                })
+                button:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
+                button.sector = sector
+
+                button.icon = button:CreateTexture(nil, "ARTWORK")
+                button.icon:SetSize(28, 28)
+                button.icon:SetPoint("CENTER", button, "CENTER", 0, 1)
+                button.icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. windsPlannerMarkers[sector])
+
+                button.sectorText = button:CreateFontString(nil, "OVERLAY")
+                button.sectorText:SetFont(self:GetGlobalFontPath(), 13, "OUTLINE")
+                button.sectorText:SetPoint("TOP", button, "TOP", 0, -2)
+                button.sectorText:SetText("C" .. sector)
+
+                button.assignmentText = button:CreateFontString(nil, "OVERLAY")
+                button.assignmentText:SetFont(self:GetGlobalFontPath(), 10, "OUTLINE")
+                button.assignmentText:SetPoint("BOTTOM", button, "BOTTOM", 0, 2)
+
+                self.WindsPlannerButtons[sector] = button
+            end
+
+            self.WindsPlannerReset = CreateFrame("Button", nil, self.WindsFrame, "BackdropTemplate")
+            self.WindsPlannerReset:SetSize(72, 42)
+            self.WindsPlannerReset:SetPoint("CENTER", self.WindsFrame, "CENTER", 0, 2)
+            self.WindsPlannerReset:SetBackdrop({
+                bgFile = [[Interface\Buttons\WHITE8X8]],
+                edgeFile = [[Interface\Buttons\WHITE8X8]],
+                edgeSize = 2,
+            })
+            self.WindsPlannerReset:SetBackdropColor(0.02, 0.05, 0.05, 0.88)
+            self.WindsPlannerReset:SetBackdropBorderColor(0.1, 0.9, 0.8, 1)
+            self.WindsPlannerReset.text = self.WindsPlannerReset:CreateFontString(nil, "OVERLAY")
+            self.WindsPlannerReset.text:SetFont(self:GetGlobalFontPath(), 11, "OUTLINE")
+            self.WindsPlannerReset.text:SetPoint("CENTER")
+            self.WindsPlannerReset.text:SetText("RAID\nCENTER\n|cffff4040RESET|r")
+        end
+
+        local function SetPlannerVisible(visible)
+            if not self.WindsPlannerButtons then return end
+            self.WindsPlannerMap:SetShown(visible)
+            self.WindsPlannerTitle:SetShown(visible)
+            self.WindsPlannerStatus:SetShown(visible)
+            self.WindsPlannerOrderLabel:SetShown(visible)
+            self.WindsPlannerReset:SetShown(visible)
+            for _, button in pairs(self.WindsPlannerButtons) do
+                button:SetShown(visible)
+            end
+        end
+
+        local function RefreshPlanner()
+            if s.PlannerEnabled == false then return end
+            self.WindsPlannerPlan = self.WindsPlannerPlan or {}
+
+            local sources = {}
+            local targets = {}
+            for index, source in ipairs(self.WindsPlannerPlan) do
+                sources[source] = sources[source] or {}
+                sources[source][#sources[source] + 1] = index
+                local target = GetPlannerTarget(source, index)
+                targets[target] = targets[target] or {}
+                targets[target][#targets[target] + 1] = index
+            end
+
+            for _, sector in ipairs(windsPlannerSectors) do
+                local button = self.WindsPlannerButtons[sector]
+                local labels = {}
+                if sources[sector] then
+                    for _, index in ipairs(sources[sector]) do
+                        labels[#labels + 1] = index == 4 and "EXTRA" or ("VORTEX " .. index)
+                    end
+                end
+                if targets[sector] then
+                    for _, index in ipairs(targets[sector]) do
+                        labels[#labels + 1] = index == 4 and "EXTRA" or ("ORB " .. index)
+                    end
+                end
+                button.assignmentText:SetText(table.concat(labels, "/"))
+
+                local hasSource = sources[sector] ~= nil
+                local hasTarget = targets[sector] ~= nil
+                button:SetBackdropColor(hasSource and 0.45 or 0.01, hasSource and 0.12 or 0.04, hasSource and 0.03 or 0.04, 0.86)
+                if hasTarget then
+                    button:SetBackdropBorderColor(1, 0.15, 0.32, 1)
+                else
+                    button:SetBackdropBorderColor(0.05, 0.85, 0.78, 1)
+                end
+            end
+
+            local activeStep = self.WindsPlannerActiveStep
+            local activeSource = activeStep and self.WindsPlannerPlan[activeStep]
+            if activeSource then
+                local activeButton = self.WindsPlannerButtons[activeSource]
+                activeButton:SetBackdropColor(0.05, 0.55, 0.08, 0.92)
+                activeButton:SetBackdropBorderColor(0.25, 1, 0.25, 1)
+            end
+
+            for index = 1, 3 do
+                self.WindsDisplay[index]:Hide()
+                self.WindsNumbers[index]:Hide()
+                self.WindsSenderNames[index]:Hide()
+            end
+            self.WindsCount = 0
+            self.WindsOrder = {}
+            self.WindsOrderCount = 0
+            for index = 1, math.min(3, #self.WindsPlannerPlan) do
+                local target = GetPlannerTarget(self.WindsPlannerPlan[index], index)
+                DisplayWind(index, windsPlannerMarkers[target], self.WindsPlannerControllerName or UnitName("player"))
+            end
+
+            if #self.WindsPlannerPlan < 4 then
+                SetPlannerStatus("PRESS VORTEX MACRO #" .. (#self.WindsPlannerPlan + 1), 0.25, 1, 0.82)
+            else
+                SetPlannerStatus("READY - sphere 4 is EXTRA", 1, 0.2, 0.4)
+            end
+            self.WindsFrame:Show()
+        end
+
+        local function EncodePlannerPlan()
+            local encoded = {}
+            for index, sector in ipairs(self.WindsPlannerPlan or {}) do
+                encoded[index] = tostring(sector)
+            end
+            return #encoded > 0 and table.concat(encoded, ",") or "-"
+        end
+
+        local function BroadcastPlannerPlan()
+            if not IsInRaid() then return end
+            self.WindsPlannerRevision = (self.WindsPlannerRevision or 0) + 1
+            self:Broadcast("NSI_SSZORAK_WINDS", "RAID", self.WindsPlannerRevision, EncodePlannerPlan())
+        end
+
+        local function ResetPlanner(shouldBroadcast)
+            self.WindsPlannerPlan = {}
+            self.WindsPlannerActiveStep = nil
+            self.WindsPlannerControllerGUID = nil
+            self.WindsPlannerControllerName = nil
+            RefreshPlanner()
+            if shouldBroadcast then BroadcastPlannerPlan() end
+        end
+
+        local function CanEditPlanner()
+            local playerGUID = UnitGUID("player")
+            if self.WindsPlannerControllerGUID and self.WindsPlannerControllerGUID ~= playerGUID then
+                SetPlannerStatus("Controlled by " .. (self.WindsPlannerControllerName or "raid member"), 1, 0.35, 0.2)
+                return false
+            end
+            self.WindsPlannerControllerGUID = playerGUID
+            self.WindsPlannerControllerName = UnitName("player")
+            return true
+        end
+
+        local function AddPlannerSector(sector, fromMacro, senderName, senderGUID)
+            if not fromMacro and not CanEditPlanner() then return end
+            if #self.WindsPlannerPlan >= 4 then
+                if fromMacro then
+                    ResetPlanner(false)
+                else
+                    return
+                end
+            end
+            for _, selected in ipairs(self.WindsPlannerPlan) do
+                if selected == sector then
+                    SetPlannerStatus("C" .. sector .. " is already selected", 1, 0.3, 0.2)
+                    return
+                end
+            end
+            if fromMacro then
+                self.WindsPlannerControllerGUID = senderGUID
+                self.WindsPlannerControllerName = senderName
+            end
+            self.WindsPlannerPlan[#self.WindsPlannerPlan + 1] = sector
+            local step = #self.WindsPlannerPlan
+            local target = GetPlannerTarget(sector, step)
+            RefreshPlanner()
+            if step <= 3 then
+                SetPlannerStatus("VORTEX C" .. sector .. " -> MARKER C" .. target, 1, 0.82, 0.1)
+            else
+                SetPlannerStatus("EXTRA ORB: C" .. sector, 1, 0.2, 0.4)
+            end
+            if senderName and Ambiguate(senderName, "none") == UnitName("player") then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff42f5c5NSRT Winds:|r C" .. sector .. " -> C" .. target .. (step == 4 and " (extra)" or ""))
+            end
+            if not fromMacro then BroadcastPlannerPlan() end
+        end
+
+        self.SszorakWindsMacroInput = function(marker)
+            if type(marker) ~= "number" then return end
+            local sourceSector = windsPlannerMarkerSectors[marker]
+            if not sourceSector then return end
+            self.WindsPlannerIgnoreChatUntil = GetTime() + 2
+            AddPlannerSector(sourceSector, false, UnitName("player"), UnitGUID("player"))
+        end
+
+        EnsurePlannerUI()
+        self.WindsPlannerRemoteRevisions = {}
+        self.WindsFrame:SetSize(s.PlannerEnabled ~= false and 300 or 180, s.PlannerEnabled ~= false and 330 or 80)
+        SetPlannerVisible(s.PlannerEnabled ~= false)
+        for index = 1, 3 do
+            self.WindsDisplay[index]:ClearAllPoints()
+            local x = s.PlannerEnabled ~= false and ((index - 2) * 58) or ((index - 1) * 60 + 30)
+            self.WindsDisplay[index]:SetPoint("BOTTOM", self.WindsFrame, "BOTTOMLEFT", x + (s.PlannerEnabled ~= false and 150 or 0), s.PlannerEnabled ~= false and 24 or 0)
+        end
+        if s.PlannerEnabled ~= false then
+            for sector, position in pairs(windsPlannerPositions) do
+                local button = self.WindsPlannerButtons[sector]
+                button:ClearAllPoints()
+                button:SetPoint("CENTER", self.WindsFrame, "CENTER", position[1], position[2] + 18)
+                button:EnableMouse(false)
+                button:SetScript("OnMouseUp", nil)
+            end
+            self.WindsPlannerReset:SetScript("OnClick", function()
+                if CanEditPlanner() then ResetPlanner(true) end
+            end)
+        end
+
+        self.SszorakWindsReceivePlan = function(senderUnit, revision, encoded)
+            if type(revision) ~= "number" or type(encoded) ~= "string" then return end
+            if UnitExists(senderUnit) and UnitIsUnit(senderUnit, "player") then return end
+
+            local senderGUID = UnitExists(senderUnit) and UnitGUID(senderUnit)
+            if not senderGUID then return end
+            self.WindsPlannerRemoteRevisions = self.WindsPlannerRemoteRevisions or {}
+            if revision <= (self.WindsPlannerRemoteRevisions[senderGUID] or 0) then return end
+            self.WindsPlannerRemoteRevisions[senderGUID] = revision
+
+            if self.WindsPlannerControllerGUID and self.WindsPlannerControllerGUID ~= senderGUID then return end
+            local received = {}
+            local used = {}
+            if encoded ~= "-" then
+                for token in encoded:gmatch("[^,]+") do
+                    local sector = tonumber(token)
+                    if not sector or not windsPlannerOpposite[sector] or used[sector] or #received >= 4 then return end
+                    used[sector] = true
+                    received[#received + 1] = sector
+                end
+            end
+
+            self.WindsPlannerPlan = received
+            self.WindsPlannerControllerGUID = #received > 0 and senderGUID or nil
+            self.WindsPlannerControllerName = #received > 0 and (UnitName(senderUnit) or senderUnit) or nil
+            self.WindsPlannerActiveStep = nil
+            self.WindsPlannerIgnoreChatUntil = GetTime() + 2
+            RefreshPlanner()
+        end
+
         self.WindsFrame:ClearAllPoints()
         self.WindsFrame:SetScale(s.Scale)
         self.WindsFrame:SetPoint(s.Anchor, self.NSRTFrame, s.relativeTo, s.xOffset, s.yOffset)
@@ -240,39 +582,90 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             edgeFile = [[Interface\Buttons\WHITE8X8]],
             edgeSize = 1,
         })
-        self.WindsFrame:SetBackdropColor(unpack(s.BackgroundColor))
+        if s.PlannerEnabled ~= false then
+            -- Keep the backdrop almost transparent so it cannot cover the
+            -- arena texture, which is drawn above it on BACKGROUND sublevel 7.
+            self.WindsFrame:SetBackdropColor(0, 0, 0, 0.08)
+        else
+            self.WindsFrame:SetBackdropColor(unpack(s.BackgroundColor))
+        end
         self.WindsFrame:SetBackdropBorderColor(unpack(s.BackgroundColor))
         HideAllWinds()
-
-        if preview then
-            self.IsSszorakWindsPreview = true
-            self:MakeDraggable(self.WindsFrame, s, true)
-            local previewNumbers = {1, 2, 3, 4, 5, 6, 7, 8}
-            for index = 8, 2, -1 do
-                local swapIndex = math.random(index)
-                previewNumbers[index], previewNumbers[swapIndex] = previewNumbers[swapIndex], previewNumbers[index]
-            end
-            for index = 1, 3 do
-                DisplayWind(index, secretwrap(previewNumbers[index]), secretwrap(UnitName("player")), secretwrap(UnitGUID("player")))
-            end
-            return
+        if s.PlannerEnabled ~= false then
+            ResetPlanner(false)
         end
 
+        -- Listen in preview as well, so the existing /raid marker macros can
+        -- be used to test the planner without starting the encounter.
         self:EncounterRegister("SszorakWinds", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, true)
         self:EncounterFunction("SszorakWinds", function(_, event, message, sender, ...)
             local senderGUID = select(10, ...)
             local senderDisplayName = event == "CHAT_MSG_RAID_LEADER" and UnitExists("raid1") and NSAPI:Shorten("raid1", 12, false, "GlobalNickNames") or nil
-            DisplayWind(nil, message, sender, senderGUID, senderDisplayName)
+            if s.PlannerEnabled ~= false then
+                if self.WindsPlannerIgnoreChatUntil and GetTime() <= self.WindsPlannerIgnoreChatUntil then
+                    return
+                end
+                if issecretvalue(message) then
+                    -- Compatibility fallback for old macros. It cannot be
+                    -- mirrored safely, but the stock helper can still render
+                    -- the protected marker value directly.
+                    DisplayWind(nil, message, sender, senderGUID, senderDisplayName)
+                    return
+                end
+                local marker = tonumber(message)
+                local sourceSector = marker and windsPlannerMarkerSectors[marker]
+                if sourceSector then
+                    AddPlannerSector(sourceSector, true, sender, senderGUID)
+                end
+            else
+                DisplayWind(nil, message, sender, senderGUID, senderDisplayName)
+            end
         end)
 
-        local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
-        local damageAmp = diffData and diffData.DamageAmp
-        local resetTimes = damageAmp and damageAmp.timers or damageAmpTimers[id]
+        if preview then
+            self.IsSszorakWindsPreview = true
+            self:MakeDraggable(self.WindsFrame, s, true)
+            if s.PlannerEnabled == false then
+                local previewNumbers = {1, 2, 3, 4, 5, 6, 7, 8}
+                for index = 8, 2, -1 do
+                    local swapIndex = math.random(index)
+                    previewNumbers[index], previewNumbers[swapIndex] = previewNumbers[swapIndex], previewNumbers[index]
+                end
+                for index = 1, 3 do
+                    DisplayWind(index, secretwrap(previewNumbers[index]), secretwrap(UnitName("player")), secretwrap(UnitGUID("player")))
+                end
+            end
+            return
+        end
+
         self.WindsResetTimers = {}
-        for _, time in ipairs(resetTimes or {}) do
-            self.WindsResetTimers[#self.WindsResetTimers + 1] = C_Timer.NewTimer(time + 20, function()
-                HideAllWinds()
-            end)
+        if s.PlannerEnabled ~= false and (id == 14 or id == 15) then
+            for pattern, times in ipairs(windsPlannerSphereTimers) do
+                for step, time in ipairs(times) do
+                    self.WindsResetTimers[#self.WindsResetTimers + 1] = C_Timer.NewTimer(time, function()
+                        self.WindsPlannerActiveStep = step
+                        RefreshPlanner()
+                        SetPlannerStatus("PATTERN " .. pattern .. " - SPHERE " .. step, 0.25, 1, 0.25)
+                    end)
+                end
+                self.WindsResetTimers[#self.WindsResetTimers + 1] = C_Timer.NewTimer(windsPlannerEndTimers[pattern], function()
+                    self.WindsPlannerActiveStep = 4
+                    RefreshPlanner()
+                    SetPlannerStatus("WINDS ENDED - POP EXTRA", 1, 0.15, 0.35)
+                    self.WindsResetTimers[#self.WindsResetTimers + 1] = C_Timer.NewTimer(3, function()
+                        ResetPlanner(false)
+                    end)
+                end)
+            end
+        else
+            local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
+            local damageAmp = diffData and diffData.DamageAmp
+            local resetTimes = damageAmp and damageAmp.timers or damageAmpTimers[id]
+            for _, time in ipairs(resetTimes or {}) do
+                self.WindsResetTimers[#self.WindsResetTimers + 1] = C_Timer.NewTimer(time + 20, function()
+                    HideAllWinds()
+                end)
+            end
         end
     end
 
@@ -365,6 +758,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    self.SszorakWindsMacroInput = nil
+    self.SszorakWindsReceivePlan = nil
+    self.WindsPlannerPlan = {}
+    self.WindsPlannerActiveStep = nil
+    self.WindsPlannerControllerGUID = nil
+    self.WindsPlannerControllerName = nil
     self:EncounterRegister("SszorakWinds", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
     if self.IsSszorakWindsPreview and self.WindsFrame then
         self:MakeDraggable(self.WindsFrame, nil, false)

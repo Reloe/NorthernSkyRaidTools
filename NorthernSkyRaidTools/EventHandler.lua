@@ -340,6 +340,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if UnitExists(unit) and UnitIsUnit("player", unit) then return end -- don't add new nickname if it's yourself because already adding it to the database when you edit it
         if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
         self:NewNickName(unit, nickname, name, realm, channel)
+    elseif e == "NSI_SSZORAK_WINDS" and internal then
+        local senderUnit, revision, encodedPlan = ...
+        if self.SszorakWindsReceivePlan then
+            self.SszorakWindsReceivePlan(senderUnit, revision, encodedPlan)
+        end
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
         self:ArrangeGroups()
         if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
