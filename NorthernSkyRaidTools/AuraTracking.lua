@@ -1680,6 +1680,7 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
         regions.bar = CreateFrame("StatusBar", nil, button, "BackdropTemplate")
         regions.bar:SetFrameLevel(buttonLevel)
         regions.bar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
+        regions.background = button:CreateTexture(nil, "BACKGROUND")
         regions.icon = button:CreateTexture(nil, "ARTWORK")
         regions.icon:SetSize(height, height)
         button:SetIcon(regions.icon)
@@ -1715,9 +1716,19 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
         regions.bar:SetPoint("TOPLEFT", button, "TOPLEFT", height, 0)
         regions.icon:SetPoint("LEFT", button, "LEFT", 0, 0)
     end
-    regions.bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", settings.Texture))
+    local barTexture = self.LSM:Fetch("statusbar", settings.Texture)
+    regions.bar:SetStatusBarTexture(barTexture)
     regions.bar:SetStatusBarColor(unpack(settings.barColors))
-    regions.bar:SetBackdropColor(unpack(settings.backgroundColors))
+    if state.useBarColorAsBackground then
+        regions.background:SetAllPoints(regions.bar)
+        regions.background:SetTexture(barTexture)
+        regions.background:SetVertexColor(unpack(settings.barColors))
+        regions.background:Show()
+    else
+        regions.background:Hide()
+    end
+    local backgroundColors = settings.backgroundColors
+    regions.bar:SetBackdropColor(unpack(backgroundColors))
     regions.border:SetBackdropBorderColor(unpack(settings.borderColors))
     regions.textLayer:SetFrameLevel(button:GetFrameLevel() + 2)
 
@@ -1737,12 +1748,12 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
         textFormatter = GetAuraTrackingDurationFormatter(settings),
         textColor = GetAuraTrackingDurationTextColor(settings),
     })
-    button:SetDurationBar(regions.bar, {
-        direction = state.invertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
-    })
+        button:SetDurationBar(regions.bar, {
+            direction = state.invertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
+        })
 end
 
-function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground)
     containerName = containerName or "Default"
     self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
     local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
@@ -1763,7 +1774,24 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
     local anchor = self.DebuffOverviewMover
     local copies = math.max(1, math.floor(containersPerUnit or 1))
     local frameCount = maxFrameCount or 1
-    local growUp = settings.GrowDirection == "Up"
+    local growDirection = settings.GrowDirection or "Up"
+    local flowHorizontal = AnchorUtil.FlowDirection.Right
+    local flowVertical = AnchorUtil.FlowDirection.Down
+    local flowAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+    local flowAnchor = "TOPLEFT"
+    if growDirection == "Up" then
+        flowAxis = AnchorUtil.FlowLayoutAxis.Vertical
+        flowVertical = AnchorUtil.FlowDirection.Up
+        flowAnchor = "BOTTOMLEFT"
+    elseif growDirection == "Down" then
+        flowAxis = AnchorUtil.FlowLayoutAxis.Vertical
+    elseif growDirection == "Left" then
+        flowHorizontal = AnchorUtil.FlowDirection.Left
+        flowAnchor = "TOPRIGHT"
+    elseif growDirection == "Right" then
+        flowHorizontal = AnchorUtil.FlowDirection.Right
+        flowAnchor = "TOPLEFT"
+    end
     local previousContainer
     local containerStates = {}
 
@@ -1775,6 +1803,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
                 unit = unit,
                 displayName = displayName,
                 invertFill = invertFill == true,
+                useBarColorAsBackground = useBarColorAsBackground == true,
                 buttonRegions = {},
             }
             local container = CreateFrame(
@@ -1787,24 +1816,29 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             container:SetFrameStrata("HIGH")
             container:SetSize(settings.Width + settings.Height, settings.Height)
             container:SetUnit(unit)
-            container:SetFlowLayoutAnchorPoint("BOTTOMLEFT")
-            container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up)
+            container:SetFlowLayoutAxis(flowAxis)
+            container:SetFlowLayoutAnchorPoint(flowAnchor)
+            container:SetFlowLayoutGrowthDirection(flowHorizontal, flowVertical)
             if previousContainer then
-                container:SetPoint(
-                    growUp and "BOTTOMLEFT" or "TOPLEFT",
-                    previousContainer,
-                    growUp and "TOPLEFT" or "BOTTOMLEFT",
-                    0,
-                    growUp and (settings.Spacing or 0) or -(settings.Spacing or 0)
-                )
+                if growDirection == "Up" then
+                    container:SetPoint("BOTTOMLEFT", previousContainer, "TOPLEFT", 0, settings.Spacing or 0)
+                elseif growDirection == "Down" then
+                    container:SetPoint("TOPLEFT", previousContainer, "BOTTOMLEFT", 0, -(settings.Spacing or 0))
+                elseif growDirection == "Left" then
+                    container:SetPoint("TOPRIGHT", previousContainer, "TOPLEFT", -(settings.Spacing or 0), 0)
+                else
+                    container:SetPoint("TOPLEFT", previousContainer, "TOPRIGHT", settings.Spacing or 0, 0)
+                end
             else
-                container:SetPoint(
-                    growUp and "BOTTOMLEFT" or "TOPLEFT",
-                    anchor,
-                    growUp and "TOPLEFT" or "BOTTOMLEFT",
-                    0,
-                    growUp and 8 or -8
-                )
+                if growDirection == "Up" then
+                    container:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", 0, 8)
+                elseif growDirection == "Down" then
+                    container:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -8)
+                elseif growDirection == "Left" then
+                    container:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -8, 0)
+                else
+                    container:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 8, 0)
+                end
             end
             container:AddAuraGroup("DebuffOverview", regularFilter, {
                 maxFrameCount = frameCount,
