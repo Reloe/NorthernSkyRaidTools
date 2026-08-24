@@ -1472,7 +1472,6 @@ local function BuildEncounterAlertsUI(parentFrame)
             local locale = GetLocale()
             NSRT.Alerts.Language = languagesAvailable[locale] and locale or "enUS"
         end
-        ApplyAlertLanguage(NSRT.Alerts.Language)
 
         local languageLabel = CreateLabel(addOptFrame, NSI:Loc("Alerts Language"), ADDOPT_INNER_W, 16)
         languageLabel:SetPoint("TOPLEFT", disableAllBtn.frame, "BOTTOMLEFT", 0, -8)
