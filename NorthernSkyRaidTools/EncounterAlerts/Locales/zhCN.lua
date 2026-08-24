@@ -212,7 +212,7 @@ L[3420] = {
     ["WindDebuffs"]  = {group = "斯索拉克", name = "狂怒侧风（点名）", text = "点名狂风"},
     ["Debuffs"]      = {group = "斯索拉克", name = "剧毒涌动（点名）", text = "点名囊肿"},
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
-    ["WindsHelper"]  = {group = "斯索拉克", name = "狂风助手"},
+    ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
     ["VenomousSurgeTargets"] = {group = "斯索拉克", name = "剧毒涌动目标"},
 }
 
@@ -241,7 +241,7 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]        = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"]   = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    -- ["P2_5WrongTarget"] = {group = "Coiled Altar P2.5", name = "Wrong Target", text = "WRONG TARGET"},
+    ["P2_5WrongTarget"] = {group = "盘卷祭坛 P2.5", name = "易伤目标错误", text = "目标错误"},
     ["P3Frontal"]       = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
     ["P3Soak"]          = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
     ["P3Shield"]        = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
@@ -263,7 +263,8 @@ L[3492] = {
     ["Adds"]                = {group = "乌拉特克", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
     ["Sweep"]               = {group = "乌拉特克", name = "恶臭痛击", text = "范围横扫"},
     ["Soak"]                = {group = "乌拉特克", name = "幽魂盘卷（分摊）", text = "分摊"},
-    ["TransitionSoakFirst"] = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
-    ["TransitionSoakSecond"] = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
-    -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
+    ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
+    ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
+    ["GraspingFangsOverview"] = {group = "乌拉特克", name = "攫取毒牙总览", text = ""},
+    ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
 }

@@ -240,7 +240,7 @@ L[3429] = {
     ["P1Taunt"] = {group = "Спиральный алтарь [Танки]", name = "Таунт (1-я фаза)", text = "Провокация"},
     ["P1Frontal"] = {group = "Спиральный алтарь [1-я фаза]", name = "Фронтальный удар (1-я фаза)", text = "Фронтальный удар"},
     ["P1OrbDeadline"] = {group = "Спиральный алтарь [1-я фаза]", name = "Горящая сфера", text = "Горящая сфера"},
-    -- ["P2_5WrongTarget"] = {group = "Coiled Altar P2.5", name = "Wrong Target", text = "WRONG TARGET"},
+    ["P2_5WrongTarget"] = {group = "Спиральный алтарь [2.5-я фаза]", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
     ["P3Frontal"] = {group = "Спиральный алтарь [3-я фаза]", name = "Фронтальный удар (3-я фаза)", text = "Фронтальный удар"},
     ["P3Soak"] = {group = "Спиральный алтарь [3-я фаза]", name = "Поглощение (3-я фаза)", text = "Поглощение"},
     ["P3Shield"] = {group = "Спиральный алтарь [3-я фаза]", name = "Щит (3-я фаза)", text = "Щит"},
@@ -264,5 +264,6 @@ L[3492] = {
     ["Soak"]                = {group = "Ула'тек", name = "Поглощение", text = "Поглощение"},
     ["TransitionSoakFirst"] = {group = "Ула'тек", name = "Первое поглощение", text = "Первое поглощение"},
     ["TransitionSoakSecond"] = {group = "Ула'тек", name = "Второе поглощение", text = "Второе поглощение"},
-    -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
+    ["GraspingFangsOverview"] = {group = "Ула'тек", name = "Обзор Хватающих клыков"},
+    ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
 }
