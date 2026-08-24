@@ -200,7 +200,12 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2.5", internalID = "P2_5WrongTarget", name = "Wrong Target", text = "WRONG TARGET", DisplayType = "Text", encID = encID, phase = 2.5, TTS = false, dur = 50, sticky = 50,
+    local data = {group = "Coiled Altar P3", internalID = "P2_5WrongTarget", name = "Wrong Target", text = "WRONG TARGET", DisplayType = "Text", encID = encID, phase = 2.5, TTS = false, dur = 50, sticky = 50,
+        timers = {
+            [14] = {0},
+            [15] = {0},
+            [16] = {0},
+        },
         enabled = true, textColors = {1, 0, 0, 1}, HideTimer = true, isSpecialDisplay = true, BlockCopy = true,
     }
     self:AddEncounterAlert(data)
@@ -307,16 +312,20 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck({15, 16})
+    id = id or self:DifficultyCheck({14, 15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     self.CoiledAltarWrongTargetAlert = diffData and diffData.P2_5WrongTarget
     HideCoiledAltarWrongTarget(self)
+    local wrongTargetLoad = self.CoiledAltarWrongTargetAlert and self:EvaluateLoad(self.CoiledAltarWrongTargetAlert)
     self:EncounterFunction("CoiledAltarWrongTarget", function()
         UpdateCoiledAltarWrongTarget(self)
     end)
     self:EncounterRegister("CoiledAltarPhaseDetect", "UNIT_SPELLCAST_CHANNEL_START", true, "boss2")
     self:EncounterFunction("CoiledAltarPhaseDetect", function(_, e, unit)
-        if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self.Phase ~= 2 or self:GetActiveEncounterTimelineEventCount() ~= 0 then return end
+        local activeTimelineCount = self:GetActiveEncounterTimelineEventCount()
+        if e ~= "UNIT_SPELLCAST_CHANNEL_START" or self.Phase ~= 2 or activeTimelineCount ~= 0 then
+            return
+        end
         self.Phase = 2.5
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
