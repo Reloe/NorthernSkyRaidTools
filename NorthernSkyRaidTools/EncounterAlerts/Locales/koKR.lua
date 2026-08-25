@@ -185,7 +185,7 @@ L[3455] = {
     ["Soaks"]       = {group = "바쉬니크", name = "스킬 맞기", text = "스킬 맞기"},
     ["Waves"]       = {group = "바쉬니크", name = "물결", text = "물결"},
     ["WaveSpread"] = {group = "바쉬니크", name = "물결 산개", text = "미리 산개"},
-    ["WavesLine"] = {group = "바쉬니크", name = "물결 라인", text = ""},
+    ["WavesLine"] = {group = "바쉬니크", name = "물결 선 표시", text = ""},
 }
 
 -- The Lost Explorers (3497)
