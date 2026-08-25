@@ -1173,6 +1173,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local newKey = NSI:UniqueAlertID(diffTable, false)
                                     local newData = CopyTable(entry.data)
                                     newData.ReloeReminder = nil
+                                    newData.internalID = newKey
                                     diffTable[newKey] = newData
                                     RebuildList()
                                 end })
