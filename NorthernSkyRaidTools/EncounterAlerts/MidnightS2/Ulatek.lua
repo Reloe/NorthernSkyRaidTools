@@ -5,6 +5,9 @@ local encID = 3492
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+    for i = 14, 16 do
+        self:RemoveEncounterAlert(encID, i, "TankDrag")
+    end
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
@@ -18,15 +21,6 @@ NSI.InitializeAlerts[encID] = function(self)
         timers = {
             [15] = {14.9, 81.9, 118.9, 377.1, 452.1, 528.1, 617.1, 732.1, 828.1},
             [16] = {14.9, 81.9, 118.9, 377.1, 452.1, 528.1, 617.1, 732.1, 828.1},
-        },
-    }
-    self:AddEncounterAlert(data)
-
-    local data = {group = "Ula'tek", internalID = "TankDrag", name = "Tank Add-Drag", text = "Drag Add", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1311611, phase = 1,
-        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
-        timers = {
-            [15] = {185},
-            [16] = {185},
         },
     }
     self:AddEncounterAlert(data)

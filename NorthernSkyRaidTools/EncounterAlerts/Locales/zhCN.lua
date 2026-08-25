@@ -268,6 +268,5 @@ L[3492] = {
     ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
     ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
     ["GraspingFangsOverview"] = {group = "乌拉特克", name = "攫取毒牙总览", text = ""},
-    ["TankDrag"]              = {group = "乌拉特克", name = "坦克带位", text = "坦克带位"},
     ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
 }

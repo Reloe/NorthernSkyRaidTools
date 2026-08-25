@@ -267,6 +267,5 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "Ула'тек", name = "Первое поглощение", text = "Первое поглощение"},
     ["TransitionSoakSecond"] = {group = "Ула'тек", name = "Второе поглощение", text = "Второе поглощение"},
     ["GraspingFangsOverview"] = {group = "Ула'тек", name = "Обзор Хватающих клыков", text = ""},
-    ["TankDrag"] = {group = "Ула'тек", name = "Перетаскивание адда танком", text = "Перетащить адда"},
     ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
 }

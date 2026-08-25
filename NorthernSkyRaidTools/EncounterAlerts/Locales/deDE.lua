@@ -266,6 +266,5 @@ L[3492] = {
     -- ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
     -- ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
     -- ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
-    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
     -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
 }

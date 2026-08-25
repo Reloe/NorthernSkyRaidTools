@@ -270,6 +270,5 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
     ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
     ["GraspingFangsOverview"] = {group = "烏拉特克", name = "攫取毒牙總覽", text = ""},
-    ["TankDrag"]            = {group = "烏拉特克", name = "坦拉小怪", text = "拉小怪"},
     ["WrongTarget"] = {group = "烏拉特克", name = "打錯目標", text = "打錯目標"},
 }
