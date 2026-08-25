@@ -1,6 +1,6 @@
 ## Changelog
-- Add new Aura Container functions for a Debuff-Overview
-- Add Ulatek Alert for Debuff Overview in P2
-- Fix some Ulatek/Nymrissa Timers
-- Add Pace Comparison Data for Entombed Sentinels
-- Fix some Aura Sounds
+- New vashnik mythic-only alert to display a "cross" during Waves (disabled by default)
+- fix a bug where duplicated alerts didn't get a new unique internalid
+- new ulatek alert for tanks to drag the add on grasping fangs
+- fix some ulatek timers
+- fix cotank name updating properly on group roster update
