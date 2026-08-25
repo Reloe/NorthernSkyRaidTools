@@ -25,8 +25,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "TankDrag", name = "Tank Add-Drag", text = "Drag Add", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1311611, phase = 1,
         textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
         timers = {
-            [15] = {183},
-            [16] = {183},
+            [15] = {185},
+            [16] = {185},
         },
     }
     self:AddEncounterAlert(data)
