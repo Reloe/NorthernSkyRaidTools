@@ -256,6 +256,13 @@ local function ResolveAuraTrackingCustomUnitType(settings, unit)
     return "Enemy"
 end
 
+local function GetAuraTrackingUnitCanAssist(unit, requiresAssist)
+    if requiresAssist and UnitIsPlayerControlledOrGroupMember(unit) then
+        return true
+    end
+    return UnitCanAssist("player", unit, true, true)
+end
+
 local function IsAuraTrackingStaticUnit(unit)
     unit = unit and strtrim(tostring(unit)) or ""
     if unit == "" then return true end
@@ -294,7 +301,7 @@ local function GetAuraTrackingCustomFrameLimit(settings, unit)
     local wantedUnitType = ResolveAuraTrackingCustomUnitType(settings, unit)
     unit = unit and strtrim(tostring(unit)) or ""
     if unit ~= "" and UnitExists(unit) then
-        local currentUnitType = UnitCanAssist("player", unit) and "Friendly" or "Enemy"
+        local currentUnitType = GetAuraTrackingUnitCanAssist(unit, wantedUnitType == "Friendly") and "Friendly" or "Enemy"
         if currentUnitType ~= wantedUnitType then
             return 0
         end
@@ -1970,7 +1977,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     else
         state.requiresAssist = nil
     end
-    state.unitCanAssist = state.requiresAssist ~= nil and UnitCanAssist("player", unit) or nil
+    state.unitCanAssist = state.requiresAssist ~= nil and GetAuraTrackingUnitCanAssist(unit, state.requiresAssist) or nil
     state.encounterConditioned = hasEncounterConditions
     state.width = width
     state.height = height
@@ -2162,7 +2169,7 @@ function NSI:UpdateAuraTrackingEncounterVisibility()
                 shouldShow = false
             end
             if state.requiresAssist ~= nil then
-                state.unitCanAssist = UnitCanAssist("player", state.unit)
+                state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                 shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
             end
             state.container:SetEnabled(shouldShow)
@@ -2208,7 +2215,7 @@ local function SetAuraTrackingPlayerVehicleState(self, disabled)
         if state.active and state.unit == "player" then
             local shouldShow = not disabled and state.settings.enabled and self:EvaluateLoad(state.settings)
             if state.requiresAssist ~= nil then
-                state.unitCanAssist = UnitCanAssist("player", state.unit)
+                state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                 shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
             end
             state.container:SetEnabled(shouldShow)
@@ -2345,7 +2352,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     SetAuraTrackingPlayerVehicleState(NSI, true)
                     return
                 elseif event == "UNIT_FACTION" then
-                    local unitCanAssist = UnitCanAssist("player", unit)
+                    local unitCanAssist = GetAuraTrackingUnitCanAssist(unit, true)
                     for _, state in pairs(NSI.AuraTrackingState or {}) do
                         if state.active and state.unit == unit and state.requiresAssist ~= nil then
                             state.unitCanAssist = unitCanAssist
@@ -2426,7 +2433,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
                 for _, state in ipairs(states) do
                     if state.container and state.active and state.requiresAssist ~= nil then
-                        local unitCanAssist = UnitCanAssist("player", state.unit)
+                        local unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                         if state.unitCanAssist ~= unitCanAssist then
                             state.unitCanAssist = unitCanAssist
                             local shouldShow = state.settings.enabled and NSI:EvaluateLoad(state.settings)
