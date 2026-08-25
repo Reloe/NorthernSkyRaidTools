@@ -1159,6 +1159,7 @@ L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the 
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."
+L["|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."
 L["Display settings are fixed\nfor this alert."] = "Display settings are fixed\nfor this alert."
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00SOAK"
