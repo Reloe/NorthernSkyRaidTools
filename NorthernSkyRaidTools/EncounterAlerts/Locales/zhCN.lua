@@ -185,13 +185,13 @@ L[3455] = {
     ["Soaks"]      = {group = "瓦什尼克", name = "催化胆汁（踩圈）", text = "踩圈"},
     ["Waves"]      = {group = "瓦什尼克", name = "瘟疫泡沫", text = "波浪"},
     ["WaveSpread"] = {group = "瓦什尼克", name = "瘟疫泡沫（分散）", text = "预分散"},
-    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
+    ["WavesLine"]  = {group = "瓦什尼克", name = "波浪辅助线", text = ""},
 }
 
 -- The Lost Explorers (3497)
 L[3497] = {
     ["ShreddingShards"]           = {group = "书卷贤者技能", name = "撕裂碎片（坦克）", text = "坦克打击"},
-    ["BlinkNova"]                 = {group = "书卷贤者技能", name = "闪现新星（点名）", text = "点名远离"},
+    ["BlinkNova"]                 = {group = "书卷贤者技能", name = "闪现新星（点名）", text = "点名闪现"},
     ["FrostfireVolley"]           = {group = "书卷贤者技能", name = "霜火连射（点名）", text = "点名放圈"},
     ["ShellSpinNormal"]           = {group = "大副技能", name = "旋壳（引诱）", text = "引龟壳"},
     ["ShellSpinScroll"]           = {group = "大副技能", name = "旋壳（书卷强化）", text = "引龟壳"},
@@ -242,7 +242,7 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]        = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["InterruptAdds"]   = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
-    ["P2_5WrongTarget"] = {group = "盘卷祭坛 P2.5", name = "易伤目标错误", text = "目标错误"},
+    ["P2_5WrongTarget"] = {group = "盘卷祭坛 P3", name = "易伤目标错误", text = "目标错误"},
     ["P3Frontal"]       = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
     ["P3Soak"]          = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
     ["P3Shield"]        = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
@@ -267,6 +267,6 @@ L[3492] = {
     ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
     ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
     ["GraspingFangsOverview"] = {group = "乌拉特克", name = "攫取毒牙总览", text = ""},
-    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
+    ["TankDrag"]              = {group = "乌拉特克", name = "坦克带位", text = "坦克带位"},
     ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
 }
