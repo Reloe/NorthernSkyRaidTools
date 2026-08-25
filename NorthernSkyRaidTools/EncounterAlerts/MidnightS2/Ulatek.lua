@@ -9,7 +9,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local data = {group = "Ula'tek", internalID = "HitKnock", name = "Mother's Wrath", text = "Hit+Knock", DisplayType = "Text", encID = encID, TTS = "Knock", dur = 5, spellID = 1298367, phase = 1,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 10}}, group = "Ula'tek", internalID = "HitKnock", name = "Mother's Wrath", text = "Hit+Knock", DisplayType = "Text", encID = encID, TTS = "Knock", dur = 10, spellID = 1298367, phase = 1,
         textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
@@ -18,6 +18,15 @@ NSI.InitializeAlerts[encID] = function(self)
         timers = {
             [15] = {14.9, 81.9, 118.9, 377.1, 452.1, 528.1, 617.1, 732.1, 828.1},
             [16] = {14.9, 81.9, 118.9, 377.1, 452.1, 528.1, 617.1, 732.1, 828.1},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Ula'tek", internalID = "TankDrag", name = "Tank Add-Drag", text = "Drag Add", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1311611, phase = 1,
+        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
+        timers = {
+            [15] = {183},
+            [16] = {183},
         },
     }
     self:AddEncounterAlert(data)
@@ -31,20 +40,18 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local UlatekDamageAmpTimers = {
-        [15] = {155.4, 304.5, 593.7},
-        [16] = {155.4, 304.5, 593.7},
+        [15] = {135.4, 284.5, 577},
+        [16] = {135.4, 284.5, 577},
     }
-    local data = {group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1286860, phase = 1,
-        timers = {
-            [15] = {135.4, 284.5, 573.7},
-            [16] = {135.4, 284.5, 573.7},
-        },
+    local data = {Version = {versionNumber = 1, [1] = {dur = 15}}, group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", DisplayType = "Text", encID = encID, TTS = false, dur = 15, spellID = 1286860, phase = 1,
+        timers = UlatekDamageAmpTimers,
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "DamageAmp", name = "Venomous Heart", text = "Dmg amp", DisplayType = "Bar", encID = encID, TTS = false, dur = 20, spellID = 1299526, phase = 1,
         barColors = {1, 0, 0, 1},
-        timers = UlatekDamageAmpTimers,
+        [15] = {155.4, 304.5, 597},
+        [16] = {155.4, 304.5, 597},
     }
     self:AddEncounterAlert(data)
 
@@ -54,7 +61,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "PlatformBreak", name = "Circling Prey", text = "Platform Break", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1315341, phase = 1,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 10}}, group = "Ula'tek", internalID = "PlatformBreak", name = "Circling Prey", text = "Platform Break", DisplayType = "Text", encID = encID, TTS = false, dur = 10, spellID = 1315341, phase = 1,
         timers = {
             [15] = {430.1, 481.2, 542.1},
             [16] = {430.1, 481.2, 542.1},
@@ -62,7 +69,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "Debuffs", name = "Serpent's Bite", text = "Debuffs", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1288879, phase = 1,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Debuffs", name = "Serpent's Bite", text = "Debuffs", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1288879, phase = 1,
         timers = {
             [15] = {392.7, 463.7, 500.6, 555.7},
             [16] = {392.7, 463.7, 500.6, 555.7},
@@ -70,7 +77,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "Eggs", name = "Eggs", text = "Eggs", DisplayType = "Text", encID = encID, TTS = false, dur = 6, spellID = 1304012, phase = 1,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Eggs", name = "Eggs", text = "Eggs", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1304012, phase = 1,
         timers = {
             [15] = {82, 319},
             [16] = {82, 319},
@@ -78,9 +85,9 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "Adds", name = "P3 Adds", text = "Adds", DisplayType = "Text", encID = encID, TTS = true, dur = 5, spellID = 1300751,  phase = 1,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Adds", name = "P3 Adds", text = "Adds", DisplayType = "Text", encID = encID, TTS = true, dur = 8, spellID = 1300751,  phase = 1,
         timers = {
-            [15] = {373.2, 403.1, 448.1, 508.2},
+            [15] = {372.2, 402.1, 447.1, 507.2},
             [16] = {373.2, 403.1, 448.1, 508.2},
         },
     }
@@ -94,10 +101,10 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1299010, phase = 1,
+    local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1299010, phase = 1,
         timers = {
-            [15] = {27.4, 30.3, 128.7, 131.5},
-            [16] = {27.4, 30.3, 128.7, 131.5},
+            [15] = {28, 30.4, 122.8, 125.6},
+            [16] = {28, 30.4, 122.8, 125.6},
         },
     }
     self:AddEncounterAlert(data)
@@ -143,7 +150,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     end
 
     if overviewAlert and overviewAlert.enabled and self:EvaluateLoad(overviewAlert) then
-        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossOrRoleAura = true}, 1, 2, "UlatekGraspingFangsOverview", false, true)
+        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true)
         self.UlatekGraspingFangsTimers = {}
         for _, applyTime in ipairs(overviewAlert.timers or {}) do
             self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime, function()

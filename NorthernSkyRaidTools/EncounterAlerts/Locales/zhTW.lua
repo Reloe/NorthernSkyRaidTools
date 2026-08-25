@@ -187,6 +187,7 @@ L[3455] = {
     ["Soaks"]      = {group = "伐許尼克", name = "分傷", text = "分傷"},
     ["Waves"]      = {group = "伐許尼克", name = "波", text = "波"},
     ["WaveSpread"] = {group = "伐許尼克", name = "波 分散", text = "分散"},
+    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -243,7 +244,7 @@ L[3429] = {
     ["P2Debuffs"]     = {group = "盤蛇祭壇 P2", name = "P2 Debuff", text = "Debuff"},
     ["P2Shield"]      = {group = "盤蛇祭壇 P2", name = "P2 盾", text = "P2 盾"},
     ["InterruptAdds"] = {group = "盤蛇祭壇 P2", name = "P2 打斷小怪", text = "鬼"},
-    -- ["P2_5WrongTarget"] = {group = "Coiled Altar P2.5", name = "Wrong Target", text = "WRONG TARGET"},
+    ["P2_5WrongTarget"] = {group = "盤蛇祭壇 P2.5", name = "打錯目標", text = "打錯目標"},
     ["P3Frontal"] = {group = "盤蛇祭壇 P3", name = "P3 頭前", text = "頭前"},
     ["P3Soak"] = {group = "盤蛇祭壇 P3", name = "P3 分傷", text = "分傷"},
     ["P3Shield"] = {group = "盤蛇祭壇 P3", name = "P3 盾", text = "盾"},
@@ -267,5 +268,7 @@ L[3492] = {
     ["Soak"]                = {group = "烏拉特克", name = "分傷", text = "分傷"},
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
     ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
-    -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
+    ["GraspingFangsOverview"] = {group = "烏拉特克", name = "攫取毒牙總覽", text = ""},
+    ["TankDrag"]            = {group = "烏拉特克", name = "坦拉小怪", text = "拉小怪"},
+    ["WrongTarget"] = {group = "烏拉特克", name = "打錯目標", text = "打錯目標"},
 }

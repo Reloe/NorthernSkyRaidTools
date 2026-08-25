@@ -1173,6 +1173,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local newKey = NSI:UniqueAlertID(diffTable, false)
                                     local newData = CopyTable(entry.data)
                                     newData.ReloeReminder = nil
+                                    newData.internalID = newKey
                                     diffTable[newKey] = newData
                                     RebuildList()
                                 end })
@@ -1278,6 +1279,13 @@ local function BuildEncounterAlertsUI(parentFrame)
     screen.RefreshSelected = function()
         if selectedEncID and selectedKey then
             SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+        end
+    end
+
+    NSI.RefreshEncounterAlertsUIHandler = function()
+        if screen:IsShown() then
+            RebuildList()
+            screen.RefreshSelected()
         end
     end
 
@@ -1472,7 +1480,6 @@ local function BuildEncounterAlertsUI(parentFrame)
             local locale = GetLocale()
             NSRT.Alerts.Language = languagesAvailable[locale] and locale or "enUS"
         end
-        ApplyAlertLanguage(NSRT.Alerts.Language)
 
         local languageLabel = CreateLabel(addOptFrame, NSI:Loc("Alerts Language"), ADDOPT_INNER_W, 16)
         languageLabel:SetPoint("TOPLEFT", disableAllBtn.frame, "BOTTOMLEFT", 0, -8)

@@ -1951,6 +1951,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
         state.buttonRegions = {}
     end
+    state.buttonRegions = state.buttonRegions or {}
     if not state.anchorFrame then
         state.anchorFrame = CreateFrame("Frame", nil, self.NSRTFrame)
     end
@@ -2473,18 +2474,18 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     end
 end
 
-function NSI:InitAuraSystem(firstcall)
+function NSI:InitAuraSystem(firstcall, reconfigureButtons)
     if firstcall then
         self.PendingInitialAuraTracking = true
         C_Timer.After(2, function()
             if not self.PendingInitialAuraTracking then return end
             self.PendingInitialAuraTracking = nil
-            self:InitAuraTracking(true)
+            self:InitAuraTracking(true, reconfigureButtons)
         end)
         return
     end
     self.PendingInitialAuraTracking = nil
-    self:InitAuraTracking(true)
+    self:InitAuraTracking(true, reconfigureButtons)
 end
 
 local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
