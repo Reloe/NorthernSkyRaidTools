@@ -185,7 +185,7 @@ L[3455] = {
     ["Soaks"]       = {group = "바쉬니크", name = "스킬 맞기", text = "스킬 맞기"},
     ["Waves"]       = {group = "바쉬니크", name = "물결", text = "물결"},
     ["WaveSpread"] = {group = "바쉬니크", name = "물결 산개", text = "미리 산개"},
-    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
+    ["WavesLine"] = {group = "바쉬니크", name = "물결 라인", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -242,12 +242,12 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "똬리의 제단 2페", name = "2페 디버프", text = "디버프"},
     ["P2Shield"]        = {group = "똬리의 제단 2페", name = "2페 보호막", text = "보호막"},
     ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
-    ["P2_5WrongTarget"] = {group = "똬리의 제단 2.5페", name = "대상 잘못 잡음", text = "대상 잘못 잡음"},
+    ["P2_5WrongTarget"] = {group = "똬리의 제단 3페", name = "대상 잘못 잡음", text = "대상 잘못 잡음"},
     ["P3Frontal"] = {group = "똬리의 제단 3페", name = "3페 전방스킬", text = "전방스킬"},
     ["P3Soak"] = {group = "똬리의 제단 3페", name = "3페 스킬 맞기", text = "스킬 맞기"},
     ["P3Shield"] = {group = "똬리의 제단 3페", name = "3페 보호막", text = "보호막"},
     ["P3Debuffs"] = {group = "똬리의 제단 3페", name = "3페 디버프", text = "디버프"},
-    ["P3InterruptAdds"] = {group = "똬리의 제단 3페", name = "3페 쫄 차단", text = "유령"},
+    -- ["P3InterruptAdds"] = {group = "똬리의 제단 3페", name = "3페 쫄 차단", text = "유령"},
     ["P3MindControls"] = {group = "똬리의 제단 3페", name = "3페 정신 지배", text = "정신 지배"},
     ["P3Taunt"] = {group = "똬리의 제단 탱커", name = "3페 도발", text = "도발"},
 }
@@ -267,6 +267,6 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
     ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
-    -- ["TankDrag"] = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
+    ["TankDrag"]            = {group = "울라텍", name = "탱커 쫄 파킹", text = "쫄 파킹"},
     ["WrongTarget"] = {group = "울라텍", name = "대상 잘못 잡음", text = "대상 잘못 잡음"},
 }
