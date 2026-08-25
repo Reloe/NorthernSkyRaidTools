@@ -150,7 +150,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     end
 
     if overviewAlert and overviewAlert.enabled and self:EvaluateLoad(overviewAlert) then
-        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 2, "UlatekGraspingFangsOverview", false, true)
+        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true)
         self.UlatekGraspingFangsTimers = {}
         for _, applyTime in ipairs(overviewAlert.timers or {}) do
             self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime, function()
