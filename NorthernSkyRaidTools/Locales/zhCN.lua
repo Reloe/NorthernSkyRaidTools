@@ -1159,6 +1159,7 @@ L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the 
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT：|r此预警无预览。在“常规 > 文本显示”中设置。"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT：|r此预警无预览。在“打断显示”中设置。"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."] = "|cFF00FFFFNSRT：|r此预警无预览。在“预览预警 > 点名减益总览”中设置。"
+L["|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."] = "|cFF00FFFFNSRT：|r此预警无预览。显示一条从角色到屏幕顶部的辅助线。"
 L["Display settings are fixed\nfor this alert."] = "此预警的显示设置已锁定。"
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00分摊"
