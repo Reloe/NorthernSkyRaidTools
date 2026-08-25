@@ -228,7 +228,6 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
         return
     elseif existing then
-        existing.name = alertDef.name
         existing.timers = alertDef.timers
         existing.phaseTimers = alertDef.phaseTimers
         existing.id = alertDef.id
