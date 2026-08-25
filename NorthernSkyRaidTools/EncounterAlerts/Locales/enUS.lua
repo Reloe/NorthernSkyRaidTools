@@ -175,6 +175,7 @@ L[3445] = {
     ["OrbSpawn"]           = {group = "Sentinels", name = "Orb Spawn", text = "Bait Orbs"},
     ["ShiftingProtovenom"] = {group = "Sentinels", name = "Shifting Protovenom", text = "Spread"},
     ["TransitionDebuffs"]  = {group = "Sentinels", name = "Transition Debuffs", text = "Number Game"},
+    ["Radar"]              = {group = "Sentinels", name = "Radar", text = ""},
 }
 
 -- Vashnik the Malignant (3455)

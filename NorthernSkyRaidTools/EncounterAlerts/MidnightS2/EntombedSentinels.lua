@@ -7,6 +7,8 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local healerConditions = self:DefaultLoadConditions()
     healerConditions.Roles.HEALER = true
+    local rangedConditions = self:DefaultLoadConditions()
+    rangedConditions.Roles.RANGED = true
 
     local data = {group = "Sentinels", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         textColors = {1, 0, 0, 1}, spellID = 1284458,
@@ -237,6 +239,212 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+
+    local RadarPreview = [[
+        return function(self)
+            if self.SentinelsRadarPreview then
+                self.EncounterAlertStop[3445](self)
+            else
+                self.EncounterAlertStart[3445](self, 16, "Radar")
+            end
+        end
+    ]]
+
+    local data = {group = "Sentinels", internalID = "Radar", name = "Radar", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, loadConditions = rangedConditions,
+        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = RadarPreview,
+        customIcon = 1284500,
+        Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 250, FontSize = 20, SafeDistance = 40, UpdateInterval = 0.5,
+        BackgroundColor = {0.06, 0.06, 0.06, 0.9}, BorderColor = {0, 0, 0, 1}, TickColor = {0.13, 0.85, 0.13, 1},
+        FarColor = {0.13, 1, 0.13, 1}, NearColor = {1, 0.1, 0.1, 1},
+        extraOptions = {
+            { Type = "Label", text = "Radar" },
+            { Type = "Slider", label = "Scale", min = 0.5, max = 3, step = 0.05, decimals = 2, usedecimals = true,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3445][16].Radar.Scale or 1 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.Scale = v end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Slider", label = "xOffset", min = -2000, max = 2000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3445][16].Radar.xOffset or 0 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.xOffset = v end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Slider", label = "yOffset", min = -2000, max = 2000,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3445][16].Radar.yOffset or 250 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.yOffset = v end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Slider", label = "FontSize", min = 8, max = 60,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3445][16].Radar.FontSize or 20 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.FontSize = v end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Slider", label = "SafeDistance", min = 5, max = 45, step = 1,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3445][16].Radar.SafeDistance or 40 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.SafeDistance = v end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]],
+                tooltip = {title = "SafeDistance", desc = "Distance in yards at which a boss' number turns from the close color to the far color."}},
+            { Type = "Slider", label = "UpdateInterval", min = 0.05, max = 1, step = 0.05, decimals = 2, usedecimals = true,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3445][16].Radar.UpdateInterval or 0.1 end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.UpdateInterval = v end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]],
+                tooltip = {title = "UpdateInterval", desc = "Seconds between distance refreshes. Lower is smoother but costs more CPU."}},
+            { Type = "Color", label = "TickColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3445][16].Radar.TickColor or {0.13,0.85,0.13,1} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.TickColor = {r,g,b,a} end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Color", label = "FarColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3445][16].Radar.FarColor or {0.13,1,0.13,1} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.FarColor = {r,g,b,a} end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Color", label = "NearColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3445][16].Radar.NearColor or {1,0.1,0.1,1} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.NearColor = {r,g,b,a} end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Color", label = "BackgroundColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3445][16].Radar.BackgroundColor or {0.06,0.06,0.06,0.9} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+            { Type = "Color", label = "BorderColor",
+                get = [[return function(NSI) local c = NSRT.EncounterAlerts[3445][16].Radar.BorderColor or {0,0,0,1} return c[1],c[2],c[3],c[4] end]],
+                set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3445][i].Radar.BorderColor = {r,g,b,a} end NSI.EncounterAlertStop[3445](NSI) NSI.EncounterAlertStart[3445](NSI, 16, "Radar") end]]},
+        },
+    }
+    self:AddEncounterAlert(data)
+end
+
+local function GetIntermissionTime(self, id)
+    local diffTable = NSRT.EncounterAlerts[encID] and (NSRT.EncounterAlerts[encID][id] or NSRT.EncounterAlerts[encID][15])
+    local alert = diffTable and diffTable.TransitionDebuffs
+    local timers = alert and alert.phaseTimers and alert.phaseTimers[self.Phase or 1]
+    return timers and timers[1]
+end
+
+local function CreateRadarFrame(self)
+    if self.SentinelsRadarFrame then return self.SentinelsRadarFrame end
+    local F = CreateFrame("Frame", "NSRTSentinelsRadar", self.NSRTFrame, "BackdropTemplate")
+    F:SetSize(96, 124)
+    F:SetFrameStrata("MEDIUM")
+    F:SetBackdrop({
+        bgFile = [[Interface\Buttons\WHITE8X8]],
+        edgeFile = [[Interface\Buttons\WHITE8X8]],
+        edgeSize = 1,
+    })
+
+    local radarCircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_filled.png]]
+
+    F.Ring = F:CreateTexture(nil, "ARTWORK")
+    F.Ring:SetTexture(radarCircleTexture)
+    F.Ring:SetSize(84, 84)
+    F.Ring:SetPoint("TOP", F, "TOP", 0, -6)
+    F.Ring:SetVertexColor(0, 0, 0, 0.85)
+
+    F.Swipe = CreateFrame("Cooldown", nil, F, "CooldownFrameTemplate")
+    F.Swipe:SetAllPoints(F.Ring)
+    F.Swipe:SetDrawBling(false)
+    F.Swipe:SetDrawEdge(false)
+    F.Swipe:SetReverse(false)
+    F.Swipe:SetHideCountdownNumbers(true)
+    F.Swipe:SetSwipeTexture(radarCircleTexture)
+
+    F.Boss1 = F:CreateFontString(nil, "OVERLAY")
+    F.Boss1:SetPoint("BOTTOMLEFT", F, "BOTTOMLEFT", 6, 5)
+    F.Boss1:SetJustifyH("LEFT")
+
+    F.Boss2 = F:CreateFontString(nil, "OVERLAY")
+    F.Boss2:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -6, 5)
+    F.Boss2:SetJustifyH("RIGHT")
+
+    self.SentinelsRadarFrame = F
+    return F
+end
+
+local function ApplyRadarSettings(self, F, s)
+    F:ClearAllPoints()
+    F:SetFrameStrata("MEDIUM")
+    F:SetScale(s.Scale or 1)
+    F:SetPoint(s.Anchor or "CENTER", self.NSRTFrame, s.relativeTo or "CENTER", s.xOffset or 0, s.yOffset or 250)
+    F:SetBackdropColor(unpack(s.BackgroundColor or {0.06, 0.06, 0.06, 0.9}))
+    F:SetBackdropBorderColor(unpack(s.BorderColor or {0, 0, 0, 1}))
+    F.Swipe:SetSwipeColor(unpack(s.TickColor or {0.13, 0.85, 0.13, 1}))
+    local font = self:GetGlobalFontPath()
+    F.Boss1:SetFont(font, s.FontSize or 20, "OUTLINE")
+    F.Boss2:SetFont(font, s.FontSize or 20, "OUTLINE")
+end
+
+local function UpdateRadarText(self, fontString, unit, s)
+    local minRange, maxRange
+    if self.SentinelsRadarPreview then
+        minRange = unit == "boss1" and 15 or 40
+    else
+        minRange, maxRange = NSAPI:GetRange(unit)
+    end
+    if not minRange then
+        if not maxRange then
+            fontString:SetText("--")
+            fontString:SetTextColor(0.6, 0.6, 0.6, 1)
+            return
+        end
+        minRange = 0
+    end
+    fontString:SetText(math.floor(minRange))
+    if minRange >= (s.SafeDistance or 40) then
+        fontString:SetTextColor(unpack(s.FarColor or {0.13, 1, 0.13, 1}))
+    else
+        fontString:SetTextColor(unpack(s.NearColor or {1, 0.1, 0.1, 1}))
+    end
+end
+
+local function StopRadar(self)
+    if self.SentinelsRadarTicker then
+        self.SentinelsRadarTicker:Cancel()
+        self.SentinelsRadarTicker = nil
+    end
+    if self.SentinelsRadarHideTimer then
+        self.SentinelsRadarHideTimer:Cancel()
+        self.SentinelsRadarHideTimer = nil
+    end
+    if self.SentinelsRadarFrame then
+        self.SentinelsRadarFrame:SetScript("OnUpdate", nil)
+        self.SentinelsRadarFrame:Hide()
+    end
+end
+
+local function StartRadar(self, id, preview)
+    if not preview and self.SentinelsRadarPreview then return end
+    local diffTable = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
+    local s = diffTable and diffTable.Radar
+    if not s then return end
+    if not preview and not (s.enabled and self:EvaluateLoad(s)) then return end
+    StopRadar(self)
+
+    local F = CreateRadarFrame(self)
+    ApplyRadarSettings(self, F, s)
+    UpdateRadarText(self, F.Boss1, "boss1", s)
+    UpdateRadarText(self, F.Boss2, "boss2", s)
+    F.RadarElapsed = 0
+    local updateInterval = s.UpdateInterval or 0.1
+    F:SetScript("OnUpdate", function(frame, elapsed)
+        frame.RadarElapsed = frame.RadarElapsed + elapsed
+        if frame.RadarElapsed < updateInterval then return end
+        frame.RadarElapsed = 0
+        UpdateRadarText(self, frame.Boss1, "boss1", s)
+        UpdateRadarText(self, frame.Boss2, "boss2", s)
+    end)
+    F:Show()
+
+    local radarTickDurationSeconds = 5
+    F.Swipe:SetCooldown(GetTime(), radarTickDurationSeconds)
+    self.SentinelsRadarTicker = C_Timer.NewTicker(radarTickDurationSeconds, function()
+        F.Swipe:SetCooldown(GetTime(), radarTickDurationSeconds)
+    end)
+
+    if not preview then
+        local hideAt = GetIntermissionTime(self, id)
+        if hideAt then
+            self.SentinelsRadarHideTimer = C_Timer.NewTimer(hideAt, function() StopRadar(self) end)
+        end
+    end
+    return s
+end
+
+local function StartRadarPreview(self, id)
+    self.SentinelsRadarPreview = true
+    local s = StartRadar(self, id, true)
+    if s then self:MakeDraggable(self.SentinelsRadarFrame, s, true) end
+end
+
+local function StopRadarPreview(self)
+    if not self.SentinelsRadarPreview then return end
+    self.SentinelsRadarPreview = false
+    if self.SentinelsRadarFrame then
+        self:MakeDraggable(self.SentinelsRadarFrame, nil, false)
+    end
 end
 
 local function ScheduleBloodHitThreatCheck(self)
@@ -297,7 +505,12 @@ local function AddBloodHitPoolTimer(self, now)
     end
 end
 
-NSI.EncounterAlertStart[encID] = function(self)
+NSI.EncounterAlertStart[encID] = function(self, previewID, preview)
+    if previewID and preview == "Radar" then
+        StartRadarPreview(self, previewID)
+        return
+    end
+
     self.BloodHitTimer = nil
     self.BloodHitPhase = nil
     if self.BloodHitPoolTimer then
@@ -309,6 +522,9 @@ NSI.EncounterAlertStart[encID] = function(self)
     if DropPool and DropPool.enabled and self:EvaluateLoad(DropPool) then
         ScheduleBloodHitThreatCheck(self)
     end
+
+    StopRadarPreview(self)
+    StartRadar(self, self:DifficultyCheck({14, 15, 16}))
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
@@ -317,6 +533,9 @@ NSI.EncounterAlertStop[encID] = function(self)
     self.BloodHitTimer = nil
     self.BloodHitPhase = nil
     self.BloodHitPoolTimer = nil
+
+    StopRadarPreview(self)
+    StopRadar(self)
 end
 
 NSI.DetectPhaseChange[encID] = function(self, e, info)
@@ -334,6 +553,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         AddBloodHitPoolTimer(self, now)
         self:StartReminders(self.Phase)
         ScheduleBloodHitThreatCheck(self)
+        StartRadar(self, self:DifficultyCheck({14, 15, 16}))
         self.Timelines = {}
         self.PhaseSwapTime = now
     end

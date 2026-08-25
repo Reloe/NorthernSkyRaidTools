@@ -172,6 +172,7 @@ L[3445] = {
     ["BloodDropPool"] = {group = "Стражи", name = "Оставить лужу (танк)", text = "Оставить лужу"},
     ["PoisonAdd"] = {group = "Стражи", name = "Ядовитый адд", text = "Ядовитый адд"},
     ["BloodSoak"] = {group = "Стражи", name = "Поглощение (Кровь)", text = "Поглощение (Кровь)"},
+    -- ["Radar"] = {group = "Sentinels", name = "Radar", text = ""},
 }
 
 -- Vashnik the Malignant (3455)
