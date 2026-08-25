@@ -249,9 +249,9 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Sentinels", internalID = "Radar", name = "Radar", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5,
-        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = RadarPreview,
+        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = RadarPreview,
         customIcon = 1284500,
-        Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 250, FontSize = 20, SafeDistance = 40, UpdateInterval = 0.1,
+        Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 250, FontSize = 20, SafeDistance = 40, UpdateInterval = 0.5,
         BackgroundColor = {0.06, 0.06, 0.06, 0.9}, BorderColor = {0, 0, 0, 1}, TickColor = {0.13, 0.85, 0.13, 1},
         FarColor = {0.13, 1, 0.13, 1}, NearColor = {1, 0.1, 0.1, 1},
         extraOptions = {
