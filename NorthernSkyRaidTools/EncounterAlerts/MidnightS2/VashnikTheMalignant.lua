@@ -90,13 +90,13 @@ NSI.InitializeAlerts[encID] = function(self)
         print(NSI:EncounterAlertLoc("|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."))
     end]]
     local data = {group = "Vashnik", internalID = "WavesLine", name = "Waves Line", text = "", DisplayType = "Text", encID = encID,
-        difficulties = {14, 15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview,
+        difficulties = {16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview,
     }
     self:AddEncounterAlert(data)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id)
-    id = id or self:DifficultyCheck({14, 15, 16})
+    id = id or self:DifficultyCheck({16})
     local alert = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WavesLine
     if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
 
