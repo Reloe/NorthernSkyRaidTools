@@ -7,6 +7,8 @@ NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local healerConditions = self:DefaultLoadConditions()
     healerConditions.Roles.HEALER = true
+    local rangedConditions = self:DefaultLoadConditions()
+    rangedConditions.Roles.RANGED = true
 
     local data = {group = "Sentinels", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         textColors = {1, 0, 0, 1}, spellID = 1284458,
@@ -248,7 +250,7 @@ NSI.InitializeAlerts[encID] = function(self)
         end
     ]]
 
-    local data = {group = "Sentinels", internalID = "Radar", name = "Radar", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5,
+    local data = {group = "Sentinels", internalID = "Radar", name = "Radar", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, loadConditions = rangedConditions,
         spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = RadarPreview,
         customIcon = 1284500,
         Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 250, FontSize = 20, SafeDistance = 40, UpdateInterval = 0.5,
