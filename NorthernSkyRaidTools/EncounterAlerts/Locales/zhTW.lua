@@ -175,6 +175,7 @@ L[3445] = {
     ["OrbSpawn"]           = {group = "衛哨", name = "出球", text = "Bait球"},
     ["ShiftingProtovenom"] = {group = "衛哨", name = "移轉原型毒液", text = "分散"},
     ["TransitionDebuffs"]  = {group = "衛哨", name = "轉階 Debuff", text = "數字遊戲"},
+    -- ["Radar"]             = {group = "Sentinels", name = "Radar", text = ""},
 }
 
 -- Vashnik the Malignant (3455)
