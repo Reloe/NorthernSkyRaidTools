@@ -87,10 +87,10 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local VashnikWavesLinePreview = [[return function(NSI)
-        print(NSI:EncounterAlertLoc("|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."))
+        print(NSI:Loc("|cFF00FFFFNSRT:|r this alert has no preview. It is timer-driven and displays a rotating-minimap-aligned cross during the Vashnik wave windows."))
     end]]
-    local data = {group = "Vashnik", internalID = "WavesLine", name = "Waves Line", text = "", DisplayType = "Text", encID = encID,
-        difficulties = {16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview,
+    local data = {Version = {versionNumber = 1, [1] = {difficulties = {16}, loadConditions = nontankConditions, enabled = false}}, group = "Vashnik", internalID = "WavesLine", name = "Waves Line", text = "", DisplayType = "Text", encID = encID,
+        difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview, loadConditions = nontankConditions,
     }
     self:AddEncounterAlert(data)
 end
@@ -98,49 +98,87 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id)
     id = id or self:DifficultyCheck({16})
     local alert = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WavesLine
-    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+    local spreadAlert = id and NSRT.EncounterAlerts[encID][id].WaveSpread
+    local wavesAlert = id and NSRT.EncounterAlerts[encID][id].Waves
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) or not spreadAlert or not wavesAlert then return end
 
-    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
-        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    if self.VashnikWavesLineTimers then
+        for _, timer in ipairs(self.VashnikWavesLineTimers) do timer:Cancel() end
+    end
+    self.VashnikWavesLineTimers = {}
+
+    if not self.VashnikWavesLineFrame then
+        self.VashnikWavesLineFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+        self.VashnikWavesLineFrame:Hide()
+        self.VashnikWavesLineFrame:SetAllPoints(self.NSRTFrame)
+        self.VashnikWavesLineFrame:SetFrameStrata("HIGH")
+        local rotationUpdateElapsed = 0
+        self.VashnikWavesLineFrame:SetScript("OnUpdate", function(_, elapsed)
+            rotationUpdateElapsed = rotationUpdateElapsed + elapsed
+            if rotationUpdateElapsed < (1 / 60) then return end
+            rotationUpdateElapsed = 0
+            local rotation = MinimapCompassTexture:GetRotation()
+            self.VashnikWavesLineHorizontal:SetRotation(rotation)
+            self.VashnikWavesLineVertical:SetRotation(rotation)
+        end)
+
+        local lineLength = math.sqrt(UIParent:GetWidth() ^ 2 + UIParent:GetHeight() ^ 2)
+        self.VashnikWavesLineHorizontal = self.VashnikWavesLineFrame:CreateTexture(nil, "OVERLAY")
+        self.VashnikWavesLineHorizontal:SetColorTexture(0, 1, 0, 1)
+        self.VashnikWavesLineHorizontal:SetPoint("CENTER")
+        self.VashnikWavesLineHorizontal:SetSize(lineLength, 2)
+
+        self.VashnikWavesLineVertical = self.VashnikWavesLineFrame:CreateTexture(nil, "OVERLAY")
+        self.VashnikWavesLineVertical:SetColorTexture(0, 1, 0, 1)
+        self.VashnikWavesLineVertical:SetPoint("CENTER")
+        self.VashnikWavesLineVertical:SetSize(2, lineLength)
     end
 
-    if not self.VashnikBossAuraLineContainer then
-        self.VashnikBossAuraLineContainer = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate")
-        self.VashnikBossAuraLineContainer:SetAllPoints(self.NSRTFrame)
-        self.VashnikBossAuraLineContainer:SetFrameStrata("HIGH")
-        self.VashnikBossAuraLineContainer:AddAuraGroup("VashnikBossAuras", "HARMFUL", {
-            maxFrameCount = 1,
-            candidateFilters = {
-                maxDuration = 10,
-                isBossAura = true,
-            },
-            initializeFrame = function(button)
-                button:SetSize(1, 1)
-                button:ClearApplicationCount()
-                button:ClearDurationText()
-                button:ClearDurationCooldown()
-                button:ClearDispelTypeTextures()
-                button:ClearDispelTypeText()
-                button:SetMouseMotionEnabled(false)
-                if not button.WavesLine then
-                    button.WavesLine = button:CreateTexture(nil, "ARTWORK")
-                    button.WavesLine:SetColorTexture(0, 1, 0, 1)
-                    button.WavesLine:SetWidth(5)
-                    button.WavesLine:SetPoint("BOTTOM", self.VashnikBossAuraLineContainer, "CENTER")
-                    button.WavesLine:SetPoint("TOP", self.VashnikBossAuraLineContainer, "TOP")
-                end
-            end,
-        })
+    local function hideWavesLine()
+        self.VashnikWavesLineFrame:Hide()
+        if self.VashnikWavesLinePreviousRotateMinimap then
+            MinimapCluster:SetRotateMinimap(self.VashnikWavesLinePreviousRotateMinimap == "1")
+            self.VashnikWavesLinePreviousRotateMinimap = nil
+        end
     end
 
-    self.VashnikBossAuraLineContainer:SetUnit("player")
-    self.VashnikBossAuraLineContainer:SetEnabled(true)
-    self.VashnikBossAuraLineContainer:Show()
+    local function showWavesLine()
+        if not self.VashnikWavesLinePreviousRotateMinimap then
+            self.VashnikWavesLinePreviousRotateMinimap = GetCVar("rotateMinimap")
+        end
+        MinimapCluster:SetRotateMinimap(true)
+        C_Timer.After(0, function()
+            if self.EncounterID == encID then
+                self.VashnikWavesLineFrame:Show()
+            end
+        end)
+    end
+
+    hideWavesLine()
+
+    for index, spreadTime in ipairs(spreadAlert.timers or {}) do
+        local waveTime = wavesAlert.timers and wavesAlert.timers[index]
+        if waveTime then
+            self.VashnikWavesLineTimers[#self.VashnikWavesLineTimers + 1] = C_Timer.NewTimer(math.max(0, spreadTime - 8), function()
+                if self.EncounterID == encID then showWavesLine() end
+            end)
+            self.VashnikWavesLineTimers[#self.VashnikWavesLineTimers + 1] = C_Timer.NewTimer(waveTime, function()
+                if self.EncounterID == encID then hideWavesLine() end
+            end)
+        end
+    end
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
-    if self.VashnikBossAuraLineContainer then
-        self.VashnikBossAuraLineContainer:SetEnabled(false)
-        self.VashnikBossAuraLineContainer:Hide()
+    if self.VashnikWavesLineTimers then
+        for _, timer in ipairs(self.VashnikWavesLineTimers) do timer:Cancel() end
+        self.VashnikWavesLineTimers = nil
+    end
+    if self.VashnikWavesLineFrame then
+        self.VashnikWavesLineFrame:Hide()
+    end
+    if self.VashnikWavesLinePreviousRotateMinimap then
+        MinimapCluster:SetRotateMinimap(self.VashnikWavesLinePreviousRotateMinimap == "1")
+        self.VashnikWavesLinePreviousRotateMinimap = nil
     end
 end
