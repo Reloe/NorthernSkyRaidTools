@@ -85,7 +85,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Twin Fangs", internalID = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 5, spellID = 1291404,
         timers = {
             [15] = {39.7, 107.5, 209.2, 276.9, 378.6, 446.4},
-            [16] = {35.8, 96.8, 190.8, 251.7, 345.7, 406.8},
+            [16] = {35, 96, 190, 251, 345, 406},
         },
     }
     self:AddEncounterAlert(data)
