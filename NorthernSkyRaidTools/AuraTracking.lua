@@ -2397,6 +2397,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 if event == "GROUP_ROSTER_UPDATE" then
                     if NSI:Restricted() then
                         NSI.PendingAuraTrackingUpdate = true
+                        NSI.PendingAuraTrackingReconfigure = true
                         return
                     end
                     for _, entry in ipairs(AuraTrackingUnitRefreshStates.roster) do
