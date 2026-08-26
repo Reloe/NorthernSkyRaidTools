@@ -173,7 +173,7 @@ L[3445] = {
     ["OrbSpawn"]        = {group = "파수꾼", name = "구슬 등장", text = "구슬 유도"},
     ["ShiftingProtovenom"] = {group = "파수꾼", name = "변화무쌍한 원시맹독", text = "산개"},
     ["TransitionDebuffs"] = {group = "파수꾼", name = "사이페 디버프", text = "숫자 게임"},
-    -- ["Radar"]            = {group = "Sentinels", name = "Radar", text = ""},
+    ["Radar"]            = {group = "파수꾼", name = "레이더", text = ""},
 }
 
 -- Vashnik the Malignant (3455)
@@ -263,7 +263,7 @@ L[3492] = {
     ["Debuffs"]             = {group = "울라텍", name = "뱀의 물어뜯기", text = "디버프"},
     ["Eggs"]                = {group = "울라텍", name = "알", text = "알"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
-    ["Sweep"]               = {group = "울라텍", name = "꼬리 휩쓸기", text = "꼬리"},
+    ["Sweep"]               = {group = "울라텍", name = "휩쓸기", text = "휩쓸기"},
     ["Soak"]                = {group = "울라텍", name = "스킬 맞기", text = "스킬 맞기"},
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
     ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
