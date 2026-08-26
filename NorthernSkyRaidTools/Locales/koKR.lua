@@ -1099,7 +1099,7 @@ L["Roles (leave all unchecked for any role)"] = "역할 (전부 체크 해제하
 L["Character Names (no server name)"] = "캐릭터 이름 (서버명 제외)"
 L["Read-only"] = "읽기 전용"
 L["Class / spec filters do not apply\nto addon-created alerts."] = "직업 / 전문화 필터는 애드온이\n생성한 경고에는 적용되지 않습니다."
-L["Sound settings are fixed\nfor this alert."] = "이 경고의 효과음 설정은\n고정되어 있습니다."
+L["Sound settings are fixed\nfor this alert."] = "이 경고의 효과음 설정은\n바꿀 수 없습니다."
 -- Extra Options
 L["Feather Color Icon"] = "깃털색 아이콘"
 L["Runes Display"] = "룬 표시"
@@ -1145,7 +1145,7 @@ L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings o
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r 이 경고는 미리보기가 없습니다. 차단 디스플레이 메뉴의 차단 설정으로 변경할 수 있습니다."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings."] = "|cFF00FFFFNSRT:|r 이 경고는 미리보기가 없습니다. 리마인더 설정 내 디버프 현황을 사용합니다."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."] = "|cFF00FFFFNSRT:|r 이 경고는 미리보기가 없습니다. 내 캐릭터에서 화면 위쪽을 향해 선이 하나 표시됩니다."
-L["Display settings are fixed\nfor this alert."] = "이 경고의 디스플레이 설정은\n고정되어 있습니다."
+L["Display settings are fixed\nfor this alert."] = "이 경고의 디스플레이 설정은\n바꿀 수 없습니다."
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00스킬 맞기"
 L["|cFFFF0000DON'T SOAK"] = "|cFFFF0000스킬 피하기"
