@@ -198,7 +198,7 @@ L[3497] = {
     ["ShellSpinScroll"]         = {group = "일등항해사 스킬", name = "등껍질 회전 - 두루마리 강화됨", text = "유도"},
     ["ShellSpinTrader"]         = {group = "일등항해사 스킬", name = "등껍질 회전 - 무역상 강화됨", text = "유도"},
     ["MightyThud"]              = {group = "일등항해사 스킬", name = "스킬 맞기", text = "스킬 맞기"},
-    ["Fish-Spawn"]              = {group = "무역상 스킬", name = "물고기 생성", text = "물고기 생성"},
+    ["Fish-Spawn"]              = {group = "무역상 스킬", name = "물고기 나옴", text = "물고기 나옴"},
     ["MushroomBait"]            = {group = "무역상 스킬", name = "버섯 유도", text = "유도"},
     ["ExplosiveSurprise"]       = {group = "무역상 스킬", name = "폭탄 디버프", text = "폭탄 걸림"},
     ["MushroomJump"]            = {group = "무역상 스킬", name = "버섯 점프", text = "점프"},
