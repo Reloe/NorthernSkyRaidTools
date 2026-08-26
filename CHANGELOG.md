@@ -5,3 +5,4 @@
 - Add default disabled debuff assignment on Sszorak - Mythic only
 - Make new default disabled Soak first, second, third Alerts on Twin Fangs - Mythic only
 - Change the "Watch Spawns" Alert for tanks to "Push" and enabled for all melee instead
+- Add Pace Comparison Data for Sszorak & Twin Fangs
