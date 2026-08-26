@@ -1894,7 +1894,7 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
     for _, state in ipairs(states) do
         local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
-        if state.displayName ~= displayName and not self:Restricted() then
+        if not self:Restricted() then
             state.displayName = displayName
             for button, regions in pairs(state.buttonRegions) do
                 if regions.name then
@@ -2087,17 +2087,11 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         elseif group.spellIDMap then
             candidateFilters = { includeSpellIDs = group.spellIDMap }
         elseif group.useLongDurationFilter then
-            if key == "Tank" or key == "TankTank2" then
-                candidateFilters = {
-                    isBossOrRoleAura = true,
-                }
-            else
-                candidateFilters = {
-                    isFromPlayerOrPlayerPet = false,
-                }
-                if settings.HideLongDurationAuras then
-                    candidateFilters.maxDuration = 300
-                end
+            candidateFilters = {
+                isFromPlayerOrPlayerPet = false,
+            }
+            if settings.HideLongDurationAuras then
+                candidateFilters.maxDuration = 300
             end
         end
         candidateFilters = candidateFilters or {}
