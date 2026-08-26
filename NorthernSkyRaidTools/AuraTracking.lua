@@ -202,8 +202,10 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         StackFontSize = 32,
         TextFont = "Expressway",
         TextFontFlags = "OUTLINE",
+        DurationAnchorPoint = "CENTER",
         DurationXOffset = 0,
         DurationYOffset = 0,
+        StackAnchorPoint = "BOTTOMRIGHT",
         StackXOffset = -1,
         StackYOffset = 1,
         NameEnabled = false,
@@ -572,7 +574,7 @@ local AuraTrackingDisplayFields = {
     "EnableCooldownSwipe", "InverseCooldownSwipe", "SortMode",
     "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
     "StackColor", "DurationFontSize", "StackFontSize",
-    "TextFont", "TextFontFlags", "DurationXOffset", "DurationYOffset", "StackXOffset", "StackYOffset",
+    "TextFont", "TextFontFlags", "DurationAnchorPoint", "DurationXOffset", "DurationYOffset", "StackAnchorPoint", "StackXOffset", "StackYOffset",
     "NameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
     "OnlyShowFirstTank",
     "MultiTankGrow", "MultiTankXOffset", "MultiTankYOffset",
@@ -1612,7 +1614,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     else
         local count = EnsureAuraTrackingFontString(regions, "count")
         count:ClearAllPoints()
-        count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
+        local stackAnchorPoint = settings.StackAnchorPoint or "BOTTOMRIGHT"
+        count:SetPoint(stackAnchorPoint, button, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
         count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
         count:SetTextColor(unpack(settings.StackColor))
         count:Show()
@@ -1628,7 +1631,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     else
         local duration = EnsureAuraTrackingFontString(regions, "duration")
         duration:ClearAllPoints()
-        duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
+        local durationAnchorPoint = settings.DurationAnchorPoint or "CENTER"
+        duration:SetPoint(durationAnchorPoint, button, durationAnchorPoint, settings.DurationXOffset, settings.DurationYOffset)
         duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         duration:SetTextColor(unpack(durationColor))
         duration:Show()
@@ -2083,11 +2087,17 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         elseif group.spellIDMap then
             candidateFilters = { includeSpellIDs = group.spellIDMap }
         elseif group.useLongDurationFilter then
-            candidateFilters = {
-                isFromPlayerOrPlayerPet = false,
-            }
-            if settings.HideLongDurationAuras then
-                candidateFilters.maxDuration = 300
+            if key == "Tank" or key == "TankTank2" then
+                candidateFilters = {
+                    isBossOrRoleAura = true,
+                }
+            else
+                candidateFilters = {
+                    isFromPlayerOrPlayerPet = false,
+                }
+                if settings.HideLongDurationAuras then
+                    candidateFilters.maxDuration = 300
+                end
             end
         end
         candidateFilters = candidateFilters or {}
@@ -2672,7 +2682,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     else
         local stack = EnsureAuraTrackingFontString(frame, "Stack")
         stack:ClearAllPoints()
-        stack:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
+        local stackAnchorPoint = settings.StackAnchorPoint or "BOTTOMRIGHT"
+        stack:SetPoint(stackAnchorPoint, frame, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
         stack:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
         stack:SetTextColor(unpack(settings.StackColor))
         stack:SetText(index)
@@ -2687,7 +2698,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     else
         local durationText = EnsureAuraTrackingFontString(frame, "Duration")
         durationText:ClearAllPoints()
-        durationText:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
+        local durationAnchorPoint = settings.DurationAnchorPoint or "CENTER"
+        durationText:SetPoint(durationAnchorPoint, frame, durationAnchorPoint, settings.DurationXOffset, settings.DurationYOffset)
         durationText:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         durationText:SetTextColor(unpack(durationColor))
         durationText:SetText(FormatAuraTrackingDuration(duration, settings))

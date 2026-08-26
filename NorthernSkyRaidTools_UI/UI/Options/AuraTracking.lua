@@ -67,6 +67,12 @@ local NAME_POSITIONS = {
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
 }
 
+local TextAnchorPoints = {
+    { label = "TOPLEFT", value = "TOPLEFT" }, { label = "TOP", value = "TOP" }, { label = "TOPRIGHT", value = "TOPRIGHT" },
+    { label = "LEFT", value = "LEFT" }, { label = "CENTER", value = "CENTER" }, { label = "RIGHT", value = "RIGHT" },
+    { label = "BOTTOMLEFT", value = "BOTTOMLEFT" }, { label = "BOTTOM", value = "BOTTOM" }, { label = "BOTTOMRIGHT", value = "BOTTOMRIGHT" },
+}
+
 local UNIT_TYPES = {
     { label = "Automatic", value = "Automatic" },
     { label = "Enemy", value = "Enemy" },
@@ -1110,6 +1116,10 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Duration Font Size", min = 6, max = 80, step = 1,
             tooltip = tip("Duration Font Size", "Font size of the duration text"),
             get = function() return s.DurationFontSize end, set = function(_, v) s.DurationFontSize = v; apply(key) end })
+        add({ Type = "Dropdown", label = "Duration Anchor Point", values = TextAnchorPoints,
+            tooltip = tip("Duration Anchor Point", "Anchor point of the duration text on the aura icon."),
+            get = function() return s.DurationAnchorPoint or "CENTER" end,
+            set = function(_, v) s.DurationAnchorPoint = v; apply(key) end })
         add({ Type = "Slider", label = "Duration X-Offset", min = -200, max = 200, step = 1,
             tooltip = tip("Duration X-Offset", "Horizontal offset of the duration text"),
             get = function() return s.DurationXOffset end, set = function(_, v) s.DurationXOffset = v; apply(key) end })
@@ -1127,6 +1137,10 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Stack Font Size", min = 6, max = 80, step = 1,
             tooltip = tip("Stack Font Size", "Font size of the stack text"),
             get = function() return s.StackFontSize end, set = function(_, v) s.StackFontSize = v; apply(key) end })
+        add({ Type = "Dropdown", label = "Stack Anchor Point", values = TextAnchorPoints,
+            tooltip = tip("Stack Anchor Point", "Anchor point of the stack text on the aura icon."),
+            get = function() return s.StackAnchorPoint or "BOTTOMRIGHT" end,
+            set = function(_, v) s.StackAnchorPoint = v; apply(key) end })
         add({ Type = "Slider", label = "Stack X-Offset", min = -200, max = 200, step = 1,
             tooltip = tip("Stack X-Offset", "Horizontal offset of the stack text"),
             get = function() return s.StackXOffset end, set = function(_, v) s.StackXOffset = v; apply(key) end })
