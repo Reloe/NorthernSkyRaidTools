@@ -215,18 +215,22 @@ L[3420] = {
     -- ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
     -- ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
     -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     -- ["Defensives"]  = {group = "Twin Fangs", name = "Defensives", text = "Defensives"},
     -- ["Soak"]        = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
+    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
+    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
     -- ["PreSpread"]   = {group = "Twin Fangs", name = "Pre-Spread", text = "Pre-Spread"},
     -- ["WatchSide"]   = {group = "Twin Fangs", name = "Watch Side", text = "Watch Side"},
     -- ["Adds"]        = {group = "Twin Fangs", name = "Adds", text = "Adds"},
     -- ["Orbs"]        = {group = "Twin Fangs", name = "Orbs", text = "Orbs"},
     -- ["TankSoak"]    = {group = "Twin Fangs", name = "Tank Soak", text = "Soak"},
-    -- ["WatchSpawns"] = {group = "Twin Fangs", name = "Watch Spawns", text = "Watch Spawns"},
+    -- ["WatchSpawns"] = {group = "Twin Fangs", name = "Push", text = "Push"},
     -- ["Knock"]       = {group = "Twin Fangs", name = "Knock", text = "Knock"},
 }
 
