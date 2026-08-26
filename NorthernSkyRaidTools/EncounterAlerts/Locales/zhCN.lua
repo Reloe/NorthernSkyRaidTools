@@ -216,22 +216,22 @@ L[3420] = {
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
     ["VenomousSurgeTargets"] = {group = "斯索拉克", name = "剧毒涌动目标"},
-    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
+    ["VenomousSurgeAssignment"] = {group = "斯索拉克", name = "剧毒涌动分配", text = "放在"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"]  = {group = "双子毒牙", name = "搅动深渊（减伤）", text = "减伤"},
     ["Soak"]        = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
-    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
-    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
-    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
+    ["Soak1"]       = {group = "双子毒牙", name = "贪婪盛宴（1分摊）", text = "1 分摊"},
+    ["Soak2"]       = {group = "双子毒牙", name = "贪婪盛宴（2分摊）", text = "2 分摊"},
+    ["Soak3"]       = {group = "双子毒牙", name = "贪婪盛宴（3分摊）", text = "3 分摊"},
     ["PreSpread"]   = {group = "双子毒牙", name = "盘卷脓液（分散）", text = "预分散"},
     ["WatchSide"]   = {group = "双子毒牙", name = "邪恶洪流（观察）", text = "看方向"},
     ["Adds"]        = {group = "双子毒牙", name = "剧毒涌现（小怪）", text = "小怪刷新"},
     ["Orbs"]        = {group = "双子毒牙", name = "腐蚀洪流（吃球）", text = "吃球"},
     ["TankSoak"]    = {group = "双子毒牙", name = "碎石击（坦克踩圈）", text = "踩圈"},
-    ["WatchSpawns"] = {group = "双子毒牙", name = "推进", text = "推进"},
+    ["WatchSpawns"] = {group = "双子毒牙", name = "碎石击（推开）", text = "推开"},
     ["Knock"]       = {group = "双子毒牙", name = "腐蚀洪流（击退）", text = "击退"},
 }
 
@@ -269,8 +269,8 @@ L[3492] = {
     ["Adds"]                = {group = "乌拉特克", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
     ["Sweep"]               = {group = "乌拉特克", name = "恶臭痛击", text = "范围横扫"},
     ["Soak"]                = {group = "乌拉特克", name = "幽魂盘卷（分摊）", text = "分摊"},
-    ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "第一次分摊"},
-    ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "第二次分摊"},
+    ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "1 分摊"},
+    ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "2 分摊"},
     ["GraspingFangsOverview"] = {group = "乌拉特克", name = "攫取毒牙总览", text = ""},
     ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
 }
