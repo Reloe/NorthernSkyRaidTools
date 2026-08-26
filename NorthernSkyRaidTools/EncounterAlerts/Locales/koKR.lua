@@ -202,8 +202,8 @@ L[3497] = {
     ["MushroomBait"]            = {group = "무역상 스킬", name = "버섯 유도", text = "유도"},
     ["ExplosiveSurprise"]       = {group = "무역상 스킬", name = "폭탄 디버프", text = "폭탄 걸림"},
     ["MushroomJump"]            = {group = "무역상 스킬", name = "버섯 점프", text = "점프"},
-    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던지기 시간", text = "던지기 시간"},
-    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던지기 시간", text = "던지기 시간"},
+    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던질 타이밍", text = "던질 타이밍"},
+    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던질 타이밍", text = "던질 타이밍"},
 }
 
 -- Sszorak (3420)
