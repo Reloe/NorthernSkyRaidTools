@@ -215,17 +215,21 @@ L[3420] = {
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
     ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
+    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Adds"] = {group = "Два Клыка", name = "Адды", text = "Адды"},
     ["Soak"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
+    -- ["Soak1"] = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
+    -- ["Soak2"] = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
+    -- ["Soak3"] = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
     ["TankSoak"] = {group = "Два Клыка", name = "Поглощение танка", text = "Поглощение"},
     ["PreSpread"] = {group = "Два Клыка", name = "Заранее разойтись", text = "Заранее разойтись"},
     ["WatchSide"] = {group = "Два Клыка", name = "Смотреть по сторонам", text = "Смотреть по сторонам"},
     ["Orbs"] = {group = "Два Клыка", name = "Сферы", text = "Сферы"},
-    ["WatchSpawns"] = {group = "Два Клыка", name = "Следить за появлением", text = "Следить за появлением"},
+    ["WatchSpawns"] = {group = "Два Клыка", name = "Толчок", text = "Толчок"},
     ["Defensives"] = {group = "Два Клыка", name = "Защитные способности", text = "Защитные способности"},
     ["Knock"] = {group = "Два Клыка", name = "Удар", text = "Удар"},
 }

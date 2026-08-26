@@ -216,18 +216,22 @@ L[3420] = {
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
     ["VenomousSurgeTargets"] = {group = "斯索拉克", name = "剧毒涌动目标"},
+    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"]  = {group = "双子毒牙", name = "搅动深渊（减伤）", text = "减伤"},
     ["Soak"]        = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
+    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
+    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
+    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
     ["PreSpread"]   = {group = "双子毒牙", name = "盘卷脓液（分散）", text = "预分散"},
     ["WatchSide"]   = {group = "双子毒牙", name = "邪恶洪流（观察）", text = "看方向"},
     ["Adds"]        = {group = "双子毒牙", name = "剧毒涌现（小怪）", text = "小怪刷新"},
     ["Orbs"]        = {group = "双子毒牙", name = "腐蚀洪流（吃球）", text = "吃球"},
     ["TankSoak"]    = {group = "双子毒牙", name = "碎石击（坦克踩圈）", text = "踩圈"},
-    ["WatchSpawns"] = {group = "双子毒牙", name = "碎石击（观察）", text = "看顺序"},
+    ["WatchSpawns"] = {group = "双子毒牙", name = "推进", text = "推进"},
     ["Knock"]       = {group = "双子毒牙", name = "腐蚀洪流（击退）", text = "击退"},
 }
 

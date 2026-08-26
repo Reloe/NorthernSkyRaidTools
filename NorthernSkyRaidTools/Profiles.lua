@@ -861,6 +861,26 @@ function NSAPI:ImportAlertsString(importString)
     local t = NSI:DecodeExportData(importString)
     if type(t) ~= "table" then return nil end
 
+    local function ResolveImportedAlertKey(destDiff, alertKey, alert)
+        if alert.ReloeReminder then return alertKey end
+
+        local importedID = alert.internalID or alertKey
+        local existing = alertKey and destDiff[alertKey]
+        if not existing then return alertKey or NSI:UniqueAlertID(destDiff, false) end
+        if type(existing) == "table" and not existing.ReloeReminder and existing.internalID == importedID then
+            return alertKey
+        end
+
+        if importedID then
+            for existingKey, existingAlert in pairs(destDiff) do
+                if type(existingAlert) == "table" and not existingAlert.ReloeReminder and existingAlert.internalID == importedID then
+                    return existingKey
+                end
+            end
+        end
+        return NSI:UniqueAlertID(destDiff, false)
+    end
+
     if t.type == "alerts" then
         local count = 0
         NSRT.EncounterAlerts = NSRT.EncounterAlerts or {}
@@ -876,13 +896,8 @@ function NSAPI:ImportAlertsString(importString)
                         end
                         for alertKey, alert in pairs(diffData) do
                             if type(alert) == "table" then
-                                if alert.ReloeReminder then
-                                    destDiff[alertKey] = alert
-                                else
-                                    alert.ReloeReminder = nil
-                                    local newKey = NSI:UniqueAlertID(destDiff, false)
-                                    destDiff[newKey] = alert
-                                end
+                                local importKey = ResolveImportedAlertKey(destDiff, alertKey, alert)
+                                destDiff[importKey] = alert
                                 count = count + 1
                             end
                         end
@@ -905,13 +920,8 @@ function NSAPI:ImportAlertsString(importString)
                         end
                         for alertKey, alert in pairs(diffData) do
                             if type(alert) == "table" then
-                                if alert.ReloeReminder then
-                                    destDiff[alertKey] = alert
-                                else
-                                    alert.ReloeReminder = nil
-                                    local newKey = NSI:UniqueAlertID(destDiff, false)
-                                    destDiff[newKey] = alert
-                                end
+                                local importKey = ResolveImportedAlertKey(destDiff, alertKey, alert)
+                                destDiff[importKey] = alert
                                 count = count + 1
                             end
                         end
@@ -959,13 +969,8 @@ function NSAPI:ImportAlertsString(importString)
                     local destDiff = NSRT.EncounterAlerts[encID][diffID]
                     for alertKey, alert in pairs(diffData) do
                         if type(alert) == "table" then
-                            if alert.ReloeReminder then
-                                destDiff[alertKey] = alert
-                            else
-                                alert.ReloeReminder = nil
-                                local importKey = alertKey or NSI:UniqueAlertID(destDiff, false)
-                                destDiff[importKey] = alert
-                            end
+                            local importKey = ResolveImportedAlertKey(destDiff, alertKey, alert)
+                            destDiff[importKey] = alert
                             count = count + 1
                         end
                     end

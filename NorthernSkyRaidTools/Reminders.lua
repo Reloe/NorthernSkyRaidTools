@@ -1220,6 +1220,9 @@ end
 
 function NSI:GetDisplayedText(remString, info, F, timerHidden)
     local reminderText = info.text or ""
+    if issecretvalue(info.SecretDisplayText) then
+        return string.format("%s (%s)", info.SecretDisplayText, remString), ""
+    end
     if issecretvalue(reminderText) then
         return reminderText, ""
     end
