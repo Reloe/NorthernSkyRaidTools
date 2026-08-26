@@ -13,6 +13,28 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
+    local meleeConditions = self:DefaultLoadConditions()
+    meleeConditions.Roles.MELEE = true
+
+    local soakTimers = {
+        [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
+        [16] = {64.7, 125.7, 216.1, 277.1, 371.1, 432.1},
+    }
+    local soak1Timers = {}
+    local soak2Timers = {}
+    local soak3Timers = {}
+    -- Align each new eight-second alert's expiration with the existing soak bar's ticks.
+    for difficulty, timers in pairs(soakTimers) do
+        soak1Timers[difficulty] = {}
+        soak2Timers[difficulty] = {}
+        soak3Timers[difficulty] = {}
+        for index, time in ipairs(timers) do
+            soak1Timers[difficulty][index] = time - 3.5
+            soak2Timers[difficulty][index] = time - 1.5
+            soak3Timers[difficulty][index] = time
+        end
+    end
+
     local data = {group = "Twin Fangs", internalID = "Defensives", text = "Defensives", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         loadConditions = nonTankConditions, spellID = 1290956,
         timers = {
@@ -24,10 +46,22 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Twin Fangs", internalID = "Soak", text = "Soak", DisplayType = "Bar", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1290516,
     Ticks = {4.5, 6.5}, barColors = {1, 0, 0, 1},
-        timers = {
-            [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
-            [16] = {64.7, 125.7, 216.1, 277.1, 371.1, 432.1},
-        },
+        timers = soakTimers,
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Twin Fangs", internalID = "Soak1", name = "Soak 1", text = "Soak 1", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
+        enabled = false, timers = {[16] = soak1Timers[16]},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Twin Fangs", internalID = "Soak2", name = "Soak 2", text = "Soak 2", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
+        enabled = false, timers = {[16] = soak2Timers[16]},
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Twin Fangs", internalID = "Soak3", name = "Soak 3", text = "Soak 3", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
+        enabled = false, timers = {[16] = soak3Timers[16]},
     }
     self:AddEncounterAlert(data)
 
@@ -78,12 +112,8 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Twin Fangs", internalID = "WatchSpawns", name = "Watch Spawns", text = "Watch Spawns", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1288538,
-        loadConditions = tankConditions,
-        isConditional = {
-            text = "This Alert only shows if you have threat on boss2.",
-            func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
-        },
+    local data = {Version = {versionNumber = 1, [1] = {name = "Push", text = "Push", loadConditions = meleeConditions}}, group = "Twin Fangs", internalID = "WatchSpawns", name = "Push", text = "Push", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 6, spellID = 1288538,
+        loadConditions = meleeConditions,
         timers = {
             [15] = {20.5, 88.3, 190, 257.8, 359.4, 427.2},
             [16] = {18.3, 79.3, 172.3, 233.3, 327.3, 388.3},

@@ -216,18 +216,22 @@ L[3420] = {
     ["SerpentsFury"] = {group = "스조라크", name = "뱀의 격노", text = "뭉치기"},
     ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
     ["VenomousSurgeTargets"] = {group = "스조라크", name = "디버프 대상"},
+    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"] = {group = "쌍둥이 송곳니", name = "생존기", text = "생존기"},
     ["Soak"]        = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
+    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
+    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
     ["PreSpread"]   = {group = "쌍둥이 송곳니", name = "미리 산개", text = "미리 산개"},
     ["WatchSide"]   = {group = "쌍둥이 송곳니", name = "브레스 방향", text = "브레스 방향"},
     ["Adds"]        = {group = "쌍둥이 송곳니", name = "쫄", text = "쫄"},
     ["Orbs"]        = {group = "쌍둥이 송곳니", name = "구슬", text = "구슬"},
     ["TankSoak"]    = {group = "쌍둥이 송곳니", name = "탱커와 같이 맞기", text = "스킬 맞기"},
-    ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "브레스 머리 나옴", text = "브레스 머리 나옴"},
+    ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "밀기", text = "밀기"},
     ["Knock"]       = {group = "쌍둥이 송곳니", name = "넉백", text = "넉백"},
 }
 
