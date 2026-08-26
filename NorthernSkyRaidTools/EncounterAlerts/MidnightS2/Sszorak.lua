@@ -18,7 +18,7 @@ local damageAmpTimers = {
 local venomousSurgeCastTimers = {
     [14] = {36.25, 95, 188.3, 247, 340.3},
     [15] = {32.2, 84.4, 170.3, 222.6, 308.5, 360.8},
-    [16] = {32, 79.8, 159, 206.8, 286, 333.8},
+    [16] = {29.5, 76, 156, 203, 283, 330},
 }
 
 -- boss1target briefly changes to each bomb target during the bomb cast.
@@ -82,7 +82,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "SerpentsFury", name = "Serpent's Fury", text = "Stack Up", DisplayType = "Text", encID = encID, phase = 1, TTS = "Stack", dur = 6,
         loadConditions = nontankConditions,
         timers = {
-            [16] = {25, 74, 153, 202, 281, 330},
+            [16] = {25, 74.5, 152, 202, 281, 329},
         },
     }
     self:AddEncounterAlert(data)
