@@ -2229,7 +2229,7 @@ function NSAPI:DebugTimeline(e, dur)
     NSRT.Settings.Debug = current
 end
 
-function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID) -- only used for Assignments now
+function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID, isAssignment) -- only used for Assignments now
     local id = self.DefaultAlertID or 10000
     self.DefaultAlertID = self.DefaultAlertID and self.DefaultAlertID + 1 or 10001
     local info =
@@ -2244,7 +2244,7 @@ function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID) -
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
-        IsAssignment = IsAssignment,
+        IsAssignment = isAssignment,
         countdown = false,
         DisplayType = DisplayType,
     }
