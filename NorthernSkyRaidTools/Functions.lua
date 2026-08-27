@@ -445,7 +445,7 @@ function NSI:StopFrameMove(F, SettingsTable)
     self:SaveFramePosition(F, SettingsTable)
 end
 
-function NSI:MakeDraggable(F, settingsTable, enable, isNote)
+function NSI:MakeDraggable(F, settingsTable, enable, isNote, onPositionSaved)
     if not F then return end
 
     if enable then
@@ -487,6 +487,7 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
                     if frame._nsrtDragSaveElapsed < 0.05 then return end
                     frame._nsrtDragSaveElapsed = 0
                     self:SaveFramePosition(frame, settingsTable)
+                    if onPositionSaved then onPositionSaved(frame, settingsTable) end
                 end)
             end
         end)
@@ -497,6 +498,7 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote)
                 f._nsrtDragSaveElapsed = nil
             end
             self:StopFrameMove(f, settingsTable)
+            if onPositionSaved then onPositionSaved(f, settingsTable) end
         end)
     else
         if F.Border and isNote then F.Border:Hide() end

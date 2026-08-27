@@ -340,17 +340,6 @@ local function CreateRadarFrame(self)
     F.Boss2:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", -6, 5)
     F.Boss2:SetJustifyH("RIGHT")
 
-    F:HookScript("OnDragStop", function(frame)
-        if not self.SentinelsRadarPreview then return end
-        local encounterAlerts = NSRT.EncounterAlerts[encID]
-        for difficultyID = 14, 16 do
-            local radar = encounterAlerts and encounterAlerts[difficultyID] and encounterAlerts[difficultyID].Radar
-            if radar then
-                self:SaveFramePosition(frame, radar)
-            end
-        end
-    end)
-
     self.SentinelsRadarFrame = F
     return F
 end
@@ -447,7 +436,18 @@ end
 local function StartRadarPreview(self, id)
     self.SentinelsRadarPreview = true
     local s = StartRadar(self, id, true)
-    if s then self:MakeDraggable(self.SentinelsRadarFrame, s, true) end
+    if s then
+        self:MakeDraggable(self.SentinelsRadarFrame, s, true, false, function(_, settings)
+            local encounterAlerts = NSRT.EncounterAlerts[encID]
+            for difficultyID = 14, 16 do
+                local difficultySettings = encounterAlerts[difficultyID].Radar
+                difficultySettings.xOffset = settings.xOffset
+                difficultySettings.yOffset = settings.yOffset
+                difficultySettings.Anchor = settings.Anchor
+                difficultySettings.relativeTo = settings.relativeTo
+            end
+        end)
+    end
 end
 
 local function StopRadarPreview(self)

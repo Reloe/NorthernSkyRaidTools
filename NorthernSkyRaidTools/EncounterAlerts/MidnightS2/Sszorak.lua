@@ -258,7 +258,15 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 
         if preview then
             self.IsSszorakWindsPreview = true
-            self:MakeDraggable(self.WindsFrame, s, true)
+            self:MakeDraggable(self.WindsFrame, s, true, false, function(_, settings)
+                for difficultyID = 14, 16 do
+                    local difficultySettings = NSRT.EncounterAlerts[encID][difficultyID].WindsHelper
+                    difficultySettings.xOffset = settings.xOffset
+                    difficultySettings.yOffset = settings.yOffset
+                    difficultySettings.Anchor = settings.Anchor
+                    difficultySettings.relativeTo = settings.relativeTo
+                end
+            end)
             local previewNumbers = {1, 2, 3, 4, 5, 6, 7, 8}
             for index = 8, 2, -1 do
                 local swapIndex = math.random(index)
@@ -449,8 +457,6 @@ NSI.EncounterAlertStop[encID] = function(self)
     self:EncounterRegister("SszorakWinds", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
     if self.IsSszorakWindsPreview and self.WindsFrame then
         self:MakeDraggable(self.WindsFrame, nil, false)
-        NSRT.EncounterAlerts[encID][15].WindsHelper = NSRT.EncounterAlerts[encID][16].WindsHelper
-        NSRT.EncounterAlerts[encID][14].WindsHelper = NSRT.EncounterAlerts[encID][16].WindsHelper
     end
     self.IsSszorakWindsPreview = false
     if self.WindsResetTimers then
