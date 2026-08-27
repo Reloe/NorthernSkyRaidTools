@@ -225,9 +225,9 @@ L[3420] = {
 L[3421] = {
     ["Defensives"]  = {group = "雙生毒牙", name = "個減", text = "個減"},
     ["Soak"]        = {group = "雙生毒牙", name = "分傷", text = "分傷"},
-    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
-    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
-    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
+    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
     ["PreSpread"]   = {group = "雙生毒牙", name = "分散", text = "分散"},
     ["WatchSide"]   = {group = "雙生毒牙", name = "看左右邊", text = "看左右邊"},
     ["Adds"]        = {group = "雙生毒牙", name = "小怪", text = "小怪"},

@@ -223,9 +223,9 @@ L[3420] = {
 L[3421] = {
     ["Defensives"]  = {group = "双子毒牙", name = "搅动深渊（减伤）", text = "减伤"},
     ["Soak"]        = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
-    ["Soak1"]       = {group = "双子毒牙", name = "贪婪盛宴（1分摊）", text = "1 分摊"},
-    ["Soak2"]       = {group = "双子毒牙", name = "贪婪盛宴（2分摊）", text = "2 分摊"},
-    ["Soak3"]       = {group = "双子毒牙", name = "贪婪盛宴（3分摊）", text = "3 分摊"},
+    ["Soak1"]       = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
+    ["Soak2"]       = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
+    ["Soak3"]       = {group = "双子毒牙", name = "贪婪盛宴（分摊）", text = "分摊"},
     ["PreSpread"]   = {group = "双子毒牙", name = "盘卷脓液（分散）", text = "预分散"},
     ["WatchSide"]   = {group = "双子毒牙", name = "邪恶洪流（观察）", text = "看方向"},
     ["Adds"]        = {group = "双子毒牙", name = "剧毒涌现（小怪）", text = "小怪刷新"},

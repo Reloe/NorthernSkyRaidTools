@@ -222,9 +222,9 @@ L[3420] = {
 L[3421] = {
     -- ["Defensives"]  = {group = "Twin Fangs", name = "Defensives", text = "Defensives"},
     -- ["Soak"]        = {group = "Twin Fangs", name = "Soak", text = "Soak"},
-    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
-    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
-    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
+    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
     -- ["PreSpread"]   = {group = "Twin Fangs", name = "Pre-Spread", text = "Pre-Spread"},
     -- ["WatchSide"]   = {group = "Twin Fangs", name = "Watch Side", text = "Watch Side"},
     -- ["Adds"]        = {group = "Twin Fangs", name = "Adds", text = "Adds"},

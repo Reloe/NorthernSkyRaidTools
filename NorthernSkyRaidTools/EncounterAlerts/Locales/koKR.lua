@@ -223,9 +223,9 @@ L[3420] = {
 L[3421] = {
     ["Defensives"] = {group = "쌍둥이 송곳니", name = "생존기", text = "생존기"},
     ["Soak"]        = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
-    ["Soak1"]       = {group = "쌍둥이 송곳니", name = "1조 맞기", text = "1조 맞기"},
-    ["Soak2"]       = {group = "쌍둥이 송곳니", name = "2조 맞기", text = "2조 맞기"},
-    ["Soak3"]       = {group = "쌍둥이 송곳니", name = "3조 맞기", text = "3조 맞기"},
+    ["Soak1"]       = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Soak2"]       = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Soak3"]       = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
     ["PreSpread"]   = {group = "쌍둥이 송곳니", name = "미리 산개", text = "미리 산개"},
     ["WatchSide"]   = {group = "쌍둥이 송곳니", name = "브레스 방향", text = "브레스 방향"},
     ["Adds"]        = {group = "쌍둥이 송곳니", name = "쫄", text = "쫄"},
