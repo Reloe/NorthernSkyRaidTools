@@ -360,7 +360,7 @@ function NSI:GetMyTimelineData(includeBossAbilities, bossDisplayMode)
     local activeReminder = NSRT.ActiveReminder
     local reminderSource = NSRT.Reminders
     if not activeReminder or activeReminder == "" then
-        activeReminder = NSRT.ActivePersonalReminder
+        activeReminder = self.LoadedPersonalReminder
         reminderSource = NSRT.PersonalReminders
     end
     if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
@@ -2446,7 +2446,7 @@ function NSI:RefreshTimelineForMode()
             local activeReminder = NSRT.ActiveReminder
             local isPersonal = false
             if not activeReminder or activeReminder == "" then
-                activeReminder = NSRT.ActivePersonalReminder
+                activeReminder = self.LoadedPersonalReminder
                 isPersonal = true
             end
             if activeReminder and activeReminder ~= "" then
@@ -2611,7 +2611,7 @@ function NSI:RefreshMyRemindersTimeline()
             local activeReminder = NSRT.ActiveReminder
             local reminderSource = NSRT.Reminders
             if not activeReminder or activeReminder == "" then
-                activeReminder = NSRT.ActivePersonalReminder
+                activeReminder = self.LoadedPersonalReminder
                 reminderSource = NSRT.PersonalReminders
             end
             if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
@@ -2873,7 +2873,7 @@ function NSI:RefreshEmbeddedTimeline(tab)
             local activeReminder = NSRT.ActiveReminder
             local isPersonal = false
             if not activeReminder or activeReminder == "" then
-                activeReminder = NSRT.ActivePersonalReminder
+                activeReminder = self.LoadedPersonalReminder
                 isPersonal = true
             end
             if activeReminder and activeReminder ~= "" then
@@ -2916,7 +2916,7 @@ function NSI:RefreshEmbeddedMyReminders(tab)
             local activeReminder = NSRT.ActiveReminder
             local reminderSource = NSRT.Reminders
             if not activeReminder or activeReminder == "" then
-                activeReminder = NSRT.ActivePersonalReminder
+                activeReminder = self.LoadedPersonalReminder
                 reminderSource = NSRT.PersonalReminders
             end
             if activeReminder and activeReminder ~= "" and reminderSource[activeReminder] then
