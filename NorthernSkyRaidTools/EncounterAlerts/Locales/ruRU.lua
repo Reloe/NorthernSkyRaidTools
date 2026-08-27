@@ -222,9 +222,9 @@ L[3420] = {
 L[3421] = {
     ["Adds"] = {group = "Два Клыка", name = "Адды", text = "Адды"},
     ["Soak"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
-    -- ["Soak1"] = {group = "Twin Fangs", name = "Soak 1", text = "Soak 1"},
-    -- ["Soak2"] = {group = "Twin Fangs", name = "Soak 2", text = "Soak 2"},
-    -- ["Soak3"] = {group = "Twin Fangs", name = "Soak 3", text = "Soak 3"},
+    ["Soak1"] = {group = "Два Клыка", name = "Поглощение 1", text = "Поглощение 1"},
+    ["Soak2"] = {group = "Два Клыка", name = "Поглощение 2", text = "Поглощение 2"},
+    ["Soak3"] = {group = "Два Клыка", name = "Поглощение 3", text = "Поглощение 3"},
     ["TankSoak"] = {group = "Два Клыка", name = "Поглощение танка", text = "Поглощение"},
     ["PreSpread"] = {group = "Два Клыка", name = "Заранее разойтись", text = "Заранее разойтись"},
     ["WatchSide"] = {group = "Два Клыка", name = "Смотреть по сторонам", text = "Смотреть по сторонам"},
