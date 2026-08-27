@@ -101,8 +101,8 @@ NSI.AuraSoundCategories = {
             {spellID = 1297096, sound = "West"}, -- Raging Crosswinds East Debuff (so we tell player to go West)
             {spellID = 1297111, sound = "East"}, -- Raging Crosswinds West Debuff (so we tell player to go East)
             {spellID = 1305621, sound = "Targeted"}, -- Serpent's Fury
-            {spellID = 1297707, sound = "Spread"}, -- Virulence
-            {spellID = 1299899, sound = "Spread"}, -- Virulence - both debuffs are real, similar to Starsplinters
+            {spellID = 1297707, sound = "Left"}, -- Virulence
+            {spellID = 1299899, sound = "Right"}, -- Virulence - both debuffs are real, similar to Starsplinters
         }},
         {key = 3421, entries = { -- The Twin Fangs
             {spellID = 1293979, sound = "Targeted"}, -- Corrosive Spit
