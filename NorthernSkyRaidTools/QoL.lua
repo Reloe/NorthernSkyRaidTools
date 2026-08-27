@@ -223,8 +223,6 @@ function NSI:QoLEvents(e, ...)
             end
             -- unfortunately have to check guild roster because C_GuildInfo.MemberExistsByName is a security risk as it can't check the realm
             if NSRT.QoL.AutoInviteGuildOnly and not self:IsInSameGuild(nil, playerName) then return end
-            if UnitInRaid(playerName) or UnitInParty(playerName) then return end
-            if IsInGroup() and not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then return end
             local now = GetTime()
             self.AutoInviteCooldown = self.AutoInviteCooldown or {}
             local key = playerName:lower()
