@@ -757,6 +757,30 @@ function NSI:ExportProfileString(includeSharedData)
     return self:EncodeExportData(exportTable)
 end
 
+function NSAPI:ProfileExists(name)
+    return name and NSRT.Profiles and NSRT.Profiles[name] ~= nil
+end
+
+function NSAPI:DeleteProfile(name)
+    if not name then return false end
+    if not NSRT.Profiles or not NSRT.Profiles[name] then
+        return false
+    end
+
+    NSI:DeleteProfile(name)
+    return true
+end
+
+function NSAPI:SetMainProfile(name)
+    if not name then return false end
+    if not NSRT.Profiles or not NSRT.Profiles[name] then
+        return false
+    end
+
+    NSI:SetMainProfile(name)
+    return true
+end
+
 function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name is optional
     local exportTable = NSI:DecodeExportData(importString)
     if type(exportTable) ~= "table" then return nil end
