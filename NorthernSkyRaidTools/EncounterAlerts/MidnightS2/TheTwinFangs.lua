@@ -50,17 +50,17 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Twin Fangs", internalID = "Soak1", name = "Soak 1", text = "Soak 1", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
+    local data = {group = "Twin Fangs", internalID = "Soak1", name = "Soak 1", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
         enabled = false, timers = {[16] = soak1Timers[16]},
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Twin Fangs", internalID = "Soak2", name = "Soak 2", text = "Soak 2", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
+    local data = {group = "Twin Fangs", internalID = "Soak2", name = "Soak 2", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
         enabled = false, timers = {[16] = soak2Timers[16]},
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Twin Fangs", internalID = "Soak3", name = "Soak 3", text = "Soak 3", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
+    local data = {group = "Twin Fangs", internalID = "Soak3", name = "Soak 3", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1290516,
         enabled = false, timers = {[16] = soak3Timers[16]},
     }
     self:AddEncounterAlert(data)
