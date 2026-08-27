@@ -209,6 +209,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     ["TankCombo"]   = {group = "스조라크", name = "탱커 연속 공격", text = "탱커 연속 공격"},
+    -- ["SetMarkers"]  = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
     ["DamageAmp"]   = {group = "스조라크", name = "약화됨", text = "약화됨"},
     ["Bait"]        = {group = "스조라크", name = "유도", text = "유도"},
     ["WindDebuffs"] = {group = "스조라크", name = "바람 디버프", text = "바람 디버프"},

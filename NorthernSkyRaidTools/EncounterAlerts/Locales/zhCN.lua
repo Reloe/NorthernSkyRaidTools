@@ -209,6 +209,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     ["TankCombo"]    = {group = "斯索拉克", name = "劫掠（坦克）", text = "坦克连击"},
+    -- ["SetMarkers"]   = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
     ["DamageAmp"]    = {group = "斯索拉克", name = "掘地固守（易伤）", text = "易伤"},
     ["Bait"]         = {group = "斯索拉克", name = "剧毒涌动（引诱）", text = "引水"},
     ["WindDebuffs"]  = {group = "斯索拉克", name = "狂怒侧风（点名）", text = "点名狂风"},

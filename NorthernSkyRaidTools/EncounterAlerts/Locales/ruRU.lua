@@ -207,6 +207,7 @@ L[3497] = {
 
 -- Sszorak (3420)
 L[3420] = {
+    -- ["SetMarkers"] = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
     ["DamageAmp"] = {group = "Ссзорак", name = "Усиление урона", text = "Усиление урона"},
     ["Debuffs"] = {group = "Ссзорак", name = "Дебаффы", text = "Дебаффы"},
     ["WindDebuffs"] = {group = "Ссзорак", name = "Дебаффы ветра", text = "Дебаффы ветра"},

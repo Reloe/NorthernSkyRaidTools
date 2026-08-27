@@ -208,6 +208,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     -- ["TankCombo"]    = {group = "Sszorak", name = "Tank Combo", text = "Tank Combo"},
+    -- ["SetMarkers"]   = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
     -- ["DamageAmp"]    = {group = "Sszorak", name = "Damage Amp", text = "Damage Amp"},
     -- ["Bait"]         = {group = "Sszorak", name = "Bait", text = "Bait"},
     -- ["WindDebuffs"]  = {group = "Sszorak", name = "WindDebuffs", text = "Wind-Debuffs"},

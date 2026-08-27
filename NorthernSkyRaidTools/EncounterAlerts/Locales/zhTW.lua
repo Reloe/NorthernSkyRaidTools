@@ -211,6 +211,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     ["TankCombo"]    = {group = "司佐拉", name = "坦克連擊", text = "坦克連擊"},
+    -- ["SetMarkers"]   = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
     ["DamageAmp"]    = {group = "司佐拉", name = "增傷", text = "增傷"},
     ["Bait"]         = {group = "司佐拉", name = "Bait", text = "Bait"},
     ["WindDebuffs"]  = {group = "司佐拉", name = "風 Debuff", text = "風 Debuff"},
