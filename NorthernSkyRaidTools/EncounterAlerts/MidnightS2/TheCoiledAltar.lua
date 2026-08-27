@@ -293,7 +293,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     end
     for phase, timers in pairs({[1] = p1SoakTimers[diff], [3] = p3SoakTimers[diff]}) do
         if #timers > 0 then
-            local alert = self:CreateDefaultAlert("", "Text", nil, nil, phase, encID)
+            local alert = self:CreateDefaultAlert("", "Text", nil, nil, phase, encID, true)
             alert.dur = 8
             for index, timer in ipairs(timers) do
                 local shouldSoak = (index == 1 and group == 1) or (index == 2 and group == 2)

@@ -527,7 +527,7 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
         end
     end
 
-    local alert = self:CreateDefaultAlert("", "Text", nil, nil, 1, encID)
+    local alert = self:CreateDefaultAlert("", "Text", nil, nil, 1, encID, true)
     alert.dur = 6
     alert.TTSTimer = 0
     for _, timer in ipairs(tankComboTimers[diff]) do
