@@ -2244,7 +2244,7 @@ function NSI:CreateDefaultAlert(text, DisplayType, spellID, dur, phase, encID) -
         phase = phase or self.Phase,
         id = id,
         startTime = GetTime(),
-        IsAssignment = IsAssignment,
+        IsAssignment = true,
         countdown = false,
         DisplayType = DisplayType,
     }
