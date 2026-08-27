@@ -34,8 +34,8 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local UlatekDamageAmpTimers = {
-        [15] = {135.4, 284.5, 577},
-        [16] = {135.4, 284.5, 577},
+        [15] = {135.4, 284.5, 573.5},
+        [16] = {135.4, 284.5, 573.5},
     }
     local data = {Version = {versionNumber = 1, [1] = {dur = 15}}, group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", DisplayType = "Text", encID = encID, TTS = false, dur = 15, spellID = 1286860, phase = 1,
         timers = UlatekDamageAmpTimers,
@@ -65,8 +65,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Debuffs", name = "Serpent's Bite", text = "Debuffs", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1288879, phase = 1,
         timers = {
-            [15] = {392.7, 463.7, 500.6, 555.7},
-            [16] = {392.7, 463.7, 500.6, 555.7},
+            [15] = {392.7, 463.7, 500.6, 560.7},
+            [16] = {392.7, 463.7, 500.6, 560.7},
         },
     }
     self:AddEncounterAlert(data)
