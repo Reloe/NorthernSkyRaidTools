@@ -25,11 +25,11 @@ NSI.InitializeAlerts[encID] = function(self)
                 {6.4, 28.3, 51.4, 73.3},
             },
             [16] ={
-                {6.1, 28},
-                {6.2, 28.5, 50.3, 72.2},
-                {6.2, 28.5, 50.3, 72.2},
-                {6.2, 28.5, 50.3, 72.2},
-                {6.2, 28.5, 50.3, 72.2},
+                {6.3, 28.2},
+                {6.7, 28.5, 50.7, 72.2},
+                {6.6, 28.5, 50.7, 72.4},
+                {6.6, 28.5, 50.3, 72.2},
+                {6.5, 28.4, 50.3, 72.3},
             }
         },
     }
@@ -49,11 +49,11 @@ NSI.InitializeAlerts[encID] = function(self)
                 {7.6, 29.5, 51.4, 73.3},
             },
             [16] ={
-                {8.5, 30.4},
-                {8.6, 32.1, 54, 75.9},
-                {8.6, 32.1, 54, 75.9},
-                {8.6, 32.1, 54, 75.9},
-                {8.6, 32.1, 54, 75.9},
+                {7.5, 29.4},
+                {7.9, 30.9, 52.8, 74.6},
+                {7.6, 29.5, 51.4, 73.3},
+                {7.9, 29.7, 51.6, 73.4},
+                {7.8, 29.6, 51.5, 73.3},
             }
         },
     }
@@ -99,17 +99,17 @@ NSI.InitializeAlerts[encID] = function(self)
                 {26.6, 68.8},
             },
             [16] ={
-                {18.3},
-                {18.7, 60},
-                {18.7, 60},
-                {18.7, 60},
-                {18.7, 60},
+                {26.5},
+                {25.6, 66.8},
+                {26.6, 67.9},
+                {25.6, 66.9},
+                {26.7, 68},
             }
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, [1] = {dur = 6}}, group = "Sentinels", internalID = "BloodSoakPool", name = "Soak-Pool", text = "Drop Pool", DisplayType = "Circle", encID = encID, phase = 1, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 2, [1] = {dur = 6}, [2] = {DisplayType = "Text"}}, group = "Sentinels", internalID = "BloodSoakPool", name = "Soak-Pool", text = "Drop Pool", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
         textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss2.",
@@ -149,11 +149,11 @@ NSI.InitializeAlerts[encID] = function(self)
                 {45},
             },
             [16] ={
-                {43.9},
-                {44},
-                {44},
-                {44},
-                {44},
+                {42.5},
+                {42.9},
+                {43.2},
+                {43.6},
+                {43.2},
             }
         },
     }
@@ -174,11 +174,11 @@ NSI.InitializeAlerts[encID] = function(self)
                 {15.7, 68},
             },
             [16] ={
-                {13.7},
-                {13.7, 67},
-                {13.7, 67},
-                {13.7, 67},
-                {13.7, 67},
+                {12.4},
+                {11.5, 63.7},
+                {12.5, 64.8},
+                {12.7, 64.9},
+                {12.6, 64.8},
             }
         },
     }
@@ -195,11 +195,11 @@ NSI.InitializeAlerts[encID] = function(self)
                 {17.2, 50},
             },
             [16] ={
-                {17.2},
-                {17.2, 47, 79.4},
-                {17.2, 47, 79.4},
-                {17.2, 47, 79.4},
-                {17.2, 47, 79.4},
+                {15.3},
+                {14.5, 47.2, 80},
+                {15.4, 48.2},
+                {15.6, 48.4, 81.1},
+                {15.5, 48.3},
             }
         },
     }
@@ -209,11 +209,11 @@ NSI.InitializeAlerts[encID] = function(self)
         spellID = 1296880,
         phaseTimers = {
             [16] ={
-                {36.7},
-                {40.5, 81.5},
-                {40.5, 81.5},
-                {40.5, 81.5},
-                {40.5, 81.5},
+                {36.9},
+                {40.4, 81.4},
+                {40.4, 81.4},
+                {40.4, 81.4},
+                {40.4, 81.4},
             }
         },
     }
@@ -230,11 +230,11 @@ NSI.InitializeAlerts[encID] = function(self)
                 {91},
             },
             [16] ={
-                {56.3},
-                {91},
-                {91},
-                {91},
-                {91},
+                {46.6},
+                {91.1},
+                {91.1},
+                {91.2},
+                {91.1},
             }
         },
     }
@@ -436,7 +436,18 @@ end
 local function StartRadarPreview(self, id)
     self.SentinelsRadarPreview = true
     local s = StartRadar(self, id, true)
-    if s then self:MakeDraggable(self.SentinelsRadarFrame, s, true) end
+    if s then
+        self:MakeDraggable(self.SentinelsRadarFrame, s, true, false, function(_, settings)
+            local encounterAlerts = NSRT.EncounterAlerts[encID]
+            for difficultyID = 14, 16 do
+                local difficultySettings = encounterAlerts[difficultyID].Radar
+                difficultySettings.xOffset = settings.xOffset
+                difficultySettings.yOffset = settings.yOffset
+                difficultySettings.Anchor = settings.Anchor
+                difficultySettings.relativeTo = settings.relativeTo
+            end
+        end)
+    end
 end
 
 local function StopRadarPreview(self)

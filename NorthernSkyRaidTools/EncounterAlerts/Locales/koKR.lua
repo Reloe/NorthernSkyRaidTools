@@ -173,7 +173,7 @@ L[3445] = {
     ["OrbSpawn"]        = {group = "파수꾼", name = "구슬 등장", text = "구슬 유도"},
     ["ShiftingProtovenom"] = {group = "파수꾼", name = "변화무쌍한 원시맹독", text = "산개"},
     ["TransitionDebuffs"] = {group = "파수꾼", name = "사이페 디버프", text = "숫자 게임"},
-    -- ["Radar"]            = {group = "Sentinels", name = "Radar", text = ""},
+    ["Radar"]            = {group = "파수꾼", name = "레이더", text = ""},
 }
 
 -- Vashnik the Malignant (3455)
@@ -198,12 +198,12 @@ L[3497] = {
     ["ShellSpinScroll"]         = {group = "일등항해사 스킬", name = "등껍질 회전 - 두루마리 강화됨", text = "유도"},
     ["ShellSpinTrader"]         = {group = "일등항해사 스킬", name = "등껍질 회전 - 무역상 강화됨", text = "유도"},
     ["MightyThud"]              = {group = "일등항해사 스킬", name = "스킬 맞기", text = "스킬 맞기"},
-    ["Fish-Spawn"]              = {group = "무역상 스킬", name = "물고기 생성", text = "물고기 생성"},
+    ["Fish-Spawn"]              = {group = "무역상 스킬", name = "물고기 나옴", text = "물고기 나옴"},
     ["MushroomBait"]            = {group = "무역상 스킬", name = "버섯 유도", text = "유도"},
     ["ExplosiveSurprise"]       = {group = "무역상 스킬", name = "폭탄 디버프", text = "폭탄 걸림"},
     ["MushroomJump"]            = {group = "무역상 스킬", name = "버섯 점프", text = "점프"},
-    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던지기 시간", text = "던지기 시간"},
-    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던지기 시간", text = "던지기 시간"},
+    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던질 타이밍", text = "던질 타이밍"},
+    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던질 타이밍", text = "던질 타이밍"},
 }
 
 -- Sszorak (3420)
@@ -216,18 +216,22 @@ L[3420] = {
     ["SerpentsFury"] = {group = "스조라크", name = "뱀의 격노", text = "뭉치기"},
     ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
     ["VenomousSurgeTargets"] = {group = "스조라크", name = "디버프 대상"},
+    ["VenomousSurgeAssignment"] = {group = "스조라크", name = "구슬 위치 배정", text = "구슬 깔기"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"] = {group = "쌍둥이 송곳니", name = "생존기", text = "생존기"},
     ["Soak"]        = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Soak1"]       = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Soak2"]       = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
+    ["Soak3"]       = {group = "쌍둥이 송곳니", name = "스킬 맞기", text = "스킬 맞기"},
     ["PreSpread"]   = {group = "쌍둥이 송곳니", name = "미리 산개", text = "미리 산개"},
     ["WatchSide"]   = {group = "쌍둥이 송곳니", name = "브레스 방향", text = "브레스 방향"},
     ["Adds"]        = {group = "쌍둥이 송곳니", name = "쫄", text = "쫄"},
     ["Orbs"]        = {group = "쌍둥이 송곳니", name = "구슬", text = "구슬"},
     ["TankSoak"]    = {group = "쌍둥이 송곳니", name = "탱커와 같이 맞기", text = "스킬 맞기"},
-    ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "브레스 머리 나옴", text = "브레스 머리 나옴"},
+    ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "밀려남", text = "밀려남"},
     ["Knock"]       = {group = "쌍둥이 송곳니", name = "넉백", text = "넉백"},
 }
 
@@ -263,11 +267,10 @@ L[3492] = {
     ["Debuffs"]             = {group = "울라텍", name = "뱀의 물어뜯기", text = "디버프"},
     ["Eggs"]                = {group = "울라텍", name = "알", text = "알"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
-    ["Sweep"]               = {group = "울라텍", name = "꼬리 휩쓸기", text = "꼬리"},
+    ["Sweep"]               = {group = "울라텍", name = "휩쓸기", text = "휩쓸기"},
     ["Soak"]                = {group = "울라텍", name = "스킬 맞기", text = "스킬 맞기"},
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
     ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
-    ["TankDrag"]            = {group = "울라텍", name = "탱커 쫄 파킹", text = "쫄 파킹"},
     ["WrongTarget"] = {group = "울라텍", name = "대상 잘못 잡음", text = "대상 잘못 잡음"},
 }

@@ -218,18 +218,22 @@ L[3420] = {
     ["SerpentsFury"] = {group = "司佐拉", name = "毒蛇之怒", text = "集中"},
     ["WindsHelper"]  = {group = "司佐拉", name = "吹風方向"},
     ["VenomousSurgeTargets"] = {group = "司佐拉", name = "Debuff 目標"},
+    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"]  = {group = "雙生毒牙", name = "個減", text = "個減"},
     ["Soak"]        = {group = "雙生毒牙", name = "分傷", text = "分傷"},
+    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
     ["PreSpread"]   = {group = "雙生毒牙", name = "分散", text = "分散"},
     ["WatchSide"]   = {group = "雙生毒牙", name = "看左右邊", text = "看左右邊"},
     ["Adds"]        = {group = "雙生毒牙", name = "小怪", text = "小怪"},
     ["Orbs"]        = {group = "雙生毒牙", name = "球", text = "球"},
     ["TankSoak"]    = {group = "雙生毒牙", name = "坦克吃圈", text = "吃圈"},
-    ["WatchSpawns"] = {group = "雙生毒牙", name = "看圈", text = "看圈"},
+    ["WatchSpawns"] = {group = "雙生毒牙", name = "推進", text = "推進"},
     ["Knock"]       = {group = "雙生毒牙", name = "擊退", text = "擊退"},
 }
 
@@ -270,6 +274,5 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
     ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
     ["GraspingFangsOverview"] = {group = "烏拉特克", name = "攫取毒牙總覽", text = ""},
-    ["TankDrag"]            = {group = "烏拉特克", name = "坦拉小怪", text = "拉小怪"},
     ["WrongTarget"] = {group = "烏拉特克", name = "打錯目標", text = "打錯目標"},
 }

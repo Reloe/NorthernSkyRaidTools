@@ -5,6 +5,9 @@ local encID = 3492
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+    for i = 14, 16 do
+        self:RemoveEncounterAlert(encID, i, "TankDrag")
+    end
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
@@ -22,15 +25,6 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "TankDrag", name = "Tank Add-Drag", text = "Drag Add", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1311611, phase = 1,
-        textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
-        timers = {
-            [15] = {185},
-            [16] = {185},
-        },
-    }
-    self:AddEncounterAlert(data)
-
     local data = {group = "Ula'tek", internalID = "Waves", name = "Caustic Wave", text = "Waves", DisplayType = "Text", encID = encID, TTS = "Waves", dur = 5, spellID = 1292403, phase = 1,
         timers = {
             [15] = {48, 100, 416.7, 471.7, 521.7, 566.7},
@@ -40,8 +34,8 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local UlatekDamageAmpTimers = {
-        [15] = {135.4, 284.5, 577},
-        [16] = {135.4, 284.5, 577},
+        [15] = {135.4, 284.5, 573.5},
+        [16] = {135.4, 284.5, 573.5},
     }
     local data = {Version = {versionNumber = 1, [1] = {dur = 15}}, group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", DisplayType = "Text", encID = encID, TTS = false, dur = 15, spellID = 1286860, phase = 1,
         timers = UlatekDamageAmpTimers,
@@ -71,8 +65,8 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Debuffs", name = "Serpent's Bite", text = "Debuffs", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1288879, phase = 1,
         timers = {
-            [15] = {392.7, 463.7, 500.6, 555.7},
-            [16] = {392.7, 463.7, 500.6, 555.7},
+            [15] = {392.7, 463.7, 500.6, 560.7},
+            [16] = {392.7, 463.7, 500.6, 560.7},
         },
     }
     self:AddEncounterAlert(data)
@@ -131,8 +125,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "GraspingFangsOverview", name = "Grasping Fangs Overview", text = nil, DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 40,
         spellID = 1311611, id = 0.2, difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
         timers = {
-            [15] = {195},
-            [16] = {195},
+            [15] = {180},
+            [16] = {180},
         },
     }
     self:AddEncounterAlert(data)

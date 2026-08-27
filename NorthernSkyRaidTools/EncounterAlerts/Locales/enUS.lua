@@ -218,18 +218,22 @@ L[3420] = {
     ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
     ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
     ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
+    ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"]  = {group = "Twin Fangs", name = "Defensives", text = "Defensives"},
     ["Soak"]        = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    ["Soak1"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    ["Soak2"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    ["Soak3"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
     ["PreSpread"]   = {group = "Twin Fangs", name = "Pre-Spread", text = "Pre-Spread"},
     ["WatchSide"]   = {group = "Twin Fangs", name = "Watch Side", text = "Watch Side"},
     ["Adds"]        = {group = "Twin Fangs", name = "Adds", text = "Adds"},
     ["Orbs"]        = {group = "Twin Fangs", name = "Orbs", text = "Orbs"},
     ["TankSoak"]    = {group = "Twin Fangs", name = "Tank Soak", text = "Soak"},
-    ["WatchSpawns"] = {group = "Twin Fangs", name = "Watch Spawns", text = "Watch Spawns"},
+    ["WatchSpawns"] = {group = "Twin Fangs", name = "Push", text = "Push"},
     ["Knock"]       = {group = "Twin Fangs", name = "Knock", text = "Knock"},
 }
 
@@ -270,6 +274,5 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},
     ["TransitionSoakSecond"] = {group = "Ula'tek", name = "Second Soak", text = "Second Soak"},
     ["GraspingFangsOverview"] = {group = "Ula'tek", name = "Grasping Fangs Overview", text = ""},
-    ["TankDrag"]            = {group = "Ula'tek", name = "Tank Add-Drag", text = "Drag Add"},
     ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
 }

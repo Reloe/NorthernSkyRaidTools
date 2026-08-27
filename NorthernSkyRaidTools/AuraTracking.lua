@@ -202,8 +202,10 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         StackFontSize = 32,
         TextFont = "Expressway",
         TextFontFlags = "OUTLINE",
+        DurationAnchorPoint = "CENTER",
         DurationXOffset = 0,
         DurationYOffset = 0,
+        StackAnchorPoint = "BOTTOMRIGHT",
         StackXOffset = -1,
         StackYOffset = 1,
         NameEnabled = false,
@@ -256,6 +258,13 @@ local function ResolveAuraTrackingCustomUnitType(settings, unit)
     return "Enemy"
 end
 
+local function GetAuraTrackingUnitCanAssist(unit, requiresAssist)
+    if requiresAssist and UnitIsPlayerControlledOrGroupMember(unit) then
+        return true
+    end
+    return UnitCanAssist("player", unit, true, true)
+end
+
 local function IsAuraTrackingStaticUnit(unit)
     unit = unit and strtrim(tostring(unit)) or ""
     if unit == "" then return true end
@@ -294,7 +303,7 @@ local function GetAuraTrackingCustomFrameLimit(settings, unit)
     local wantedUnitType = ResolveAuraTrackingCustomUnitType(settings, unit)
     unit = unit and strtrim(tostring(unit)) or ""
     if unit ~= "" and UnitExists(unit) then
-        local currentUnitType = UnitCanAssist("player", unit) and "Friendly" or "Enemy"
+        local currentUnitType = GetAuraTrackingUnitCanAssist(unit, wantedUnitType == "Friendly") and "Friendly" or "Enemy"
         if currentUnitType ~= wantedUnitType then
             return 0
         end
@@ -565,7 +574,7 @@ local AuraTrackingDisplayFields = {
     "EnableCooldownSwipe", "InverseCooldownSwipe", "SortMode",
     "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
     "StackColor", "DurationFontSize", "StackFontSize",
-    "TextFont", "TextFontFlags", "DurationXOffset", "DurationYOffset", "StackXOffset", "StackYOffset",
+    "TextFont", "TextFontFlags", "DurationAnchorPoint", "DurationXOffset", "DurationYOffset", "StackAnchorPoint", "StackXOffset", "StackYOffset",
     "NameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
     "OnlyShowFirstTank",
     "MultiTankGrow", "MultiTankXOffset", "MultiTankYOffset",
@@ -1605,7 +1614,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     else
         local count = EnsureAuraTrackingFontString(regions, "count")
         count:ClearAllPoints()
-        count:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
+        local stackAnchorPoint = settings.StackAnchorPoint or "BOTTOMRIGHT"
+        count:SetPoint(stackAnchorPoint, button, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
         count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
         count:SetTextColor(unpack(settings.StackColor))
         count:Show()
@@ -1621,7 +1631,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     else
         local duration = EnsureAuraTrackingFontString(regions, "duration")
         duration:ClearAllPoints()
-        duration:SetPoint("CENTER", button, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
+        local durationAnchorPoint = settings.DurationAnchorPoint or "CENTER"
+        duration:SetPoint(durationAnchorPoint, button, durationAnchorPoint, settings.DurationXOffset, settings.DurationYOffset)
         duration:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         duration:SetTextColor(unpack(durationColor))
         duration:Show()
@@ -1883,7 +1894,7 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
     for _, state in ipairs(states) do
         local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
-        if state.displayName ~= displayName and not self:Restricted() then
+        if not self:Restricted() then
             state.displayName = displayName
             for button, regions in pairs(state.buttonRegions) do
                 if regions.name then
@@ -1970,7 +1981,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     else
         state.requiresAssist = nil
     end
-    state.unitCanAssist = state.requiresAssist ~= nil and UnitCanAssist("player", unit) or nil
+    state.unitCanAssist = state.requiresAssist ~= nil and GetAuraTrackingUnitCanAssist(unit, state.requiresAssist) or nil
     state.encounterConditioned = hasEncounterConditions
     state.width = width
     state.height = height
@@ -2162,7 +2173,7 @@ function NSI:UpdateAuraTrackingEncounterVisibility()
                 shouldShow = false
             end
             if state.requiresAssist ~= nil then
-                state.unitCanAssist = UnitCanAssist("player", state.unit)
+                state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                 shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
             end
             state.container:SetEnabled(shouldShow)
@@ -2208,7 +2219,7 @@ local function SetAuraTrackingPlayerVehicleState(self, disabled)
         if state.active and state.unit == "player" then
             local shouldShow = not disabled and state.settings.enabled and self:EvaluateLoad(state.settings)
             if state.requiresAssist ~= nil then
-                state.unitCanAssist = UnitCanAssist("player", state.unit)
+                state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                 shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
             end
             state.container:SetEnabled(shouldShow)
@@ -2345,7 +2356,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     SetAuraTrackingPlayerVehicleState(NSI, true)
                     return
                 elseif event == "UNIT_FACTION" then
-                    local unitCanAssist = UnitCanAssist("player", unit)
+                    local unitCanAssist = GetAuraTrackingUnitCanAssist(unit, true)
                     for _, state in pairs(NSI.AuraTrackingState or {}) do
                         if state.active and state.unit == unit and state.requiresAssist ~= nil then
                             state.unitCanAssist = unitCanAssist
@@ -2386,6 +2397,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 if event == "GROUP_ROSTER_UPDATE" then
                     if NSI:Restricted() then
                         NSI.PendingAuraTrackingUpdate = true
+                        NSI.PendingAuraTrackingReconfigure = true
                         return
                     end
                     for _, entry in ipairs(AuraTrackingUnitRefreshStates.roster) do
@@ -2426,7 +2438,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
                 for _, state in ipairs(states) do
                     if state.container and state.active and state.requiresAssist ~= nil then
-                        local unitCanAssist = UnitCanAssist("player", state.unit)
+                        local unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                         if state.unitCanAssist ~= unitCanAssist then
                             state.unitCanAssist = unitCanAssist
                             local shouldShow = state.settings.enabled and NSI:EvaluateLoad(state.settings)
@@ -2665,7 +2677,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     else
         local stack = EnsureAuraTrackingFontString(frame, "Stack")
         stack:ClearAllPoints()
-        stack:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", settings.StackXOffset, settings.StackYOffset)
+        local stackAnchorPoint = settings.StackAnchorPoint or "BOTTOMRIGHT"
+        stack:SetPoint(stackAnchorPoint, frame, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
         stack:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
         stack:SetTextColor(unpack(settings.StackColor))
         stack:SetText(index)
@@ -2680,7 +2693,8 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     else
         local durationText = EnsureAuraTrackingFontString(frame, "Duration")
         durationText:ClearAllPoints()
-        durationText:SetPoint("CENTER", frame, "CENTER", settings.DurationXOffset, settings.DurationYOffset)
+        local durationAnchorPoint = settings.DurationAnchorPoint or "CENTER"
+        durationText:SetPoint(durationAnchorPoint, frame, durationAnchorPoint, settings.DurationXOffset, settings.DurationYOffset)
         durationText:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         durationText:SetTextColor(unpack(durationColor))
         durationText:SetText(FormatAuraTrackingDuration(duration, settings))

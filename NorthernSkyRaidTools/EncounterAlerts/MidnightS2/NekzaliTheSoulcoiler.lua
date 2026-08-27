@@ -51,12 +51,12 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Nek'zali", internalID = "HungeringPyre", name = "Hungering Pyre", text = "Soak", DisplayType = "Text", encID = encID, phase = 1.5, TTS = true, dur = 7.5, spellID = 1289855,
         phaseTimers = {
             [15] = {
-                [1.5] =  {35},
-                [1.75] =  {35},
+                [1.5] =  {27},
+                [1.75] =  {27},
             },
             [16] = {
-                [1.5] =  {35},
-                [1.75] =  {35},
+                [1.5] =  {27},
+                [1.75] =  {27},
             },
         },
     }

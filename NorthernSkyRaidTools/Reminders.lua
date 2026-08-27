@@ -1220,6 +1220,9 @@ end
 
 function NSI:GetDisplayedText(remString, info, F, timerHidden)
     local reminderText = info.text or ""
+    if issecretvalue(info.SecretDisplayText) then
+        return string.format("%s (%s)", info.SecretDisplayText, remString), ""
+    end
     if issecretvalue(reminderText) then
         return reminderText, ""
     end
@@ -2120,21 +2123,38 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
 end
 
 function NSI:CreateNoteMoverFrame(Name, SettingsTable, Shared, Personal, Extra)
-    if not self[Name.."Mover"] then
-        self[Name.."Mover"] = CreateFrame("Frame", "NSUI"..Name.."Mover", UIParent, "BackdropTemplate")
-        self:MoveFrameInit(self[Name.."Mover"], Name, SettingsTable.BGcolor)
-        self:MoveFrameSettings(self[Name.."Mover"], SettingsTable)
-        if SettingsTable.enabled and SettingsTable.Moveable then
-            self:UpdateReminderFrame(false, Shared, Personal, Extra)
-            self:MakeDraggable(self[Name.."Mover"], SettingsTable, true, true)
-            self[Name.."Mover"].Resizer:Show()
-            self[Name.."Mover"]:SetResizable(true)
-            self[Name.."Mover"]:SetResizeBounds(100, 100, 2000, 2000)
-        end
-    else
-        self:MoveFrameSettings(self[Name.."Mover"], SettingsTable)
+    local mover = self[Name.."Mover"]
+    if not mover then
+        mover = CreateFrame("Frame", "NSUI"..Name.."Mover", UIParent, "BackdropTemplate")
+        self[Name.."Mover"] = mover
+        self:MoveFrameInit(mover, Name, SettingsTable.BGcolor)
     end
-    self[Name.."Mover"]:Show()
+
+    self:MoveFrameSettings(mover, SettingsTable)
+    if not SettingsTable.enabled then
+        self:MakeDraggable(mover, SettingsTable, false, true)
+        if mover.Resizer then mover.Resizer:Hide() end
+        mover:SetResizable(false)
+        mover:StopMovingOrSizing()
+        mover:Hide()
+        return
+    end
+
+    if not self[Name] then
+        self:UpdateReminderFrame(false, Shared, Personal, Extra)
+    end
+    if SettingsTable.Moveable then
+        self:MakeDraggable(mover, SettingsTable, true, true)
+        mover.Resizer:Show()
+        mover:SetResizable(true)
+        mover:SetResizeBounds(100, 100, 2000, 2000)
+    else
+        self:MakeDraggable(mover, SettingsTable, false, true)
+        mover.Resizer:Hide()
+        mover:SetResizable(false)
+        mover:StopMovingOrSizing()
+    end
+    mover:Show()
 end
 
 function NSI:MoveFrameSettings(F, s, IsText, isAnchor)
@@ -2344,7 +2364,7 @@ function NSI:CreateNoteFrame(Name, SettingsTable)
         SettingsTable.Height = mover:GetHeight()
         local anchor, _, relativeTo, xOffset, yOffset = mover:GetPoint(nil, UIParent)
         SettingsTable.Anchor = anchor
-        SettingsTable.relativeTo = relativeTos
+        SettingsTable.relativeTo = relativeTo
         SettingsTable.xOffset = Round(xOffset)
         SettingsTable.yOffset = Round(yOffset)
     end)
@@ -2355,8 +2375,21 @@ end
 
 function NSI:UpdateNoteFrame(Name, SettingsTable, text)
     if not self[Name] then return end
+    local mover = self[Name.."Mover"]
     if SettingsTable.enabled then
-        self[Name]:SetAllPoints(self[Name.."Mover"])
+        self[Name]:SetAllPoints(mover)
+        if SettingsTable.Moveable then
+            self:MakeDraggable(mover, SettingsTable, true, true)
+            mover.Resizer:Show()
+            mover:SetResizable(true)
+            mover:SetResizeBounds(100, 100, 2000, 2000)
+        else
+            self:MakeDraggable(mover, SettingsTable, false, true)
+            mover.Resizer:Hide()
+            mover:SetResizable(false)
+            mover:StopMovingOrSizing()
+        end
+        mover:Show()
         self[Name].Text:SetFont(self.LSM:Fetch("font", SettingsTable.Font), SettingsTable.FontSize, GetReminderFontFlags(SettingsTable))
         self[Name].Text:SetWidth(SettingsTable.Width)
         if text ~= "skip" then
@@ -2373,6 +2406,11 @@ function NSI:UpdateNoteFrame(Name, SettingsTable, text)
         end
     elseif self[Name] then
         self[Name]:Hide()
+        self:MakeDraggable(mover, SettingsTable, false, true)
+        mover.Resizer:Hide()
+        mover:SetResizable(false)
+        mover:StopMovingOrSizing()
+        mover:Hide()
     end
 end
 

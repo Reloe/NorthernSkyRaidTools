@@ -172,7 +172,7 @@ L[3445] = {
     ["BloodDropPool"] = {group = "Стражи", name = "Оставить лужу (танк)", text = "Оставить лужу"},
     ["PoisonAdd"] = {group = "Стражи", name = "Ядовитый адд", text = "Ядовитый адд"},
     ["BloodSoak"] = {group = "Стражи", name = "Поглощение (Кровь)", text = "Поглощение (Кровь)"},
-    -- ["Radar"] = {group = "Sentinels", name = "Radar", text = ""},
+    ["Radar"] = {group = "Стражи", name = "Радар", text = ""},
 }
 
 -- Vashnik the Malignant (3455)
@@ -215,17 +215,21 @@ L[3420] = {
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
     ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
+    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Adds"] = {group = "Два Клыка", name = "Адды", text = "Адды"},
     ["Soak"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
+    ["Soak1"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
+    ["Soak2"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
+    ["Soak3"] = {group = "Два Клыка", name = "Поглощение", text = "Поглощение"},
     ["TankSoak"] = {group = "Два Клыка", name = "Поглощение танка", text = "Поглощение"},
     ["PreSpread"] = {group = "Два Клыка", name = "Заранее разойтись", text = "Заранее разойтись"},
     ["WatchSide"] = {group = "Два Клыка", name = "Смотреть по сторонам", text = "Смотреть по сторонам"},
     ["Orbs"] = {group = "Два Клыка", name = "Сферы", text = "Сферы"},
-    ["WatchSpawns"] = {group = "Два Клыка", name = "Следить за появлением", text = "Следить за появлением"},
+    ["WatchSpawns"] = {group = "Два Клыка", name = "Толчок", text = "Толчок"},
     ["Defensives"] = {group = "Два Клыка", name = "Защитные способности", text = "Защитные способности"},
     ["Knock"] = {group = "Два Клыка", name = "Удар", text = "Удар"},
 }
@@ -267,6 +271,5 @@ L[3492] = {
     ["TransitionSoakFirst"] = {group = "Ула'тек", name = "Первое поглощение", text = "Первое поглощение"},
     ["TransitionSoakSecond"] = {group = "Ула'тек", name = "Второе поглощение", text = "Второе поглощение"},
     ["GraspingFangsOverview"] = {group = "Ула'тек", name = "Обзор Хватающих клыков", text = ""},
-    ["TankDrag"] = {group = "Ула'тек", name = "Перетаскивание адда танком", text = "Перетащить адда"},
     ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
 }
