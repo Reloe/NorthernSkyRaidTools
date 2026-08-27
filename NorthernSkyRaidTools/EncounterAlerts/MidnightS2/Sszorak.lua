@@ -18,7 +18,7 @@ local damageAmpTimers = {
 local venomousSurgeCastTimers = {
     [14] = {36.25, 95, 188.3, 247, 340.3},
     [15] = {32.2, 84.4, 170.3, 222.6, 308.5, 360.8},
-    [16] = {29.5, 76, 156, 203, 283, 330},
+    [16] = {29, 76, 156, 203, 283, 330},
 }
 
 -- boss1target briefly changes to each bomb target during the bomb cast.
@@ -46,6 +46,14 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Sszorak", internalID = "SetMarkers", name = "Mark Reminder", text = "Set Markers", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
+        difficulties = {16}, enabled = false,
+        timers = {
+            [16] = {9.9, 137, 264},
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Sszorak", internalID = "DamageAmp", name = "Damage Amp", text = "Damage Amp", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1286033,
         timers = {
             [15] = damageAmpTimers[15],
@@ -57,8 +65,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1305959,
         loadConditions = tankConditions,
         timers = {
-            [15] = {32.2, 84.4, 170.4, 222.6, 308.5, 360.8},
-            [16] = {28.8, 76.8, 156, 203, 282.2, 330.2},
+            [15] = venomousSurgeCastTimers[15],
+            [16] = venomousSurgeCastTimers[16],
         },
     }
     self:AddEncounterAlert(data)
@@ -82,7 +90,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "SerpentsFury", name = "Serpent's Fury", text = "Stack Up", DisplayType = "Text", encID = encID, phase = 1, TTS = "Stack", dur = 6,
         loadConditions = nontankConditions,
         timers = {
-            [16] = {25, 74.5, 152, 202, 281, 329},
+            [16] = {25.5, 75.5, 152, 202.5, 279.5, 329.5},
         },
     }
     self:AddEncounterAlert(data)
