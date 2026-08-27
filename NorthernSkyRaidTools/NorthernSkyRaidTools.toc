@@ -52,6 +52,7 @@ AuraTracking.lua
 PaceComparison.lua
 QoL.lua
 QoLDisplay.lua
+PlayerStatsDisplay.lua
 Profiles.lua
 InterruptDisplay.lua
 

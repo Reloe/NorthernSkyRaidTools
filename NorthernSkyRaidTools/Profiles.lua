@@ -491,6 +491,23 @@ function NSI:AddMissingDefaults()
             },
         },
 
+        -- Player Stats Display
+        PlayerStatsDisplay = {
+            enabled = false,
+            Anchor = "CENTER",
+            relativeTo = "CENTER",
+            CustomAnchorFrame = "UIParent",
+            xOffset = 0,
+            yOffset = 250,
+            FrameStrata = "MEDIUM",
+            TextFont = "Expressway",
+            TextFontFlags = "OUTLINE",
+            TextAlign = "CENTER",
+            FontSize = 14,
+            Stats = { Crit = true, Haste = true, Mastery = true },
+            TextColor = { 1, 1, 1, 1 },
+        },
+
         -- Encounter Alerts
         EncounterAlerts = {
             [3176] = {},

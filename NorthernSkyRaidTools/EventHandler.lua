@@ -72,6 +72,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:CreateGenericDisplays()
         self:InitLDB()
         self:InitQoL()
+        self:InitPlayerStatsDisplay()
         self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think

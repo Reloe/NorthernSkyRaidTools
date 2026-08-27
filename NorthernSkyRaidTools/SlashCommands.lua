@@ -61,6 +61,8 @@ SlashCmdList["NSUI"] = function(msg)
         end
     elseif msg == "invite" then
         NSI:InviteFromReminder(NSRT.ActiveReminder, true)
+    elseif msg == "inv" then
+        NSI:InviteOnlineGuildMembers()
     elseif msg == "arrange" then
         NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
     elseif msg == "debuglogs" then
@@ -89,6 +91,7 @@ SlashCmdList["NSUI"] = function(msg)
         print(NSI:Loc("  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note"))
         print(NSI:Loc("  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"))
         print(NSI:Loc("  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"))
+        print(NSI:Loc("  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"))
         print(NSI:Loc("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"))
     elseif msg == "" then
         if NSI:LoadUI(true) then NSI.NSUI:ToggleOptions() end
