@@ -91,6 +91,13 @@ NSI.InitializeAlerts[encID] = function(self)
     end]]
     local data = {Version = {versionNumber = 1, [1] = {difficulties = {16}, loadConditions = nontankConditions, enabled = false}}, group = "Vashnik", internalID = "WavesLine", name = "Waves Line", text = "", DisplayType = "Text", encID = encID,
         difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview, loadConditions = nontankConditions,
+        ShowEntireFight = false,
+        extraOptions = {
+            { Type = "Checkbox", label = "Show Entire Fight",
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3455][16].WavesLine.ShowEntireFight end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3455][16].WavesLine.ShowEntireFight = value NSI.EncounterAlertStop[3455](NSI) NSI.EncounterAlertStart[3455](NSI, 16, "Waves Line") end]],
+            },
+        },
     }
     self:AddEncounterAlert(data)
 end
@@ -100,7 +107,8 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     local alert = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WavesLine
     local spreadAlert = id and NSRT.EncounterAlerts[encID][id].WaveSpread
     local wavesAlert = id and NSRT.EncounterAlerts[encID][id].Waves
-    if not alert or not alert.enabled or not self:EvaluateLoad(alert) or not spreadAlert or not wavesAlert then return end
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+    if not alert.ShowEntireFight and (not spreadAlert or not wavesAlert) then return end
 
     if self.VashnikWavesLineTimers then
         for _, timer in ipairs(self.VashnikWavesLineTimers) do timer:Cancel() end
@@ -155,6 +163,11 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     end
 
     hideWavesLine()
+
+    if alert.ShowEntireFight then
+        showWavesLine()
+        return
+    end
 
     for index, spreadTime in ipairs(spreadAlert.timers or {}) do
         local waveTime = wavesAlert.timers and wavesAlert.timers[index]
