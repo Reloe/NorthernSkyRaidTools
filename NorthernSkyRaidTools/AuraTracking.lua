@@ -1875,6 +1875,68 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
     return containerStates
 end
 
+function NSI:UpdateDebuffOverviewContainers()
+    if self:Restricted() then return end
+    local sets = self.DebuffOverviewContainerSetsByName or {}
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
+    local growDirection = settings.GrowDirection or "Up"
+    local flowHorizontal = AnchorUtil.FlowDirection.Right
+    local flowVertical = AnchorUtil.FlowDirection.Down
+    local flowAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+    local flowAnchor = "TOPLEFT"
+    if growDirection == "Up" then
+        flowAxis = AnchorUtil.FlowLayoutAxis.Vertical
+        flowVertical = AnchorUtil.FlowDirection.Up
+        flowAnchor = "BOTTOMLEFT"
+    elseif growDirection == "Left" then
+        flowHorizontal = AnchorUtil.FlowDirection.Left
+        flowAnchor = "TOPRIGHT"
+    elseif growDirection == "Right" then
+        flowAnchor = "TOPLEFT"
+    end
+
+    for _, states in pairs(sets) do
+        local previousContainer
+        for _, state in ipairs(states) do
+            local container = state.container
+            container:SetSize(settings.Width + settings.Height, settings.Height)
+            container:SetFlowLayoutAxis(flowAxis)
+            container:SetFlowLayoutAnchorPoint(flowAnchor)
+            container:SetFlowLayoutGrowthDirection(flowHorizontal, flowVertical)
+            container:SetAuraGroupLayout("DebuffOverview", {
+                elementWidth = settings.Width + settings.Height,
+                elementHeight = settings.Height,
+                elementSpacing = 0,
+                lineSpacing = 0,
+            })
+            container:ClearAllPoints()
+            if previousContainer then
+                if growDirection == "Up" then
+                    container:SetPoint("BOTTOMLEFT", previousContainer, "TOPLEFT", 0, settings.Spacing or 0)
+                elseif growDirection == "Down" then
+                    container:SetPoint("TOPLEFT", previousContainer, "BOTTOMLEFT", 0, -(settings.Spacing or 0))
+                elseif growDirection == "Left" then
+                    container:SetPoint("TOPRIGHT", previousContainer, "TOPLEFT", -(settings.Spacing or 0), 0)
+                else
+                    container:SetPoint("TOPLEFT", previousContainer, "TOPRIGHT", settings.Spacing or 0, 0)
+                end
+            elseif growDirection == "Up" then
+                container:SetPoint("BOTTOMLEFT", self.DebuffOverviewMover, "TOPLEFT", 0, 8)
+            elseif growDirection == "Down" then
+                container:SetPoint("TOPLEFT", self.DebuffOverviewMover, "BOTTOMLEFT", 0, -8)
+            elseif growDirection == "Left" then
+                container:SetPoint("TOPRIGHT", self.DebuffOverviewMover, "TOPLEFT", -8, 0)
+            else
+                container:SetPoint("TOPLEFT", self.DebuffOverviewMover, "TOPRIGHT", 8, 0)
+            end
+            for button in pairs(state.buttonRegions) do
+                ConfigureDebuffOverviewButton(self, state, button, state.unit)
+            end
+            previousContainer = container
+        end
+    end
+end
+
 function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     local sets = self.DebuffOverviewContainerSetsByName or {}
     if not containerName then

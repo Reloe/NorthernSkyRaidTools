@@ -642,6 +642,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
         F.Border:SetPoint("BOTTOMRIGHT", F, "BOTTOMRIGHT", iconOnRight and 6 + s.Height or 6, borderBottom)
         self:MoveFrameSettings(F, s, false, false)
     end
+    self:UpdateDebuffOverviewContainers()
 end
 
 function NSI:ArrangeStates(DisplayType)
