@@ -73,7 +73,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Vashnik", internalID = "Waves", name = "Waves", text = "Waves", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1281908,
         timers = {
             [15] = {21, 62, 95, 146, 179, 230, 263, 314, 347, 398, 431, 482},
-            [16] = {13, 54, 87, 138, 171.1, 222.1, 255, 306.1, 339.1, 390, 423.1, 474.1},
+            [16] = {19, 60.1, 93.1, 144.1, 177.1, 228.1, 261.1, 312.1, 345.1, 396.1, 429.1, 480.1},
         },
     }
     self:AddEncounterAlert(data)
@@ -81,7 +81,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nontankConditions,
         timers = {
             [15] = {13, 54, 87, 138, 171, 222, 255, 306, 339, 390, 423, 474},
-            [16] = {7, 48, 81, 132, 165.1, 216.1, 249, 300.1, 333.1, 384, 417.1, 468.1},
+            [16] = {13, 54.1, 87.1, 138.1, 171.1, 222.1, 255.1, 306.1, 339.1, 390.1, 423.1, 474.1},
         },
     }
     self:AddEncounterAlert(data)
