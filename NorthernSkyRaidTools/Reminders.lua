@@ -2027,7 +2027,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
         if IsDebuffOverview then
             local F = self[Name]
             F.PreviewRows = {}
-            local previewSpellIDs = {102342, 204018, 116849}
+            local previewSpellIDs = {1311611, 1311611, 1311611}
             local coloredPlayerName = NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
             for index, spellID in ipairs(previewSpellIDs) do
                 local row = CreateFrame("Frame", nil, F)
