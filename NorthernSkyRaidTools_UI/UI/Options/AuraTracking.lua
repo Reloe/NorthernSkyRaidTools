@@ -128,6 +128,10 @@ local ANCHOR_POINTS = {
     { label = "BOTTOMLEFT", value = "BOTTOMLEFT" }, { label = "BOTTOM", value = "BOTTOM" }, { label = "BOTTOMRIGHT", value = "BOTTOMRIGHT" },
 }
 
+local TEXT_ALIGNMENTS = {
+    { label = "Left", value = "LEFT" }, { label = "Center", value = "CENTER" }, { label = "Right", value = "RIGHT" },
+}
+
 local ROLE_DATA = {
     { key = "TANK", label = "Tank" }, { key = "HEALER", label = "Healer" },
     { key = "DAMAGER", label = "DPS" }, { key = "MELEE", label = "Melee" }, { key = "RANGED", label = "Ranged" },
@@ -349,6 +353,14 @@ local function BuildAuraTrackingUI(screen)
     local nameEntry, groupDD, anchorEntry
     local resetTriggerScroll = false
 
+    -- Player Stats Display: a standalone, non-aura built-in entry that lives
+    -- visually inside the Built-in group but doesn't use the aura settings
+    -- shape, so it gets its own tiny selection state and right panel instead
+    -- of going through NSI:GetAuraTrackingSettings/SelectEntry.
+    local statsPanel, ShowPlayerStatsPanel
+    local isStatsSelected = false
+    local STAT_DISPLAY_ICON = [[Interface\Icons\INV_Misc_Note_01]]
+
     -- ── Left: title / search ────────────────────────────────────────────────
     local title = screen:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 16, "OUTLINE")
@@ -392,6 +404,7 @@ local function BuildAuraTrackingUI(screen)
     local stopBtn = CreateLocalizedButton(screen, "Stop All Previews", function()
         autoPreviewKey = nil
         NSI:StopAllAuraTrackingPreviews()
+        NSI:SetPlayerStatsPreview(false)
     end, leftWidth - pad * 2, 22, "NSUIAuraTrackStopPreview")
     stopBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
@@ -534,6 +547,16 @@ local function BuildAuraTrackingUI(screen)
             end)
         end
 
+        -- The Player Stats Display isn't a real aura-tracking entry, so it
+        -- isn't part of `all`/IterateAuraTrackingEntries. Splice it into the
+        -- Built-in group here so it still respects search and still forces
+        -- the Built-in header to appear even if every real built-in is
+        -- filtered out.
+        local statPasses = passes({ settings = { Name = NSI:Loc("Player Stats") } })
+        if statPasses then
+            pushGroup(NSI.AuraTrackingBuiltinGroup)
+        end
+
         table.sort(groupOrder, function(a, b)
             if a == NSI.AuraTrackingBuiltinGroup then return true end
             if b == NSI.AuraTrackingBuiltinGroup then return false end
@@ -544,9 +567,14 @@ local function BuildAuraTrackingUI(screen)
         for _, item in ipairs(pinned) do model[#model + 1] = { kind = "entry", item = item, indent = false } end
         for _, name in ipairs(groupOrder) do
             local isCollapsed = NSI:GetAuraTrackingGroupCollapsed(name)
-            model[#model + 1] = { kind = "header", group = name, count = #groups[name], collapsed = isCollapsed }
+            local isBuiltin = name == NSI.AuraTrackingBuiltinGroup
+            local count = #groups[name] + ((isBuiltin and statPasses) and 1 or 0)
+            model[#model + 1] = { kind = "header", group = name, count = count, collapsed = isCollapsed }
             if not isCollapsed then
                 for _, item in ipairs(groups[name]) do model[#model + 1] = { kind = "entry", item = item, indent = true } end
+                if isBuiltin and statPasses then
+                    model[#model + 1] = { kind = "stat", indent = true }
+                end
             end
         end
         for _, item in ipairs(ungrouped) do model[#model + 1] = { kind = "entry", item = item, indent = false } end
@@ -758,6 +786,44 @@ local function BuildAuraTrackingUI(screen)
                 row:SetScript("OnMouseDown", function(_, button)
                     if button == "RightButton" then GroupContextMenu(gname)
                     else NSI:SetAuraTrackingGroupCollapsed(gname, not NSI:GetAuraTrackingGroupCollapsed(gname)); RebuildList() end
+                end)
+            elseif node.kind == "stat" then
+                entryIdx = entryIdx + 1
+                if not entryRows[entryIdx] then entryRows[entryIdx] = CreateEntryRow() end
+                local row    = entryRows[entryIdx]
+                local indent = node.indent and 14 or 0
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", listChild, "TOPLEFT", indent, -(slot - 1) * lineHeight)
+                row:SetWidth(listChild:GetWidth() - indent)
+                row:Show()
+
+                local statSettings = NSRT.PlayerStatsDisplay
+                if isStatsSelected then
+                    row.__background:SetVertexColor(0, 1, 1); row.__background:SetAlpha(1)
+                else
+                    row.__background:SetVertexColor(0.4, 0.4, 0.4); row.__background:SetAlpha(0.5)
+                end
+
+                row.icon:SetTexture(STAT_DISPLAY_ICON)
+                row.icon:SetAlpha(1)
+                row.name:SetText(NSI:Loc("Player Stats"))
+                row.name:SetTextColor(1, 1, 1, statSettings.enabled and 1 or 0.45)
+                row.pinIcon:Hide()
+
+                row.enabledCB.frame:SetAlpha(1)
+                row.enabledCB:SetValue(statSettings.enabled)
+                row.enabledCB:SetOnChange(function(_, v)
+                    statSettings.enabled = v
+                    NSI:InitPlayerStatsDisplay()
+                    RebuildList()
+                end)
+
+                row.deleteBtn:Hide(); row.deleteBtn:SetScript("OnClick", nil); row.lockIcon:Show()
+
+                row:SetScript("OnMouseDown", function(_, button)
+                    if row.enabledCB.frame:IsMouseOver() then return end
+                    if button == "RightButton" then return end
+                    ShowPlayerStatsPanel()
                 end)
             else
                 entryIdx = entryIdx + 1
@@ -1871,8 +1937,187 @@ local function BuildAuraTrackingUI(screen)
         tabBtns[name] = btn
     end
 
+    -- ── Player Stats Display panel ──────────────────────────────────────────
+    -- A stripped-down version of the aura Display tab: same widget system
+    -- (BuildWidgets/CreateScrollBox) and the same Anchor/Offset/Frame Strata/
+    -- Text Font/Text Outline fields, bound to NSRT.PlayerStatsDisplay instead
+    -- of an aura settings table. No Trigger/Load tab, no icon/grid/border/
+    -- duration/stack fields, since none of that applies to plain text.
+    local statsScrollObj, statsAnchorEntry
+    local STATS_HEADER_HEIGHT = 138
+
+    local function BuildStatsDisplayDefs()
+        local s = NSI:EnsurePlayerStatsDisplaySettings() or NSRT.PlayerStatsDisplay
+        local defs = {}
+        local function add(d) defs[#defs + 1] = d end
+        local function tip(title, desc) return { title = title, desc = desc } end
+
+        add({ Type = "Label", text = "Stats to Display", highlight = true })
+        for _, statDef in ipairs(NSI.PlayerStatsDisplayStatDefs) do
+            local statKey = statDef.key
+            add({ Type = "Checkbox", label = statDef.label,
+                tooltip = tip(statDef.label, string.format(NSI:Loc("Show %s in the stats display."), NSI:Loc(statDef.label))),
+                get = function() return s.Stats[statKey] end,
+                set = function(_, v) s.Stats[statKey] = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        end
+
+        add({ Type = "Label", text = "Position Settings", highlight = true })
+        add({ Type = "Dropdown", label = "Anchor Point", values = ANCHOR_POINTS,
+            tooltip = tip("Anchor Point", "Point on this display that should be anchored."),
+            get = function() return s.Anchor or "CENTER" end,
+            set = function(_, v) s.Anchor = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Dropdown", label = "Relative Point", values = ANCHOR_POINTS,
+            tooltip = tip("Relative Point", "Point on the anchor frame that this display should attach to."),
+            get = function() return s.relativeTo or "CENTER" end,
+            set = function(_, v) s.relativeTo = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Slider", label = "X-Offset", min = -3000, max = 3000, step = 1, liveDrag = true,
+            tooltip = tip("X-Offset", "Horizontal offset of the display"),
+            get = function() return s.xOffset end,
+            set = function(_, v) s.xOffset = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Slider", label = "Y-Offset", min = -3000, max = 3000, step = 1, liveDrag = true,
+            tooltip = tip("Y-Offset", "Vertical offset of the display"),
+            get = function() return s.yOffset end,
+            set = function(_, v) s.yOffset = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Dropdown", label = "Frame Strata", values = FRAME_STRATA,
+            tooltip = tip("Frame Strata", "Controls whether this display appears above or below other UI frames."),
+            get = function() return s.FrameStrata or "MEDIUM" end,
+            set = function(_, v) s.FrameStrata = v; NSI:RefreshPlayerStatsDisplayLive() end })
+
+        add({ Type = "Label", text = "Text Style", highlight = true })
+        add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
+            tooltip = tip("Text Font", "Font used for the stats text"),
+            get = function() return s.TextFont end,
+            set = function(_, v) s.TextFont = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Dropdown", label = "Text Outline", values = FONT_FLAGS,
+            tooltip = tip("Text Outline", "Outline style used for the stats text"),
+            get = function() return s.TextFontFlags end,
+            set = function(_, v) s.TextFontFlags = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Slider", label = "Font Size", min = 6, max = 80, step = 1,
+            tooltip = tip("Font Size", "Font size of the stats text"),
+            get = function() return s.FontSize end,
+            set = function(_, v) s.FontSize = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Dropdown", label = "Text Alignment", values = TEXT_ALIGNMENTS,
+            tooltip = tip("Text Alignment", "Horizontal alignment of the stats text lines relative to each other"),
+            get = function() return s.TextAlign or "CENTER" end,
+            set = function(_, v) s.TextAlign = v; NSI:RefreshPlayerStatsDisplayLive() end })
+        add({ Type = "Color", label = "Text Color",
+            tooltip = tip("Text Color", "Color of the stats display text."),
+            get = function() return unpack(s.TextColor) end,
+            set = function(_, r, g, b, a) s.TextColor = { r, g, b, a }; NSI:RefreshPlayerStatsDisplayLive() end })
+
+        return defs
+    end
+
+    local function RebuildStatsWidgets()
+        if not statsPanel then return end
+        local scrollPosition = 0
+        if statsScrollObj then scrollPosition = statsScrollObj.frame:GetVerticalScroll() or 0 end
+        local defs = BuildStatsDisplayDefs()
+        if not statsScrollObj then
+            statsScrollObj = CreateScrollBox(statsPanel, rightW - 14, tab_content_height - STATS_HEADER_HEIGHT)
+            statsScrollObj.frame:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -STATS_HEADER_HEIGHT)
+        else
+            statsScrollObj.scrollChild:Hide()
+            local newScrollChild = CreateFrame("Frame", nil, statsScrollObj.frame)
+            newScrollChild:SetWidth(statsScrollObj.scrollChild:GetWidth())
+            newScrollChild:SetHeight(1)
+            statsScrollObj.frame:SetScrollChild(newScrollChild)
+            statsScrollObj.scrollChild = newScrollChild
+        end
+        local totalH = BuildWidgets(statsScrollObj.scrollChild, defs, statsScrollObj.scrollChild:GetWidth(), "NSRTPlayerStatsDisplay")
+        statsScrollObj.scrollChild:SetHeight(math.max(totalH, 1))
+        statsScrollObj:UpdateScrollBar()
+        statsScrollObj.frame:SetVerticalScroll(scrollPosition)
+    end
+
+    local function EnsureStatsPanel()
+        if statsPanel then return end
+        statsPanel = CreateFrame("Frame", nil, screen)
+        statsPanel:SetPoint("TOPLEFT",     screen, "TOPLEFT",     rightX, topY)
+        statsPanel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -pad,   pad)
+        statsPanel:Hide()
+
+        local titleLbl = statsPanel:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(titleLbl, 16, "OUTLINE")
+        titleLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, 0)
+        titleLbl:SetText(NSI:Loc("Player Stats Display"))
+
+        local descLbl = statsPanel:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(descLbl, 12, "")
+        descLbl:SetTextColor(0.75, 0.75, 0.75, 1)
+        descLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -22)
+        descLbl:SetPoint("RIGHT", statsPanel, "RIGHT", 0, 0)
+        descLbl:SetJustifyH("LEFT")
+        descLbl:SetWordWrap(true)
+        descLbl:SetText(NSI:Loc("Shows a small always-on text block with the combat rating stats you choose below. Disabled by default."))
+
+        local anchorLbl = statsPanel:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(anchorLbl, 11, "")
+        anchorLbl:SetTextColor(1, 0.82, 0, 1)
+        anchorLbl:SetText(NSI:Loc("Anchor Frame"))
+        anchorLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -60)
+
+        statsAnchorEntry = CreateTextEntry(statsPanel, nil,
+            function() return NSRT.PlayerStatsDisplay.CustomAnchorFrame or "UIParent" end,
+            function(_, v)
+                local s = NSRT.PlayerStatsDisplay
+                v = strtrim(tostring(v or ""))
+                if v == "" then v = "UIParent" end
+                if not NSI:IsValidAuraTrackingAnchorFrame(v) then
+                    print("|cFF00FFFFNSRT:|r " .. NSI:Loc("Anchor frame not found."))
+                    statsAnchorEntry:SetValue(s.CustomAnchorFrame or "UIParent")
+                    return
+                end
+                s.CustomAnchorFrame = v
+                NSI:RefreshPlayerStatsDisplayLive()
+            end,
+            rightW, 22, nil, nil, nil, "NSUIPlayerStatsAnchorEntry",
+            { title = NSI:Loc("Anchor Frame"), desc = NSI:Loc("Enter a frame name (e.g. UIParent) to anchor this display to.") })
+        statsAnchorEntry:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -78)
+
+        local previewBtn = CreateLocalizedButton(statsPanel, "Preview/Unlock", function()
+            NSI:TogglePlayerStatsPreview()
+        end, 160, 22, "NSUIPlayerStatsPreview")
+        previewBtn:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -108)
+
+        local resetBtn = CreateLocalizedButton(statsPanel, "Reset Position", function()
+            NSI:ResetPlayerStatsDisplayPosition()
+            statsAnchorEntry:SetValue(NSRT.PlayerStatsDisplay.CustomAnchorFrame or "UIParent")
+            RebuildStatsWidgets()
+        end, 160, 22, "NSUIPlayerStatsResetPosition")
+        resetBtn:SetPoint("LEFT", previewBtn.frame, "RIGHT", 8, 0)
+    end
+
+    ShowPlayerStatsPanel = function()
+        StopAutoPreview(autoPreviewKey)
+        StopPreview(selectedKey)
+        SetSelectedKey(nil)
+        rightPanel:Hide()
+        isStatsSelected = true
+        EnsureStatsPanel()
+        statsPanel:Show()
+        RebuildStatsWidgets()
+        RebuildList()
+    end
+
+    local function HidePlayerStatsPanel()
+        if isStatsSelected then
+            isStatsSelected = false
+            NSI:SetPlayerStatsPreview(false)
+            if statsPanel then statsPanel:Hide() end
+        end
+    end
+
+    if NSUI and not NSUI._PlayerStatsPreviewOnHideHooked then
+        NSUI:HookScript("OnHide", function()
+            NSI:SetPlayerStatsPreview(false)
+        end)
+        NSUI._PlayerStatsPreviewOnHideHooked = true
+    end
+
     -- ── SelectEntry ─────────────────────────────────────────────────────────
     SelectEntry = function(key, shouldAutoPreview)
+        HidePlayerStatsPanel()
         local previousSettings = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         local nextSettings = key and NSI:GetAuraTrackingSettings(key)
         if previousSettings and nextSettings
