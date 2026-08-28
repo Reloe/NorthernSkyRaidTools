@@ -409,32 +409,39 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             if assignmentActive then
                 self.AssignmentWindowCaptures = (self.AssignmentWindowCaptures or 0) + 1
                 local isPlayerTarget = UnitIsUnit("boss1target", "player")
-                if not issecretvalue(isPlayerTarget) and isPlayerTarget then
-                    local displayText
-                    if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
-                        displayText = string.format("%s |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", assignment.text or "Drop on", self.WindsOrder[self.AssignmentWindowCaptures])
-                    else
-                        displayText = string.format("%s %s", assignment.text or "Drop on", NSI:EncounterAlertLoc("Backup"))
-                    end
+                local displayText
+                if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
+                    displayText = string.format("%s |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", assignment.text or "Drop on", self.WindsOrder[self.AssignmentWindowCaptures])
+                else
+                    displayText = string.format("%s %s", assignment.text or "Drop on", NSI:EncounterAlertLoc("Backup"))
+                end
 
-                    local info = self:CreateReminder({
-                        text = "",
-                        DisplayType = "Text",
-                        spellID = assignment.spellID,
-                        dur = assignment.dur,
-                        encID = encID,
-                        phase = self.Phase,
-                        TTS = false,
-                        sticky = 0,
-                        IsAlert = true,
-                    }, true)
-                    if info then
-                        if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
-                            info.SecretDisplayText = displayText
-                        else
-                            info.text = displayText
+                local info = self:CreateReminder({
+                    text = "",
+                    DisplayType = "Text",
+                    spellID = assignment.spellID,
+                    dur = assignment.dur,
+                    encID = encID,
+                    phase = self.Phase,
+                    TTS = false,
+                    sticky = 0,
+                    IsAlert = true,
+                }, true)
+                if info then
+                    if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
+                        info.SecretDisplayText = displayText
+                    else
+                        info.text = displayText
+                    end
+                    local frame = self:DisplayReminder(info)
+                    if frame then
+                        if not frame.SszorakAssignmentAlphaReset then
+                            frame.SszorakAssignmentAlphaReset = true
+                            frame:HookScript("OnHide", function(hiddenFrame)
+                                hiddenFrame.Text:SetAlpha(1)
+                            end)
                         end
-                        self:DisplayReminder(info)
+                        frame.Text:SetAlphaFromBoolean(isPlayerTarget, 1, 0)
                     end
                 end
             end
