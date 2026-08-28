@@ -1178,6 +1178,13 @@ L["Show Entire Fight"] = "Show Entire Fight"
 L["Winds Helper"] = "Winds Helper"
 L["Shows the sender next to each entered number."] = "Shows the sender next to each entered number."
 L["Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."] = "Creates macros that post numbers 1 through 8 with the matching raid-marker icons and will trigger the display mid-fight. All you have to do is press the macro's in the order you want the Knocks to be triggered during the Dmg-Amp. If new messages come in after 3 have already filled it will simply start from the beginning, that way you can fix mistakes."
+L["Rotating Marker Map"] = "Rotating Marker Map"
+L["MapSize"] = "Map Size"
+L["MarkerSize"] = "Marker Size"
+L["PlayerColor"] = "Player Color"
+L["ShowPlayerArrow"] = "Show Player Arrow"
+L["Shows the player at the center, facing toward the top of the map."] = "Shows the player at the center, facing toward the top of the map."
+L["World marker positions"] = "World Marker Positions"
 L["Backup"] = "Backup"
 -- ============================================================================
 -- EncounterAlerts.lua
