@@ -211,14 +211,18 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P2", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, FontSize = 12, BoxSize = 30,
+        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, NumberFontSize = 12, NameFontSize = 12, BoxSize = 30,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false,
-        Version = {versionNumber = 1, [1] = {BoxSize = 30}},
+        Version = {versionNumber = 2, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}},
         extraOptions = {
             { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."), height = 80 },
-            { Type = "Slider", label = "Font Size", min = 8, max = 40, step = 1,
-                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize or 12 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
+            { Type = "Slider", label = "Number Font Size", min = 8, max = 40, step = 1,
+                get = [[return function(NSI) local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments return alert.NumberFontSize or alert.FontSize or 12 end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NumberFontSize = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
+            },
+            { Type = "Slider", label = "Name Font Size", min = 8, max = 40, step = 1,
+                get = [[return function(NSI) local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments return alert.NameFontSize or alert.FontSize or 12 end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameFontSize = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
             },
             { Type = "Slider", label = "Box Size", min = 30, max = 150, step = 1,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize or 30 end]],
@@ -389,7 +393,8 @@ function NSI:UpdateCoiledAltarInterruptPreview()
     local assignmentTable = self.Interrupts and self.Interrupts.assignTable or {}
     local boxSize = alert and alert.BoxSize or 30
     local fontScale = boxSize / 30
-    local alertFontSize = alert and alert.FontSize or 12
+    local numberFontSize = alert and (alert.NumberFontSize or alert.FontSize) or 12
+    local nameFontSize = alert and (alert.NameFontSize or alert.FontSize) or 12
     local nameFontPath = self.LSM:Fetch("font", interruptSettings.NameFont)
     local numberFontPath = self.LSM:Fetch("font", interruptSettings.NumberFont)
 
@@ -418,14 +423,14 @@ function NSI:UpdateCoiledAltarInterruptPreview()
             local number = preview.numbers[boxIndex]
             number:ClearAllPoints()
             number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-            number:SetFont(numberFontPath, alertFontSize * fontScale, interruptSettings.NumberFontFlags)
+            number:SetFont(numberFontPath, numberFontSize * fontScale, interruptSettings.NumberFontFlags)
             number:SetTextColor(unpack(textColor))
             number:SetText(1)
 
             local name = preview.names[boxIndex]
             name:ClearAllPoints()
             name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
-            name:SetFont(nameFontPath, alertFontSize * fontScale, interruptSettings.NameFontFlags)
+            name:SetFont(nameFontPath, nameFontSize * fontScale, interruptSettings.NameFontFlags)
             name:SetText(currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or NSAPI:Shorten("player", 12, false, "GlobalNickNames", true, false))
             box:Show()
         end
@@ -446,18 +451,12 @@ function NSI:PreviewCoiledAltarInterruptDisplay()
         preview.numbers = {}
         preview.names = {}
         for boxIndex = 1, 2 do
-            local box = CreateFrame("Frame", nil, preview)
+            local box = NSI:CreateInterruptAssignmentDisplay(preview)
             box:SetFrameLevel(1)
-            box.Background = box:CreateTexture(nil, "ARTWORK")
-            box.Background:SetAllPoints()
-            box.Border = box:CreateTexture(nil, "BACKGROUND")
-            box.Border:SetColorTexture(0, 0, 0, 1)
-            box.Border:SetPoint("TOPLEFT", box, "TOPLEFT", -1, 1)
-            box.Border:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", 1, -1)
             box:Show()
             preview.boxes[boxIndex] = box
-            preview.numbers[boxIndex] = box:CreateFontString(nil, "OVERLAY")
-            preview.names[boxIndex] = box:CreateFontString(nil, "OVERLAY")
+            preview.numbers[boxIndex] = box.Number
+            preview.names[boxIndex] = box.Name
         end
         self.CoiledAltarInterruptPreviewFrame = preview
     end
@@ -489,7 +488,8 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     end
 
     local boxSize = alert.BoxSize or 100
-    local alertFontSize = alert.FontSize or 12
+    local numberFontSize = alert.NumberFontSize or alert.FontSize or 12
+    local nameFontSize = alert.NameFontSize or alert.FontSize or 12
     local nameplateAnchor = alert.NameplateAnchor or "TOP"
     local boxAnchor, plateAnchor = "BOTTOM", "TOP"
     if nameplateAnchor == "CENTER" then
@@ -548,13 +548,13 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 local displayName = currentName and UnitExists(currentName) and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or ""
                 number:ClearAllPoints()
                 number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-                number:SetFont(numberFontPath, alertFontSize * fontScale, interruptSettings.NumberFontFlags)
+                number:SetFont(numberFontPath, numberFontSize * fontScale, interruptSettings.NumberFontFlags)
                 number:SetTextColor(unpack(textColor))
                 number:SetText(castCount)
                 number:SetAlpha(1)
                 name:ClearAllPoints()
                 name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
-                name:SetFont(nameFontPath, alertFontSize * fontScale, interruptSettings.NameFontFlags)
+                name:SetFont(nameFontPath, nameFontSize * fontScale, interruptSettings.NameFontFlags)
                 name:SetText(displayName)
                 name:SetAlpha(1)
             end
@@ -586,29 +586,23 @@ local function AddCoiledAltarInterruptNameplate(self, unit)
         display = {plate = plate, lines = {}, numbers = {}, names = {}, boxes = {}}
         self.CoiledAltarInterruptNameplates[unit] = display
         for bossIndex = 1, 2 do
-            local box = CreateFrame("Frame", nil, self.CoiledAltarInterruptFrame)
+            local box = NSI:CreateInterruptAssignmentDisplay(self.CoiledAltarInterruptFrame)
             display.boxes[bossIndex] = box
             box:SetFrameLevel(1)
             box:SetSize(self.CoiledAltarInterruptAlert.BoxSize or 100, self.CoiledAltarInterruptAlert.BoxSize or 100)
             box:SetPoint("BOTTOM", plate, "TOP", 0, 0)
-            box.Background = box:CreateTexture(nil, "ARTWORK")
-            box.Background:SetAllPoints()
-            box.Border = box:CreateTexture(nil, "BACKGROUND")
-            box.Border:SetColorTexture(0, 0, 0, 1)
-            box.Border:SetPoint("TOPLEFT", box, "TOPLEFT", -1, 1)
-            box.Border:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", 1, -1)
-            display.numbers[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.numbers[bossIndex] = box.Number
             display.numbers[bossIndex]:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-            display.names[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.names[bossIndex] = box.Name
             display.names[bossIndex]:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
         end
     elseif not display.numbers then
         display.numbers = {}
         display.names = {}
         for bossIndex, box in ipairs(display.boxes) do
-            display.numbers[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.numbers[bossIndex] = box.Number
             display.numbers[bossIndex]:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-            display.names[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.names[bossIndex] = box.Name
             display.names[bossIndex]:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
         end
         for lineIndex = 1, 2 do

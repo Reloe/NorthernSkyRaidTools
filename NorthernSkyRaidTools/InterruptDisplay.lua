@@ -1,19 +1,25 @@
 local _, NSI = ... -- Internal namespace
 
+function NSI:CreateInterruptAssignmentDisplay(parent, name)
+    local display = CreateFrame("Frame", name, parent)
+    display.Box = display:CreateTexture(nil, "ARTWORK")
+    display.Box:SetColorTexture(0, 0, 0, 1)
+    display.Box:SetAllPoints()
+    display.Background = display.Box
+    display.Border = display:CreateTexture(nil, "BACKGROUND")
+    display.Border:SetColorTexture(0, 0, 0, 1)
+    display.Border:SetPoint("TOPLEFT", display, "TOPLEFT", -1, 1)
+    display.Border:SetPoint("BOTTOMRIGHT", display, "BOTTOMRIGHT", 1, -1)
+    display.Number = display:CreateFontString(nil, "OVERLAY")
+    display.Number:SetTextColor(1, 0, 0, 1)
+    display.Name = display:CreateFontString(nil, "OVERLAY")
+    display.Name:SetTextColor(1, 1, 1, 1)
+    return display
+end
+
 function NSI:CreateInterruptDisplay()
     if not self.InterruptDisplay then
-        self.InterruptDisplay = CreateFrame("Frame", "NSIInterruptDisplay", NSI.NSRTFrame)
-        self.InterruptDisplay.Box = self.InterruptDisplay:CreateTexture(nil, "ARTWORK")
-        self.InterruptDisplay.Box:SetColorTexture(0, 0, 0, 1)
-        self.InterruptDisplay.Box:SetAllPoints()
-        self.InterruptDisplay.Border = self.InterruptDisplay:CreateTexture(nil, "BACKGROUND")
-        self.InterruptDisplay.Border:SetColorTexture(0, 0, 0, 1)
-        self.InterruptDisplay.Border:SetPoint("TOPLEFT", self.InterruptDisplay, "TOPLEFT", -1, 1)
-        self.InterruptDisplay.Border:SetPoint("BOTTOMRIGHT", self.InterruptDisplay, "BOTTOMRIGHT", 1, -1)
-        self.InterruptDisplay.Number = self.InterruptDisplay:CreateFontString(nil, "OVERLAY")
-        self.InterruptDisplay.Number:SetTextColor(1, 0, 0, 1)
-        self.InterruptDisplay.Name = self.InterruptDisplay:CreateFontString(nil, "OVERLAY")
-        self.InterruptDisplay.Name:SetTextColor(1, 1, 1, 1)
+        self.InterruptDisplay = self:CreateInterruptAssignmentDisplay(NSI.NSRTFrame, "NSIInterruptDisplay")
     end
     self.InterruptDisplay:ClearAllPoints()
     self.InterruptDisplay:SetSize(NSRT.InterruptSettings.Width, NSRT.InterruptSettings.Height)
