@@ -188,7 +188,6 @@ NSI.AuraSoundCategories = {
             {spellID = 1297876, sound = "Spread"}, -- Triple Shot
         }},
         {key = "temple_of_sethraliss", label = "Temple of Sethraliss", entries = {
-            {spellID = 1300704, sound = "Fixate"}, -- Fixate
             {spellID = 1311979, sound = "Spread"}, -- Latent Hex
             {spellID = 1311981, sound = "Spread"}, -- Latent Hex
             {spellID = 1290030, sound = "Stack"}, -- A Knot of Snakes
