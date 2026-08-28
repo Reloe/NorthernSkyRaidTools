@@ -29,9 +29,8 @@ local bombDuration = 10
 
 local markerMapDefaultOrder = {3, 8, 4, 5, 6, 7, 1, 2}
 local markerMapDirections = {"North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest"}
-local markerMapIconFileIDs = {137001, 137002, 137003, 137004, 137005, 137006, 137007, 137008}
 local markerMapCircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_filled.png]]
-local markerMapRotationDegrees = -7
+local markerMapRotationDegrees = 7
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
@@ -427,7 +426,7 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
         if order[slot] == 0 then
             marker:Hide()
         else
-            marker:SetTexture(markerMapIconFileIDs[order[slot]], "CLAMP", "CLAMP")
+            marker:SetTexture(string.format("Interface\\TargetingFrame\\UI-RaidTargetingIcon_%d", order[slot]), "CLAMP", "CLAMP")
             SetPaddedMarkerTexCoords(marker, centerX, centerY, markerSize, mapSize)
             marker:SetRotation(0)
             marker:Show()
@@ -451,8 +450,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
         end
         C_CVar.SetCVar("rotateMinimap", "1")
         MinimapCluster:SetRotateMinimap(true)
-        LendSszorakMarkerMapCompass(self)
-        F:Show()
+        F:Hide()
 
         if preview == "Marker Map" then
             self.IsSszorakMarkerMapPreview = true
@@ -478,6 +476,19 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 frame:SetScript("OnUpdate", frame.MarkerMapOnUpdate)
             end)
         end
+
+        self.SszorakMarkerMapShowToken = (self.SszorakMarkerMapShowToken or 0) + 1
+        local showToken = self.SszorakMarkerMapShowToken
+        C_Timer.After(0, function()
+            if self.SszorakMarkerMapShowToken ~= showToken then return end
+            if preview == "Marker Map" then
+                if not self.IsSszorakMarkerMapPreview then return end
+            elseif self.EncounterID ~= encID then
+                return
+            end
+            LendSszorakMarkerMapCompass(self)
+            F:Show()
+        end)
     end
 
     local winds = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WindsHelper
@@ -762,6 +773,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    self.SszorakMarkerMapShowToken = (self.SszorakMarkerMapShowToken or 0) + 1
     if self.IsSszorakMarkerMapPreview and self.SszorakMarkerMapFrame then
         self:MakeDraggable(self.SszorakMarkerMapFrame, nil, false)
     end
