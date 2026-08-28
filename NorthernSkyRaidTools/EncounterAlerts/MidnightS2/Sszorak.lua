@@ -264,7 +264,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {Version = {versionNumber = 5}, group = "Sszorak", internalID = "MarkerMap", name = "Marker Map", text = nil, DisplayType = "Text", encID = encID,
         phase = nil, TTS = false, dur = 5, spellID = nil, id = 0.2, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true,
-        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 150,
+        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -400, yOffset = 150,
         UpdateInterval = 0.03, BackgroundColor = {0.03, 0.03, 0.03, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
         ShowPlayerArrow = true, MarkerOrder = {3, 8, 4, 5, 6, 7, 1, 2}, extraOptions = markerMapOptions,
     }
@@ -445,12 +445,43 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
     if markerMap and ((markerMap.enabled and self:EvaluateLoad(markerMap) and realpull) or preview == "Marker Map") then
         local F = CreateSszorakMarkerMap(self)
         ApplySszorakMarkerMapSettings(self, F, markerMap)
-        if self.SszorakMarkerMapPreviousRotateMinimap == nil then
-            self.SszorakMarkerMapPreviousRotateMinimap = GetCVar("rotateMinimap")
+        if self.SszorakMarkerMapTimers then
+            for _, timer in ipairs(self.SszorakMarkerMapTimers) do
+                timer:Cancel()
+            end
         end
-        C_CVar.SetCVar("rotateMinimap", "1")
-        MinimapCluster:SetRotateMinimap(true)
+        self.SszorakMarkerMapTimers = {}
         F:Hide()
+
+        local hideMarkerMap = function()
+            self.SszorakMarkerMapShowToken = (self.SszorakMarkerMapShowToken or 0) + 1
+            F:Hide()
+            if self.SszorakMarkerMapPreviousRotateMinimap ~= nil then
+                local rotateMinimap = self.SszorakMarkerMapPreviousRotateMinimap
+                C_CVar.SetCVar("rotateMinimap", rotateMinimap)
+                MinimapCluster:SetRotateMinimap(rotateMinimap == "1")
+                self.SszorakMarkerMapPreviousRotateMinimap = nil
+            end
+            ReturnSszorakMarkerMapCompass(self)
+        end
+
+        local showMarkerMap = function()
+            if self.SszorakMarkerMapPreviousRotateMinimap == nil then
+                self.SszorakMarkerMapPreviousRotateMinimap = GetCVar("rotateMinimap")
+            end
+            C_CVar.SetCVar("rotateMinimap", "1")
+            MinimapCluster:SetRotateMinimap(true)
+            F:Hide()
+            self.SszorakMarkerMapShowToken = (self.SszorakMarkerMapShowToken or 0) + 1
+            local showToken = self.SszorakMarkerMapShowToken
+            C_Timer.After(0, function()
+                if self.SszorakMarkerMapShowToken ~= showToken then return end
+                if self.IsSszorakMarkerMapPreview or self.EncounterID == encID then
+                    LendSszorakMarkerMapCompass(self)
+                    F:Show()
+                end
+            end)
+        end
 
         if preview == "Marker Map" then
             self.IsSszorakMarkerMapPreview = true
@@ -475,20 +506,18 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 frame.UpdateElapsed = 0
                 frame:SetScript("OnUpdate", frame.MarkerMapOnUpdate)
             end)
-        end
-
-        self.SszorakMarkerMapShowToken = (self.SszorakMarkerMapShowToken or 0) + 1
-        local showToken = self.SszorakMarkerMapShowToken
-        C_Timer.After(0, function()
-            if self.SszorakMarkerMapShowToken ~= showToken then return end
-            if preview == "Marker Map" then
-                if not self.IsSszorakMarkerMapPreview then return end
-            elseif self.EncounterID ~= encID then
-                return
+            showMarkerMap()
+        else
+            local debuffAlert = NSRT.EncounterAlerts[encID][id].Debuffs
+            if id == 14 and (not debuffAlert or not debuffAlert.timers or #debuffAlert.timers == 0) then
+                showMarkerMap()
+            elseif debuffAlert and debuffAlert.timers then
+                for _, debuffTime in ipairs(debuffAlert.timers) do
+                    self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(math.max(0, debuffTime - 5), showMarkerMap)
+                    self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(debuffTime + 15, hideMarkerMap)
+                end
             end
-            LendSszorakMarkerMapCompass(self)
-            F:Show()
-        end)
+        end
     end
 
     local winds = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WindsHelper
@@ -773,6 +802,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    if self.SszorakMarkerMapTimers then
+        for _, timer in ipairs(self.SszorakMarkerMapTimers) do
+            timer:Cancel()
+        end
+        self.SszorakMarkerMapTimers = nil
+    end
     self.SszorakMarkerMapShowToken = (self.SszorakMarkerMapShowToken or 0) + 1
     if self.IsSszorakMarkerMapPreview and self.SszorakMarkerMapFrame then
         self:MakeDraggable(self.SszorakMarkerMapFrame, nil, false)
