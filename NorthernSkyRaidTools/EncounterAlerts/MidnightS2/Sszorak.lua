@@ -505,7 +505,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             elseif debuffAlert and debuffAlert.timers then
                 for _, debuffTime in ipairs(debuffAlert.timers) do
                     self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(math.max(0, debuffTime - 5), showMarkerMap)
-                    self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(debuffTime + 15, hideMarkerMap)
+                    self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(debuffTime + 12, hideMarkerMap)
                 end
             end
         end
