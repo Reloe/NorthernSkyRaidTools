@@ -207,7 +207,7 @@ L[3497] = {
 
 -- Sszorak (3420)
 L[3420] = {
-    -- ["SetMarkers"] = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
+    ["SetMarkers"] = {group = "Ссзорак", name = "Напоминание о метке", text = "Установить метки"},
     ["DamageAmp"] = {group = "Ссзорак", name = "Усиление урона", text = "Усиление урона"},
     ["Debuffs"] = {group = "Ссзорак", name = "Дебаффы", text = "Дебаффы"},
     ["WindDebuffs"] = {group = "Ссзорак", name = "Дебаффы ветра", text = "Дебаффы ветра"},
@@ -216,7 +216,7 @@ L[3420] = {
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
     ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
-    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
+    -- ["VenomousSurgeAssignment"] = {group = "Ссзорак", name = "Drop Assignment", text = "Drop on"},
 }
 
 -- The Twin Fangs (3421)
