@@ -1,4 +1,5 @@
 ## Changelog
-- fix vashnik wave timers
-- add a player-stat display (default off)
-- fix a bug that prevented assignments to reach TR
+- finetune sszora timers
+- add default off alert to remind you to look at markers on sszorak
+- fix a bug when changing debuff overview settings
+- add optional setting on vashnik wave lines to always show them
