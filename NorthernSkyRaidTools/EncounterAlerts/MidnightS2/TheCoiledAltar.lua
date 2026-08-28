@@ -215,17 +215,18 @@ NSI.InitializeAlerts[encID] = function(self)
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false,
         Version = {versionNumber = 1, [1] = {BoxSize = 30}},
         extraOptions = {
+            { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."), height = 80 },
             { Type = "Slider", label = "Font Size", min = 8, max = 40, step = 1,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize or 12 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
             },
             { Type = "Slider", label = "Box Size", min = 30, max = 150, step = 1,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize or 30 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
             },
             { Type = "Dropdown", label = "Nameplate Anchor",
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateAnchor or "TOP" end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateAnchor = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateAnchor = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
                 values = [[return function()
                     return {
                         {label = "Top", value = "TOP"},
@@ -238,19 +239,23 @@ NSI.InitializeAlerts[encID] = function(self)
             },
             { Type = "Slider", label = "Nameplate X Offset", min = -200, max = 200, step = 1,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateXOffset or 0 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateXOffset = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateXOffset = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
             },
             { Type = "Slider", label = "Nameplate Y Offset", min = -200, max = 200, step = 1,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateYOffset or 0 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateYOffset = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateYOffset = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
             },
             { Type = "Checkbox", label = "Show All",
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.ShowAll or false end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.ShowAll = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.ShowAll = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
                 tooltip = {title = "Show All", desc = "Show the assignment boxes for both interrupt lines."},
             },
         },
-        Preview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It is displayed on the add nameplates during phases 2 and 3.")) end]],
+        Preview = [[return function(NSI)
+            if NSI:PreviewCoiledAltarInterruptDisplay() then
+                print(NSI:Loc("|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. This static preview is only provided for editing the box size and display settings."))
+            end
+        end]],
     }
     self:AddEncounterAlert(data)
 end
@@ -375,6 +380,93 @@ local function ResetCoiledAltarInterruptDisplay(self)
     end
 end
 
+function NSI:UpdateCoiledAltarInterruptPreview()
+    local preview = self.CoiledAltarInterruptPreviewFrame
+    if not preview then return end
+
+    local alert = self.CoiledAltarInterruptAlert or (NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptAssignments)
+    local interruptSettings = NSRT.InterruptSettings
+    local assignmentTable = self.Interrupts and self.Interrupts.assignTable or {}
+    local boxSize = alert and alert.BoxSize or 30
+    local fontScale = boxSize / 30
+    local alertFontSize = alert and alert.FontSize or 12
+    local nameFontPath = self.LSM:Fetch("font", interruptSettings.NameFont)
+    local numberFontPath = self.LSM:Fetch("font", interruptSettings.NumberFont)
+
+    preview:SetSize(boxSize * 2 + 20, boxSize + 20)
+    for boxIndex, box in ipairs(preview.boxes) do
+        box:Hide()
+        if boxIndex == (self.Interrupts and self.Interrupts.myID == 3 and 2 or 1) then
+            local lineNames = assignmentTable[boxIndex + 1] or {}
+            local currentName = lineNames[1]
+            local nextName = lineNames[2]
+            local boxColor = interruptSettings.InterruptDefaultColor
+            local textColor = interruptSettings.InterruptDefaultTextColor
+            if currentName and UnitIsUnit(currentName, "player") then
+                boxColor = interruptSettings.InterruptNowColor
+                textColor = interruptSettings.InterruptNowTextColor
+            elseif nextName and UnitIsUnit(nextName, "player") then
+                boxColor = interruptSettings.InterruptNextColor
+                textColor = interruptSettings.InterruptNextTextColor
+            end
+
+            box:ClearAllPoints()
+            box:SetPoint("CENTER", preview, "CENTER", boxIndex == 1 and -(boxSize + 10) / 2 or (boxSize + 10) / 2, 0)
+            box:SetSize(boxSize, boxSize)
+            box.Background:SetColorTexture(unpack(boxColor))
+
+            local number = preview.numbers[boxIndex]
+            number:ClearAllPoints()
+            number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
+            number:SetFont(numberFontPath, alertFontSize * fontScale, interruptSettings.NumberFontFlags)
+            number:SetTextColor(unpack(textColor))
+            number:SetText(1)
+
+            local name = preview.names[boxIndex]
+            name:ClearAllPoints()
+            name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
+            name:SetFont(nameFontPath, alertFontSize * fontScale, interruptSettings.NameFontFlags)
+            name:SetText(currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or NSAPI:Shorten("player", 12, false, "GlobalNickNames", true, false))
+            box:Show()
+        end
+    end
+end
+
+function NSI:PreviewCoiledAltarInterruptDisplay()
+    if self.CoiledAltarInterruptPreviewFrame and self.CoiledAltarInterruptPreviewFrame:IsShown() then
+        self.CoiledAltarInterruptPreviewFrame:Hide()
+        return false
+    end
+    if not self.CoiledAltarInterruptPreviewFrame then
+        local preview = CreateFrame("Frame", "NSRTCoiledAltarInterruptPreview", UIParent)
+        preview:SetFrameStrata("DIALOG")
+        preview:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        preview:SetFrameLevel(10)
+        preview.boxes = {}
+        preview.numbers = {}
+        preview.names = {}
+        for boxIndex = 1, 2 do
+            local box = CreateFrame("Frame", nil, preview)
+            box:SetFrameLevel(1)
+            box.Background = box:CreateTexture(nil, "ARTWORK")
+            box.Background:SetAllPoints()
+            box.Border = box:CreateTexture(nil, "BACKGROUND")
+            box.Border:SetColorTexture(0, 0, 0, 1)
+            box.Border:SetPoint("TOPLEFT", box, "TOPLEFT", -1, 1)
+            box.Border:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", 1, -1)
+            box:Show()
+            preview.boxes[boxIndex] = box
+            preview.numbers[boxIndex] = box:CreateFontString(nil, "OVERLAY")
+            preview.names[boxIndex] = box:CreateFontString(nil, "OVERLAY")
+        end
+        self.CoiledAltarInterruptPreviewFrame = preview
+    end
+    self:ReadInterruptNote(1)
+    self:UpdateCoiledAltarInterruptPreview()
+    self.CoiledAltarInterruptPreviewFrame:Show()
+    return true
+end
+
 function NSI:UpdateCoiledAltarInterruptDisplay()
     local alert = self.CoiledAltarInterruptAlert
     local interrupts = self.Interrupts
@@ -397,6 +489,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     end
 
     local boxSize = alert.BoxSize or 100
+    local alertFontSize = alert.FontSize or 12
     local nameplateAnchor = alert.NameplateAnchor or "TOP"
     local boxAnchor, plateAnchor = "BOTTOM", "TOP"
     if nameplateAnchor == "CENTER" then
@@ -415,8 +508,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local interruptSettings = NSRT.InterruptSettings
     local nameFontPath = self.LSM:Fetch("font", interruptSettings.NameFont)
     local numberFontPath = self.LSM:Fetch("font", interruptSettings.NumberFont)
-    local regularDisplayHeight = interruptSettings.Height or 100
-    local fontScale = boxSize / regularDisplayHeight * 1.15
+    local fontScale = boxSize / 30
     for unit, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
         if display.plate then
             local raidMarker = GetRaidTargetIndex(unit)
@@ -456,13 +548,13 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 local displayName = currentName and UnitExists(currentName) and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or ""
                 number:ClearAllPoints()
                 number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-                number:SetFont(numberFontPath, interruptSettings.NumberFontSize * fontScale, interruptSettings.NumberFontFlags)
+                number:SetFont(numberFontPath, alertFontSize * fontScale, interruptSettings.NumberFontFlags)
                 number:SetTextColor(unpack(textColor))
                 number:SetText(castCount)
                 number:SetAlpha(1)
                 name:ClearAllPoints()
                 name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
-                name:SetFont(nameFontPath, interruptSettings.NameFontSize * fontScale, interruptSettings.NameFontFlags)
+                name:SetFont(nameFontPath, alertFontSize * fontScale, interruptSettings.NameFontFlags)
                 name:SetText(displayName)
                 name:SetAlpha(1)
             end
