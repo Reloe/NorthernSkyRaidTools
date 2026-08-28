@@ -27,10 +27,11 @@ local venomousSurgeCastTimers = {
 local venomousSurgeBombsPerCast = 2
 local bombDuration = 10
 
-local markerMapDefaultOrder = {1, 2, 3, 4, 5, 6, 7, 8}
+local markerMapDefaultOrder = {3, 8, 4, 5, 6, 7, 1, 2}
 local markerMapDirections = {"North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest"}
 local markerMapIconFileIDs = {137001, 137002, 137003, 137004, 137005, 137006, 137007, 137008}
 local markerMapCircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_filled.png]]
+local markerMapRotationDegrees = -7
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
@@ -253,7 +254,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 if value == nil or value < 0 or value > 8 then return end
                 for difficultyID = 14, 16 do
                     local settings = NSRT.EncounterAlerts[3420][difficultyID].MarkerMap
-                    settings.MarkerOrder = settings.MarkerOrder or {1,2,3,4,5,6,7,8}
+                    settings.MarkerOrder = settings.MarkerOrder or {3,8,4,5,6,7,1,2}
                     settings.MarkerOrder[%d] = value
                 end
                 NSI.EncounterAlertStop[3420](NSI)
@@ -266,7 +267,7 @@ NSI.InitializeAlerts[encID] = function(self)
         phase = nil, TTS = false, dur = 5, spellID = nil, id = 0.2, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true,
         Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 150,
         UpdateInterval = 0.03, BackgroundColor = {0.03, 0.03, 0.03, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
-        ShowPlayerArrow = true, MarkerOrder = {1, 2, 3, 4, 5, 6, 7, 8}, extraOptions = markerMapOptions,
+        ShowPlayerArrow = true, MarkerOrder = {3, 8, 4, 5, 6, 7, 1, 2}, extraOptions = markerMapOptions,
     }
     self:AddEncounterAlert(data)
 end
@@ -409,7 +410,7 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
 
     local vertices = {}
     for index = 1, 8 do
-        local angle = math.rad(22.5 + ((index - 1) * 45))
+        local angle = math.rad(22.5 + ((index - 1) * 45) + markerMapRotationDegrees)
         vertices[index] = {math.sin(angle) * outlineRadius, math.cos(angle) * outlineRadius}
     end
     for index, edge in ipairs(F.Edges) do
@@ -420,7 +421,7 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
     end
 
     for slot, marker in ipairs(F.Markers) do
-        local angle = math.rad((slot - 1) * 45)
+        local angle = math.rad(((slot - 1) * 45) + markerMapRotationDegrees)
         local centerX = 0.5 + ((math.sin(angle) * markerRadius) / mapSize)
         local centerY = 0.5 - ((math.cos(angle) * markerRadius) / mapSize)
         if order[slot] == 0 then
