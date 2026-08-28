@@ -94,6 +94,28 @@ NSI.PaceComparisonDefaults = {
             {phase = 1, time = 395, unit = "boss1", expected = 0},
         },
     },
+    [3429] = { -- The Coiled Altar
+        thresholds = {
+            {phase = 1, time = 0, unit = "boss1", expected = 100},
+            {phase = 1, time = 10, unit = "boss1", expected = 92.5},
+            {phase = 1, time = 20, unit = "boss1", expected = 79.5},
+            {phase = 1, time = 30, unit = "boss1", expected = 72.1},
+            {phase = 1, time = 40, unit = "boss1", expected = 66.6},
+            {phase = 1, time = 50, unit = "boss1", expected = 63.4},
+            {phase = 1, time = 60, unit = "boss1", expected = 59},
+            {phase = 1, time = 70, unit = "boss1", expected = 54.5},
+            {phase = 1, time = 80, unit = "boss1", expected = 49.5},
+            {phase = 1, time = 90, unit = "boss1", expected = 45.3},
+            {phase = 1, time = 100, unit = "boss1", expected = 41.1},
+            {phase = 1, time = 110, unit = "boss1", expected = 34.7},
+            {phase = 1, time = 120, unit = "boss1", expected = 29.8},
+            {phase = 1, time = 130, unit = "boss1", expected = 23.6},
+            {phase = 1, time = 140, unit = "boss1", expected = 15.1},
+            {phase = 1, time = 150, unit = "boss1", expected = 8.3},
+            {phase = 1, time = 160, unit = "boss1", expected = 3.1},
+            {phase = 1, time = 170, unit = "boss1", expected = 0},
+        },
+    },
     [3421] = { -- The Twin Fangs
         thresholds = {
             {phase = 1, time = 0, unit = "boss1", expected = 100},
