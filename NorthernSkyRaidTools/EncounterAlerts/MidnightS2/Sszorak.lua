@@ -215,7 +215,7 @@ NSI.InitializeAlerts[encID] = function(self)
             get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.MarkerSize or 34 end]],
             set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.MarkerSize = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
         { Type = "Slider", label = "xOffset", min = -2000, max = 2000,
-            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.xOffset or 0 end]],
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.xOffset or -800 end]],
             set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.xOffset = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
         { Type = "Slider", label = "yOffset", min = -2000, max = 2000,
             get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.yOffset or 150 end]],
@@ -264,7 +264,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {Version = {versionNumber = 5}, group = "Sszorak", internalID = "MarkerMap", name = "Marker Map", text = nil, DisplayType = "Text", encID = encID,
         phase = nil, TTS = false, dur = 5, spellID = nil, id = 0.2, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true,
-        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -400, yOffset = 150,
+        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -800, yOffset = 150,
         UpdateInterval = 0.03, BackgroundColor = {0.03, 0.03, 0.03, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
         ShowPlayerArrow = true, MarkerOrder = {3, 8, 4, 5, 6, 7, 1, 2}, extraOptions = markerMapOptions,
     }
@@ -372,8 +372,6 @@ local function CreateSszorakMarkerMap(self)
             end
         end
     end
-    F:SetScript("OnUpdate", F.MarkerMapOnUpdate)
-
     F.Owner = self
     self.SszorakMarkerMapFrame = F
     return F
