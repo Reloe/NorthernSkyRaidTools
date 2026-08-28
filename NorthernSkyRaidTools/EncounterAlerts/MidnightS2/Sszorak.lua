@@ -284,18 +284,6 @@ local function GetValidMarkerOrder(settings)
     return order
 end
 
--- Places a small icon inside a full-map texture by sampling beyond the icon's
--- transparent edge. The whole texture can then use the protected compass angle
--- as a SetRotation input without exposing that angle to Lua arithmetic.
-local function SetPaddedMarkerTexCoords(texture, centerX, centerY, iconSize, mapSize)
-    local fraction = math.max(0.01, math.min(0.9, iconSize / mapSize))
-    local left = 0.5 - (centerX / fraction)
-    local right = 0.5 + ((1 - centerX) / fraction)
-    local top = 0.5 - (centerY / fraction)
-    local bottom = 0.5 + ((1 - centerY) / fraction)
-    texture:SetTexCoord(left, right, top, bottom)
-end
-
 local function ShowCompassTextureThroughHooks()
     if not MinimapCompassTexture then return end
     local metatable = getmetatable(MinimapCompassTexture)
@@ -354,7 +342,6 @@ local function CreateSszorakMarkerMap(self)
     F.Markers = {}
     for slot = 1, 8 do
         local marker = F:CreateTexture(nil, "OVERLAY")
-        marker:SetAllPoints(F)
         F.Markers[slot] = marker
     end
 
@@ -378,7 +365,11 @@ local function CreateSszorakMarkerMap(self)
         local ok, rotation = pcall(MinimapCompassTexture.GetRotation, MinimapCompassTexture)
         if not ok then return end
         for _, marker in ipairs(frame.Markers) do
-            pcall(marker.SetRotation, marker, rotation)
+            if marker:IsShown() then
+                local angle = marker.MarkerAngle + rotation
+                marker:ClearAllPoints()
+                marker:SetPoint("CENTER", frame, "CENTER", math.sin(angle) * frame.MarkerRadius, math.cos(angle) * frame.MarkerRadius)
+            end
         end
     end
     F:SetScript("OnUpdate", F.MarkerMapOnUpdate)
@@ -402,6 +393,7 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
     F:SetPoint(settings.Anchor or "CENTER", self.NSRTFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 150)
     F.UpdateInterval = settings.UpdateInterval or 0.03
     F.UpdateElapsed = 0
+    F.MarkerRadius = markerRadius
     F:SetScript("OnUpdate", F.MarkerMapOnUpdate)
 
     F.Background:SetSize(outlineRadius * 2, outlineRadius * 2)
@@ -421,14 +413,15 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
 
     for slot, marker in ipairs(F.Markers) do
         local angle = math.rad(((slot - 1) * 45) + markerMapRotationDegrees)
-        local centerX = 0.5 + ((math.sin(angle) * markerRadius) / mapSize)
-        local centerY = 0.5 - ((math.cos(angle) * markerRadius) / mapSize)
+        marker.MarkerAngle = angle
         if order[slot] == 0 then
             marker:Hide()
         else
             marker:SetTexture(string.format("Interface\\TargetingFrame\\UI-RaidTargetingIcon_%d", order[slot]), "CLAMP", "CLAMP")
-            SetPaddedMarkerTexCoords(marker, centerX, centerY, markerSize, mapSize)
-            marker:SetRotation(0)
+            marker:SetTexCoord(0, 1, 0, 1)
+            marker:SetSize(markerSize, markerSize)
+            marker:ClearAllPoints()
+            marker:SetPoint("CENTER", F, "CENTER", math.sin(angle) * markerRadius, math.cos(angle) * markerRadius)
             marker:Show()
         end
     end
