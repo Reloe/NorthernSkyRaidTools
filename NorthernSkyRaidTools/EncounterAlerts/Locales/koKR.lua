@@ -248,7 +248,7 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "똬리의 제단 2페", name = "2페 디버프", text = "디버프"},
     ["P2Shield"]        = {group = "똬리의 제단 2페", name = "2페 보호막", text = "보호막"},
     ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
-    -- ["InterruptAssignments"] = {group = "Coiled Altar P2", name = "Interrupt Assignments", text = "Interrupts"},
+    ["InterruptAssignments"] = {group = "똬리의 제단 2페", name = "차단 배정", text = "차단"},
     ["P2_5WrongTarget"] = {group = "똬리의 제단 3페", name = "대상 잘못 잡음", text = "대상 잘못 잡음"},
     ["P3Frontal"] = {group = "똬리의 제단 3페", name = "3페 전방스킬", text = "전방스킬"},
     ["P3Soak"] = {group = "똬리의 제단 3페", name = "3페 스킬 맞기", text = "스킬 맞기"},
