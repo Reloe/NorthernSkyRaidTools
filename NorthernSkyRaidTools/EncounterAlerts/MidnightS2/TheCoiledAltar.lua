@@ -211,15 +211,43 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar P2", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, FontSize = 12, BoxSize = 100,
+        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, FontSize = 12, BoxSize = 30,
+        NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false,
+        Version = {versionNumber = 1, [1] = {BoxSize = 30}},
         extraOptions = {
             { Type = "Slider", label = "Font Size", min = 8, max = 40, step = 1,
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize or 12 end]],
                 set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.FontSize = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
             },
             { Type = "Slider", label = "Box Size", min = 30, max = 150, step = 1,
-                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize or 100 end]],
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize or 30 end]],
                 set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.BoxSize = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+            },
+            { Type = "Dropdown", label = "Nameplate Anchor",
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateAnchor or "TOP" end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateAnchor = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                values = [[return function()
+                    return {
+                        {label = "Top", value = "TOP"},
+                        {label = "Center", value = "CENTER"},
+                        {label = "Left", value = "LEFT"},
+                        {label = "Right", value = "RIGHT"},
+                        {label = "Bottom", value = "BOTTOM"},
+                    }
+                end]],
+            },
+            { Type = "Slider", label = "Nameplate X Offset", min = -200, max = 200, step = 1,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateXOffset or 0 end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateXOffset = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+            },
+            { Type = "Slider", label = "Nameplate Y Offset", min = -200, max = 200, step = 1,
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateYOffset or 0 end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NameplateYOffset = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+            },
+            { Type = "Checkbox", label = "Show All",
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.ShowAll or false end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.ShowAll = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                tooltip = {title = "Show All", desc = "Show the assignment boxes for both interrupt lines."},
             },
         },
         Preview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It is displayed on the add nameplates during phases 2 and 3.")) end]],
@@ -328,6 +356,9 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 local function ResetCoiledAltarInterruptDisplay(self)
+    if self.CoiledAltarInterruptFrame then
+        self.CoiledAltarInterruptFrame:Hide()
+    end
     self.CoiledAltarInterruptAssignedBoss = nil
     self.CoiledAltarInterruptActive = false
     self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
@@ -348,7 +379,9 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local alert = self.CoiledAltarInterruptAlert
     local interrupts = self.Interrupts
     local assignmentTable = interrupts and interrupts.assignTable
-    local active = self.CoiledAltarInterruptActive and self.Phase and (self.Phase == 2 or self.Phase == 3) and alert and alert.enabled and self:EvaluateLoad(alert)
+    local phaseAllowed = self.Phase == 2 or self.Phase == 3
+    local alertLoad = alert and self:EvaluateLoad(alert)
+    local active = self.CoiledAltarInterruptActive and phaseAllowed and alert and alert.enabled and alertLoad
     if not active or not assignmentTable or not assignmentTable[2] or not assignmentTable[3] then
         for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
             for boxIndex, box in ipairs(display.boxes) do
@@ -363,63 +396,79 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
         return
     end
 
-    local fontSize = alert.FontSize or 12
     local boxSize = alert.BoxSize or 100
+    local nameplateAnchor = alert.NameplateAnchor or "TOP"
+    local boxAnchor, plateAnchor = "BOTTOM", "TOP"
+    if nameplateAnchor == "CENTER" then
+        boxAnchor, plateAnchor = "CENTER", "CENTER"
+    elseif nameplateAnchor == "LEFT" then
+        boxAnchor, plateAnchor = "RIGHT", "LEFT"
+    elseif nameplateAnchor == "RIGHT" then
+        boxAnchor, plateAnchor = "LEFT", "RIGHT"
+    elseif nameplateAnchor == "BOTTOM" then
+        boxAnchor, plateAnchor = "TOP", "BOTTOM"
+    end
+    local nameplateXOffset = alert.NameplateXOffset or 0
+    local nameplateYOffset = alert.NameplateYOffset or 0
     local assignedBoss = self.CoiledAltarInterruptAssignedBoss
+    local assignedLine = self.Interrupts.myID == 2 and 1 or self.Interrupts.myID == 3 and 2
     local interruptSettings = NSRT.InterruptSettings
-    local fontPath = self.LSM:Fetch("font", interruptSettings.NameFont)
+    local nameFontPath = self.LSM:Fetch("font", interruptSettings.NameFont)
+    local numberFontPath = self.LSM:Fetch("font", interruptSettings.NumberFont)
+    local regularDisplayHeight = interruptSettings.Height or 100
+    local fontScale = boxSize / regularDisplayHeight * 1.15
     for unit, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
         if display.plate then
-            local isBoss3 = UnitIsUnit(unit, "boss3")
-            local isBoss4 = UnitIsUnit(unit, "boss4")
-            local bossMatches = {isBoss3, isBoss4}
+            local raidMarker = GetRaidTargetIndex(unit)
+            local hasRaidMarker = issecretvalue(raidMarker)
+            for boxIndex, box in ipairs(display.boxes) do
+                box:SetAlpha(0)
+                box:Hide()
+            end
             for bossIndex, box in ipairs(display.boxes) do
                 local bossUnit = bossIndex == 1 and "boss3" or "boss4"
+                local displayLine = bossIndex == 2 and 2 or 1
+                local lineNames = assignmentTable[displayLine + 1]
+                local countUnit = assignedBoss or bossUnit
+                local castCount = self.CoiledAltarInterruptCastCounts[countUnit] or 1
+                local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
+                local nextName = #lineNames > 0 and lineNames[(castCount % #lineNames) + 1]
                 local boxColor = interruptSettings.InterruptDefaultColor
                 local textColor = interruptSettings.InterruptDefaultTextColor
-                local activeLine
-                if assignedBoss then
-                    activeLine = assignedBoss == bossUnit and 2 or 1
-                    local names = assignmentTable[activeLine + 1]
-                    local castCount = self.CoiledAltarInterruptCastCounts[bossUnit] or 1
-                    if #names > 0 then
-                        local currentName = names[((castCount - 1) % #names) + 1]
-                        local nextName = names[(castCount % #names) + 1]
-                        if UnitIsUnit(currentName, "player") then
-                            boxColor = interruptSettings.InterruptNowColor
-                            textColor = interruptSettings.InterruptNowTextColor
-                        elseif UnitIsUnit(nextName, "player") then
-                            boxColor = interruptSettings.InterruptNextColor
-                            textColor = interruptSettings.InterruptNextTextColor
-                        end
-                    end
+                if currentName and UnitIsUnit(currentName, "player") then
+                    boxColor = interruptSettings.InterruptNowColor
+                    textColor = interruptSettings.InterruptNowTextColor
+                elseif nextName and UnitIsUnit(nextName, "player") then
+                    boxColor = interruptSettings.InterruptNextColor
+                    textColor = interruptSettings.InterruptNextTextColor
                 end
+                box:ClearAllPoints()
+                box:SetPoint(boxAnchor, display.plate, plateAnchor, nameplateXOffset, nameplateYOffset)
                 box:SetSize(boxSize, boxSize)
                 box.Background:SetColorTexture(unpack(boxColor))
-                box:Show()
-                box:SetAlphaFromBoolean(bossMatches[bossIndex], 1, 0)
+                local boxVisible = (alert.ShowAll or assignedLine == displayLine) and ((bossIndex == 2) == hasRaidMarker)
+                if boxVisible then
+                    box:SetAlpha(1)
+                    box:Show()
+                end
+                local number = display.numbers[bossIndex]
+                local name = display.names[bossIndex]
+                local displayName = currentName and UnitExists(currentName) and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or ""
+                number:ClearAllPoints()
+                number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
+                number:SetFont(numberFontPath, interruptSettings.NumberFontSize * fontScale, interruptSettings.NumberFontFlags)
+                number:SetTextColor(unpack(textColor))
+                number:SetText(castCount)
+                number:SetAlpha(1)
+                name:ClearAllPoints()
+                name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
+                name:SetFont(nameFontPath, interruptSettings.NameFontSize * fontScale, interruptSettings.NameFontFlags)
+                name:SetText(displayName)
+                name:SetAlpha(1)
             end
-            for lineIndex = 1, 2 do
-                local line = display.lines[lineIndex]
-                local names = assignmentTable[lineIndex + 1]
-                for bossIndex = 1, 2 do
-                    local fontString = line[bossIndex]
-                    local bossUnit = bossIndex == 1 and "boss3" or "boss4"
-                    local castCount = self.CoiledAltarInterruptCastCounts[bossUnit] or 1
-                    local name = ""
-                    if #names > 0 then
-                        name = names[((castCount - 1) % #names) + 1]
-                    end
-                    local lineTextColor = interruptSettings.InterruptDefaultTextColor
-                    if activeLine == lineIndex then
-                        lineTextColor = textColor
-                    end
-                    fontString:SetFont(fontPath, fontSize, interruptSettings.NameFontFlags)
-                    fontString:SetTextColor(unpack(lineTextColor))
-                    fontString:SetText(name)
-                    local isBossUnit = bossIndex == 1 and isBoss3 or isBoss4
-                    local shouldShow = not assignedBoss or (lineIndex == 1 and assignedBoss ~= bossUnit) or (lineIndex == 2 and assignedBoss == bossUnit)
-                    fontString:SetAlphaFromBoolean(isBossUnit, shouldShow and 1 or 0, 0)
+            for lineIndex, line in ipairs(display.lines) do
+                for bossIndex, fontString in ipairs(line) do
+                    fontString:SetAlpha(0)
                 end
             end
         end
@@ -428,6 +477,7 @@ end
 
 local function AddCoiledAltarInterruptNameplate(self, unit)
     local plate = C_NamePlate.GetNamePlateForUnit(unit)
+    local interruptSettings = NSRT.InterruptSettings
     self.CoiledAltarInterruptNameplates = self.CoiledAltarInterruptNameplates or {}
     if not plate or UnitLevel(unit) == 92 then
         local oldDisplay = self.CoiledAltarInterruptNameplates[unit]
@@ -441,7 +491,7 @@ local function AddCoiledAltarInterruptNameplate(self, unit)
     end
     local display = self.CoiledAltarInterruptNameplates[unit]
     if not display then
-        display = {plate = plate, lines = {}, boxes = {}}
+        display = {plate = plate, lines = {}, numbers = {}, names = {}, boxes = {}}
         self.CoiledAltarInterruptNameplates[unit] = display
         for bossIndex = 1, 2 do
             local box = CreateFrame("Frame", nil, self.CoiledAltarInterruptFrame)
@@ -455,6 +505,19 @@ local function AddCoiledAltarInterruptNameplate(self, unit)
             box.Border:SetColorTexture(0, 0, 0, 1)
             box.Border:SetPoint("TOPLEFT", box, "TOPLEFT", -1, 1)
             box.Border:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", 1, -1)
+            display.numbers[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.numbers[bossIndex]:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
+            display.names[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.names[bossIndex]:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
+        end
+    elseif not display.numbers then
+        display.numbers = {}
+        display.names = {}
+        for bossIndex, box in ipairs(display.boxes) do
+            display.numbers[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.numbers[bossIndex]:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
+            display.names[bossIndex] = box:CreateFontString(nil, "OVERLAY")
+            display.names[bossIndex]:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
         end
         for lineIndex = 1, 2 do
             display.lines[lineIndex] = {}
@@ -526,7 +589,8 @@ end
 
 local function SetCoiledAltarInterruptPhase(self, active)
     local alert = self.CoiledAltarInterruptAlert
-    if active and (not alert or not alert.enabled or not self:EvaluateLoad(alert)) then
+    local alertLoad = alert and self:EvaluateLoad(alert)
+    if active and (not alert or not alert.enabled or not alertLoad) then
         active = false
     end
     self.CoiledAltarInterruptActive = active
@@ -534,6 +598,7 @@ local function SetCoiledAltarInterruptPhase(self, active)
     self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
     self.CoiledAltarInterruptCasting = {}
     if active then
+        self.CoiledAltarInterruptFrame:Show()
         self:ReadInterruptNote(1)
         RefreshCoiledAltarInterruptNameplates(self)
         UpdateCoiledAltarInterruptMarker(self)
