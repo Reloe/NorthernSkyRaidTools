@@ -148,8 +148,8 @@ function NSI:ReadInterruptNote(StartNumber)
     str = str:gsub("||r", "")
     str = str:gsub("||c%x%x%x%x%x%x%x%x", "")
     str = strtrim(str)
-    for line in string.gmatch(str,'[^\r\n]+') do
-        line = strtrim(line)
+    for rawLine in string.gmatch(str,'[^\r\n]+') do
+        local line = strtrim(rawLine)
         if strlower(line) == "intend" then
             assign = false
             self.Interrupts.myTrackedID = self.Interrupts.myID
@@ -161,8 +161,8 @@ function NSI:ReadInterruptNote(StartNumber)
             local num = 0
             count = count+1
             self.Interrupts.assignTable[count] = self.Interrupts.assignTable[count] or {}
-            for name in line:gmatch("%S+") do
-                name = NSAPI:GetChar(name, true, "GlobalNickNames")
+            for rawName in line:gmatch("%S+") do
+                local name = NSAPI:GetChar(rawName, true, "GlobalNickNames")
                 if UnitInRaid(name) then
                     num = num+1
                     table.insert(self.Interrupts.assignTable[count], name)
