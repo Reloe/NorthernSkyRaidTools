@@ -18,7 +18,7 @@ local damageAmpTimers = {
 local venomousSurgeCastTimers = {
     [14] = {36.25, 95, 188.3, 247, 340.3},
     [15] = {32.2, 84.4, 170.3, 222.6, 308.5, 360.8},
-    [16] = {29, 76, 156, 203, 283, 330},
+    [16] = {29.5, 76, 156, 203, 283, 330},
 }
 
 -- boss1target briefly changes to each bomb target during the bomb cast.
@@ -26,6 +26,11 @@ local venomousSurgeCastTimers = {
 -- We use boss1 UNIT_TARGET events to determine the bomb targets.
 local venomousSurgeBombsPerCast = 2
 local bombDuration = 10
+
+local markerMapDefaultOrder = {1, 2, 3, 4, 5, 6, 7, 8}
+local markerMapDirections = {"North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest"}
+local markerMapIconFileIDs = {137001, 137002, 137003, 137004, 137005, 137006, 137007, 137008}
+local markerMapCircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_filled.png]]
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
@@ -46,14 +51,6 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Sszorak", internalID = "SetMarkers", name = "Mark Reminder", text = "Set Markers", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
-        difficulties = {16}, enabled = false,
-        timers = {
-            [16] = {9.9, 137, 264},
-        },
-    }
-    self:AddEncounterAlert(data)
-
     local data = {group = "Sszorak", internalID = "DamageAmp", name = "Damage Amp", text = "Damage Amp", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6, spellID = 1286033,
         timers = {
             [15] = damageAmpTimers[15],
@@ -65,8 +62,8 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "Bait", text = "Bait", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1305959,
         loadConditions = tankConditions,
         timers = {
-            [15] = venomousSurgeCastTimers[15],
-            [16] = venomousSurgeCastTimers[16],
+            [15] = {32.2, 84.4, 170.4, 222.6, 308.5, 360.8},
+            [16] = {28.8, 76.8, 156, 203, 282.2, 330.2},
         },
     }
     self:AddEncounterAlert(data)
@@ -87,10 +84,10 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, [1] = {loadConditions = {}}}, group = "Sszorak", internalID = "SerpentsFury", name = "Serpent's Fury", text = "Stack Up", DisplayType = "Text", encID = encID, phase = 1, TTS = "Stack", dur = 6,
-        loadConditions = {},
+    local data = {group = "Sszorak", internalID = "SerpentsFury", name = "Serpent's Fury", text = "Stack Up", DisplayType = "Text", encID = encID, phase = 1, TTS = "Stack", dur = 6,
+        loadConditions = nontankConditions,
         timers = {
-            [16] = {25.5, 75.5, 152.5, 202.5, 279.5, 326.6},
+            [16] = {25, 74.5, 152, 202, 281, 329},
         },
     }
     self:AddEncounterAlert(data)
@@ -175,11 +172,305 @@ NSI.InitializeAlerts[encID] = function(self)
         Preview = AssignmentPreview,
     }
     self:AddEncounterAlert(data)
+
+    local MarkerMapPreview = [[
+        return function(self)
+            if self.IsSszorakMarkerMapPreview then
+                self.EncounterAlertStop[3420](self)
+            else
+                self.EncounterAlertStart[3420](self, 16, "Marker Map")
+            end
+        end
+    ]]
+
+    local markerDropdownValues = [[return function()
+        local names = {"Star", "Circle", "Diamond", "Triangle", "Moon", "Square", "Cross", "Skull"}
+        local values = {{label = "None", value = 0}}
+        for markerID, name in ipairs(names) do
+            values[#values + 1] = {
+                label = string.format("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%d:18:18|t %s", markerID, name),
+                value = markerID,
+            }
+        end
+        return values
+    end]]
+
+    local markerMapOptions = {
+        { Type = "Label", text = "Rotating Marker Map" },
+        { Type = "Slider", label = "Scale", min = 0.5, max = 2, step = 0.05, decimals = 2, usedecimals = true,
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.Scale or 1 end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.Scale = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Slider", label = "MapSize", min = 140, max = 500, step = 10,
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.MapSize or 240 end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.MapSize = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Slider", label = "MarkerSize", min = 16, max = 80, step = 1,
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.MarkerSize or 34 end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.MarkerSize = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Slider", label = "xOffset", min = -2000, max = 2000,
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.xOffset or 0 end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.xOffset = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Slider", label = "yOffset", min = -2000, max = 2000,
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.yOffset or 150 end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.yOffset = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Slider", label = "UpdateInterval", min = 0.01, max = 0.2, step = 0.01, decimals = 2, usedecimals = true,
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.UpdateInterval or 0.03 end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.UpdateInterval = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Color", label = "BackgroundColor",
+            get = [[return function() local c = NSRT.EncounterAlerts[3420][16].MarkerMap.BackgroundColor or {0.03,0.03,0.03,0.82} return c[1],c[2],c[3],c[4] end]],
+            set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.BackgroundColor = {r,g,b,a} end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Color", label = "BorderColor",
+            get = [[return function() local c = NSRT.EncounterAlerts[3420][16].MarkerMap.BorderColor or {0.15,0.85,1,1} return c[1],c[2],c[3],c[4] end]],
+            set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.BorderColor = {r,g,b,a} end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Color", label = "PlayerColor",
+            get = [[return function() local c = NSRT.EncounterAlerts[3420][16].MarkerMap.PlayerColor or {1,1,1,1} return c[1],c[2],c[3],c[4] end]],
+            set = [[return function(NSI, r,g,b,a) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.PlayerColor = {r,g,b,a} end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]]},
+        { Type = "Checkbox", label = "ShowPlayerArrow",
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.ShowPlayerArrow ~= false end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.ShowPlayerArrow = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]],
+            tooltip = {title = "ShowPlayerArrow", desc = "Shows the player at the center, facing toward the top of the map."}},
+        { Type = "Label", text = "World marker positions" },
+    }
+
+    for slot, direction in ipairs(markerMapDirections) do
+        markerMapOptions[#markerMapOptions + 1] = {
+            Type = "Dropdown",
+            label = direction,
+            values = markerDropdownValues,
+            get = string.format([[return function()
+                local order = NSRT.EncounterAlerts[3420][16].MarkerMap.MarkerOrder
+                return order and order[%d] or %d
+            end]], slot, slot),
+            set = string.format([[return function(NSI, value)
+                value = tonumber(value)
+                if value == nil or value < 0 or value > 8 then return end
+                for difficultyID = 14, 16 do
+                    local settings = NSRT.EncounterAlerts[3420][difficultyID].MarkerMap
+                    settings.MarkerOrder = settings.MarkerOrder or {1,2,3,4,5,6,7,8}
+                    settings.MarkerOrder[%d] = value
+                end
+                NSI.EncounterAlertStop[3420](NSI)
+                NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map")
+            end]], slot),
+        }
+    end
+
+    local data = {Version = {versionNumber = 5}, group = "Sszorak", internalID = "MarkerMap", name = "Marker Map", text = nil, DisplayType = "Text", encID = encID,
+        phase = nil, TTS = false, dur = 5, spellID = nil, id = 0.2, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true,
+        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 150,
+        UpdateInterval = 0.03, BackgroundColor = {0.03, 0.03, 0.03, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
+        ShowPlayerArrow = true, MarkerOrder = {1, 2, 3, 4, 5, 6, 7, 8}, extraOptions = markerMapOptions,
+    }
+    self:AddEncounterAlert(data)
+end
+
+local function GetValidMarkerOrder(settings)
+    local configured = settings.MarkerOrder or markerMapDefaultOrder
+    local order = {}
+    for slot = 1, 8 do
+        local markerID = tonumber(configured[slot])
+        if markerID == nil or markerID < 0 or markerID > 8 then
+            markerID = markerMapDefaultOrder[slot]
+        end
+        order[slot] = markerID
+    end
+    return order
+end
+
+-- Places a small icon inside a full-map texture by sampling beyond the icon's
+-- transparent edge. The whole texture can then use the protected compass angle
+-- as a SetRotation input without exposing that angle to Lua arithmetic.
+local function SetPaddedMarkerTexCoords(texture, centerX, centerY, iconSize, mapSize)
+    local fraction = math.max(0.01, math.min(0.9, iconSize / mapSize))
+    local left = 0.5 - (centerX / fraction)
+    local right = 0.5 + ((1 - centerX) / fraction)
+    local top = 0.5 - (centerY / fraction)
+    local bottom = 0.5 + ((1 - centerY) / fraction)
+    texture:SetTexCoord(left, right, top, bottom)
+end
+
+local function ShowCompassTextureThroughHooks()
+    if not MinimapCompassTexture then return end
+    local metatable = getmetatable(MinimapCompassTexture)
+    local methods = metatable and metatable.__index
+    local realShow = type(methods) == "table" and methods.Show
+    if type(realShow) == "function" then
+        realShow(MinimapCompassTexture)
+    else
+        MinimapCompassTexture:Show()
+    end
+end
+
+local function LendSszorakMarkerMapCompass(self)
+    if not MinimapCompassTexture then return end
+    if not self.SszorakMarkerMapCompassState then
+        self.SszorakMarkerMapCompassState = {
+            shown = MinimapCompassTexture:IsShown(),
+            alpha = MinimapCompassTexture:GetAlpha(),
+        }
+    end
+    if not self.SszorakMarkerMapCompassState.shown then
+        MinimapCompassTexture:SetAlpha(0)
+    end
+    ShowCompassTextureThroughHooks()
+end
+
+local function ReturnSszorakMarkerMapCompass(self)
+    local state = self.SszorakMarkerMapCompassState
+    if not state or not MinimapCompassTexture then return end
+    if not state.shown then
+        MinimapCompassTexture:Hide()
+    end
+    MinimapCompassTexture:SetAlpha(state.alpha or 1)
+    self.SszorakMarkerMapCompassState = nil
+end
+
+local function CreateSszorakMarkerMap(self)
+    if self.SszorakMarkerMapFrame then return self.SszorakMarkerMapFrame end
+
+    local F = CreateFrame("Frame", "NSRTSszorakMarkerMap", self.NSRTFrame)
+    F:SetFrameStrata("MEDIUM")
+    F:SetClipsChildren(false)
+    F:Hide()
+
+    F.Background = F:CreateTexture(nil, "BACKGROUND")
+    F.Background:SetTexture(markerMapCircleTexture)
+    F.Background:SetPoint("CENTER")
+
+    F.Edges = {}
+    for index = 1, 8 do
+        local edge = F:CreateLine(nil, "ARTWORK")
+        edge:SetThickness(2)
+        F.Edges[index] = edge
+    end
+
+    F.Markers = {}
+    for slot = 1, 8 do
+        local marker = F:CreateTexture(nil, "OVERLAY")
+        marker:SetAllPoints(F)
+        F.Markers[slot] = marker
+    end
+
+    F.Player = F:CreateTexture(nil, "OVERLAY")
+    F.Player:SetPoint("CENTER", F, "CENTER", 0, 0)
+    F.Player:SetTexture([[Interface\Minimap\MinimapArrow]])
+
+    F.MarkerMapOnUpdate = function(frame, elapsed)
+        frame.UpdateElapsed = (frame.UpdateElapsed or 0) + elapsed
+        if frame.UpdateElapsed < (frame.UpdateInterval or 0.03) then return end
+        frame.UpdateElapsed = 0
+        if not MinimapCompassTexture then return end
+        local owner = frame.Owner
+        if owner then
+            if GetCVar("rotateMinimap") ~= "1" then
+                C_CVar.SetCVar("rotateMinimap", "1")
+                MinimapCluster:SetRotateMinimap(true)
+            end
+            LendSszorakMarkerMapCompass(owner)
+        end
+        local ok, rotation = pcall(MinimapCompassTexture.GetRotation, MinimapCompassTexture)
+        if not ok then return end
+        for _, marker in ipairs(frame.Markers) do
+            pcall(marker.SetRotation, marker, rotation)
+        end
+    end
+    F:SetScript("OnUpdate", F.MarkerMapOnUpdate)
+
+    F.Owner = self
+    self.SszorakMarkerMapFrame = F
+    return F
+end
+
+local function ApplySszorakMarkerMapSettings(self, F, settings)
+    local mapSize = settings.MapSize or 240
+    local markerSize = settings.MarkerSize or 34
+    local outlineRadius = mapSize * 0.43
+    local markerRadius = outlineRadius * math.cos(math.pi / 8)
+    local borderColor = settings.BorderColor or {0.15, 0.85, 1, 1}
+    local order = GetValidMarkerOrder(settings)
+
+    F:SetSize(mapSize, mapSize)
+    F:SetScale(settings.Scale or 1)
+    F:ClearAllPoints()
+    F:SetPoint(settings.Anchor or "CENTER", self.NSRTFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 150)
+    F.UpdateInterval = settings.UpdateInterval or 0.03
+    F.UpdateElapsed = 0
+    F:SetScript("OnUpdate", F.MarkerMapOnUpdate)
+
+    F.Background:SetSize(outlineRadius * 2, outlineRadius * 2)
+    F.Background:SetVertexColor(unpack(settings.BackgroundColor or {0.03, 0.03, 0.03, 0.82}))
+
+    local vertices = {}
+    for index = 1, 8 do
+        local angle = math.rad(22.5 + ((index - 1) * 45))
+        vertices[index] = {math.sin(angle) * outlineRadius, math.cos(angle) * outlineRadius}
+    end
+    for index, edge in ipairs(F.Edges) do
+        local nextIndex = index == 8 and 1 or index + 1
+        edge:SetStartPoint("CENTER", F, "CENTER", vertices[index][1], vertices[index][2])
+        edge:SetEndPoint("CENTER", F, "CENTER", vertices[nextIndex][1], vertices[nextIndex][2])
+        edge:SetColorTexture(unpack(borderColor))
+    end
+
+    for slot, marker in ipairs(F.Markers) do
+        local angle = math.rad((slot - 1) * 45)
+        local centerX = 0.5 + ((math.sin(angle) * markerRadius) / mapSize)
+        local centerY = 0.5 - ((math.cos(angle) * markerRadius) / mapSize)
+        if order[slot] == 0 then
+            marker:Hide()
+        else
+            marker:SetTexture(markerMapIconFileIDs[order[slot]], "CLAMP", "CLAMP")
+            SetPaddedMarkerTexCoords(marker, centerX, centerY, markerSize, mapSize)
+            marker:SetRotation(0)
+            marker:Show()
+        end
+    end
+
+    F.Player:SetSize(math.max(18, markerSize * 0.85), math.max(18, markerSize * 0.85))
+    F.Player:SetVertexColor(unpack(settings.PlayerColor or {1, 1, 1, 1}))
+    F.Player:SetShown(settings.ShowPlayerArrow ~= false)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, preview)
     local realpull = not id
     id = id or self:DifficultyCheck({14, 15, 16}) or 0
+    local markerMap = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].MarkerMap
+    if markerMap and ((markerMap.enabled and self:EvaluateLoad(markerMap) and realpull) or preview == "Marker Map") then
+        local F = CreateSszorakMarkerMap(self)
+        ApplySszorakMarkerMapSettings(self, F, markerMap)
+        if self.SszorakMarkerMapPreviousRotateMinimap == nil then
+            self.SszorakMarkerMapPreviousRotateMinimap = GetCVar("rotateMinimap")
+        end
+        C_CVar.SetCVar("rotateMinimap", "1")
+        MinimapCluster:SetRotateMinimap(true)
+        LendSszorakMarkerMapCompass(self)
+        F:Show()
+
+        if preview == "Marker Map" then
+            self.IsSszorakMarkerMapPreview = true
+            self:MakeDraggable(F, markerMap, true, false, function(_, settings)
+                for difficultyID = 14, 16 do
+                    local difficultySettings = NSRT.EncounterAlerts[encID][difficultyID].MarkerMap
+                    difficultySettings.xOffset = settings.xOffset
+                    difficultySettings.yOffset = settings.yOffset
+                    difficultySettings.Anchor = settings.Anchor
+                    difficultySettings.relativeTo = settings.relativeTo
+                end
+            end)
+            local dragStart = F:GetScript("OnDragStart")
+            local dragStop = F:GetScript("OnDragStop")
+            F:SetScript("OnDragStart", function(frame, ...)
+                frame.MarkerMapDragging = true
+                if dragStart then dragStart(frame, ...) end
+            end)
+            F:SetScript("OnDragStop", function(frame, ...)
+                if dragStop then dragStop(frame, ...) end
+                frame.MarkerMapDragging = false
+                frame.UpdateElapsed = 0
+                frame:SetScript("OnUpdate", frame.MarkerMapOnUpdate)
+            end)
+        end
+    end
+
     local winds = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WindsHelper
     if winds and ((winds.enabled and self:EvaluateLoad(winds) and realpull) or (preview and preview == "Winds Helper")) then
         local s = winds
@@ -409,39 +700,32 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             if assignmentActive then
                 self.AssignmentWindowCaptures = (self.AssignmentWindowCaptures or 0) + 1
                 local isPlayerTarget = UnitIsUnit("boss1target", "player")
-                local displayText
-                if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
-                    displayText = string.format("%s |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", assignment.text or "Drop on", self.WindsOrder[self.AssignmentWindowCaptures])
-                else
-                    displayText = string.format("%s %s", assignment.text or "Drop on", NSI:EncounterAlertLoc("Backup"))
-                end
-
-                local info = self:CreateReminder({
-                    text = "",
-                    DisplayType = "Text",
-                    spellID = assignment.spellID,
-                    dur = assignment.dur,
-                    encID = encID,
-                    phase = self.Phase,
-                    TTS = false,
-                    sticky = 0,
-                    IsAlert = true,
-                }, true)
-                if info then
+                if not issecretvalue(isPlayerTarget) and isPlayerTarget then
+                    local displayText
                     if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
-                        info.SecretDisplayText = displayText
+                        displayText = string.format("%s |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", assignment.text or "Drop on", self.WindsOrder[self.AssignmentWindowCaptures])
                     else
-                        info.text = displayText
+                        displayText = string.format("%s %s", assignment.text or "Drop on", NSI:EncounterAlertLoc("Backup"))
                     end
-                    local frame = self:DisplayReminder(info)
-                    if frame then
-                        if not frame.SszorakAssignmentAlphaReset then
-                            frame.SszorakAssignmentAlphaReset = true
-                            frame:HookScript("OnHide", function(hiddenFrame)
-                                hiddenFrame.Text:SetAlpha(1)
-                            end)
+
+                    local info = self:CreateReminder({
+                        text = "",
+                        DisplayType = "Text",
+                        spellID = assignment.spellID,
+                        dur = assignment.dur,
+                        encID = encID,
+                        phase = self.Phase,
+                        TTS = false,
+                        sticky = 0,
+                        IsAlert = true,
+                    }, true)
+                    if info then
+                        if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
+                            info.SecretDisplayText = displayText
+                        else
+                            info.text = displayText
                         end
-                        frame.Text:SetAlphaFromBoolean(isPlayerTarget, 1, 0)
+                        self:DisplayReminder(info)
                     end
                 end
             end
@@ -469,6 +753,21 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    if self.IsSszorakMarkerMapPreview and self.SszorakMarkerMapFrame then
+        self:MakeDraggable(self.SszorakMarkerMapFrame, nil, false)
+    end
+    self.IsSszorakMarkerMapPreview = false
+    if self.SszorakMarkerMapFrame then
+        self.SszorakMarkerMapFrame:Hide()
+    end
+    if self.SszorakMarkerMapPreviousRotateMinimap ~= nil then
+        local rotateMinimap = self.SszorakMarkerMapPreviousRotateMinimap
+        C_CVar.SetCVar("rotateMinimap", rotateMinimap)
+        MinimapCluster:SetRotateMinimap(rotateMinimap == "1")
+        self.SszorakMarkerMapPreviousRotateMinimap = nil
+    end
+    ReturnSszorakMarkerMapCompass(self)
+
     self:EncounterRegister("SszorakWinds", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
     if self.IsSszorakWindsPreview and self.WindsFrame then
         self:MakeDraggable(self.WindsFrame, nil, false)
