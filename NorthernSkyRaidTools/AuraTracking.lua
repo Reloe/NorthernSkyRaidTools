@@ -1681,7 +1681,7 @@ end
 local function ConfigureDebuffOverviewButton(self, state, button, unit)
     local settings = NSRT.ReminderSettings.DebuffOverviewSettings
     local width = settings.Width
-    local height = settings.Height
+    local height = state.height or settings.Height
     local buttonWidth = width + height
     local fontPath = self.LSM:Fetch("font", settings.Font)
     local buttonLevel = button:GetFrameLevel()
@@ -1729,16 +1729,16 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
     end
     local barTexture = self.LSM:Fetch("statusbar", settings.Texture)
     regions.bar:SetStatusBarTexture(barTexture)
-    regions.bar:SetStatusBarColor(unpack(settings.barColors))
+    regions.bar:SetStatusBarColor(unpack(state.barColors or settings.barColors))
     if state.useBarColorAsBackground then
         regions.background:SetAllPoints(regions.bar)
         regions.background:SetTexture(barTexture)
-        regions.background:SetVertexColor(unpack(settings.barColors))
+        regions.background:SetVertexColor(unpack(state.backgroundColors or settings.barColors))
         regions.background:Show()
     else
         regions.background:Hide()
     end
-    local backgroundColors = settings.backgroundColors
+    local backgroundColors = state.backgroundColors or settings.backgroundColors
     regions.bar:SetBackdropColor(unpack(backgroundColors))
     regions.border:SetBackdropBorderColor(unpack(settings.borderColors))
     regions.textLayer:SetFrameLevel(button:GetFrameLevel() + 2)
@@ -1775,12 +1775,26 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
     end
 end
 
-function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications)
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, overrides)
     containerName = containerName or "Default"
     self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
     local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
     if existingSet then
+        if useApplicationBar ~= nil or maxApplications ~= nil or overrides then
+            for _, state in ipairs(existingSet) do
+                if useApplicationBar ~= nil then state.useApplicationBar = useApplicationBar == true end
+                state.maxApplications = maxApplications or state.maxApplications
+                state.height = overrides and overrides.height or state.height
+                state.barColors = overrides and overrides.barColors or state.barColors
+                state.backgroundColors = overrides and overrides.backgroundColors or state.backgroundColors
+            end
+            if overrides and self.DebuffOverviewContainerPreviewActive and self.DebuffOverviewContainerPreviewName == containerName and self.DebuffOverviewFakePreviewConfig then
+                self.DebuffOverviewFakePreviewConfig.overrides = overrides
+                self.DebuffOverviewFakePreviewConfig.backgroundOnly = overrides.backgroundOnly
+            end
+        end
         self.DebuffOverviewContainerSets = existingSet
+        self:UpdateDebuffOverviewContainers()
         return existingSet
     end
     if regularFilter == nil and candidateFilters == nil then
@@ -1821,6 +1835,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
         local unit = "raid" .. raidIndex
         local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
         for copyIndex = 1, copies do
+            local height = overrides and overrides.height or settings.Height
             local state = {
                 unit = unit,
                 displayName = displayName,
@@ -1828,6 +1843,9 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
                 useBarColorAsBackground = useBarColorAsBackground == true,
                 useApplicationBar = useApplicationBar == true,
                 maxApplications = maxApplications or 1,
+                height = overrides and overrides.height,
+                barColors = overrides and overrides.barColors,
+                backgroundColors = overrides and overrides.backgroundColors,
                 buttonRegions = {},
             }
             local container = CreateFrame(
@@ -1838,7 +1856,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             )
             state.container = container
             container:SetFrameStrata("HIGH")
-            container:SetSize(settings.Width + settings.Height, settings.Height)
+            container:SetSize(settings.Width + height, height)
             container:SetUnit(unit)
             container:SetFlowLayoutAxis(flowAxis)
             container:SetFlowLayoutAnchorPoint(flowAnchor)
@@ -1873,8 +1891,8 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
                     ConfigureDebuffOverviewButton(self, state, button, unit)
                 end,
                 layout = {
-                    elementWidth = settings.Width + settings.Height,
-                    elementHeight = settings.Height,
+                    elementWidth = settings.Width + height,
+                    elementHeight = height,
                     elementSpacing = 0,
                     lineSpacing = 0,
                 },
@@ -1914,13 +1932,14 @@ function NSI:UpdateDebuffOverviewContainers()
         local previousContainer
         for _, state in ipairs(states) do
             local container = state.container
-            container:SetSize(settings.Width + settings.Height, settings.Height)
+            local height = state.height or settings.Height
+            container:SetSize(settings.Width + height, height)
             container:SetFlowLayoutAxis(flowAxis)
             container:SetFlowLayoutAnchorPoint(flowAnchor)
             container:SetFlowLayoutGrowthDirection(flowHorizontal, flowVertical)
             container:SetAuraGroupLayout("DebuffOverview", {
-                elementWidth = settings.Width + settings.Height,
-                elementHeight = settings.Height,
+                elementWidth = settings.Width + height,
+                elementHeight = height,
                 elementSpacing = 0,
                 lineSpacing = 0,
             })
@@ -1949,6 +1968,10 @@ function NSI:UpdateDebuffOverviewContainers()
             end
             previousContainer = container
         end
+    end
+    local previewConfig = self.DebuffOverviewFakePreviewConfig
+    if self.DebuffOverviewContainerPreviewActive and previewConfig then
+        self:UpdateDebuffOverviewFakePreview(previewConfig.rowCount, previewConfig.useApplicationBar, previewConfig.maxApplications, previewConfig.overrides, previewConfig.backgroundOnly)
     end
 end
 
@@ -1985,19 +2008,146 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
 end
 
-function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications)
+function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApplications, overrides, backgroundOnly)
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
+    local width = settings.Width
+    local height = overrides and overrides.height or settings.Height
+    local barColors = overrides and overrides.barColors or settings.barColors
+    local backgroundColors = overrides and overrides.backgroundColors
+    if not backgroundColors then
+        backgroundColors = useApplicationBar and barColors or settings.backgroundColors
+    end
+    local fillBackgroundColors = backgroundColors or barColors
+    local frame = self.DebuffOverviewFakePreview
+    if not frame then
+        frame = CreateFrame("Frame", nil, UIParent)
+        frame:SetFrameStrata("HIGH")
+        frame.rows = {}
+        self.DebuffOverviewFakePreview = frame
+    end
+    local growDirection = settings.GrowDirection or "Up"
+    local vertical = growDirection == "Up" or growDirection == "Down"
+    local rowWidth = width + height
+    local rowHeight = height
+    local barAnchorOffset = settings.IconPosition == "Right" and 0 or -height
+    frame:SetSize(vertical and rowWidth or rowCount * (rowWidth + settings.Spacing) - settings.Spacing, vertical and rowCount * (rowHeight + settings.Spacing) - settings.Spacing or rowHeight)
+    frame:ClearAllPoints()
+    if growDirection == "Up" then
+        frame:SetPoint("BOTTOMLEFT", self.DebuffOverviewMover, "TOPLEFT", barAnchorOffset, 8)
+    elseif growDirection == "Left" then
+        frame:SetPoint("TOPRIGHT", self.DebuffOverviewMover, "TOPLEFT", barAnchorOffset - 8, 0)
+    elseif growDirection == "Right" then
+        frame:SetPoint("TOPLEFT", self.DebuffOverviewMover, "TOPRIGHT", barAnchorOffset + 8, 0)
+    else
+        frame:SetPoint("TOPLEFT", self.DebuffOverviewMover, "BOTTOMLEFT", barAnchorOffset, -8)
+    end
+    local fontPath = self.LSM:Fetch("font", settings.Font)
+    local iconInfo = C_Spell.GetSpellInfo(1311611)
+    for index = 1, rowCount do
+        local row = frame.rows[index]
+        if not row then
+            row = CreateFrame("Frame", nil, frame)
+            row.Bar = CreateFrame("StatusBar", nil, row, "BackdropTemplate")
+            row.Background = row:CreateTexture(nil, "BACKGROUND")
+            row.Icon = row:CreateTexture(nil, "ARTWORK")
+            row.Border = CreateFrame("Frame", nil, row, "BackdropTemplate")
+            row.TextLayer = CreateFrame("Frame", nil, row)
+            row.Name = row.TextLayer:CreateFontString(nil, "OVERLAY")
+            row.Value = row.TextLayer:CreateFontString(nil, "OVERLAY")
+            row.Bar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
+            row.Border:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+            frame.rows[index] = row
+        end
+        row:ClearAllPoints()
+        if growDirection == "Up" then
+            row:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, (index - 1) * (height + settings.Spacing))
+        elseif growDirection == "Left" then
+            row:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -(index - 1) * (rowWidth + settings.Spacing), 0)
+        elseif growDirection == "Right" then
+            row:SetPoint("TOPLEFT", frame, "TOPLEFT", (index - 1) * (rowWidth + settings.Spacing), 0)
+        else
+            row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -(index - 1) * (height + settings.Spacing))
+        end
+        row:SetSize(width + height, height)
+        row.Bar:ClearAllPoints()
+        if settings.IconPosition == "Right" then
+            row.Bar:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+            row.Icon:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+        else
+            row.Bar:SetPoint("TOPLEFT", row, "TOPLEFT", height, 0)
+            row.Icon:SetPoint("LEFT", row, "LEFT", 0, 0)
+        end
+        row.Bar:SetSize(width, height)
+        row.Bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", settings.Texture))
+        row.Bar:SetStatusBarColor(unpack(barColors))
+        row.Bar:SetMinMaxValues(0, useApplicationBar and maxApplications or 8)
+        row.Bar:SetValue(backgroundOnly and 0 or (useApplicationBar and (maxApplications - ((index - 1) % maxApplications)) or 8 - ((index - 1) % 8)))
+        row.Bar:SetBackdropColor(unpack(backgroundColors))
+        if useBarColorAsBackground then
+            row.Background:SetAllPoints(row.Bar)
+            row.Background:SetTexture(self.LSM:Fetch("statusbar", settings.Texture))
+            row.Background:SetVertexColor(unpack(fillBackgroundColors))
+            row.Background:Show()
+        else
+            row.Background:Hide()
+        end
+        row.Border:SetAllPoints(row)
+        row.Border:SetBackdropBorderColor(unpack(settings.borderColors))
+        row.TextLayer:SetAllPoints(row)
+        row.Icon:SetSize(height, height)
+        row.Icon:SetTexture(iconInfo and iconInfo.iconID)
+        row.Name:SetPoint("LEFT", row.Bar, "LEFT", settings.xTextOffset, settings.yTextOffset)
+        row.Name:SetFont(fontPath, settings.FontSize, settings.FontFlags)
+        row.Name:SetTextColor(unpack(settings.textColors))
+        row.Name:SetText(index == 1 and (NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or "Player") or "Player " .. index)
+        row.Value:SetPoint("RIGHT", row.Bar, "RIGHT", settings.xTimer, settings.yTimer)
+        row.Value:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
+        row.Value:SetTextColor(unpack(settings.textColors))
+        row.Value:SetText(useApplicationBar and tostring(maxApplications - ((index - 1) % maxApplications)) or tostring(8 - ((index - 1) % 8)))
+        row.Icon:SetShown(true)
+        row.Name:SetShown(true)
+        row.Value:SetShown(not (overrides and overrides.hideValue))
+        row:Show()
+    end
+    for index = rowCount + 1, #frame.rows do frame.rows[index]:Hide() end
+    frame:Show()
+end
+
+function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, previewRowCount, overrides)
     if self.DebuffOverviewContainerPreviewActive then
         self.DebuffOverviewContainerPreviewActive = false
-        self:SetDebuffOverviewContainersShown(false, self.DebuffOverviewContainerPreviewName)
+        local states = self.DebuffOverviewContainerSetsByName and self.DebuffOverviewContainerSetsByName[self.DebuffOverviewContainerPreviewName]
+        for _, state in ipairs(states or {}) do
+            state.container:Hide()
+            state.container:SetEnabled(false)
+        end
+        if self.DebuffOverviewFakePreview then self.DebuffOverviewFakePreview:Hide() end
         self.DebuffOverviewContainerPreviewName = nil
+        self.DebuffOverviewFakePreviewConfig = nil
         return
     end
     if regularFilter ~= nil or candidateFilters ~= nil then
-        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications)
+        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, overrides)
     end
     self.DebuffOverviewContainerPreviewActive = true
     self.DebuffOverviewContainerPreviewName = containerName or "Default"
-    self:SetDebuffOverviewContainersShown(true, containerName)
+    self.DebuffOverviewFakePreviewConfig = {
+        rowCount = previewRowCount,
+        useApplicationBar = useApplicationBar,
+        maxApplications = maxApplications or 1,
+        overrides = overrides,
+        backgroundOnly = overrides and overrides.backgroundOnly,
+    }
+    local states = self.DebuffOverviewContainerSetsByName and self.DebuffOverviewContainerSetsByName[containerName]
+    for _, state in ipairs(states or {}) do
+        state.container:Hide()
+        state.container:SetEnabled(false)
+    end
+    if previewRowCount then
+        self:UpdateDebuffOverviewFakePreview(previewRowCount, useApplicationBar, maxApplications or 1, overrides, overrides and overrides.backgroundOnly)
+    else
+        self:SetDebuffOverviewContainersShown(true, containerName)
+    end
 end
 
 local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)

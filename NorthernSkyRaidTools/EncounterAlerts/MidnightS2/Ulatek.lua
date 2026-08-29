@@ -121,9 +121,28 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local UlatekGraspingFangsPreview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings.")) end]]
+    local UlatekGraspingFangsPreview = [[
+        return function(self)
+            local alert = NSRT.EncounterAlerts[3492][16].GraspingFangsOverview
+            local overviewSettings = NSRT.ReminderSettings.DebuffOverviewSettings
+            self:PreviewDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true, false, 1, 6, {
+                backgroundColors = alert.BackgroundColor or {1, 0, 0, 1},
+                height = alert.BarHeight or overviewSettings.Height,
+                backgroundOnly = true,
+                hideValue = true,
+            })
+        end
+    ]]
+    local graspingFangsOverviewOptions = {
+        {Type = "Color", label = "Background Color",
+            get = [[return function() local a = NSRT.EncounterAlerts[3492][16].GraspingFangsOverview local c = a.BackgroundColor or {1, 0, 0, 1} return c[1], c[2], c[3], c[4] end]],
+            set = [[return function(NSI, r, g, b, a) for i = 15, 16 do NSRT.EncounterAlerts[3492][i].GraspingFangsOverview.BackgroundColor = {r, g, b, a} end NSI:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true, false, 1, {backgroundColors = {r, g, b, a}}) end]],},
+        {Type = "Slider", label = "Bar Height", min = 10, max = 100, step = 1,
+            get = [[return function() local a = NSRT.EncounterAlerts[3492][16].GraspingFangsOverview return a.BarHeight or NSRT.ReminderSettings.DebuffOverviewSettings.Height end]],
+            set = [[return function(NSI, value) for i = 15, 16 do NSRT.EncounterAlerts[3492][i].GraspingFangsOverview.BarHeight = value end NSI:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true, false, 1, {height = value}) end]],},
+    }
     local data = {group = "Ula'tek", internalID = "GraspingFangsOverview", name = "Grasping Fangs Overview", text = nil, DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 40,
-        spellID = 1311611, id = 0.2, difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
+        spellID = 1311611, id = 0.2, difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false, BackgroundColor = {1, 0, 0, 1}, extraOptions = graspingFangsOverviewOptions,
         timers = {
             [15] = {180},
             [16] = {180},
@@ -144,7 +163,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     end
 
     if overviewAlert and overviewAlert.enabled and self:EvaluateLoad(overviewAlert) then
-        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true)
+        self:CreateDebuffOverviewContainers("HARMFUL|!PLAYER|!DISPELLABLE", {isBossAura = true}, 1, 1, "UlatekGraspingFangsOverview", false, true, false, 1, {backgroundColors = overviewAlert.BackgroundColor or {1, 0, 0, 1}, height = overviewAlert.BarHeight})
         self.UlatekGraspingFangsTimers = {}
         for _, applyTime in ipairs(overviewAlert.timers or {}) do
             self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime, function()
