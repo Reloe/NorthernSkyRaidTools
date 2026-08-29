@@ -598,7 +598,7 @@ local function AddCoiledAltarInterruptNameplate(self, unit)
     local plate = C_NamePlate.GetNamePlateForUnit(unit)
     local interruptSettings = NSRT.InterruptSettings
     self.CoiledAltarInterruptNameplates = self.CoiledAltarInterruptNameplates or {}
-    if not plate or UnitLevel(unit) == 92 then
+    if not plate or UnitLevel(unit) ~= 92 then
         local oldDisplay = self.CoiledAltarInterruptNameplates[unit]
         if oldDisplay then
             for boxIndex, box in ipairs(oldDisplay.boxes) do
