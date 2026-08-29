@@ -217,6 +217,7 @@ L[3420] = {
     -- ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
     -- ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
     -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
+    -- ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
 }
 
 -- The Twin Fangs (3421)

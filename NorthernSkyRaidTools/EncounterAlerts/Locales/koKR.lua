@@ -218,6 +218,7 @@ L[3420] = {
     ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
     ["VenomousSurgeTargets"] = {group = "스조라크", name = "디버프 대상"},
     ["VenomousSurgeAssignment"] = {group = "스조라크", name = "구슬 위치 배정", text = "구슬 깔기"},
+    -- ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
 }
 
 -- The Twin Fangs (3421)
