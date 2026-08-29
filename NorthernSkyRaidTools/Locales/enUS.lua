@@ -1202,6 +1202,9 @@ L["Square"] = "Square"
 L["Cross"] = "Cross"
 L["Skull"] = "Skull"
 L["Backup"] = "Backup"
+L["Bar Color"] = "Bar Color"
+L["Bar Height"] = "Bar Height"
+L["Background Color"] = "Background Color"
 -- ============================================================================
 -- EncounterAlerts.lua
 -- ============================================================================
