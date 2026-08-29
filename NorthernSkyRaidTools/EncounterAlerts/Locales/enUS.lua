@@ -251,6 +251,7 @@ L[3429] = {
     ["P2Taunt"]       = {group = "Coiled Altar Tanks", name = "P2 Taunt", text = "Taunt"},
     ["P2Debuffs"]     = {group = "Coiled Altar P2", name = "P2 Debuffs", text = "Debuffs"},
     ["P2Shield"]      = {group = "Coiled Altar P2", name = "P2 Shield", text = "Shield"},
+    ["EternalNightfallAbsorb"] = {group = "Coiled Altar P2", name = "Eternal Nightfall Absorb", text = ""},
     ["InterruptAdds"] = {group = "Coiled Altar P2", name = "P2 Interrupt Adds", text = "Ghosts"},
     ["InterruptAssignments"] = {group = "Coiled Altar P2", name = "Interrupt Assignments", text = "Interrupts"},
     ["P2_5WrongTarget"] = {group = "Coiled Altar P3", name = "Wrong Target", text = "WRONG TARGET"},

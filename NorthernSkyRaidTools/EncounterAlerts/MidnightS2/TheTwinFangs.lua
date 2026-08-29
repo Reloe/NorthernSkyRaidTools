@@ -45,7 +45,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local soakTimers = {
         [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
-        [16] = {64.7, 125.7, 216.1, 277.1, 371.1, 432.1},
+        [16] = {64.7, 125.7, 219.8, 280.8, 374.9, 435.9},
     }
     local soak1Timers = {}
     local soak2Timers = {}

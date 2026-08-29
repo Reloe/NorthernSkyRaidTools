@@ -266,10 +266,10 @@ NSI.InitializeAlerts[encID] = function(self)
         }
     end
 
-    local data = {group = "Sszorak", internalID = "MarkerMap", name = "Marker Map", text = nil, DisplayType = "Text", encID = encID,
+    local data = {Version = {versionNumber = 1, [1] = {MapSize = 200, BackgroundColor = {0.302, 0.302, 0.302, 0.82}}}, group = "Sszorak", internalID = "MarkerMap", name = "Marker Map", text = nil, DisplayType = "Text", encID = encID,
         phase = nil, TTS = false, dur = 5, spellID = nil, id = 0.2, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
-        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -800, yOffset = 150,
-        UpdateInterval = 0.03, BackgroundColor = {0.03, 0.03, 0.03, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
+        Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 200, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -800, yOffset = 150,
+        UpdateInterval = 0.03, BackgroundColor = {0.302, 0.302, 0.302, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
         ShowPlayerArrow = true, ActiveEntireFight = false, MarkerOrder = {3, 8, 4, 5, 6, 7, 1, 2}, extraOptions = markerMapOptions,
     }
     self:AddEncounterAlert(data)
@@ -389,7 +389,7 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
     local rotationScale = math.sqrt(2)
     local backgroundRadius = (markerRadius * rotationScale) + markerSize
 
-    F:SetSize(mapSize, mapSize)
+    F:SetSize(backgroundRadius * 2, backgroundRadius * 2)
     F:SetScale(settings.Scale or 1)
     F:ClearAllPoints()
     F:SetPoint(settings.Anchor or "CENTER", self.NSRTFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 150)

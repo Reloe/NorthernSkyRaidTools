@@ -5,6 +5,9 @@ local _, NSI = ... -- Internal namespace
 local encID = 3429
 -- /run NSAPI:DebugEncounter(3429)
 
+local eternalNightfallDuration = 15
+local eternalNightfallPreviewAbsorb = 5200000
+
 local p1SoakTimers = {
     [15] = {48, 133},
     [16] = {48, 133},
@@ -117,6 +120,30 @@ NSI.InitializeAlerts[encID] = function(self)
             [15] = {70, 155},
             [16] = {70, 155},
         },
+    }
+    self:AddEncounterAlert(data)
+
+    local eternalNightfallPreview = [[return function(NSI)
+        NSI:PreviewCoiledAltarEternalNightfall()
+    end]]
+    local eternalNightfallOptions = {
+        {Type = "Color", label = "Bar Color",
+            get = [[return function() local alert = NSRT.EncounterAlerts[3429][16].EternalNightfallAbsorb local c = alert.BarColor or NSRT.ReminderSettings.BarSettings.barColors return c[1], c[2], c[3], c[4] end]],
+            set = [[return function(NSI, r, g, b, a) for difficultyID = 15, 16 do NSRT.EncounterAlerts[3429][difficultyID].EternalNightfallAbsorb.BarColor = {r, g, b, a} end NSI:UpdateCoiledAltarEternalNightfall() end]],
+        },
+        {Type = "Slider", label = "Bar Width", min = 50, max = 600, step = 1,
+            get = [[return function() local alert = NSRT.EncounterAlerts[3429][16].EternalNightfallAbsorb return alert.BarWidth or NSRT.ReminderSettings.BarSettings.Width end]],
+            set = [[return function(NSI, value) for difficultyID = 15, 16 do NSRT.EncounterAlerts[3429][difficultyID].EternalNightfallAbsorb.BarWidth = value end NSI:UpdateCoiledAltarEternalNightfall() end]],
+        },
+        {Type = "Slider", label = "Bar Height", min = 10, max = 100, step = 1,
+            get = [[return function() local alert = NSRT.EncounterAlerts[3429][16].EternalNightfallAbsorb return alert.BarHeight or NSRT.ReminderSettings.BarSettings.Height end]],
+            set = [[return function(NSI, value) for difficultyID = 15, 16 do NSRT.EncounterAlerts[3429][difficultyID].EternalNightfallAbsorb.BarHeight = value end NSI:UpdateCoiledAltarEternalNightfall() end]],
+        },
+    }
+    local data = {group = "Coiled Altar P2", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", DisplayType = "Bar", encID = encID,
+        phase = nil, TTS = false, dur = eternalNightfallDuration, enabled = true, isSpecialDisplay = true, BlockCopy = true,
+        BarColor = {0.6235, 0.2510, 1, 1}, BarWidth = 300, BarHeight = 40, Anchor = "TOP", relativeTo = "TOP", xOffset = 0, yOffset = -300,
+        Preview = eternalNightfallPreview, extraOptions = eternalNightfallOptions, difficulties = {15, 16}, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -692,10 +719,167 @@ local function SetCoiledAltarInterruptPhase(self, active)
     NSI:UpdateCoiledAltarInterruptDisplay()
 end
 
+local function ApplyCoiledAltarEternalNightfallSettings(self, frame, alert)
+    local barSettings = NSRT.ReminderSettings.BarSettings
+    frame:SetSize(alert.BarWidth or barSettings.Width, alert.BarHeight or barSettings.Height)
+    frame:SetScale(1)
+    frame:ClearAllPoints()
+    frame:SetPoint(alert.Anchor or barSettings.Anchor, self.NSRTFrame, alert.relativeTo or barSettings.relativeTo, alert.xOffset or barSettings.xOffset, alert.yOffset or barSettings.yOffset)
+    frame:SetStatusBarTexture(self.LSM:Fetch("statusbar", barSettings.Texture))
+    frame:SetStatusBarColor(unpack(alert.BarColor or barSettings.barColors))
+    frame:SetBackdropColor(unpack(barSettings.backgroundColors))
+    frame.Border:SetBackdropBorderColor(unpack(barSettings.borderColors))
+    frame.AbsorbText:SetFont(self.LSM:Fetch("font", barSettings.Font), barSettings.TimerFontSize, "OUTLINE")
+    frame.AbsorbText:SetTextColor(unpack(barSettings.textColors))
+    frame.TimerText:SetFont(self.LSM:Fetch("font", barSettings.Font), barSettings.TimerFontSize, "OUTLINE")
+    frame.TimerText:SetTextColor(unpack(barSettings.textColors))
+    frame.Tick:SetSize(2, frame:GetHeight())
+end
+
+local function HideCoiledAltarEternalNightfall(self)
+    local frame = self.CoiledAltarEternalNightfallFrame
+    if frame then
+        frame:Hide()
+        frame.EternalNightfallStart = nil
+        frame.EternalNightfallEnd = nil
+        frame.EternalNightfallMaxAbsorb = nil
+    end
+end
+
+local function ShowCoiledAltarEternalNightfall(self, preview)
+    local frame = self.CoiledAltarEternalNightfallFrame
+    local alert = self.CoiledAltarEternalNightfallAlert
+    if not frame or not alert then return end
+    ApplyCoiledAltarEternalNightfallSettings(self, frame, alert)
+    local maxAbsorb = preview and secretwrap(eternalNightfallPreviewAbsorb) or UnitGetTotalAbsorbs("boss2")
+    frame:SetMinMaxValues(0, maxAbsorb)
+    frame:SetValue(maxAbsorb)
+    frame.EternalNightfallStart = GetTime()
+    frame.EternalNightfallEnd = frame.EternalNightfallStart + eternalNightfallDuration
+    frame.EternalNightfallMaxAbsorb = maxAbsorb
+    frame.AbsorbText:SetText(AbbreviateNumbers(maxAbsorb))
+    frame.TimerText:SetText(string.format("%.1f", eternalNightfallDuration))
+    frame:Show()
+end
+
+function NSI:UpdateCoiledAltarEternalNightfall()
+    local frame = self.CoiledAltarEternalNightfallFrame
+    local alert = self.CoiledAltarEternalNightfallAlert
+    if not frame or not alert then return end
+    ApplyCoiledAltarEternalNightfallSettings(self, frame, alert)
+    if frame:IsShown() then
+        frame:SetMinMaxValues(0, frame.EternalNightfallMaxAbsorb or secretwrap(eternalNightfallPreviewAbsorb))
+    end
+end
+
+function NSI:PreviewCoiledAltarEternalNightfall()
+    if self.CoiledAltarEternalNightfallPreview then
+        self.CoiledAltarEternalNightfallPreview = false
+        HideCoiledAltarEternalNightfall(self)
+        self:MakeDraggable(self.CoiledAltarEternalNightfallFrame, nil, false)
+        return false
+    end
+    self.CoiledAltarEternalNightfallPreview = true
+    self.CoiledAltarEternalNightfallAlert = NSRT.EncounterAlerts[encID][16].EternalNightfallAbsorb
+    local frame = self.CoiledAltarEternalNightfallFrame
+    if not frame then
+        frame = CreateFrame("StatusBar", "NSRTCoiledAltarEternalNightfall", self.NSRTFrame, "BackdropTemplate")
+        frame:SetFrameStrata("HIGH")
+        frame:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8", tileSize = 0})
+        frame.Border = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+        frame.Border:SetAllPoints(frame)
+        frame.Border:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+        frame.AbsorbText = frame:CreateFontString(nil, "OVERLAY")
+        frame.AbsorbText:SetPoint("LEFT", frame, "LEFT", 4, 0)
+        frame.TimerText = frame:CreateFontString(nil, "OVERLAY")
+        frame.TimerText:SetPoint("RIGHT", frame, "RIGHT", -4, 0)
+        frame.Tick = frame:CreateTexture(nil, "OVERLAY")
+        frame.Tick:SetColorTexture(1, 1, 1, 1)
+        frame:SetScript("OnUpdate", function(display)
+            if not display.EternalNightfallStart then return end
+            local elapsed = GetTime() - display.EternalNightfallStart
+            if elapsed >= eternalNightfallDuration then
+                HideCoiledAltarEternalNightfall(self)
+                return
+            end
+            local previewProgress = math.min(1, elapsed / eternalNightfallDuration * 1.05)
+            local absorb = self.CoiledAltarEternalNightfallPreview and secretwrap(eternalNightfallPreviewAbsorb * (1 - previewProgress)) or UnitGetTotalAbsorbs("boss2")
+            display:SetValue(absorb)
+            display.AbsorbText:SetText(AbbreviateNumbers(absorb))
+            display.Tick:ClearAllPoints()
+            display.Tick:SetPoint("CENTER", display, "LEFT", display:GetWidth() * (1 - elapsed / eternalNightfallDuration), 0)
+            display.TimerText:SetText(string.format("%.1f", eternalNightfallDuration - elapsed))
+        end)
+        self.CoiledAltarEternalNightfallFrame = frame
+    end
+    ApplyCoiledAltarEternalNightfallSettings(self, frame, self.CoiledAltarEternalNightfallAlert)
+    self:MakeDraggable(frame, self.CoiledAltarEternalNightfallAlert, true, false)
+    ShowCoiledAltarEternalNightfall(self, true)
+    return true
+end
+
+local function StopCoiledAltarEternalNightfallListening(self)
+    for timerIndex, timer in ipairs(self.CoiledAltarEternalNightfallListenTimers or {}) do
+        timer:Cancel()
+    end
+    self.CoiledAltarEternalNightfallListenTimers = nil
+    if self.CoiledAltarEternalNightfallListenStopTimer then
+        self.CoiledAltarEternalNightfallListenStopTimer:Cancel()
+        self.CoiledAltarEternalNightfallListenStopTimer = nil
+    end
+    self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP"}, false, "boss2")
+end
+
+local function ArmCoiledAltarEternalNightfall(self)
+    StopCoiledAltarEternalNightfallListening(self)
+    local alert = self.CoiledAltarEternalNightfallAlert
+    local difficultyID = self:DifficultyCheck({14, 15, 16})
+    local diffData = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
+    local shieldAlert = diffData and diffData.P2Shield
+    local shieldTimers = shieldAlert and shieldAlert.timers and shieldAlert.timers[difficultyID]
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) or not shieldTimers then return end
+
+    self.CoiledAltarEternalNightfallListenTimers = {}
+    local phaseElapsed = GetTime() - self.PhaseSwapTime
+    for shieldIndex, shieldTime in ipairs(shieldTimers) do
+        local listenDelay = shieldTime - 2 - phaseElapsed
+        if listenDelay >= 0 then
+            self.CoiledAltarEternalNightfallListenTimers[#self.CoiledAltarEternalNightfallListenTimers + 1] = C_Timer.NewTimer(listenDelay, function()
+                if self.EncounterID ~= encID or self.Phase ~= 2 then return end
+                self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_STOP"}, true, "boss2")
+                self.CoiledAltarEternalNightfallListenStopTimer = C_Timer.NewTimer(eternalNightfallDuration + 2, function()
+                    StopCoiledAltarEternalNightfallListening(self)
+                end)
+            end)
+        end
+    end
+end
+
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck({14, 15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     self.CoiledAltarInterruptAlert = diffData and diffData.InterruptAssignments
+    self.CoiledAltarEternalNightfallAlert = diffData and diffData.EternalNightfallAbsorb
+    self.CoiledAltarEternalNightfallPreview = false
+    StopCoiledAltarEternalNightfallListening(self)
+    local eternalNightfallActive = self.CoiledAltarEternalNightfallAlert and self.CoiledAltarEternalNightfallAlert.enabled and self:EvaluateLoad(self.CoiledAltarEternalNightfallAlert)
+    if eternalNightfallActive then
+        local frame = self.CoiledAltarEternalNightfallFrame
+        if not frame then
+            self:PreviewCoiledAltarEternalNightfall()
+            self.CoiledAltarEternalNightfallPreview = false
+            self:MakeDraggable(self.CoiledAltarEternalNightfallFrame, nil, false)
+            HideCoiledAltarEternalNightfall(self)
+        end
+        self:EncounterFunction("CoiledAltarEternalNightfall", function(eventFrame, event)
+            if event == "UNIT_SPELLCAST_START" then
+                ShowCoiledAltarEternalNightfall(self)
+            elseif self.CoiledAltarEternalNightfallFrame and self.CoiledAltarEternalNightfallFrame:IsShown() then
+                HideCoiledAltarEternalNightfall(self)
+            end
+        end)
+        if self.Phase == 2 then ArmCoiledAltarEternalNightfall(self) end
+    end
     local interruptAlertActive = self.CoiledAltarInterruptAlert and self.CoiledAltarInterruptAlert.enabled and self:EvaluateLoad(self.CoiledAltarInterruptAlert)
     if interruptAlertActive then
         self.CoiledAltarInterruptFrame = self.CoiledAltarInterruptFrame or CreateFrame("Frame")
@@ -771,6 +955,9 @@ end
 
 NSI.EncounterAlertStop[encID] = function(self)
     HideCoiledAltarWrongTarget(self)
+    StopCoiledAltarEternalNightfallListening(self)
+    self.CoiledAltarEternalNightfallPreview = false
+    HideCoiledAltarEternalNightfall(self)
     self:EncounterRegister("CoiledAltarInterruptAssignments", {"NAME_PLATE_UNIT_ADDED", "NAME_PLATE_UNIT_REMOVED", "RAID_TARGET_UPDATE", "INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, false)
     self:EncounterRegister("CoiledAltarInterruptAssignments", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false, {"boss3", "boss4"})
     ResetCoiledAltarInterruptDisplay(self)
@@ -807,6 +994,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = 3
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = now
+        StopCoiledAltarEternalNightfallListening(self)
         SetCoiledAltarInterruptPhase(self, true)
         HideCoiledAltarWrongTarget(self)
         return
@@ -821,6 +1009,9 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = newphase
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = now
+        if newphase == 2 then
+            ArmCoiledAltarEternalNightfall(self)
+        end
         SetCoiledAltarInterruptPhase(self, newphase == 2 or newphase == 3)
     end
 end

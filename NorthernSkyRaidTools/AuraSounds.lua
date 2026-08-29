@@ -112,8 +112,8 @@ NSI.AuraSoundCategories = {
             {spellID = 1283485, sound = "Targeted"}, -- Guillotine
             {spellID = 1299266, sound = "Targeted"}, -- Grim Guillotine
             {spellID = 1297435, sound = "Targeted"}, -- Dreadmarch
-            {spellID = 1282419, sound = "Orb"}, -- Volatile Venom
-            {spellID = 1310498, sound = "Spread"}, -- Mutagenic Venom
+            {spellID = 1282419, sound = "5seconds321"}, -- Volatile Venom
+            {spellID = 1310498, sound = "5seconds321"}, -- Mutagenic Venom
             {spellID = 1282419, sound = "Move", eventType = "removed"}, -- Volatile Venom
             {spellID = 1310498, sound = "Move", eventType = "removed"}, -- Mutagenic Venom
             {spellID = 1286901, sound = "Bomb"}, -- Gloombomb

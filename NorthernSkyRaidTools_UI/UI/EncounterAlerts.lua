@@ -3670,6 +3670,34 @@ local function BuildEncounterAlertsUI(parentFrame)
         RefreshSectionCopyButtons()
     end
 
+    screen.OpenAlert = function(screenFrame, encID, diffID, internalID)
+        if not encID or not diffID or not internalID then return false end
+        local difficultyAlerts = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID]
+        if not difficultyAlerts then return false end
+
+        local alertKey
+        local selectedAlert
+        for key, alert in pairs(difficultyAlerts) do
+            if type(alert) == "table" and alert.internalID == internalID then
+                alertKey = key
+                selectedAlert = alert
+                break
+            end
+        end
+        if not alertKey then return false end
+
+        filterEncID = encID
+        filterDiffID = diffID
+        if selectedAlert.group and selectedAlert.group ~= "" then
+            EnsureGroup(encID, selectedAlert.group)
+            NSRT.Alerts.Groups[GroupKey(encID, selectedAlert.group)].collapsed = false
+        end
+        filterDD:Refresh()
+        RebuildList()
+        SelectAlert(alertKey, diffID, encID)
+        return true
+    end
+
     SelectInnerTab("Display")
     RefreshSectionCopyButtons()
 
