@@ -410,6 +410,29 @@ function NSAPI:SetEncounterAlertState(encID, internalID, enabled)
     return found
 end
 
+function NSAPI:OpenAlert(encID, diffID, internalID)
+    if not encID or not diffID or not internalID then return false end
+
+    local function openAlert()
+        if not NSI.NSUI or not NSI.NSUI.encounters_frame then return false end
+        NSI.NSUI.MenuFrame:SelectTabByName("EncounterAlerts")
+        return NSI.NSUI.encounters_frame:OpenAlert(encID, diffID, internalID)
+    end
+
+    if NSI:LoadUI(true, "EncounterAlerts") then
+        return openAlert()
+    end
+
+    if NSI.NSUI and NSI.NSUI.Initializing then
+        NSI.PendingOpenAlert = {encID = encID, diffID = diffID, internalID = internalID}
+        NSI.NSUI.PendingShow = true
+        NSI.NSUI.PendingTabName = "EncounterAlerts"
+        return true
+    end
+
+    return false
+end
+
 local ExportSerializer = LibStub("LibSerialize")
 local ExportDeflate = LibStub("LibDeflate")
 
