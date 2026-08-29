@@ -191,12 +191,12 @@ NSI.InitializeAlerts[encID] = function(self)
         end
     ]]
 
-    local markerDropdownValues = [[return function()
+    local markerDropdownValues = [[return function(NSI)
         local names = {"Star", "Circle", "Diamond", "Triangle", "Moon", "Square", "Cross", "Skull"}
         local values = {{label = "None", value = 0}}
         for markerID, name in ipairs(names) do
             values[#values + 1] = {
-                label = string.format("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%d:18:18|t %s", markerID, name),
+                label = string.format("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%d:18:18|t %s", markerID, NSI:EncounterAlertLoc(name)),
                 value = markerID,
             }
         end
