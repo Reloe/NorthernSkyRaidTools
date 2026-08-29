@@ -217,7 +217,7 @@ L[3420] = {
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
     ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
     -- ["VenomousSurgeAssignment"] = {group = "Ссзорак", name = "Drop Assignment", text = "Drop on"},
-    -- ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
+    ["MarkerMap"] = {group = "Ссзорак", name = "Карта меток"},
 }
 
 -- The Twin Fangs (3421)
@@ -234,7 +234,7 @@ L[3421] = {
     ["WatchSpawns"] = {group = "Два Клыка", name = "Толчок", text = "Толчок"},
     ["Defensives"] = {group = "Два Клыка", name = "Защитные способности", text = "Защитные способности"},
     ["Knock"] = {group = "Два Клыка", name = "Удар", text = "Удар"},
-    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
+    ["DebuffOverview"] = {group = "Два Клыка", name = "Обзор Вечного яда", text = "Обзор Вечного яда"},
 }
 
 -- The Coiled Altar (3429)
