@@ -88,7 +88,6 @@ end
 -- Create main panel
 local NSUI_panel_options = {
     UseStatusBar = true,
-    DontRightClickClose = true,
 }
 local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Raid Tools", "NSUI",
     NSUI_panel_options)
