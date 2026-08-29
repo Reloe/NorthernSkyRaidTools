@@ -1230,8 +1230,8 @@ L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Ove
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It displays a line from your character to the top of your screen."] = "|cFF00FFFFNSRT：|r此预警无预览。显示一条从角色到屏幕顶部的辅助线。"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is displayed on the add nameplates during phases 2 and 3."] = "|cFF00FFFFNSRT：|r此预警无预览。在P2和P3的小怪姓名板上显示打断图标。"
 L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. This static preview is only provided for editing the box size and display settings."] = "|cFF00FFFFNSRT：|r实际显示在P2和P3的小怪姓名板上。此预览仅用于调整图标尺寸和显示设置。"
-L["Show the assignment boxes for both interrupt lines."] = "显示所有打断链的分配图标。"
-L["The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."] = "分配第一组打断无队伍标记的小怪，第二组打断任意队伍标记的小怪。常规策略：安排一名成员立即标记远处的小怪，确保仅显示一个打断图标并正确计数。"
+L["Show the assignment boxes for both interrupt lines."] = "显示所有打断组的分配图标。"
+L["The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."] = "分配第一组打断无队伍标记的小怪，第二组打断任意队伍标记的小怪。\n常规策略：安排一名成员立即标记远处的小怪，确保打断图标正确显示和计数。"
 L["Display settings are fixed\nfor this alert."] = "此预警的显示设置已锁定。"
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00分摊"
