@@ -234,6 +234,7 @@ L[3421] = {
     ["TankSoak"]    = {group = "双子毒牙", name = "碎石击（坦克踩圈）", text = "踩圈"},
     ["WatchSpawns"] = {group = "双子毒牙", name = "碎石击（推开）", text = "推开"},
     ["Knock"]       = {group = "双子毒牙", name = "腐蚀洪流（击退）", text = "击退"},
+    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
 }
 
 -- The Coiled Altar (3429)

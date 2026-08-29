@@ -236,6 +236,7 @@ L[3421] = {
     ["TankSoak"]    = {group = "雙生毒牙", name = "坦克吃圈", text = "吃圈"},
     ["WatchSpawns"] = {group = "雙生毒牙", name = "推進", text = "推進"},
     ["Knock"]       = {group = "雙生毒牙", name = "擊退", text = "擊退"},
+    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
 }
 
 -- The Coiled Altar (3429)

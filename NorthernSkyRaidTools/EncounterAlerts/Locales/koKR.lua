@@ -234,6 +234,7 @@ L[3421] = {
     ["TankSoak"]    = {group = "쌍둥이 송곳니", name = "탱커와 같이 맞기", text = "스킬 맞기"},
     ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "밀려남", text = "밀려남"},
     ["Knock"]       = {group = "쌍둥이 송곳니", name = "넉백", text = "넉백"},
+    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
 }
 
 -- The Coiled Altar (3429)

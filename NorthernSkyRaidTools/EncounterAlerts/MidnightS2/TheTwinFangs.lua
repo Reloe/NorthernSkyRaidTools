@@ -16,6 +16,14 @@ NSI.InitializeAlerts[encID] = function(self)
     local meleeConditions = self:DefaultLoadConditions()
     meleeConditions.Roles.MELEE = true
 
+    local DebuffOverviewPreview = [[return function(NSI) print(NSI:Loc("|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the Debuff Overview anchor from the Reminder settings.")) end]]
+
+    local data = {group = "Twin Fangs", internalID = "DebuffOverview", name = "Eternal Venom Overview", text = "Eternal Venom Overview", DisplayType = "Bar", encID = encID,
+        phase = 1, TTS = false, dur = 5, spellID = nil, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        Preview = DebuffOverviewPreview, id = 0.3,
+    }
+    self:AddEncounterAlert(data)
+
     local soakTimers = {
         [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
         [16] = {64.7, 125.7, 216.1, 277.1, 371.1, 432.1},
@@ -134,4 +142,19 @@ NSI.InitializeAlerts[encID] = function(self)
         },
     }
     self:AddEncounterAlert(data)
+end
+
+NSI.EncounterAlertStart[encID] = function(self, id)
+    local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id or self:DifficultyCheck({14, 15, 16})]
+    local alert = diffData and diffData.DebuffOverview
+    if alert and alert.enabled and self:EvaluateLoad(alert) then
+        self:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false}, 1, 1, "TwinFangsDebuffOverview", false, true, true, 9)
+        self:SetDebuffOverviewContainersShown(true, "TwinFangsDebuffOverview")
+    else
+        self:SetDebuffOverviewContainersShown(false, "TwinFangsDebuffOverview")
+    end
+end
+
+NSI.EncounterAlertStop[encID] = function(self)
+    self:SetDebuffOverviewContainersShown(false, "TwinFangsDebuffOverview")
 end

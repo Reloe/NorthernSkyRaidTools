@@ -233,6 +233,7 @@ L[3421] = {
     -- ["TankSoak"]    = {group = "Twin Fangs", name = "Tank Soak", text = "Soak"},
     -- ["WatchSpawns"] = {group = "Twin Fangs", name = "Push", text = "Push"},
     -- ["Knock"]       = {group = "Twin Fangs", name = "Knock", text = "Knock"},
+    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
 }
 
 -- The Coiled Altar (3429)

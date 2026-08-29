@@ -233,6 +233,7 @@ L[3421] = {
     ["WatchSpawns"] = {group = "Два Клыка", name = "Толчок", text = "Толчок"},
     ["Defensives"] = {group = "Два Клыка", name = "Защитные способности", text = "Защитные способности"},
     ["Knock"] = {group = "Два Клыка", name = "Удар", text = "Удар"},
+    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
 }
 
 -- The Coiled Altar (3429)

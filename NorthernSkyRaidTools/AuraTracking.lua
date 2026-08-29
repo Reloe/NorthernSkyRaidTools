@@ -1752,19 +1752,30 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
 
     regions.duration:ClearAllPoints()
     regions.duration:SetPoint("RIGHT", regions.bar, "RIGHT", settings.xTimer, settings.yTimer)
-    regions.duration:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
     regions.duration:SetTextColor(unpack(settings.textColors))
-    regions.duration:Show()
-    button:SetDurationText(regions.duration, {
-        textFormatter = GetAuraTrackingDurationFormatter(settings),
-        textColor = GetAuraTrackingDurationTextColor(settings),
-    })
+    if state.useApplicationBar then
+        regions.duration:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
+        regions.duration:Show()
+        button:ClearDurationText()
+        button:ClearDurationBar()
+        button:SetApplicationCount(regions.duration, {})
+        button:SetApplicationBar(regions.bar, {maxApplications = state.maxApplications})
+    else
+        regions.duration:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
+        regions.duration:Show()
+        button:ClearApplicationCount()
+        button:ClearApplicationBar()
+        button:SetDurationText(regions.duration, {
+            textFormatter = GetAuraTrackingDurationFormatter(settings),
+            textColor = GetAuraTrackingDurationTextColor(settings),
+        })
         button:SetDurationBar(regions.bar, {
             direction = state.invertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
         })
+    end
 end
 
-function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground)
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications)
     containerName = containerName or "Default"
     self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
     local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
@@ -1815,6 +1826,8 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
                 displayName = displayName,
                 invertFill = invertFill == true,
                 useBarColorAsBackground = useBarColorAsBackground == true,
+                useApplicationBar = useApplicationBar == true,
+                maxApplications = maxApplications or 1,
                 buttonRegions = {},
             }
             local container = CreateFrame(
@@ -1853,6 +1866,8 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             end
             container:AddAuraGroup("DebuffOverview", regularFilter, {
                 maxFrameCount = frameCount,
+                sortMethod = state.useApplicationBar and AuraContainerSortMethod.AuraInstanceIDOnly or nil,
+                sortDirection = state.useApplicationBar and AuraContainerSortDirection.Normal or nil,
                 candidateFilters = candidateFilters or {},
                 initializeFrame = function(button)
                     ConfigureDebuffOverviewButton(self, state, button, unit)
@@ -1970,16 +1985,18 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
 end
 
-function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
+function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications)
     if self.DebuffOverviewContainerPreviewActive then
         self.DebuffOverviewContainerPreviewActive = false
-        self:SetDebuffOverviewContainersShown(false)
+        self:SetDebuffOverviewContainersShown(false, self.DebuffOverviewContainerPreviewName)
+        self.DebuffOverviewContainerPreviewName = nil
         return
     end
     if regularFilter ~= nil or candidateFilters ~= nil then
-        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill)
+        self:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications)
     end
     self.DebuffOverviewContainerPreviewActive = true
+    self.DebuffOverviewContainerPreviewName = containerName or "Default"
     self:SetDebuffOverviewContainersShown(true, containerName)
 end
 
