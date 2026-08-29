@@ -1205,6 +1205,7 @@ L["Cross"] = "Cross"
 L["Skull"] = "Skull"
 L["Backup"] = "Backup"
 L["Bar Color"] = "Bar Color"
+L["Bar Width"] = "Bar Width"
 L["Bar Height"] = "Bar Height"
 L["Background Color"] = "Background Color"
 -- ============================================================================
