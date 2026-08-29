@@ -30,7 +30,7 @@ local bombDuration = 10
 local markerMapDefaultOrder = {3, 8, 4, 5, 6, 7, 1, 2}
 local markerMapDirections = {"North", "Northeast", "East", "Southeast", "South", "Southwest", "West", "Northwest"}
 local markerMapCircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_filled.png]]
-local markerMapRotationDegrees = 7
+local markerMapRotationDegrees = 14
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
@@ -191,12 +191,12 @@ NSI.InitializeAlerts[encID] = function(self)
         end
     ]]
 
-    local markerDropdownValues = [[return function(NSI)
+    local markerDropdownValues = [[return function()
         local names = {"Star", "Circle", "Diamond", "Triangle", "Moon", "Square", "Cross", "Skull"}
         local values = {{label = "None", value = 0}}
         for markerID, name in ipairs(names) do
             values[#values + 1] = {
-                label = string.format("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%d:18:18|t %s", markerID, NSI:EncounterAlertLoc(name)),
+                label = string.format("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%d:18:18|t %s", markerID, name),
                 value = markerID,
             }
         end
@@ -236,6 +236,10 @@ NSI.InitializeAlerts[encID] = function(self)
             get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.ShowPlayerArrow ~= false end]],
             set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.ShowPlayerArrow = v end NSI.EncounterAlertStop[3420](NSI) NSI.EncounterAlertStart[3420](NSI, 16, "Marker Map") end]],
             tooltip = {title = "ShowPlayerArrow", desc = "Shows the player at the center, facing toward the top of the map."}},
+        { Type = "Checkbox", label = "Active Entire Fight",
+            get = [[return function() return NSRT.EncounterAlerts[3420][16].MarkerMap.ActiveEntireFight == true end]],
+            set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].MarkerMap.ActiveEntireFight = v end end]],
+            tooltip = {title = "Active Entire Fight", desc = "Keeps the marker map visible from pull until the encounter ends instead of only around configured mechanic windows."}},
         { Type = "Label", text = "World marker positions" },
     }
 
@@ -266,7 +270,7 @@ NSI.InitializeAlerts[encID] = function(self)
         phase = nil, TTS = false, dur = 5, spellID = nil, id = 0.2, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
         Preview = MarkerMapPreview, customIcon = 137001, Scale = 1, MapSize = 240, MarkerSize = 34, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -800, yOffset = 150,
         UpdateInterval = 0.03, BackgroundColor = {0.03, 0.03, 0.03, 0.82}, BorderColor = {0.15, 0.85, 1, 1}, PlayerColor = {1, 1, 1, 1},
-        ShowPlayerArrow = true, MarkerOrder = {3, 8, 4, 5, 6, 7, 1, 2}, extraOptions = markerMapOptions,
+        ShowPlayerArrow = true, ActiveEntireFight = false, MarkerOrder = {3, 8, 4, 5, 6, 7, 1, 2}, extraOptions = markerMapOptions,
     }
     self:AddEncounterAlert(data)
 end
@@ -366,9 +370,7 @@ local function CreateSszorakMarkerMap(self)
         if not ok then return end
         for _, marker in ipairs(frame.Markers) do
             if marker:IsShown() then
-                local angle = marker.MarkerAngle + rotation
-                marker:ClearAllPoints()
-                marker:SetPoint("CENTER", frame, "CENTER", math.sin(angle) * frame.MarkerRadius, math.cos(angle) * frame.MarkerRadius)
+                marker:SetRotation(rotation)
             end
         end
     end
@@ -384,6 +386,8 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
     local markerRadius = outlineRadius * math.cos(math.pi / 8)
     local borderColor = settings.BorderColor or {0.15, 0.85, 1, 1}
     local order = GetValidMarkerOrder(settings)
+    local rotationScale = math.sqrt(2)
+    local backgroundRadius = (markerRadius * rotationScale) + markerSize
 
     F:SetSize(mapSize, mapSize)
     F:SetScale(settings.Scale or 1)
@@ -394,7 +398,7 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
     F.MarkerRadius = markerRadius
     F:SetScript("OnUpdate", F.MarkerMapOnUpdate)
 
-    F.Background:SetSize(outlineRadius * 2, outlineRadius * 2)
+    F.Background:SetSize(backgroundRadius * 2, backgroundRadius * 2)
     F.Background:SetVertexColor(unpack(settings.BackgroundColor or {0.03, 0.03, 0.03, 0.82}))
 
     local vertices = {}
@@ -411,15 +415,31 @@ local function ApplySszorakMarkerMapSettings(self, F, settings)
 
     for slot, marker in ipairs(F.Markers) do
         local angle = math.rad(((slot - 1) * 45) + markerMapRotationDegrees)
-        marker.MarkerAngle = angle
         if order[slot] == 0 then
             marker:Hide()
         else
+            local markerX = math.sin(angle) * markerRadius
+            local markerY = math.cos(angle) * markerRadius
+            local layerSize = mapSize * rotationScale
+            local targetX = markerX * rotationScale
+            local targetY = markerY * rotationScale
+            local markerHalf = markerSize * rotationScale * 0.5
+            local layerHalf = layerSize * 0.5
+
+            marker:SetRotation(0)
             marker:SetTexture(string.format("Interface\\TargetingFrame\\UI-RaidTargetingIcon_%d", order[slot]), "CLAMP", "CLAMP")
+            marker:SetHorizTile(false)
+            marker:SetVertTile(false)
             marker:SetTexCoord(0, 1, 0, 1)
-            marker:SetSize(markerSize, markerSize)
+            marker:SetSize(layerSize, layerSize)
+            marker:SetScale(1)
             marker:ClearAllPoints()
-            marker:SetPoint("CENTER", F, "CENTER", math.sin(angle) * markerRadius, math.cos(angle) * markerRadius)
+            marker:SetPoint("CENTER", F, "CENTER", 0, 0)
+            marker:ClearVertexOffsets()
+            marker:SetVertexOffset(UPPER_LEFT_VERTEX,  targetX - markerHalf + layerHalf, targetY + markerHalf - layerHalf)
+            marker:SetVertexOffset(LOWER_LEFT_VERTEX,  targetX - markerHalf + layerHalf, targetY - markerHalf + layerHalf)
+            marker:SetVertexOffset(UPPER_RIGHT_VERTEX, targetX + markerHalf - layerHalf, targetY + markerHalf - layerHalf)
+            marker:SetVertexOffset(LOWER_RIGHT_VERTEX, targetX + markerHalf - layerHalf, targetY - markerHalf + layerHalf)
             marker:Show()
         end
     end
@@ -499,13 +519,17 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             end)
             showMarkerMap()
         else
-            local debuffAlert = NSRT.EncounterAlerts[encID][id].Debuffs
-            if id == 14 and (not debuffAlert or not debuffAlert.timers or #debuffAlert.timers == 0) then
+            if markerMap.ActiveEntireFight then
                 showMarkerMap()
-            elseif debuffAlert and debuffAlert.timers then
-                for _, debuffTime in ipairs(debuffAlert.timers) do
-                    self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(math.max(0, debuffTime - 5), showMarkerMap)
-                    self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(debuffTime + 12, hideMarkerMap)
+            else
+                local debuffAlert = NSRT.EncounterAlerts[encID][id].Debuffs
+                if id == 14 and (not debuffAlert or not debuffAlert.timers or #debuffAlert.timers == 0) then
+                    showMarkerMap()
+                elseif debuffAlert and debuffAlert.timers then
+                    for _, debuffTime in ipairs(debuffAlert.timers) do
+                        self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(math.max(0, debuffTime - 5), showMarkerMap)
+                        self.SszorakMarkerMapTimers[#self.SszorakMarkerMapTimers + 1] = C_Timer.NewTimer(debuffTime + 12, hideMarkerMap)
+                    end
                 end
             end
         end
