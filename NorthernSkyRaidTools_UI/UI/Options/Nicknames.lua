@@ -242,6 +242,18 @@ local function BuildNicknamesOptions()
             desc = "Enable Nicknames to be used with EllesmereUI unit frames.",
             nocombat = true
         },
+        {
+            type = "toggle",
+            boxfirst = true,
+            get = function() return NSRT.Settings["Spotlights"] end,
+            set = function(self, fixedparam, value)
+                NSRT.Settings["Spotlights"] = value
+                NSI:FireCallback("SPOTLIGHTS_NICKNAME_TOGGLE", value)
+            end,
+            name = "Enable Spotlights Nicknames",
+            desc = "Enable Nicknames to be used with Spotlights unit frames.",
+            nocombat = true
+        },
 
         {
             type = "breakline"
