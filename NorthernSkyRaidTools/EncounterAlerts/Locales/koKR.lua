@@ -218,7 +218,7 @@ L[3420] = {
     ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
     ["VenomousSurgeTargets"] = {group = "스조라크", name = "디버프 대상"},
     ["VenomousSurgeAssignment"] = {group = "스조라크", name = "구슬 위치 배정", text = "구슬 깔기"},
-    -- ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
+    ["MarkerMap"] = {group = "스조라크", name = "징표 맵"},
 }
 
 -- The Twin Fangs (3421)
@@ -235,7 +235,7 @@ L[3421] = {
     ["TankSoak"]    = {group = "쌍둥이 송곳니", name = "탱커와 같이 맞기", text = "스킬 맞기"},
     ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "밀려남", text = "밀려남"},
     ["Knock"]       = {group = "쌍둥이 송곳니", name = "넉백", text = "넉백"},
-    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
+    ["DebuffOverview"] = {group = "쌍둥이 송곳니", name = "영원의 맹독 현황", text = "영원의 맹독 현황"},
 }
 
 -- The Coiled Altar (3429)
