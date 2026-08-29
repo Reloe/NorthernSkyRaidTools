@@ -76,6 +76,7 @@ NSI.LSM:Register("sound", color .. "Cleaner|r", [[Interface\Addons\NorthernSkyRa
 NSI.LSM:Register("sound", color .. "Root|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Root.ogg]])
 NSI.LSM:Register("sound", color .. "Adds|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Adds.ogg]])
 NSI.LSM:Register("sound", color .. "Done|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Done.ogg]])
+NSI.LSM:Register("sound", color .. "5seconds321|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\5seconds321.ogg]])
 --Fonts
 NSI.LSM:Register("font","Expressway", [[Interface\Addons\NorthernSkyRaidTools\Media\Fonts\Expressway.TTF]])
 --StatusBars

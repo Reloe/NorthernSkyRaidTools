@@ -251,6 +251,7 @@ L[3429] = {
     ["P2Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P2 嘲諷", text = "嘲諷"},
     ["P2Debuffs"]     = {group = "盤蛇祭壇 P2", name = "P2 Debuff", text = "Debuff"},
     ["P2Shield"]      = {group = "盤蛇祭壇 P2", name = "P2 盾", text = "P2 盾"},
+    -- ["EternalNightfallAbsorb"] = {group = "Coiled Altar P2", name = "Eternal Nightfall Absorb", text = ""},
     ["InterruptAdds"] = {group = "盤蛇祭壇 P2", name = "P2 打斷小怪", text = "鬼"},
     -- ["InterruptAssignments"] = {group = "Coiled Altar P2", name = "Interrupt Assignments", text = "Interrupts"},
     ["P2_5WrongTarget"] = {group = "盤蛇祭壇 P2.5", name = "打錯目標", text = "打錯目標"},

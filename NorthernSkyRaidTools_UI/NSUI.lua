@@ -508,6 +508,12 @@ function NSUI:Init()
             self.PendingShow = false
             NSUI:Show()
         end
+        local pendingOpenAlert = NSI.PendingOpenAlert
+        if pendingOpenAlert then
+            NSI.PendingOpenAlert = nil
+            self.MenuFrame:SelectTabByName("EncounterAlerts")
+            self.encounters_frame:OpenAlert(pendingOpenAlert.encID, pendingOpenAlert.diffID, pendingOpenAlert.internalID)
+        end
     end)
     end)
 
