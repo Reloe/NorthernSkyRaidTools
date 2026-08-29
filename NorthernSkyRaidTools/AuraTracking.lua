@@ -1773,6 +1773,7 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
             direction = state.invertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
         })
     end
+    button:SetMouseMotionEnabled(false)
 end
 
 function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, overrides)
