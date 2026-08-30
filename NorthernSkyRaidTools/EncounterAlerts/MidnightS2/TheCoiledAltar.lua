@@ -681,6 +681,25 @@ local function RemoveCoiledAltarInterruptNameplate(self, unit)
 end
 
 local function UpdateCoiledAltarInterruptMarker(self)
+    local assignedBoss = self.CoiledAltarInterruptAssignedBoss
+    local migratedBoss
+    if assignedBoss == "boss4" and not UnitExists("boss4") and UnitExists("boss3") then
+        migratedBoss = "boss3"
+    elseif assignedBoss == "boss3" and not UnitExists("boss3") and UnitExists("boss4") then
+        migratedBoss = "boss4"
+    end
+    if migratedBoss then
+        local counts = self.CoiledAltarInterruptCastCounts or {}
+        counts[migratedBoss] = math.max(counts[migratedBoss] or 1, counts[assignedBoss] or 1)
+        self.CoiledAltarInterruptCastCounts = counts
+        if self.CoiledAltarInterruptCasting and self.CoiledAltarInterruptCasting[assignedBoss] then
+            self.CoiledAltarInterruptCasting[migratedBoss] = true
+        end
+        if self.CoiledAltarInterruptCasting then
+            self.CoiledAltarInterruptCasting[assignedBoss] = nil
+        end
+        self.CoiledAltarInterruptAssignedBoss = migratedBoss
+    end
     if self.CoiledAltarInterruptAssignedBoss or not self.CoiledAltarInterruptActive then
         NSI:UpdateCoiledAltarInterruptDisplay()
         return
@@ -914,8 +933,9 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                 end
             elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
                 UpdateCoiledAltarInterruptMarker(self)
-                if self.CoiledAltarInterruptActive then
+                if self.CoiledAltarInterruptActive and IsCoiledAltarInterruptUnit(self, unit) and self.CoiledAltarInterruptCasting[unit] then
                     self.CoiledAltarInterruptCasting[unit] = nil
+                    self.CoiledAltarInterruptCastCounts[unit] = (self.CoiledAltarInterruptCastCounts[unit] or 1) + 1
                 end
                 NSI:UpdateCoiledAltarInterruptDisplay()
             elseif event == "UNIT_SPELLCAST_STOP" then
