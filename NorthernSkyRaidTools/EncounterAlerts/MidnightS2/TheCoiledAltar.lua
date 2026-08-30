@@ -397,6 +397,7 @@ local function ResetCoiledAltarInterruptDisplay(self)
     end
     self.CoiledAltarInterruptAssignedBoss = nil
     self.CoiledAltarInterruptActive = false
+    self.CoiledAltarInterruptBoss3Available = false
     self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
     self.CoiledAltarInterruptCasting = {}
     for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
@@ -499,7 +500,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local assignmentTable = interrupts and interrupts.assignTable
     local phaseAllowed = self.Phase == 2 or self.Phase == 3
     local alertLoad = alert and self:EvaluateLoad(alert)
-    local active = self.CoiledAltarInterruptActive and phaseAllowed and alert and alert.enabled and alertLoad
+    local active = self.CoiledAltarInterruptActive and self.CoiledAltarInterruptBoss3Available ~= false and phaseAllowed and alert and alert.enabled and alertLoad
     if not active or not assignmentTable or not assignmentTable[2] or not assignmentTable[3] then
         for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
             for boxIndex, box in ipairs(display.boxes) do
@@ -707,6 +708,7 @@ local function SetCoiledAltarInterruptPhase(self, active)
         active = false
     end
     self.CoiledAltarInterruptActive = active
+    self.CoiledAltarInterruptBoss3Available = active
     self.CoiledAltarInterruptAssignedBoss = nil
     self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
     self.CoiledAltarInterruptCasting = {}
@@ -893,10 +895,16 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             elseif event == "RAID_TARGET_UPDATE" then
                 UpdateCoiledAltarInterruptMarker(self)
             elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
-                if not UnitExists("boss3") then
-                    SetCoiledAltarInterruptPhase(self, false)
+                local boss3Exists = UnitExists("boss3")
+                if not boss3Exists then
+                    self.CoiledAltarInterruptBoss3Available = false
+                    self.CoiledAltarInterruptAssignedBoss = nil
+                    self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
+                    self.CoiledAltarInterruptCasting = {}
+                    NSI:UpdateCoiledAltarInterruptDisplay()
                     return
                 end
+                self.CoiledAltarInterruptBoss3Available = true
                 UpdateCoiledAltarInterruptMarker(self)
             elseif event == "UNIT_SPELLCAST_START" then
                 UpdateCoiledAltarInterruptMarker(self)
