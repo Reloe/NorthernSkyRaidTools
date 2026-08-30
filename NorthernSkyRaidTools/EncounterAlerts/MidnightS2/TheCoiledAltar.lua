@@ -151,7 +151,7 @@ NSI.InitializeAlerts[encID] = function(self)
         spellID = 1286399,
         timers = {
             [15] = {13, 46.1, 98},
-            [16] = {13, 46.1, 98},
+            [16] = {13, 46, 98, 131, 183},
         },
     }
     self:AddEncounterAlert(data)
@@ -182,7 +182,7 @@ NSI.InitializeAlerts[encID] = function(self)
         spellID = 1310752,
         timers = {
             [15] = {41.9, 141.8},
-            [16] = {41.9, 141.8},
+            [16] = {38, 134.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -196,15 +196,14 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    --[=[
     local data = {group = "Coiled Altar P3", internalID = "P3InterruptAdds", name = "P3 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1286399,
         timers = {
-            [16] = {},
+            [16] = {62.2, 159.2},
         },
+        difficulties = {16},
     }
     self:AddEncounterAlert(data)
-    ]=]
 
     local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
         timers = {
@@ -406,6 +405,10 @@ local function ResetCoiledAltarInterruptDisplay(self)
     if self.CoiledAltarInterruptStaticFrame then
         self.CoiledAltarInterruptStaticFrame:Hide()
     end
+    for timerIndex, timer in ipairs(self.CoiledAltarInterruptResetTimers or {}) do
+        timer:Cancel()
+    end
+    self.CoiledAltarInterruptResetTimers = nil
     self.CoiledAltarInterruptAssignedBoss = nil
     self.CoiledAltarInterruptActive = false
     self.CoiledAltarInterruptBoss3Available = false
@@ -807,6 +810,32 @@ local function UpdateCoiledAltarInterruptMarker(self)
     NSI:UpdateCoiledAltarInterruptDisplay()
 end
 
+local function ArmCoiledAltarInterruptResetTimers(self, phase)
+    for timerIndex, timer in ipairs(self.CoiledAltarInterruptResetTimers or {}) do
+        timer:Cancel()
+    end
+    self.CoiledAltarInterruptResetTimers = {}
+
+    local difficultyID = self:DifficultyCheck({16})
+    local alertID = phase == 2 and "InterruptAdds" or phase == 3 and "P3InterruptAdds"
+    local diffData = difficultyID and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficultyID]
+    local ghostAlert = diffData and alertID and diffData[alertID]
+    local timers = ghostAlert and ghostAlert.timers and ghostAlert.timers[difficultyID]
+    if not timers then return end
+
+    local phaseStart = self.PhaseSwapTime or GetTime()
+    for timerIndex, timer in ipairs(timers) do
+        local delay = timer - (GetTime() - phaseStart)
+        self.CoiledAltarInterruptResetTimers[#self.CoiledAltarInterruptResetTimers + 1] = C_Timer.NewTimer(math.max(delay, 0), function()
+            if self.EncounterID ~= encID or self.Phase ~= phase then return end
+            self.CoiledAltarInterruptAssignedBoss = nil
+            self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
+            self.CoiledAltarInterruptCasting = {}
+            UpdateCoiledAltarInterruptMarker(self)
+        end)
+    end
+end
+
 local function IsCoiledAltarInterruptUnit(self, unit)
     if unit ~= "boss3" and unit ~= "boss4" then return false end
     if not self.CoiledAltarInterruptAssignedBoss then return true end
@@ -829,6 +858,7 @@ local function SetCoiledAltarInterruptPhase(self, active)
         self:ReadInterruptNote(1)
         RefreshCoiledAltarInterruptNameplates(self)
         UpdateCoiledAltarInterruptMarker(self)
+        ArmCoiledAltarInterruptResetTimers(self, self.Phase)
     end
     NSI:UpdateCoiledAltarInterruptDisplay()
 end
@@ -947,7 +977,7 @@ end
 local function ArmCoiledAltarEternalNightfall(self)
     StopCoiledAltarEternalNightfallListening(self)
     local alert = self.CoiledAltarEternalNightfallAlert
-    local difficultyID = self:DifficultyCheck({14, 15, 16})
+    local difficultyID = self:DifficultyCheck({15, 16})
     local diffData = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
     local shieldAlert = diffData and diffData.P2Shield
     local shieldTimers = shieldAlert and shieldAlert.timers and shieldAlert.timers[difficultyID]
@@ -970,7 +1000,7 @@ local function ArmCoiledAltarEternalNightfall(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
-    id = id or self:DifficultyCheck({14, 15, 16})
+    id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     self.CoiledAltarInterruptAlert = diffData and diffData.InterruptAssignments
     self.CoiledAltarEternalNightfallAlert = diffData and diffData.EternalNightfallAbsorb
