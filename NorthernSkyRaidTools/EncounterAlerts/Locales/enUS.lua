@@ -219,7 +219,6 @@ L[3420] = {
     ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
     ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
     ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
-    ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
     ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
 }
 

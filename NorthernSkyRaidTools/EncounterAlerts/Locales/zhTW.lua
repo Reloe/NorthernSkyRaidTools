@@ -219,7 +219,6 @@ L[3420] = {
     ["SerpentsFury"] = {group = "司佐拉", name = "毒蛇之怒", text = "集中"},
     ["WindsHelper"]  = {group = "司佐拉", name = "吹風方向"},
     ["VenomousSurgeTargets"] = {group = "司佐拉", name = "Debuff 目標"},
-    -- ["VenomousSurgeAssignment"] = {group = "Sszorak", name = "Drop Assignment", text = "Drop on"},
     -- ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
 }
 

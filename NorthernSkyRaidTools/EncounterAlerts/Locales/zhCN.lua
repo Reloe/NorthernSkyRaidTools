@@ -217,7 +217,6 @@ L[3420] = {
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
     ["VenomousSurgeTargets"]    = {group = "斯索拉克", name = "剧毒涌动目标"},
-    ["VenomousSurgeAssignment"] = {group = "斯索拉克", name = "剧毒涌动分配", text = "放在"},
     ["MarkerMap"]    = {group = "斯索拉克", name = "标记地图"},
 }
 
