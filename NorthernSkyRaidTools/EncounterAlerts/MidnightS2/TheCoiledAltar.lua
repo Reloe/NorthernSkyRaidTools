@@ -74,7 +74,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
             [15] = {8.1, 44.7, 93.1, 129},
-            [16] = {8.1, 44.7, 93.1, 129},
+            [16] = {8.1, 44.7, 93.1, 129, 177.4},
         },
     }
     self:AddEncounterAlert(data)
@@ -86,8 +86,8 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() if UnitGroupRolesAssigned("player") ~= "TANK" then return true end local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
         },
         timers = {
-            [15] = {38.1, 69, 123.1, 154},
-            [16] = {38.1, 69, 123.1, 154},
+            [15] = {38, 69, 123, 154},
+            [16] = {38, 69, 123, 154, 208},
         },
     }
     self:AddEncounterAlert(data)
@@ -100,7 +100,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {38.6, 69.5, 123.6, 154.5},
-            [16] = {38.6, 69.5, 123.6, 154.5},
+            [16] = {38.6, 69.5, 123.6, 154.5, 208.6},
         },
     }
     self:AddEncounterAlert(data)
@@ -109,7 +109,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
             [15] = {24.1, 62.1, 109, 147},
-            [16] = {24.1, 62.1, 109, 147},
+            [16] = {20, 57, 105, 142, 190},
         },
     }
     self:AddEncounterAlert(data)
@@ -164,8 +164,16 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {36.3, 68.5, 103, 140.9, 173.1},
-            [16] = {36.3, 68.5, 103, 140.9, 173.1},
+            [16] = {35.5, 66.5, 99.9, 136.5, 167.6, 199.8},
         },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Coiled Altar P3", internalID = "P3OrbDeadline", name = "P3 Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5,
+        timers = {
+            [16] = {29.5, 60.5, 93.9, 130.5, 161.6, 193.8},
+        },
+        difficulties = {16},
     }
     self:AddEncounterAlert(data)
 
@@ -173,7 +181,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = tankConditions,
         timers = {
             [15] = {22.3, 191.3},
-            [16] = {22.3, 191.3},
+            [16] = {21.8, 86.3, 186.3},
         },
     }
     self:AddEncounterAlert(data)
@@ -191,7 +199,7 @@ NSI.InitializeAlerts[encID] = function(self)
         loadConditions = nonTankConditions, spellID = 1310881,
         timers = {
             [15] = {31.2, 81.8, 115.1, 181.8},
-            [16] = {31.2, 81.8, 115.1, 181.8},
+            [16] = {26.8, 71.1, 109, 172.2},
         },
     }
     self:AddEncounterAlert(data)
@@ -208,7 +216,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
         timers = {
             [15] = {66.3, 167.5},
-            [16] = {66.3, 167.5},
+            [16] = {57.8, 154.1, 201.9},
         },
     }
     self:AddEncounterAlert(data)
@@ -221,7 +229,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {39.6, 71.8, 106.3, 144.2, 176.4},
-            [16] = {39.6, 71.8, 106.3, 144.2, 176.4},
+            [16] = {36, 67, 100.4, 137, 168.1, 200.3},
         },
     }
     self:AddEncounterAlert(data)
