@@ -254,6 +254,7 @@ L[3429] = {
     ["EternalNightfallAbsorb"] = {group = "Coiled Altar P2", name = "Eternal Nightfall Absorb", text = ""},
     ["InterruptAdds"] = {group = "Coiled Altar P2", name = "P2 Interrupt Adds", text = "Ghosts"},
     ["InterruptAssignments"] = {group = "Coiled Altar P2", name = "Interrupt Assignments", text = "Interrupts"},
+    ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     ["P2_5WrongTarget"] = {group = "Coiled Altar P3", name = "Wrong Target", text = "WRONG TARGET"},
     ["P3Frontal"] = {group = "Coiled Altar P3", name = "P3 Frontal", text = "Frontal"},
     ["P3Soak"] = {group = "Coiled Altar P3", name = "P3 Soak", text = "Soak"},

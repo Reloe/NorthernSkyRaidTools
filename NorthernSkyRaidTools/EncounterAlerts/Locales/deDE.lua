@@ -239,6 +239,7 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
+    -- ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     -- ["P1Frontal"]     = {group = "Coiled Altar P1", name = "P1 Frontal", text = "Frontal"},
     -- ["P1OrbDeadline"] = {group = "Coiled Altar P1", name = "Orb deadline", text = "Orb deadline"},
     -- ["P1Taunt"]       = {group = "Coiled Altar Tanks", name = "P1 Taunt", text = "Taunt"},

@@ -240,6 +240,7 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
+    -- ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     ["P1Frontal"]       = {group = "똬리의 제단 1페", name = "1페 전방스킬", text = "전방스킬"},
     ["P1OrbDeadline"] = {group = "똬리의 제단 1페", name = "구슬 운반 마감", text = "구슬 운반 마감"},
     ["P1Taunt"]         = {group = "똬리의 제단 탱커", name = "1페 도발", text = "도발"},
