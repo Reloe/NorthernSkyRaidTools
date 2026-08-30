@@ -239,6 +239,7 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
+    -- ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     ["InterruptAdds"] = {group = "Спиральный алтарь [2-я фаза]", name = "Прерывание аддов (2-я фаза)", text = "Призраки"},
     ["InterruptAssignments"] = {group = "Спиральный алтарь [2-я фаза]", name = "Назначенные прерываний", text = "Прерывания"},
     ["P2Taunt"] = {group = "Спиральный алтарь [Танки]", name = "Таунт (2-я фаза)", text = "Провокация"},
