@@ -240,7 +240,6 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    -- ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     ["P1Frontal"]       = {group = "똬리의 제단 1페", name = "1페 전방스킬", text = "전방스킬"},
     ["P1OrbDeadline"] = {group = "똬리의 제단 1페", name = "구슬 운반 마감", text = "구슬 운반 마감"},
     ["P1Taunt"]         = {group = "똬리의 제단 탱커", name = "1페 도발", text = "도발"},
@@ -253,12 +252,13 @@ L[3429] = {
     ["EternalNightfallAbsorb"] = {group = "똬리의 제단 2페", name = "영원한 일몰 보호막", text = ""},
     ["InterruptAdds"] = {group = "똬리의 제단 2페", name = "2페 쫄 차단", text = "유령"},
     ["InterruptAssignments"] = {group = "똬리의 제단 2페", name = "차단 배정", text = "차단"},
+    ["P3OrbDeadline"] = {group = "똬리의 제단 3페", name = "3페 구슬 운반 마감", text = "구슬 운반 마감"},
     ["P2_5WrongTarget"] = {group = "똬리의 제단 3페", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
     ["P3Frontal"] = {group = "똬리의 제단 3페", name = "3페 전방스킬", text = "전방스킬"},
     ["P3Soak"] = {group = "똬리의 제단 3페", name = "3페 스킬 맞기", text = "스킬 맞기"},
     ["P3Shield"] = {group = "똬리의 제단 3페", name = "3페 보호막", text = "보호막"},
     ["P3Debuffs"] = {group = "똬리의 제단 3페", name = "3페 디버프", text = "디버프"},
-    -- ["P3InterruptAdds"] = {group = "똬리의 제단 3페", name = "3페 쫄 차단", text = "유령"},
+    ["P3InterruptAdds"] = {group = "똬리의 제단 3페", name = "3페 쫄 차단", text = "유령"},
     ["P3MindControls"] = {group = "똬리의 제단 3페", name = "3페 정신 지배", text = "정신 지배"},
     ["P3Taunt"] = {group = "똬리의 제단 탱커", name = "3페 도발", text = "도발"},
 }
