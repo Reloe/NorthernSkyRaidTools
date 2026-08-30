@@ -1227,6 +1227,7 @@ L["Cross"] = "Крест"
 L["Skull"] = "Череп"
 L["Backup"] = "Резервная копия"
 L["Bar Color"] = "Цвет полосы"
+L["Bar Width"] = "Ширина полосы"
 L["Bar Height"] = "Высота полосы"
 L["Background Color"] = "Цвет фона"
 
