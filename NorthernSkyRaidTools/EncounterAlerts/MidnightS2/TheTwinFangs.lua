@@ -167,7 +167,11 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id or self:DifficultyCheck({14, 15, 16})]
     local alert = diffData and diffData.DebuffOverview
     if alert and alert.enabled and self:EvaluateLoad(alert) then
-        self:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, nil, true)
+        local overviewSettings = NSRT.ReminderSettings.DebuffOverviewSettings
+        self:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, {
+            height = alert.BarHeight or overviewSettings.Height,
+            barColors = alert.BarColor or overviewSettings.barColors,
+        }, true)
         self:SetDebuffOverviewContainersShown(true, "TwinFangsDebuffOverview")
     else
         self:SetDebuffOverviewContainersShown(false, "TwinFangsDebuffOverview")

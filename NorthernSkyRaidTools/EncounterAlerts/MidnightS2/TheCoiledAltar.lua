@@ -892,6 +892,7 @@ local function HideCoiledAltarEternalNightfall(self)
     local frame = self.CoiledAltarEternalNightfallFrame
     if frame then
         frame:Hide()
+        frame.EternalNightfallPending = false
         frame.EternalNightfallStart = nil
         frame.EternalNightfallEnd = nil
         frame.EternalNightfallMaxAbsorb = nil
@@ -979,7 +980,7 @@ local function StopCoiledAltarEternalNightfallListening(self)
         self.CoiledAltarEternalNightfallListenStopTimer:Cancel()
         self.CoiledAltarEternalNightfallListenStopTimer = nil
     end
-    self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_ABSORB_AMOUNT_CHANGED", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_CHANNEL_STOP", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_FAILED"}, false, "boss2")
+    self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_SPELLCAST_START", "UNIT_ABSORB_AMOUNT_CHANGED", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_CHANNEL_STOP", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_FAILED"}, false, "boss2")
 end
 
 local function ArmCoiledAltarEternalNightfall(self)
@@ -998,7 +999,7 @@ local function ArmCoiledAltarEternalNightfall(self)
         if listenDelay >= 0 then
             self.CoiledAltarEternalNightfallListenTimers[#self.CoiledAltarEternalNightfallListenTimers + 1] = C_Timer.NewTimer(listenDelay, function()
                 if self.EncounterID ~= encID or self.Phase ~= 2 then return end
-                self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_ABSORB_AMOUNT_CHANGED", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_CHANNEL_STOP", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_FAILED"}, true, "boss2")
+                self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_SPELLCAST_START", "UNIT_ABSORB_AMOUNT_CHANGED", "UNIT_SPELLCAST_STOP", "UNIT_SPELLCAST_CHANNEL_STOP", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_FAILED"}, true, "boss2")
                 self.CoiledAltarEternalNightfallListenStopTimer = C_Timer.NewTimer(eternalNightfallDuration + 2, function()
                     StopCoiledAltarEternalNightfallListening(self)
                 end)
@@ -1024,7 +1025,17 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             HideCoiledAltarEternalNightfall(self)
         end
         self:EncounterFunction("CoiledAltarEternalNightfall", function(eventFrame, event)
-            if event == "UNIT_ABSORB_AMOUNT_CHANGED" then
+            local frame = self.CoiledAltarEternalNightfallFrame
+            if event == "UNIT_SPELLCAST_START" then
+                if frame then
+                    frame.EternalNightfallPending = true
+                    frame.EternalNightfallStart = GetTime()
+                    frame.EternalNightfallEnd = frame.EternalNightfallStart + eternalNightfallDuration
+                    frame.EternalNightfallMaxAbsorb = nil
+                    frame:Hide()
+                end
+            elseif event == "UNIT_ABSORB_AMOUNT_CHANGED" and frame and frame.EternalNightfallPending then
+                frame.EternalNightfallPending = false
                 ShowCoiledAltarEternalNightfall(self, false, UnitGetTotalAbsorbs("boss2"))
             elseif event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_FAILED" then
                 HideCoiledAltarEternalNightfall(self)

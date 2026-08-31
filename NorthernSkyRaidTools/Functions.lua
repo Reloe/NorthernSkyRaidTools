@@ -472,6 +472,9 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote, onPositionSaved)
     if not F then return end
 
     if enable then
+        if not F._nsrtPreservedOnUpdate then
+            F._nsrtPreservedOnUpdate = F:GetScript("OnUpdate")
+        end
         if (not F.dragBorder) and (not isNote) then
             F.dragBorder = CreateFrame("Frame", nil, F, "BackdropTemplate")
             F.dragBorder:SetPoint("TOPLEFT",     F, "TOPLEFT",     -8,  8)
@@ -507,16 +510,20 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote, onPositionSaved)
                 f._nsrtLiveSaveDrag = true
                 f:SetScript("OnUpdate", function(frame, elapsed)
                     frame._nsrtDragSaveElapsed = (frame._nsrtDragSaveElapsed or 0) + elapsed
-                    if frame._nsrtDragSaveElapsed < 0.05 then return end
-                    frame._nsrtDragSaveElapsed = 0
-                    self:SaveFramePosition(frame, settingsTable)
-                    if onPositionSaved then onPositionSaved(frame, settingsTable) end
+                    if frame._nsrtDragSaveElapsed >= 0.05 then
+                        frame._nsrtDragSaveElapsed = 0
+                        self:SaveFramePosition(frame, settingsTable)
+                        if onPositionSaved then onPositionSaved(frame, settingsTable) end
+                    end
+                    if frame._nsrtPreservedOnUpdate then
+                        frame._nsrtPreservedOnUpdate(frame, elapsed)
+                    end
                 end)
             end
         end)
         F:SetScript("OnDragStop", function(f)
             if f._nsrtLiveSaveDrag then
-                f:SetScript("OnUpdate", nil)
+                f:SetScript("OnUpdate", f._nsrtPreservedOnUpdate)
                 f._nsrtLiveSaveDrag = nil
                 f._nsrtDragSaveElapsed = nil
             end
@@ -539,7 +546,7 @@ function NSI:MakeDraggable(F, settingsTable, enable, isNote, onPositionSaved)
         F:SetMovable(false)
         F:EnableMouse(false)
         if F._nsrtLiveSaveDrag then
-            F:SetScript("OnUpdate", nil)
+            F:SetScript("OnUpdate", F._nsrtPreservedOnUpdate)
             F._nsrtLiveSaveDrag = nil
             F._nsrtDragSaveElapsed = nil
         end

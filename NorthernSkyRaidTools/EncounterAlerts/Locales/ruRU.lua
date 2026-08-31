@@ -216,7 +216,6 @@ L[3420] = {
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
     ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
-    -- ["VenomousSurgeAssignment"] = {group = "Ссзорак", name = "Drop Assignment", text = "Drop on"},
     ["MarkerMap"] = {group = "Ссзорак", name = "Карта меток"},
 }
 

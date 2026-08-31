@@ -34,6 +34,9 @@ local markerMapRotationDegrees = 14
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
+    for difficultyID = 14, 16 do
+        self:RemoveEncounterAlert(encID, difficultyID, "VenomousSurgeAssignment")
+    end
 
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
@@ -166,18 +169,6 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Sszorak", internalID = "VenomousSurgeTargets", name = "Debuff Targets", text = nil, DisplayType = "Bar", encID = encID, phase = nil, TTS = false, dur = bombDuration,
         spellID = 1305959, id = 0.1, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, Preview = BombPreview,
         customIcon = 1305959,
-    }
-    self:AddEncounterAlert(data)
-
-    local AssignmentPreview = [[
-        return function(self)
-            self.EncounterAlertStart[3420](self, 16, "Drop Assignment")
-        end
-    ]]
-
-    local data = {group = "Sszorak", internalID = "VenomousSurgeAssignment", name = "Drop Assignment", text = "Drop on", DisplayType = "Text", encID = encID,
-        phase = 1, TTS = false, dur = 11, spellID = 1305959, difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true,
-        Preview = AssignmentPreview,
     }
     self:AddEncounterAlert(data)
 
@@ -661,11 +652,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 
     local diffData = NSRT.EncounterAlerts[encID][id]
     local bombs = diffData and diffData.VenomousSurgeTargets
-    local assignment = diffData and diffData.VenomousSurgeAssignment
     local bombsActive = bombs and ((bombs.enabled and self:EvaluateLoad(bombs) and realpull) or (preview and preview == "Debuff Targets"))
-    local assignmentPreview = preview and preview == "Drop Assignment"
-    local assignmentActive = assignment and ((assignment.enabled and self:EvaluateLoad(assignment) and realpull) or assignmentPreview)
-    if bombsActive or assignmentActive then
+    if bombsActive then
         local windsActive = (winds and winds.enabled and self:EvaluateLoad(winds)) and true or false
         local function DisplayBomb(unit)
             if not UnitExists(unit) then return end
@@ -715,29 +703,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
         end
         self.BombCount = 0
 
-        if assignmentPreview then
-            local previewMarker = secretwrap(math.random(1, 4))
-            local info = self:CreateReminder({
-                text = "",
-                DisplayType = "Text",
-                spellID = assignment.spellID,
-                dur = assignment.dur,
-                encID = encID,
-                phase = self.Phase,
-                TTS = false,
-                sticky = 0,
-                IsAlert = true,
-            }, true)
-            if info then
-                info.SecretDisplayText = string.format("%s |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", assignment.text or "Drop on", previewMarker)
-                local frame = self:DisplayReminder(info)
-                if frame then
-                    self.SszorakAssignmentPreviewFrames = {frame}
-                end
-            end
-            return
-        end
-
         if preview then
             self.IsSszorakBombPreview = true
             self.SszorakBombPreviewFrames = {}
@@ -761,55 +726,16 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             if bombsActive then
                 DisplayBomb("boss1target")
             end
-            if assignmentActive then
-                self.AssignmentWindowCaptures = (self.AssignmentWindowCaptures or 0) + 1
-                local isPlayerTarget = UnitIsUnit("boss1target", "player")
-                if not issecretvalue(isPlayerTarget) and isPlayerTarget then
-                    local displayText
-                    if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
-                        displayText = string.format("%s |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", assignment.text or "Drop on", self.WindsOrder[self.AssignmentWindowCaptures])
-                    else
-                        displayText = string.format("%s %s", assignment.text or "Drop on", NSI:EncounterAlertLoc("Backup"))
-                    end
-
-                    local info = self:CreateReminder({
-                        text = "",
-                        DisplayType = "Text",
-                        spellID = assignment.spellID,
-                        dur = assignment.dur,
-                        encID = encID,
-                        phase = self.Phase,
-                        TTS = false,
-                        sticky = 0,
-                        IsAlert = true,
-                    }, true)
-                    if info then
-                        if self.AssignmentWindowCaptures <= (self.WindsOrderCount or 0) then
-                            info.SecretDisplayText = displayText
-                        else
-                            info.text = displayText
-                        end
-                        self:DisplayReminder(info)
-                    end
-                end
-            end
             if self.BombWindowCaptures >= venomousSurgeBombsPerCast then
                 self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
             end
         end)
 
         self.BombWindowCaptures = 0
-        self.AssignmentCastCount = 0
-        self.AssignmentWindowCaptures = 0
         self.BombWindowTimers = {}
         for _, castTime in ipairs(venomousSurgeCastTimers[id] or {}) do
             self.BombWindowTimers[#self.BombWindowTimers + 1] = C_Timer.NewTimer(castTime, function()
                 self.BombWindowCaptures = 0
-                self.AssignmentCastCount = (self.AssignmentCastCount or 0) + 1
-                if self.AssignmentCastCount > 2 then
-                    self.AssignmentCastCount = 1
-                    self.AssignmentWindowCaptures = 0
-                end
                 self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", true, "boss1")
             end)
         end
@@ -869,16 +795,8 @@ NSI.EncounterAlertStop[encID] = function(self)
         end
         self.SszorakBombPreviewFrames = nil
     end
-    if self.SszorakAssignmentPreviewFrames then
-        for _, frame in ipairs(self.SszorakAssignmentPreviewFrames) do
-            frame:Hide()
-        end
-        self.SszorakAssignmentPreviewFrames = nil
-    end
     self:EncounterRegister("SszorakBombTargets", "UNIT_TARGET", false, "boss1")
     self.BombWindowCaptures = 0
-    self.AssignmentCastCount = 0
-    self.AssignmentWindowCaptures = 0
     if self.BombWindowTimers then
         for _, timer in ipairs(self.BombWindowTimers) do
             timer:Cancel()
