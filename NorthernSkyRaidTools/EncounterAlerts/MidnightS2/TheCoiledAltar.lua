@@ -827,7 +827,7 @@ local function ArmCoiledAltarInterruptResetTimers(self, phase)
     local alertID = phase == 2 and "InterruptAdds" or phase == 3 and "P3InterruptAdds"
     local diffData = difficultyID and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficultyID]
     local ghostAlert = diffData and alertID and diffData[alertID]
-    local timers = ghostAlert and ghostAlert.timers and ghostAlert.timers[difficultyID]
+    local timers = ghostAlert and ghostAlert.timers
     if not timers then return end
 
     local phaseStart = self.PhaseSwapTime or GetTime()
