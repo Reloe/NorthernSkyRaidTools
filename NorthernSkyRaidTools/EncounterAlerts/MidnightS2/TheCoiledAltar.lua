@@ -599,12 +599,14 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
         local focusMarker = focusIsGhost and GetRaidTargetIndex("focus")
         local focusHasMarker = focusIsGhost and issecretvalue(focusMarker)
         local displayLine = focusHasMarker and 2 or 1
-        local boxVisible = focusIsGhost and (alert.ShowAll or assignedLine == displayLine)
+        local markedBoss = assignedBoss
+        local unmarkedBoss = markedBoss == "boss3" and "boss4" or markedBoss == "boss4" and "boss3"
+        local countUnit = displayLine == 2 and markedBoss or unmarkedBoss
+        local boxVisible = focusIsGhost and countUnit and (alert.ShowAll or assignedLine == displayLine)
         local box = staticFrame.box
         box:Hide()
         if boxVisible then
             local lineNames = assignmentTable[displayLine + 1]
-            local countUnit = assignedBoss or (displayLine == 2 and "boss4" or "boss3")
             local castCount = self.CoiledAltarInterruptCastCounts[countUnit] or 1
             local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
             local nextName = #lineNames > 0 and lineNames[(castCount % #lineNames) + 1]
@@ -652,7 +654,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 local bossUnit = bossIndex == 1 and "boss3" or "boss4"
                 local displayLine = bossIndex == 2 and 2 or 1
                 local lineNames = assignmentTable[displayLine + 1]
-                local countUnit = assignedBoss or bossUnit
+                local countUnit = bossUnit
                 local castCount = self.CoiledAltarInterruptCastCounts[countUnit] or 1
                 local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
                 local nextName = #lineNames > 0 and lineNames[(castCount % #lineNames) + 1]
@@ -670,7 +672,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 box:SetSize(boxSize, boxSize)
                 box.Background:SetColorTexture(unpack(boxColor))
                 local boxVisible = (alert.ShowAll or assignedLine == displayLine) and ((bossIndex == 2) == hasRaidMarker)
-                if boxVisible then
+        if boxVisible and countUnit then
                     box:SetAlpha(1)
                     box:Show()
                 end
@@ -788,8 +790,6 @@ local function UpdateCoiledAltarInterruptMarker(self)
     local migratedBoss
     if assignedBoss == "boss4" and not UnitExists("boss4") and UnitExists("boss3") then
         migratedBoss = "boss3"
-    elseif assignedBoss == "boss3" and not UnitExists("boss3") and UnitExists("boss4") then
-        migratedBoss = "boss4"
     end
     if migratedBoss then
         local counts = self.CoiledAltarInterruptCastCounts or {}
@@ -838,15 +838,13 @@ local function ArmCoiledAltarInterruptResetTimers(self, phase)
             self.CoiledAltarInterruptAssignedBoss = nil
             self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
             self.CoiledAltarInterruptCasting = {}
-            UpdateCoiledAltarInterruptMarker(self)
+            NSI:UpdateCoiledAltarInterruptDisplay()
         end)
     end
 end
 
 local function IsCoiledAltarInterruptUnit(self, unit)
-    if unit ~= "boss3" and unit ~= "boss4" then return false end
-    if not self.CoiledAltarInterruptAssignedBoss then return true end
-    return unit == self.CoiledAltarInterruptAssignedBoss
+    return unit == "boss3" or unit == "boss4"
 end
 
 local function SetCoiledAltarInterruptPhase(self, active)
