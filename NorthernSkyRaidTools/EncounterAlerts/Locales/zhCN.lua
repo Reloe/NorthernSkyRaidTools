@@ -239,7 +239,6 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    -- ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     ["P1Frontal"]       = {group = "盘卷祭坛 P1", name = "撕裂", text = "正面顺劈"},
     ["P1OrbDeadline"]   = {group = "盘卷祭坛 P1", name = "搬球时限", text = "搬球时限"},
     ["P1Taunt"]         = {group = "盘卷祭坛 坦克", name = "P1 嘲讽", text = "嘲讽"},
@@ -250,14 +249,15 @@ L[3429] = {
     ["P2Debuffs"]       = {group = "盘卷祭坛 P2", name = "幽暗炸弹（点名）", text = "点名炸弹"},
     ["P2Shield"]        = {group = "盘卷祭坛 P2", name = "永恒夜幕（破盾）", text = "破盾"},
     ["EternalNightfallAbsorb"] = {group = "盘卷祭坛 P2", name = "永恒夜幕吸收盾", text = ""},
-    ["InterruptAdds"]          = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断小怪"},
+    ["InterruptAdds"]          = {group = "盘卷祭坛 P2", name = "恐惧哀嚎（打断）", text = "打断怪刷新"},
     ["InterruptAssignments"]   = {group = "盘卷祭坛 P2", name = "打断分配", text = "打断"},
+    ["P3OrbDeadline"]   = {group = "盘卷祭坛 P3", name = "搬球时限", text = "搬球时限"},
     ["P2_5WrongTarget"] = {group = "盘卷祭坛 P3", name = "易伤目标错误", text = "目标错误"},
     ["P3Frontal"]       = {group = "盘卷祭坛 P3", name = "凋零撕裂", text = "正面顺劈"},
     ["P3Soak"]          = {group = "盘卷祭坛 P3", name = "冷酷处斩（分摊）", text = "分摊"},
     ["P3Shield"]        = {group = "盘卷祭坛 P3", name = "永恒夜幕（破盾）", text = "破盾"},
     ["P3Debuffs"]       = {group = "盘卷祭坛 P3", name = "幽暗炸弹（点名）", text = "点名炸弹"},
-    -- ["P3InterruptAdds"] = {group = "盘卷祭坛 P3", name = "恐惧哀嚎（打断）", text = "打断小怪"},
+    ["P3InterruptAdds"] = {group = "盘卷祭坛 P3", name = "恐惧哀嚎（打断）", text = "打断怪刷新"},
     ["P3MindControls"]  = {group = "盘卷祭坛 P3", name = "恐惧行军（心控）", text = "心控"},
     ["P3Taunt"]         = {group = "盘卷祭坛 坦克", name = "P3 嘲讽", text = "嘲讽"},
 }
