@@ -175,7 +175,7 @@ L[3445] = {
     ["OrbSpawn"]           = {group = "衛哨", name = "出球", text = "Bait球"},
     ["ShiftingProtovenom"] = {group = "衛哨", name = "移轉原型毒液", text = "分散"},
     ["TransitionDebuffs"]  = {group = "衛哨", name = "轉階 Debuff", text = "數字遊戲"},
-    -- ["Radar"]             = {group = "Sentinels", name = "Radar", text = ""},
+    ["Radar"]              = {group = "衛哨", name = "距離雷達", text = ""},
 }
 
 -- Vashnik the Malignant (3455)
@@ -188,7 +188,7 @@ L[3455] = {
     ["Soaks"]      = {group = "伐許尼克", name = "分傷", text = "分傷"},
     ["Waves"]      = {group = "伐許尼克", name = "波", text = "波"},
     ["WaveSpread"] = {group = "伐許尼克", name = "波 分散", text = "分散"},
-    -- ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
+    ["WavesLine"]  = {group = "伐許尼克", name = "波 瞄準線", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -211,7 +211,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     ["TankCombo"]    = {group = "司佐拉", name = "坦克連擊", text = "坦克連擊"},
-    -- ["SetMarkers"]   = {group = "Sszorak", name = "Mark Reminder", text = "Set Markers"},
+    ["SetMarkers"]   = {group = "司佐拉", name = "標記提醒", text = "標記"},
     ["DamageAmp"]    = {group = "司佐拉", name = "增傷", text = "增傷"},
     ["Bait"]         = {group = "司佐拉", name = "Bait", text = "Bait"},
     ["WindDebuffs"]  = {group = "司佐拉", name = "風 Debuff", text = "風 Debuff"},
@@ -219,16 +219,16 @@ L[3420] = {
     ["SerpentsFury"] = {group = "司佐拉", name = "毒蛇之怒", text = "集中"},
     ["WindsHelper"]  = {group = "司佐拉", name = "吹風方向"},
     ["VenomousSurgeTargets"] = {group = "司佐拉", name = "Debuff 目標"},
-    -- ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
+    ["MarkerMap"]    = {group = "司佐拉", name = "標記地圖"},
 }
 
 -- The Twin Fangs (3421)
 L[3421] = {
     ["Defensives"]  = {group = "雙生毒牙", name = "個減", text = "個減"},
     ["Soak"]        = {group = "雙生毒牙", name = "分傷", text = "分傷"},
-    -- ["Soak1"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
-    -- ["Soak2"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
-    -- ["Soak3"]       = {group = "Twin Fangs", name = "Soak", text = "Soak"},
+    ["Soak1"]       = {group = "雙生毒牙", name = "分傷", text = "分傷"},
+    ["Soak2"]       = {group = "雙生毒牙", name = "分傷", text = "分傷"},
+    ["Soak3"]       = {group = "雙生毒牙", name = "分傷", text = "分傷"},
     ["PreSpread"]   = {group = "雙生毒牙", name = "分散", text = "分散"},
     ["WatchSide"]   = {group = "雙生毒牙", name = "看左右邊", text = "看左右邊"},
     ["Adds"]        = {group = "雙生毒牙", name = "小怪", text = "小怪"},
@@ -236,12 +236,11 @@ L[3421] = {
     ["TankSoak"]    = {group = "雙生毒牙", name = "坦克吃圈", text = "吃圈"},
     ["WatchSpawns"] = {group = "雙生毒牙", name = "推進", text = "推進"},
     ["Knock"]       = {group = "雙生毒牙", name = "擊退", text = "擊退"},
-    -- ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
+    ["DebuffOverview"] = {group = "雙生毒牙", name = "永恆毒液層數", text = "永恆毒液層數"},
 }
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    -- ["P3OrbDeadline"] = {group = "Coiled Altar P3", name = "P3 Orb deadline", text = "Orb deadline"},
     ["P1Frontal"]     = {group = "盤蛇祭壇 P1", name = "P1 頭前", text = "頭前"},
     ["P1OrbDeadline"] = {group = "盤蛇祭壇 P1", name = "停止搬球", text = "停止搬球"},
     ["P1Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P1 嘲諷", text = "嘲諷"},
@@ -251,15 +250,16 @@ L[3429] = {
     ["P2Taunt"]       = {group = "盤蛇祭壇 坦克", name = "P2 嘲諷", text = "嘲諷"},
     ["P2Debuffs"]     = {group = "盤蛇祭壇 P2", name = "P2 Debuff", text = "Debuff"},
     ["P2Shield"]      = {group = "盤蛇祭壇 P2", name = "P2 盾", text = "P2 盾"},
-    -- ["EternalNightfallAbsorb"] = {group = "Coiled Altar P2", name = "Eternal Nightfall Absorb", text = ""},
+    ["EternalNightfallAbsorb"] = {group = "盤蛇祭壇 P2", name = "吸收盾", text = ""},
     ["InterruptAdds"] = {group = "盤蛇祭壇 P2", name = "P2 打斷小怪", text = "鬼"},
-    -- ["InterruptAssignments"] = {group = "Coiled Altar P2", name = "Interrupt Assignments", text = "Interrupts"},
+    ["InterruptAssignments"] = {group = "盤蛇祭壇 P2", name = "打斷分配", text = "打斷"},
+    ["P3OrbDeadline"] = {group = "盤蛇祭壇 P3", name = "P3 停止搬球", text = "停止搬球"},
     ["P2_5WrongTarget"] = {group = "盤蛇祭壇 P2.5", name = "打錯目標", text = "打錯目標"},
     ["P3Frontal"] = {group = "盤蛇祭壇 P3", name = "P3 頭前", text = "頭前"},
     ["P3Soak"] = {group = "盤蛇祭壇 P3", name = "P3 分傷", text = "分傷"},
     ["P3Shield"] = {group = "盤蛇祭壇 P3", name = "P3 盾", text = "盾"},
     ["P3Debuffs"] = {group = "盤蛇祭壇 P3", name = "P3 Debuff", text = "Debuff"},
-    -- ["P3InterruptAdds"] = {group = "盤蛇祭壇 P3", name = "P3 打斷小怪", text = "鬼"},
+    ["P3InterruptAdds"] = {group = "盤蛇祭壇 P3", name = "P3 打斷小怪", text = "鬼"},
     ["P3MindControls"] = {group = "盤蛇祭壇 P3", name = "P3 心控", text = "心控"},
     ["P3Taunt"] = {group = "盤蛇祭壇 坦克", name = "P3 嘲諷", text = "嘲諷"},
 }
@@ -274,7 +274,7 @@ L[3492] = {
     ["Debuffs"]             = {group = "烏拉特克", name = "毒蛇之咬", text = "Debuff"},
     ["Eggs"]                = {group = "烏拉特克", name = "蛋", text = "蛋"},
     ["Adds"]                = {group = "烏拉特克", name = "P3 小怪", text = "小怪"},
-    ["Sweep"]               = {group = "烏拉特克", name = "Sweep", text = "Sweep"},
+    ["Sweep"]               = {group = "烏拉特克", name = "大圈", text = "大圈"},
     ["Soak"]                = {group = "烏拉特克", name = "分傷", text = "分傷"},
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
     ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
