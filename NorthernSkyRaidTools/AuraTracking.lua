@@ -1972,42 +1972,42 @@ local function ConfigureDebuffOverviewButton(self, state, button, unit)
     button:SetMouseMotionEnabled(false)
 end
 
-function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, overrides, sortByDuration)
-    containerName = containerName or "Default"
-    self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
-    local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
-    if existingSet then
-        if useApplicationBar ~= nil or maxApplications ~= nil or overrides or sortByDuration ~= nil then
-            for _, state in ipairs(existingSet) do
-                if useApplicationBar ~= nil then state.useApplicationBar = useApplicationBar == true end
-                state.maxApplications = maxApplications or state.maxApplications
-                if sortByDuration ~= nil then state.sortByDuration = sortByDuration == true end
-                state.height = overrides and overrides.height or state.height
-                state.barColors = overrides and overrides.barColors or state.barColors
-                state.backgroundColors = overrides and overrides.backgroundColors or state.backgroundColors
-            end
-            if overrides and self.DebuffOverviewContainerPreviewActive and self.DebuffOverviewContainerPreviewName == containerName and self.DebuffOverviewFakePreviewConfig then
-                self.DebuffOverviewFakePreviewConfig.overrides = overrides
-                self.DebuffOverviewFakePreviewConfig.backgroundOnly = overrides.backgroundOnly
-            end
-        end
-        self.DebuffOverviewContainerSets = existingSet
-        self:UpdateDebuffOverviewContainers()
-        return existingSet
-    end
-    if regularFilter == nil and candidateFilters == nil then
-        return self.DebuffOverviewContainerSetsByName[containerName]
-    end
-    assert(type(regularFilter) == "string" and AuraUtil.IsValidFilterString(regularFilter), "regularFilter must be a valid aura filter string")
-    assert(candidateFilters == nil or type(candidateFilters) == "table", "candidateFilters must be a table or nil")
-    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
-        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
-    end
-
+local function EnsureDebuffOverviewBaseRow(self, state)
     local settings = NSRT.ReminderSettings.DebuffOverviewSettings
-    local anchor = self.DebuffOverviewMover
-    local copies = math.max(1, math.floor(containersPerUnit or 1))
-    local frameCount = maxFrameCount or 1
+    local container = state.container
+    local row = state.baseRow
+    if not row then
+        row = CreateFrame("StatusBar", nil, container:GetParent(), "BackdropTemplate")
+        row:SetFrameStrata(container:GetFrameStrata())
+        row:SetFrameLevel(math.max(container:GetFrameLevel() - 1, 0))
+        row:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
+        row.Border = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        row.Border:SetAllPoints(row)
+        row.Border:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+        row.Name = row:CreateFontString(nil, "OVERLAY")
+        row:Hide()
+        state.baseRow = row
+    end
+    local height = state.height or settings.Height
+    local barOffset = settings.IconPosition == "Right" and 0 or height
+    row:SetSize(settings.Width + height, height)
+    row:SetBackdropColor(unpack(state.inactiveColors or state.backgroundColors or settings.backgroundColors))
+    row.Border:SetBackdropBorderColor(unpack(settings.borderColors))
+    row.Name:ClearAllPoints()
+    row.Name:SetPoint("LEFT", row, "LEFT", barOffset + settings.xTextOffset, settings.yTextOffset)
+    row.Name:SetFont(self.LSM:Fetch("font", settings.Font), settings.FontSize, settings.FontFlags)
+    row.Name:SetTextColor(unpack(settings.textColors))
+    row.Name:SetText(state.displayName)
+    return row
+end
+
+-- NSI.spectable: tank, melee, range, healer
+local function GetDebuffOverviewRolePriority(self, unit)
+    local specID = self:GetSpecs(unit)
+    return specID and self.spectable[specID] or 100
+end
+
+local function GetDebuffOverviewFlow(settings)
     local growDirection = settings.GrowDirection or "Up"
     local flowHorizontal = AnchorUtil.FlowDirection.Right
     local flowVertical = AnchorUtil.FlowDirection.Down
@@ -2022,11 +2022,162 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
     elseif growDirection == "Left" then
         flowHorizontal = AnchorUtil.FlowDirection.Left
         flowAnchor = "TOPRIGHT"
-    elseif growDirection == "Right" then
-        flowHorizontal = AnchorUtil.FlowDirection.Right
-        flowAnchor = "TOPLEFT"
     end
-    local previousContainer
+    return growDirection, flowAxis, flowAnchor, flowHorizontal, flowVertical
+end
+
+-- overrides.subgroups is an array of raid subgroup numbers ({1, 2, 3, 4}); nil means all subgroups, an empty array means none
+local function BuildDebuffOverviewSubgroupFilter(subgroups)
+    if type(subgroups) ~= "table" then return nil end
+    local filter = {}
+    for _, subgroup in ipairs(subgroups) do
+        local index = tonumber(subgroup)
+        if index then filter[index] = true end
+    end
+    return filter
+end
+
+local function AnchorDebuffOverviewRow(frame, growDirection, previous, anchor, spacing, xOffset, yOffset)
+    frame:ClearAllPoints()
+    if previous then
+        if growDirection == "Up" then
+            frame:SetPoint("BOTTOMLEFT", previous, "TOPLEFT", 0, spacing)
+        elseif growDirection == "Down" then
+            frame:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -spacing)
+        elseif growDirection == "Left" then
+            frame:SetPoint("TOPRIGHT", previous, "TOPLEFT", -spacing, 0)
+        else
+            frame:SetPoint("TOPLEFT", previous, "TOPRIGHT", spacing, 0)
+        end
+    elseif growDirection == "Up" then
+        frame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", xOffset, 8)
+    elseif growDirection == "Down" then
+        frame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", xOffset, -8)
+    elseif growDirection == "Left" then
+        frame:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -8, yOffset)
+    else
+        frame:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 8, yOffset)
+    end
+end
+
+local function DebuffOverviewUnitMatchesSet(state)
+    if not UnitIsVisible(state.unit) then return false end
+    if not state.subgroups then return true end
+    local subgroup = select(3, GetRaidRosterInfo(state.raidIndex))
+    return (subgroup and state.subgroups[subgroup]) == true
+end
+
+function NSI:LayoutDebuffOverviewSets()
+    local sets = self.DebuffOverviewContainerSetsByName
+    local anchor = self.DebuffOverviewMover
+    if not sets or not anchor then return end
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
+    local growDirection, _, flowAnchor = GetDebuffOverviewFlow(settings)
+    local vertical = growDirection == "Up" or growDirection == "Down"
+    local spacing = settings.Spacing or 0
+    local shownSets = self.DebuffOverviewShownSets or {}
+    local setOffset = 0
+
+    for _, containerName in ipairs(self.DebuffOverviewContainerOrder or {}) do
+        local states = sets[containerName]
+        if states and states[1] then
+            local setShown = shownSets[containerName]
+            local sortByRole = states[1].sortByRole
+            local height = states[1].height or settings.Height
+            local ordered = {}
+            for _, state in ipairs(states) do
+                local visible = setShown and DebuffOverviewUnitMatchesSet(state)
+                state.visible = visible
+                if visible then
+                    state.sortPriority = sortByRole and GetDebuffOverviewRolePriority(self, state.unit) or state.raidIndex
+                    ordered[#ordered + 1] = state
+                end
+            end
+            table.sort(ordered, function(a, b)
+                if a.sortPriority == b.sortPriority then return a.raidIndex < b.raidIndex end
+                return a.sortPriority < b.sortPriority
+            end)
+
+            local xOffset = vertical and setOffset or 0
+            local yOffset = vertical and 0 or -setOffset
+            local previousContainer, previousRow
+            for _, state in ipairs(ordered) do
+                local container, row = state.container, state.baseRow
+                if state.showInactive and row then
+                    AnchorDebuffOverviewRow(row, growDirection, previousRow, anchor, spacing, xOffset, yOffset)
+                    row:Show()
+                    previousRow = row
+                    container:ClearAllPoints()
+                    container:SetPoint(flowAnchor, row, flowAnchor)
+                else
+                    AnchorDebuffOverviewRow(container, growDirection, previousContainer, anchor, spacing, xOffset, yOffset)
+                    previousContainer = container
+                    if row then row:Hide() end
+                end
+                container:SetShown(true)
+                container:SetEnabled(true)
+            end
+            for _, state in ipairs(states) do
+                if not state.visible then
+                    state.container:SetShown(false)
+                    state.container:SetEnabled(false)
+                    if state.baseRow then state.baseRow:Hide() end
+                end
+            end
+            if #ordered > 0 then
+                setOffset = setOffset + (vertical and (settings.Width + height + spacing) or (height + spacing))
+            end
+        end
+    end
+end
+
+function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, overrides, sortByDuration)
+    containerName = containerName or "Default"
+    self.DebuffOverviewContainerSetsByName = self.DebuffOverviewContainerSetsByName or {}
+    self.DebuffOverviewContainerOrder = self.DebuffOverviewContainerOrder or {}
+    local existingSet = self.DebuffOverviewContainerSetsByName[containerName]
+    if existingSet then
+        if useApplicationBar ~= nil or maxApplications ~= nil or overrides or sortByDuration ~= nil then
+            for _, state in ipairs(existingSet) do
+                if useApplicationBar ~= nil then state.useApplicationBar = useApplicationBar == true end
+                state.maxApplications = maxApplications or state.maxApplications
+                if sortByDuration ~= nil then state.sortByDuration = sortByDuration == true end
+                state.height = overrides and overrides.height or state.height
+                state.barColors = overrides and overrides.barColors or state.barColors
+                state.backgroundColors = overrides and overrides.backgroundColors or state.backgroundColors
+                state.inactiveColors = overrides and overrides.inactiveColors or state.inactiveColors
+                if overrides and overrides.subgroups then
+                    state.subgroups = BuildDebuffOverviewSubgroupFilter(overrides.subgroups)
+                end
+                if overrides and overrides.sortByRole ~= nil then
+                    state.sortByRole = overrides.sortByRole == true
+                end
+                if overrides and overrides.showInactive ~= nil then
+                    state.showInactive = overrides.showInactive == true
+                end
+            end
+            if overrides and self.DebuffOverviewContainerPreviewActive and self.DebuffOverviewContainerPreviewName == containerName and self.DebuffOverviewFakePreviewConfig then
+                self.DebuffOverviewFakePreviewConfig.overrides = overrides
+                self.DebuffOverviewFakePreviewConfig.backgroundOnly = overrides.backgroundOnly
+            end
+        end
+        self:UpdateDebuffOverviewContainers()
+        return existingSet
+    end
+    if regularFilter == nil and candidateFilters == nil then
+        return self.DebuffOverviewContainerSetsByName[containerName]
+    end
+    assert(type(regularFilter) == "string" and AuraUtil.IsValidFilterString(regularFilter), "regularFilter must be a valid aura filter string")
+    assert(candidateFilters == nil or type(candidateFilters) == "table", "candidateFilters must be a table or nil")
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    end
+
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
+    local copies = math.max(1, math.floor(containersPerUnit or 1))
+    local frameCount = maxFrameCount or 1
+    local _, flowAxis, flowAnchor, flowHorizontal, flowVertical = GetDebuffOverviewFlow(settings)
+    local subgroupFilter = BuildDebuffOverviewSubgroupFilter(overrides and overrides.subgroups)
     local containerStates = {}
 
     for raidIndex = 1, 30 do
@@ -2036,6 +2187,11 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             local height = overrides and overrides.height or settings.Height
             local state = {
                 unit = unit,
+                raidIndex = raidIndex,
+                subgroups = subgroupFilter,
+                sortByRole = overrides and overrides.sortByRole == true,
+                showInactive = overrides and overrides.showInactive == true,
+                inactiveColors = overrides and overrides.inactiveColors,
                 displayName = displayName,
                 invertFill = invertFill == true,
                 useBarColorAsBackground = useBarColorAsBackground == true,
@@ -2060,27 +2216,6 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             container:SetFlowLayoutAxis(flowAxis)
             container:SetFlowLayoutAnchorPoint(flowAnchor)
             container:SetFlowLayoutGrowthDirection(flowHorizontal, flowVertical)
-            if previousContainer then
-                if growDirection == "Up" then
-                    container:SetPoint("BOTTOMLEFT", previousContainer, "TOPLEFT", 0, settings.Spacing or 0)
-                elseif growDirection == "Down" then
-                    container:SetPoint("TOPLEFT", previousContainer, "BOTTOMLEFT", 0, -(settings.Spacing or 0))
-                elseif growDirection == "Left" then
-                    container:SetPoint("TOPRIGHT", previousContainer, "TOPLEFT", -(settings.Spacing or 0), 0)
-                else
-                    container:SetPoint("TOPLEFT", previousContainer, "TOPRIGHT", settings.Spacing or 0, 0)
-                end
-            else
-                if growDirection == "Up" then
-                    container:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", 0, 8)
-                elseif growDirection == "Down" then
-                    container:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -8)
-                elseif growDirection == "Left" then
-                    container:SetPoint("TOPRIGHT", anchor, "TOPLEFT", -8, 0)
-                else
-                    container:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 8, 0)
-                end
-            end
             container:AddAuraGroup("DebuffOverview", regularFilter, {
                 maxFrameCount = frameCount,
                 sortMethod = state.sortByDuration and AuraContainerSortMethod.ExpirationOnly or (state.useApplicationBar and AuraContainerSortMethod.AuraInstanceIDOnly or nil),
@@ -2098,12 +2233,15 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
             })
             container:Hide()
             container:SetEnabled(false)
+            if state.showInactive then EnsureDebuffOverviewBaseRow(self, state) end
             containerStates[#containerStates + 1] = state
-            previousContainer = container
         end
     end
+    if not self.DebuffOverviewContainerSetsByName[containerName] then
+        self.DebuffOverviewContainerOrder[#self.DebuffOverviewContainerOrder + 1] = containerName
+    end
     self.DebuffOverviewContainerSetsByName[containerName] = containerStates
-    self.DebuffOverviewContainerSets = containerStates
+    self:LayoutDebuffOverviewSets()
     return containerStates
 end
 
@@ -2111,24 +2249,9 @@ function NSI:UpdateDebuffOverviewContainers()
     if self:Restricted() then return end
     local sets = self.DebuffOverviewContainerSetsByName or {}
     local settings = NSRT.ReminderSettings.DebuffOverviewSettings
-    local growDirection = settings.GrowDirection or "Up"
-    local flowHorizontal = AnchorUtil.FlowDirection.Right
-    local flowVertical = AnchorUtil.FlowDirection.Down
-    local flowAxis = AnchorUtil.FlowLayoutAxis.Horizontal
-    local flowAnchor = "TOPLEFT"
-    if growDirection == "Up" then
-        flowAxis = AnchorUtil.FlowLayoutAxis.Vertical
-        flowVertical = AnchorUtil.FlowDirection.Up
-        flowAnchor = "BOTTOMLEFT"
-    elseif growDirection == "Left" then
-        flowHorizontal = AnchorUtil.FlowDirection.Left
-        flowAnchor = "TOPRIGHT"
-    elseif growDirection == "Right" then
-        flowAnchor = "TOPLEFT"
-    end
+    local _, flowAxis, flowAnchor, flowHorizontal, flowVertical = GetDebuffOverviewFlow(settings)
 
     for _, states in pairs(sets) do
-        local previousContainer
         for _, state in ipairs(states) do
             local container = state.container
             local height = state.height or settings.Height
@@ -2147,32 +2270,13 @@ function NSI:UpdateDebuffOverviewContainers()
             elseif state.useApplicationBar then
                 container:SetAuraGroupSortMethod("DebuffOverview", AuraContainerSortMethod.AuraInstanceIDOnly, AuraContainerSortDirection.Normal)
             end
-            container:ClearAllPoints()
-            if previousContainer then
-                if growDirection == "Up" then
-                    container:SetPoint("BOTTOMLEFT", previousContainer, "TOPLEFT", 0, settings.Spacing or 0)
-                elseif growDirection == "Down" then
-                    container:SetPoint("TOPLEFT", previousContainer, "BOTTOMLEFT", 0, -(settings.Spacing or 0))
-                elseif growDirection == "Left" then
-                    container:SetPoint("TOPRIGHT", previousContainer, "TOPLEFT", -(settings.Spacing or 0), 0)
-                else
-                    container:SetPoint("TOPLEFT", previousContainer, "TOPRIGHT", settings.Spacing or 0, 0)
-                end
-            elseif growDirection == "Up" then
-                container:SetPoint("BOTTOMLEFT", self.DebuffOverviewMover, "TOPLEFT", 0, 8)
-            elseif growDirection == "Down" then
-                container:SetPoint("TOPLEFT", self.DebuffOverviewMover, "BOTTOMLEFT", 0, -8)
-            elseif growDirection == "Left" then
-                container:SetPoint("TOPRIGHT", self.DebuffOverviewMover, "TOPLEFT", -8, 0)
-            else
-                container:SetPoint("TOPLEFT", self.DebuffOverviewMover, "TOPRIGHT", 8, 0)
-            end
             for button in pairs(state.buttonRegions) do
                 ConfigureDebuffOverviewButton(self, state, button, state.unit)
             end
-            previousContainer = container
+            if state.showInactive then EnsureDebuffOverviewBaseRow(self, state) end
         end
     end
+    self:LayoutDebuffOverviewSets()
     local previewConfig = self.DebuffOverviewFakePreviewConfig
     if self.DebuffOverviewContainerPreviewActive and previewConfig then
         self:UpdateDebuffOverviewFakePreview(previewConfig.rowCount, previewConfig.useApplicationBar, previewConfig.maxApplications, previewConfig.overrides, previewConfig.backgroundOnly)
@@ -2181,35 +2285,33 @@ end
 
 function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     local sets = self.DebuffOverviewContainerSetsByName or {}
-    if not containerName then
-        if self.DebuffOverviewContainerSets then sets.Default = self.DebuffOverviewContainerSets end
-        containerName = "Default"
-    end
+    containerName = containerName or "Default"
     local states = sets[containerName]
     if not states then return end
     self.DebuffOverviewShownSets = self.DebuffOverviewShownSets or {}
     self.DebuffOverviewShownSets[containerName] = shown
-    if self.DebuffOverviewMover then
+    if self.DebuffOverviewMover and not self.IsInPreview then -- never pull the mover away while anchors are unlocked
         local anyShown = false
         for _, isShown in pairs(self.DebuffOverviewShownSets) do
             if isShown then anyShown = true break end
         end
         self.DebuffOverviewMover:SetShown(anyShown)
     end
-    for _, state in ipairs(states) do
-        local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
-        if not self:Restricted() then
+    if not self:Restricted() then
+        for _, state in ipairs(states) do
+            local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
             state.displayName = displayName
             for button, regions in pairs(state.buttonRegions) do
                 if regions.name then
                     regions.name:SetText(displayName)
                 end
             end
+            if state.baseRow then
+                state.baseRow.Name:SetText(displayName)
+            end
         end
-        local visible = shown and UnitIsVisible(state.unit)
-        state.container:SetShown(visible)
-        state.container:SetEnabled(visible)
     end
+    self:LayoutDebuffOverviewSets()
 end
 
 function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApplications, overrides, backgroundOnly)
@@ -2234,7 +2336,12 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
     local rowWidth = width + height
     local rowHeight = height
     local barAnchorOffset = settings.IconPosition == "Right" and 0 or -height
-    frame:SetSize(vertical and rowWidth or rowCount * (rowWidth + settings.Spacing) - settings.Spacing, vertical and rowCount * (rowHeight + settings.Spacing) - settings.Spacing or rowHeight)
+    local columns = overrides and overrides.previewColumns or {{}}
+    local showInactive = overrides and overrides.showInactive == true
+    local previewActiveRows = 2
+    local columnSpan = #columns * ((vertical and rowWidth or rowHeight) + settings.Spacing) - settings.Spacing
+    local rowSpan = rowCount * ((vertical and rowHeight or rowWidth) + settings.Spacing) - settings.Spacing
+    frame:SetSize(vertical and columnSpan or rowSpan, vertical and rowSpan or columnSpan)
     frame:ClearAllPoints()
     if growDirection == "Up" then
         frame:SetPoint("BOTTOMLEFT", self.DebuffOverviewMover, "TOPLEFT", barAnchorOffset, 8)
@@ -2247,8 +2354,17 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
     end
     local fontPath = self.LSM:Fetch("font", settings.Font)
     local iconInfo = C_Spell.GetSpellInfo(1311611)
-    for index = 1, rowCount do
-        local row = frame.rows[index]
+    for rowIndex = 1, rowCount * #columns do
+        local columnIndex = math.ceil(rowIndex / rowCount)
+        local index = rowIndex - (columnIndex - 1) * rowCount
+        local isActive = not showInactive or index <= previewActiveRows
+        local columnBackgroundColors = columns[columnIndex].backgroundColors or backgroundColors
+        if not isActive then
+            columnBackgroundColors = columns[columnIndex].inactiveColors or columnBackgroundColors
+        end
+        local columnOffsetX = vertical and (columnIndex - 1) * (rowWidth + settings.Spacing) or 0
+        local columnOffsetY = vertical and 0 or -(columnIndex - 1) * (rowHeight + settings.Spacing)
+        local row = frame.rows[rowIndex]
         if not row then
             row = CreateFrame("Frame", nil, frame)
             row.Bar = CreateFrame("StatusBar", nil, row, "BackdropTemplate")
@@ -2260,17 +2376,17 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
             row.Value = row.TextLayer:CreateFontString(nil, "OVERLAY")
             row.Bar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
             row.Border:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
-            frame.rows[index] = row
+            frame.rows[rowIndex] = row
         end
         row:ClearAllPoints()
         if growDirection == "Up" then
-            row:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, (index - 1) * (height + settings.Spacing))
+            row:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", columnOffsetX, (index - 1) * (height + settings.Spacing))
         elseif growDirection == "Left" then
-            row:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -(index - 1) * (rowWidth + settings.Spacing), 0)
+            row:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -(index - 1) * (rowWidth + settings.Spacing), columnOffsetY)
         elseif growDirection == "Right" then
-            row:SetPoint("TOPLEFT", frame, "TOPLEFT", (index - 1) * (rowWidth + settings.Spacing), 0)
+            row:SetPoint("TOPLEFT", frame, "TOPLEFT", (index - 1) * (rowWidth + settings.Spacing), columnOffsetY)
         else
-            row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -(index - 1) * (height + settings.Spacing))
+            row:SetPoint("TOPLEFT", frame, "TOPLEFT", columnOffsetX, -(index - 1) * (height + settings.Spacing))
         end
         row:SetSize(width + height, height)
         row.Bar:ClearAllPoints()
@@ -2286,11 +2402,12 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
         row.Bar:SetStatusBarColor(unpack(barColors))
         row.Bar:SetMinMaxValues(0, useApplicationBar and maxApplications or 8)
         row.Bar:SetValue(backgroundOnly and 0 or (useApplicationBar and (maxApplications - ((index - 1) % maxApplications)) or 8 - ((index - 1) % 8)))
-        row.Bar:SetBackdropColor(unpack(backgroundColors))
-        if useBarColorAsBackground then
-            row.Background:SetAllPoints(row.Bar)
-            row.Background:SetTexture(self.LSM:Fetch("statusbar", settings.Texture))
-            row.Background:SetVertexColor(unpack(fillBackgroundColors))
+        row.Bar:SetBackdropColor(unpack(columnBackgroundColors))
+        if useBarColorAsBackground or not isActive then
+            -- an inactive row has no icon, so its color spans the whole row the way the static row does in game
+            row.Background:SetAllPoints(isActive and row.Bar or row)
+            row.Background:SetTexture(isActive and self.LSM:Fetch("statusbar", settings.Texture) or "Interface\\Buttons\\WHITE8x8")
+            row.Background:SetVertexColor(unpack(columnBackgroundColors or fillBackgroundColors))
             row.Background:Show()
         else
             row.Background:Hide()
@@ -2303,28 +2420,24 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
         row.Name:SetPoint("LEFT", row.Bar, "LEFT", settings.xTextOffset, settings.yTextOffset)
         row.Name:SetFont(fontPath, settings.FontSize, settings.FontFlags)
         row.Name:SetTextColor(unpack(settings.textColors))
-        row.Name:SetText(index == 1 and (NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or "Player") or "Player " .. index)
+        row.Name:SetText(rowIndex == 1 and (NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or "Player") or "Player " .. rowIndex)
         row.Value:SetPoint("RIGHT", row.Bar, "RIGHT", settings.xTimer, settings.yTimer)
         row.Value:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
         row.Value:SetTextColor(unpack(settings.textColors))
         row.Value:SetText(useApplicationBar and tostring(maxApplications - ((index - 1) % maxApplications)) or tostring(8 - ((index - 1) % 8)))
-        row.Icon:SetShown(true)
+        row.Icon:SetShown(isActive)
         row.Name:SetShown(true)
-        row.Value:SetShown(not (overrides and overrides.hideValue))
+        row.Value:SetShown(isActive and not (overrides and overrides.hideValue))
         row:Show()
     end
-    for index = rowCount + 1, #frame.rows do frame.rows[index]:Hide() end
+    for index = rowCount * #columns + 1, #frame.rows do frame.rows[index]:Hide() end
     frame:Show()
 end
 
 function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, containersPerUnit, maxFrameCount, containerName, invertFill, useBarColorAsBackground, useApplicationBar, maxApplications, previewRowCount, overrides, sortByDuration)
     if self.DebuffOverviewContainerPreviewActive then
         self.DebuffOverviewContainerPreviewActive = false
-        local states = self.DebuffOverviewContainerSetsByName and self.DebuffOverviewContainerSetsByName[self.DebuffOverviewContainerPreviewName]
-        for _, state in ipairs(states or {}) do
-            state.container:Hide()
-            state.container:SetEnabled(false)
-        end
+        self:SetDebuffOverviewContainersShown(false, self.DebuffOverviewContainerPreviewName)
         if self.DebuffOverviewFakePreview then self.DebuffOverviewFakePreview:Hide() end
         self.DebuffOverviewContainerPreviewName = nil
         self.DebuffOverviewFakePreviewConfig = nil
@@ -2342,15 +2455,11 @@ function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, co
         overrides = overrides,
         backgroundOnly = overrides and overrides.backgroundOnly,
     }
-    local states = self.DebuffOverviewContainerSetsByName and self.DebuffOverviewContainerSetsByName[containerName]
-    for _, state in ipairs(states or {}) do
-        state.container:Hide()
-        state.container:SetEnabled(false)
-    end
     if previewRowCount then
+        self:SetDebuffOverviewContainersShown(false, self.DebuffOverviewContainerPreviewName)
         self:UpdateDebuffOverviewFakePreview(previewRowCount, useApplicationBar, maxApplications or 1, overrides, overrides and overrides.backgroundOnly)
     else
-        self:SetDebuffOverviewContainersShown(true, containerName)
+        self:SetDebuffOverviewContainersShown(true, self.DebuffOverviewContainerPreviewName)
     end
 end
 
