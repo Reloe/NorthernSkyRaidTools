@@ -1044,6 +1044,7 @@ L["Center Aligned"] = "Center Aligned"
 L["Size"] = "Size"
 L["Show Background Ring"] = "Show Background Ring"
 L["Ring Color"] = "Ring Color"
+L["Ring Size"] = "Ring Size"
 -- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================

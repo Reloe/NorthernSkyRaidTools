@@ -17,6 +17,9 @@ local p3SoakTimers = {
     [16] = {22.3, 191.3},
 }
 
+local debuffCircleFilter = "HARMFUL"
+local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5}
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -27,7 +30,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local data = {group = "Coiled Altar P1", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P1Frontal", name = "P1 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8,
         textColors = {1, 0, 0, 1}, spellID = 1299684,
         isConditional = {
             text = "This Alert only shows if you are not a tank or have threat on boss1.",
@@ -40,7 +43,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P1", internalID = "P1OrbDeadline", name = "Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P1OrbDeadline", name = "Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         timers = {
             [15] = {17, 34, 54, 71.1, 102.1, 119, 139, 156.1},
             [16] = {17, 34, 54, 71.1, 102.1, 119, 139, 156.1},
@@ -48,7 +51,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar Tanks", internalID = "P1Taunt", name = "P1 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P1Taunt", name = "P1 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 1, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss1.",
@@ -61,7 +64,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P1", internalID = "P1Soak", name = "P1 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1283489,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P1Soak", name = "P1 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1283489,
         loadConditions = tankConditions,
         timers = {
             [15] = p1SoakTimers[15],
@@ -70,7 +73,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "MindControls", name = "Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar", name = "P2 Mind Controls"}}, group = "Coiled Altar", internalID = "MindControls", name = "P2 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
             [15] = {8.1, 44.7, 93.1, 129},
             [16] = {8.1, 44.7, 93.1, 129, 177.4},
@@ -78,7 +81,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "P2Frontal", name = "P2 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 2, TTS = true, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P2Frontal", name = "P2 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 2, TTS = true, dur = 6,
         textColors = {1, 0, 0, 1}, spellID = 1286620,
         isConditional = {
             text = "This Alert only shows if you are not a tank or have threat on boss2.",
@@ -91,7 +94,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar Tanks", internalID = "P2Taunt", name = "P2 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 2, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P2Taunt", name = "P2 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 2, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss2.",
@@ -104,7 +107,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "P2Debuffs", name = "P2 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P2Debuffs", name = "P2 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1286895,
         timers = {
             [15] = {24.1, 62.1, 109, 147},
@@ -113,12 +116,40 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "P2Shield", name = "P2 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P2Shield", name = "P2 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         spellID = 1286918,
         timers = {
             [15] = {70, 155},
             [16] = {70, 155},
         },
+    }
+    self:AddEncounterAlert(data)
+
+local debuffCirclePreview = [[return function(NSI)
+        local alert = NSRT.EncounterAlerts[3429][16].DebuffCircle
+        NSI:PreviewReminderCircle("CoiledAltarDebuffCirclePreview", 5, alert.CircleColor, alert.CircleTexture)
+    end]]
+    local debuffCircleOptions = {
+        {Type = "Color", label = NSI:Loc("Ring Color"),
+            get = [[return function() local alert = NSRT.EncounterAlerts[3429][16].DebuffCircle local c = alert.CircleColor or {1, 0, 0, 1} return c[1], c[2], c[3], c[4] end]],
+            set = [[return function(NSI, r, g, b, a) for difficultyID = 14, 16 do NSRT.EncounterAlerts[3429][difficultyID].DebuffCircle.CircleColor = {r, g, b, a} end NSI:UpdateCoiledAltarDebuffCircle() NSI:UpdateReminderCirclePreview("CoiledAltarDebuffCirclePreview", NSRT.EncounterAlerts[3429][16].DebuffCircle.CircleColor, NSRT.EncounterAlerts[3429][16].DebuffCircle.CircleTexture) end]],
+        },
+        {Type = "Dropdown", label = NSI:Loc("Ring Size"),
+            get = [[return function() local alert = NSRT.EncounterAlerts[3429][16].DebuffCircle return alert.CircleTexture or "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_8px.png" end]],
+            set = [[return function(NSI, value) for difficultyID = 14, 16 do NSRT.EncounterAlerts[3429][difficultyID].DebuffCircle.CircleTexture = value end NSI:UpdateCoiledAltarDebuffCircle() NSI:UpdateReminderCirclePreview("CoiledAltarDebuffCirclePreview", NSRT.EncounterAlerts[3429][16].DebuffCircle.CircleColor, value) end]],
+            values = [[return function() return {
+                {label = "2 px", value = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_2px.png"},
+                {label = "5 px", value = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_5px.png"},
+                {label = "8 px", value = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_8px.png"},
+                {label = "10 px", value = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_10px.png"},
+                {label = "15 px", value = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_15px.png"},
+            } end]],
+        },
+    }
+    local data = {group = "Coiled Altar", internalID = "DebuffCircle", name = "Orb/Bomb Circle", text = "", DisplayType = "Circle", encID = encID,
+        phase = nil, TTS = false, difficulties = {14, 15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        CircleColor = {1, 0, 0, 1}, CircleTexture = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_8px.png",
+        Preview = debuffCirclePreview, extraOptions = debuffCircleOptions,
     }
     self:AddEncounterAlert(data)
 
@@ -139,14 +170,14 @@ NSI.InitializeAlerts[encID] = function(self)
             set = [[return function(NSI, value) for difficultyID = 15, 16 do NSRT.EncounterAlerts[3429][difficultyID].EternalNightfallAbsorb.BarHeight = value end NSI:UpdateCoiledAltarEternalNightfall() end]],
         },
     }
-    local data = {group = "Coiled Altar P2", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", DisplayType = "Bar", encID = encID,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", DisplayType = "Bar", encID = encID,
         phase = nil, TTS = false, dur = eternalNightfallDuration, enabled = true, isSpecialDisplay = true, BlockCopy = true,
         BarColor = {0.6235, 0.2510, 1, 1}, BarWidth = 300, BarHeight = 40, Anchor = "TOP", relativeTo = "TOP", xOffset = 0, yOffset = -300,
         Preview = eternalNightfallPreview, extraOptions = eternalNightfallOptions, difficulties = {15, 16}, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "InterruptAdds", name = "P2 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6,
         spellID = 1286399,
         timers = {
             [15] = {13, 46.1, 98},
@@ -155,7 +186,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3Frontal", name = "P3 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3Frontal", name = "P3 Frontal", text = "Frontal", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 6,
         textColors = {1, 0, 0, 1}, spellID = 1307292,
         isConditional = {
             text = "This Alert only shows if you are not a tank or have threat on boss1.",
@@ -168,7 +199,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3OrbDeadline", name = "P3 Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3OrbDeadline", name = "P3 Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5,
         timers = {
             [16] = {29.5, 60.5, 93.9, 130.5, 161.6, 193.8},
         },
@@ -176,7 +207,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3Soak", name = "P3 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 8, spellID = 1299266,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3Soak", name = "P3 Soak", text = "Soak", DisplayType = "Text", encID = encID, phase = 3, TTS = true, dur = 8, spellID = 1299266,
         loadConditions = tankConditions,
         timers = {
             [15] = {22.3, 191.3},
@@ -185,7 +216,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1310752,
         timers = {
             [15] = {41.9, 141.8},
@@ -194,7 +225,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3Debuffs", name = "P3 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3Debuffs", name = "P3 Debuffs", text = "Debuffs", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         loadConditions = nonTankConditions, spellID = 1310881,
         timers = {
             [15] = {31.2, 81.8, 115.1, 181.8},
@@ -203,7 +234,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3InterruptAdds", name = "P3 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3InterruptAdds", name = "P3 Interrupt Adds", text = "Ghosts", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1286399,
         timers = {
             [16] = {62.2, 159.2},
@@ -212,7 +243,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3MindControls", name = "P3 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6, spellID = 1297445,
         timers = {
             [15] = {66.3, 167.5},
             [16] = {57.8, 154.1, 201.9},
@@ -220,7 +251,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar Tanks", internalID = "P3Taunt", name = "P3 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 3, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3Taunt", name = "P3 Taunt", text = "Taunt", customIcon = 355, DisplayType = "Text", encID = encID, phase = 3, TTS = true, TTSTimer = 0, dur = 6, sticky = 3,
         textColors = {0, 1, 0, 1}, loadConditions = tankConditions, isTaunt = true,
         isConditional = {
             text = "This Alert only shows if you do not have threat on boss1.",
@@ -233,7 +264,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P3", internalID = "P2_5WrongTarget", name = "Wrong Target", text = "WRONG TARGET", DisplayType = "Text", encID = encID, phase = 2.5, TTS = false, dur = 50, sticky = 50,
+    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P2_5WrongTarget", name = "Wrong Target", text = "WRONG TARGET", DisplayType = "Text", encID = encID, phase = 2.5, TTS = false, dur = 50, sticky = 50,
         timers = {
             [14] = {0},
             [15] = {0},
@@ -243,11 +274,11 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Coiled Altar P2", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
+    local data = {Version = {versionNumber = 3, [3] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, NumberFontSize = 12, NameFontSize = 12, BoxSize = 30,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false, DisplayStaticBox = false,
         Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 0,
-        Version = {versionNumber = 2, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}},
+        Version = {versionNumber = 3, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}, [3] = {group = "Coiled Altar"}},
         extraOptions = {
             { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."), height = 80 },
             { Type = "Slider", label = "Number Font Size", min = 8, max = 40, step = 1,
@@ -303,6 +334,14 @@ NSI.InitializeAlerts[encID] = function(self)
         end]],
     }
     self:AddEncounterAlert(data)
+end
+
+function NSI:UpdateCoiledAltarDebuffCircle()
+    local alert = self.CoiledAltarDebuffCircleAlert
+    if not alert then return end
+
+    local shown = alert.enabled and self:EvaluateLoad(alert) and self.Phase ~= 2.5
+    self:UpdateAuraContainerCircle("CoiledAltarDebuffCircleContainer", "CoiledAltarDebuffCircleAuraSlot", alert, shown)
 end
 
 local function HideCoiledAltarWrongTarget(self)
@@ -961,8 +1000,16 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     self.CoiledAltarInterruptAlert = diffData and diffData.InterruptAssignments
     self.CoiledAltarEternalNightfallAlert = diffData and diffData.EternalNightfallAbsorb
+    self.CoiledAltarDebuffCircleAlert = diffData and diffData.DebuffCircle
     self.CoiledAltarEternalNightfallPreview = false
+    local debuffCircleLoad = self.CoiledAltarDebuffCircleAlert and self:EvaluateLoad(self.CoiledAltarDebuffCircleAlert)
     StopCoiledAltarEternalNightfallListening(self, true)
+    if self.CoiledAltarDebuffCircleAlert and self.CoiledAltarDebuffCircleAlert.enabled and debuffCircleLoad then
+        self:CreateAuraContainerCircle("CoiledAltarDebuffCircleContainer", "CoiledAltarDebuffCircleAuraSlot", self.CoiledAltarDebuffCircleAlert, debuffCircleFilter, debuffCircleCandidateFilters)
+        self:UpdateCoiledAltarDebuffCircle()
+    else
+        self:HideAuraContainerCircle("CoiledAltarDebuffCircleContainer")
+    end
     local eternalNightfallActive = self.CoiledAltarEternalNightfallAlert and self.CoiledAltarEternalNightfallAlert.enabled and self:EvaluateLoad(self.CoiledAltarEternalNightfallAlert)
     if eternalNightfallActive then
         local frame = self.CoiledAltarEternalNightfallFrame
@@ -1045,6 +1092,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
         SetCoiledAltarInterruptPhase(self, false)
+        self:UpdateCoiledAltarDebuffCircle()
         local alert = self.CoiledAltarWrongTargetAlert
         if alert and alert.enabled and self:EvaluateLoad(alert) then
             self.CoiledAltarWrongTargetEndTime = GetTime() + (alert.dur or 50)
@@ -1059,6 +1107,8 @@ end
 
 NSI.EncounterAlertStop[encID] = function(self)
     HideCoiledAltarWrongTarget(self)
+    self:HideAuraContainerCircle("CoiledAltarDebuffCircleContainer")
+    self:HideReminderCirclePreview("CoiledAltarDebuffCirclePreview")
     StopCoiledAltarEternalNightfallListening(self, true)
     self.CoiledAltarEternalNightfallPreview = false
     HideCoiledAltarEternalNightfall(self)
@@ -1101,7 +1151,8 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         StopCoiledAltarEternalNightfallListening(self, true)
         SetCoiledAltarInterruptPhase(self, true)
         HideCoiledAltarWrongTarget(self)
-        ArmCoiledAltarEternalNightfall(self, newphase)
+        ArmCoiledAltarEternalNightfall(self, 3)
+        self:UpdateCoiledAltarDebuffCircle()
         return
     end
 
@@ -1116,5 +1167,6 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.PhaseSwapTime = now
         ArmCoiledAltarEternalNightfall(self, newphase)
         SetCoiledAltarInterruptPhase(self, newphase == 2 or newphase == 3)
+        self:UpdateCoiledAltarDebuffCircle()
     end
 end

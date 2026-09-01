@@ -1506,6 +1506,199 @@ local function EnsureAuraTrackingFontString(owner, key)
     return owner[key]
 end
 
+function NSI:ConfigureAuraContainerCircle(container, anchor)
+    local settings = NSRT.ReminderSettings.CircleSettings
+    local size = settings.Size or 80
+    local horizontalDirection = AnchorUtil.FlowDirection.Right
+    local verticalDirection = AnchorUtil.FlowDirection.Down
+    local layoutAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+
+    if settings.GrowDirection == "Left" then
+        horizontalDirection = AnchorUtil.FlowDirection.Left
+    elseif settings.GrowDirection == "Up" then
+        verticalDirection = AnchorUtil.FlowDirection.Up
+        layoutAxis = AnchorUtil.FlowLayoutAxis.Vertical
+    elseif settings.GrowDirection == "Down" then
+        layoutAxis = AnchorUtil.FlowLayoutAxis.Vertical
+    end
+
+    container:SetSize(size, size)
+    container:ClearAllPoints()
+    if settings.GrowDirection == "Up" then
+        container:SetPoint("BOTTOM", anchor, "TOP", 0, 8)
+    elseif settings.GrowDirection == "Down" then
+        verticalDirection = AnchorUtil.FlowDirection.Down
+        container:SetPoint("TOP", anchor, "BOTTOM", 0, -8)
+    elseif settings.GrowDirection == "Right" then
+        container:SetPoint("LEFT", anchor, "RIGHT", 8, 0)
+    else
+        horizontalDirection = AnchorUtil.FlowDirection.Left
+        container:SetPoint("RIGHT", anchor, "LEFT", -8, 0)
+    end
+
+    container:SetFlowLayoutAxis(layoutAxis)
+    container:SetFlowLayoutAnchorPoint("CENTER")
+    container:SetFlowLayoutGrowthDirection(horizontalDirection, verticalDirection)
+    container:SetFlowLayoutMaximumLineSize(size)
+    return size
+end
+
+function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
+    options = options or {}
+    local texture = options.texture
+    if type(texture) ~= "string" then
+        texture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]]
+    end
+    local color = options.color or {1, 1, 1, 1}
+
+    local circle = button.NSRTAuraCircleTexture
+    if not circle then
+        circle = button:CreateTexture(nil, "ARTWORK")
+        button.NSRTAuraCircleTexture = circle
+        if button.SetIcon then button:SetIcon(circle) end
+    end
+    circle:SetAllPoints(button)
+    circle:SetTexture(texture)
+    circle:SetVertexColor(0, 0, 0, 0.85)
+    circle:SetShown(NSRT.ReminderSettings.CircleSettings.showBackground == true)
+
+    button:SetSize(size, size)
+    button:ClearAllPoints()
+    local settings = NSRT.ReminderSettings.CircleSettings
+    if settings.GrowDirection == "Up" then
+        button:SetPoint("BOTTOM", anchor, "TOP", 0, 8)
+    elseif settings.GrowDirection == "Down" then
+        button:SetPoint("TOP", anchor, "BOTTOM", 0, -8)
+    elseif settings.GrowDirection == "Right" then
+        button:SetPoint("LEFT", anchor, "RIGHT", 8, 0)
+    else
+        button:SetPoint("RIGHT", anchor, "LEFT", -8, 0)
+    end
+    if button.ClearApplicationCount then button:ClearApplicationCount() end
+    if button.ClearDurationText then button:ClearDurationText() end
+    if button.ClearDispelTypeTextures then button:ClearDispelTypeTextures() end
+    if button.ClearDispelTypeText then button:ClearDispelTypeText() end
+    if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(false) end
+
+    local duration = button.NSRTAuraCircleDuration
+    if not duration then
+        duration = button:CreateFontString(nil, "OVERLAY")
+        button.NSRTAuraCircleDuration = duration
+    end
+    self:PositionCircleText(duration, button, settings)
+    duration:SetFont(self.LSM:Fetch("font", settings.Font), settings.FontSize, settings.FontFlags or "OUTLINE")
+    duration:SetTextColor(unpack(settings.textColors))
+    duration:Show()
+
+    if button.SetDurationText then
+        local formatter = button.NSRTAuraCircleDurationFormatter
+        if not formatter then
+            formatter = C_StringUtil.CreateNumericRuleFormatter()
+            formatter:SetBreakpoints({
+                {
+                    threshold = 0,
+                    step = 0.1,
+                    rounding = Enum.NumericRuleFormatRounding.Up,
+                    format = "%.1f",
+                },
+            })
+            button.NSRTAuraCircleDurationFormatter = formatter
+        end
+        button:SetDurationText(duration, {textFormatter = formatter})
+    end
+
+    local cooldown = button.NSRTAuraCircleCooldown
+    if not cooldown then
+        cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
+        button.NSRTAuraCircleCooldown = cooldown
+    end
+    cooldown:SetAllPoints(button)
+    cooldown:SetDrawBling(false)
+    cooldown:SetDrawEdge(false)
+    cooldown:SetHideCountdownNumbers(true)
+    cooldown:SetReverse(false)
+    cooldown:SetSwipeTexture(texture)
+    cooldown:SetSwipeColor(unpack(color))
+    if button.SetDurationCooldown then button:SetDurationCooldown(cooldown) end
+    return cooldown
+end
+
+function NSI:CreateAuraContainerCircle(containerKey, slotKey, alert, filter, candidateFilters)
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+    end
+
+    local container = self[containerKey]
+    if not container then
+        container = CreateFrame("AuraContainer", nil, UIParent, "CustomAuraContainerTemplate")
+        self[containerKey] = container
+    end
+    local anchorKey = containerKey .. "Anchor"
+    local anchor = self[anchorKey]
+    if not anchor then
+        anchor = CreateFrame("Frame", nil, UIParent)
+        self[anchorKey] = anchor
+    end
+    anchor:SetSize(self.CircleMover:GetSize())
+    anchor:ClearAllPoints()
+    anchor:SetPoint("CENTER", self.CircleMover, "CENTER")
+    anchor:Show()
+    container:SetFrameStrata("HIGH")
+    container:SetFrameLevel(10)
+
+    local size = self:ConfigureAuraContainerCircle(container, anchor)
+    container:SetUnit("player")
+
+    local function initializeFrame(button)
+        self:ConfigureAuraContainerCircleButton(button, anchor, size, {
+            color = alert.CircleColor,
+            texture = alert.CircleTexture,
+        })
+    end
+
+    if not self[slotKey] then
+        self[slotKey] = container:AddAuraSlot(slotKey, filter, {
+            maxFrameCount = 1,
+            candidateFilters = candidateFilters,
+            initializeFrame = initializeFrame,
+        })
+    else
+        container:SetAuraSlotFilterString(slotKey, filter)
+        container:SetAuraSlotCandidateFilters(slotKey, candidateFilters)
+        initializeFrame(self[slotKey])
+    end
+
+    return container
+end
+
+function NSI:UpdateAuraContainerCircle(containerKey, slotKey, alert, shown)
+    local container = self[containerKey]
+    if not container then return end
+
+    local anchor = self[containerKey .. "Anchor"]
+    anchor:SetSize(self.CircleMover:GetSize())
+    anchor:ClearAllPoints()
+    anchor:SetPoint("CENTER", self.CircleMover, "CENTER")
+    anchor:Show()
+    local size = self:ConfigureAuraContainerCircle(container, anchor)
+    container:SetShown(shown)
+    container:SetEnabled(shown)
+    if self[slotKey] then
+        self:ConfigureAuraContainerCircleButton(self[slotKey], anchor, size, {
+            color = alert.CircleColor,
+            texture = alert.CircleTexture,
+        })
+    end
+end
+
+function NSI:HideAuraContainerCircle(containerKey)
+    local container = self[containerKey]
+    if container then
+        container:SetEnabled(false)
+        container:Hide()
+    end
+end
+
 local function ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
     state.buttonRegions = state.buttonRegions or {}
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
