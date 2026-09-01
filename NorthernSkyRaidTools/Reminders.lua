@@ -450,7 +450,7 @@ local function GetCircleTexture(info)
     return (s and s.Texture) or DefaultCircleTexture
 end
 
-local function PositionCircleText(text, F, s)
+function NSI:PositionCircleText(text, F, s)
     text:ClearAllPoints()
     local position = s.TextPosition
     local x, y = s.xTextOffset, s.yTextOffset
@@ -578,7 +578,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
                 F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
             end
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
-            PositionCircleText(F.Text, F, s)
+            self:PositionCircleText(F.Text, F, s)
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
         end
     end
@@ -766,7 +766,7 @@ function NSI:SetProperties(F, info, s)
         local s = NSRT.ReminderSettings.CircleSettings
         local r, g, b, a = unpack(info.textColors or s.textColors)
         F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
-        PositionCircleText(F.Text, F, s)
+        self:PositionCircleText(F.Text, F, s)
         F.Text:SetTextColor(r, g, b, a)
         local texture = GetCircleTexture(info)
         if F.ring then
@@ -1046,7 +1046,7 @@ function NSI:CreateCircle(info)
             F.TextFrame:SetAllPoints(F)
             F.TextFrame:SetFrameLevel(F.Swipe:GetFrameLevel() + 1)
             F.Text = F.TextFrame:CreateFontString(nil, "OVERLAY")
-            PositionCircleText(F.Text, F, s)
+            self:PositionCircleText(F.Text, F, s)
             F.Text:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             F.Text:SetTextColor(unpack(info.textColors or s.textColors))
             local xoff = (s.GrowDirection == "Right" and (i-1)*(s.Size+s.Spacing)) or (s.GrowDirection == "Left" and -(i-1)*(s.Size+s.Spacing)) or 0
@@ -1376,6 +1376,44 @@ function NSI:DisplayReminder(info, bypass)
     end
     self:FireCallback("NSRT_REMINDER_SHOW", info, F)
     return F
+end
+
+function NSI:PreviewReminderCircle(previewKey, duration, ringColors, texture)
+    local frame = self[previewKey]
+    if frame and frame:IsShown() then
+        frame:Hide()
+        self[previewKey] = nil
+        return false
+    end
+
+    local info = {
+        DisplayType = "Circle",
+        text = "",
+        dur = duration,
+        Decimals = duration,
+        sticky = 0,
+        ringColors = ringColors,
+        Texture = texture,
+    }
+    self[previewKey] = self:DisplayReminder(info, true)
+    return true
+end
+
+function NSI:UpdateReminderCirclePreview(previewKey, ringColors, texture)
+    local frame = self[previewKey]
+    if not frame or not frame:IsShown() then return end
+
+    frame.info.ringColors = ringColors
+    frame.info.Texture = texture
+    self:UpdateExistingFrames()
+end
+
+function NSI:HideReminderCirclePreview(previewKey)
+    local frame = self[previewKey]
+    if frame then
+        frame:Hide()
+        self[previewKey] = nil
+    end
 end
 
 function NSI:UpdateReminderDisplay(info, F)
