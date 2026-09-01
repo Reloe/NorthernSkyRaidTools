@@ -489,7 +489,6 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.pinIcon:SetSize(12, 12)
         row.pinIcon:SetTexture([[Interface\Addons\NorthernSkyRaidTools\Media\Icons\pin.png]])
         row.pinIcon:SetVertexColor(189/255, 142/255, 69/255, 1)
-        row.pinIcon:SetPoint("RIGHT", row, "RIGHT", -20, 0)
         row.pinIcon:Hide()
 
         row:EnableMouse(true)
@@ -1079,6 +1078,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                         end)
                     end
                 end
+
+                local pinAnchor = canDelete and row.deleteBtn or row.lockIcon
+                row.pinIcon:ClearAllPoints()
+                row.pinIcon:SetPoint("RIGHT", pinAnchor, "LEFT", -4, 0)
 
                 -- Click to select (skip when clicking the enabled checkbox)
                 do
