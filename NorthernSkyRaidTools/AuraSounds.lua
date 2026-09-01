@@ -86,6 +86,7 @@ NSI.AuraSoundCategories = {
             {spellID = 1295224, sound = "Suck"}, -- Siphoning Infection
             {spellID = 1294994, sound = "Move"}, -- Stygian Infusion
             {spellID = 1281913, sound = "Targeted"}, -- Plague Froth
+            {spellID = 1295173, sound = "empty"}, -- Exploding Infection
         }},
         {key = 3497, entries = { -- The Lost Explorers
             {spellID = 1295886, sound = "Fire"}, -- Frostfire Volley (Fire)
