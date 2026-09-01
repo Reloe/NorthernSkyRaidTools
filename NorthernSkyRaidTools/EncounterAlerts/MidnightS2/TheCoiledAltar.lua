@@ -965,12 +965,14 @@ function NSI:PreviewCoiledAltarEternalNightfall()
     return true
 end
 
-local function StopCoiledAltarEternalNightfallListening(self)
+local function StopCoiledAltarEternalNightfallListening(self, cancelActivationTimers)
     self.CoiledAltarEternalNightfallListening = false
-    for timerIndex, timer in ipairs(self.CoiledAltarEternalNightfallListenTimers or {}) do
-        timer:Cancel()
+    if cancelActivationTimers then
+        for timerIndex, timer in ipairs(self.CoiledAltarEternalNightfallListenTimers or {}) do
+            timer:Cancel()
+        end
+        self.CoiledAltarEternalNightfallListenTimers = nil
     end
-    self.CoiledAltarEternalNightfallListenTimers = nil
     if self.CoiledAltarEternalNightfallListenStopTimer then
         self.CoiledAltarEternalNightfallListenStopTimer:Cancel()
         self.CoiledAltarEternalNightfallListenStopTimer = nil
@@ -979,7 +981,7 @@ local function StopCoiledAltarEternalNightfallListening(self)
 end
 
 local function ArmCoiledAltarEternalNightfall(self, phase)
-    StopCoiledAltarEternalNightfallListening(self)
+    StopCoiledAltarEternalNightfallListening(self, true)
     local alert = self.CoiledAltarEternalNightfallAlert
     local difficultyID = self:DifficultyCheck({15, 16})
     local diffData = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
@@ -997,7 +999,8 @@ local function ArmCoiledAltarEternalNightfall(self, phase)
                 self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_ABSORB_AMOUNT_CHANGED", "UNIT_SPELLCAST_STOP"}, true, "boss2")
                 self.CoiledAltarEternalNightfallListening = true
                 self.CoiledAltarEternalNightfallListenStopTimer = C_Timer.NewTimer(eternalNightfallDuration + 2, function()
-                    StopCoiledAltarEternalNightfallListening(self)
+                    self.CoiledAltarEternalNightfallListenStopTimer = nil
+                    StopCoiledAltarEternalNightfallListening(self, false)
                     HideCoiledAltarEternalNightfall(self)
                 end)
             end)
@@ -1011,7 +1014,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     self.CoiledAltarInterruptAlert = diffData and diffData.InterruptAssignments
     self.CoiledAltarEternalNightfallAlert = diffData and diffData.EternalNightfallAbsorb
     self.CoiledAltarEternalNightfallPreview = false
-    StopCoiledAltarEternalNightfallListening(self)
+    StopCoiledAltarEternalNightfallListening(self, true)
     local eternalNightfallActive = self.CoiledAltarEternalNightfallAlert and self.CoiledAltarEternalNightfallAlert.enabled and self:EvaluateLoad(self.CoiledAltarEternalNightfallAlert)
     if eternalNightfallActive then
         local frame = self.CoiledAltarEternalNightfallFrame
@@ -1031,7 +1034,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     frame:SetValue(absorb)
                     frame.AbsorbText:SetText(AbbreviateNumbers(absorb))
                 end
-            elseif event == "UNIT_SPELLCAST_STOP" then
+            elseif event == "UNIT_SPELLCAST_STOP" and frame and frame.EternalNightfallMaxAbsorb ~= nil then
                 HideCoiledAltarEternalNightfall(self)
             end
         end)
@@ -1126,7 +1129,7 @@ end
 
 NSI.EncounterAlertStop[encID] = function(self)
     HideCoiledAltarWrongTarget(self)
-    StopCoiledAltarEternalNightfallListening(self)
+    StopCoiledAltarEternalNightfallListening(self, true)
     self.CoiledAltarEternalNightfallPreview = false
     HideCoiledAltarEternalNightfall(self)
     self:EncounterRegister("CoiledAltarInterruptAssignments", {"NAME_PLATE_UNIT_ADDED", "NAME_PLATE_UNIT_REMOVED", "RAID_TARGET_UPDATE", "INSTANCE_ENCOUNTER_ENGAGE_UNIT"}, false)
@@ -1165,7 +1168,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = 3
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = now
-        StopCoiledAltarEternalNightfallListening(self)
+        StopCoiledAltarEternalNightfallListening(self, true)
         SetCoiledAltarInterruptPhase(self, true)
         HideCoiledAltarWrongTarget(self)
         return
