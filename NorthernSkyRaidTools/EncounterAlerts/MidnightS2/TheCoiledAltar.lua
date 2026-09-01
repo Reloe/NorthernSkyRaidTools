@@ -43,7 +43,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P1OrbDeadline", name = "Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
+    local data = {Version = {versionNumber = 2, [1] = {group = "Coiled Altar"}, [2] = {customIcon = 1299838}}, group = "Coiled Altar", internalID = "P1OrbDeadline", name = "Orb deadline", text = "Orb deadline", customIcon = 1299838, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
         timers = {
             [15] = {17, 34, 54, 71.1, 102.1, 119, 139, 156.1},
             [16] = {17, 34, 54, 71.1, 102.1, 119, 139, 156.1},
@@ -170,7 +170,7 @@ local debuffCirclePreview = [[return function(NSI)
             set = [[return function(NSI, value) for difficultyID = 15, 16 do NSRT.EncounterAlerts[3429][difficultyID].EternalNightfallAbsorb.BarHeight = value end NSI:UpdateCoiledAltarEternalNightfall() end]],
         },
     }
-    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", DisplayType = "Bar", encID = encID,
+    local data = {Version = {versionNumber = 2, [1] = {group = "Coiled Altar"}, [2] = {customIcon = 1286918}}, group = "Coiled Altar", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", customIcon = 1286918, DisplayType = "Bar", encID = encID,
         phase = nil, TTS = false, dur = eternalNightfallDuration, enabled = true, isSpecialDisplay = true, BlockCopy = true,
         BarColor = {0.6235, 0.2510, 1, 1}, BarWidth = 300, BarHeight = 40, Anchor = "TOP", relativeTo = "TOP", xOffset = 0, yOffset = -300,
         Preview = eternalNightfallPreview, extraOptions = eternalNightfallOptions, difficulties = {15, 16}, NoEdit = true,
@@ -199,7 +199,7 @@ local debuffCirclePreview = [[return function(NSI)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3OrbDeadline", name = "P3 Orb deadline", text = "Orb deadline", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5,
+    local data = {Version = {versionNumber = 2, [1] = {group = "Coiled Altar"}, [2] = {customIcon = 1299838}}, group = "Coiled Altar", internalID = "P3OrbDeadline", name = "P3 Orb deadline", text = "Orb deadline", customIcon = 1299838, DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 5,
         timers = {
             [16] = {29.5, 60.5, 93.9, 130.5, 161.6, 193.8},
         },
@@ -274,11 +274,11 @@ local debuffCirclePreview = [[return function(NSI)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 3, [3] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
+    local data = {group = "Coiled Altar", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, NumberFontSize = 12, NameFontSize = 12, BoxSize = 30,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false, DisplayStaticBox = false,
         Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 0,
-        Version = {versionNumber = 3, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}, [3] = {group = "Coiled Altar"}},
+        Version = {versionNumber = 4, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}, [3] = {group = "Coiled Altar"}, [4] = {customIcon = 6552}},
         extraOptions = {
             { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."), height = 80 },
             { Type = "Slider", label = "Number Font Size", min = 8, max = 40, step = 1,
