@@ -1082,6 +1082,9 @@ local function BuildEncounterAlertsUI(parentFrame)
                 local pinAnchor = canDelete and row.deleteBtn or row.lockIcon
                 row.pinIcon:ClearAllPoints()
                 row.pinIcon:SetPoint("RIGHT", pinAnchor, "LEFT", -4, 0)
+                row.nameLabel:ClearAllPoints()
+                row.nameLabel:SetPoint("LEFT", row.bossIcon, "RIGHT", 4, 0)
+                row.nameLabel:SetPoint("RIGHT", entry._pinned and row.pinIcon or pinAnchor, "LEFT", -4, 0)
 
                 -- Click to select (skip when clicking the enabled checkbox)
                 do
