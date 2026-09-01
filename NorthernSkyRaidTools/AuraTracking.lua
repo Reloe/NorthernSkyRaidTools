@@ -1544,6 +1544,8 @@ function NSI:ConfigureAuraContainerCircle(container, anchor)
 end
 
 function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
+    if self:Restricted() then return end
+
     options = options or {}
     local texture = options.texture
     if type(texture) ~= "string" then
@@ -1675,14 +1677,16 @@ function NSI:UpdateAuraContainerCircle(containerKey, slotKey, alert, shown)
     local container = self[containerKey]
     if not container then return end
 
+    container:SetShown(shown)
+    container:SetEnabled(shown)
+    if self:Restricted() then return end
+
     local anchor = self[containerKey .. "Anchor"]
     anchor:SetSize(self.CircleMover:GetSize())
     anchor:ClearAllPoints()
     anchor:SetPoint("CENTER", self.CircleMover, "CENTER")
     anchor:Show()
     local size = self:ConfigureAuraContainerCircle(container, anchor)
-    container:SetShown(shown)
-    container:SetEnabled(shown)
     if self[slotKey] then
         self:ConfigureAuraContainerCircleButton(self[slotKey], anchor, size, {
             color = alert.CircleColor,
