@@ -635,6 +635,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local function SortAlerts(t)
         table.sort(t, function(a, b)
+            if a._pinned ~= b._pinned then return a._pinned end
             local ag = (a._enabled and 0 or 2) + (a._isReloeCreated and 1 or 0)
             local bg = (b._enabled and 0 or 2) + (b._isReloeCreated and 1 or 0)
             if ag ~= bg then return ag < bg end
@@ -682,6 +683,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     _sortName       = displayName,
                                     _orderID        = isReloe and entry.id or nil,
                                     _group          = entry.group,
+                                    _pinned         = entry.pinned == true,
                                 }
                                 if grp then
                                     local gk = GroupKey(encID, grp)
@@ -737,7 +739,6 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         SortAlerts(pinned)
         for _, item in ipairs(pinned) do
-            item._pinned = true
             if NSI.CurrentEncounterIDs[item.encID] then
                 table.insert(currentPinned, item)
             else
