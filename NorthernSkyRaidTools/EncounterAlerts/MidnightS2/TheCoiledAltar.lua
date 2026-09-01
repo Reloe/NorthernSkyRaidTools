@@ -1101,6 +1101,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         StopCoiledAltarEternalNightfallListening(self, true)
         SetCoiledAltarInterruptPhase(self, true)
         HideCoiledAltarWrongTarget(self)
+        ArmCoiledAltarEternalNightfall(self, newphase)
         return
     end
 
@@ -1113,9 +1114,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = newphase
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = now
-        if newphase == 2 or newphase == 3 then
-            ArmCoiledAltarEternalNightfall(self, newphase)
-        end
+        ArmCoiledAltarEternalNightfall(self, newphase)
         SetCoiledAltarInterruptPhase(self, newphase == 2 or newphase == 3)
     end
 end
