@@ -787,32 +787,29 @@ end
 
 local function UpdateCoiledAltarInterruptMarker(self)
     local assignedBoss = self.CoiledAltarInterruptAssignedBoss
-    local migratedBoss
-    if assignedBoss == "boss4" and not UnitExists("boss4") and UnitExists("boss3") then
-        migratedBoss = "boss3"
-    end
-    if migratedBoss then
-        local counts = self.CoiledAltarInterruptCastCounts or {}
-        counts[migratedBoss] = math.max(counts[migratedBoss] or 1, counts[assignedBoss] or 1)
-        self.CoiledAltarInterruptCastCounts = counts
-        if self.CoiledAltarInterruptCasting and self.CoiledAltarInterruptCasting[assignedBoss] then
-            self.CoiledAltarInterruptCasting[migratedBoss] = true
-        end
-        if self.CoiledAltarInterruptCasting then
-            self.CoiledAltarInterruptCasting[assignedBoss] = nil
-        end
-        self.CoiledAltarInterruptAssignedBoss = migratedBoss
-    end
-    if self.CoiledAltarInterruptAssignedBoss or not self.CoiledAltarInterruptActive then
+    if not self.CoiledAltarInterruptActive then
         NSI:UpdateCoiledAltarInterruptDisplay()
         return
     end
     local boss3Marker = GetRaidTargetIndex("boss3")
     local boss4Marker = GetRaidTargetIndex("boss4")
+    local detectedBoss
     if issecretvalue(boss3Marker) then
-        self.CoiledAltarInterruptAssignedBoss = "boss3"
+        detectedBoss = "boss3"
     elseif issecretvalue(boss4Marker) then
-        self.CoiledAltarInterruptAssignedBoss = "boss4"
+        detectedBoss = "boss4"
+    elseif assignedBoss == "boss4" and not UnitExists("boss4") and UnitExists("boss3") then
+        detectedBoss = "boss3"
+    end
+    if detectedBoss ~= assignedBoss then
+        if detectedBoss and assignedBoss and self.CoiledAltarInterruptCastCounts[assignedBoss] then
+            self.CoiledAltarInterruptCastCounts[detectedBoss] = math.max(self.CoiledAltarInterruptCastCounts[detectedBoss] or 1, self.CoiledAltarInterruptCastCounts[assignedBoss])
+            if self.CoiledAltarInterruptCasting and self.CoiledAltarInterruptCasting[assignedBoss] then
+                self.CoiledAltarInterruptCasting[detectedBoss] = true
+                self.CoiledAltarInterruptCasting[assignedBoss] = nil
+            end
+        end
+        self.CoiledAltarInterruptAssignedBoss = detectedBoss
     end
     NSI:UpdateCoiledAltarInterruptDisplay()
 end
@@ -1043,15 +1040,20 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self:EncounterFunction("CoiledAltarInterruptAssignments", function(_, event, unit)
             if event == "NAME_PLATE_UNIT_ADDED" then
                 AddCoiledAltarInterruptNameplate(self, unit)
+                if unit == "boss3" or unit == "boss4" then
+                    UpdateCoiledAltarInterruptMarker(self)
+                end
             elseif event == "NAME_PLATE_UNIT_REMOVED" then
                 RemoveCoiledAltarInterruptNameplate(self, unit)
+                if unit == "boss3" or unit == "boss4" then
+                    UpdateCoiledAltarInterruptMarker(self)
+                end
             elseif event == "RAID_TARGET_UPDATE" then
                 UpdateCoiledAltarInterruptMarker(self)
             elseif event == "PLAYER_FOCUS_CHANGED" then
                 NSI:UpdateCoiledAltarInterruptDisplay()
             elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
-                local boss3Exists = UnitExists("boss3")
-                if not boss3Exists then
+                if not UnitExists("boss3") then
                     self.CoiledAltarInterruptBoss3Available = false
                     self.CoiledAltarInterruptAssignedBoss = nil
                     self.CoiledAltarInterruptCastCounts = {boss3 = 1, boss4 = 1}
