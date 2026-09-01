@@ -37,7 +37,7 @@ NSI.InitializeAlerts[encID] = function(self)
             set = [[return function(NSI, value) for i = 14, 16 do NSRT.EncounterAlerts[3421][i].DebuffOverview.BarHeight = value end NSI:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, {height = value}, true) end]],},
     }
 
-    local data = {group = "Twin Fangs", internalID = "DebuffOverview", name = "Eternal Venom Overview", text = "Eternal Venom Overview", DisplayType = "Bar", encID = encID,
+    local data = {Version = {versionNumber = 1, [1] = {customIcon = 1290336}}, group = "Twin Fangs", internalID = "DebuffOverview", name = "Eternal Venom Overview", text = "Eternal Venom Overview", customIcon = 1290336, DisplayType = "Bar", encID = encID,
         phase = 1, TTS = false, dur = 5, spellID = nil, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
         Preview = DebuffOverviewPreview, id = 0.3, BarHeight = 25, extraOptions = debuffOverviewOptions,
     }
