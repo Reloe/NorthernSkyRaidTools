@@ -884,6 +884,7 @@ end
 
 local function HideCoiledAltarEternalNightfall(self)
     local frame = self.CoiledAltarEternalNightfallFrame
+    self.CoiledAltarEternalNightfallListening = false
     if frame then
         frame:Hide()
         frame.EternalNightfallStart = nil
@@ -965,6 +966,7 @@ function NSI:PreviewCoiledAltarEternalNightfall()
 end
 
 local function StopCoiledAltarEternalNightfallListening(self)
+    self.CoiledAltarEternalNightfallListening = false
     for timerIndex, timer in ipairs(self.CoiledAltarEternalNightfallListenTimers or {}) do
         timer:Cancel()
     end
@@ -991,9 +993,12 @@ local function ArmCoiledAltarEternalNightfall(self, phase)
         if listenDelay >= 0 then
             self.CoiledAltarEternalNightfallListenTimers[#self.CoiledAltarEternalNightfallListenTimers + 1] = C_Timer.NewTimer(listenDelay, function()
                 if self.EncounterID ~= encID or self.Phase ~= phase then return end
+                HideCoiledAltarEternalNightfall(self)
                 self:EncounterRegister("CoiledAltarEternalNightfall", {"UNIT_ABSORB_AMOUNT_CHANGED", "UNIT_SPELLCAST_STOP"}, true, "boss2")
+                self.CoiledAltarEternalNightfallListening = true
                 self.CoiledAltarEternalNightfallListenStopTimer = C_Timer.NewTimer(eternalNightfallDuration + 2, function()
                     StopCoiledAltarEternalNightfallListening(self)
+                    HideCoiledAltarEternalNightfall(self)
                 end)
             end)
         end
@@ -1018,7 +1023,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         end
         self:EncounterFunction("CoiledAltarEternalNightfall", function(eventFrame, event)
             local frame = self.CoiledAltarEternalNightfallFrame
-            if event == "UNIT_ABSORB_AMOUNT_CHANGED" and frame then
+            if event == "UNIT_ABSORB_AMOUNT_CHANGED" and frame and self.CoiledAltarEternalNightfallListening then
                 local absorb = UnitGetTotalAbsorbs("boss2")
                 if frame.EternalNightfallMaxAbsorb == nil then
                     ShowCoiledAltarEternalNightfall(self, false, absorb)
