@@ -613,6 +613,16 @@ local ignored = {
     ["NickNames"]        = true,
 }
 
+local ProfileNoteKeys = {
+    PersonalReminders = true,
+    Reminders = true,
+    PersonalNotes = true,
+    SharedNotes = true,
+    ActivePersonalReminder = true,
+    StoredPersonalReminder = true,
+    StoredSharedReminder = true,
+}
+
 local ProfileSharedDataKeys = {
     EncounterAlerts = true,
     AuraSounds = true,
@@ -823,6 +833,85 @@ function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name 
             NSI:RefreshAuraTrackingUI()
         end
     end
+    return name
+end
+
+function NSAPI:OverrideProfile(importString, name, options)
+    if not name then
+        return nil, "missing_name"
+    end
+
+    if not NSAPI:ProfileExists(name) then
+        return nil, "profile_not_found"
+    end
+
+    local exportTable = NSI:DecodeExportData(importString)
+    if type(exportTable) ~= "table" then
+        return nil, "invalid_import"
+    end
+
+    options = options or {}
+
+    local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
+    if sharedData and next(sharedData) and not options.allowSharedData then
+        return nil, "shared_data"
+    end
+
+    local preserved = {}
+
+    -- Preserve existing notes if requested.
+    if options.preserveNotes then
+        local source = name == NSRT.CurrentProfile and NSRT or NSRT.Profiles[name]
+
+        for key in pairs(ProfileNoteKeys) do
+            if source[key] ~= nil then
+                preserved[key] = CopyProfileValue(key, source[key])
+            end
+        end
+    end
+
+
+    -- Build the new profile from export
+    local importedProfile = {}
+
+    if type(exportTable.data) == "table" then
+        for key, value in pairs(exportTable.data) do
+            if not ignored[key] then
+                importedProfile[key] = CopyProfileValue(key, value)
+            end
+        end
+    end
+
+    -- Restore preserved notes
+    for key, value in pairs(preserved) do
+        importedProfile[key] = value
+    end
+
+    NSRT.Profiles[name] = importedProfile
+    NSI:LoadProfile(name, true)
+
+    -- Apply shared data if explicitly allowed
+    if sharedData then
+        for key in pairs(ProfileSharedDataKeys) do
+            if sharedData[key] ~= nil then
+                NSRT[key] = CopyProfileValue(key, sharedData[key])
+            end
+        end
+
+        if sharedData.EncounterAlerts ~= nil then
+            NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
+        end
+
+        if sharedData.AuraSounds ~= nil then
+            NSI:RebuildAuraSounds()
+        end
+
+        if sharedData.AuraTrackingSettings ~= nil then
+            NSI:InitAuraTracking()
+            NSI:RefreshAuraTrackingUI()
+        end
+    end
+
     return name
 end
 
