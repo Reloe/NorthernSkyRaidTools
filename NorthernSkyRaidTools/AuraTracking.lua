@@ -174,6 +174,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         Width = 100,
         Height = 100,
         Zoom = 25,
+        HideIcon = false,
         Anchor = "CENTER",
         relativeTo = "CENTER",
         CustomAnchorFrame = "UIParent",
@@ -187,6 +188,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         DispelBorderSize = 3,
         HideTooltip = false,
         HideDurationText = false,
+        DurationTextFormat = "",
         ShowWhitelistedPlayerBuffs = false,
         HideStackText = false,
         EnableCooldownSwipe = true,
@@ -567,10 +569,10 @@ local AuraTrackingSectionFields = {
 }
 
 local AuraTrackingDisplayFields = {
-    "Spacing", "Limit", "AurasPerRowColumn", "GridGrowDirection", "GridSpacing", "GrowDirection", "Width", "Height", "Zoom",
+    "Spacing", "Limit", "AurasPerRowColumn", "GridGrowDirection", "GridSpacing", "GrowDirection", "Width", "Height", "Zoom", "HideIcon",
     "Anchor", "relativeTo", "CustomAnchorFrame", "xOffset", "yOffset",
     "FrameStrata", "BorderSize", "BorderColor", "BorderSwipeMode", "DispelBorderMode", "DispelBorderSize",
-    "HideTooltip", "HideDurationText", "HideLongDurationAuras", "ShowWhitelistedPlayerBuffs", "IncludeImmunities", "HideStackText",
+    "HideTooltip", "HideDurationText", "DurationTextFormat", "HideLongDurationAuras", "ShowWhitelistedPlayerBuffs", "IncludeImmunities", "HideStackText",
     "EnableCooldownSwipe", "InverseCooldownSwipe", "SortMode",
     "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
     "StackColor", "DurationFontSize", "StackFontSize",
@@ -805,6 +807,55 @@ local function FormatAuraTrackingDuration(seconds, settings)
         return string.format("%dm", math.max(1, math.floor(seconds / 60)))
     end
     return tostring(math.ceil(seconds))
+end
+
+local function GetAuraTrackingDurationTemplate(settings)
+    local template = settings and settings.DurationTextFormat
+    if type(template) ~= "string" then return end
+    template = strtrim(template)
+    if template == "" or not template:find("%%t") then return end
+    return template
+end
+
+-- Translates the user-facing duration template ("Sated - %t") into the Blizzard
+-- textFormat table for CustomAuraButton:SetDurationText. %t marks where the
+-- remaining time is substituted; any literal text around it is preserved.
+-- Only %t is combat-safe here: the aura name and stack count are secret values
+-- inside instances and cannot be composed into a single string, so any other
+-- %-token is left as a literal. Returns nil when there is no %t placeholder.
+local function GetAuraTrackingDurationTextFormat(settings)
+    local template = GetAuraTrackingDurationTemplate(settings)
+    if not template then return end
+
+    local formatString = template:gsub("%%(.)", function(token)
+        if token == "t" then return "{}" end
+        if token == "%" then return "%" end
+        return "%" .. token
+    end)
+
+    local formatter = GetAuraTrackingDurationFormatter(settings)
+    local components = {}
+    for _ in formatString:gmatch("{}") do
+        components[#components + 1] = {
+            property = Enum.DurationTextBindingProperty.RemainingDuration,
+            formatter = formatter,
+        }
+    end
+    if #components == 0 then return end
+    return { formatString = formatString, components = components }
+end
+
+-- Preview-only: previews run on fake, never-secret data, so the template can be
+-- resolved to a plain string here.
+local function FormatAuraTrackingPreviewDuration(seconds, settings)
+    local timeText = FormatAuraTrackingDuration(seconds, settings)
+    local template = GetAuraTrackingDurationTemplate(settings)
+    if not template then return timeText end
+    return (template:gsub("%%(.)", function(token)
+        if token == "t" then return timeText end
+        if token == "%" then return "%" end
+        return "%" .. token
+    end))
 end
 
 local function ParseAuraTrackingSpellIDs(value)
@@ -1713,7 +1764,6 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
 
         regions.icon = button:CreateTexture(nil, "ARTWORK")
         regions.icon:SetAllPoints(button)
-        button:SetIcon(regions.icon)
 
         regions.textOverlay = CreateFrame("Frame", nil, button)
         regions.textOverlay:SetAllPoints(button)
@@ -1723,9 +1773,17 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     local regions = state.buttonRegions[button]
+    local hideIcon = settings.HideIcon == true
     button:SetSize(width, height)
     local zoom = ((settings.Zoom or 0) * 0.25) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
+    if hideIcon then
+        if button.ClearIcon then button:ClearIcon() end
+        regions.icon:Hide()
+    else
+        button:SetIcon(regions.icon)
+        regions.icon:Show()
+    end
     regions.textOverlay:SetFrameLevel(buttonLevel + 3)
     if not regions.borderOverlay then
         regions.borderOverlay = CreateFrame("Frame", nil, button)
@@ -1739,7 +1797,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         settings.BorderSize, settings.BorderColor
     )
 
-    if AuraTrackingWantsDispelBorder(settings, key) then
+    if AuraTrackingWantsDispelBorder(settings, key) and not hideIcon then
         if not regions.dispelOverlay then
             regions.dispelOverlay = CreateFrame("Frame", nil, button)
             regions.dispelOverlay:SetAllPoints(regions.icon)
@@ -1833,6 +1891,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         duration:SetTextColor(unpack(durationColor))
         duration:Show()
         button:SetDurationText(duration, {
+            textFormat = GetAuraTrackingDurationTextFormat(settings),
             textFormatter = GetAuraTrackingDurationFormatter(settings),
             textColor = GetAuraTrackingDurationTextColor(settings),
         })
@@ -1854,7 +1913,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     button:SetMouseMotionEnabled(not settings.HideTooltip)
-    if settings.EnableCooldownSwipe then
+    if settings.EnableCooldownSwipe and not hideIcon then
         if not regions.cooldown then
             regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
             regions.cooldown:SetAllPoints(regions.icon)
@@ -3127,7 +3186,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
                             return
                         end
                         if frame.Duration then
-                            frame.Duration:SetText(FormatAuraTrackingDuration(remaining, settings))
+                            frame.Duration:SetText(FormatAuraTrackingPreviewDuration(remaining, settings))
                             if colorUnderThreshold and remaining < durationThreshold then
                                 frame.Duration:SetTextColor(unpack(thresholdColor))
                             else
@@ -3148,10 +3207,12 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     local now = GetTime()
     duration = duration or 10
     frame.PreviewExpires = now + duration
+    local hideIcon = settings.HideIcon == true
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
     local zoom = ((settings.Zoom or 0) * 0.25) / 100
     frame.Icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
+    frame.Icon:SetShown(not hideIcon)
 
     if not frame.BorderOverlay then
         frame.BorderOverlay = CreateFrame("Frame", nil, frame)
@@ -3165,7 +3226,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
         settings.BorderSize, settings.BorderColor
     )
 
-    if AuraTrackingWantsDispelBorder(settings, key) and dispelType then
+    if AuraTrackingWantsDispelBorder(settings, key) and dispelType and not hideIcon then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
@@ -3208,7 +3269,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
         HideAuraTrackingPreviewDispelRegions(frame)
     end
 
-    if settings.EnableCooldownSwipe then
+    if settings.EnableCooldownSwipe and not hideIcon then
         if not frame.Cooldown then
             frame.Cooldown = CreateFrame("Cooldown", nil, frame, "CooldownFrameTemplate")
             frame.Cooldown:SetAllPoints(frame.Icon)
@@ -3251,7 +3312,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
         durationText:SetPoint(durationAnchorPoint, frame, durationAnchorPoint, settings.DurationXOffset, settings.DurationYOffset)
         durationText:SetFont(fontPath, settings.DurationFontSize, settings.TextFontFlags)
         durationText:SetTextColor(unpack(durationColor))
-        durationText:SetText(FormatAuraTrackingDuration(duration, settings))
+        durationText:SetText(FormatAuraTrackingPreviewDuration(duration, settings))
         if settings.ColorDurationUnderThreshold and duration < math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1) then
             durationText:SetTextColor(unpack(thresholdColor))
         else

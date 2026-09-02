@@ -1095,6 +1095,9 @@ local function BuildAuraTrackingUI(screen)
             get = function() return s.SortMode or "AuraInstanceID" end, set = function(_, v) s.SortMode = v or "AuraInstanceID"; apply(key) end })
 
         add({ Type = "Label", text = "Icon", highlight = true })
+        add({ Type = "Checkbox", label = "Hide Icon",
+            tooltip = tip("Hide Icon", "Hides the aura icon (and its dispel border / cooldown swipe) so only the text is shown. Combine with a Duration Text Format like \"Sated - %t\" for a text-only display."),
+            get = function() return s.HideIcon end, set = function(_, v) s.HideIcon = v; apply(key) end })
         add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
             tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
             get = function() return s.BorderSize end, set = function(_, v) s.BorderSize = v; apply(key) end })
@@ -1151,7 +1154,18 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Label", text = "Duration Text", highlight = true })
         add({ Type = "Checkbox", label = "Hide Duration Text",
             tooltip = tip("Hide Duration Text", "Hide the duration text on tracked auras."),
-            get = function() return s.HideDurationText end, set = function(_, v) s.HideDurationText = v; apply(key) end })
+            get = function() return s.HideDurationText end,
+            set = function(_, v) s.HideDurationText = v; apply(key); RebuildCurrentTab() end })
+        if not s.HideDurationText then
+            add({ Type = "Label", text = "Duration Text Format" })
+            add({ Type = "TextEntry",
+                tooltip = tip("Duration Text Format",
+                    "Optional. Use %t where the remaining time should go, e.g. \"Sated - %t\". Leave blank for just the timer.\n\n"
+                    .. "Only %t works here: the aura name and stack count are protected values in instances and cannot be combined into one line. "
+                    .. "Use the separate Stack Text element for stacks."),
+                get = function() return s.DurationTextFormat or "" end,
+                set = function(_, v) s.DurationTextFormat = strtrim(tostring(v or "")); apply(key) end })
+        end
         add({ Type = "Color", label = "Duration Color",
             tooltip = tip("Duration Color", "Color of the duration text"),
             get = function() return unpack(s.DurationColor) end, set = function(_, r, g, b, a) s.DurationColor = {r, g, b, a}; apply(key) end })
