@@ -1201,6 +1201,14 @@ L["Bar Color"] = "Bar Color"
 L["Bar Width"] = "Bar Width"
 L["Bar Height"] = "Bar Height"
 L["Background Color"] = "Background Color"
+L["Left Side Background Color"] = "Left Side Background Color"
+L["Right Side Background Color"] = "Right Side Background Color"
+L["Left Side Inactive Color"] = "Left Side Inactive Color"
+L["Right Side Inactive Color"] = "Right Side Inactive Color"
+L["Left Side Groups"] = "Left Side Groups"
+L["Right Side Groups"] = "Right Side Groups"
+L["Sort by Role"] = "Sort by Role"
+L["Show All Players"] = "Show All Players"
 -- ============================================================================
 -- EncounterAlerts.lua
 -- ============================================================================

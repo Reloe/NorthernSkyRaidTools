@@ -16,6 +16,7 @@ f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_LOGOUT")
 f:RegisterEvent("PLAYER_REGEN_ENABLED")
+f:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
 f:RegisterEvent("ACTIVE_PLAYER_SPECIALIZATION_CHANGED")
 
 function NSI:UpdateDebugLogEvents()
@@ -348,10 +349,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.GroupUpdateTimer = nil
             self:InitAuraSystem(false, true)
             if self:DifficultyCheck({14, 15, 16}) then
-                for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
-                    local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
-                    self:SetDebuffOverviewContainersShown(shown, containerName)
-                end
+                self:RefreshDebuffOverviewContainers()
             end
             self:UpdateRaidBuffFrame()
         end)
@@ -367,10 +365,16 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
+    elseif e == "ADDON_RESTRICTION_STATE_CHANGED" and wowevent then
+        local restrictionState = select(2, ...)
+        if restrictionState == Enum.AddOnRestrictionState.Inactive then
+            self:RefreshDebuffOverviewContainers()
+        end
     elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
         if self.PendingAuraTrackingUpdate then
             self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
         end
+        self:RefreshDebuffOverviewContainers()
     elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
         self:InitAuraTracking()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
