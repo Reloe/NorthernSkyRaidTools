@@ -1557,7 +1557,6 @@ function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
     if not circle then
         circle = button:CreateTexture(nil, "ARTWORK")
         button.NSRTAuraCircleTexture = circle
-        if button.SetIcon then button:SetIcon(circle) end
     end
     circle:SetAllPoints(button)
     circle:SetTexture(texture)
