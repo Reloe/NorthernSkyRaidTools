@@ -3,3 +3,4 @@
 - Fix Shield Alert for P3
 - use castBarID for interrupt alert
 - update pace data for twin fangs and coiled altar
+- add options to ulatek grasping fangs overview
