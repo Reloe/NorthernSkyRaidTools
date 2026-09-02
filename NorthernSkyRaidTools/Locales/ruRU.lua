@@ -1064,6 +1064,7 @@ L["Center Aligned"] = "Выровнено по центру"
 L["Size"] = "Размер"
 L["Show Background Ring"] = "Показывать фоновое кольцо"
 L["Ring Color"] = "Цвет кольца"
+L["Ring Size"] = "Размер кольца"
 
 -- ============================================================================
 -- UI/Options/WAImports.lua
@@ -1222,6 +1223,19 @@ L["Bar Color"] = "Цвет полосы"
 L["Bar Width"] = "Ширина полосы"
 L["Bar Height"] = "Высота полосы"
 L["Background Color"] = "Цвет фона"
+L["Left Side Background Color"] = "Цвет фона левой стороны"
+L["Right Side Background Color"] = "Цвет фона правой стороны"
+L["Left Side Inactive Color"] = "Цвет неактивной левой стороны"
+L["Color of the left side's rows while that player does not have the debuff."] = "Цвет строк левой стороны, пока у игрока нет дебаффа."
+L["Right Side Inactive Color"] = "Цвет неактивной правой стороны"
+L["Color of the right side's rows while that player does not have the debuff."] = "Цвет строк правой стороны, пока у игрока нет дебаффа."
+L["Show All Players"] = "Показывать всех игроков"
+L["Keeps a row up for every player on that side, in the inactive color, and switches it to the regular color while they have the debuff. Turn off to only show players who currently have the debuff."] = "Отображает строку для каждого игрока на этой стороне в неактивном цвете и переключает её на обычный цвет, когда у них есть дебафф. Отключите, чтобы показывать только игроков, у которых в данный момент есть дебафф."
+L["Left Side Groups"] = "Группы левой стороны"
+L["Raid subgroups shown on the left side, comma separated. Use 1,2 and 3,4 to split by halves, or 1,3,5,7 and 2,4,6,8 for odds and evens."] = "Подгруппы рейда, отображаемые на левой стороне, через запятую. Используйте 1,2 и 3,4 для разделения на половины, или 1,3,5,7 и 2,4,6,8 для нечётных и чётных."
+L["Right Side Groups"] = "Группы правой стороны"
+L["Raid subgroups shown on the right side, comma separated. Empty by default, so only the left side is shown. A group left out of both sides is not tracked."] = "Подгруппы рейда, отображаемые на правой стороне, через запятую. По умолчанию пусто, поэтому отображается только левая сторона. Группа, не указанная ни на одной из сторон, не отслеживается."
+L["Sort by Role"] = "Сортировать по роли"
 
 -- ============================================================================
 -- EncounterAlerts.lua
