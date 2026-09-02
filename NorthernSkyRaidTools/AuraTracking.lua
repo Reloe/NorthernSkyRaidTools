@@ -2314,6 +2314,18 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     self:LayoutDebuffOverviewSets()
 end
 
+function NSI:RefreshDebuffOverviewContainers()
+    if self:Restricted() then
+        self.PendingDebuffOverviewUpdate = true
+        return
+    end
+    self.PendingDebuffOverviewUpdate = nil
+    for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
+        local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
+        self:SetDebuffOverviewContainersShown(shown, containerName)
+    end
+end
+
 function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApplications, overrides, backgroundOnly)
     local settings = NSRT.ReminderSettings.DebuffOverviewSettings
     local width = settings.Width
