@@ -245,7 +245,7 @@ L[3429] = {
     ["P2Frontal"] = {group = "Спиральный алтарь", name = "Фронтальный удар (2-я фаза)", text = "Фронтальный удар"},
     ["P1Soak"] = {group = "Спиральный алтарь", name = "Поглощение (1-я фаза)", text = "Поглощение"},
     ["P2Shield"] = {group = "Спиральный алтарь", name = "Щит (2-я фаза)", text = "Щит"},
-    -- ["DebuffCircle"] = {group = "Coiled Altar", name = "Orb/Bomb Circle", text = ""},
+    ["DebuffCircle"] = {group = "Спиральный алтарь", name = "Круг сферы/бомбы", text = ""},
     ["EternalNightfallAbsorb"] = {group = "Спиральный алтарь", name = "Поглощение Вечной полночи", text = ""},
     ["MindControls"] = {group = "Спиральный алтарь", name = "Контроль над разумом (2-я фаза)", text = "Контроль над разумом"},
     ["P2Debuffs"] = {group = "Спиральный алтарь", name = "Дебаффы (2-я фаза)", text = "Дебаффы"},
