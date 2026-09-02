@@ -212,7 +212,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "GraspingFangsOverview", name = "Grasping Fangs Overview", text = nil, DisplayType = "Bar", encID = encID, phase = 1, TTS = false, dur = 40,
         Version = {versionNumber = 1, [1] = {LeftBackgroundColor = {1, 0, 0, 1}, RightBackgroundColor = {0, 0.45, 1, 1},
             LeftInactiveColor = {0.32, 0.02, 0.02, 0.85}, RightInactiveColor = {0.02, 0.155, 0.32, 0.85},
-            LeftGroups = "1,2,3,4,5,6,7,8", RightGroups = "", SortByRole = true, ShowAllPlayers = true}},
+            LeftGroups = "1,2", RightGroups = "3,4", SortByRole = true, ShowAllPlayers = true}},
         spellID = 1311611, id = 0.2, difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = UlatekGraspingFangsPreview, enabled = false,
         LeftBackgroundColor = {1, 0, 0, 1}, RightBackgroundColor = {0, 0.45, 1, 1}, LeftGroups = "1,2", RightGroups = "3,4", SortByRole = true, extraOptions = graspingFangsOverviewOptions,
         LeftInactiveColor = {0.32, 0.02, 0.02, 0.85}, RightInactiveColor = {0.02, 0.155, 0.32, 0.85}, ShowAllPlayers = true,
