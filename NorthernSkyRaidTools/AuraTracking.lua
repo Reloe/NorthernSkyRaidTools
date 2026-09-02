@@ -1543,6 +1543,8 @@ function NSI:ConfigureAuraContainerCircle(container, anchor)
     return size
 end
 
+local auraCircleButtonRegions = {}
+
 function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
     if self:Restricted() then return end
 
@@ -1553,10 +1555,16 @@ function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
     end
     local color = options.color or {1, 1, 1, 1}
 
-    local circle = button.NSRTAuraCircleTexture
+    local regions = auraCircleButtonRegions[button]
+    if not regions then
+        regions = {}
+        auraCircleButtonRegions[button] = regions
+    end
+
+    local circle = regions.circle
     if not circle then
         circle = button:CreateTexture(nil, "ARTWORK")
-        button.NSRTAuraCircleTexture = circle
+        regions.circle = circle
     end
     circle:SetAllPoints(button)
     circle:SetTexture(texture)
@@ -1581,10 +1589,10 @@ function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
     if button.ClearDispelTypeText then button:ClearDispelTypeText() end
     if button.SetMouseMotionEnabled then button:SetMouseMotionEnabled(false) end
 
-    local duration = button.NSRTAuraCircleDuration
+    local duration = regions.duration
     if not duration then
         duration = button:CreateFontString(nil, "OVERLAY")
-        button.NSRTAuraCircleDuration = duration
+        regions.duration = duration
     end
     self:PositionCircleText(duration, button, settings)
     duration:SetFont(self.LSM:Fetch("font", settings.Font), settings.FontSize, settings.FontFlags or "OUTLINE")
@@ -1592,7 +1600,7 @@ function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
     duration:Show()
 
     if button.SetDurationText then
-        local formatter = button.NSRTAuraCircleDurationFormatter
+        local formatter = regions.durationFormatter
         if not formatter then
             formatter = C_StringUtil.CreateNumericRuleFormatter()
             formatter:SetBreakpoints({
@@ -1603,21 +1611,22 @@ function NSI:ConfigureAuraContainerCircleButton(button, anchor, size, options)
                     format = "%.1f",
                 },
             })
-            button.NSRTAuraCircleDurationFormatter = formatter
+            regions.durationFormatter = formatter
         end
         button:SetDurationText(duration, {textFormatter = formatter})
     end
 
-    local cooldown = button.NSRTAuraCircleCooldown
+    local cooldown = regions.cooldown
     if not cooldown then
         cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-        button.NSRTAuraCircleCooldown = cooldown
+        regions.cooldown = cooldown
     end
     cooldown:SetAllPoints(button)
     cooldown:SetDrawBling(false)
     cooldown:SetDrawEdge(false)
     cooldown:SetHideCountdownNumbers(true)
     cooldown:SetReverse(false)
+    regions.cooldownColor = color
     cooldown:SetSwipeTexture(texture)
     cooldown:SetSwipeColor(unpack(color))
     if button.SetDurationCooldown then button:SetDurationCooldown(cooldown) end
@@ -1977,13 +1986,33 @@ local function EnsureDebuffOverviewBaseRow(self, state)
     local container = state.container
     local row = state.baseRow
     if not row then
-        row = CreateFrame("StatusBar", nil, container:GetParent(), "BackdropTemplate")
+        row = CreateFrame("Frame", nil, container:GetParent())
         row:SetFrameStrata(container:GetFrameStrata())
         row:SetFrameLevel(math.max(container:GetFrameLevel() - 1, 0))
-        row:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
-        row.Border = CreateFrame("Frame", nil, row, "BackdropTemplate")
-        row.Border:SetAllPoints(row)
-        row.Border:SetBackdrop({edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1})
+        row.Background = row:CreateTexture(nil, "BACKGROUND")
+        row.Background:SetAllPoints(row)
+        row.Background:SetTexture("Interface\\Buttons\\WHITE8x8")
+        row.Border = {}
+        row.Border.top = row:CreateTexture(nil, "OVERLAY")
+        row.Border.top:SetPoint("TOPLEFT", row, "TOPLEFT")
+        row.Border.top:SetPoint("TOPRIGHT", row, "TOPRIGHT")
+        row.Border.top:SetHeight(1)
+        row.Border.bottom = row:CreateTexture(nil, "OVERLAY")
+        row.Border.bottom:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT")
+        row.Border.bottom:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT")
+        row.Border.bottom:SetHeight(1)
+        row.Border.left = row:CreateTexture(nil, "OVERLAY")
+        row.Border.left:SetPoint("TOPLEFT", row, "TOPLEFT")
+        row.Border.left:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT")
+        row.Border.left:SetWidth(1)
+        row.Border.right = row:CreateTexture(nil, "OVERLAY")
+        row.Border.right:SetPoint("TOPRIGHT", row, "TOPRIGHT")
+        row.Border.right:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT")
+        row.Border.right:SetWidth(1)
+        row.Border.top:SetTexture("Interface\\Buttons\\WHITE8x8")
+        row.Border.bottom:SetTexture("Interface\\Buttons\\WHITE8x8")
+        row.Border.left:SetTexture("Interface\\Buttons\\WHITE8x8")
+        row.Border.right:SetTexture("Interface\\Buttons\\WHITE8x8")
         row.Name = row:CreateFontString(nil, "OVERLAY")
         row:Hide()
         state.baseRow = row
@@ -1991,8 +2020,11 @@ local function EnsureDebuffOverviewBaseRow(self, state)
     local height = state.height or settings.Height
     local barOffset = settings.IconPosition == "Right" and 0 or height
     row:SetSize(settings.Width + height, height)
-    row:SetBackdropColor(unpack(state.inactiveColors or state.backgroundColors or settings.backgroundColors))
-    row.Border:SetBackdropBorderColor(unpack(settings.borderColors))
+    row.Background:SetVertexColor(unpack(state.inactiveColors or state.backgroundColors or settings.backgroundColors))
+    local borderColor = settings.borderColors
+    for _, border in pairs(row.Border) do
+        border:SetVertexColor(unpack(borderColor))
+    end
     row.Name:ClearAllPoints()
     row.Name:SetPoint("LEFT", row, "LEFT", barOffset + settings.xTextOffset, settings.yTextOffset)
     row.Name:SetFont(self.LSM:Fetch("font", settings.Font), settings.FontSize, settings.FontFlags)
