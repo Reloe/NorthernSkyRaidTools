@@ -30,9 +30,9 @@ local issecretvalue        = issecretvalue or function() return false end
 --        when carrying a stack > 1).
 --    * countCharges    -> the count is remaining uses/charges across the stack, not
 --        the item count (Healthstones report "N Charges").
---    * glowWhenEmpty   -> single always-usable item; desaturate + glow the icon
---        (like a missing food/flask buff) whenever the count is 0. The /use action
---        is wired up even when you own none, so grabbing one mid-ready-check works.
+--    * glowWhenEmpty   -> informational icon; desaturate + glow whenever the count
+--        is 0 (like a missing food/flask buff). The click is inert - it never uses
+--        the item or casts anything (a ready check must not consume a Healthstone).
 --  "Last used" (per character) remembers which TYPE (variant) you last had active
 --  or clicked, and suggests it first next time (using whatever quality you own).
 -- ============================================================================
@@ -834,29 +834,25 @@ local function ConfigureButton(btn, slot, index)
         btn.click:SetAttribute("type", "spell")
         btn.click:SetAttribute("spell", spellName)
     elseif cat.glowWhenEmpty then
-        -- Single always-usable item (Healthstone for non-Warlocks): wire up the
-        -- /use even when you own none, so grabbing one mid-ready-check makes the
-        -- button live. Stock is refreshed every tick in UpdateButtonBuff.
+        -- Informational-only item (Healthstone for non-Warlocks): show the icon,
+        -- charge count and empty glow, but clicking must NOT use the item or cast
+        -- anything - a ready check should never consume the player's Healthstone.
+        -- Stock is refreshed every tick in UpdateButtonBuff.
         local itemID      = cat.variants[1].items[1]
-        local itemName    = C_Item.GetItemInfo(itemID)
         local count       = ItemCount(cat, itemID)
         btn.chosenID      = itemID
         btn.chosenVariant = nil
         btn.currentSpell  = nil
-        btn.currentItem   = itemID
+        btn.currentItem   = itemID -- tooltip only
         btn.countItem     = itemID
         btn.hasItem       = true
         btn.icon:SetTexture(cat.icon or C_Item.GetItemIconByID(itemID) or QUESTION_MARK)
         btn.icon:SetDesaturated(count == 0)
         btn.count:SetText(CountText(cat, count))
         btn.handLabel:Hide()
-        if itemName then
-            btn.click:SetAttribute("type", "macro")
-            btn.click:SetAttribute("macrotext", "/stopmacro [combat]\n/use " .. itemName)
-        else
-            btn.click:SetAttribute("type", "item")
-            btn.click:SetAttribute("item", "item:" .. itemID)
-        end
+        -- Inert click: no /use, no cast, no action of any kind.
+        btn.click:SetAttribute("type", "macro")
+        btn.click:SetAttribute("macrotext", "")
     else
         local chosenID, displayID, variant = ResolveCategory(cat)
         -- cat.icon forces a fixed icon (e.g. food always shows the Well Fed icon);

@@ -1,4 +1,5 @@
 ## Changelog
+- Ready check consumables: clicking the Healthstone icon as a non-Warlock no longer uses the stone or casts anything
 - Add Circle Alert for Orbs&Bombs on Coiled Altar
 - Fix Shield Alert for P3
 - use castBarID for interrupt alert
