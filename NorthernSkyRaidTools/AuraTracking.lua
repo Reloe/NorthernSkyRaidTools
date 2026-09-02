@@ -2098,7 +2098,8 @@ function NSI:LayoutDebuffOverviewSets()
                 return a.sortPriority < b.sortPriority
             end)
 
-            local xOffset = vertical and setOffset or 0
+            local iconOffset = settings.IconPosition == "Right" and 0 or -height
+            local xOffset = vertical and setOffset + iconOffset or 0
             local yOffset = vertical and 0 or -setOffset
             local previousContainer, previousRow
             for _, state in ipairs(ordered) do
