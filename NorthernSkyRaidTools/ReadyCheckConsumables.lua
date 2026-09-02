@@ -21,7 +21,18 @@ local issecretvalue        = issecretvalue or function() return false end
 --    `buffs` / `buffIcons`); they are treated as a single variant.
 --    * buffIcons -> { [iconFileID] = true } fallback (e.g. generic "Well Fed" icon).
 --    * perWeaponHand -> one icon per equipped weapon.
---    * warlockOnly   -> only shown for Warlocks.
+--    * warlockOnly    -> only shown for Warlocks.
+--    * warlockInGroup -> shown for everyone, but only when a Warlock is in the group.
+--    * warlockVariant -> { items = { <id> }, cast = <spellID> }: what a Warlock sees
+--        instead of the normal items (own item for icon + count; clicking casts the
+--        spell to conjure more, rather than consuming one).
+--    * alwaysShowCount -> always print the count on the icon (default: only show it
+--        when carrying a stack > 1).
+--    * countCharges    -> the count is remaining uses/charges across the stack, not
+--        the item count (Healthstones report "N Charges").
+--    * glowWhenEmpty   -> single always-usable item; desaturate + glow the icon
+--        (like a missing food/flask buff) whenever the count is 0. The /use action
+--        is wired up even when you own none, so grabbing one mid-ready-check works.
 --  "Last used" (per character) remembers which TYPE (variant) you last had active
 --  or clicked, and suggests it first next time (using whatever quality you own).
 -- ============================================================================
@@ -88,13 +99,23 @@ local ConsumableCategories = {
         },
     },
     {
-        key         = "healthstone",
-        label       = "Healthstone",
-        warlockOnly = true, -- only Warlocks, who can make their own
-        items       = {
-            5512,           -- Healthstone
+        key            = "healthstone",
+        label          = "Healthstone",
+        warlockInGroup = true, -- shown for everyone whenever a Warlock is in the group
+        alwaysShowCount = true, -- always print the count on the icon (even 0 / 1)
+        countCharges    = true, -- count charges/uses left, not the number of items
+        glowWhenEmpty   = true, -- desaturate + glow the icon while you're carrying none
+        items          = {
+            5512,              -- Healthstone (non-Warlocks: the stone a Warlock hands out)
         },
-        -- No buffs: a Healthstone is an instant heal, not a buff, so no glow/timer.
+        -- Warlocks instead see their own Demonic Healthstone (icon + charges left)
+        -- and click to conjure Healthstones for the raid (Ritual of Souls).
+        warlockVariant = {
+            items = { 224464 }, -- Demonic Healthstone
+            cast  = 29893,      -- Ritual of Souls
+        },
+        -- No buff timer: a Healthstone is an instant heal, so the icon is driven by
+        -- the charge count (see glowWhenEmpty) rather than an aura.
     },
 }
 
@@ -115,6 +136,11 @@ local function NormalizeCategory(cat)
             for _, id in ipairs(v.items) do
                 cat._allItems[#cat._allItems + 1] = id
             end
+        end
+    end
+    if cat.warlockVariant and cat.warlockVariant.items then
+        for _, id in ipairs(cat.warlockVariant.items) do
+            cat._allItems[#cat._allItems + 1] = id
         end
     end
 end
@@ -149,6 +175,18 @@ local function IsWarlock()
     return class == "WARLOCK"
 end
 
+-- Whether the player or anyone in their group is a Warlock (i.e. someone who can
+-- hand out Healthstones). IterateGroupMembers yields "player" too when solo.
+local function IsWarlockInGroup()
+    if IsWarlock() then return true end
+    for unit in NSI:IterateGroupMembers() do
+        if UnitExists(unit) and select(2, UnitClass(unit)) == "WARLOCK" then
+            return true
+        end
+    end
+    return false
+end
+
 local function IsWeaponInSlot(slot)
     local itemID = GetInventoryItemID("player", slot)
     if not itemID then return false end
@@ -176,7 +214,8 @@ end
 --  unfilled tracking simply stays dormant (the button still shows and casts).
 -- ---------------------------------------------------------------------------
 local RITE_OF_SANCTIFICATION = 433568 -- Paladin (Lightsmith): cast
-local LIGHTNING_SHIELD       = 192106 -- Shaman: the click for ALL specs (applies the spec's imbues)
+local LIGHTNING_SHIELD       = 192106 -- Shaman: the click for Elemental / Enhancement (applies the spec's imbues)
+local WATER_SHIELD           = 52127  -- Restoration Shaman: uses Water Shield instead of Lightning Shield
 local THUNDERSTRIKE_WARD     = 7587   -- Elemental: off-hand SHIELD enchant ID (needs shield + talent)
 local FLAMETONGUE_TALENT     = 318038 -- Flametongue Weapon talent spellID (IsPlayerSpell)
 local EARTHLIVING_TALENT     = 382021 -- TODO Earthliving Weapon talent spellID
@@ -274,15 +313,15 @@ local WEAPON_OVERRIDES = {
             { enchant = OFFHAND_SLOT, ids = { THUNDERSTRIKE_WARD }, needsShield = true, talentGated = true, talent = THUNDERSTRIKE_TALENT },
         },
     },
-    { -- Restoration shaman: Lightning Shield + Earthliving (if talented) (replaces oils)
+    { -- Restoration shaman: Water Shield + Earthliving (if talented) (replaces oils)
         condition    = function()
             return PlayerClass() == "SHAMAN" and PlayerSpec() == 3
         end,
         replacesOils = true,
-        cast         = LIGHTNING_SHIELD,
-        icon         = LIGHTNING_SHIELD,
+        cast         = WATER_SHIELD,
+        icon         = WATER_SHIELD,
         requires     = {
-            { aura = LIGHTNING_SHIELD },
+            { aura = WATER_SHIELD },
             { enchant = MAINHAND_SLOT, ids = EARTHLIVING_ENCH, talentGated = true, talent = EARTHLIVING_TALENT },
         },
     },
@@ -434,6 +473,8 @@ local function BuildSlotList()
     for _, cat in ipairs(ConsumableCategories) do
         if cat.warlockOnly and not warlock then
             -- skipped: wrong class
+        elseif cat.warlockInGroup and not IsWarlockInGroup() then
+            -- skipped: no Warlock in the group to provide Healthstones
         elseif cat.perWeaponHand then
             local replacer, extras = GetWeaponSpecials(cat)
             if replacer then
@@ -554,6 +595,20 @@ local function FormatDuration(sec)
     return math.max(0, math.ceil(sec)) .. "s"
 end
 
+-- How many of an item you're carrying. `countCharges` categories (Healthstone)
+-- count remaining uses/charges across the stack instead of the item count.
+local function ItemCount(cat, id)
+    return C_Item.GetItemCount(id, false, cat and cat.countCharges or false)
+end
+
+-- Count text for a button: most categories only show it when you carry a stack
+-- (>1); `alwaysShowCount` categories (Healthstone) always show the exact number.
+local function CountText(cat, count)
+    count = count or 0
+    if cat and cat.alwaysShowCount then return tostring(count) end
+    return count > 1 and count or ""
+end
+
 -- Refresh the buff timer text + glow for one visible button.
 local function ApplyGlow(btn, needsRebuff)
     if needsRebuff and not btn.glowing then
@@ -567,6 +622,18 @@ end
 local function UpdateButtonBuff(btn)
     local slot = btn.slot
     if not slot then return end
+
+    if btn.countItem then
+        -- Stock-driven slot (Healthstone): no aura timer; the icon reflects how
+        -- many charges you're carrying and glows while you have none.
+        local count = ItemCount(slot.cat, btn.countItem)
+        btn.count:SetText(CountText(slot.cat, count))
+        btn.icon:SetDesaturated(count == 0)
+        btn.duration:SetText("")
+        btn.duration:Hide()
+        ApplyGlow(btn, slot.cat.glowWhenEmpty and count == 0)
+        return
+    end
 
     if btn.override then
         local minRem, anyMissing = EvaluateOverride(btn.override)
@@ -605,9 +672,13 @@ end
 
 -- Refresh the bag stack count (bag counts change as consumables are used).
 local function UpdateButtonCount(btn)
-    if not btn.chosenID then return end
-    local count = C_Item.GetItemCount(btn.chosenID)
-    btn.count:SetText(count and count > 1 and count or "")
+    if btn.countItem then return end -- handled in UpdateButtonBuff (count + saturate + glow)
+    local cat = btn.slot and btn.slot.cat
+    if btn.chosenID then
+        btn.count:SetText(CountText(cat, ItemCount(cat, btn.chosenID)))
+    elseif cat and cat.alwaysShowCount then
+        btn.count:SetText(CountText(cat, 0))
+    end
 end
 
 local function StopGlow(btn)
@@ -708,6 +779,7 @@ local function ConfigureButton(btn, slot, index)
 
     btn.slot     = slot
     btn.override = slot.override
+    btn.countItem = nil -- set by stock-driven slots (Healthstone); see UpdateButtonBuff
 
     -- Reset stale action attributes (pooled buttons switch slot types).
     btn.click:SetAttribute("type", nil)
@@ -740,6 +812,51 @@ local function ConfigureButton(btn, slot, index)
             btn.click:SetAttribute("type", "spell")
             btn.click:SetAttribute("spell", spellName)
         end
+    elseif cat.warlockVariant and IsWarlock() then
+        -- Warlock viewing the Healthstone slot: show their own Demonic Healthstone
+        -- (icon + charges left), but clicking conjures stones for the raid (Ritual
+        -- of Souls) rather than consuming one. Stock (count / desaturate / glow) is
+        -- refreshed every tick in UpdateButtonBuff via btn.countItem.
+        local wv          = cat.warlockVariant
+        local itemID      = wv.items[1]
+        local spellName   = SpellName(wv.cast) or tostring(wv.cast)
+        local count       = ItemCount(cat, itemID)
+        btn.chosenID      = nil
+        btn.chosenVariant = nil
+        btn.currentItem   = nil
+        btn.currentSpell  = wv.cast -- tooltip shows the spell the click casts
+        btn.countItem     = itemID
+        btn.hasItem       = IsPlayerSpell(wv.cast) and true or false
+        btn.icon:SetTexture(C_Item.GetItemIconByID(itemID) or QUESTION_MARK)
+        btn.icon:SetDesaturated(count == 0)
+        btn.count:SetText(CountText(cat, count))
+        btn.handLabel:Hide()
+        btn.click:SetAttribute("type", "spell")
+        btn.click:SetAttribute("spell", spellName)
+    elseif cat.glowWhenEmpty then
+        -- Single always-usable item (Healthstone for non-Warlocks): wire up the
+        -- /use even when you own none, so grabbing one mid-ready-check makes the
+        -- button live. Stock is refreshed every tick in UpdateButtonBuff.
+        local itemID      = cat.variants[1].items[1]
+        local itemName    = C_Item.GetItemInfo(itemID)
+        local count       = ItemCount(cat, itemID)
+        btn.chosenID      = itemID
+        btn.chosenVariant = nil
+        btn.currentSpell  = nil
+        btn.currentItem   = itemID
+        btn.countItem     = itemID
+        btn.hasItem       = true
+        btn.icon:SetTexture(cat.icon or C_Item.GetItemIconByID(itemID) or QUESTION_MARK)
+        btn.icon:SetDesaturated(count == 0)
+        btn.count:SetText(CountText(cat, count))
+        btn.handLabel:Hide()
+        if itemName then
+            btn.click:SetAttribute("type", "macro")
+            btn.click:SetAttribute("macrotext", "/stopmacro [combat]\n/use " .. itemName)
+        else
+            btn.click:SetAttribute("type", "item")
+            btn.click:SetAttribute("item", "item:" .. itemID)
+        end
     else
         local chosenID, displayID, variant = ResolveCategory(cat)
         -- cat.icon forces a fixed icon (e.g. food always shows the Well Fed icon);
@@ -771,13 +888,12 @@ local function ConfigureButton(btn, slot, index)
                 btn.click:SetAttribute("item", "item:" .. chosenID)
             end
             btn.icon:SetDesaturated(false)
-            local count = C_Item.GetItemCount(chosenID)
-            btn.count:SetText(count > 1 and count or "")
+            btn.count:SetText(CountText(cat, ItemCount(cat, chosenID)))
         else
             btn.click:SetAttribute("type", "macro")
             btn.click:SetAttribute("macrotext", "") -- greyed-out: clicking does nothing
             btn.icon:SetDesaturated(true)
-            btn.count:SetText("")
+            btn.count:SetText(CountText(cat, 0))
         end
 
         if slot.handLabel then
