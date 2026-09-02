@@ -3554,7 +3554,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             end
             return
         end
-        if NSI:IsUsingTLAlerts() then print(NSI:Loc("|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders.")) return end
+        if NSI:IsUsingTLAlerts() and not dispF._alert.isSpecialDisplay then print(NSI:Loc("|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders.")) return end
         local info = NSI:CreateReminder(dispF._alert, true)
         NSI:HideAllReminders()
         NSI:DisplayReminder(info, true)
