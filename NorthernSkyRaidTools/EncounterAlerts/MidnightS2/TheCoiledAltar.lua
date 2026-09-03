@@ -1056,14 +1056,23 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
             elseif event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
                 self.CoiledAltarInterruptBoss3Available = UnitExists("boss3") and true or false
                 NSI:UpdateCoiledAltarInterruptDisplay()
-            elseif event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_STOP" then
+            elseif event == "UNIT_SPELLCAST_START" then
+                if not self.CoiledAltarInterruptActive or not IsCoiledAltarInterruptUnit(self, unit) then return end
+                C_Timer.After(0, function()
+                    if not self.CoiledAltarInterruptActive or not IsCoiledAltarInterruptUnit(self, unit) then return end
+                    local castBarID = select(10, UnitCastingInfo(unit))
+                    if not castBarID or issecretvalue(castBarID) then return end
+                    local castCount = CoiledAltarInterruptPosition(castBarID)
+                    if self.CoiledAltarInterruptCastCounts[unit] ~= castCount then
+                        self.CoiledAltarInterruptCastCounts[unit] = castCount
+                        NSI:UpdateCoiledAltarInterruptDisplay()
+                    end
+                end)
+            elseif event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_STOP" then
                 if not self.CoiledAltarInterruptActive or not IsCoiledAltarInterruptUnit(self, unit) then return end
                 local castBarID = event == "UNIT_SPELLCAST_INTERRUPTED" and arg5 or arg4
                 if not castBarID or issecretvalue(castBarID) then return end
-                local castCount = CoiledAltarInterruptPosition(castBarID)
-                if event ~= "UNIT_SPELLCAST_START" then
-                    castCount = castCount + 1
-                end
+                local castCount = CoiledAltarInterruptPosition(castBarID) + 1
                 if self.CoiledAltarInterruptCastCounts[unit] ~= castCount then
                     self.CoiledAltarInterruptCastCounts[unit] = castCount
                     NSI:UpdateCoiledAltarInterruptDisplay()
