@@ -20,6 +20,17 @@ local function ParseGroupList(text)
     return subgroups
 end
 
+local function StopUlatekWaveDirection(self)
+    self:EncounterRegister("UlatekWaveDirection", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
+    self.UlatekWaveDirectionListening = false
+    if self.UlatekWaveDirectionTimers then
+        for _, timer in ipairs(self.UlatekWaveDirectionTimers) do
+            timer:Cancel()
+        end
+        self.UlatekWaveDirectionTimers = nil
+    end
+end
+
 local function BuildGraspingFangsOverrides(alert, isLeftSide)
     local rightGroups = ParseGroupList(alert.RightGroups)
     local previewColumns = {{backgroundColors = alert.LeftBackgroundColor, inactiveColors = alert.LeftInactiveColor}}
@@ -174,6 +185,51 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    function NSI:PreviewUlatekWaveDirection()
+        local message = math.random(2) == 1 and NSI:Loc("< Left") or NSI:Loc("Right >")
+        local info = self:CreateReminder({
+            text = "",
+            DisplayType = "Text",
+            dur = 8,
+            time = 8,
+            encID = encID,
+            phase = 1,
+            HideTimer = true,
+            TTS = false,
+            IsAlert = false,
+            ReloeReminder = true,
+        }, true)
+        info.text = message
+        self:DisplayReminder(info, true)
+    end
+
+    local waveDirectionOptions = {
+        {Type = "Label", text = NSI:Loc('During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'), height = 50},
+        {Type = "Button", label = NSI:Loc("Create Macros"), width = 180,
+            func = [[return function(NSI)
+                local macros = {
+                    {name = NSI:Loc("Ula'tek Left"), icon = 450906, message = "/raid " .. NSI:Loc("< Left")},
+                    {name = NSI:Loc("Ula'tek Right"), icon = 450908, message = "/raid " .. NSI:Loc("Right >")},
+                }
+                for _, macro in ipairs(macros) do
+                    if GetMacroInfo(macro.name) then
+                        EditMacro(macro.name, macro.name, macro.icon, macro.message)
+                    else
+                        CreateMacro(macro.name, macro.icon, macro.message)
+                    end
+                end
+            end]],
+            tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates one raid macro for each wave direction and updates them if they already exist.")}},
+    }
+    local data = {group = "Ula'tek", internalID = "WaveDirection", name = "Wave Direction Input", text = "", DisplayType = "Text", encID = encID, TTS = false, dur = 8,
+        HideTimer = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(self) self:PreviewUlatekWaveDirection() end]],
+        extraOptions = waveDirectionOptions,
+        timers = {
+            [16] = {48, 100},
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local UlatekGraspingFangsPreview = [[return function(self) self:PreviewUlatekGraspingFangsOverviews() end]]
     local graspingFangsOverviewOptions = {
         {Type = "Color", label = "Left Side Background Color",
@@ -229,6 +285,8 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     local overviewAlert = diffData and diffData.GraspingFangsOverview
     local wrongTargetAlert = diffData and diffData.WrongTarget
+    local waveDirectionAlert = diffData and diffData.WaveDirection
+    local wavesAlert = diffData and diffData.Waves
 
     if self.UlatekGraspingFangsTimers then
         for _, timer in ipairs(self.UlatekGraspingFangsTimers) do timer:Cancel() end
@@ -248,6 +306,45 @@ NSI.EncounterAlertStart[encID] = function(self, id)
         end
     else
         self:SetUlatekGraspingFangsOverviewsShown(false)
+    end
+
+    StopUlatekWaveDirection(self)
+    if waveDirectionAlert and waveDirectionAlert.enabled and self:EvaluateLoad(waveDirectionAlert) and wavesAlert then
+        self:EncounterFunction("UlatekWaveDirection", function(_, event, message)
+            if not self.UlatekWaveDirectionListening then return end
+            local info = self:CreateReminder({
+                text = "",
+                DisplayType = "Text",
+                textColors = waveDirectionAlert.textColors,
+                dur = 8,
+                time = 8,
+                encID = encID,
+                phase = self.Phase,
+                HideTimer = true,
+                TTS = false,
+                IsAlert = false,
+                ReloeReminder = true,
+            })
+            if not info then return end
+            info.text = message
+            self:DisplayReminder(info)
+        end)
+        self.UlatekWaveDirectionTimers = {}
+        for _, waveTime in ipairs(wavesAlert.timers or {}) do
+            if waveTime < 180 then
+                local listenStart = math.max(0, waveTime - 6)
+                self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(listenStart, function()
+                    if self.EncounterID ~= encID then return end
+                    self.UlatekWaveDirectionListening = true
+                    self:EncounterRegister("UlatekWaveDirection", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, true)
+                end)
+                self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(waveTime + 2, function()
+                    if self.EncounterID ~= encID then return end
+                    self.UlatekWaveDirectionListening = false
+                    self:EncounterRegister("UlatekWaveDirection", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
+                end)
+            end
+        end
     end
 
     if not wrongTargetAlert or not wrongTargetAlert.enabled or not self:EvaluateLoad(wrongTargetAlert) then return end
@@ -328,6 +425,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    StopUlatekWaveDirection(self)
     if self.UlatekGraspingFangsTimers then
         for _, timer in ipairs(self.UlatekGraspingFangsTimers) do timer:Cancel() end
         self.UlatekGraspingFangsTimers = nil
