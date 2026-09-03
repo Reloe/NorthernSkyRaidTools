@@ -59,7 +59,7 @@ end
 
 function NSI:IsPTRPatch()
     local interfaceVersion = select(4, GetBuildInfo())
-    return interfaceVersion >= 120150
+    return interfaceVersion >= 120105
 end
 
 function NSI:GetPrimaryPhase(phase)
