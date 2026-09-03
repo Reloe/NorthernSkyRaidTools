@@ -206,10 +206,10 @@ NSI.InitializeAlerts[encID] = function(self)
     local waveDirectionOptions = {
         {Type = "Label", text = NSI:Loc('During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'), height = 50},
         {Type = "Button", label = NSI:Loc("Create Macros"), width = 180,
-            func = [[return function()
+            func = [[return function(NSI)
                 local macros = {
-                    {name = "NSRT_ULATEK_LEFT", icon = 450906, message = "/raid < Left"},
-                    {name = "NSRT_ULATEK_RIGHT", icon = 450908, message = "/raid Right >"},
+                    {name = NSI:Loc("Ula'tek Left"), icon = 450906, message = "/raid " .. NSI:Loc("< Left")},
+                    {name = NSI:Loc("Ula'tek Right"), icon = 450908, message = "/raid " .. NSI:Loc("Right >")},
                 }
                 for _, macro in ipairs(macros) do
                     if GetMacroInfo(macro.name) then
