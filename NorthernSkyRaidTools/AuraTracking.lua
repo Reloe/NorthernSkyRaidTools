@@ -1846,10 +1846,18 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
             textColor = GetAuraTrackingDurationTextColor(settings),
         })
     end
-    --[[
     local isCustom = tostring(key):match("^Custom") and true or false
-    if (key == "External" or isCustom) and settings.NameEnabled then]]
-    -- if blizzard adds this just need to support it here
+    if (key == "External" or isCustom) and self:IsPTRPatch() then
+        if settings.NameEnabled then
+            local casterName = EnsureAuraTrackingFontString(regions, "casterName")
+            PositionAuraTrackingUnitName(casterName, button, settings)
+            casterName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
+            button:SetCasterName(casterName)
+        elseif regions.casterName then
+            button:ClearCasterName()
+            regions.casterName:Hide()
+        end
+    end
     local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
     if (tostring(key or ""):match("^Tank") or isCotankTracking) and settings.NameEnabled then
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")

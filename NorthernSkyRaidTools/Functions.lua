@@ -57,6 +57,11 @@ function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
 
+function NSI:IsPTRPatch()
+    local interfaceVersion = select(4, GetBuildInfo())
+    return interfaceVersion >= 120150
+end
+
 function NSI:GetPrimaryPhase(phase)
     if type(phase) == "table" then
         local primaryPhase
