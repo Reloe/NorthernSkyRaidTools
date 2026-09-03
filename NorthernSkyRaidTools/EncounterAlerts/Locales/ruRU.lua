@@ -245,7 +245,7 @@ L[3429] = {
     ["P2Frontal"] = {group = "Спиральный алтарь", name = "Фронтальный удар (2-я фаза)", text = "Фронтальный удар"},
     ["P1Soak"] = {group = "Спиральный алтарь", name = "Поглощение (1-я фаза)", text = "Поглощение"},
     ["P2Shield"] = {group = "Спиральный алтарь", name = "Щит (2-я фаза)", text = "Щит"},
-    -- ["DebuffCircle"] = {group = "Coiled Altar", name = "Orb/Bomb Circle", text = ""},
+    ["DebuffCircle"] = {group = "Спиральный алтарь", name = "Круг сферы/бомбы", text = ""},
     ["EternalNightfallAbsorb"] = {group = "Спиральный алтарь", name = "Поглощение Вечной полночи", text = ""},
     ["MindControls"] = {group = "Спиральный алтарь", name = "Контроль над разумом (2-я фаза)", text = "Контроль над разумом"},
     ["P2Debuffs"] = {group = "Спиральный алтарь", name = "Дебаффы (2-я фаза)", text = "Дебаффы"},
@@ -278,5 +278,5 @@ L[3492] = {
     ["TransitionSoakSecond"] = {group = "Ула'тек", name = "Второе поглощение", text = "Второе поглощение"},
     ["GraspingFangsOverview"] = {group = "Ула'тек", name = "Обзор Хватающих клыков", text = ""},
     ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
-    -- ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
+    ["WaveDirection"] = {group = "Ула'тек", name = "Ввод направления волны", text = ""},
 }
