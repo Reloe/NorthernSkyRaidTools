@@ -186,7 +186,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     function NSI:PreviewUlatekWaveDirection()
-        local message = math.random(2) == 1 and "< Left" or "Right >"
+        local message = math.random(2) == 1 and NSI:Loc("< Left") or NSI:Loc("Right >")
         local info = self:CreateReminder({
             text = "",
             DisplayType = "Text",
