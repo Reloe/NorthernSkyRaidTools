@@ -248,7 +248,7 @@ L[3429] = {
     ["P2Taunt"]         = {group = "똬리의 제단", name = "2페 도발", text = "도발"},
     ["P2Debuffs"]       = {group = "똬리의 제단", name = "2페 디버프", text = "디버프"},
     ["P2Shield"]        = {group = "똬리의 제단", name = "2페 보호막", text = "보호막"},
-    -- ["DebuffCircle"] = {group = "Coiled Altar", name = "Orb/Bomb Circle", text = ""},
+    ["DebuffCircle"] = {group = "똬리의 제단", name = "구슬/폭탄 원 도형", text = ""},
     ["EternalNightfallAbsorb"] = {group = "똬리의 제단", name = "영원한 일몰 보호막", text = ""},
     ["InterruptAdds"] = {group = "똬리의 제단", name = "2페 쫄 차단", text = "유령"},
     ["InterruptAssignments"] = {group = "똬리의 제단", name = "차단 배정", text = "차단"},
@@ -279,5 +279,5 @@ L[3492] = {
     ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
     ["WrongTarget"] = {group = "울라텍", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
-    -- ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
+    ["WaveDirection"] = {group = "울라텍", name = "파도 방향 입력", text = ""},
 }
