@@ -368,6 +368,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "ADDON_RESTRICTION_STATE_CHANGED" and wowevent then
         local restrictionState = select(2, ...)
         if restrictionState == Enum.AddOnRestrictionState.Inactive then
+            if self.PendingAuraTrackingUpdate then
+                self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
+            end
             self:RefreshDebuffOverviewContainers()
         end
     elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
