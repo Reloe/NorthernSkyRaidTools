@@ -144,7 +144,7 @@ function NSAPI:Shorten(unit, num, specicon, AddonName, combined, roleicon) -- Re
     end
     if classFile then -- basically "if unit found"
         local color = classFile == "PRIEST" and CreateColor(200/255, 200/255, 200/255) or GetClassColorObj(classFile)
-        local newname = num and NSI:Utf8Sub(NSAPI:GetName(name, AddonName), 1, num) or NSAPI:GetName(name, AddonName) -- shorten name before wrapping in color
+        local newname = num and NSI:Utf8Sub(NSAPI:GetName(unit, AddonName), 1, num) or NSAPI:GetName(unit, AddonName) -- resolve the display name from the current unit before wrapping it in color
         if color then -- should always be true anyway?
             return combined and specicon..roleicon..color:WrapTextInColorCode(newname) or color:WrapTextInColorCode(newname), combined and "" or specicon, combined and "" or roleicon
         else
