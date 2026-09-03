@@ -57,6 +57,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.MRTNickNamesHook = false
             self.ReminderTimer = {}
             self.GlowStarted = {}
+            self.UnitFrames = {}
             self:InitNickNames()
             if self:GetProfileKey() then
                 self.LoadedProfile = true
@@ -266,6 +267,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitAuraSystem(false, true)
         self:RebuildAuraSounds()
         if self:DifficultyCheck({14, 15, 16}) then
+            self:CacheUnitFrames()
             for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
                 local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
                 self:SetDebuffOverviewContainersShown(shown, containerName)
@@ -350,6 +352,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:InitAuraSystem(false, true)
             if self:DifficultyCheck({14, 15, 16}) then
                 self:RefreshDebuffOverviewContainers()
+                self:CacheUnitFrames()
             end
             self:UpdateRaidBuffFrame()
         end)
@@ -366,10 +369,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif e == "ADDON_RESTRICTION_STATE_CHANGED" and wowevent then
-        local restrictionState = select(2, ...)
-        if restrictionState == Enum.AddOnRestrictionState.Inactive then
+        local restrictionType, restrictionState = ...
+        if (restrictionType == Enum.AddOnRestrictionType.Combat or restrictionType == Enum.AddOnRestrictionType.Encounter) and restrictionState == Enum.AddOnRestrictionState.Inactive then
             if self.PendingAuraTrackingUpdate then
                 self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
+            end
+            if self.PendingUnitFramesUpdate then
+                self:CacheUnitFrames()
             end
             self:RefreshDebuffOverviewContainers()
         end

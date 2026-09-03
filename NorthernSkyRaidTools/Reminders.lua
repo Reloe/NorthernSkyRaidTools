@@ -928,9 +928,7 @@ function NSI:CreateUnitFrameIcon(info, name)
     self.UnitIcon = self.UnitIcon or {}
     local spellInfo = info.spellID and C_Spell.GetSpellInfo(info.spellID)
     if not spellInfo then return end
-    local unit = NSAPI:GetChar(name, true)
-    if (not UnitExists(unit)) then return end
-    local UnitFrame = self.LGF.GetUnitFrame(unit)
+    local UnitFrame = self.UnitFrames and self.UnitFrames[name]
     if not UnitFrame then return end
     local s = NSRT.ReminderSettings.UnitIconSettings
     for i=1, #self.UnitIcon+1 do
@@ -2015,13 +2013,9 @@ function NSI:GlowFrame(unit, id, F, colors)
         self.LCG.ButtonGlow_Start(F, nil, nil, 1000)
         return
     end
-    local color = {0, 1, 0, 1}
     if not unit then return end
-    unit = NSAPI:GetChar(unit, true)
-    local i = UnitInRaid(unit) or UnitInParty(unit) or "player"
-    if (not UnitExists(unit)) or (not i) then return end
     id = unit..id
-    local F = self.LGF.GetUnitFrame(unit)
+    local F = self.UnitFrames and self.UnitFrames[unit]
     if not F then return end
     self.LCG.PixelGlow_Stop(F, id) -- hide any preivous glows first
     self.AllGlows = self.AllGlows or {}
@@ -2037,14 +2031,35 @@ function NSI:HideGlows(units, id, F)
     end
     if not units then return end
     for i, unit in ipairs(units) do
-        unit = NSAPI:GetChar(unit, true)
-        local i = UnitInRaid(unit) or UnitInParty(unit) or "player"
-        if (not UnitExists(unit)) or (not i) then return end
         local newid = unit..id
-        local F = self.LGF.GetUnitFrame(unit)
-        if not F then return end
-        self.AllGlows[F] = nil
-        self.LCG.PixelGlow_Stop(F, newid)
+        local F = self.UnitFrames and self.UnitFrames[unit]
+        if F then
+            self.AllGlows[F] = nil
+            self.LCG.PixelGlow_Stop(F, newid)
+        end
+    end
+end
+
+function NSI:CacheUnitFrames()
+    if self:Restricted() then
+        self.PendingUnitFramesUpdate = true
+        return
+    end
+    self.PendingUnitFramesUpdate = false
+    self.UnitFrames = {}
+    for unit in self:IterateGroupMembers() do
+        local frame = self.LGF.GetUnitFrame(unit)
+        if frame then
+            self.UnitFrames[unit] = frame
+            local name, realm = UnitFullName(unit)
+            if name then
+                self.UnitFrames[name] = frame
+                if realm then self.UnitFrames[name.."-"..realm] = frame end
+            end
+            local nickname = NSAPI:GetName(unit, nil, true)
+            if nickname then self.UnitFrames[nickname] = frame end
+            if UnitIsUnit(unit, "player") then self.UnitFrames.player = frame end
+        end
     end
 end
 

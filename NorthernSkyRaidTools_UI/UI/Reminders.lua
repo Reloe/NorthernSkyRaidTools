@@ -25,7 +25,8 @@ function NSI:SpawnPreviewReminders()
     end
     self.AllGlows = self.AllGlows or {}
     self.GlowStarted = {}
-    self.LGF.GetUnitFrame("player")
+    self.UnitFrames = self.UnitFrames or {}
+    self.UnitFrames.player = self.LGF.GetUnitFrame("player")
     local info1 = {
         text = NSI:Loc("Personals"),
         DisplayType = "Text",
