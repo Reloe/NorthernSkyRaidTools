@@ -20,7 +20,7 @@ NSI.InitializeAlerts[encID] = function(self)
         return function(self)
             local alert = NSRT.EncounterAlerts[3421][16].DebuffOverview
             local overviewSettings = NSRT.ReminderSettings.DebuffOverviewSettings
-            self:PreviewDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, 20, {
+            self:PreviewDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 10, 20, {
                 barColors = alert.BarColor or overviewSettings.barColors,
                 backgroundColors = overviewSettings.backgroundColors,
                 height = alert.BarHeight or overviewSettings.Height,
@@ -31,10 +31,10 @@ NSI.InitializeAlerts[encID] = function(self)
     local debuffOverviewOptions = {
         {Type = "Color", label = "Bar Color",
             get = [[return function() local a = NSRT.EncounterAlerts[3421][16].DebuffOverview local c = a.BarColor or NSRT.ReminderSettings.DebuffOverviewSettings.barColors return c[1], c[2], c[3], c[4] end]],
-            set = [[return function(NSI, r, g, b, a) for i = 14, 16 do NSRT.EncounterAlerts[3421][i].DebuffOverview.BarColor = {r, g, b, a} end NSI:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, {barColors = {r, g, b, a}}, true) end]],},
+            set = [[return function(NSI, r, g, b, a) for i = 14, 16 do NSRT.EncounterAlerts[3421][i].DebuffOverview.BarColor = {r, g, b, a} end NSI:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 10, {barColors = {r, g, b, a}}, true) end]],},
         {Type = "Slider", label = "Bar Height", min = 10, max = 100, step = 1,
             get = [[return function() local a = NSRT.EncounterAlerts[3421][16].DebuffOverview return a.BarHeight or NSRT.ReminderSettings.DebuffOverviewSettings.Height end]],
-            set = [[return function(NSI, value) for i = 14, 16 do NSRT.EncounterAlerts[3421][i].DebuffOverview.BarHeight = value end NSI:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, {height = value}, true) end]],},
+            set = [[return function(NSI, value) for i = 14, 16 do NSRT.EncounterAlerts[3421][i].DebuffOverview.BarHeight = value end NSI:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 10, {height = value}, true) end]],},
     }
 
     local data = {Version = {versionNumber = 1, [1] = {customIcon = 1290336}}, group = "Twin Fangs", internalID = "DebuffOverview", name = "Eternal Venom Overview", text = "Eternal Venom Overview", customIcon = 1290336, DisplayType = "Bar", encID = encID,
@@ -168,7 +168,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     local alert = diffData and diffData.DebuffOverview
     if alert and alert.enabled and self:EvaluateLoad(alert) then
         local overviewSettings = NSRT.ReminderSettings.DebuffOverviewSettings
-        self:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 9, {
+        self:CreateDebuffOverviewContainers("HARMFUL", {isFromPlayerOrPlayerPet = false, isBossOrRoleAura = false}, 1, 1, "TwinFangsDebuffOverview", false, false, true, 10, {
             height = alert.BarHeight or overviewSettings.Height,
             barColors = alert.BarColor or overviewSettings.barColors,
         }, true)
