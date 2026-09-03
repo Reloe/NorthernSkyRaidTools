@@ -5,3 +5,4 @@
 - use castBarID for interrupt alert
 - update pace data for twin fangs and coiled altar
 - add options to ulatek grasping fangs overview
+- update twin fangs overview to 10 max stacks
