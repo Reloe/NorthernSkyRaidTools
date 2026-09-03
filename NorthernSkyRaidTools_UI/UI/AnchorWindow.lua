@@ -169,7 +169,7 @@ local function GetWidgetDefs(settingsName)
         return {
             DDGrow(false),
             Slider(T("Width"),              "Width",         80,   500),
-            Slider(T("Height"),             "Height",        10,   100),
+            Slider(T("Height"),             "Height",        1,    100),
             Slider(T("Spacing"),            "Spacing",       -5,   20),
             Slider(T("Sticky Duration"),    "Sticky",        0,    30),
             DD    (T("Texture"),            "Texture",       MediaValuesFn(true)),

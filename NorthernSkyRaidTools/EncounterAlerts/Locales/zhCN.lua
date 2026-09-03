@@ -279,4 +279,5 @@ L[3492] = {
     ["TransitionSoakSecond"]  = {group = "乌拉特克", name = "幽魂盘卷（2分摊）", text = "2 分摊"},
     ["GraspingFangsOverview"] = {group = "乌拉特克", name = "攫取毒牙总览", text = ""},
     ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
+    -- ["WaveDirection"]          = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
 }
