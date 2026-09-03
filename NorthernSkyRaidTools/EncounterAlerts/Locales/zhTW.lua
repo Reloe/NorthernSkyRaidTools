@@ -282,4 +282,5 @@ L[3492] = {
     ["GraspingFangsOverview"] = {group = "烏拉特克", name = "攫取毒牙總覽", text = ""},
     ["WrongTarget"] = {group = "烏拉特克", name = "打錯目標", text = "打錯目標"},
     -- ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
+    -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
 }

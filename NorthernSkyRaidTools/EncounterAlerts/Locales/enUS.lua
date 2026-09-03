@@ -282,4 +282,5 @@ L[3492] = {
     ["GraspingFangsOverview"] = {group = "Ula'tek", name = "Grasping Fangs Overview", text = ""},
     ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
     ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
+    ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
 }
