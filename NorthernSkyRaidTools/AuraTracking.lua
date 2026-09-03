@@ -1852,7 +1852,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
             local casterName = EnsureAuraTrackingFontString(regions, "casterName")
             PositionAuraTrackingUnitName(casterName, button, settings)
             casterName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-            button:SetCasterName(casterName)
+            button:SetCasterName(casterName, {useClassColors = true})
         elseif regions.casterName then
             button:ClearCasterName()
             regions.casterName:Hide()
