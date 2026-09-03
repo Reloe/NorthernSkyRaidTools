@@ -78,16 +78,7 @@ local function BuildInterruptDisplayOptions()
             name = "Preview / Move",
             desc = "Toggle a live preview of the Interrupt Display. While shown, drag it to reposition.",
             func = function()
-                if NSI.InterruptDisplay and NSI.InterruptDisplay:IsShown() then
-                    NSI:MakeDraggable(NSI.InterruptDisplay, NSRT.InterruptSettings, false)
-                    NSI:HideInterrupt()
-                else
-                    NSI:CreateInterruptDisplay()
-                    NSI.InterruptDisplay.Number:SetText("3")
-                    NSI.InterruptDisplay.Name:SetText(NSAPI:Shorten("player", 12, false, "GlobalNickNames", false, false))
-                    NSI.InterruptDisplay.Box:SetColorTexture(unpack(NSRT.InterruptSettings.InterruptNowColor))
-                    NSI:MakeDraggable(NSI.InterruptDisplay, NSRT.InterruptSettings, true)
-                end
+                NSI:PreviewInterruptDisplay()
             end,
             nocombat = true,
             spacement = true,

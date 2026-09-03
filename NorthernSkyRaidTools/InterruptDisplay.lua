@@ -32,31 +32,52 @@ function NSI:CreateInterruptDisplay()
     self.InterruptDisplay.Name:SetFont(self.LSM:Fetch("font", NSRT.InterruptSettings.NameFont), NSRT.InterruptSettings.NameFontSize, NSRT.InterruptSettings.NameFontFlags)
 end
 
+function NSI:DisplayInterruptAssignment(castCount, name, boxColor, textColor)
+    self:CreateInterruptDisplay()
+    self.InterruptDisplay.Background:SetColorTexture(unpack(boxColor))
+    self.InterruptDisplay.Number:SetTextColor(unpack(textColor))
+    self.InterruptDisplay.Number:SetText(castCount or "")
+    self.InterruptDisplay.Name:SetText(name or "")
+    self.InterruptDisplay:Show()
+end
+
+function NSI:PreviewInterruptDisplay(castCount, name, boxColor, textColor)
+    if self.InterruptDisplay and self.InterruptDisplay:IsShown() then
+        self:MakeDraggable(self.InterruptDisplay, NSRT.InterruptSettings, false)
+        self:HideInterrupt()
+        return false
+    end
+
+    self:DisplayInterruptAssignment(castCount or 3, name or NSAPI:Shorten("player", 12, false, "GlobalNickNames", false, false), boxColor or NSRT.InterruptSettings.InterruptNowColor, textColor or NSRT.InterruptSettings.InterruptNowTextColor)
+    self:MakeDraggable(self.InterruptDisplay, NSRT.InterruptSettings, true)
+    return true
+end
+
+function NSI:GetInterruptNameplateScale(plate)
+    return plate and plate:GetEffectiveScale() / UIParent:GetEffectiveScale() or 1
+end
+
 function NSI:DisplayInterrupt(isCastStart)
     local s = NSRT.InterruptSettings
     local myKick = self.Interrupts.myKick
     local castCount = self.Interrupts.castCount
     local unit = self.Interrupts.myTable[castCount]
     local name = unit and UnitExists(unit) and NSAPI:Shorten(unit, 12, false, "GlobalNickNames", false, false) or ""
-    self:CreateInterruptDisplay()
-    self.InterruptDisplay.Number:SetText(castCount or "")
-    self.InterruptDisplay.Name:SetText(name)
+    local boxColor = s.InterruptDefaultColor
+    local textColor = s.InterruptDefaultTextColor
     if castCount == myKick then
         if isCastStart then -- player interrupts now
-            self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNowColor))
-            self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNowTextColor))
+            boxColor = s.InterruptNowColor
+            textColor = s.InterruptNowTextColor
         else -- player interrupts next
-            self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNextColor))
-            self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNextTextColor))
+            boxColor = s.InterruptNextColor
+            textColor = s.InterruptNextTextColor
         end
     elseif (castCount+1 == myKick) or (myKick == 1 and castCount == self.Interrupts.max) then
-        self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptNextColor))
-        self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptNextTextColor))
-    else
-        self.InterruptDisplay.Box:SetColorTexture(unpack(s.InterruptDefaultColor))
-        self.InterruptDisplay.Number:SetTextColor(unpack(s.InterruptDefaultTextColor))
+        boxColor = s.InterruptNextColor
+        textColor = s.InterruptNextTextColor
     end
-    self.InterruptDisplay:Show()
+    self:DisplayInterruptAssignment(castCount, name, boxColor, textColor)
 end
 
 function NSI:PlayInterruptSound()

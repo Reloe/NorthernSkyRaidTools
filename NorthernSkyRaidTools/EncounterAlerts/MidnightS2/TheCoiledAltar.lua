@@ -276,8 +276,7 @@ local debuffCirclePreview = [[return function(NSI)
 
     local data = {group = "Coiled Altar", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, NumberFontSize = 12, NameFontSize = 12, BoxSize = 30,
-        NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false, DisplayStaticBox = false,
-        Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 0,
+        NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false, DisplayStaticBox = false, HideNameplateBox = false,
         Version = {versionNumber = 4, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}, [3] = {group = "Coiled Altar"}, [4] = {customIcon = 6552}},
         extraOptions = {
             { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."), height = 80 },
@@ -322,13 +321,18 @@ local debuffCirclePreview = [[return function(NSI)
             { Type = "Checkbox", label = NSI:Loc("Display static box"),
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.DisplayStaticBox or false end]],
                 set = [[return function(NSI, value) local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments alert.DisplayStaticBox = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
-                tooltip = {title = "Display static box", desc = "Show the interrupt box at a saved static position instead of on the add nameplate. You must focus the ghost for this mode to work."},
+                tooltip = {title = "Display static box", desc = NSI:Loc("Use the global Interrupt Display settings for the static box.")},
+            },
+            { Type = "Checkbox", label = NSI:Loc("Hide nameplate box"),
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.HideNameplateBox or false end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.HideNameplateBox = value NSI:UpdateCoiledAltarInterruptDisplay() end]],
+                tooltip = {title = NSI:Loc("Hide nameplate box"), desc = NSI:Loc("Hide the nameplate box while keeping the static box visible.")},
             },
         },
         Preview = [[return function(NSI)
             if NSI:PreviewCoiledAltarInterruptDisplay() then
                 local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments
-                local message = alert.DisplayStaticBox and "|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3." or "|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3."
+                local message = alert.DisplayStaticBox and "|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3." or "|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3."
                 print(NSI:Loc(message))
             end
         end]],
@@ -448,8 +452,9 @@ local function ResetCoiledAltarInterruptDisplay(self)
     if self.CoiledAltarInterruptFrame then
         self.CoiledAltarInterruptFrame:Hide()
     end
-    if self.CoiledAltarInterruptStaticFrame then
-        self.CoiledAltarInterruptStaticFrame:Hide()
+    if self.CoiledAltarInterruptStaticShown then
+        self:HideInterrupt()
+        self.CoiledAltarInterruptStaticShown = false
     end
     self.CoiledAltarInterruptActive = false
     self.CoiledAltarInterruptBoss3Available = false
@@ -480,21 +485,16 @@ function NSI:UpdateCoiledAltarInterruptPreview()
     local nameFontPath = self.LSM:Fetch("font", interruptSettings.NameFont)
     local numberFontPath = self.LSM:Fetch("font", interruptSettings.NumberFont)
 
-    local staticPreview = alert and alert.DisplayStaticBox
-    self:MakeDraggable(preview, staticPreview and alert or nil, staticPreview or false, false)
-    preview:SetSize(staticPreview and boxSize or boxSize * 2 + 20, staticPreview and boxSize or boxSize + 20)
-    if staticPreview then
-        preview:ClearAllPoints()
-        preview:SetPoint(alert.Anchor or "CENTER", UIParent, alert.relativeTo or "CENTER", alert.xOffset or 0, alert.yOffset or 0)
-    else
-        preview:ClearAllPoints()
-        preview:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    end
+    self:MakeDraggable(preview, nil, false, false)
+    preview:SetScale(self:GetInterruptNameplateScale(C_NamePlate.GetNamePlateForUnit("focus")))
+    preview:SetSize(boxSize * 2 + 20, boxSize + 20)
+    preview:ClearAllPoints()
+    preview:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     for boxIndex, box in ipairs(preview.boxes) do
         box:Hide()
         local previewLine = self.Interrupts and self.Interrupts.myID == 3 and 2 or 1
-        if (staticPreview and boxIndex == 1) or (not staticPreview and boxIndex == previewLine) then
-            local displayLine = staticPreview and previewLine or boxIndex
+        if boxIndex == previewLine then
+            local displayLine = boxIndex
             local lineNames = assignmentTable[displayLine + 1] or {}
             local currentName = lineNames[1]
             local nextName = lineNames[2]
@@ -509,11 +509,7 @@ function NSI:UpdateCoiledAltarInterruptPreview()
             end
 
             box:ClearAllPoints()
-            if staticPreview then
-                box:SetPoint("CENTER", preview, "CENTER")
-            else
-                box:SetPoint("CENTER", preview, "CENTER", boxIndex == 1 and -(boxSize + 10) / 2 or (boxSize + 10) / 2, 0)
-            end
+            box:SetPoint("CENTER", preview, "CENTER", boxIndex == 1 and -(boxSize + 10) / 2 or (boxSize + 10) / 2, 0)
             box:SetSize(boxSize, boxSize)
             box.Background:SetColorTexture(unpack(boxColor))
 
@@ -535,6 +531,29 @@ function NSI:UpdateCoiledAltarInterruptPreview()
 end
 
 function NSI:PreviewCoiledAltarInterruptDisplay()
+    local alert = self.CoiledAltarInterruptAlert or (NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptAssignments)
+    if alert and alert.DisplayStaticBox then
+        if self.CoiledAltarInterruptPreviewFrame then
+            self.CoiledAltarInterruptPreviewFrame:Hide()
+        end
+        self:ReadInterruptNote(1)
+        local displayLine = self.Interrupts and self.Interrupts.myID == 3 and 2 or 1
+        local lineNames = self.Interrupts and self.Interrupts.assignTable[displayLine + 1] or {}
+        local currentName = lineNames[1]
+        local nextName = lineNames[2]
+        local interruptSettings = NSRT.InterruptSettings
+        local boxColor = interruptSettings.InterruptDefaultColor
+        local textColor = interruptSettings.InterruptDefaultTextColor
+        if currentName and UnitIsUnit(currentName, "player") then
+            boxColor = interruptSettings.InterruptNowColor
+            textColor = interruptSettings.InterruptNowTextColor
+        elseif nextName and UnitIsUnit(nextName, "player") then
+            boxColor = interruptSettings.InterruptNextColor
+            textColor = interruptSettings.InterruptNextTextColor
+        end
+        local displayName = currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or NSAPI:Shorten("player", 12, false, "GlobalNickNames", true, false)
+        return self:PreviewInterruptDisplay(1, displayName, boxColor, textColor)
+    end
     if self.CoiledAltarInterruptPreviewFrame and self.CoiledAltarInterruptPreviewFrame:IsShown() then
         self.CoiledAltarInterruptPreviewFrame:Hide()
         return false
@@ -581,8 +600,9 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 end
             end
         end
-        if self.CoiledAltarInterruptStaticFrame then
-            self.CoiledAltarInterruptStaticFrame:Hide()
+        if self.CoiledAltarInterruptStaticShown then
+            self:HideInterrupt()
+            self.CoiledAltarInterruptStaticShown = false
         end
         return
     end
@@ -610,30 +630,12 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local fontScale = boxSize / 30
 
     if alert.DisplayStaticBox and UnitExists("focus") then
-        for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
-            for boxIndex, box in ipairs(display.boxes) do
-                box:Hide()
-            end
-        end
-
-        local staticFrame = self.CoiledAltarInterruptStaticFrame
-        if not staticFrame then
-            staticFrame = CreateFrame("Frame", "NSRTCoiledAltarInterruptStatic", self.NSRTFrame)
-            staticFrame.box = self:CreateInterruptAssignmentDisplay(staticFrame)
-            self.CoiledAltarInterruptStaticFrame = staticFrame
-        end
-        staticFrame:ClearAllPoints()
-        staticFrame:SetPoint(alert.Anchor or "CENTER", UIParent, alert.relativeTo or "CENTER", alert.xOffset or 0, alert.yOffset or 0)
-        staticFrame:SetSize(boxSize, boxSize)
-
         local focusExists = UnitExists("focus")
         local focusIsGhost = focusExists and UnitLevel("focus") == 92
         local focusMarker = focusIsGhost and GetRaidTargetIndex("focus")
         local focusHasMarker = focusIsGhost and issecretvalue(focusMarker)
         local displayLine = focusHasMarker and 2 or 1
         local boxVisible = focusIsGhost and (alert.ShowAll or assignedLine == displayLine)
-        local box = staticFrame.box
-        box:Hide()
         if boxVisible then
             local lineNames = assignmentTable[displayLine + 1]
             local castCount = self.CoiledAltarInterruptCastCounts["focus"] or 1
@@ -648,27 +650,25 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 boxColor = interruptSettings.InterruptNextColor
                 textColor = interruptSettings.InterruptNextTextColor
             end
-            box:ClearAllPoints()
-            box:SetPoint("CENTER", staticFrame, "CENTER")
-            box:SetSize(boxSize, boxSize)
-            box.Background:SetColorTexture(unpack(boxColor))
-            box.Number:ClearAllPoints()
-            box.Number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-            box.Number:SetFont(numberFontPath, numberFontSize * fontScale, interruptSettings.NumberFontFlags)
-            box.Number:SetTextColor(unpack(textColor))
-            box.Number:SetText(castCount)
-            box.Name:ClearAllPoints()
-            box.Name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
-            box.Name:SetFont(nameFontPath, nameFontSize * fontScale, interruptSettings.NameFontFlags)
-            box.Name:SetText(currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or "")
-            box:Show()
-            staticFrame:Show()
-        else
-            staticFrame:Hide()
+            local displayName = currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or ""
+            self:DisplayInterruptAssignment(castCount, displayName, boxColor, textColor)
+            self.CoiledAltarInterruptStaticShown = true
+        elseif self.CoiledAltarInterruptStaticShown then
+            self:HideInterrupt()
+            self.CoiledAltarInterruptStaticShown = false
+        end
+    elseif self.CoiledAltarInterruptStaticShown then
+        self:HideInterrupt()
+        self.CoiledAltarInterruptStaticShown = false
+    end
+
+    if alert.HideNameplateBox then
+        for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
+            for boxIndex, box in ipairs(display.boxes) do
+                box:Hide()
+            end
         end
         return
-    elseif self.CoiledAltarInterruptStaticFrame then
-        self.CoiledAltarInterruptStaticFrame:Hide()
     end
 
     for unit, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
@@ -696,6 +696,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 end
                 box:ClearAllPoints()
                 box:SetPoint(boxAnchor, display.plate, plateAnchor, nameplateXOffset, nameplateYOffset)
+                box:SetScale(self:GetInterruptNameplateScale(display.plate))
                 box:SetSize(boxSize, boxSize)
                 box.Background:SetColorTexture(unpack(boxColor))
                 local boxVisible = (alert.ShowAll or assignedLine == displayLine) and ((bossIndex == 2) == hasRaidMarker)
