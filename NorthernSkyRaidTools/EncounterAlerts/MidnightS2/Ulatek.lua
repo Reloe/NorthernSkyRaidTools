@@ -732,7 +732,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:RemoveEncounterAlert(encID, 16, "TransitionSoakSecond")
 
     local data = {group = "Ula'tek", internalID = "WaveLines", name = "P3 Wave lines", text = "", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = ulatekWaveLineDuration, spellID = 1316356,
-        difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewUlatekWaveLines() end]],
+        difficulties = {16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewUlatekWaveLines() end]],
         timers = {
             [16] = ulatekWaveLineTimes,
         },
