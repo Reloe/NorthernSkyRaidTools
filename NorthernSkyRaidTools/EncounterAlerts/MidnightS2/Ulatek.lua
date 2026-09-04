@@ -808,7 +808,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
     local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
+        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
 
