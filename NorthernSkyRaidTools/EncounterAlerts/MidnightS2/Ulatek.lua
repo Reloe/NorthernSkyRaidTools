@@ -501,7 +501,13 @@ NSI.InitializeAlerts[encID] = function(self)
         {label = NSI:Loc("Right"), value = "RIGHT"},
         {label = NSI:Loc("Bottom"), value = "BOTTOM"},
     }
-    local data = {Version = {versionNumber = 1, [1] = {group = "Ula'tek"}}, group = "Ula'tek", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 1, Preview = [[return function(NSI) NSI:PreviewUlatekInterruptDisplay() end]],
+    local data = {Version = {versionNumber = 1, [1] = {group = "Ula'tek"}}, group = "Ula'tek", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 1, Preview = [[return function(NSI)
+        if NSI:PreviewUlatekInterruptDisplay() then
+            local alert = NSRT.EncounterAlerts[3492][16].InterruptAssignments
+            local message = alert.DisplayStaticBox and "|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter." or "|cFF00FFFFNSRT:|r the live display is shown on the focused add nameplate during this encounter. Its size may also change with the nameplate frame scale."
+            print(NSI:Loc(message))
+        end
+    end]],
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, DisplayStaticBox = false, HideNameplateBox = false,
         extraOptions = {

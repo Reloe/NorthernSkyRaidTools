@@ -332,7 +332,7 @@ local debuffCirclePreview = [[return function(NSI)
         Preview = [[return function(NSI)
             if NSI:PreviewCoiledAltarInterruptDisplay() then
                 local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments
-                local message = alert.DisplayStaticBox and "|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3." or "|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3."
+                local message = alert.DisplayStaticBox and "|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3." or "|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. Its size may also change with the nameplate frame scale."
                 print(NSI:Loc(message))
             end
         end]],
