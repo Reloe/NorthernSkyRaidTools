@@ -250,7 +250,7 @@ L[3429] = {
     ["P2Taunt"]       = {group = "盤蛇祭壇", name = "P2 嘲諷", text = "嘲諷"},
     ["P2Debuffs"]     = {group = "盤蛇祭壇", name = "P2 Debuff", text = "Debuff"},
     ["P2Shield"]      = {group = "盤蛇祭壇", name = "P2 盾", text = "P2 盾"},
-    -- ["DebuffCircle"] = {group = "Coiled Altar", name = "Orb/Bomb Circle", text = ""},
+    ["DebuffCircle"] = {group = "盤蛇祭壇", name = "放球", text = ""},
     ["EternalNightfallAbsorb"] = {group = "盤蛇祭壇", name = "吸收盾", text = ""},
     ["InterruptAdds"] = {group = "盤蛇祭壇", name = "P2 打斷小怪", text = "鬼"},
     ["InterruptAssignments"] = {group = "盤蛇祭壇", name = "打斷分配", text = "打斷"},
@@ -281,6 +281,6 @@ L[3492] = {
     ["TransitionSoakSecond"] = {group = "烏拉特克", name = "分傷2", text = "分傷2"},
     ["GraspingFangsOverview"] = {group = "烏拉特克", name = "攫取毒牙總覽", text = ""},
     ["WrongTarget"] = {group = "烏拉特克", name = "打錯目標", text = "打錯目標"},
-    -- ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
-    -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
+    ["WaveDirection"] = {group = "烏拉特克", name = "波左右方向", text = ""},
+    ["InterruptAssignments"] = {group = "烏拉特克", name = "打斷分配", text = "打斷"},
 }
