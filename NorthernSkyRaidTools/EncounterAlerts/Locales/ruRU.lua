@@ -280,4 +280,6 @@ L[3492] = {
     ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
     ["WaveDirection"] = {group = "Ула'тек", name = "Ввод направления волны", text = ""},
     -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
+    -- ["TransitionPatternSoaks"] = {group = "Ula'tek", name = "Transition Soaks", text = "Soak"},
+    -- ["TransitionPatternArrow"] = {group = "Ula'tek", name = "Transition Arrow", text = ""},
 }

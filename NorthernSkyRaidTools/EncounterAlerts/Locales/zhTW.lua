@@ -283,4 +283,6 @@ L[3492] = {
     ["WrongTarget"] = {group = "烏拉特克", name = "打錯目標", text = "打錯目標"},
     -- ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
     -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
+    -- ["TransitionPatternSoaks"] = {group = "Ula'tek", name = "Transition Soaks", text = "Soak"},
+    -- ["TransitionPatternArrow"] = {group = "Ula'tek", name = "Transition Arrow", text = ""},
 }
