@@ -494,11 +494,18 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local nameplateAnchorOptions = {
+        {label = NSI:Loc("Top"), value = "TOP"},
+        {label = NSI:Loc("Center"), value = "CENTER"},
+        {label = NSI:Loc("Left"), value = "LEFT"},
+        {label = NSI:Loc("Right"), value = "RIGHT"},
+        {label = NSI:Loc("Bottom"), value = "BOTTOM"},
+    }
     local data = {Version = {versionNumber = 1, [1] = {group = "Ula'tek"}}, group = "Ula'tek", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 1, Preview = [[return function(NSI) NSI:PreviewUlatekInterruptDisplay() end]],
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, DisplayStaticBox = false, HideNameplateBox = false,
         extraOptions = {
-            {Type = "Label", text = NSI:Loc("Focus an interrupt add to show its assignment."), height = 30},
+            {Type = "Label", text = NSI:Loc("The Interrupt display will be displayed for the add that you focused. The order of lines in the interrupt note does not matter since it's not assigned to an actual boss unit but just to whatever you focus. Use raidmarker to ensure that people are focusing the same add."), height = 60},
             {Type = "Slider", label = NSI:Loc("Number Font Size"), min = 8, max = 40, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NumberFontSize or 12 end]],
                 set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NumberFontSize = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
@@ -514,15 +521,7 @@ NSI.InitializeAlerts[encID] = function(self)
             {Type = "Dropdown", label = NSI:Loc("Nameplate Anchor"),
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateAnchor or "TOP" end]],
                 set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateAnchor = value NSI:UpdateUlatekInterruptDisplay() end]],
-                values = [[return function()
-                    return {
-                        {label = NSI:Loc("Top"), value = "TOP"},
-                        {label = NSI:Loc("Center"), value = "CENTER"},
-                        {label = NSI:Loc("Left"), value = "LEFT"},
-                        {label = NSI:Loc("Right"), value = "RIGHT"},
-                        {label = NSI:Loc("Bottom"), value = "BOTTOM"},
-                    }
-                end]],
+                values = nameplateAnchorOptions,
             },
             {Type = "Slider", label = NSI:Loc("Nameplate X Offset"), min = -200, max = 200, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateXOffset or 0 end]],
