@@ -269,8 +269,8 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "Ula'tek", name = "Mother's Wrath", text = "Hit+Knock"},
     ["Waves"]               = {group = "Ula'tek", name = "Caustic Wave", text = "Waves"},
-    ["DamageAmpIn"]         = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp in"},
-    ["DamageAmp"]           = {group = "Ula'tek", name = "Venomous Heart", text = "Dmg amp"},
+    ["DamageAmpIn"]         = {group = "Ula'tek", name = "Dmg amp in", text = "Dmg amp in"},
+    ["DamageAmp"]           = {group = "Ula'tek", name = "Dmg amp Timer", text = "Dmg amp"},
     ["PlatformBreak"]       = {group = "Ula'tek", name = "Circling Prey", text = "Platform Break"},
     ["Debuffs"]             = {group = "Ula'tek", name = "Serpent's Bite", text = "Debuffs"},
     ["Eggs"]                = {group = "Ula'tek", name = "Eggs", text = "Eggs"},
