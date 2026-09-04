@@ -500,7 +500,7 @@ NSI.InitializeAlerts[encID] = function(self)
         [15] = {135.4, 284.5, 573.5},
         [16] = {145.4, 294.5, 583.6},
     }
-    local data = {Version = {versionNumber = 2, [1] = {dur = 15}, [2] = {customIcon = 1299526}}, group = "Ula'tek", internalID = "DamageAmpIn", name = "Venomous Heart", text = "Dmg amp in", customIcon = 1299526, DisplayType = "Text", encID = encID, TTS = false, dur = 15, spellID = 1286860, phase = 1,
+    local data = {Version = {versionNumber = 3, [1] = {dur = 15}, [2] = {customIcon = 1299526}, [3] = {name = "Dmg amp in"}}, group = "Ula'tek", internalID = "DamageAmpIn", name = "Dmg amp in", text = "Dmg amp in", customIcon = 1299526, DisplayType = "Text", encID = encID, TTS = false, dur = 15, spellID = 1286860, phase = 1,
         timers = UlatekDamageAmpTimers,
     }
     self:AddEncounterAlert(data)
@@ -509,7 +509,7 @@ NSI.InitializeAlerts[encID] = function(self)
         [15] = {155.4, 304.5, 597},
         [16] = {165.4, 314.5, 603.6},
     }
-    local data = {Version = {versionNumber = 1, [1] = {customIcon = 1299526}}, group = "Ula'tek", internalID = "DamageAmp", name = "Venomous Heart", text = "Dmg amp", customIcon = 1299526, DisplayType = "Bar", encID = encID, TTS = false, dur = 20, spellID = 1299526, phase = 1,
+    local data = {Version = {versionNumber = 2, [1] = {customIcon = 1299526}, [2] = {name = "Dmg amp Timer"}}, group = "Ula'tek", internalID = "DamageAmp", name = "Dmg amp Timer", text = "Dmg amp", customIcon = 1299526, DisplayType = "Bar", encID = encID, TTS = false, dur = 20, spellID = 1299526, phase = 1,
         barColors = {1, 0, 0, 1},
         timers = UlatekDamageAmpEndTimers,
     }
