@@ -279,6 +279,7 @@ L[3492] = {
     -- ["GraspingFangsOverview"] = {group = "Ula'tek", name = "Grasping Fangs Overview", text = ""},
     -- ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
     -- ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Input", text = ""},
+    -- ["WaveLines"] = {group = "Ula'tek", name = "P3 Wave lines", text = ""},
     -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
     -- ["TransitionPatternSoaks"] = {group = "Ula'tek", name = "Transition Soaks", text = "Soak"},
     -- ["TransitionPatternArrow"] = {group = "Ula'tek", name = "Transition Arrow", text = ""},

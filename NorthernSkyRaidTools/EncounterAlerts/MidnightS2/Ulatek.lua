@@ -5,6 +5,8 @@ local encID = 3492
 
 local GRASPING_FANGS_LEFT = "UlatekGraspingFangsLeftSide"
 local GRASPING_FANGS_RIGHT = "UlatekGraspingFangsRightSide"
+local ulatekWaveLineTimes = {}
+local ulatekWaveLineDuration = 10
 local transitionSoakTimes = {337, 339, 343, 345, 349, 351, 353, 355}
 local transitionPatterns = {
     CHAT_MSG_YELL = {7, 3, 4, 2, 8, 6, 1, 5},
@@ -30,6 +32,14 @@ for marker, angle in pairs(transitionMarkerAngles) do
     transitionMarkerTexCoords[marker] = {upperLeftX, upperLeftY, lowerLeftX, lowerLeftY, upperRightX, upperRightY, lowerRightX, lowerRightY}
 end
 
+function NSI:PreviewUlatekWaveLines()
+    if self.UlatekWaveLinesIsPreview then
+        NSI.EncounterAlertStop[encID](self)
+        return
+    end
+    NSI.EncounterAlertStart[encID](self, 16, true)
+end
+
 local function GetGraspingFangsAlert()
     local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16]
     return diffData and diffData.GraspingFangsOverview
@@ -52,6 +62,100 @@ local function StopUlatekWaveDirection(self)
             timer:Cancel()
         end
         self.UlatekWaveDirectionTimers = nil
+    end
+end
+
+local function StopUlatekWaveLines(self)
+    self.UlatekWaveLinesIsPreview = false
+    if self.UlatekWaveLinesTimers then
+        for _, timer in ipairs(self.UlatekWaveLinesTimers) do
+            timer:Cancel()
+        end
+        self.UlatekWaveLinesTimers = nil
+    end
+    if self.UlatekWaveLinesFrame then
+        self.UlatekWaveLinesFrame:Hide()
+    end
+    if self.UlatekWaveLinesPreviousRotateMinimap then
+        C_CVar.SetCVar("rotateMinimap", self.UlatekWaveLinesPreviousRotateMinimap)
+        MinimapCluster:SetRotateMinimap(self.UlatekWaveLinesPreviousRotateMinimap == "1")
+        self.UlatekWaveLinesPreviousRotateMinimap = nil
+    end
+end
+
+local function StartUlatekWaveLines(self, alert, isPreview)
+    isPreview = isPreview == true
+    StopUlatekWaveLines(self)
+    if not alert or (not isPreview and (not alert.enabled or not self:EvaluateLoad(alert))) then return end
+
+    self.UlatekWaveLinesIsPreview = isPreview
+    if isPreview then
+        self.UlatekWaveLinesPreviewToken = (self.UlatekWaveLinesPreviewToken or 0) + 1
+    end
+    self.UlatekWaveLinesTimers = {}
+
+    if not self.UlatekWaveLinesFrame then
+        local frame = CreateFrame("Frame", nil, self.NSRTFrame)
+        frame:SetAllPoints(self.NSRTFrame)
+        frame:SetFrameStrata("HIGH")
+        frame:Hide()
+        local texture = frame:CreateTexture(nil, "OVERLAY")
+        texture:SetTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\UlatekWaveLines.png]])
+        texture:SetPoint("CENTER")
+        local lineLength = math.sqrt(UIParent:GetWidth() ^ 2 + UIParent:GetHeight() ^ 2)
+        texture:SetSize(lineLength, lineLength)
+        local rotationUpdateElapsed = 0
+        frame:SetScript("OnUpdate", function(_, elapsed)
+            rotationUpdateElapsed = rotationUpdateElapsed + elapsed
+            if rotationUpdateElapsed < (1 / 60) then return end
+            rotationUpdateElapsed = 0
+            texture:SetRotation(MinimapCompassTexture:GetRotation())
+        end)
+        self.UlatekWaveLinesFrame = frame
+    end
+
+    local function hideWaveLines()
+        self.UlatekWaveLinesFrame:Hide()
+        if self.UlatekWaveLinesPreviousRotateMinimap then
+            C_CVar.SetCVar("rotateMinimap", self.UlatekWaveLinesPreviousRotateMinimap)
+            MinimapCluster:SetRotateMinimap(self.UlatekWaveLinesPreviousRotateMinimap == "1")
+            self.UlatekWaveLinesPreviousRotateMinimap = nil
+        end
+    end
+
+    local function showWaveLines()
+        if not self.UlatekWaveLinesPreviousRotateMinimap then
+            self.UlatekWaveLinesPreviousRotateMinimap = GetCVar("rotateMinimap")
+        end
+        C_CVar.SetCVar("rotateMinimap", "1")
+        MinimapCluster:SetRotateMinimap(true)
+        local previewToken = self.UlatekWaveLinesPreviewToken
+        C_Timer.After(0, function()
+            if (not isPreview or (self.UlatekWaveLinesIsPreview and self.UlatekWaveLinesPreviewToken == previewToken))
+                and (isPreview or self.EncounterID == encID) then
+                self.UlatekWaveLinesFrame:Show()
+            end
+        end)
+    end
+
+    if isPreview then
+        showWaveLines()
+        local previewToken = self.UlatekWaveLinesPreviewToken
+        self.UlatekWaveLinesTimers[#self.UlatekWaveLinesTimers + 1] = C_Timer.NewTimer(ulatekWaveLineDuration, function()
+            if self.UlatekWaveLinesIsPreview and self.UlatekWaveLinesPreviewToken == previewToken then
+                StopUlatekWaveLines(self)
+            end
+        end)
+        return
+    end
+
+    for _, waveTime in ipairs(ulatekWaveLineTimes) do
+        self.UlatekWaveLinesTimers[#self.UlatekWaveLinesTimers + 1] = C_Timer.NewTimer(math.max(0, waveTime - ulatekWaveLineDuration), function()
+            if self.EncounterID == encID then showWaveLines() end
+        end)
+        self.UlatekWaveLinesTimers[#self.UlatekWaveLinesTimers + 1] = C_Timer.NewTimer(waveTime, function()
+            if self.EncounterID == encID then hideWaveLines() end
+        end)
     end
 end
 
@@ -627,6 +731,14 @@ NSI.InitializeAlerts[encID] = function(self)
     self:RemoveEncounterAlert(encID, 16, "TransitionSoakFirst")
     self:RemoveEncounterAlert(encID, 16, "TransitionSoakSecond")
 
+    local data = {group = "Ula'tek", internalID = "WaveLines", name = "P3 Wave lines", text = "", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = ulatekWaveLineDuration, spellID = 1316356,
+        difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewUlatekWaveLines() end]],
+        timers = {
+            [16] = ulatekWaveLineTimes,
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local transitionSoakDescription = [[Use the following note format to assign players to one of the 3 soaking groups:
 transitionStart
 Reloe Senfi Ponky
@@ -667,7 +779,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             end]],
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
-    local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
+    local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
@@ -679,17 +791,20 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
     self:AddEncounterAlert(data)
 end
 
-NSI.EncounterAlertStart[encID] = function(self, id)
+NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
     id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     local overviewAlert = diffData and diffData.GraspingFangsOverview
     local wrongTargetAlert = diffData and diffData.WrongTarget
     local waveDirectionAlert = diffData and diffData.WaveDirection
     local wavesAlert = diffData and diffData.Waves
+    local waveLinesAlert = diffData and diffData.WaveLines
     local transitionSoakAlert = diffData and diffData.TransitionPatternSoaks
     local transitionArrowAlert = diffData and diffData.TransitionPatternArrow
 
     StopUlatekTransition(self)
+    StartUlatekWaveLines(self, waveLinesAlert, isPreview)
+    if isPreview then return end
     if (transitionSoakAlert and transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert))
         or (transitionArrowAlert and transitionArrowAlert.enabled and self:EvaluateLoad(transitionArrowAlert)) then
         self.UlatekTransitionStartTime = GetTime()
@@ -981,6 +1096,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    StopUlatekWaveLines(self)
     StopUlatekWaveDirection(self)
     StopUlatekTransition(self)
     self.UlatekInterruptAlert = nil

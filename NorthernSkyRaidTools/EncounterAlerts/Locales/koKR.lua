@@ -280,6 +280,7 @@ L[3492] = {
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
     ["WrongTarget"] = {group = "울라텍", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
     ["WaveDirection"] = {group = "울라텍", name = "파도 방향 입력", text = ""},
+    -- ["WaveLines"] = {group = "Ula'tek", name = "P3 Wave lines", text = ""},
     -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
     -- ["TransitionPatternSoaks"] = {group = "Ula'tek", name = "Transition Soaks", text = "Soak"},
     -- ["TransitionPatternArrow"] = {group = "Ula'tek", name = "Transition Arrow", text = ""},
