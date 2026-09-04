@@ -459,6 +459,7 @@ local function ResetCoiledAltarInterruptDisplay(self)
     self.CoiledAltarInterruptActive = false
     self.CoiledAltarInterruptBoss3Available = false
     self.CoiledAltarInterruptCastCounts = {}
+    self.CoiledAltarInterruptLastSoundCastCounts = {}
     for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
         for boxIndex, box in ipairs(display.boxes) do
             box:Hide()
@@ -836,6 +837,22 @@ local function IsCoiledAltarInterruptUnit(self, unit)
     return (display and display.plate) and true or false
 end
 
+local function PlayCoiledAltarInterruptSound(self, unit, castCount)
+    local assignedLine = self.Interrupts and (self.Interrupts.myID == 2 and 1 or self.Interrupts.myID == 3 and 2)
+    if not assignedLine then return end
+    local hasRaidMarker = issecretvalue(GetRaidTargetIndex(unit))
+    local displayLine = hasRaidMarker and 2 or 1
+    if displayLine ~= assignedLine then return end
+    self.CoiledAltarInterruptLastSoundCastCounts = self.CoiledAltarInterruptLastSoundCastCounts or {}
+    if self.CoiledAltarInterruptLastSoundCastCounts[displayLine] == castCount then return end
+    self.CoiledAltarInterruptLastSoundCastCounts[displayLine] = castCount
+    local lineNames = self.Interrupts.assignTable[displayLine + 1]
+    local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
+    if currentName and UnitIsUnit(currentName, "player") then
+        self:PlayInterruptSound()
+    end
+end
+
 local function SetCoiledAltarInterruptPhase(self, active)
     local alert = self.CoiledAltarInterruptAlert
     local alertLoad = alert and self:EvaluateLoad(alert)
@@ -845,6 +862,7 @@ local function SetCoiledAltarInterruptPhase(self, active)
     self.CoiledAltarInterruptActive = active
     self.CoiledAltarInterruptBoss3Available = active
     self.CoiledAltarInterruptCastCounts = {}
+    self.CoiledAltarInterruptLastSoundCastCounts = {}
     if active then
         self.CoiledAltarInterruptFrame:Show()
         self:ReadInterruptNote(1)
@@ -1066,6 +1084,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     local castCount = CoiledAltarInterruptPosition(castBarID)
                     if self.CoiledAltarInterruptCastCounts[unit] ~= castCount then
                         self.CoiledAltarInterruptCastCounts[unit] = castCount
+                        PlayCoiledAltarInterruptSound(self, unit, castCount)
                         NSI:UpdateCoiledAltarInterruptDisplay()
                     end
                 end)
