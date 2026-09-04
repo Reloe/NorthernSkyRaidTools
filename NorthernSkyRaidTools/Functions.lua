@@ -391,21 +391,27 @@ function NSI:RefreshEncounterAlertsUI()
     end
 end
 
-function NSAPI:SetEncounterAlertState(encID, internalID, enabled)
+function NSAPI:SetEncounterAlertState(encID, internalID, enabled, difficultyID)
     local alertTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
     if not alertTable then return false end
 
     local newState = enabled == true
+    if not newState then
+        difficultyID = difficultyID or NSI:DifficultyCheck({14, 15, 16, 220})
+    end
+
     local found = false
-    for difficultyID, difficultyAlerts in pairs(alertTable) do
-        local alert = difficultyAlerts[internalID]
-        if alert then
-            found = true
-            alert.enabled = newState
-            if alert.ReloeReminder == true then
-                alert.UserModifiedEnabled = true
+    for alertDifficultyID, difficultyAlerts in pairs(alertTable) do
+        if newState or alertDifficultyID == difficultyID then
+            local alert = difficultyAlerts[internalID]
+            if alert then
+                found = true
+                alert.enabled = newState
+                if alert.ReloeReminder == true then
+                    alert.UserModifiedEnabled = true
+                end
+                NSI:FireCallback("NSRT_ALERT_CHANGED", encID, alertDifficultyID, internalID)
             end
-            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, difficultyID, internalID)
         end
     end
 
