@@ -280,5 +280,5 @@ L[3492] = {
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
     ["WrongTarget"] = {group = "울라텍", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
     ["WaveDirection"] = {group = "울라텍", name = "파도 방향 입력", text = ""},
-    -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
+    ["InterruptAssignments"] = {group = "울라텍", name = "차단 배정", text = "차단"},
 }
