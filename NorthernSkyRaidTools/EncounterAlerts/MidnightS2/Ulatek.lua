@@ -68,53 +68,38 @@ function NSI:PreviewUlatekGraspingFangsOverviews()
 end
 
 local function GetUlatekInterruptNames(self)
-    local assignmentTable = self.Interrupts and self.Interrupts.assignTable
-    if assignmentTable then
-        for lineIndex = 2, #assignmentTable do
-            local interruptNames = assignmentTable[lineIndex]
-            if #interruptNames > 0 then return interruptNames end
-        end
-    end
-    return {}
+    return self.Interrupts and self.Interrupts.myTable or {}
 end
 
-local function GetUlatekInterruptCount(self, castBarID, nextCast)
-    local interruptNames = GetUlatekInterruptNames(self)
-    if #interruptNames == 0 then return 1 end
-    local castCount = math.max(1, castBarID - 1)
-    if nextCast then castCount = castCount + 1 end
-    return (castCount - 1) % #interruptNames + 1
-end
-
-local function IsUlatekInterruptFocus()
+local function GetUlatekInterruptFocusedBossUnit()
     for bossIndex = 2, 5 do
-        local isBoss = UnitIsUnit("focus", "boss"..bossIndex)
-        if issecretvalue(isBoss) then return false end
-        if isBoss then return true end
+        local bossUnit = "boss"..bossIndex
+        local isBoss = UnitIsUnit("focus", bossUnit)
+        if issecretvalue(isBoss) then return end
+        if isBoss then return bossUnit end
     end
-    return false
 end
 
 local function HideUlatekInterruptDisplay(self)
     if self.UlatekInterruptNameplateBox then
         self.UlatekInterruptNameplateBox:Hide()
     end
-    if self.UlatekInterruptStaticShown then
-        self:HideInterrupt()
-        self.UlatekInterruptStaticShown = false
-    end
 end
 
 function NSI:UpdateUlatekInterruptDisplay()
     local alert = self.UlatekInterruptAlert
     if not alert then return end
-    if not IsUlatekInterruptFocus() then
+    if not GetUlatekInterruptFocusedBossUnit() then
+        HideUlatekInterruptDisplay(self)
+        return
+    end
+    if not self.Interrupts or self.Interrupts.disabled or self.Interrupts.myTrackedID == 0 then
         HideUlatekInterruptDisplay(self)
         return
     end
 
     local interruptNames = GetUlatekInterruptNames(self)
-    local castCount = self.UlatekInterruptCastCount or 1
+    local castCount = self.Interrupts and self.Interrupts.castCount or 1
     local currentName = #interruptNames > 0 and interruptNames[castCount] or nil
     local nextName = #interruptNames > 0 and interruptNames[castCount % #interruptNames + 1] or nil
     local interruptSettings = NSRT.InterruptSettings
@@ -141,14 +126,6 @@ function NSI:UpdateUlatekInterruptDisplay()
         boxAnchor, plateAnchor = "LEFT", "RIGHT"
     elseif alert.NameplateAnchor == "BOTTOM" then
         boxAnchor, plateAnchor = "TOP", "BOTTOM"
-    end
-
-    if alert.DisplayStaticBox then
-        self:DisplayInterruptAssignment(castCount, displayName, boxColor, textColor)
-        self.UlatekInterruptStaticShown = true
-    elseif self.UlatekInterruptStaticShown then
-        self:HideInterrupt()
-        self.UlatekInterruptStaticShown = false
     end
 
     local displays = {}
@@ -184,53 +161,6 @@ function NSI:UpdateUlatekInterruptDisplay()
     end
 end
 
-function NSI:UpdateUlatekInterruptPreview()
-    local preview = self.UlatekInterruptPreviewFrame
-    if not preview then return end
-
-    local alert = self.UlatekInterruptAlert or (NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptAssignments)
-    if not alert or alert.DisplayStaticBox then
-        preview:Hide()
-        return
-    end
-
-    local interruptNames = GetUlatekInterruptNames(self)
-    local currentName = interruptNames[1]
-    local nextName = interruptNames[2]
-    local interruptSettings = NSRT.InterruptSettings
-    local boxSize = alert.BoxSize or 30
-    local fontScale = boxSize / 30
-    local boxColor = interruptSettings.InterruptDefaultColor
-    local textColor = interruptSettings.InterruptDefaultTextColor
-    if currentName and UnitIsUnit(currentName, "player") then
-        boxColor = interruptSettings.InterruptNowColor
-        textColor = interruptSettings.InterruptNowTextColor
-    elseif nextName and UnitIsUnit(nextName, "player") then
-        boxColor = interruptSettings.InterruptNextColor
-        textColor = interruptSettings.InterruptNextTextColor
-    end
-
-    preview:SetScale(self:GetInterruptNameplateScale(C_NamePlate.GetNamePlateForUnit("focus")))
-    preview:SetSize(boxSize + 20, boxSize + 20)
-    preview:ClearAllPoints()
-    preview:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-    local box = preview.box
-    box:SetSize(boxSize, boxSize)
-    box:ClearAllPoints()
-    box:SetPoint("CENTER", preview, "CENTER")
-    box.Background:SetColorTexture(unpack(boxColor))
-    box.Number:ClearAllPoints()
-    box.Number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
-    box.Number:SetFont(self.LSM:Fetch("font", interruptSettings.NumberFont), (alert.NumberFontSize or interruptSettings.NumberFontSize) * fontScale, interruptSettings.NumberFontFlags)
-    box.Number:SetTextColor(unpack(textColor))
-    box.Number:SetText(1)
-    box.Name:ClearAllPoints()
-    box.Name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
-    box.Name:SetFont(self.LSM:Fetch("font", interruptSettings.NameFont), (alert.NameFontSize or interruptSettings.NameFontSize) * fontScale, interruptSettings.NameFontFlags)
-    box.Name:SetText(currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or NSAPI:Shorten("player", 12, false, "GlobalNickNames", true, false))
-    box:Show()
-end
-
 function NSI:PreviewUlatekInterruptDisplay()
     local alert = self.UlatekInterruptAlert or (NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptAssignments)
     if not alert then return false end
@@ -251,35 +181,7 @@ function NSI:PreviewUlatekInterruptDisplay()
     end
     local displayName = currentName and NSAPI:Shorten(currentName, 12, false, "GlobalNickNames", true, false) or NSAPI:Shorten("player", 12, false, "GlobalNickNames", true, false)
 
-    if alert.DisplayStaticBox then
-        if self.UlatekInterruptPreviewFrame then
-            self.UlatekInterruptPreviewFrame:Hide()
-        end
-        return self:PreviewInterruptDisplay(1, displayName, boxColor, textColor)
-    end
-
-    if self.UlatekInterruptPreviewFrame and self.UlatekInterruptPreviewFrame:IsShown() then
-        self.UlatekInterruptPreviewFrame:Hide()
-        return false
-    end
-    if not self.UlatekInterruptPreviewFrame then
-        local preview = CreateFrame("Frame", "NSRTUlatekInterruptPreview", UIParent)
-        preview:SetFrameStrata("DIALOG")
-        preview:SetFrameLevel(10)
-        preview.box = self:CreateInterruptAssignmentDisplay(preview)
-        preview.box:SetFrameLevel(1)
-        self.UlatekInterruptPreviewFrame = preview
-    end
-    self:UpdateUlatekInterruptPreview()
-    self.UlatekInterruptPreviewFrame:Show()
-    return true
-end
-
-local function SyncUlatekInterruptCount(self)
-    local castBarID = select(10, UnitCastingInfo("focus"))
-    if castBarID and not issecretvalue(castBarID) then
-        self.UlatekInterruptCastCount = GetUlatekInterruptCount(self, castBarID)
-    end
+    return self:PreviewInterruptDisplay(1, displayName, boxColor, textColor)
 end
 
 NSI.InitializeAlerts[encID] = function(self)
@@ -503,26 +405,24 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     local data = {Version = {versionNumber = 1, [1] = {group = "Ula'tek"}}, group = "Ula'tek", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 1, Preview = [[return function(NSI)
         if NSI:PreviewUlatekInterruptDisplay() then
-            local alert = NSRT.EncounterAlerts[3492][16].InterruptAssignments
-            local message = alert.DisplayStaticBox and "|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter." or "|cFF00FFFFNSRT:|r the live display is shown on the focused add nameplate during this encounter. Its size may also change with the nameplate frame scale."
-            print(NSI:Loc(message))
+            print(NSI:Loc("|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter."))
         end
     end]],
         difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
-        NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, DisplayStaticBox = false, HideNameplateBox = false,
+        NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, HideNameplateBox = false,
         extraOptions = {
             {Type = "Label", text = NSI:Loc("The Interrupt display will be displayed for the add that you focused. The order of lines in the interrupt note does not matter since it's not assigned to an actual boss unit but just to whatever you focus. Use raidmarker to ensure that people are focusing the same add."), height = 60},
             {Type = "Slider", label = NSI:Loc("Number Font Size"), min = 8, max = 40, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NumberFontSize or 12 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NumberFontSize = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NumberFontSize = value NSI:UpdateUlatekInterruptDisplay() end]],
             },
             {Type = "Slider", label = NSI:Loc("Name Font Size"), min = 8, max = 40, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameFontSize or 12 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameFontSize = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameFontSize = value NSI:UpdateUlatekInterruptDisplay() end]],
             },
             {Type = "Slider", label = NSI:Loc("Box Size"), min = 30, max = 150, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.BoxSize or 30 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.BoxSize = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.BoxSize = value NSI:UpdateUlatekInterruptDisplay() end]],
             },
             {Type = "Dropdown", label = NSI:Loc("Nameplate Anchor"),
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateAnchor or "TOP" end]],
@@ -531,20 +431,15 @@ NSI.InitializeAlerts[encID] = function(self)
             },
             {Type = "Slider", label = NSI:Loc("Nameplate X Offset"), min = -200, max = 200, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateXOffset or 0 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateXOffset = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateXOffset = value NSI:UpdateUlatekInterruptDisplay() end]],
             },
             {Type = "Slider", label = NSI:Loc("Nameplate Y Offset"), min = -200, max = 200, step = 1,
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateYOffset or 0 end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateYOffset = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
-            },
-            {Type = "Checkbox", label = NSI:Loc("Display static box"),
-                get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.DisplayStaticBox or false end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.DisplayStaticBox = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
-                tooltip = {title = NSI:Loc("Display static box"), desc = NSI:Loc("Use the global Interrupt Display settings for the static box.")},
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.NameplateYOffset = value NSI:UpdateUlatekInterruptDisplay() end]],
             },
             {Type = "Checkbox", label = NSI:Loc("Hide nameplate box"),
                 get = [[return function() return NSRT.EncounterAlerts[3492][16].InterruptAssignments.HideNameplateBox or false end]],
-                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.HideNameplateBox = value NSI:UpdateUlatekInterruptDisplay() NSI:UpdateUlatekInterruptPreview() end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].InterruptAssignments.HideNameplateBox = value NSI:UpdateUlatekInterruptDisplay() end]],
                 tooltip = {title = NSI:Loc("Hide nameplate box"), desc = NSI:Loc("Hide the nameplate box while keeping the static box visible.")},
             },
         },
@@ -622,35 +517,64 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     local interruptAlert = diffData and diffData.InterruptAssignments
     local interruptAlertActive = interruptAlert and interruptAlert.enabled and self:EvaluateLoad(interruptAlert)
     self.UlatekInterruptAlert = interruptAlert
-    self.UlatekInterruptCastCount = nil
-    self.UlatekInterruptStaticShown = false
+    if self.UlatekInterruptResetTimer then
+        self.UlatekInterruptResetTimer:Cancel()
+        self.UlatekInterruptResetTimer = nil
+    end
     if interruptAlertActive then
         self:ReadInterruptNote(1)
-        self:EncounterRegister("UlatekInterruptAssignments", "PLAYER_FOCUS_CHANGED", true)
-        self:EncounterRegister("UlatekInterruptAssignments", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, true, "focus")
-        self:EncounterFunction("UlatekInterruptAssignments", function(_, event, unit, _, _, arg4, arg5)
+        self:ResetInterrupts()
+        self.UlatekInterruptBossCounts = {boss2 = 1, boss3 = 1, boss4 = 1, boss5 = 1}
+        self.UlatekInterruptFocusedBossUnit = nil
+        self.UlatekInterruptTrackingEnabled = false
+        self:EncounterRegister("UlatekInterruptFocus", "PLAYER_FOCUS_CHANGED", true)
+        self:EncounterRegister("UlatekInterruptFocus", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, true, "focus")
+        self:EncounterRegister("UlatekInterruptBossCounts", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, true, {"boss2", "boss3", "boss4", "boss5"})
+        self:EncounterFunction("UlatekInterruptFocus", function(_, event, unit)
+            if not self.UlatekInterruptTrackingEnabled then return end
             if event == "PLAYER_FOCUS_CHANGED" then
-                self.UlatekInterruptCastCount = nil
-                SyncUlatekInterruptCount(self)
+                self.UlatekInterruptFocusedBossUnit = GetUlatekInterruptFocusedBossUnit()
+                self:ResetInterrupts()
+                if self.UlatekInterruptFocusedBossUnit then
+                    self.Interrupts.castCount = self.UlatekInterruptBossCounts[self.UlatekInterruptFocusedBossUnit]
+                    self:DisplayInterrupt()
+                end
                 self:UpdateUlatekInterruptDisplay()
             elseif event == "UNIT_SPELLCAST_START" and unit == "focus" then
-                C_Timer.After(0, function()
-                    if self.EncounterID ~= encID or not self.UlatekInterruptAlert then return end
-                    SyncUlatekInterruptCount(self)
+                if self.UlatekInterruptFocusedBossUnit then
+                    self:InterruptOnCastStart({dur = 3}, unit)
                     self:UpdateUlatekInterruptDisplay()
-                end)
-            elseif (event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_STOP") and unit == "focus" then
-                local castBarID = event == "UNIT_SPELLCAST_INTERRUPTED" and arg5 or arg4
-                if not castBarID or issecretvalue(castBarID) then return end
-                self.UlatekInterruptCastCount = GetUlatekInterruptCount(self, castBarID, true)
+                end
+            elseif event == "UNIT_SPELLCAST_INTERRUPTED" and unit == "focus" and self.UlatekInterruptFocusedBossUnit then
+                self:OnInterrupt(true)
+                self:UpdateUlatekInterruptDisplay()
+            elseif event == "UNIT_SPELLCAST_STOP" and unit == "focus" and self.UlatekInterruptFocusedBossUnit then
+                self:OnCastStop(false)
+                self.UlatekInterruptBossCounts[self.UlatekInterruptFocusedBossUnit] = self.Interrupts.castCount
                 self:UpdateUlatekInterruptDisplay()
             end
         end)
-        SyncUlatekInterruptCount(self)
+        self:EncounterFunction("UlatekInterruptBossCounts", function(_, event, unit)
+            if not self.UlatekInterruptTrackingEnabled or event ~= "UNIT_SPELLCAST_STOP" or unit == self.UlatekInterruptFocusedBossUnit then return end
+            local castCount = self.UlatekInterruptBossCounts[unit] + 1
+            if castCount > self.Interrupts.max then
+                castCount = 1
+            end
+            self.UlatekInterruptBossCounts[unit] = castCount
+        end)
+        self.UlatekInterruptResetTimer = C_Timer.NewTimer(240, function()
+            if self.EncounterID ~= encID then return end
+            self.UlatekInterruptBossCounts = {boss2 = 1, boss3 = 1, boss4 = 1, boss5 = 1}
+            self.UlatekInterruptTrackingEnabled = true
+            self:ResetInterrupts()
+            self.UlatekInterruptFocusedBossUnit = GetUlatekInterruptFocusedBossUnit()
+            HideUlatekInterruptDisplay(self)
+        end)
         self:UpdateUlatekInterruptDisplay()
     else
-        self:EncounterRegister("UlatekInterruptAssignments", "PLAYER_FOCUS_CHANGED", false)
-        self:EncounterRegister("UlatekInterruptAssignments", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false)
+        self:EncounterRegister("UlatekInterruptFocus", "PLAYER_FOCUS_CHANGED", false)
+        self:EncounterRegister("UlatekInterruptFocus", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false)
+        self:EncounterRegister("UlatekInterruptBossCounts", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false)
         HideUlatekInterruptDisplay(self)
     end
 
@@ -734,9 +658,19 @@ end
 NSI.EncounterAlertStop[encID] = function(self)
     StopUlatekWaveDirection(self)
     self.UlatekInterruptAlert = nil
-    self.UlatekInterruptCastCount = nil
-    self:EncounterRegister("UlatekInterruptAssignments", "PLAYER_FOCUS_CHANGED", false)
-    self:EncounterRegister("UlatekInterruptAssignments", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false)
+    self.UlatekInterruptTrackingEnabled = false
+    self.UlatekInterruptFocusedBossUnit = nil
+    self.UlatekInterruptBossCounts = nil
+    if self.UlatekInterruptResetTimer then
+        self.UlatekInterruptResetTimer:Cancel()
+        self.UlatekInterruptResetTimer = nil
+    end
+    self:EncounterRegister("UlatekInterruptFocus", "PLAYER_FOCUS_CHANGED", false)
+    self:EncounterRegister("UlatekInterruptFocus", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false)
+    self:EncounterRegister("UlatekInterruptBossCounts", {"UNIT_SPELLCAST_START", "UNIT_SPELLCAST_INTERRUPTED", "UNIT_SPELLCAST_STOP"}, false)
+    if self.Interrupts then
+        self:ResetInterrupts()
+    end
     HideUlatekInterruptDisplay(self)
     if self.UlatekGraspingFangsTimers then
         for _, timer in ipairs(self.UlatekGraspingFangsTimers) do timer:Cancel() end
