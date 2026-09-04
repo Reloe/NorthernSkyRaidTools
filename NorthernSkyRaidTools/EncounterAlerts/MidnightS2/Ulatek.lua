@@ -20,7 +20,7 @@ local transitionGroupMarkers = {
     CHAT_MSG_RAID_LEADER = {{1, 2, 8}, {4, 3, 5}, {7, 6}},
     CHAT_MSG_RAID_WARNING = {{1, 2, 8}, {4, 3, 5}, {7, 6}},
 }
-local transitionMarkerAngles = {[2] = math.pi / 8, [8] = math.pi * 0.375, [5] = math.pi * 0.625, [3] = math.pi * 0.875, [4] = math.pi * 1.125, [6] = math.pi * 1.375, [7] = math.pi * 1.625, [1] = math.pi * 1.875}
+local transitionMarkerAngles = {[2] = math.pi * 1.875, [8] = math.pi * 1.625, [5] = math.pi * 1.375, [3] = math.pi * 1.125, [4] = math.pi * 0.875, [6] = math.pi * 0.625, [7] = math.pi * 0.375, [1] = math.pi / 8}
 local transitionMarkerTexCoords = {}
 for marker, angle in pairs(transitionMarkerAngles) do
     local cosine = math.cos(angle)
@@ -835,17 +835,22 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                         if transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert) then
                             local reminderMarker = marker
                             local reminderRemaining = remaining
-                            self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(math.max(0, reminderRemaining - 8), function()
+                            local reminderDelay = math.max(0, reminderRemaining - 8)
+                            local previousSoak = assignedSoaks[#assignedSoaks - 1]
+                            if previousSoak then
+                                reminderDelay = math.min(reminderDelay, previousSoak.remaining)
+                            end
+                            local reminderDuration = reminderRemaining - reminderDelay
+                            self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(reminderDelay, function()
                                 if self.EncounterID ~= encID or not transitionSoakAlert.enabled or not self:EvaluateLoad(transitionSoakAlert) then return end
-                                local duration = math.min(8, reminderRemaining)
                                 local info = self:CreateReminder({
                                     text = transitionSoakAlert.text.." {rt"..reminderMarker.."}",
                                     DisplayType = transitionSoakAlert.DisplayType,
                                     textColors = transitionSoakAlert.textColors,
                                     barColors = transitionSoakAlert.barColors,
                                     ringColors = transitionSoakAlert.ringColors,
-                                    dur = duration,
-                                    time = duration,
+                                    dur = reminderDuration,
+                                    time = reminderDuration,
                                     encID = encID,
                                     phase = self.Phase,
                                     TTS = transitionSoakAlert.TTS,
