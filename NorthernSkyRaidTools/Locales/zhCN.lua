@@ -301,7 +301,7 @@ L["Always use text-to-speech even if a soundfile with the same name is detected.
 L["Ignore 'everyone' tags"] = "忽略“everyone”标签"
 L["Ignores All Reminders that use the 'everyone' tag. For example if there are a lot of reminders shared from your raidlead that you don't want to see, you can filter out these 'everyone' reminders while still getting your personal assigned spells."] = "忽略所有使用“everyone”标签的提醒。例如，团队领袖共享了很多不想看到的提醒，可在过滤掉这些“everyone”提醒的同时，看到分配给个人的法术。"
 L["Hide Reminder Treshold"] = "隐藏提醒阈值"
-L["Treshold above which spells will not be hidden if pressed during the reminder. Some long ramp classes have multiple reminders up at the same time and thus don't want them hidden early"] = "设置一个时间阈值。提醒剩余时间大于此阈值时，按下法术不会隐藏提醒。某些职业需要同时保持多个提醒，不希望它们过早消失。"
+L["Treshold above which spells will not be hidden if pressed during the reminder. Some long ramp classes have multiple reminders up at the same time and thus don't want them hidden early"] = "设置一个时间阈值。提醒剩余时间大于此阈值时，施放法术不会隐藏提醒。某些职业需要同时保持多个提醒，不希望它们过早消失。"
 L["Sound"] = "音效"
 L["Show ALL Reminders"] = "显示所有提醒"
 L["This will show you ALL reminders from your notes, regardless of whether the tag matches you or not."] = "显示方案中的所有提醒，无论标签是否匹配个人。"
@@ -1168,8 +1168,33 @@ L["Ula'tek Right"] = "乌拉特克 右"
 L["< Left"] = "< 左"
 L["Right >"] = "右 >"
 L['During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'] = "在P1波浪期间，任何团队聊天消息都会显示为文本预警。点击下方按钮创建“< 左”和“右 >”的宏。"
-L["Creates one raid macro for each wave direction and updates them if they already exist."] = "自动创建所有波浪方向的宏，已存在时更新宏。"
-L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "自动创建用于记忆游戏的宏。需要下载并替换图标文件才能显示正确的宏图标。"
+L["Ula'tek Pattern Yell"] = "乌拉特克大喊模式"
+L["Ula'tek Pattern Raid"] = "乌拉特克团队模式"
+L["Ula'tek Pattern Warning"] = "乌拉特克通知模式"
+L["/yell X"] = "/yell 红叉"
+L["/raid Star"] = "/raid 星星"
+L["/rw Triangle"] = "/rw 三角"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[使用下方的方案格式将玩家分配到3个分摊组之一：
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+共有3种分摊模式。需要团队领袖/助理创建底部的3个宏，根据第一次猛击出现的位置点击对应的宏后，插件会自动分配分摊。
+下方链接为喊话模式示意图，1组分摊橙色标记，2组分摊紫色标记，3组分摊红色标记。
+其他两种模式的分摊位置相同顺序不同，相对于示意图整体顺时针偏移1格。]=]
+L["Copy Group Assignment Image Link"] = "复制分摊示意图链接"
+L["Creates the three chat macros used to select Ula'tek's transition pattern."] = "创建用于选择乌拉特克分摊模式的3个宏。"
+L["Creates one raid macro for each wave direction and updates them if they already exist."] = "创建用于通报波浪方向的宏，已存在时更新宏。"
+L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "创建用于记忆游戏的宏。需要下载并替换图标文件才能显示正确的宏图标。"
 L["FontSize"] = "字体大小"
 L["relativeTo"] = "附着点"
 L["Radar"] = "距离监测"
@@ -1451,6 +1476,7 @@ L["Hide nameplate box"] = "隐藏姓名板打断图标"
 L["Hide the nameplate box while keeping the static box visible."] = "隐藏姓名板打断图标，同时保持固定打断图标可见。"
 L["Use the global Interrupt Display settings for the static box."] = "固定打断图标使用全局打断显示设置。"
 L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3."] = "|cFF00FFFFNSRT：|r实战中会在P2和P3使用全局打断显示设置。"
+L["Show the interrupt box at a saved static position instead of on the add nameplate. You must focus the ghost for this mode to work."] = "在屏幕固定位置显示打断图标，而非显示在小怪姓名板上。需要将“打断怪”设为焦点才能生效。"
 L["|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3."] = "|cFF00FFFFNSRT：|r实战中会在P2和P3的屏幕固定位置显示。"
 L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3."] = "|cFF00FFFFNSRT：|r实战中会在P2和P3的小怪姓名板上显示。"
 L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter."] = "|cFF00FFFFNSRT：|r实战中会全程使用全局打断显示设置。"
