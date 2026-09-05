@@ -1187,9 +1187,30 @@ L["Texture Files"] = "Файлы текстур"
 L["Create Macros"] = "Создать макросы"
 L["Ula'tek Left"] = "Лево [Ула'тек]"
 L["Ula'tek Right"] = "Право [Ула'тек]"
-L["< Left"] = "< Лево"
-L["Right >"] = "Право >"
-L['During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'] = 'Во время волн на 1-й фазе любое сообщение в рейдовом чате будет отображаться как текст. Кнопка ниже предоставляет Вам макросы "< Лево" и "Право >"'
+L["Ula'tek Pattern Yell"] = "Последовательность атак Ула'тек (крик в чат)"
+L["Ula'tek Pattern Raid"] = "Последовательность атак Ула'тек (оповещение рейду)"
+L["Ula'tek Pattern Warning"] = "Последовательность атак Ула'тек (предупреждение)"
+L["/yell X"] = "/yell X"
+L["/raid Star"] = "/raid Звезда"
+L["/rw Triangle"] = "/rw Треугольник"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] = [=[Используйте следующий формат заметки для распределения игроков по одной из 3-х групп поглощения:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+Существует 3 возможных паттерна. Чтобы определить правильный паттерн, один игрок (который должен быть лидером рейда или иметь статус помощника) создаёт 3 макроса внизу и нажимает соответствующий макрос для первого появившегося удара. С этого момента назначения будут происходить автоматически.
+На скриншоте ниже Группа1 поглощает 3 позиции, отмеченные оранжевым, Группа2 - позиции, отмеченные фиолетовым, а Группа3 - позиции, отмеченные красным.
+Для одного из паттернов все назначенные поглощения сдвигаются против часовой стрелки на 1]=]
+L["Copy Group Assignment Image Link"] = "Скопировать ссылку на изображение назначений групп"
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "Создает по одному рейдовому макросу для каждого направления волны и обновляет их, если они уже существуют."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "Автоматически создаст правильные макросы для игры на запоминание. Правильные иконки будут отображаться, только если Вы скачали файлы текстур"
 L["FontSize"] = "Размер шрифта"
@@ -1363,7 +1384,7 @@ L["Color of the display box when it's your turn to interrupt"] = "Цвет ок�
 L["Interrupt Next Color"] = "Цвет при следующем прерывании"
 L["Color of the display box when you are up next to interrupt"] = "Цвет окна, когда Вы следующий в очереди на прерывание"
 L["Interrupt Default Color"] = "Цвет по умолчанию"
-L["The first line of a note will be assigned to interrupt the first relevant boss unit. For Lura this means it assigns boss2, then boss3, then boss4.\nThe note allows for colored name-strings as well as NSNickNames."] = "Первая строка заметки будет назначена для прерывания первого соответствующего юнита-босса. Для Л'ура это означает, что назначается boss2, затем boss3, затем boss4.\nЗаметка поддерживает цветные строки с именами, а также NSNickNames."
+L["Read/inspect the Options tab of each interrupt alert to know how assignments on that specific alert work."] = "Прочтите/изучите вкладку 'Параметры' каждого оповещения о прерывании, чтобы узнать, как работают назначения для этого конкретного оповещения."
 L["Color of the display box when it's not your turn to interrupt"] = "Цвет окна, когда не Ваша очередь прерывать"
 L["Interrupt Now Text Color"] = "Цвет текста при прерывании"
 L["Color of the number when it's your turn to interrupt"] = "Цвет числа, когда наступила Ваша очередь прерывать"
@@ -1471,9 +1492,16 @@ L["Important Healer"] = "Важное для целителя"
 L["Important Tank"] = "Важное для танка"
 L["Show All"] = "Показать всё"
 L["Display static box"] = "Отображать статическую рамку"
+L["The Interrupt display will be displayed for the add that you focused. The order of lines in the interrupt note does not matter since it's not assigned to an actual boss unit but just to whatever you focus. Use raidmarker to ensure that people are focusing the same add."] = "Отображение прерываний будет показываться для адда, на котором у Вас установлен фокус. Порядок строк в заметке о прерываниях не имеет значения, поскольку он назначается не конкретному боссу, а тому, который в фокусе. Используйте рейдовые метки, чтобы убедиться, что все фокусируются на одном и том же адде."
+L["Hide nameplate box"] = "Скрыть рамку на индикаторах"
+L["Hide the nameplate box while keeping the static box visible."] = "Скрыть рамку на индикаторах, оставляя статическую рамку видимой."
+L["Use the global Interrupt Display settings for the static box."] = "Использовать глобальные настройки отображения прерываний для статической рамки."
+L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3."] = "|cFF00FFFFNSRT:|r информация в режиме реального времени использует глобальные настройки отображения прерываний во время 2-й и 3-й фаз."
 L["Show the interrupt box at a saved static position instead of on the add nameplate. You must focus the ghost for this mode to work."] = "Показывать рамку прерываний в сохранённой статической позиции вместо отображения на индикаторе адда. Для работы этого режима необходимо установить фокус на призрака."
-L["|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3."] = "|cFF00FFFFNSRT:|r Во 2-й и 3-й фазах изображение в реальном времени отображается в сохраненном статическом положении."
-L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3."] = "|cFF00FFFFNSRT:|r Изображение в реальном времени отображается на индикаторах дополнительных аддов во время 2-й и 3-й фаз."
+L["|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3."] = "|cFF00FFFFNSRT:|r информация в режиме реального времени отображается в сохраненном статическом положении во время 2-й и 3-й фаз."
+L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. Its size may also change with the nameplate frame scale."] = "|cFF00FFFFNSRT:|r информация в режиме реального времени отображается на индикаторах аддов во время 2-й и 3-й фаз. Его размер также может меняться в зависимости от масштаба индикаторов."
+L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter."] = "|cFF00FFFFNSRT:|r информация в режиме реального времени использует глобальные настройки отображения прерываний во время этого боя."
+L["|cFF00FFFFNSRT:|r the live display is shown on the focused add nameplate during this encounter. Its size may also change with the nameplate frame scale."] = "|cFF00FFFFNSRT:|r информация в режиме реального времени отображается на индикаторах адда, на котором установлен фокус, во время этого боя. Его размер также может меняться в зависимости от масштаба индикаторов."
 L["Combined"] = "Объединённый"
 L["Combined Important"] = "Объединённое важное"
 L["Boss Display:"] = "Отображение босса:"
