@@ -369,11 +369,11 @@ L["Universal Settings - these apply to all 3 Notes"] = "공통 설정 - 3종류�
 L["Hide Player-Names in Note"] = "메모에서 플레이어 이름 숨기기"
 L["Hides the Player Names for Reminders in the Note."] = "메모에서 리마인더의 플레이어 이름을 숨깁니다."
 L["Show Only Spell-Reminders"] = "주문 리마인더만 표시"
-L["With this enabled you will only see Spell-Reminders in your notes."] = "활성화 시 메모에서 주문 리마인더만 표시됩니다."
-L["Countdown and Hide Timers in Notes"] = "메모에서 초읽기 사용 및 타이머 숨기기"
-L["With this enabled, Timers will count down during combat and completed timers will hide."] = "활성화 시 전투 중 타이머를 초읽기하고 완료된 타이머는 숨겨집니다."
+L["With this enabled you will only see Spell-Reminders in your notes."] = "이 옵션을 켜면 메모에서 주문 리마인더만 표시됩니다."
+L["Countdown and Hide Timers in Notes"] = "메모의 타이머를 초읽기한 후 숨기기"
+L["With this enabled, Timers will count down during combat and completed timers will hide."] = "이 옵션을 켜면 전투 중에 타이머를 초읽기하고 완료된 타이머를 숨깁니다."
 L["Show Outside of Raid"] = "공격대 밖에서도 표시"
-L["With this enabled the Notes will still show outside of raid instances."] = "활성화 시 공격대 인스턴스 밖에서도 메모가 표시됩니다."
+L["With this enabled the Notes will still show outside of raid instances."] = "이 옵션을 켜면 공격대 인스턴스 밖에서도 메모가 표시됩니다."
 -- Reminder Note — Personal
 L["Personal Reminder-Note"] = "개인 리마인더 메모"
 L["Unlock Pers Reminder"] = "개인 리마인더 잠금 해제"
@@ -416,7 +416,7 @@ L["For the following Boxes only the Settings of the Raidleader matter."] = "아�
 L["Gloom Soaks - Mythic Only"] = "암울 맞기 - 신화 전용"
 L["Assigns Group 1&2 to soak the first cast, Group 3&4 to soak the second cast. This is overkill as only 7 people are required. Alternatively you can create a custom Assignment through wowutils."] = "1,2파티가 첫 번째 시전을 맞고 3,4파티가 두 번째 시전을 맞는걸로 배정합니다. 7명만 필요하기 때문에 여유를 두고 배정한 것입니다. 이 방식 대신 wowutils를 통해 별도의 특임조를 구성할 수도 있습니다."
 L["Execution Sentence - Mythic Only"] = "사형 선고 - 신화 전용"
-L["Automatically assigns players to Front Left/Right and Back Left/Right. Melee are preferred for Front Left/Right, Ranged for Back Left/Right. Healers are evenly split, if you are more than 4healers than some healers will be told to have a 'Flex Spot'"] = "앞에 왼쪽/오른쪽과 뒤에 왼쪽/오른쪽으로 플레이어를 자동 배정합니다. 근딜은 앞에 왼쪽/오른쪽,  원거리는 뒤에 왼쪽/오른쪽에 우선 배정됩니다. 힐러들은 골고루 나눠서 배치되며 힐러가 4명 이상이면 몇명에게는 'Flex Spot'(빈 자리)을 잘 잡으라고 나옵니다."
+L["Automatically assigns players to Front Left/Right and Back Left/Right. Melee are preferred for Front Left/Right, Ranged for Back Left/Right. Healers are evenly split, if you are more than 4healers than some healers will be told to have a 'Flex Spot'"] = "앞에 왼쪽/오른쪽과 뒤에 왼쪽/오른쪽으로 플레이어를 자동 배정합니다. 근딜은 앞에 왼쪽/오른쪽,  원거리는 뒤에 왼쪽/오른쪽에 우선 배정됩니다. 힐러들은 골고루 나눠서 배치되며 힐러가 4명 이상이면 몇명에게는 '빈 자리'를 잘 찾으라고 나옵니다."
 L["Alndust Upheaval - Mythic"] = "알른가루 지각 변동 - 신화"
 L["Automatically tells Groups 1&2 to soak the first Cast of Alndust Upheaval and Group 3&4 to soak the second cast"] = "첫 번째 알른가루 지각 변동 시전에 1,2파티, 두 번째 시전에 3,4파티가 맞도록 자동으로 알려줍니다"
 L["Alndust Upheaval - Normal/Heroic"] = "알른가루 지각 변동 - 일반/영웅"
@@ -1157,9 +1157,30 @@ L["Texture Files"] = "텍스처 파일"
 L["Create Macros"] = "매크로 생성"
 L["Ula'tek Left"] = "울라텍 왼쪽"
 L["Ula'tek Right"] = "울라텍 오른쪽"
-L["< Left"] = "< 왼쪽"
-L["Right >"] = "오른쪽 >"
-L['During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'] = '1페 파도 패턴 동안 공격대 채팅 메시지가 텍스트로 표시됩니다. 아래에 "< 왼쪽"과 "오른쪽 >" 매크로 버튼이 생깁니다'
+L["Ula'tek Pattern Yell"] = "울라텍 패턴 외치기"
+L["Ula'tek Pattern Raid"] = "울라텍 패턴 공격대 대화"
+L["Ula'tek Pattern Warning"] = "울라텍 패턴 경보"
+L["/yell X"] = "/외침 X"
+L["/raid Star"] = "/공 별"
+L["/rw Triangle"] = "/경보 역삼"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[다음 메모 형식을 사용해 사람들을 3개의 바닥 맞기 특임조로 지정하세요:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+패턴은 3가지가 있습니다. 정확한 패턴을 결정하려면 1명(공대장이나 부공대장)이 아래에서 매크로 3개를 생성한 후 1번 바닥이 나올 때 일치하는 매크로를 누르면 됩니다. 그 이후부턴 자동으로 배정됩니다.
+다음의 스크린샷 기준 1조는 주황색으로 표시된 3개 지점, 2조는 보라색으로 표시된 지점, 3조는 빨간색으로 표시된 지점의 바닥을 맞습니다.
+패턴 중 하나는 모든 바닥 맞기 배정이 반시계 방향으로 1칸씩 이동합니다.]=]
+L["Copy Group Assignment Image Link"] = "특임조 배정 이미지 링크 복사"
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "파도 방향별로 공격대 매크로가 하나씩 생성되고 이미 있을 경우엔 업데이트됩니다."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "메모리 게임에 쓸 매크로를 자동으로 생성합니다. 텍스처 파일을 다운로드 받아야 아이콘이 제대로 나옵니다"
 L["FontSize"] = "글꼴 크기"
@@ -1180,9 +1201,9 @@ L["Creates macros that post numbers 1 through 8 with the matching raid-marker ic
 L["Rotating Marker Map"] = "회전하는 징표 맵"
 L["MapSize"] = "맵 크기"
 L["MarkerSize"] = "징표 크기"
-L["PlayerColor"] = "플레이어 색상"
-L["ShowPlayerArrow"] = "플레이어 화살표 표시"
-L["Shows the player at the center, facing toward the top of the map."] = "중앙에 플레이어를 표시하며 바라보는 방향이 지도의 위쪽이 됩니다."
+L["PlayerColor"] = "내 색상"
+L["ShowPlayerArrow"] = "내 화살표 표시"
+L["Shows the player at the center, facing toward the top of the map."] = "중앙에 나를 표시하며 내가 바라보는 방향이 지도의 위쪽이 됩니다."
 L["Active Entire Fight"] = "전투 내내 활성화"
 L["Keeps the marker map visible from pull until the encounter ends instead of only around configured mechanic windows."] = "징표 맵이 설정된 보스 패턴에만 나오지 않고 전투 시작부터 종료까지 계속 표시됩니다."
 L["World marker positions"] = "바닥 징표 위치"
@@ -1331,7 +1352,7 @@ L["Color of the display box when it's your turn to interrupt"] = "내 차단 차
 L["Interrupt Next Color"] = "다음 차단 차례 색상"
 L["Color of the display box when you are up next to interrupt"] = "내가 다음 차단 차례일 때 디스플레이 박스 색상입니다"
 L["Interrupt Default Color"] = "차단 기본 색상"
-L["The first line of a note will be assigned to interrupt the first relevant boss unit. For Lura this means it assigns boss2, then boss3, then boss4.\nThe note allows for colored name-strings as well as NSNickNames."] = "메모의 첫 번째 줄은 차단을 해야하는 첫 번째 보스 유닛에 배정됩니다. 르우라의 경우 boss2, boss3, boss4 순으로 배정된다는 의미입니다.\n메모엔 색상을 입힌 이름 스트링은 물론 NSRT 닉네임도 허용됩니다."
+L["Read/inspect the Options tab of each interrupt alert to know how assignments on that specific alert work."] = "각 차단 경고의 옵션 탭에 들어가서 해당 경고가 어떤 방식으로 배정되는지 알아보세요."
 L["Color of the display box when it's not your turn to interrupt"] = "내 차단 차례가 아닐 때 디스플레이 박스 색상입니다"
 L["Interrupt Now Text Color"] = "지금 차단 텍스트 색상"
 L["Color of the number when it's your turn to interrupt"] = "내 차단 차례일 때 번호 색상입니다"
@@ -1438,9 +1459,16 @@ L["Important Healer"] = "주요 힐러"
 L["Important Tank"] = "주요 탱커"
 L["Show All"] = "모두 표시"
 L["Display static box"] = "고정 박스 표시"
+L["The Interrupt display will be displayed for the add that you focused. The order of lines in the interrupt note does not matter since it's not assigned to an actual boss unit but just to whatever you focus. Use raidmarker to ensure that people are focusing the same add."] = "주시 대상으로 설정한 쫄에 차단 디스플레이가 표시됩니다. 차단 순서가 적힌 차단 메모는 보스 유닛이 아니어도 주시로 잡은 어떤 유닛이든 작동합니다. 공격대 징표를 사용해서 모든 사람이 같은 쫄을 주시하도록 하세요."
+L["Hide nameplate box"] = "이름표 박스 숨기기"
+L["Hide the nameplate box while keeping the static box visible."] = "고정 박스는 보이게 놔두고 이름표 박스만 숨깁니다."
+L["Use the global Interrupt Display settings for the static box."] = "고정 박스에 전역 차단 디스플레이 설정을 사용합니다."
+L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3."] = "|cFF00FFFFNSRT:|r 실시간 디스플레이가 2, 3페이즈 동안 전역 차단 디스플레이 설정을 사용합니다."
 L["Show the interrupt box at a saved static position instead of on the add nameplate. You must focus the ghost for this mode to work."] = "차단 박스를 쫄 이름표 대신 저장된 고정 위치에 표시합니다. 반드시 유령을 주시 대상으로 설정해야 이 모드가 작동합니다."
 L["|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3."] = "|cFF00FFFFNSRT:|r 실시간 디스플레이가 2, 3페이즈 동안 저장된 고정 위치에 표시됩니다."
-L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3."] = "|cFF00FFFFNSRT:|r 실시간 디스플레이가 2,3페이즈 동안 쫄 이름표 위에 표시됩니다."
+L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. Its size may also change with the nameplate frame scale."] = "|cFF00FFFFNSRT:|r 실시간 디스플레이가 2, 3페이즈 동안 쫄 이름표에 표시됩니다. 이름표 프레임 크기 비율에 따라 디스플레이 크기가 바뀔 수 있습니다."
+L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter."] = "|cFF00FFFFNSRT:|r 실시간 디스플레이가 이 보스전 동안 전역 차단 디스플레이 설정을 사용합니다."
+L["|cFF00FFFFNSRT:|r the live display is shown on the focused add nameplate during this encounter. Its size may also change with the nameplate frame scale."] = "|cFF00FFFFNSRT:|r 실시간 디스플레이가 이 보스전 동안 주시 중인 쫄 이름표에 표시됩니다. 이름표 프레임 크기 비율에 따라 디스플레이 크기가 바뀔 수 있습니다."
 L["Combined"] = "통합"
 L["Combined Important"] = "주요 사항 통합"
 L["Boss Display:"] = "보스 디스플레이:"
