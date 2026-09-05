@@ -1202,6 +1202,7 @@ There are 3 possible patterns. To determine the correct pattern, one player (who
 From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
 For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=]
 L["Copy Group Assignment Image Link"] = "Copy Group Assignment Image Link"
+L["Creates the three chat macros used to select Ula'tek's transition pattern."] = "Creates the three chat macros used to select Ula'tek's transition pattern."
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "Creates one raid macro for each wave direction and updates them if they already exist."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"
 L["FontSize"] = "FontSize"
