@@ -1201,7 +1201,7 @@ Hori Shiru Robin
 transitionEnd
 There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
 From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
-For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] = [=[Используйте следующий формат заметки для распределения игроков по одной из 3-х групп поглощения:
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[Используйте следующий формат заметки для распределения игроков по одной из 3-х групп поглощения:
 transitionStart
 Reloe Senfi Ponky
 Impy Liebre Gladrien
@@ -1211,6 +1211,7 @@ transitionEnd
 На скриншоте ниже Группа1 поглощает 3 позиции, отмеченные оранжевым, Группа2 - позиции, отмеченные фиолетовым, а Группа3 - позиции, отмеченные красным.
 Для одного из паттернов все назначенные поглощения сдвигаются против часовой стрелки на 1]=]
 L["Copy Group Assignment Image Link"] = "Скопировать ссылку на изображение назначений групп"
+L["Creates the three chat macros used to select Ula'tek's transition pattern."] = "Создает три макроса чата, используемые для выбора паттерна переходной фазы Ула'тек."
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "Создает по одному рейдовому макросу для каждого направления волны и обновляет их, если они уже существуют."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "Автоматически создаст правильные макросы для игры на запоминание. Правильные иконки будут отображаться, только если Вы скачали файлы текстур"
 L["FontSize"] = "Размер шрифта"
