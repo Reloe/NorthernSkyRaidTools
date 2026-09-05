@@ -966,7 +966,15 @@ function NSI:PreviewCoiledAltarEternalNightfall()
         self.CoiledAltarEternalNightfallFrame = frame
     end
     ApplyCoiledAltarEternalNightfallSettings(self, frame, self.CoiledAltarEternalNightfallAlert)
-    self:MakeDraggable(frame, self.CoiledAltarEternalNightfallAlert, true, false)
+    self:MakeDraggable(frame, self.CoiledAltarEternalNightfallAlert, true, false, function(_, settings)
+        for difficultyID = 15, 16 do
+            local difficultySettings = NSRT.EncounterAlerts[encID][difficultyID].EternalNightfallAbsorb
+            difficultySettings.xOffset = settings.xOffset
+            difficultySettings.yOffset = settings.yOffset
+            difficultySettings.Anchor = settings.Anchor
+            difficultySettings.relativeTo = settings.relativeTo
+        end
+    end)
     ShowCoiledAltarEternalNightfall(self, true)
     return true
 end
