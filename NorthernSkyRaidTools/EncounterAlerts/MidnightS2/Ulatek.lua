@@ -654,7 +654,7 @@ NSI.InitializeAlerts[encID] = function(self)
     function NSI:PreviewUlatekWaveDirection()
         local alert = NSRT.EncounterAlerts[encID][16].WaveDirection
         local choice = WaveDirectionTexts[math.random(#WaveDirectionTexts)]
-        ShowUlatekWaveText(self, alert, alert[choice.key] or choice.text, alert.dur, nil, true)
+        ShowUlatekWaveText(self, alert, alert[choice.key] or NSI:Loc(choice.text), alert.dur, nil, true)
     end
 
     local waveDirectionOptions = {
@@ -681,7 +681,7 @@ NSI.InitializeAlerts[encID] = function(self)
     for choiceIndex, choice in ipairs(WaveDirectionTexts) do
         waveDirectionOptions[#waveDirectionOptions + 1] = {
             Type = "TextEntry", label = NSI:Loc(choice.label), inputWidth = 250,
-            get = string.format([[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection[%q] or %q end]], choice.key, choice.text),
+            get = string.format([[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection[%q] or %q end]], choice.key, NSI:Loc(choice.text)),
             set = string.format([[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection[%q] = value end]], choice.key),
         }
     end
@@ -1014,7 +1014,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             else
                 return
             end
-            local text = waveDirectionAlert[textKey] or (direction == "Left" and "< Left + Dodge" or "Right > + Dodge")
+            local text = waveDirectionAlert[textKey] or (direction == "Left" and NSI:Loc("< Left + Dodge") or NSI:Loc("Right > + Dodge"))
             ShowUlatekWaveText(self, waveDirectionAlert, text, waveDirectionAlert.dur, "UlatekWaveDirectionDisplay")
         end)
         self.UlatekWaveDirectionTimers = {}
