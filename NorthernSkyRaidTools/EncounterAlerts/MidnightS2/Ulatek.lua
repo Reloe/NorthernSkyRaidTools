@@ -85,7 +85,7 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         countdown = false,
         IsAlert = false,
         ReloeReminder = true,
-    }, isPreview)
+    }, true)
     if not info then return end
     local frame = self:DisplayReminder(info, isPreview)
     if key then self[key] = {frame = frame, info = info} end
@@ -929,7 +929,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                                     TTSTimer = transitionSoakAlert.TTSTimer,
                                     IsAlert = false,
                                     ReloeReminder = true,
-                                })
+                                }, true)
                                 if info then self:DisplayReminder(info) end
                             end)
                         end
@@ -1157,7 +1157,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             TTS = false,
             IsAlert = false,
             ReloeReminder = true,
-        })
+        }, true)
         self.UlatekWrongTargetFrame = info and self:DisplayReminder(info)
     end
 
