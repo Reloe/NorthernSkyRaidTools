@@ -7,6 +7,15 @@ local GRASPING_FANGS_LEFT = "UlatekGraspingFangsLeftSide"
 local GRASPING_FANGS_RIGHT = "UlatekGraspingFangsRightSide"
 local ulatekWaveLineTimes = {423, 488, 590}
 local ulatekWaveLineDuration = 10
+local WaveDirectionEvents = {"CHAT_MSG_YELL", "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}
+local WaveDirectionTexts = {
+    {key = "FirstWaveLeft", label = "1st Wave - Left", text = "< Left + Dodge"},
+    {key = "FirstWaveRight", label = "1st Wave - Right", text = "Right > + Dodge"},
+    {key = "SecondWaveLeftLeft", label = "2nd Wave - Submerge Left, Wave Left", text = "< Left + Dodge"},
+    {key = "SecondWaveLeftRight", label = "2nd Wave - Submerge Left, Wave Right", text = "Right > + Dodge"},
+    {key = "SecondWaveRightLeft", label = "2nd Wave - Submerge Right, Wave Left", text = "< Left + Dodge"},
+    {key = "SecondWaveRightRight", label = "2nd Wave - Submerge Right, Wave Right", text = "Right > + Dodge"},
+}
 local transitionSoakTimes = {337, 339, 343, 345, 349, 351, 353, 355}
 local transitionPatterns = {
     CHAT_MSG_YELL = {7, 3, 4, 2, 8, 6, 1, 5},
@@ -54,11 +63,42 @@ local function ParseGroupList(text)
     return subgroups
 end
 
+local function HideUlatekWaveText(self, key)
+    local display = self[key]
+    if not display then return end
+    if display.frame and display.frame.info == display.info then display.frame:Hide() end
+    self[key] = nil
+end
+
+local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
+    if key then HideUlatekWaveText(self, key) end
+    local info = self:CreateReminder({
+        text = text,
+        DisplayType = "Text",
+        textColors = alert.textColors,
+        dur = duration,
+        time = duration,
+        encID = encID,
+        phase = self.Phase or 1,
+        HideTimer = true,
+        TTS = false,
+        countdown = false,
+        IsAlert = false,
+        ReloeReminder = true,
+    }, isPreview)
+    if not info then return end
+    local frame = self:DisplayReminder(info, isPreview)
+    if key then self[key] = {frame = frame, info = info} end
+end
+
 local function StopUlatekWaveDirection(self)
-    self:EncounterRegister("UlatekWaveDirection", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
-    self.UlatekWaveDirectionListening = false
+    self:EncounterRegister("UlatekWaveDirection", WaveDirectionEvents, false)
+    self.UlatekWaveDirectionWindow = nil
+    self.UlatekSubmergeDirection = nil
+    HideUlatekWaveText(self, "UlatekWaveDirectionDisplay")
+    HideUlatekWaveText(self, "UlatekWaveDirectionPrompt")
     if self.UlatekWaveDirectionTimers then
-        for _, timer in ipairs(self.UlatekWaveDirectionTimers) do
+        for timerIndex, timer in ipairs(self.UlatekWaveDirectionTimers) do
             timer:Cancel()
         end
         self.UlatekWaveDirectionTimers = nil
@@ -612,32 +652,20 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     function NSI:PreviewUlatekWaveDirection()
-        local message = math.random(2) == 1 and secretwrap(NSI:Loc("< Left")) or secretwrap(NSI:Loc("Right >"))
-        local info = self:CreateReminder({
-            text = "",
-            DisplayType = "Text",
-            dur = 8,
-            time = 8,
-            encID = encID,
-            phase = 1,
-            HideTimer = true,
-            TTS = false,
-            IsAlert = false,
-            ReloeReminder = true,
-        }, true)
-        info.text = message
-        self:DisplayReminder(info, true)
+        local alert = NSRT.EncounterAlerts[encID][16].WaveDirection
+        local choice = WaveDirectionTexts[math.random(#WaveDirectionTexts)]
+        ShowUlatekWaveText(self, alert, alert[choice.key] or choice.text, alert.dur, nil, true)
     end
 
     local waveDirectionOptions = {
-        {Type = "Label", text = NSI:Loc('During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'), height = 50},
+        {Type = "Label", text = NSI:Loc("Use /yell for left or /raid for Right during the input windows, from 6 seconds before until 6 seconds after each wave and submerge. The second wave combines the submerge and wave inputs."), height = 70},
         {Type = "Button", label = NSI:Loc("Create Macros"), width = 180,
             func = [[return function(NSI)
                 local macros = {
-                    {name = NSI:Loc("Ula'tek Left"), icon = 450906, message = "/raid " .. NSI:Loc("< Left")},
-                    {name = NSI:Loc("Ula'tek Right"), icon = 450908, message = "/raid " .. NSI:Loc("Right >")},
+                    {name = NSI:Loc("Ula'tek Left"), icon = 450906, message = "/yell ".. NSI:Loc("Left")},
+                    {name = NSI:Loc("Ula'tek Right"), icon = 450908, message = "/raid ".. NSI:Loc("Right")},
                 }
-                for _, macro in ipairs(macros) do
+                for macroIndex, macro in ipairs(macros) do
                     if GetMacroInfo(macro.name) then
                         EditMacro(macro.name, macro.name, macro.icon, macro.message)
                     else
@@ -645,14 +673,29 @@ NSI.InitializeAlerts[encID] = function(self)
                     end
                 end
             end]],
-            tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates one raid macro for each wave direction and updates them if they already exist.")}},
+            tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates a yell macro for Left and a raid macro for Right, or updates the existing macros.")}},
+        {Type = "Slider", label = NSI:Loc("Duration Seconds"), min = 1, max = 30, step = 1,
+            get = [[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection.dur end]],
+            set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection.dur = value end]],},
     }
-    local data = {group = "Ula'tek", internalID = "WaveDirection", name = "Wave Direction Input", text = "", DisplayType = "Text", encID = encID, TTS = false, dur = 8,
-        HideTimer = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(self) self:PreviewUlatekWaveDirection() end]],
+    for choiceIndex, choice in ipairs(WaveDirectionTexts) do
+        waveDirectionOptions[#waveDirectionOptions + 1] = {
+            Type = "TextEntry", label = NSI:Loc(choice.label), inputWidth = 250,
+            get = string.format([[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection[%q] or %q end]], choice.key, choice.text),
+            set = string.format([[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection[%q] = value end]], choice.key),
+        }
+    end
+    local data = {Version = {versionNumber = 1, [1] = {enabled = true, pinned = true, name = "Wave Direction Display"}},group = "Ula'tek", internalID = "WaveDirection", name = "Wave Direction Display", text = "", DisplayType = "Text", encID = encID, TTS = false, dur = 8,
+        HideTimer = true, isSpecialDisplay = true, BlockCopy = true, enabled = true, NoEdit = true, pinned = true, Preview = [[return function(self) self:PreviewUlatekWaveDirection() end]],
         extraOptions = waveDirectionOptions,
         timers = {
             [16] = {56, 113},
         },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Ula'tek", internalID = "WaveDirectionPrompt", name = "Wave Direction Input", text = "Input Direction", DisplayType = "Text", encID = encID, TTS = false, dur = 12, phase = 1,
+        difficulties = {16}, enabled = false, HideTimer = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -825,6 +868,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
     local overviewAlert = diffData and diffData.GraspingFangsOverview
     local wrongTargetAlert = diffData and diffData.WrongTarget
     local waveDirectionAlert = diffData and diffData.WaveDirection
+    local waveDirectionPromptAlert = diffData and diffData.WaveDirectionPrompt
     local wavesAlert = diffData and diffData.Waves
     local waveLinesAlert = diffData and diffData.WaveLines
     local transitionSoakAlert = diffData and diffData.TransitionPatternSoaks
@@ -949,41 +993,51 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
     end
 
     StopUlatekWaveDirection(self)
-    if waveDirectionAlert and waveDirectionAlert.enabled and self:EvaluateLoad(waveDirectionAlert) and wavesAlert then
-        self:EncounterFunction("UlatekWaveDirection", function(_, event, message)
-            if not self.UlatekWaveDirectionListening then return end
-            local info = self:CreateReminder({
-                text = "",
-                DisplayType = "Text",
-                textColors = waveDirectionAlert.textColors,
-                dur = 8,
-                time = 8,
-                encID = encID,
-                phase = self.Phase,
-                HideTimer = true,
-                TTS = false,
-                IsAlert = false,
-                ReloeReminder = true,
-            })
-            if not info then return end
-            info.text = message
-            self:DisplayReminder(info)
+    local waveDirectionActive = waveDirectionAlert and waveDirectionAlert.enabled and self:EvaluateLoad(waveDirectionAlert)
+    local waveDirectionPromptActive = waveDirectionPromptAlert and waveDirectionPromptAlert.enabled and self:EvaluateLoad(waveDirectionPromptAlert)
+    if (waveDirectionActive or waveDirectionPromptActive) and wavesAlert then
+        self:EncounterFunction("UlatekWaveDirection", function(frame, event)
+            local window = self.UlatekWaveDirectionWindow
+            if not window then return end
+            HideUlatekWaveText(self, "UlatekWaveDirectionPrompt")
+            local direction = event == "CHAT_MSG_YELL" and "Left" or "Right"
+            if window == "Submerge" then
+                self.UlatekSubmergeDirection = direction
+                return
+            end
+            if not waveDirectionActive then return end
+            local textKey
+            if window == "FirstWave" then
+                textKey = "FirstWave"..direction
+            elseif self.UlatekSubmergeDirection then
+                textKey = "SecondWave"..self.UlatekSubmergeDirection..direction
+            else
+                return
+            end
+            local text = waveDirectionAlert[textKey] or (direction == "Left" and "< Left + Dodge" or "Right > + Dodge")
+            ShowUlatekWaveText(self, waveDirectionAlert, text, waveDirectionAlert.dur, "UlatekWaveDirectionDisplay")
         end)
         self.UlatekWaveDirectionTimers = {}
-        for _, waveTime in ipairs(wavesAlert.timers or {}) do
-            if waveTime < 180 then
-                local listenStart = math.max(0, waveTime - 6)
-                self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(listenStart, function()
-                    if self.EncounterID ~= encID then return end
-                    self.UlatekWaveDirectionListening = true
-                    self:EncounterRegister("UlatekWaveDirection", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, true)
-                end)
-                self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(waveTime + 2, function()
-                    if self.EncounterID ~= encID then return end
-                    self.UlatekWaveDirectionListening = false
-                    self:EncounterRegister("UlatekWaveDirection", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, false)
-                end)
-            end
+        local windows = {
+            {name = "FirstWave", time = wavesAlert.timers[1]},
+            {name = "Submerge", time = 79.4},
+            {name = "SecondWave", time = wavesAlert.timers[2]},
+        }
+        for windowIndex, window in ipairs(windows) do
+            self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(window.time - 6, function()
+                if self.EncounterID ~= encID then return end
+                self.UlatekWaveDirectionWindow = window.name
+                self:EncounterRegister("UlatekWaveDirection", WaveDirectionEvents, true)
+                if waveDirectionPromptActive then
+                    ShowUlatekWaveText(self, waveDirectionPromptAlert, waveDirectionPromptAlert.text, 12, "UlatekWaveDirectionPrompt")
+                end
+            end)
+            self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(window.time + 6, function()
+                if self.EncounterID ~= encID then return end
+                self.UlatekWaveDirectionWindow = nil
+                self:EncounterRegister("UlatekWaveDirection", WaveDirectionEvents, false)
+                HideUlatekWaveText(self, "UlatekWaveDirectionPrompt")
+            end)
         end
     end
 
