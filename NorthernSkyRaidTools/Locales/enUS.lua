@@ -1165,9 +1165,30 @@ L["Texture Files"] = "Texture Files"
 L["Create Macros"] = "Create Macros"
 L["Ula'tek Left"] = "Ula'tek Left"
 L["Ula'tek Right"] = "Ula'tek Right"
-L["< Left"] = "< Left"
-L["Right >"] = "Right >"
-L['During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'] = 'During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'
+L["Ula'tek Pattern Yell"] = "Ula'tek Pattern Yell"
+L["Ula'tek Pattern Raid"] = "Ula'tek Pattern Raid"
+L["Ula'tek Pattern Warning"] = "Ula'tek Pattern Warning"
+L["/yell X"] = "/yell X"
+L["/raid Star"] = "/raid Star"
+L["/rw Triangle"] = "/rw Triangle"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=]
+L["Copy Group Assignment Image Link"] = "Copy Group Assignment Image Link"
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "Creates one raid macro for each wave direction and updates them if they already exist."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"
 L["FontSize"] = "FontSize"

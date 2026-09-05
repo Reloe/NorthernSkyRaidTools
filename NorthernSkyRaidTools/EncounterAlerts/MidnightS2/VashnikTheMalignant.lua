@@ -86,11 +86,8 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local VashnikWavesLinePreview = [[return function(NSI)
-        print(NSI:Loc("|cFF00FFFFNSRT:|r this alert has no preview. It is timer-driven and displays a rotating-minimap-aligned cross during the Vashnik wave windows."))
-    end]]
     local data = {Version = {versionNumber = 1, [1] = {difficulties = {16}, loadConditions = nontankConditions, enabled = false}}, group = "Vashnik", internalID = "WavesLine", name = "Waves Line", text = "", DisplayType = "Text", encID = encID,
-        difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = VashnikWavesLinePreview, loadConditions = nontankConditions,
+        difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewVashnikWavesLine() end]], loadConditions = nontankConditions,
         ShowEntireFight = false,
         extraOptions = {
             { Type = "Checkbox", label = "Show Entire Fight",
@@ -102,13 +99,18 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 end
 
-NSI.EncounterAlertStart[encID] = function(self, id)
+NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
+    isPreview = isPreview == true
+    self.VashnikWavesLineIsPreview = isPreview
+    if isPreview then
+        self.VashnikWavesLinePreviewToken = (self.VashnikWavesLinePreviewToken or 0) + 1
+    end
     id = id or self:DifficultyCheck({16})
     local alert = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].WavesLine
     local spreadAlert = id and NSRT.EncounterAlerts[encID][id].WaveSpread
     local wavesAlert = id and NSRT.EncounterAlerts[encID][id].Waves
-    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
-    if not alert.ShowEntireFight and (not spreadAlert or not wavesAlert) then return end
+    if not alert or (not isPreview and (not alert.enabled or not self:EvaluateLoad(alert))) then return end
+    if not isPreview and not alert.ShowEntireFight and (not spreadAlert or not wavesAlert) then return end
 
     if self.VashnikWavesLineTimers then
         for _, timer in ipairs(self.VashnikWavesLineTimers) do timer:Cancel() end
@@ -145,6 +147,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     local function hideWavesLine()
         self.VashnikWavesLineFrame:Hide()
         if self.VashnikWavesLinePreviousRotateMinimap then
+            C_CVar.SetCVar("rotateMinimap", self.VashnikWavesLinePreviousRotateMinimap)
             MinimapCluster:SetRotateMinimap(self.VashnikWavesLinePreviousRotateMinimap == "1")
             self.VashnikWavesLinePreviousRotateMinimap = nil
         end
@@ -154,9 +157,12 @@ NSI.EncounterAlertStart[encID] = function(self, id)
         if not self.VashnikWavesLinePreviousRotateMinimap then
             self.VashnikWavesLinePreviousRotateMinimap = GetCVar("rotateMinimap")
         end
+        C_CVar.SetCVar("rotateMinimap", "1")
         MinimapCluster:SetRotateMinimap(true)
+        local previewToken = self.VashnikWavesLinePreviewToken
         C_Timer.After(0, function()
-            if self.EncounterID == encID then
+            if (not isPreview or (self.VashnikWavesLineIsPreview and self.VashnikWavesLinePreviewToken == previewToken))
+                and (isPreview or self.EncounterID == encID) then
                 self.VashnikWavesLineFrame:Show()
             end
         end)
@@ -164,8 +170,17 @@ NSI.EncounterAlertStart[encID] = function(self, id)
 
     hideWavesLine()
 
-    if alert.ShowEntireFight then
+    if alert.ShowEntireFight or isPreview then
         showWavesLine()
+        if isPreview then
+            local previewToken = self.VashnikWavesLinePreviewToken
+            self.VashnikWavesLineTimers[#self.VashnikWavesLineTimers + 1] = C_Timer.NewTimer(8, function()
+                if self.VashnikWavesLineIsPreview and self.VashnikWavesLinePreviewToken == previewToken then
+                    self.VashnikWavesLineIsPreview = false
+                    hideWavesLine()
+                end
+            end)
+        end
         return
     end
 
@@ -182,7 +197,16 @@ NSI.EncounterAlertStart[encID] = function(self, id)
     end
 end
 
+function NSI:PreviewVashnikWavesLine()
+    if self.VashnikWavesLineIsPreview then
+        NSI.EncounterAlertStop[encID](self)
+        return
+    end
+    NSI.EncounterAlertStart[encID](self, 16, true)
+end
+
 NSI.EncounterAlertStop[encID] = function(self)
+    self.VashnikWavesLineIsPreview = false
     if self.VashnikWavesLineTimers then
         for _, timer in ipairs(self.VashnikWavesLineTimers) do timer:Cancel() end
         self.VashnikWavesLineTimers = nil
@@ -191,6 +215,7 @@ NSI.EncounterAlertStop[encID] = function(self)
         self.VashnikWavesLineFrame:Hide()
     end
     if self.VashnikWavesLinePreviousRotateMinimap then
+        C_CVar.SetCVar("rotateMinimap", self.VashnikWavesLinePreviousRotateMinimap)
         MinimapCluster:SetRotateMinimap(self.VashnikWavesLinePreviousRotateMinimap == "1")
         self.VashnikWavesLinePreviousRotateMinimap = nil
     end
