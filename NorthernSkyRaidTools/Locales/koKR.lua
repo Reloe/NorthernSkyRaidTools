@@ -1157,9 +1157,30 @@ L["Texture Files"] = "텍스처 파일"
 L["Create Macros"] = "매크로 생성"
 L["Ula'tek Left"] = "울라텍 왼쪽"
 L["Ula'tek Right"] = "울라텍 오른쪽"
-L["< Left"] = "< 왼쪽"
-L["Right >"] = "오른쪽 >"
-L['During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'] = '1페 파도 패턴 동안 공격대 채팅 메시지가 텍스트로 표시됩니다. 아래에 "< 왼쪽"과 "오른쪽 >" 매크로 버튼이 생깁니다'
+L["Ula'tek Pattern Yell"] = "울라텍 패턴 외치기"
+L["Ula'tek Pattern Raid"] = "울라텍 패턴 공격대 대화"
+L["Ula'tek Pattern Warning"] = "울라텍 패턴 경보"
+L["/yell X"] = "/외침 X"
+L["/raid Star"] = "/공 별"
+L["/rw Triangle"] = "/경보 역삼"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[다음 메모 형식을 사용해 사람들을 3개의 바닥 맞기 특임조로 지정하세요:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+패턴은 3가지가 있습니다. 정확한 패턴을 결정하려면 1명(공대장이나 부공대장)이 아래에서 매크로 3개를 생성한 후 1번 바닥이 나올 때 일치하는 매크로를 누르면 됩니다. 그 이후부턴 자동으로 배정됩니다.
+다음의 스크린샷 기준 1조는 주황색으로 표시된 3개 지점, 2조는 보라색으로 표시된 지점, 3조는 빨간색으로 표시된 지점의 바닥을 맞습니다.
+패턴 중 하나는 모든 바닥 맞기 배정이 반시계 방향으로 1칸씩 이동합니다.]=]
+L["Copy Group Assignment Image Link"] = "특임조 배정 이미지 링크 복사"
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "파도 방향별로 공격대 매크로가 하나씩 생성되고 이미 있을 경우엔 업데이트됩니다."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "메모리 게임에 쓸 매크로를 자동으로 생성합니다. 텍스처 파일을 다운로드 받아야 아이콘이 제대로 나옵니다"
 L["FontSize"] = "글꼴 크기"
