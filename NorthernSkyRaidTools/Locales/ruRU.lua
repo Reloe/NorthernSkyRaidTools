@@ -1201,7 +1201,7 @@ Hori Shiru Robin
 transitionEnd
 There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
 From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
-For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] = [=[Используйте следующий формат заметки для распределения игроков по одной из 3-х групп поглощения:
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[Используйте следующий формат заметки для распределения игроков по одной из 3-х групп поглощения:
 transitionStart
 Reloe Senfi Ponky
 Impy Liebre Gladrien
