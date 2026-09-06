@@ -461,6 +461,19 @@ L["Repair"] = "Repair"
 L["Shows a Text when a Repair Bot/Anvil has been dropped and your durability is less than 90%."] = "Shows a Text when a Repair Bot/Anvil has been dropped and your durability is less than 90%."
 L["%s Dropped a Repair"] = "%s Dropped a Repair"
 L["Duration Seconds"] = "Duration Seconds"
+L["1st Wave - Left"] = "1st Wave - Left"
+L["1st Wave - Right"] = "1st Wave - Right"
+L["2nd Wave - Submerge Left, Wave Left"] = "2nd Wave - Submerge Left, Wave Left"
+L["2nd Wave - Submerge Left, Wave Right"] = "2nd Wave - Submerge Left, Wave Right"
+L["2nd Wave - Submerge Right, Wave Left"] = "2nd Wave - Submerge Right, Wave Left"
+L["2nd Wave - Submerge Right, Wave Right"] = "2nd Wave - Submerge Right, Wave Right"
+L["< Left + Dodge"] = "< Left + Dodge"
+L["Right > + Dodge"] = "Right > + Dodge"
+L["Input Direction"] = "Input Direction"
+L["Wave Direction Display"] = "Wave Direction Display"
+L["Wave Direction Input"] = "Wave Direction Input"
+L["Use /yell for left or /raid for Right during the input windows, from 6 seconds before until 6 seconds after each wave and submerge. The second wave combines the submerge and wave inputs."] = "Use /yell for left or /raid for Right during the input windows, from 6 seconds before until 6 seconds after each wave and submerge. The second wave combines the submerge and wave inputs."
+L["Creates a yell macro for Left and a raid macro for Right, or updates the existing macros."] = "Creates a yell macro for Left and a raid macro for Right, or updates the existing macros."
 L["Show dropped consumable notifications for the selected number of seconds."] = "Show dropped consumable notifications for the selected number of seconds."
 L["Other QoL Things"] = "Other QoL Things"
 L["Check Vantus-Rune"] = "Check Vantus-Rune"
@@ -1165,9 +1178,31 @@ L["Texture Files"] = "Texture Files"
 L["Create Macros"] = "Create Macros"
 L["Ula'tek Left"] = "Ula'tek Left"
 L["Ula'tek Right"] = "Ula'tek Right"
-L["< Left"] = "< Left"
-L["Right >"] = "Right >"
-L['During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'] = 'During the Waves in P1, any raid chat msg will be displayed as a text. The button below provide you with a "< Left" and a "Right >" macro'
+L["Ula'tek Pattern Yell"] = "Ula'tek Pattern Yell"
+L["Ula'tek Pattern Raid"] = "Ula'tek Pattern Raid"
+L["Ula'tek Pattern Warning"] = "Ula'tek Pattern Warning"
+L["/yell X"] = "/yell X"
+L["/raid Star"] = "/raid Star"
+L["/rw Triangle"] = "/rw Triangle"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=]
+L["Copy Group Assignment Image Link"] = "Copy Group Assignment Image Link"
+L["Creates the three chat macros used to select Ula'tek's transition pattern."] = "Creates the three chat macros used to select Ula'tek's transition pattern."
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "Creates one raid macro for each wave direction and updates them if they already exist."
 L["Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"] = "Will automatically create the correct macros for the memory game. You will only see the correct icons if you downloaded the texture files"
 L["FontSize"] = "FontSize"
@@ -1250,6 +1285,7 @@ L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is displayed on the
 L["|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. This static preview is only provided for editing the box size and display settings."] = "|cFF00FFFFNSRT:|r the live display is shown on add nameplates during phases 2 and 3. This static preview is only provided for editing the box size and display settings."
 L["Show the assignment boxes for both interrupt lines."] = "Show the assignment boxes for both interrupt lines."
 L["The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."] = "The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."
+L["The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add so the correct box shows and counts up.\n\nOptionally, add two more lines for separate P3 assignments, or four more lines for separate assignments for the first and second P3 add waves. Each pair follows the same order: unmarked add first, marked add second."] = "The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add so the correct box shows and counts up.\n\nOptionally, add two more lines for separate P3 assignments, or four more lines for separate assignments for the first and second P3 add waves. Each pair follows the same order: unmarked add first, marked add second."
 L["Display settings are fixed\nfor this alert."] = "Display settings are fixed\nfor this alert."
 -- Assignment
 L["|cFF00FF00SOAK"] = "|cFF00FF00SOAK"

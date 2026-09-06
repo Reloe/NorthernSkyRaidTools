@@ -284,7 +284,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     function NSI:SaveAlertData(alert, dataKey, newData)
         if alert then
             alert[dataKey] = newData
-            if alert.internalID and SharedAlertDataKeys[dataKey] then
+            if alert.internalID and SharedAlertDataKeys[dataKey] and (dataKey ~= "enabled" or newData ~= false) then
                 local encounterID = alert.encID or selectedEncID
                 local encounterAlerts = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encounterID]
                 if encounterAlerts then

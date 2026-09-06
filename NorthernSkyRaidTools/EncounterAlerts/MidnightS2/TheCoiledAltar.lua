@@ -279,7 +279,7 @@ local debuffCirclePreview = [[return function(NSI)
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false, DisplayStaticBox = false, HideNameplateBox = false,
         Version = {versionNumber = 4, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}, [3] = {group = "Coiled Altar"}, [4] = {customIcon = 6552}},
         extraOptions = {
-            { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add. That way only one of the boxes should show up and count up correctly."), height = 80 },
+            { Type = "Label", text = NSI:Loc("The first interrupt line will be assigned to the add with no raidmarker. The second interrupt line will be assigned to the add with any raidmarker. The usual strat is that you have one person instantly putting a raidmarker on the ranged add so the correct box shows and counts up.\n\nOptionally, add two more lines for separate P3 assignments, or four more lines for separate assignments for the first and second P3 add waves. Each pair follows the same order: unmarked add first, marked add second."), height = 120 },
             { Type = "Slider", label = "Number Font Size", min = 8, max = 40, step = 1,
                 get = [[return function(NSI) local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments return alert.NumberFontSize or alert.FontSize or 12 end]],
                 set = [[return function(NSI, value) NSRT.EncounterAlerts[3429][16].InterruptAssignments.NumberFontSize = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
@@ -448,7 +448,49 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     end
 end
 
+local function CancelCoiledAltarInterruptWaveTimer(self)
+    if self.CoiledAltarInterruptWaveTimer then
+        self.CoiledAltarInterruptWaveTimer:Cancel()
+        self.CoiledAltarInterruptWaveTimer = nil
+    end
+end
+
+local function SelectCoiledAltarInterruptAssignments(self, wave)
+    local interrupts = self.Interrupts
+    local assignments = self.CoiledAltarInterruptAssignments
+    if not interrupts or not assignments then return end
+    local first = 2
+    if wave >= 2 and assignments[4] and assignments[5] then first = 4 end
+    if wave >= 3 and assignments[6] and assignments[7] then first = 6 end
+    -- Keep the display's existing two-line indices, using only the active pair.
+    interrupts.assignTable = {[2] = assignments[first], [3] = assignments[first + 1]}
+    interrupts.myID = 0
+    interrupts.myKick = 0
+    interrupts.max = 0
+    interrupts.disabled = true
+    for line = 2, 3 do
+        for position, name in ipairs(interrupts.assignTable[line] or {}) do
+            if UnitIsUnit(name, "player") then
+                interrupts.myID = line
+                interrupts.myKick = position
+                interrupts.max = #interrupts.assignTable[line]
+                interrupts.disabled = false
+            end
+        end
+    end
+    interrupts.myTrackedID = interrupts.myID
+    interrupts.myTable = interrupts.assignTable[interrupts.myID] or {}
+end
+
+local function ReadCoiledAltarInterruptNote(self, wave)
+    self:ReadInterruptNote(1)
+    self.CoiledAltarInterruptAssignments = self.Interrupts.assignTable
+    SelectCoiledAltarInterruptAssignments(self, wave or 1)
+end
+
 local function ResetCoiledAltarInterruptDisplay(self)
+    CancelCoiledAltarInterruptWaveTimer(self)
+    self.CoiledAltarInterruptAssignments = nil
     if self.CoiledAltarInterruptFrame then
         self.CoiledAltarInterruptFrame:Hide()
     end
@@ -459,6 +501,7 @@ local function ResetCoiledAltarInterruptDisplay(self)
     self.CoiledAltarInterruptActive = false
     self.CoiledAltarInterruptBoss3Available = false
     self.CoiledAltarInterruptCastCounts = {}
+    self.CoiledAltarInterruptLastSoundCastCounts = {}
     for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
         for boxIndex, box in ipairs(display.boxes) do
             box:Hide()
@@ -536,7 +579,7 @@ function NSI:PreviewCoiledAltarInterruptDisplay()
         if self.CoiledAltarInterruptPreviewFrame then
             self.CoiledAltarInterruptPreviewFrame:Hide()
         end
-        self:ReadInterruptNote(1)
+        ReadCoiledAltarInterruptNote(self, 1)
         local displayLine = self.Interrupts and self.Interrupts.myID == 3 and 2 or 1
         local lineNames = self.Interrupts and self.Interrupts.assignTable[displayLine + 1] or {}
         local currentName = lineNames[1]
@@ -576,7 +619,7 @@ function NSI:PreviewCoiledAltarInterruptDisplay()
         end
         self.CoiledAltarInterruptPreviewFrame = preview
     end
-    self:ReadInterruptNote(1)
+    ReadCoiledAltarInterruptNote(self, 1)
     self:UpdateCoiledAltarInterruptPreview()
     self.CoiledAltarInterruptPreviewFrame:Show()
     return true
@@ -586,7 +629,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local alert = self.CoiledAltarInterruptAlert
     local interrupts = self.Interrupts
     local assignmentTable = interrupts and interrupts.assignTable
-    local phaseAllowed = self.Phase == 2 or self.Phase == 3
+    local phaseAllowed = self.Phase == 2 or self.Phase == 2.5 or self.Phase == 3
     local alertLoad = alert and self:EvaluateLoad(alert)
     local active = self.CoiledAltarInterruptActive and self.CoiledAltarInterruptBoss3Available ~= false and phaseAllowed and alert and alert.enabled and alertLoad
     if not active or not assignmentTable or not assignmentTable[2] or not assignmentTable[3] then
@@ -836,7 +879,24 @@ local function IsCoiledAltarInterruptUnit(self, unit)
     return (display and display.plate) and true or false
 end
 
+local function PlayCoiledAltarInterruptSound(self, unit, castCount)
+    local assignedLine = self.Interrupts and (self.Interrupts.myID == 2 and 1 or self.Interrupts.myID == 3 and 2)
+    if not assignedLine then return end
+    local hasRaidMarker = issecretvalue(GetRaidTargetIndex(unit))
+    local displayLine = hasRaidMarker and 2 or 1
+    if displayLine ~= assignedLine then return end
+    self.CoiledAltarInterruptLastSoundCastCounts = self.CoiledAltarInterruptLastSoundCastCounts or {}
+    if self.CoiledAltarInterruptLastSoundCastCounts[displayLine] == castCount then return end
+    self.CoiledAltarInterruptLastSoundCastCounts[displayLine] = castCount
+    local lineNames = self.Interrupts.assignTable[displayLine + 1]
+    local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
+    if currentName and UnitIsUnit(currentName, "player") then
+        self:PlayInterruptSound()
+    end
+end
+
 local function SetCoiledAltarInterruptPhase(self, active)
+    CancelCoiledAltarInterruptWaveTimer(self)
     local alert = self.CoiledAltarInterruptAlert
     local alertLoad = alert and self:EvaluateLoad(alert)
     if active and (not alert or not alert.enabled or not alertLoad) then
@@ -845,9 +905,20 @@ local function SetCoiledAltarInterruptPhase(self, active)
     self.CoiledAltarInterruptActive = active
     self.CoiledAltarInterruptBoss3Available = active
     self.CoiledAltarInterruptCastCounts = {}
+    self.CoiledAltarInterruptLastSoundCastCounts = {}
     if active then
         self.CoiledAltarInterruptFrame:Show()
-        self:ReadInterruptNote(1)
+        ReadCoiledAltarInterruptNote(self, self.Phase == 3 and 2 or 1)
+        if self.Phase == 3 and self.CoiledAltarInterruptAssignments[6] and self.CoiledAltarInterruptAssignments[7] then
+            -- Arm the final pair six seconds before the second P3 wave.
+            self.CoiledAltarInterruptWaveTimer = C_Timer.NewTimer(159.2 - 6, function()
+                self.CoiledAltarInterruptWaveTimer = nil
+                if self.EncounterID ~= encID or self.Phase ~= 3 or not self.CoiledAltarInterruptActive then return end
+                SelectCoiledAltarInterruptAssignments(self, 3)
+                self.CoiledAltarInterruptLastSoundCastCounts = {}
+                NSI:UpdateCoiledAltarInterruptDisplay()
+            end)
+        end
         RefreshCoiledAltarInterruptNameplates(self)
     end
     NSI:UpdateCoiledAltarInterruptDisplay()
@@ -948,7 +1019,15 @@ function NSI:PreviewCoiledAltarEternalNightfall()
         self.CoiledAltarEternalNightfallFrame = frame
     end
     ApplyCoiledAltarEternalNightfallSettings(self, frame, self.CoiledAltarEternalNightfallAlert)
-    self:MakeDraggable(frame, self.CoiledAltarEternalNightfallAlert, true, false)
+    self:MakeDraggable(frame, self.CoiledAltarEternalNightfallAlert, true, false, function(_, settings)
+        for difficultyID = 15, 16 do
+            local difficultySettings = NSRT.EncounterAlerts[encID][difficultyID].EternalNightfallAbsorb
+            difficultySettings.xOffset = settings.xOffset
+            difficultySettings.yOffset = settings.yOffset
+            difficultySettings.Anchor = settings.Anchor
+            difficultySettings.relativeTo = settings.relativeTo
+        end
+    end)
     ShowCoiledAltarEternalNightfall(self, true)
     return true
 end
@@ -1066,6 +1145,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                     local castCount = CoiledAltarInterruptPosition(castBarID)
                     if self.CoiledAltarInterruptCastCounts[unit] ~= castCount then
                         self.CoiledAltarInterruptCastCounts[unit] = castCount
+                        PlayCoiledAltarInterruptSound(self, unit, castCount)
                         NSI:UpdateCoiledAltarInterruptDisplay()
                     end
                 end)
@@ -1101,7 +1181,6 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.Phase = 2.5
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
-        SetCoiledAltarInterruptPhase(self, false)
         self:UpdateCoiledAltarDebuffCircle()
         local alert = self.CoiledAltarWrongTargetAlert
         if alert and alert.enabled and self:EvaluateLoad(alert) then

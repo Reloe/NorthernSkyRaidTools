@@ -186,7 +186,7 @@ L[3455] = {
     ["Soaks"]       = {group = "바쉬니크", name = "바닥 맞기", text = "바닥 맞기"},
     ["Waves"]       = {group = "바쉬니크", name = "물결", text = "물결"},
     ["WaveSpread"] = {group = "바쉬니크", name = "물결 산개", text = "미리 산개"},
-    ["WavesLine"] = {group = "바쉬니크", name = "물결 선 표시", text = ""},
+    ["WavesLine"] = {group = "바쉬니크", name = "물결 선", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -272,13 +272,20 @@ L[3492] = {
     ["PlatformBreak"]       = {group = "울라텍", name = "사냥감 포위", text = "바닥 꺼짐"},
     ["Debuffs"]             = {group = "울라텍", name = "뱀의 물어뜯기", text = "디버프"},
     ["Eggs"]                = {group = "울라텍", name = "알", text = "알"},
+    ["EggDeadline"]         = {group = "울라텍", name = "알 운반 마감", text = "알 운반 마감"},
+    ["AddSoak"]             = {group = "울라텍", name = "쫄 맞기", text = "쫄 맞기"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
+    ["BossSpawn"]           = {group = "울라텍", name = "보스 등장", text = "보스 등장"},
     ["Sweep"]               = {group = "울라텍", name = "휩쓸기", text = "휩쓸기"},
-    ["Soak"]                = {group = "울라텍", name = "같이맞기", text = "같이맞기"},
+    ["Soak"]                = {group = "울라텍", name = "바닥 맞기", text = "맞기"},
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
     ["TransitionSoakSecond"] = {group = "울라텍", name = "2조 맞기", text = "2조 맞기"},
     ["GraspingFangsOverview"] = {group = "울라텍", name = "움켜쥐는 송곳니 현황", text = ""},
     ["WrongTarget"] = {group = "울라텍", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
-    ["WaveDirection"] = {group = "울라텍", name = "파도 방향 입력", text = ""},
-    -- ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
+    ["WaveDirection"] = {group = "울라텍", name = "파도 방향 디스플레이", text = ""},
+    ["WaveDirectionPrompt"] = {group = "울라텍", name = "파도 방향 입력", text = "방향 입력"},
+    ["WaveLines"] = {group = "울라텍", name = "3페 파도 선", text = ""},
+    ["InterruptAssignments"] = {group = "울라텍", name = "차단 배정", text = "차단"},
+    ["TransitionPatternSoaks"] = {group = "울라텍", name = "사이페 바닥 맞기", text = "맞기"},
+    ["TransitionPatternArrow"] = {group = "울라텍", name = "사이페 화살표", text = ""},
 }
