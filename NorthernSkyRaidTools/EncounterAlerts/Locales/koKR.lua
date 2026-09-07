@@ -267,8 +267,8 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "울라텍", name = "어미의 분노", text = "공격+넉백"},
     ["Waves"]               = {group = "울라텍", name = "부식의 파도", text = "파도"},
-    ["DamageAmpIn"]         = {group = "울라텍", name = "맹독의 심장", text = "곧 약화"},
-    ["DamageAmp"]           = {group = "울라텍", name = "맹독의 심장", text = "약화됨"},
+    ["DamageAmpIn"]         = {group = "울라텍", name = "곧 약화", text = "곧 약화"},
+    ["DamageAmp"]           = {group = "울라텍", name = "약화 타이머", text = "약화됨"},
     ["PlatformBreak"]       = {group = "울라텍", name = "사냥감 포위", text = "바닥 꺼짐"},
     ["Debuffs"]             = {group = "울라텍", name = "뱀의 물어뜯기", text = "디버프"},
     ["Eggs"]                = {group = "울라텍", name = "알", text = "알"},
