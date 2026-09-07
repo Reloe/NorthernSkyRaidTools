@@ -1083,13 +1083,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                     self:InterruptOnCastStart({dur = 3}, unit)
                     self:UpdateUlatekInterruptDisplay()
                 end
-            elseif (event == "UNIT_SPELLCAST_INTERRUPTED" or event == "UNIT_SPELLCAST_STOP") and unit == "focus" and self.UlatekInterruptFocusedBossUnit
+            elseif event == "UNIT_SPELLCAST_STOP" and unit == "focus" and self.UlatekInterruptFocusedBossUnit then
+                self.UlatekInterruptCastStarts[self.UlatekInterruptFocusedBossUnit] = nil
+            elseif event == "UNIT_SPELLCAST_INTERRUPTED" and unit == "focus" and self.UlatekInterruptFocusedBossUnit
                 and ConsumeUlatekInterruptCastStart(self, self.UlatekInterruptFocusedBossUnit) then
-                if event == "UNIT_SPELLCAST_INTERRUPTED" then
-                    self:OnInterrupt(true)
-                else
-                    self:OnCastStop(true)
-                end
+                self:OnInterrupt(true)
                 self.UlatekInterruptBossCounts[self.UlatekInterruptFocusedBossUnit] = self.Interrupts.castCount
                 self:UpdateUlatekInterruptDisplay()
             end
@@ -1100,6 +1098,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                 if UnitLevel(unit) == 92 then
                     self.UlatekInterruptCastStarts[unit] = GetTime()
                 end
+                return
+            end
+            if event == "UNIT_SPELLCAST_STOP" then
+                self.UlatekInterruptCastStarts[unit] = nil
                 return
             end
             if not ConsumeUlatekInterruptCastStart(self, unit) then return end
