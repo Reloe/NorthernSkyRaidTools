@@ -843,6 +843,12 @@ local function AddCoiledAltarInterruptNameplate(self, unit)
     end
     SyncCoiledAltarInterruptCount(self, unit)
     NSI:UpdateCoiledAltarInterruptDisplay()
+    -- Nameplate scaling is applied after NAME_PLATE_UNIT_ADDED.
+    C_Timer.After(0, function()
+        if display.plate == plate then
+            NSI:UpdateCoiledAltarInterruptDisplay()
+        end
+    end)
 end
 
 local function RefreshCoiledAltarInterruptNameplates(self)
