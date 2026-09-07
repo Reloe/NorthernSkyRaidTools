@@ -417,6 +417,23 @@ local function HideUlatekInterruptDisplay(self)
     end
 end
 
+function NSI:DisplayUlatekInterruptAssignment()
+    local interruptSettings = NSRT.InterruptSettings
+    local castCount = self.Interrupts.castCount
+    local unit = self.Interrupts.myTable[castCount]
+    local name = unit and UnitExists(unit) and NSAPI:Shorten(unit, 12, false, "GlobalNickNames", false, false) or ""
+    local boxColor = interruptSettings.InterruptDefaultColor
+    local textColor = interruptSettings.InterruptDefaultTextColor
+    if castCount == self.Interrupts.myKick then
+        boxColor = interruptSettings.InterruptNowColor
+        textColor = interruptSettings.InterruptNowTextColor
+    elseif (castCount + 1 == self.Interrupts.myKick) or (self.Interrupts.myKick == 1 and castCount == self.Interrupts.max) then
+        boxColor = interruptSettings.InterruptNextColor
+        textColor = interruptSettings.InterruptNextTextColor
+    end
+    self:DisplayInterruptAssignment(castCount, name, boxColor, textColor)
+end
+
 function NSI:UpdateUlatekInterruptDisplay()
     local alert = self.UlatekInterruptAlert
     if not alert then return end
@@ -1060,6 +1077,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
     if interruptAlertActive then
         self:ReadInterruptNote(1)
         self:ResetInterrupts()
+        self:HideInterruptBar()
         self.UlatekInterruptBossCounts = {boss2 = 1, boss3 = 1, boss4 = 1, boss5 = 1}
         self.UlatekInterruptCastStarts = {}
         self.UlatekInterruptFocusedBossUnit = nil
@@ -1074,21 +1092,25 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                 self:ResetInterrupts()
                 if self.UlatekInterruptFocusedBossUnit then
                     self.Interrupts.castCount = self.UlatekInterruptBossCounts[self.UlatekInterruptFocusedBossUnit]
-                    self:DisplayInterrupt()
+                    self:DisplayUlatekInterruptAssignment()
                 end
                 self:UpdateUlatekInterruptDisplay()
             elseif event == "UNIT_SPELLCAST_START" and unit == "focus" then
                 if self.UlatekInterruptFocusedBossUnit and UnitLevel(unit) == 92 then
                     self.UlatekInterruptCastStarts[self.UlatekInterruptFocusedBossUnit] = GetTime()
-                    self:InterruptOnCastStart({dur = 3}, unit)
                     self:UpdateUlatekInterruptDisplay()
                 end
             elseif event == "UNIT_SPELLCAST_STOP" and unit == "focus" and self.UlatekInterruptFocusedBossUnit then
                 self.UlatekInterruptCastStarts[self.UlatekInterruptFocusedBossUnit] = nil
             elseif event == "UNIT_SPELLCAST_INTERRUPTED" and unit == "focus" and self.UlatekInterruptFocusedBossUnit
                 and ConsumeUlatekInterruptCastStart(self, self.UlatekInterruptFocusedBossUnit) then
-                self:OnInterrupt(true)
+                self.Interrupts.castCount = self.Interrupts.castCount + 1
+                if self.Interrupts.castCount > self.Interrupts.max then
+                    self.Interrupts.castCount = 1
+                end
+                self:HideInterruptBar()
                 self.UlatekInterruptBossCounts[self.UlatekInterruptFocusedBossUnit] = self.Interrupts.castCount
+                self:DisplayUlatekInterruptAssignment()
                 self:UpdateUlatekInterruptDisplay()
             end
         end)
@@ -1119,6 +1141,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             self:ResetInterrupts()
             self.UlatekInterruptFocusedBossUnit = GetUlatekInterruptFocusedBossUnit()
             HideUlatekInterruptDisplay(self)
+            if self.UlatekInterruptFocusedBossUnit then
+                self.Interrupts.castCount = self.UlatekInterruptBossCounts[self.UlatekInterruptFocusedBossUnit]
+                self:DisplayUlatekInterruptAssignment()
+            end
         end)
         self:UpdateUlatekInterruptDisplay()
     else
