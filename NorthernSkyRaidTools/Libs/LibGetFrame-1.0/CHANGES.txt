@@ -1,5 +1,26 @@
 Changes since tag 1.6.2
 
+commit 9d8d6f81a80a357c97c84a20bfe81f44e083702e
+Author: Ellesmere <57682642+EllesmereGaming@users.noreply.github.com>
+Date:   Tue Aug 18 10:58:36 2026 -0400
+
+    Add EllesmereUI extra (spotlight) frames, prioritized over regular raid frames (#51)
+    
+    * Add EllesmereUI extra (spotlight) frames, prioritized over regular raid frames
+    
+    * Increment MINOR_VERSION to 77
+    
+    ---------
+    
+    Co-authored-by: EllesmereGaming <ellesmeregamingalt@gmail.com>
+    Co-authored-by: Buds <mrbouyou@gmail.com>
+
+commit 7a52b9b37940df4fa228e8f40f28da0dc3d561aa
+Author: Gerrit Alex <admin@gerritalex.de>
+Date:   Tue Aug 18 16:28:43 2026 +0200
+
+    Add Spotlights frame support (#50)
+
 commit 25cf3e6fbd119b7c380ae668b29d8774d8d431c2
 Author: EllesmereGaming <ellesmeregaming@gmail.com>
 Date:   Tue Jun 16 02:48:19 2026 -0400

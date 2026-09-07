@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibGetFrame-1.0"
-local MINOR_VERSION = 75
+local MINOR_VERSION = 77
 if not LibStub then
   error(MAJOR_VERSION .. " requires LibStub.")
 end
@@ -46,6 +46,7 @@ local defaultFramePriorities = {
   "^DandersFlatRaidHeader$", -- Danders (alternative style name)
   "^DandersFlatRaidHeaderUnitButton%d+$", -- Danders (alternative style name)
   "^DandersRaidFrame", -- Danders
+  "^ERFExtraFrame%d+$", -- EllesmereUI (extra/spotlight frames, preferred over the regular raid frames)
   "^ERFGroupHeader%dUnitButton%d+$", -- EllesmereUI (separated groups)
   "^ERFFlatHeaderUnitButton%d+$", -- EllesmereUI (merged groups)
   -- party frames
@@ -62,6 +63,7 @@ local defaultFramePriorities = {
   "^DandersFrames_Player$", -- Danders (used for party frames)
   "^ERFPartyHeaderUnitButton%d+$", -- EllesmereUI
   "^ERFPartySelfButton$", -- EllesmereUI (static self frame)
+  "^SpotlightsSlotHeader%d+UnitButton%d+$", -- Spotlights
   "^CompactRaid", -- blizz
   "^CompactParty", -- blizz
   "^PartyFrame",
@@ -207,6 +209,7 @@ local defaultRaidFrames = {
   "^DandersFlatRaidHeader$", -- alternative style name
   "^DandersFlatRaidHeaderUnitButton%d+$", -- alternative style name
   "^DandersRaidFrame", -- depricated
+  "^ERFExtraFrame%d+$", -- EllesmereUI (extra/spotlight frames)
   "^ERFGroupHeader%dUnitButton%d+$", -- EllesmereUI (separated groups)
   "^ERFFlatHeaderUnitButton%d+$", -- EllesmereUI (merged groups)
   "^CompactRaid",
