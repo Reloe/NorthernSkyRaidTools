@@ -3002,36 +3002,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     end)
                     return
                 end
-                if event == "GROUP_ROSTER_UPDATE" then
-                    if NSI:Restricted() then
-                        NSI.PendingAuraTrackingUpdate = true
-                        NSI.PendingAuraTrackingReconfigure = true
-                        return
-                    end
-                    for _, entry in ipairs(AuraTrackingUnitRefreshStates.roster) do
-                        if entry.multiTank then
-                            NSI:InitAuraTracking(false, true)
-                            return
-                        end
-                        local unit = ResolveAuraTrackingUnit(NSI, entry.settings)
-                        if unit then
-                            InitAuraTrackingContainer(NSI, unit, entry.settings, entry.key)
-                        else
-                            local state = NSI.AuraTrackingState and NSI.AuraTrackingState[entry.key]
-                            if state and state.container then
-                                state.container:SetEnabled(false)
-                                state.container:Hide()
-                                state.buttonRegions = nil
-                                if state.anchorFrame then
-                                    state.anchorFrame:Hide()
-                                end
-                                state.unit = nil
-                            end
-                        end
-                    end
-                    return
-                end
-
                 local states
                 if event == "PLAYER_TARGET_CHANGED" then
                     states = AuraTrackingUnitRefreshStates.target
@@ -3077,9 +3047,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
         if #AuraTrackingUnitRefreshStates.boss > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("INSTANCE_ENCOUNTER_ENGAGE_UNIT")
-        end
-        if #AuraTrackingUnitRefreshStates.roster > 0 then
-            AuraTrackingUnitRefreshFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
         end
         if AuraTrackingUnitRefreshStates.playerControl then
             AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")

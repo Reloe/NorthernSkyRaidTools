@@ -436,6 +436,7 @@ end
 local function GetRememberTable()
     NSRT.LastUsedConsumables = NSRT.LastUsedConsumables or {}
     local key = NSI:GetProfileKey()
+    if not key then return end
     NSRT.LastUsedConsumables[key] = NSRT.LastUsedConsumables[key] or {}
     return NSRT.LastUsedConsumables[key]
 end
