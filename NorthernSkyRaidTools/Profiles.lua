@@ -508,6 +508,29 @@ function NSI:AddMissingDefaults()
             TextColor = { 1, 1, 1, 1 },
         },
 
+        -- Break Timer
+        BreakTimer = {
+            enabled = true,
+            Anchor = "CENTER",
+            relativeTo = "CENTER",
+            xOffset = 0,
+            yOffset = 200,
+            Width = 300,
+            Height = 40,
+            Texture = "Atrocity",
+            FontSize = 22,
+            FontFlags = "OUTLINE",
+            barColors = { 0.29, 0.67, 0.78, 1 },
+            backgroundColors = { 0, 0, 0, 0.8 },
+            borderColors = { 0, 0, 0, 1 },
+            textColors = { 1, 1, 1, 1 },
+            ShowMeme = true,
+            MemeSize = 128,
+            PlaySound = true,
+            Sound = "|cFF4BAAC8Break|r",
+            SendRaidWarning = false,
+        },
+
         -- Encounter Alerts
         EncounterAlerts = {
             [3176] = {},

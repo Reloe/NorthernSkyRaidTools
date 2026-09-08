@@ -75,6 +75,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitLDB()
         self:InitQoL()
         self:InitPlayerStatsDisplay()
+        self:RestoreBreakTimer()
         self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
@@ -415,6 +416,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
+    elseif e == "NSI_BREAK_TIMER" and internal then
+        local unit, seconds = ...
+        self:ReceiveBreakTimer(unit, seconds)
     elseif e == "QoL_Comms" and internal then
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
