@@ -235,6 +235,7 @@ L[3421] = {
     ["WatchSpawns"] = {group = "쌍둥이 송곳니", name = "밀려남", text = "밀려남"},
     ["Knock"]       = {group = "쌍둥이 송곳니", name = "넉백", text = "넉백"},
     ["DebuffOverview"] = {group = "쌍둥이 송곳니", name = "영원의 맹독 현황", text = "영원의 맹독 현황"},
+    -- ["InterruptWhisperAlert"] = {group = "Twin Fangs", name = "Interrupt Whisper Alert", text = "Your Interrupt"},
 }
 
 -- The Coiled Altar (3429)

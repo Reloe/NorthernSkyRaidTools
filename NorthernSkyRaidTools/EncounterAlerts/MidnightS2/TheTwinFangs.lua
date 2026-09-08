@@ -43,6 +43,35 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local InterruptWhisperAlertPreview = [[
+        return function(self)
+            local alert = NSRT.EncounterAlerts[3421][16].InterruptWhisperAlert
+            local info = self:CreateReminder(CopyTable(alert), true)
+            if alert.ShowWhisperSender then
+                local sender = secretwrap(UnitName("player"))
+                local senderGUID = secretwrap(UnitGUID("player"))
+                local classFilename = senderGUID and select(2, UnitClassFromGUID(senderGUID))
+                local classColor = classFilename and C_ClassColor.GetClassColor(classFilename)
+                local senderNameClassColored = classColor and C_ColorUtil.WrapTextInColor(sender, classColor) or sender
+                info.text = string.format("%s - %s", alert.text, senderNameClassColored)
+            end
+            self:DisplayReminder(info)
+        end
+    ]]
+
+    local data = {group = "Twin Fangs", internalID = "InterruptWhisperAlert", name = "Interrupt Whisper Alert", text = "Your Interrupt", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 3,
+        sound = "|cFF4BAAC8Interrupt|r", difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, id = 0.4, ShowWhisperSender = false, pinned = true,
+        Preview = InterruptWhisperAlertPreview,
+        extraOptions = {
+            {Type = "Label", text = "This Alert shows up whenever you receive any whisper at all during the encounter. It cannot filter out wrong whispers."},
+            {Type = "Checkbox", label = "Show Whisper Sender",
+                get = [[return function() return NSRT.EncounterAlerts[3421][16].InterruptWhisperAlert.ShowWhisperSender or false end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3421][16].InterruptWhisperAlert.ShowWhisperSender = value end]],
+            },
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local soakTimers = {
         [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
         [16] = {64.7, 125.7, 219.8, 280.8, 374.9, 435.9},
@@ -175,6 +204,24 @@ NSI.EncounterAlertStart[encID] = function(self, id)
         self:SetDebuffOverviewContainersShown(true, "TwinFangsDebuffOverview")
     else
         self:SetDebuffOverviewContainersShown(false, "TwinFangsDebuffOverview")
+    end
+
+    local interruptWhisperAlert = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptWhisperAlert
+    if interruptWhisperAlert and interruptWhisperAlert.enabled and self:EvaluateLoad(interruptWhisperAlert) then
+        local info = self:CreateReminder(CopyTable(interruptWhisperAlert), true)
+        self:EncounterFunction("TwinFangsInterruptWhisper", function(_, _, _, sender, ...)
+            if interruptWhisperAlert.ShowWhisperSender then
+                local senderGUID = select(10, ...)
+                local classFilename = senderGUID and select(2, UnitClassFromGUID(senderGUID))
+                local classColor = classFilename and C_ClassColor.GetClassColor(classFilename)
+                local senderNameClassColored = classColor and C_ColorUtil.WrapTextInColor(sender, classColor) or sender
+                info.text = string.format("%s - %s", interruptWhisperAlert.text, senderNameClassColored)
+            else
+                info.text = interruptWhisperAlert.text
+            end
+            self:DisplayReminder(info)
+        end)
+        self:EncounterRegister("TwinFangsInterruptWhisper", "CHAT_MSG_WHISPER", true)
     end
 end
 
