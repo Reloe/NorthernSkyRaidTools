@@ -234,6 +234,7 @@ L[3421] = {
     ["Defensives"] = {group = "Два Клыка", name = "Защитные способности", text = "Защитные способности"},
     ["Knock"] = {group = "Два Клыка", name = "Удар", text = "Удар"},
     ["DebuffOverview"] = {group = "Два Клыка", name = "Обзор Вечного яда", text = "Обзор Вечного яда"},
+    -- ["InterruptWhisperAlert"] = {group = "Twin Fangs", name = "Interrupt Whisper Alert", text = "Your Interrupt"},
 }
 
 -- The Coiled Altar (3429)

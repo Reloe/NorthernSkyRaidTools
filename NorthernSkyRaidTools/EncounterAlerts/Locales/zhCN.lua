@@ -235,6 +235,7 @@ L[3421] = {
     ["WatchSpawns"] = {group = "双子毒牙", name = "碎石击（推开）", text = "推开"},
     ["Knock"]       = {group = "双子毒牙", name = "腐蚀洪流（击退）", text = "击退"},
     ["DebuffOverview"] = {group = "双子毒牙", name = "永恒毒液总览", text = "永恒毒液总览"},
+    -- ["InterruptWhisperAlert"] = {group = "Twin Fangs", name = "Interrupt Whisper Alert", text = "Your Interrupt"},
 }
 
 -- The Coiled Altar (3429)

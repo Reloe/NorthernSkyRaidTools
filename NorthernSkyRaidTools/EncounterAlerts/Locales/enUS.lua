@@ -237,6 +237,7 @@ L[3421] = {
     ["WatchSpawns"] = {group = "Twin Fangs", name = "Push", text = "Push"},
     ["Knock"]       = {group = "Twin Fangs", name = "Knock", text = "Knock"},
     ["DebuffOverview"] = {group = "Twin Fangs", name = "Eternal Venom Overview", text = "Eternal Venom Overview"},
+    ["InterruptWhisperAlert"] = {group = "Twin Fangs", name = "Interrupt Whisper Alert", text = "Your Interrupt"},
 }
 
 -- The Coiled Altar (3429)

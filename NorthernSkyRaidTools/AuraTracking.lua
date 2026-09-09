@@ -2605,6 +2605,15 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
     container:SetPoint(containerAnchorPoint, anchorFrame, containerAnchorPoint, 0, 0)
     container:SetUnit(unit)
+    local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
+    if (tostring(key):match("^Tank") or isCotankTracking) and settings.NameEnabled then
+        local unitName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or ""
+        for _, regions in pairs(state.buttonRegions) do
+            if regions.unitName then
+                regions.unitName:SetText(unitName)
+            end
+        end
+    end
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection, settings.GridGrowDirection or "UP")
     local rowWidth = GetAuraTrackingRowWidth(settings)
     container:SetFlowLayoutAxis(GetAuraTrackingLayoutAxis(settings))
