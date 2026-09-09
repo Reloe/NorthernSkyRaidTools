@@ -322,9 +322,8 @@ local function BuildGeneralOptions()
                 NSUI.export_string_popup.IncludeSharedData = false
                 if NSUI.export_string_popup:IsShown() then
                     NSUI.export_string_popup:Hide()
-                else
-                    NSUI.export_string_popup:Show()
                 end
+                NSUI.export_string_popup:Show()
             end,
             nocombat = true,
             spacement = true
@@ -337,9 +336,8 @@ local function BuildGeneralOptions()
                 NSUI.export_string_popup.IncludeSharedData = true
                 if NSUI.export_string_popup:IsShown() then
                     NSUI.export_string_popup:Hide()
-                else
-                    NSUI.export_string_popup:Show()
                 end
+                NSUI.export_string_popup:Show()
             end,
             nocombat = true,
             spacement = true

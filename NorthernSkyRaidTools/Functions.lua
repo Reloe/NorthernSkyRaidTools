@@ -447,8 +447,28 @@ end
 local ExportSerializer = LibStub("LibSerialize")
 local ExportDeflate = LibStub("LibDeflate")
 
+local function CopySerializableValue(value, copies)
+    local valueType = type(value)
+    if valueType == "function" then return nil end
+    if valueType ~= "table" then return value end
+
+    copies = copies or {}
+    if copies[value] then return copies[value] end
+
+    local copy = {}
+    copies[value] = copy
+    for key, nestedValue in pairs(value) do
+        local copiedKey = CopySerializableValue(key, copies)
+        local copiedValue = CopySerializableValue(nestedValue, copies)
+        if copiedKey ~= nil and copiedValue ~= nil then
+            copy[copiedKey] = copiedValue
+        end
+    end
+    return copy
+end
+
 function NSI:EncodeExportData(data, serializer)
-    local serialized = (serializer or ExportSerializer):Serialize(data)
+    local serialized = (serializer or ExportSerializer):Serialize(CopySerializableValue(data))
     local compressed = serialized and ExportDeflate:CompressDeflate(serialized)
     return compressed and ExportDeflate:EncodeForPrint(compressed)
 end
