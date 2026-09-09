@@ -528,7 +528,7 @@ function NSI:AutoPromotePass(force)
         local unit = "raid"..i
         if not (UnitIsUnit(unit, "player") or UnitIsGroupAssistant(unit) or UnitIsGroupLeader(unit)) then
             local bareName = (strsplit("-", name))
-            local fullName = name:find("-", 1, true) and name or (name.."-"..realm)
+            local fullName = name:find("-", 1, true) and name or (realm and name.."-"..realm) or name
             local entry = { unit = unit, fullName = fullName }
             byUnit[unit] = entry
             byFullName[fullName] = entry
