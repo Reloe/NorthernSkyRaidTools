@@ -2,7 +2,7 @@ local _, NSI = ... -- Internal namespace
 
 -- Built-in aura sound entries accept:
 -- {spellID = 12345, sound = "SoundName"}                         -- defaults to unit = "player", eventType = "applied"
--- {spellID = 12345, sound = "SoundName", unit = "target"}         -- unit can also be cotank, a player name, raid/party unit, bossN, focus, etc.
+-- {spellID = 12345, sound = "SoundName", unit = "target"}         -- unit can also be cotank, a player name, raid/party unit, bossN, raid, party, boss, focus, etc.
 -- {spellID = 12345, sound = "SoundName", eventType = "removed"}   -- eventType can be "applied", "removed", or "stackGain"
 -- Duplicate spell/unit/event combinations are supported; built-in entry keys are assigned automatically.
 NSI.AuraSoundCategories = {
@@ -331,8 +331,21 @@ function NSI:ResolveAuraSoundUnit(unit)
 end
 
 function NSI:ResolveAuraSoundUnits(unit)
-    if type(unit) == "string" and strlower(strtrim(unit)) == "cotank" then
-        return self:GetCoTankUnits()
+    if type(unit) == "string" then
+        local lower = strlower(strtrim(unit))
+        if lower == "cotank" then
+            return self:GetCoTankUnits()
+        end
+
+        local multiUnitCounts = {raid = 40, party = 4, boss = 10}
+        local count = multiUnitCounts[lower]
+        if count then
+            local units = {}
+            for index = 1, count do
+                units[index] = lower .. index
+            end
+            return units
+        end
     end
 
     local resolvedUnit = self:ResolveAuraSoundUnit(unit)

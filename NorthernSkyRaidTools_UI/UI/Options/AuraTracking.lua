@@ -1216,23 +1216,35 @@ local function BuildAuraTrackingUI(screen)
 
         if key == "Tank" or key == "External" or tostring(key):match("^Custom:") then
             local isTank = key == "Tank"
-            add({ Type = "Label", text = isTank and "Co-Tank Name Settings" or "Source Name Settings", highlight = true })
-            add({ Type = "Checkbox", label = isTank and "Show Co-Tank Name" or "Show Source Name",
+            local isGroupUnitTracking = not isTank and tostring(key):match("^Custom:") ~= nil and NSI:IsAuraTrackingGroupUnitInput(s.Unit)
+            local nameType = isTank and "Co-Tank" or (isGroupUnitTracking and "Unit" or "Source")
+            add({ Type = "Label", text = nameType .. " Name Settings", highlight = true })
+            add({ Type = "Checkbox", label = "Show " .. nameType .. " Name",
                 tooltip = isTank
                     and tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons.")
+                    or isGroupUnitTracking
+                    and tip("Show Unit Name", "Shows the class-colored nickname of the unit whose aura is shown. This replaces caster names for this display.")
                     or tip("Show Source Name", "Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"),
-                get = function() return s.NameEnabled end, set = function(_, v) s.NameEnabled = v; apply(key) end })
+                get = function() return isGroupUnitTracking and s.UnitNameEnabled or s.NameEnabled end,
+                set = function(_, v)
+                    if isGroupUnitTracking then
+                        s.UnitNameEnabled = v
+                    else
+                        s.NameEnabled = v
+                    end
+                    apply(key)
+                end })
             add({ Type = "Dropdown", label = "Name Position", values = NAME_POSITIONS,
-                tooltip = tip("Name Position", isTank and "Position of the co-tank name relative to the aura icon." or "Position of the source name relative to the aura icon."),
+                tooltip = tip("Name Position", "Position of the " .. string.lower(nameType) .. " name relative to the aura icon."),
                 get = function() return s.NamePosition end, set = function(_, v) s.NamePosition = v; apply(key) end })
             add({ Type = "Slider", label = "Name X-Offset", min = -200, max = 200, step = 1,
-                tooltip = tip("Name X-Offset", isTank and "Horizontal offset of the co-tank name." or "Horizontal offset of the source name."),
+                tooltip = tip("Name X-Offset", "Horizontal offset of the " .. string.lower(nameType) .. " name."),
                 get = function() return s.NameXOffset end, set = function(_, v) s.NameXOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Y-Offset", min = -200, max = 200, step = 1,
-                tooltip = tip("Name Y-Offset", isTank and "Vertical offset of the co-tank name." or "Vertical offset of the source name."),
+                tooltip = tip("Name Y-Offset", "Vertical offset of the " .. string.lower(nameType) .. " name."),
                 get = function() return s.NameYOffset end, set = function(_, v) s.NameYOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
-                tooltip = tip("Name Font Size", isTank and "Font size of the co-tank name." or "Font size of the source name."),
+                tooltip = tip("Name Font Size", "Font size of the " .. string.lower(nameType) .. " name."),
                 get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
         end
         return defs
@@ -1375,8 +1387,9 @@ local function BuildAuraTrackingUI(screen)
                     v = strtrim(tostring(v or ""))
                     s.Unit = (v ~= "") and v or "player"
                     apply(key)
+                    RebuildCurrentTab()
                 end },
-            { Type = "Label", text = "e.g. player, cotank, target, focus, boss1-boss8, party1-4, raid1-40, or friendly player names" },
+            { Type = "Label", text = "Separate units with commas (e.g. player, target, focus, cotank).\nFriendly player names and multi-unit entries such as boss, party, raid also work", height = 48 },
             { Type = "Dropdown", label = "Tracking Mode", values = TRACKING_MODES, highlight = true,
                 tooltip = { title = "Tracking Mode", desc = "Choose whether this custom Aura Tracking display uses a spell-ID whitelist or Blizzard aura filters." },
                 get = function() return s.TrackingMode or "SpellIDs" end,

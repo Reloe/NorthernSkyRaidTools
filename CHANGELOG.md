@@ -1,3 +1,2 @@
 ## Changelog
-- Fix Ulatek Interrupt Alert counting up on the wrong cast
-- Add Interrupt Alert on Twin Fangs that alerts you when you receive a whisper
+- support multi-unit entries in aura sounds and aura tracking. You can now for example put "raid" to track all raid units at once. Aura Tracking also supports multiple units comma separated now.
