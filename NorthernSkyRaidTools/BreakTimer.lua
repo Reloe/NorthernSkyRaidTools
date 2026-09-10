@@ -126,7 +126,9 @@ function NSI:AnnounceBreak(remaining)
         -- "10:00 remaining" because it started below that threshold already.
         if remaining <= threshold and activeBreak.duration > threshold and not activeBreak.announced[threshold] then
             activeBreak.announced[threshold] = true
-            PrintBreak(string.format(self:Loc("Break: %s remaining"), FormatBreakTime(threshold)))
+            if NSRT.BreakTimer.AnnounceChat then
+                PrintBreak(string.format(self:Loc("Break: %s remaining"), FormatBreakTime(threshold)))
+            end
             if threshold <= SOUND_THRESHOLD then self:PlayBreakSound() end
             if threshold == RAID_WARNING_THRESHOLD then
                 self:SendBreakRaidWarning(string.format(self:Loc("NSRT: Break is over in %s"), FormatBreakTime(threshold)))

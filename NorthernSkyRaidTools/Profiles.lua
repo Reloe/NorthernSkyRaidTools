@@ -528,6 +528,7 @@ function NSI:AddMissingDefaults()
             ShowMeme = false,
             MemeSize = 128,
             PlaySound = false,
+            AnnounceChat = true,
             Sound = "|cFF4BAAC8Break|r",
             SendRaidWarning = false,
         },
