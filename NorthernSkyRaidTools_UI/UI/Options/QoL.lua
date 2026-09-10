@@ -342,9 +342,30 @@ local function BuildQoLOptions()
             max = 80,
         },
         {
+            type = "select",
+            name = "Break Timer Font",
+            desc = "Font for the break timer bar.",
+            get = function() return NSRT.BreakTimer.Font or "Expressway" end,
+            set = function() end,
+            values = function()
+                local options = {}
+                for _, name in ipairs(NSI.LSM:List("font")) do
+                    options[#options + 1] = {
+                        label = name,
+                        value = name,
+                        onclick = function()
+                            NSRT.BreakTimer.Font = name
+                            NSI:RefreshBreakTimerDisplay()
+                        end,
+                    }
+                end
+                return options
+            end,
+        },
+        {
             type = "range",
             name = "Break Timer Font Size",
-            desc = "Font Size for the break timer bar. The Font itself is controlled by the Global Font found in General Settings.",
+            desc = "Font size for the break timer bar.",
             get = function() return NSRT.BreakTimer.FontSize end,
             set = function(self, fixedparam, value)
                 NSRT.BreakTimer.FontSize = value
