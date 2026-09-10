@@ -1103,7 +1103,7 @@ L["Nameplate X Offset"] = "이름표 X 위치 조정"
 L["Nameplate Y Offset"] = "이름표 Y 위치 조정"
 L["Center Aligned"] = "가운데 정렬"
 L["Size"] = "크기"
-L["Show Background Ring"] = "배경 링 표시"
+L["Show Background Ring"] = "배경 원 표시"
 L["Ring Color"] = "원 색상"
 L["Ring Size"] = "원 크기"
 -- ============================================================================
