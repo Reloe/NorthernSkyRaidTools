@@ -216,7 +216,7 @@ function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds,
     NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration, announced = announcedThresholds}
     self.CurrentBreakMeme = PickBreakMeme()
     if senderName then
-        PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(seconds)))
+        PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(duration or seconds)))
         self:PlayBreakSound()
     end
     if NSRT.BreakTimer.enabled then self:ShowBreakTimerFrame() end
@@ -241,7 +241,10 @@ function NSI:ReceiveBreakTimer(unit, seconds, endServerTime, duration)
     if not (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then return end
     local senderName = NSAPI:Shorten(unit, 12, false, "GlobalNickNames") or UnitName(unit)
     if seconds and seconds > 0 then
-        self:StartBreakTimer(seconds, senderName, duration, nil, endServerTime)
+        endServerTime = tonumber(endServerTime)
+        local remaining = endServerTime and endServerTime - GetServerTime() or seconds
+        if remaining <= 0 then return end
+        self:StartBreakTimer(remaining, senderName, duration or seconds, nil, endServerTime)
     else
         self:StopBreakTimer(senderName)
     end
