@@ -86,6 +86,7 @@ L["|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of com
 -- BreakTimer.lua
 -- ============================================================================
 L["Break"] = "Break"
+L["Break ends at: %s"] = "Break ends at: %s"
 L["Break is over!"] = "Break is over!"
 L["Break: %s remaining"] = "Break: %s remaining"
 L["%s started a %s break."] = "%s started a %s break."

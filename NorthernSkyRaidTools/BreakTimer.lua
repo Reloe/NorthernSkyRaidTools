@@ -71,6 +71,8 @@ function NSI:CreateBreakTimerDisplay()
     F.Text:SetPoint("LEFT", F, "LEFT", 4, 0)
     F.TimerText = F:CreateFontString(nil, "OVERLAY")
     F.TimerText:SetPoint("RIGHT", F, "RIGHT", -4, 0)
+    F.EndText = F:CreateFontString(nil, "OVERLAY")
+    F.EndText:SetPoint("TOP", F, "BOTTOM", 0, -4)
     F:SetScript("OnDragStart", function(frame) frame:StartMoving() end)
     F:SetScript("OnDragStop", function(frame) self:StopFrameMove(frame, NSRT.BreakTimer) end)
     self.BreakTimerFrame = F
@@ -93,8 +95,10 @@ function NSI:ApplyBreakTimerSettings()
     local font = self:GetGlobalFontPath()
     F.Text:SetFont(font, s.FontSize, s.FontFlags)
     F.TimerText:SetFont(font, s.FontSize, s.FontFlags)
+    F.EndText:SetFont(font, s.FontSize, s.FontFlags)
     F.Text:SetTextColor(unpack(s.textColors))
     F.TimerText:SetTextColor(unpack(s.textColors))
+    F.EndText:SetTextColor(unpack(s.textColors))
 
     local meme = s.ShowMeme and self.CurrentBreakMeme
     if meme then
@@ -172,6 +176,7 @@ function NSI:ShowBreakTimerFrame()
     local F = self:CreateBreakTimerDisplay()
     self:ApplyBreakTimerSettings()
     F.Text:SetText(self:Loc("Break"))
+    F.EndText:SetText(string.format(self:Loc("Break ends at: %s"), date("%H:%M", math.floor(self.ActiveBreak.endServerTime))))
     F.shownSeconds = nil
     F.elapsed = 0
     F:SetScript("OnUpdate", OnBreakUpdate)
@@ -196,10 +201,11 @@ function NSI:StartBreakTimer(seconds, senderName, duration)
     if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
     self.ActiveBreak = {
         endTime = GetTime() + seconds,
+        endServerTime = GetServerTime() + seconds,
         duration = duration or seconds,
         announced = {},
     }
-    NSRT.BreakTimerState = {endTime = GetServerTime() + seconds, duration = self.ActiveBreak.duration}
+    NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration}
     self.CurrentBreakMeme = PickBreakMeme()
     if senderName then
         PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(seconds)))
@@ -292,6 +298,7 @@ function NSI:SetBreakTimerPreview(active)
         F:SetValue(0.66)
         F.Text:SetText(self:Loc("Break"))
         F.TimerText:SetText(FormatBreakTime(5 * 60))
+        F.EndText:SetText(string.format(self:Loc("Break ends at: %s"), date("%H:%M", math.floor(GetServerTime() + 5 * 60))))
         F:Show()
         self:MakeDraggable(F, NSRT.BreakTimer, true)
     else
