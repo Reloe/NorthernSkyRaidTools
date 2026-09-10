@@ -80,6 +80,7 @@ L["  |cFF00FFFF/ns pnote|r or |cFF00FFFF/ns pn|r - Toggle personal reminders not
 L["  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note"] = "  |cFF00FFFF/ns tnote|r или |cFF00FFFF/ns tn|r - Показать/скрыть текстовую заметку"
 L["  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"] = "  |cFF00FFFF/ns timeline|r или |cFF00FFFF/ns tl|r - Показать/скрыть окно временной шкалы"
 L["  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"] = "  |cFF00FFFF/ns invite|r - Пригласить игроков из активного напоминания в группу"
+L["  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"] = "  |cFF00FFFF/ns inv|r - пригласить участников гильдии (то же самое, что и кнопка на вкладке 'Удобства')"
 L["  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"] = "  |cFF00FFFF/ns arrange|r - Расставить игроков из активного напоминания в группе"
 L["|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."] = "|cFF00FFFFNSRT|r Неизвестная команда. Введите |cFF00FFFF/ns help|r для списка команд."
 
