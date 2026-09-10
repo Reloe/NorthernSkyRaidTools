@@ -283,6 +283,12 @@ local function IsAuraTrackingStaticUnit(unit)
         or lower:match("^boss%d+$")
 end
 
+local function IsAuraTrackingIndexedGroupOrBossUnit(unit)
+    return unit:match("^party%d+$")
+        or unit:match("^raid%d+$")
+        or unit:match("^boss%d+$")
+end
+
 local function ResolveAuraTrackingUnits(self, settings)
     local input = settings and settings.Unit and strtrim(tostring(settings.Unit)) or "player"
     if input == "" then input = "player" end
@@ -2817,7 +2823,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 
     local playerVehicleDisabled = unit == "player" and (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
     local shouldShow = loadMatches and not playerVehicleDisabled
-    if unit:match("^boss%d+$") and not UnitExists(unit) then
+    if IsAuraTrackingIndexedGroupOrBossUnit(unit) and not UnitExists(unit) then
         shouldShow = false
     end
     if state.requiresAssist ~= nil and state.unitCanAssist ~= state.requiresAssist then
@@ -2886,6 +2892,9 @@ function NSI:UpdateAuraTrackingEncounterVisibility()
         if state.encounterConditioned and state.container then
             local shouldShow = self:EvaluateLoad(state.settings)
             if state.unit == "player" and playerVehicleDisabled then
+                shouldShow = false
+            end
+            if IsAuraTrackingIndexedGroupOrBossUnit(state.unit) and not UnitExists(state.unit) then
                 shouldShow = false
             end
             if state.requiresAssist ~= nil then
