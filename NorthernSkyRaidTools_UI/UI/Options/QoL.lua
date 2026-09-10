@@ -285,7 +285,7 @@ local function BuildQoLOptions()
         },
         {
             type = "label",
-            get = function() return "Started with /ns break <minutes> by the raid leader or an assistant.\nEveryone in the group running NSRT gets the same timer." end,
+            get = function() return "Started with /ns break <minutes>" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
         },
         {

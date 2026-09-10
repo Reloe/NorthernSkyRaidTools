@@ -503,7 +503,7 @@ L["Automatically enables the cvar to display spellids in tooltips on every reloa
 L["Auto-Repair"] = "Auto-Repair"
 L["Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs)."] = "Whether you want to automatically repair your equipment when visiting a vendor (prefers guild repairs)."
 L["Break Timer"] = "Break Timer"
-L["Started with /ns break <minutes> by the raid leader or an assistant.\nEveryone in the group running NSRT gets the same timer."] = "Started with /ns break <minutes> by the raid leader or an assistant.\nEveryone in the group running NSRT gets the same timer."
+L["Started with /ns break <minutes>"] = "Started with /ns break <minutes>"
 L["Show Break Timer"] = "Show Break Timer"
 L["Whether you want to see the break timer bar when someone starts a break."] = "Whether you want to see the break timer bar when someone starts a break."
 L["Preview and Move the Break Timer bar."] = "Preview and Move the Break Timer bar."
