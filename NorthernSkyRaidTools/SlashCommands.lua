@@ -59,6 +59,8 @@ SlashCmdList["NSUI"] = function(msg)
         if NSI:LoadUI() then
             NSI:ToggleTimelineWindow()
         end
+    elseif msg:match("^break") or msg:match("^brb") then
+        NSI:BreakCommand(msg:match("^%a+%s*(.*)$"))
     elseif msg == "invite" then
         NSI:InviteFromReminder(NSRT.ActiveReminder, true)
     elseif msg == "inv" then
@@ -90,6 +92,7 @@ SlashCmdList["NSUI"] = function(msg)
         print(NSI:Loc("  |cFF00FFFF/ns pnote|r or |cFF00FFFF/ns pn|r - Toggle personal reminders note"))
         print(NSI:Loc("  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note"))
         print(NSI:Loc("  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"))
+        print(NSI:Loc("  |cFF00FFFF/ns break <minutes>|r or |cFF00FFFF/ns brb <minutes>|r - Start a raid break timer for everyone in the group, use 0 to cancel it"))
         print(NSI:Loc("  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"))
         print(NSI:Loc("  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"))
         print(NSI:Loc("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"))

@@ -52,6 +52,36 @@ local function BuildGuildRankOptions(settingKey)
     return options
 end
 
+local function BuildBreakTimerTextureOptions()
+    local options = {}
+    for _, texture in ipairs(NSI.LSM:List("statusbar")) do
+        options[#options + 1] = {
+            label = texture,
+            value = texture,
+            onclick = function(_, _, value)
+                NSRT.BreakTimer.Texture = value
+                NSI:RefreshBreakTimerDisplay()
+            end,
+        }
+    end
+    return options
+end
+
+local function BuildBreakTimerSoundOptions()
+    local options = {}
+    for _, name in ipairs(NSI:GetOrderedSoundList()) do
+        options[#options + 1] = {
+            label = name,
+            value = name,
+            onclick = function()
+                NSRT.BreakTimer.Sound = name
+                PlaySoundFile(NSI.LSM:Fetch("sound", name), "Master")
+            end,
+        }
+    end
+    return options
+end
+
 local function BuildQoLOptions()
     return {
         {
@@ -412,6 +442,205 @@ local function BuildQoLOptions()
                 NSI:UpdateRaidBuffFrame()
             end,
             nocombat = true,
+        },
+        {
+            type = "breakline",
+        },
+        {
+            type = "label",
+            get = function() return "Break Timer" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE")
+        },
+        {
+            type = "label",
+            get = function() return "Started with /ns break <minutes>" end,
+            text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Break Timer",
+            desc = "Whether you want to see the break timer bar when someone starts a break.",
+            get = function() return NSRT.BreakTimer.enabled end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.enabled = value
+                if value and NSI.ActiveBreak then
+                    NSI:ShowBreakTimerFrame()
+                else
+                    NSI:HideBreakTimerFrame()
+                end
+            end,
+        },
+        {
+            type = "button",
+            name = "Preview/Unlock",
+            desc = "Preview and Move the Break Timer bar.",
+            func = function(self)
+                NSI:SetBreakTimerPreview(not NSI.IsBreakTimerPreview)
+            end,
+            spacement = true
+        },
+        {
+            type = "button",
+            name = "Reset Position",
+            desc = "Move the Break Timer bar back to its default position.",
+            func = function(self)
+                local settings = NSRT.BreakTimer
+                settings.Anchor = "CENTER"
+                settings.relativeTo = "CENTER"
+                settings.xOffset = 0
+                settings.yOffset = 200
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            spacement = true
+        },
+        {
+            type = "range",
+            name = "Bar Width",
+            desc = "Width of the break timer bar.",
+            get = function() return NSRT.BreakTimer.Width end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.Width = value
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            min = 100,
+            max = 600,
+        },
+        {
+            type = "range",
+            name = "Bar Height",
+            desc = "Height of the break timer bar.",
+            get = function() return NSRT.BreakTimer.Height end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.Height = value
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            min = 10,
+            max = 80,
+        },
+        {
+            type = "select",
+            name = "Break Timer Font",
+            desc = "Font for the break timer bar.",
+            get = function() return NSRT.BreakTimer.Font or "Expressway" end,
+            set = function() end,
+            values = function()
+                local options = {}
+                for _, name in ipairs(NSI.LSM:List("font")) do
+                    options[#options + 1] = {
+                        label = name,
+                        value = name,
+                        onclick = function()
+                            NSRT.BreakTimer.Font = name
+                            NSI:RefreshBreakTimerDisplay()
+                        end,
+                    }
+                end
+                return options
+            end,
+        },
+        {
+            type = "range",
+            name = "Break Timer Font Size",
+            desc = "Font size for the break timer bar.",
+            get = function() return NSRT.BreakTimer.FontSize end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.FontSize = value
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            min = 5,
+            max = 70,
+        },
+        {
+            type = "select",
+            name = "Bar Texture",
+            desc = "Texture of the break timer bar.",
+            get = function() return NSRT.BreakTimer.Texture end,
+            set = function() end,
+            values = BuildBreakTimerTextureOptions,
+        },
+        {
+            type = "color",
+            name = "Bar Color",
+            desc = "Color of the break timer bar.",
+            get = function() return unpack(NSRT.BreakTimer.barColors) end,
+            set = function(_, r, g, b, a)
+                NSRT.BreakTimer.barColors = {r, g, b, a}
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            hasAlpha = true,
+        },
+        {
+            type = "color",
+            name = "Break Timer Text Color",
+            desc = "Color of the text on the break timer bar.",
+            get = function() return unpack(NSRT.BreakTimer.textColors) end,
+            set = function(_, r, g, b, a)
+                NSRT.BreakTimer.textColors = {r, g, b, a}
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            hasAlpha = true,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Show Break Meme",
+            desc = "Shows a random meme above the break timer bar.",
+            get = function() return NSRT.BreakTimer.ShowMeme end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.ShowMeme = value
+                NSI:RefreshBreakTimerDisplay()
+            end,
+        },
+        {
+            type = "range",
+            name = "Meme Size",
+            desc = "Size of the meme shown above the break timer bar.",
+            get = function() return NSRT.BreakTimer.MemeSize end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.MemeSize = value
+                NSI:RefreshBreakTimerDisplay()
+            end,
+            min = 32,
+            max = 256,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Break Timer Sound",
+            desc = "Plays a sound when the break starts, during the last minute and when it is over.",
+            get = function() return NSRT.BreakTimer.PlaySound end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.PlaySound = value
+            end,
+        },
+        {
+            type = "select",
+            name = "Break Sound",
+            desc = "Sound played by the break timer.",
+            get = function() return NSRT.BreakTimer.Sound end,
+            set = function() end,
+            values = BuildBreakTimerSoundOptions,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Print Remaining Break Time",
+            desc = "Prints remaining break time in chat at 10, 5, 2, and 1 minutes, plus 30 and 10 seconds.",
+            get = function() return NSRT.BreakTimer.AnnounceChat end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.AnnounceChat = value
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
+            name = "Announce Break in Chat",
+            desc = "Sends a raid warning when you start a break, one minute before it ends and when it is over, so people without NSRT know about it too. Only applies to breaks you start yourself.",
+            get = function() return NSRT.BreakTimer.SendRaidWarning end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.SendRaidWarning = value
+            end,
         },
     }
 end

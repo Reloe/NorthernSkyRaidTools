@@ -53,6 +53,7 @@ PaceComparison.lua
 QoL.lua
 QoLDisplay.lua
 PlayerStatsDisplay.lua
+BreakTimer.lua
 Profiles.lua
 InterruptDisplay.lua
 
