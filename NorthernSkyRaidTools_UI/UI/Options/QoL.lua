@@ -419,7 +419,7 @@ local function BuildQoLOptions()
             type = "button",
             name = "Invite Guild Members",
             desc =
-            "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group.",
+            "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group.",
             func = function(self)
                 NSI:InviteOnlineGuildMembers()
             end,

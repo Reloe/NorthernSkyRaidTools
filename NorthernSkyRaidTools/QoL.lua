@@ -471,6 +471,68 @@ function NSI:ScheduleAutoPromotePass()
     end)
 end
 
+local function DoConvertToRaid()
+    if C_PartyInfo and C_PartyInfo.ConvertToRaid then
+        C_PartyInfo.ConvertToRaid()
+    elseif ConvertToRaid then
+        ConvertToRaid()
+    end
+end
+
+-- Converts the current party into a raid group so invited guild members land in a raid.
+-- If we're solo, wait until a party forms (from the invites) before converting.
+-- Duration is generous because invitees may take a while to accept.
+function NSI:ConvertPartyToRaid()
+    local function log(...)
+        if NSRT.Settings and NSRT.Settings.Debug then
+            print("|cFF00FFFFNSRT|r ConvertPartyToRaid:", ...)
+        end
+    end
+
+    if IsInRaid() then
+        log("already in a raid, nothing to do")
+        return
+    end
+
+    if self.ConvertToRaidTimer then
+        self.ConvertToRaidTimer:Cancel()
+    end
+    log("armed - will convert once a party (2+ members) exists")
+    local attempts = 0
+    local maxAttempts = 60 -- ~60s
+    self.ConvertToRaidTimer = C_Timer.NewTicker(1, function(ticker)
+        attempts = attempts + 1
+
+        if IsInRaid() then
+            log("raid confirmed after", attempts, "attempt(s)")
+            ticker:Cancel()
+            self.ConvertToRaidTimer = nil
+            return
+        end
+
+        if attempts >= maxAttempts then
+            log("gave up after", attempts, "attempts")
+            ticker:Cancel()
+            self.ConvertToRaidTimer = nil
+            return
+        end
+
+        -- Need at least one other member actually in the group before converting, and
+        -- retry every tick until IsInRaid() confirms it: the call is a no-op while the
+        -- group is still forming (e.g. the same instant the invite is accepted).
+        if IsInGroup() and GetNumGroupMembers() >= 2 then
+            if InCombatLockdown() then
+                log("waiting: in combat")
+            elseif not UnitIsGroupLeader("player") then
+                log("waiting: not group leader")
+            else
+                log("converting to raid (attempt", attempts, ")")
+                DoConvertToRaid()
+            end
+        end
+    end)
+end
+
 -- Invites every online guild member at or above (rankIndex <=) the selected rank threshold.
 function NSI:InviteOnlineGuildMembers()
     if not IsInGuild() then return end
@@ -488,6 +550,8 @@ function NSI:InviteOnlineGuildMembers()
             end
         end
     end
+
+    self:ConvertPartyToRaid()
 end
 
 -- Guild rank permission flags (C_GuildInfo.GuildControlGetRankFlags) are believed to require
