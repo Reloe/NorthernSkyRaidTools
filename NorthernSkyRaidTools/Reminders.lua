@@ -49,6 +49,14 @@ local function RestoreWoWEscapeSequences(text)
     return text:gsub("||c(%x%x%x%x%x%x%x%x)", "|c%1"):gsub("||r", "|r"):gsub("||T", "|T"):gsub("||t", "|t")
 end
 
+local function CopyReminderInfo(info)
+    local copy = {}
+    for key, value in pairs(info) do
+        copy[key] = value
+    end
+    return copy
+end
+
 
 function NSI:AddToReminder(reminderInfo)
     local info = self:CreateReminder(reminderInfo)
@@ -57,7 +65,7 @@ function NSI:AddToReminder(reminderInfo)
 end
 
 function NSI:CreateReminder(info, preview)
-    info = CopyTable(info)
+    info = CopyReminderInfo(info)
     if preview or not info.encID then
         info.time = info.dur or 60
         info.encID = info.encID or 0
@@ -2322,14 +2330,14 @@ function NSI:FireEncounterAlerts(encID, id)
                 if entry.phaseTimers then
                     for _, phase in ipairs(self:GetSortedPhaseKeys(entry.phaseTimers)) do
                         local timers = entry.phaseTimers[phase]
-                        local alert = CopyTable(entry)
+                        local alert = CopyReminderInfo(entry)
                         alert.encID = encID
                         alert.phase = tonumber(phase) or phase
                         alert.phaseTimers = nil
                         self:AddRemindersFromTable(alert, timers)
                     end
                 else
-                    local alert = CopyTable(entry)
+                    local alert = CopyReminderInfo(entry)
                     alert.encID = encID
                     if type(entry.phase) == "table" then
                         for _, phase in ipairs(entry.phase) do
