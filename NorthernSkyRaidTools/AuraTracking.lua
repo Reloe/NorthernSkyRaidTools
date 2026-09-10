@@ -2817,6 +2817,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
 
     local playerVehicleDisabled = unit == "player" and (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
     local shouldShow = loadMatches and not playerVehicleDisabled
+    if unit:match("^boss%d+$") and not UnitExists(unit) then
+        shouldShow = false
+    end
     if state.requiresAssist ~= nil and state.unitCanAssist ~= state.requiresAssist then
         shouldShow = false
     end
@@ -3160,7 +3163,16 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
                 local unitSetsToLayout = {}
                 for _, state in ipairs(states) do
-                    if state.container and state.active and state.requiresAssist ~= nil then
+                    if state.container and state.active and event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
+                        local shouldShow = state.settings.enabled and NSI:EvaluateLoad(state.settings) and UnitExists(state.unit)
+                        if state.requiresAssist ~= nil then
+                            state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
+                            shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
+                        end
+                        state.container:SetEnabled(shouldShow)
+                        state.container:SetShown(shouldShow)
+                        state.anchorFrame:SetShown(shouldShow)
+                    elseif state.container and state.active and state.requiresAssist ~= nil then
                         local unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                         if state.unitCanAssist ~= unitCanAssist then
                             state.unitCanAssist = unitCanAssist
