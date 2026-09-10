@@ -129,7 +129,7 @@ end
 function NSI:UpdateBreakTimer()
     local activeBreak = self.ActiveBreak
     if not activeBreak then return end
-    local remaining = activeBreak.endTime - GetTime()
+    local remaining = activeBreak.endServerTime - GetServerTime()
     if remaining <= 0 then
         self:FinishBreakTimer()
         return
@@ -199,7 +199,6 @@ function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds,
     self.BreakTimerSyncRequested = nil
     self.BreakTimerSyncPending = nil
     self.ActiveBreak = {
-        endTime = GetTime() + seconds,
         endServerTime = endServerTime,
         duration = duration,
         announced = announcedThresholds,
