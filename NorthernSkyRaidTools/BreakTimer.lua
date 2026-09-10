@@ -5,20 +5,20 @@ local _, NSI = ... -- Internal namespace
 -- NSRT gets the same bar and the same countdown announcements. Same idea as the
 -- BigWigs/DBM break timers.
 
-local MAX_BREAK_MINUTES = 120
+local MaxBreakMinutes = 120
 
 -- Remaining time (in seconds) at which the break gets announced in chat.
-local ANNOUNCE_THRESHOLDS = {600, 300, 120, 60, 30, 10}
+local AnnounceThresholds = {600, 300, 120, 60, 30, 10}
 -- Only the last minute plays a sound, a 30 minute break would otherwise beep at
 -- everyone half a dozen times.
-local SOUND_THRESHOLD = 60
+local SoundThreshold = 60
 -- The raid warning (if enabled) is only sent by whoever started the break, and
 -- only for this threshold, so people without the addon get one heads-up.
-local RAID_WARNING_THRESHOLD = 60
+local RaidWarningThreshold = 60
 
-local UPDATE_INTERVAL = 0.1
+local UpdateInterval = 0.1
 -- Breaks shorter than this aren't worth restoring after a /reload.
-local MIN_RESTORE_SECONDS = 5
+local MinRestoreSeconds = 5
 
 local function FormatBreakTime(seconds)
     seconds = math.max(math.ceil(seconds), 0)
@@ -110,7 +110,7 @@ end
 
 function NSI:AnnounceBreak(remaining)
     local activeBreak = self.ActiveBreak
-    for _, threshold in ipairs(ANNOUNCE_THRESHOLDS) do
+    for _, threshold in ipairs(AnnounceThresholds) do
         -- The duration check keeps a 3 minute break from immediately announcing
         -- "10:00 remaining" because it started below that threshold already.
         if remaining <= threshold and activeBreak.duration > threshold and not activeBreak.announced[threshold] then
@@ -118,8 +118,8 @@ function NSI:AnnounceBreak(remaining)
             if NSRT.BreakTimer.AnnounceChat then
                 PrintBreak(string.format(self:Loc("Break: %s remaining"), FormatBreakTime(threshold)))
             end
-            if threshold <= SOUND_THRESHOLD then self:PlayBreakSound() end
-            if threshold == RAID_WARNING_THRESHOLD then
+            if threshold <= SoundThreshold then self:PlayBreakSound() end
+            if threshold == RaidWarningThreshold then
                 self:SendBreakRaidWarning(string.format(self:Loc("NSRT: Break is over in %s"), FormatBreakTime(threshold)))
             end
         end
@@ -172,7 +172,7 @@ function NSI:ShowBreakTimerFrame()
     F.elapsed = 0
     F:SetScript("OnUpdate", function(frame, elapsed)
         frame.elapsed = (frame.elapsed or 0) + elapsed
-        if frame.elapsed < UPDATE_INTERVAL then return end
+        if frame.elapsed < UpdateInterval then return end
         frame.elapsed = 0
         self:UpdateBreakTimer()
     end)
@@ -182,11 +182,7 @@ end
 
 function NSI:FinishBreakTimer()
     self:SendBreakRaidWarning(self:Loc("NSRT: Break is over!")) -- needs the break to still be around to know we own it
-    self.ActiveBreak = nil
-    self.BreakTimerSyncRequested = nil
-    self.BreakTimerSyncPending = nil
-    NSRT.BreakTimerState = nil
-    self:HideBreakTimerFrame()
+    self:StopBreakTimer()
     self:PlayBreakSound()
     PrintBreak(self:Loc("Break is over!"))
 end
@@ -197,6 +193,7 @@ function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds,
     seconds = tonumber(seconds)
     if not seconds or seconds <= 0 then return end
     if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
+    duration = tonumber(duration) or seconds
     announcedThresholds = announcedThresholds or {}
     endServerTime = tonumber(endServerTime) or GetServerTime() + seconds
     self.BreakTimerSyncRequested = nil
@@ -204,13 +201,13 @@ function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds,
     self.ActiveBreak = {
         endTime = GetTime() + seconds,
         endServerTime = endServerTime,
-        duration = duration or seconds,
+        duration = duration,
         announced = announcedThresholds,
     }
     NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration, announced = announcedThresholds}
     self.CurrentBreakMeme = PickBreakMeme()
     if senderName then
-        PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(duration or seconds)))
+        PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(duration)))
         self:PlayBreakSound()
     end
     if NSRT.BreakTimer.enabled then self:ShowBreakTimerFrame() end
@@ -238,7 +235,7 @@ function NSI:ReceiveBreakTimer(unit, seconds, endServerTime, duration)
         endServerTime = tonumber(endServerTime)
         local remaining = endServerTime and endServerTime - GetServerTime() or seconds
         if remaining <= 0 then return end
-        self:StartBreakTimer(remaining, senderName, duration or seconds, nil, endServerTime)
+        self:StartBreakTimer(remaining, senderName, duration, nil, endServerTime)
     else
         self:StopBreakTimer(senderName)
     end
@@ -268,12 +265,12 @@ function NSI:ReceiveBreakTimerSync(unit, endServerTime, duration)
     endServerTime = tonumber(endServerTime)
     if not endServerTime then return end
     local remaining = endServerTime - GetServerTime()
-    if remaining <= MIN_RESTORE_SECONDS then return end
+    if remaining <= MinRestoreSeconds then return end
     local announcedThresholds = {}
-    for _, threshold in ipairs(ANNOUNCE_THRESHOLDS) do
+    for _, threshold in ipairs(AnnounceThresholds) do
         if remaining <= threshold then announcedThresholds[threshold] = true end
     end
-    self:StartBreakTimer(remaining, nil, tonumber(duration), announcedThresholds, endServerTime)
+    self:StartBreakTimer(remaining, nil, duration, announcedThresholds, endServerTime)
 end
 
 -- Restores a break that was still running when the player reloaded or relogged.
@@ -283,8 +280,8 @@ function NSI:RestoreBreakTimer()
     NSRT.BreakTimerState = nil
     if type(state) ~= "table" or not tonumber(state.endTime) then return end
     local remaining = state.endTime - GetServerTime()
-    if remaining <= MIN_RESTORE_SECONDS then return end
-    self:StartBreakTimer(remaining, nil, tonumber(state.duration), state.announced, state.endTime)
+    if remaining <= MinRestoreSeconds then return end
+    self:StartBreakTimer(remaining, nil, state.duration, state.announced, state.endTime)
 end
 
 function NSI:BreakCommand(msg)
@@ -300,8 +297,8 @@ function NSI:BreakCommand(msg)
     else
         minutes = tonumber(arg)
     end
-    if not minutes or minutes < 0 or minutes > MAX_BREAK_MINUTES then
-        PrintBreak(string.format(self:Loc("Usage: /ns break <minutes> - use 0 to cancel a running break. The maximum is %d minutes."), MAX_BREAK_MINUTES))
+    if not minutes or minutes < 0 or minutes > MaxBreakMinutes then
+        PrintBreak(string.format(self:Loc("Usage: /ns break <minutes> - use 0 to cancel a running break. The maximum is %d minutes."), MaxBreakMinutes))
         return
     end
 
@@ -317,11 +314,9 @@ function NSI:BreakCommand(msg)
     end
 
     self:StartBreakTimer(seconds, myName)
-    if self.ActiveBreak then
-        self.ActiveBreak.isOwner = true
-        if IsInGroup() then self:Broadcast("NSI_BREAK_TIMER", "RAID", seconds, self.ActiveBreak.endServerTime, self.ActiveBreak.duration) end
-        self:SendBreakRaidWarning(string.format(self:Loc("NSRT: Break for %s"), FormatBreakTime(seconds)))
-    end
+    self.ActiveBreak.isOwner = true
+    if IsInGroup() then self:Broadcast("NSI_BREAK_TIMER", "RAID", seconds, self.ActiveBreak.endServerTime, self.ActiveBreak.duration) end
+    self:SendBreakRaidWarning(string.format(self:Loc("NSRT: Break for %s"), FormatBreakTime(seconds)))
 end
 
 -- Draggable preview used by the "Preview/Unlock" button in the options panel.
