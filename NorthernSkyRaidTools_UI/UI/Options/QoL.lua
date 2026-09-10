@@ -610,6 +610,14 @@ local function BuildQoLOptions()
             end,
         },
         {
+            type = "select",
+            name = "Break Sound",
+            desc = "Sound played by the break timer.",
+            get = function() return NSRT.BreakTimer.Sound end,
+            set = function() end,
+            values = BuildBreakTimerSoundOptions,
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Announce Remaining Break Time",
@@ -618,14 +626,6 @@ local function BuildQoLOptions()
             set = function(self, fixedparam, value)
                 NSRT.BreakTimer.AnnounceChat = value
             end,
-        },
-        {
-            type = "select",
-            name = "Break Sound",
-            desc = "Sound played by the break timer.",
-            get = function() return NSRT.BreakTimer.Sound end,
-            set = function() end,
-            values = BuildBreakTimerSoundOptions,
         },
         {
             type = "toggle",
