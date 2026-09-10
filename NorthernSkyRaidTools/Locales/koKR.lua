@@ -1104,7 +1104,8 @@ L["Nameplate Y Offset"] = "이름표 Y 위치 조정"
 L["Center Aligned"] = "가운데 정렬"
 L["Size"] = "크기"
 L["Show Background Ring"] = "배경 링 표시"
-L["Ring Color"] = "링 색상"
+L["Ring Color"] = "원 색상"
+L["Ring Size"] = "원 크기"
 -- ============================================================================
 -- UI/Options/WAImports.lua
 -- ============================================================================
@@ -1299,9 +1300,9 @@ L["Color of the right side's rows while that player does not have the debuff."] 
 L["Show All Players"] = "모든 플레이어 표시"
 L["Keeps a row up for every player on that side, in the inactive color, and switches it to the regular color while they have the debuff. Turn off to only show players who currently have the debuff."] = "해당 진영의 모든 플레이어들을 비활성화 색상으로 한 줄에 표시해놓고 디버프가 있을 때 일반 색상으로 변경합니다. 옵션을 끄면 현재 디버프가 있는 플레이어만 표시합니다."
 L["Left Side Groups"] = "왼쪽 조"
-L["Raid subgroups shown on the left side, comma separated. Use 1,2 and 3,4 to split by halves, or 1,3,5,7 and 2,4,6,8 for odds and evens."] = "왼쪽에 표시할 파티를 콤마로 구분해서 입력합니다. 반씩 나누려면 1,2와 3,4를 쓰면 되고 1,3,5,7과 2,4,6,8로 홀수 짝수로도 나눌 수 있습니다."
+L["Raid subgroups shown on the left side, comma separated. Use 1,2 and 3,4 to split by halves, or 1,3,5,7 and 2,4,6,8 for odds and evens."] = "왼쪽 조로 표시할 파티를 콤마로 구분해서 입력합니다. 반씩 나누려면 1,2와 3,4를 쓰면 되고 1,3,5,7과 2,4,6,8로 홀수 짝수로도 나눌 수 있습니다."
 L["Right Side Groups"] = "오른쪽 조"
-L["Raid subgroups shown on the right side, comma separated. Empty by default, so only the left side is shown. A group left out of both sides is not tracked."] = "오른쪽에 표시할 파티를 콤마로 구분해서 입력합니다. 기본값은 비어 있어서 왼쪽만 표시됩니다. 양쪽 모두에서 제외된 파티는 추적하지 않습니다."
+L["Raid subgroups shown on the right side, comma separated. Empty by default, so only the left side is shown. A group left out of both sides is not tracked."] = "오른쪽 조로 표시할 파티를 콤마로 구분해서 입력합니다. 기본값은 비어 있기 때문에 그대로 두면 왼쪽 조만 표시됩니다. 양쪽 모두에서 제외된 파티는 추적하지 않습니다."
 L["Sort by Role"] = "역할별 정렬"
 -- ============================================================================
 -- EncounterAlerts.lua
