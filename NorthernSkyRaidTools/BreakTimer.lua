@@ -197,7 +197,7 @@ end
 -- break gets restored after a /reload, so the restore stays silent.
 function NSI:StartBreakTimer(seconds, senderName, duration)
     seconds = tonumber(seconds)
-    if not NSRT.BreakTimer.enabled or not seconds or seconds <= 0 then return end
+    if not seconds or seconds <= 0 then return end
     if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
     self.ActiveBreak = {
         endTime = GetTime() + seconds,
@@ -211,7 +211,7 @@ function NSI:StartBreakTimer(seconds, senderName, duration)
         PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(seconds)))
         self:PlayBreakSound()
     end
-    self:ShowBreakTimerFrame()
+    if NSRT.BreakTimer.enabled then self:ShowBreakTimerFrame() end
 end
 
 function NSI:StopBreakTimer(senderName)

@@ -464,7 +464,11 @@ local function BuildQoLOptions()
             get = function() return NSRT.BreakTimer.enabled end,
             set = function(self, fixedparam, value)
                 NSRT.BreakTimer.enabled = value
-                if not value then NSI:StopBreakTimer() end
+                if value and NSI.ActiveBreak then
+                    NSI:ShowBreakTimerFrame()
+                else
+                    NSI:HideBreakTimerFrame()
+                end
             end,
         },
         {
