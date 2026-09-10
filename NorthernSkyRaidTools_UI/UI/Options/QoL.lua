@@ -620,7 +620,7 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = "Announce Remaining Break Time",
+            name = "Print Remaining Break Time",
             desc = "Prints remaining break time in chat at 10, 5, 2, and 1 minutes, plus 30 and 10 seconds.",
             get = function() return NSRT.BreakTimer.AnnounceChat end,
             set = function(self, fixedparam, value)
