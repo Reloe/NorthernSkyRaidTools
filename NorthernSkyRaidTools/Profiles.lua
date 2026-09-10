@@ -527,7 +527,7 @@ function NSI:AddMissingDefaults()
             textColors = { 1, 1, 1, 1 },
             ShowMeme = false,
             MemeSize = 128,
-            PlaySound = true,
+            PlaySound = false,
             Sound = "|cFF4BAAC8Break|r",
             SendRaidWarning = false,
         },
