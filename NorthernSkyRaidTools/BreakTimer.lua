@@ -197,17 +197,18 @@ end
 
 -- senderName is the name shown in the chat announcement. It is left out when a
 -- break gets restored after a /reload, so the restore stays silent.
-function NSI:StartBreakTimer(seconds, senderName, duration)
+function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds)
     seconds = tonumber(seconds)
     if not seconds or seconds <= 0 then return end
     if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
+    announcedThresholds = announcedThresholds or {}
     self.ActiveBreak = {
         endTime = GetTime() + seconds,
         endServerTime = GetServerTime() + seconds,
         duration = duration or seconds,
-        announced = {},
+        announced = announcedThresholds,
     }
-    NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration}
+    NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration, announced = announcedThresholds}
     self.CurrentBreakMeme = PickBreakMeme()
     if senderName then
         PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(seconds)))
@@ -247,7 +248,7 @@ function NSI:RestoreBreakTimer()
     if type(state) ~= "table" or not tonumber(state.endTime) then return end
     local remaining = state.endTime - GetServerTime()
     if remaining <= MIN_RESTORE_SECONDS then return end
-    self:StartBreakTimer(remaining, nil, tonumber(state.duration))
+    self:StartBreakTimer(remaining, nil, tonumber(state.duration), state.announced)
 end
 
 function NSI:BreakCommand(msg)
