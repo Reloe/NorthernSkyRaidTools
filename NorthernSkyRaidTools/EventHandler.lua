@@ -6,6 +6,8 @@ f:RegisterEvent("ENCOUNTER_END")
 f:RegisterEvent("READY_CHECK")
 f:RegisterEvent("READY_CHECK_FINISHED")
 f:RegisterEvent("GROUP_FORMED")
+f:RegisterEvent("GROUP_JOINED")
+f:RegisterEvent("GROUP_LEFT")
 f:RegisterEvent("ADDON_LOADED")
 f:RegisterEvent("PLAYER_LOGIN")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
@@ -327,6 +329,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.NSUI and self.NSUI.reminders_frame and self.NSUI.reminders_frame.UpdateButtonAccess then
             self.NSUI.reminders_frame.UpdateButtonAccess()
         end
+    elseif e == "GROUP_JOINED" and wowevent then
+        C_Timer.After(1, function() self:RequestBreakTimerSync() end)
+    elseif e == "GROUP_LEFT" and wowevent then
+        self.BreakTimerSyncRequested = nil
+        self.BreakTimerSyncPending = nil
     elseif e == "NSI_VERSION_CHECK" and internal then
         if self:Restricted() then return end
         if not self.VersionCheckData then return end -- ignore stale responses from a previous check
@@ -371,6 +378,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "ADDON_RESTRICTION_STATE_CHANGED" and wowevent then
         local restrictionType, restrictionState = ...
+        if self.BreakTimerSyncPending and not C_ChatInfo.InChatMessagingLockdown() then
+            self:RequestBreakTimerSync()
+        end
         if (restrictionType == Enum.AddOnRestrictionType.Combat or restrictionType == Enum.AddOnRestrictionType.Encounter) and restrictionState == Enum.AddOnRestrictionState.Inactive then
             if self.PendingAuraTrackingUpdate then
                 self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
@@ -417,8 +427,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
     elseif e == "NSI_BREAK_TIMER" and internal then
-        local unit, seconds = ...
-        self:ReceiveBreakTimer(unit, seconds)
+        local unit, seconds, endServerTime, duration = ...
+        self:ReceiveBreakTimer(unit, seconds, endServerTime, duration)
+    elseif e == "NSI_BREAK_TIMER_SYNC_REQUEST" and internal then
+        local unit = ...
+        self:SendBreakTimerSync(unit)
+    elseif e == "NSI_BREAK_TIMER_SYNC" and internal then
+        local unit, endServerTime, duration = ...
+        self:ReceiveBreakTimerSync(unit, endServerTime, duration)
     elseif e == "QoL_Comms" and internal then
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then

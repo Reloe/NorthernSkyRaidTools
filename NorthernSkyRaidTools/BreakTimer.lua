@@ -189,6 +189,8 @@ end
 function NSI:FinishBreakTimer()
     self:SendBreakRaidWarning(self:Loc("NSRT: Break is over!")) -- needs the break to still be around to know we own it
     self.ActiveBreak = nil
+    self.BreakTimerSyncRequested = nil
+    self.BreakTimerSyncPending = nil
     NSRT.BreakTimerState = nil
     self:HideBreakTimerFrame()
     self:PlayBreakSound()
@@ -197,14 +199,17 @@ end
 
 -- senderName is the name shown in the chat announcement. It is left out when a
 -- break gets restored after a /reload, so the restore stays silent.
-function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds)
+function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds, endServerTime)
     seconds = tonumber(seconds)
     if not seconds or seconds <= 0 then return end
     if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
     announcedThresholds = announcedThresholds or {}
+    endServerTime = tonumber(endServerTime) or GetServerTime() + seconds
+    self.BreakTimerSyncRequested = nil
+    self.BreakTimerSyncPending = nil
     self.ActiveBreak = {
         endTime = GetTime() + seconds,
-        endServerTime = GetServerTime() + seconds,
+        endServerTime = endServerTime,
         duration = duration or seconds,
         announced = announcedThresholds,
     }
@@ -220,6 +225,8 @@ end
 function NSI:StopBreakTimer(senderName)
     local wasRunning = self.ActiveBreak ~= nil
     self.ActiveBreak = nil
+    self.BreakTimerSyncRequested = nil
+    self.BreakTimerSyncPending = nil
     NSRT.BreakTimerState = nil
     self:HideBreakTimerFrame()
     if wasRunning and senderName then
@@ -228,16 +235,48 @@ function NSI:StopBreakTimer(senderName)
     return wasRunning
 end
 
-function NSI:ReceiveBreakTimer(unit, seconds)
+function NSI:ReceiveBreakTimer(unit, seconds, endServerTime, duration)
     if not UnitExists(unit) then return end
     if UnitIsUnit(unit, "player") then return end -- our own broadcast, already handled locally
     if not (UnitIsGroupLeader(unit) or UnitIsGroupAssistant(unit)) then return end
     local senderName = NSAPI:Shorten(unit, 12, false, "GlobalNickNames") or UnitName(unit)
     if seconds and seconds > 0 then
-        self:StartBreakTimer(seconds, senderName)
+        self:StartBreakTimer(seconds, senderName, duration, nil, endServerTime)
     else
         self:StopBreakTimer(senderName)
     end
+end
+
+function NSI:RequestBreakTimerSync()
+    if self.ActiveBreak or self.BreakTimerSyncRequested or not IsInGroup() then return end
+    if C_ChatInfo.InChatMessagingLockdown() then
+        self.BreakTimerSyncPending = true
+        return
+    end
+    self.BreakTimerSyncRequested = true
+    self.BreakTimerSyncPending = nil
+    self:Broadcast("NSI_BREAK_TIMER_SYNC_REQUEST", "RAID")
+end
+
+function NSI:SendBreakTimerSync(unit)
+    if not UnitExists(unit) or UnitIsUnit(unit, "player") or not UnitIsGroupLeader("player") then return end
+    if C_ChatInfo.InChatMessagingLockdown() then return end
+    local activeBreak = self.ActiveBreak
+    if not activeBreak then return end
+    self:Broadcast("NSI_BREAK_TIMER_SYNC", "WHISPER", unit, activeBreak.endServerTime, activeBreak.duration)
+end
+
+function NSI:ReceiveBreakTimerSync(unit, endServerTime, duration)
+    if self.ActiveBreak or not UnitExists(unit) or not UnitIsGroupLeader(unit) then return end
+    endServerTime = tonumber(endServerTime)
+    if not endServerTime then return end
+    local remaining = endServerTime - GetServerTime()
+    if remaining <= MIN_RESTORE_SECONDS then return end
+    local announcedThresholds = {}
+    for _, threshold in ipairs(ANNOUNCE_THRESHOLDS) do
+        if remaining <= threshold then announcedThresholds[threshold] = true end
+    end
+    self:StartBreakTimer(remaining, nil, tonumber(duration), announcedThresholds, endServerTime)
 end
 
 -- Restores a break that was still running when the player reloaded or relogged.
@@ -248,7 +287,7 @@ function NSI:RestoreBreakTimer()
     if type(state) ~= "table" or not tonumber(state.endTime) then return end
     local remaining = state.endTime - GetServerTime()
     if remaining <= MIN_RESTORE_SECONDS then return end
-    self:StartBreakTimer(remaining, nil, tonumber(state.duration), state.announced)
+    self:StartBreakTimer(remaining, nil, tonumber(state.duration), state.announced, state.endTime)
 end
 
 function NSI:BreakCommand(msg)
@@ -271,9 +310,8 @@ function NSI:BreakCommand(msg)
 
     local seconds = math.floor(minutes * 60 + 0.5)
     local myName = GetPlayerDisplayName()
-    if IsInGroup() then self:Broadcast("NSI_BREAK_TIMER", "RAID", seconds) end
-
     if seconds == 0 then
+        if IsInGroup() then self:Broadcast("NSI_BREAK_TIMER", "RAID", seconds) end
         self:SendBreakRaidWarning(self:Loc("NSRT: Break cancelled."))
         if not self:StopBreakTimer(myName) then
             PrintBreak(self:Loc("There is no break running."))
@@ -284,6 +322,7 @@ function NSI:BreakCommand(msg)
     self:StartBreakTimer(seconds, myName)
     if self.ActiveBreak then
         self.ActiveBreak.isOwner = true
+        if IsInGroup() then self:Broadcast("NSI_BREAK_TIMER", "RAID", seconds, self.ActiveBreak.endServerTime, self.ActiveBreak.duration) end
         self:SendBreakRaidWarning(string.format(self:Loc("NSRT: Break for %s"), FormatBreakTime(seconds)))
     end
 end
