@@ -29,10 +29,6 @@ local function PrintBreak(text)
     print("|cFF00FFFFNSRT|r "..text)
 end
 
-local function GetPlayerDisplayName()
-    return NSAPI:Shorten("player", 12, false, "GlobalNickNames") or UnitName("player")
-end
-
 function NSI:PlayBreakSound()
     local s = NSRT.BreakTimer
     if not s.PlaySound then return end
@@ -112,13 +108,6 @@ function NSI:ApplyBreakTimerSettings()
     end
 end
 
-local function OnBreakUpdate(F, elapsed)
-    F.elapsed = (F.elapsed or 0) + elapsed
-    if F.elapsed < UPDATE_INTERVAL then return end
-    F.elapsed = 0
-    NSI:UpdateBreakTimer()
-end
-
 function NSI:AnnounceBreak(remaining)
     local activeBreak = self.ActiveBreak
     for _, threshold in ipairs(ANNOUNCE_THRESHOLDS) do
@@ -181,7 +170,12 @@ function NSI:ShowBreakTimerFrame()
     F.EndText:SetText(string.format(self:Loc("Break ends at: %s"), date("%H:%M", math.floor(self.ActiveBreak.endServerTime))))
     F.shownSeconds = nil
     F.elapsed = 0
-    F:SetScript("OnUpdate", OnBreakUpdate)
+    F:SetScript("OnUpdate", function(frame, elapsed)
+        frame.elapsed = (frame.elapsed or 0) + elapsed
+        if frame.elapsed < UPDATE_INTERVAL then return end
+        frame.elapsed = 0
+        self:UpdateBreakTimer()
+    end)
     F:Show()
     self:UpdateBreakTimer()
 end
@@ -312,7 +306,7 @@ function NSI:BreakCommand(msg)
     end
 
     local seconds = math.floor(minutes * 60 + 0.5)
-    local myName = GetPlayerDisplayName()
+    local myName = NSAPI:Shorten("player", 12, false, "GlobalNickNames") or UnitName("player")
     if seconds == 0 then
         if IsInGroup() then self:Broadcast("NSI_BREAK_TIMER", "RAID", seconds) end
         self:SendBreakRaidWarning(self:Loc("NSRT: Break cancelled."))
@@ -356,22 +350,9 @@ function NSI:SetBreakTimerPreview(active)
     end
 end
 
-function NSI:ToggleBreakTimerPreview()
-    self:SetBreakTimerPreview(not self.IsBreakTimerPreview)
-end
-
 -- Options-panel edits should restyle the preview (or a running break) right away.
 function NSI:RefreshBreakTimerDisplay()
     if self.IsBreakTimerPreview or self.ActiveBreak then
         self:ApplyBreakTimerSettings()
     end
-end
-
-function NSI:ResetBreakTimerPosition()
-    local s = NSRT.BreakTimer
-    s.Anchor = "CENTER"
-    s.relativeTo = "CENTER"
-    s.xOffset = 0
-    s.yOffset = 200
-    self:RefreshBreakTimerDisplay()
 end

@@ -476,7 +476,7 @@ local function BuildQoLOptions()
             name = "Preview/Unlock",
             desc = "Preview and Move the Break Timer bar.",
             func = function(self)
-                NSI:ToggleBreakTimerPreview()
+                NSI:SetBreakTimerPreview(not NSI.IsBreakTimerPreview)
             end,
             spacement = true
         },
@@ -485,7 +485,12 @@ local function BuildQoLOptions()
             name = "Reset Position",
             desc = "Move the Break Timer bar back to its default position.",
             func = function(self)
-                NSI:ResetBreakTimerPosition()
+                local settings = NSRT.BreakTimer
+                settings.Anchor = "CENTER"
+                settings.relativeTo = "CENTER"
+                settings.xOffset = 0
+                settings.yOffset = 200
+                NSI:RefreshBreakTimerDisplay()
             end,
             spacement = true
         },
