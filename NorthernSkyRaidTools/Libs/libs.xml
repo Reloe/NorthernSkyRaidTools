@@ -14,6 +14,7 @@
 	<Script file="Libs\LibSpecialization\LibSpecialization.lua"/>
 	<Script file="Libs\LibSharedMedia-3.0\LibSharedMedia-3.0.lua"/>
 	<Script file="Libs\LibTranslit-1.0\LibTranslit-1.0.lua"/>
+	<Script file="Libs\IndentationLib\indent.lua"/>
 
     <Include file="Libs\LibDFramework-1.0\load.xml"/>
 </Ui>
