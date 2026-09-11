@@ -541,7 +541,7 @@ L["Only auto-invite players who are in your guild. Disable to allow anyone who w
 L["Guild Invite Rank"] = "길드 초대 등급"
 L["The guild rank threshold used for Invite Online Guild Members. Members at this rank or higher (closer to Guild Master) are invited."] = "접속 중인 길드원 초대에 사용할 길드 등급 기준값입니다. 해당 등급 이상의 공대원(길드 등급 높은순)들이 초대됩니다."
 L["Invite Guild Members"] = "길드원 초대"
-L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group."] = "설정한 길드 초대 등급 이상의 길드원 중에 아직 그룹에 있지 않은 사람들을 전부 초대합니다."
+L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group."] = "설정한 길드 초대 등급 이상의 길드원 중에 아직 그룹에 있지 않은 사람들을 전부 초대하고 파티는 공격대 그룹으로 전환합니다."
 L["Auto-Accept Guild Invites"] = "길드 초대 자동 수락"
 L["Automatically accept group/raid invites sent by members of your guild."] = "길드원이 보낸 파티/공격대 초대를 자동으로 수락합니다."
 L["Auto-Promote Assistants"] = "부공대장 자동 승급"
