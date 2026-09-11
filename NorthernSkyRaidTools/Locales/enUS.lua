@@ -80,6 +80,7 @@ L["  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note"] = "  |cFF0
 L["  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"] = "  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"
 L["  |cFF00FFFF/ns break <minutes>|r or |cFF00FFFF/ns brb <minutes>|r - Start a raid break timer for everyone in the group, use 0 to cancel it"] = "  |cFF00FFFF/ns break <minutes>|r or |cFF00FFFF/ns brb <minutes>|r - Start a raid break timer for everyone in the group, use 0 to cancel it"
 L["  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"] = "  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"
+L["  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"] = "  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"
 L["  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"] = "  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"
 L["|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."] = "|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."
 -- ============================================================================
