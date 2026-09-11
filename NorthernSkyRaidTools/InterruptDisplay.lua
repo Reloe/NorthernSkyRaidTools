@@ -57,15 +57,19 @@ function NSI:GetInterruptNameplateScale(plate)
     return plate and plate:GetEffectiveScale() / UIParent:GetEffectiveScale() or 1
 end
 
+function NSI:IsMyInterrupt(castCount)
+    local myKicks = self.Interrupts.myKicks
+    return (myKicks and myKicks[castCount]) or castCount == self.Interrupts.myKick
+end
+
 function NSI:DisplayInterrupt(isCastStart)
     local s = NSRT.InterruptSettings
-    local myKick = self.Interrupts.myKick
     local castCount = self.Interrupts.castCount
     local unit = self.Interrupts.myTable[castCount]
     local name = unit and UnitExists(unit) and NSAPI:Shorten(unit, 12, false, "GlobalNickNames", false, false) or ""
     local boxColor = s.InterruptDefaultColor
     local textColor = s.InterruptDefaultTextColor
-    if castCount == myKick then
+    if self:IsMyInterrupt(castCount) then
         if isCastStart then -- player interrupts now
             boxColor = s.InterruptNowColor
             textColor = s.InterruptNowTextColor
@@ -73,7 +77,7 @@ function NSI:DisplayInterrupt(isCastStart)
             boxColor = s.InterruptNextColor
             textColor = s.InterruptNextTextColor
         end
-    elseif (castCount+1 == myKick) or (myKick == 1 and castCount == self.Interrupts.max) then
+    elseif self:IsMyInterrupt(castCount == self.Interrupts.max and 1 or castCount + 1) then
         boxColor = s.InterruptNextColor
         textColor = s.InterruptNextTextColor
     end
@@ -105,7 +109,7 @@ function NSI:InterruptOnCastStart(info, unit)
     if self.Interrupts.myTrackedID == 0 then return end
     if not UnitCastingInfo(unit) then return end
     self:DisplayInterrupt(true)
-    if self.Interrupts.castCount == self.Interrupts.myKick then
+    if self:IsMyInterrupt(self.Interrupts.castCount) then
         self:PlayInterruptSound()
         if NSRT.InterruptSettings.ShowBar and info then
             self:ShowInterruptBar(info)
@@ -165,6 +169,7 @@ function NSI:ReadInterruptNote(StartNumber)
     self.Interrupts.assignTable = {}
     self.Interrupts.myID = 0
     self.Interrupts.myKick = 0
+    self.Interrupts.myKicks = {}
     self.Interrupts.myTrackedID = 0
     self.Interrupts.castCount = 1
     self.Interrupts.disabled = false
@@ -195,8 +200,12 @@ function NSI:ReadInterruptNote(StartNumber)
                     table.insert(self.Interrupts.assignTable[count], name)
                     if UnitIsUnit(name, "player") then
                         self.Interrupts.disabled = false
+                        if self.Interrupts.myID ~= count then
+                            self.Interrupts.myKicks = {}
+                        end
                         self.Interrupts.myID = count
                         self.Interrupts.myKick = num
+                        self.Interrupts.myKicks[num] = true
                     end
                     if count == self.Interrupts.myID then
                         self.Interrupts.max = #self.Interrupts.assignTable[count]

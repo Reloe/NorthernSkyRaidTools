@@ -424,10 +424,10 @@ function NSI:DisplayUlatekInterruptAssignment()
     local name = unit and UnitExists(unit) and NSAPI:Shorten(unit, 12, false, "GlobalNickNames", false, false) or ""
     local boxColor = interruptSettings.InterruptDefaultColor
     local textColor = interruptSettings.InterruptDefaultTextColor
-    if castCount == self.Interrupts.myKick then
+    if self:IsMyInterrupt(castCount) then
         boxColor = interruptSettings.InterruptNowColor
         textColor = interruptSettings.InterruptNowTextColor
-    elseif (castCount + 1 == self.Interrupts.myKick) or (self.Interrupts.myKick == 1 and castCount == self.Interrupts.max) then
+    elseif self:IsMyInterrupt(castCount == self.Interrupts.max and 1 or castCount + 1) then
         boxColor = interruptSettings.InterruptNextColor
         textColor = interruptSettings.InterruptNextTextColor
     end
