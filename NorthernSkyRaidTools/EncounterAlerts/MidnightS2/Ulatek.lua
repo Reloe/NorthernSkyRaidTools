@@ -496,8 +496,6 @@ function NSI:UpdateUlatekInterruptDisplay()
     for _, box in ipairs(displays) do
         box.Background:SetColorTexture(unpack(boxColor))
         box.Number:SetTextColor(unpack(textColor))
-        box.Number:SetText(castCount)
-        box.Name:SetText(displayName)
         box:SetSize(boxSize, boxSize)
         box.Number:ClearAllPoints()
         box.Number:SetPoint(interruptSettings.NumberAnchor, box, interruptSettings.NumberRelativeTo, interruptSettings.NumberxOffset, interruptSettings.NumberyOffset)
@@ -505,6 +503,8 @@ function NSI:UpdateUlatekInterruptDisplay()
         box.Name:ClearAllPoints()
         box.Name:SetPoint(interruptSettings.NameAnchor, box, interruptSettings.NameRelativeTo, interruptSettings.NamexOffset, interruptSettings.NameyOffset)
         box.Name:SetFont(self.LSM:Fetch("font", interruptSettings.NameFont), nameFontSize * fontScale, interruptSettings.NameFontFlags)
+        box.Number:SetText(castCount)
+        box.Name:SetText(displayName)
         box:Show()
     end
 end
