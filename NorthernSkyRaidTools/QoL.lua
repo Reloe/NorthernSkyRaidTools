@@ -483,35 +483,25 @@ end
 -- If we're solo, wait until a party forms (from the invites) before converting.
 -- Duration is generous because invitees may take a while to accept.
 function NSI:ConvertPartyToRaid()
-    local function log(...)
-        if NSRT.Settings and NSRT.Settings.Debug then
-            print("|cFF00FFFFNSRT|r ConvertPartyToRaid:", ...)
-        end
-    end
-
     if IsInRaid() then
-        log("already in a raid, nothing to do")
         return
     end
 
     if self.ConvertToRaidTimer then
         self.ConvertToRaidTimer:Cancel()
     end
-    log("armed - will convert once a party (2+ members) exists")
     local attempts = 0
     local maxAttempts = 60 -- ~60s
     self.ConvertToRaidTimer = C_Timer.NewTicker(1, function(ticker)
         attempts = attempts + 1
 
         if IsInRaid() then
-            log("raid confirmed after", attempts, "attempt(s)")
             ticker:Cancel()
             self.ConvertToRaidTimer = nil
             return
         end
 
         if attempts >= maxAttempts then
-            log("gave up after", attempts, "attempts")
             ticker:Cancel()
             self.ConvertToRaidTimer = nil
             return
@@ -521,12 +511,7 @@ function NSI:ConvertPartyToRaid()
         -- retry every tick until IsInRaid() confirms it: the call is a no-op while the
         -- group is still forming (e.g. the same instant the invite is accepted).
         if IsInGroup() and GetNumGroupMembers() >= 2 then
-            if InCombatLockdown() then
-                log("waiting: in combat")
-            elseif not UnitIsGroupLeader("player") then
-                log("waiting: not group leader")
-            else
-                log("converting to raid (attempt", attempts, ")")
+            if not InCombatLockdown() and UnitIsGroupLeader("player") then
                 DoConvertToRaid()
             end
         end
@@ -541,17 +526,21 @@ function NSI:InviteOnlineGuildMembers()
     local rankThreshold = NSRT.QoL.AutoInviteGuildRankIndex or 1
     local myName = UnitName("player")
     local numMembers = GetNumGuildMembers()
+    local invited = false
     for i = 1, numMembers do
         local name, _, rankIndex, _, _, _, _, _, online = GetGuildRosterInfo(i)
         if name and online and rankIndex and rankIndex <= rankThreshold then
             local bareName = (name:find("-", 1, true)) and name:match("^([^-]+)") or name
             if bareName ~= myName and not UnitInRaid(name) and not UnitInParty(name) then
                 C_PartyInfo.InviteUnit(name)
+                invited = true
             end
         end
     end
 
-    self:ConvertPartyToRaid()
+    if invited and (not IsInGroup() or UnitIsGroupLeader("player")) then
+        self:ConvertPartyToRaid()
+    end
 end
 
 -- Guild rank permission flags (C_GuildInfo.GuildControlGetRankFlags) are believed to require
