@@ -471,6 +471,53 @@ function NSI:ScheduleAutoPromotePass()
     end)
 end
 
+local function DoConvertToRaid()
+    if C_PartyInfo and C_PartyInfo.ConvertToRaid then
+        C_PartyInfo.ConvertToRaid()
+    elseif ConvertToRaid then
+        ConvertToRaid()
+    end
+end
+
+-- Converts the current party into a raid group so invited guild members land in a raid.
+-- If we're solo, wait until a party forms (from the invites) before converting.
+-- Duration is generous because invitees may take a while to accept.
+function NSI:ConvertPartyToRaid()
+    if IsInRaid() then
+        return
+    end
+
+    if self.ConvertToRaidTimer then
+        self.ConvertToRaidTimer:Cancel()
+    end
+    local attempts = 0
+    local maxAttempts = 60 -- ~60s
+    self.ConvertToRaidTimer = C_Timer.NewTicker(1, function(ticker)
+        attempts = attempts + 1
+
+        if IsInRaid() then
+            ticker:Cancel()
+            self.ConvertToRaidTimer = nil
+            return
+        end
+
+        if attempts >= maxAttempts then
+            ticker:Cancel()
+            self.ConvertToRaidTimer = nil
+            return
+        end
+
+        -- Need at least one other member actually in the group before converting, and
+        -- retry every tick until IsInRaid() confirms it: the call is a no-op while the
+        -- group is still forming (e.g. the same instant the invite is accepted).
+        if IsInGroup() and GetNumGroupMembers() >= 2 then
+            if not InCombatLockdown() and UnitIsGroupLeader("player") then
+                DoConvertToRaid()
+            end
+        end
+    end)
+end
+
 -- Invites every online guild member at or above (rankIndex <=) the selected rank threshold.
 function NSI:InviteOnlineGuildMembers()
     if not IsInGuild() then return end
@@ -479,14 +526,20 @@ function NSI:InviteOnlineGuildMembers()
     local rankThreshold = NSRT.QoL.AutoInviteGuildRankIndex or 1
     local myName = UnitName("player")
     local numMembers = GetNumGuildMembers()
+    local invited = false
     for i = 1, numMembers do
         local name, _, rankIndex, _, _, _, _, _, online = GetGuildRosterInfo(i)
         if name and online and rankIndex and rankIndex <= rankThreshold then
             local bareName = (name:find("-", 1, true)) and name:match("^([^-]+)") or name
             if bareName ~= myName and not UnitInRaid(name) and not UnitInParty(name) then
                 C_PartyInfo.InviteUnit(name)
+                invited = true
             end
         end
+    end
+
+    if invited and (not IsInGroup() or UnitIsGroupLeader("player")) then
+        self:ConvertPartyToRaid()
     end
 end
 

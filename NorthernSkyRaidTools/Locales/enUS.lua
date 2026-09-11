@@ -541,7 +541,7 @@ L["Only auto-invite players who are in your guild. Disable to allow anyone who w
 L["Guild Invite Rank"] = "Guild Invite Rank"
 L["The guild rank threshold used for Invite Online Guild Members. Members at this rank or higher (closer to Guild Master) are invited."] = "The guild rank threshold used for Invite Online Guild Members. Members at this rank or higher (closer to Guild Master) are invited."
 L["Invite Guild Members"] = "Invite Guild Members"
-L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group."] = "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group."
+L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group."] = "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group."
 L["Auto-Accept Guild Invites"] = "Auto-Accept Guild Invites"
 L["Automatically accept group/raid invites sent by members of your guild."] = "Automatically accept group/raid invites sent by members of your guild."
 L["Auto-Promote Assistants"] = "Auto-Promote Assistants"
