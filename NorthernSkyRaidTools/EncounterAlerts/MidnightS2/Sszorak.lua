@@ -694,7 +694,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             end
 
             if pos <= (self.WindsOrderCount or 0) then
-                F.SszorakBombMarker:SetFormattedText("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:0|t", self.WindsOrder[pos])
+                local iconSize = NSRT.ReminderSettings.BarSettings.FontSize
+                F.SszorakBombMarker:SetFormattedText("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%s:%d:%d|t", self.WindsOrder[pos], iconSize, iconSize)
             else
                 F.SszorakBombMarker:SetText(NSI:EncounterAlertLoc("Backup"))
             end
