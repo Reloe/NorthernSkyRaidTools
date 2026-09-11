@@ -542,7 +542,7 @@ L["Only auto-invite players who are in your guild. Disable to allow anyone who w
 L["Guild Invite Rank"] = "邀请会阶"
 L["The guild rank threshold used for Invite Online Guild Members. Members at this rank or higher (closer to Guild Master) are invited."] = "选择邀请公会在线成员的会阶门槛。所选会阶及以上（越接近会长）的成员会被邀请。"
 L["Invite Guild Members"] = "邀请公会成员"
-L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group."] = "自动邀请所有指定会阶及以上，且尚未加入队伍的公会在线成员。"
+L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group."] = "自动邀请所有指定会阶及以上，且尚未加入队伍的公会在线成员，并转化为团队。"
 L["Auto-Accept Guild Invites"] = "自动接受公会邀请"
 L["Automatically accept group/raid invites sent by members of your guild."] = "自动接受公会成员发送的小队/团队邀请。"
 L["Auto-Promote Assistants"] = "自动提升助理"
