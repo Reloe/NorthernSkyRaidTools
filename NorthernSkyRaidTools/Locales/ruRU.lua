@@ -556,7 +556,7 @@ L["Only auto-invite players who are in your guild. Disable to allow anyone who w
 L["Guild Invite Rank"] = "Пригласить участников гильдии по рангу"
 L["The guild rank threshold used for Invite Online Guild Members. Members at this rank or higher (closer to Guild Master) are invited."] = "Пороговое значение ранга гильдии, используемое для приглашения онлайн-участников гильдии. Участники с этим рангом или выше (ближе к званию ГМ) будут приглашаться."
 L["Invite Guild Members"] = "Пригласить участников гильдии"
-L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group."] = "Пригласить всех онлайн-участников гильдии с выбранным рангом для приглашения или выше, которые ещё не в Вашей группе."
+L["Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group."] = "Пригласить всех онлайн-участников гильдии с выбранным рангом для приглашения или выше, которые ещё не в Вашей группе, и превратить свою группу в рейд."
 L["Auto-Accept Guild Invites"] = "Автопринятие приглашений гильдии"
 L["Automatically accept group/raid invites sent by members of your guild."] = "Автоматически принимать приглашения в группу/рейд, отправленные участниками Вашей гильдии."
 L["Auto-Promote Assistants"] = "Автоповышение до помощников"
