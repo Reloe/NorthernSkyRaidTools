@@ -52,21 +52,6 @@ local function BuildGuildRankOptions(settingKey)
     return options
 end
 
-local function BuildBreakTimerTextureOptions()
-    local options = {}
-    for _, texture in ipairs(NSI.LSM:List("statusbar")) do
-        options[#options + 1] = {
-            label = texture,
-            value = texture,
-            onclick = function(_, _, value)
-                NSRT.BreakTimer.Texture = value
-                NSI:RefreshBreakTimerDisplay()
-            end,
-        }
-    end
-    return options
-end
-
 local function BuildBreakTimerSoundOptions()
     local options = {}
     for _, name in ipairs(NSI:GetOrderedSoundList()) do
@@ -80,6 +65,108 @@ local function BuildBreakTimerSoundOptions()
         }
     end
     return options
+end
+
+function NSI:ToggleBreakTimerSettingsWindow(frame)
+    if not frame then return end
+    if frame.SettingsWindow then
+        frame.SettingsWindow:SetShown(not frame.SettingsWindow:IsShown())
+        return
+    end
+
+    local settings = NSRT.BreakTimer
+    local window = CreateFrame("Frame", "NSRTBreakTimerSettings", frame, "BackdropTemplate")
+    window:SetFrameStrata("DIALOG")
+    window:SetFrameLevel(frame:GetFrameLevel() + 10)
+    window:SetSize(frame:GetWidth() + 16, 100)
+    window:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8",
+        edgeFile = "Interface\\Buttons\\WHITE8x8",
+        edgeSize = 1,
+    })
+    window:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
+    window:SetBackdropBorderColor(0, 1, 1, 0.9)
+    window:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", -8, -11)
+
+    local title = window:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(title, 11, "")
+    title:SetTextColor(0, 1, 1, 0.85)
+    title:SetText(NSI:Loc("Break Timer"))
+    title:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -7)
+
+    local closeButton = CreateFrame("Button", nil, window)
+    closeButton:SetSize(16, 16)
+    closeButton:SetPoint("TOPRIGHT", window, "TOPRIGHT", -3, -3)
+    closeButton:SetNormalFontObject("GameFontNormalSmall")
+    closeButton:SetText("×")
+    closeButton:GetFontString():SetTextColor(0.7, 0.7, 0.7)
+    closeButton:SetScript("OnEnter", function(button) button:GetFontString():SetTextColor(1, 0.3, 0.3) end)
+    closeButton:SetScript("OnLeave", function(button) button:GetFontString():SetTextColor(0.7, 0.7, 0.7) end)
+    closeButton:SetScript("OnClick", function() window:Hide() end)
+
+    local function RefreshDisplay()
+        NSI:RefreshBreakTimerDisplay()
+    end
+
+    local definitions = {
+        { Type = "Button", label = "Reset Position",
+            func = function()
+                settings.Anchor = "CENTER"
+                settings.relativeTo = "CENTER"
+                settings.xOffset = 0
+                settings.yOffset = 200
+                RefreshDisplay()
+            end },
+        { Type = "Slider", label = "Bar Width", min = 100, max = 600,
+            get = function() return settings.Width end,
+            set = function(_, value) settings.Width = value; RefreshDisplay() end },
+        { Type = "Slider", label = "Bar Height", min = 10, max = 80,
+            get = function() return settings.Height end,
+            set = function(_, value) settings.Height = value; RefreshDisplay() end },
+        { Type = "Dropdown", label = "Break Timer Font",
+            get = function() return settings.Font or "Expressway" end,
+            set = function(_, value) settings.Font = value; RefreshDisplay() end,
+            values = function()
+                local values = {}
+                for _, name in ipairs(NSI.LSM:List("font")) do
+                    values[#values + 1] = { label = name, value = name }
+                end
+                return values
+            end },
+        { Type = "Slider", label = "Break Timer Font Size", min = 5, max = 70,
+            get = function() return settings.FontSize end,
+            set = function(_, value) settings.FontSize = value; RefreshDisplay() end },
+        { Type = "Dropdown", label = "Bar Texture",
+            get = function() return settings.Texture end,
+            set = function(_, value) settings.Texture = value; RefreshDisplay() end,
+            values = function()
+                local values = {}
+                for _, name in ipairs(NSI.LSM:List("statusbar")) do
+                    values[#values + 1] = { label = name, value = name }
+                end
+                return values
+            end },
+        { Type = "Color", label = "Bar Color",
+            get = function() return unpack(settings.barColors) end,
+            set = function(_, r, g, b, a) settings.barColors = {r, g, b, a}; RefreshDisplay() end },
+        { Type = "Color", label = "Break Timer Text Color",
+            get = function() return unpack(settings.textColors) end,
+            set = function(_, r, g, b, a) settings.textColors = {r, g, b, a}; RefreshDisplay() end },
+        { Type = "Checkbox", label = "Show Break Meme",
+            get = function() return settings.ShowMeme end,
+            set = function(_, value) settings.ShowMeme = value; RefreshDisplay() end },
+        { Type = "Slider", label = "Meme Size", min = 32, max = 256,
+            get = function() return settings.MemeSize end,
+            set = function(_, value) settings.MemeSize = value; RefreshDisplay() end },
+    }
+
+    local content = CreateFrame("Frame", nil, window)
+    content:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -28)
+    content:SetWidth(window:GetWidth() - 16)
+    local contentHeight = NSI.UI.Components.BuildWidgets(content, definitions, content:GetWidth(), "NSRTBreakTimerSettings")
+    content:SetHeight(contentHeight)
+    window:SetHeight(contentHeight + 36)
+    frame.SettingsWindow = window
 end
 
 local function BuildQoLOptions()
@@ -332,7 +419,7 @@ local function BuildQoLOptions()
             type = "button",
             name = "Invite Guild Members",
             desc =
-            "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group.",
+            "Invite all online guild members at or above the selected Guild Invite Rank who aren't already in your group, and convert your party into a raid group.",
             func = function(self)
                 NSI:InviteOnlineGuildMembers()
             end,
@@ -479,130 +566,6 @@ local function BuildQoLOptions()
                 NSI:SetBreakTimerPreview(not NSI.IsBreakTimerPreview)
             end,
             spacement = true
-        },
-        {
-            type = "button",
-            name = "Reset Position",
-            desc = "Move the Break Timer bar back to its default position.",
-            func = function(self)
-                local settings = NSRT.BreakTimer
-                settings.Anchor = "CENTER"
-                settings.relativeTo = "CENTER"
-                settings.xOffset = 0
-                settings.yOffset = 200
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            spacement = true
-        },
-        {
-            type = "range",
-            name = "Bar Width",
-            desc = "Width of the break timer bar.",
-            get = function() return NSRT.BreakTimer.Width end,
-            set = function(self, fixedparam, value)
-                NSRT.BreakTimer.Width = value
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            min = 100,
-            max = 600,
-        },
-        {
-            type = "range",
-            name = "Bar Height",
-            desc = "Height of the break timer bar.",
-            get = function() return NSRT.BreakTimer.Height end,
-            set = function(self, fixedparam, value)
-                NSRT.BreakTimer.Height = value
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            min = 10,
-            max = 80,
-        },
-        {
-            type = "select",
-            name = "Break Timer Font",
-            desc = "Font for the break timer bar.",
-            get = function() return NSRT.BreakTimer.Font or "Expressway" end,
-            set = function() end,
-            values = function()
-                local options = {}
-                for _, name in ipairs(NSI.LSM:List("font")) do
-                    options[#options + 1] = {
-                        label = name,
-                        value = name,
-                        onclick = function()
-                            NSRT.BreakTimer.Font = name
-                            NSI:RefreshBreakTimerDisplay()
-                        end,
-                    }
-                end
-                return options
-            end,
-        },
-        {
-            type = "range",
-            name = "Break Timer Font Size",
-            desc = "Font size for the break timer bar.",
-            get = function() return NSRT.BreakTimer.FontSize end,
-            set = function(self, fixedparam, value)
-                NSRT.BreakTimer.FontSize = value
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            min = 5,
-            max = 70,
-        },
-        {
-            type = "select",
-            name = "Bar Texture",
-            desc = "Texture of the break timer bar.",
-            get = function() return NSRT.BreakTimer.Texture end,
-            set = function() end,
-            values = BuildBreakTimerTextureOptions,
-        },
-        {
-            type = "color",
-            name = "Bar Color",
-            desc = "Color of the break timer bar.",
-            get = function() return unpack(NSRT.BreakTimer.barColors) end,
-            set = function(_, r, g, b, a)
-                NSRT.BreakTimer.barColors = {r, g, b, a}
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            hasAlpha = true,
-        },
-        {
-            type = "color",
-            name = "Break Timer Text Color",
-            desc = "Color of the text on the break timer bar.",
-            get = function() return unpack(NSRT.BreakTimer.textColors) end,
-            set = function(_, r, g, b, a)
-                NSRT.BreakTimer.textColors = {r, g, b, a}
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            hasAlpha = true,
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
-            name = "Show Break Meme",
-            desc = "Shows a random meme above the break timer bar.",
-            get = function() return NSRT.BreakTimer.ShowMeme end,
-            set = function(self, fixedparam, value)
-                NSRT.BreakTimer.ShowMeme = value
-                NSI:RefreshBreakTimerDisplay()
-            end,
-        },
-        {
-            type = "range",
-            name = "Meme Size",
-            desc = "Size of the meme shown above the break timer bar.",
-            get = function() return NSRT.BreakTimer.MemeSize end,
-            set = function(self, fixedparam, value)
-                NSRT.BreakTimer.MemeSize = value
-                NSI:RefreshBreakTimerDisplay()
-            end,
-            min = 32,
-            max = 256,
         },
         {
             type = "toggle",
