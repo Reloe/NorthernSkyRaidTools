@@ -290,7 +290,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
             end
         end
     end
-    if self.Groups.ProcessStart and now > self.Groups.ProcessStart+15 then self.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
+    if self.Groups.ProcessStart and now > self.Groups.ProcessStart+25 then self.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indexlink = {}
@@ -405,7 +405,7 @@ function NSI:SplitGroupInit(Flex, default, odds, MythicFlex)
     if C_ChatInfo.InChatMessagingLockdown() then print("Addon Messages are currently restricted and thus this action cannot be performed") return end
     if UnitIsGroupAssistant("player") or UnitIsGroupLeader("player") and UnitInRaid("player") then
         local now = GetTime()
-        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
+        if self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 25 then print("there is still a group process going on, please wait") return end
         if not self.LastGroupSort or self.LastGroupSort < now - 5 then
             self.LastGroupSort = GetTime()
             local _, instanceType, difficultyID = GetInstanceInfo()
@@ -594,7 +594,7 @@ end
 
 function NSI:ArrangeFromReminder(str)
     local now = GetTime()
-    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 15 then print("there is still a group process going on, please wait") return end
+    if self.Groups and self.Groups.Processing and self.Groups.ProcessStart and now < self.Groups.ProcessStart + 25 then print("there is still a group process going on, please wait") return end
     if self.LastGroupSort and self.LastGroupSort > now - 5 then
         print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
         return
