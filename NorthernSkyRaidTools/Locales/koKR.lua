@@ -80,6 +80,7 @@ L["  |cFF00FFFF/ns tnote|r or |cFF00FFFF/ns tn|r - Toggle text note"] = "  |cFF0
 L["  |cFF00FFFF/ns timeline|r or |cFF00FFFF/ns tl|r - Toggle timeline window"] = "  |cFF00FFFF/ns timeline|r 또는 |cFF00FFFF/ns tl|r - 타임라인 창 켜기/끄기"
 L["  |cFF00FFFF/ns break <minutes>|r or |cFF00FFFF/ns brb <minutes>|r - Start a raid break timer for everyone in the group, use 0 to cancel it"] = "  |cFF00FFFF/ns break <분>|r 또는 |cFF00FFFF/ns brb <분>|r - 레이드 휴식 타이머가 그룹 내 전원에게 시작됩니다. 취소는 0으로 하면 됩니다"
 L["  |cFF00FFFF/ns invite|r - Invite players from active reminder to group"] = "  |cFF00FFFF/ns invite|r - 활성화된 리마인더에 명시된 플레이어들을 그룹으로 초대합니다"
+L["  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"] = "  |cFF00FFFF/ns inv|r - 접속 중인 길드원을 초대합니다 (편의 기능 탭의 버튼과 같은 기능)"
 L["  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"] = "  |cFF00FFFF/ns arrange|r - 그룹 내 활성화된 리마인더에 명시된 플레이어들을 정렬합니다"
 L["|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."] = "|cFF00FFFFNSRT|r 알 수 없는 명령어입니다. 명령어 목록을 보려면 |cFF00FFFF/ns help|r를 입력하세요."
 -- ============================================================================
