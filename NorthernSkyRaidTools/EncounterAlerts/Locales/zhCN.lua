@@ -186,7 +186,6 @@ L[3455] = {
     ["Soaks"]      = {group = "瓦什尼克", name = "催化胆汁（踩圈）", text = "踩圈"},
     ["Waves"]      = {group = "瓦什尼克", name = "瘟疫泡沫", text = "波浪"},
     ["WaveSpread"] = {group = "瓦什尼克", name = "瘟疫泡沫（分散）", text = "预分散"},
-    ["WavesLine"]  = {group = "瓦什尼克", name = "波浪辅助线", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -217,7 +216,6 @@ L[3420] = {
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
     ["VenomousSurgeTargets"]    = {group = "斯索拉克", name = "剧毒涌动目标"},
-    ["MarkerMap"]    = {group = "斯索拉克", name = "标记地图"},
 }
 
 -- The Twin Fangs (3421)
@@ -285,8 +283,6 @@ L[3492] = {
     ["WrongTarget"]           = {group = "乌拉特克", name = "易伤目标错误", text = "目标错误"},
     ["WaveDirection"]         = {group = "乌拉特克", name = "躲波方向显示", text = ""},
     ["WaveDirectionPrompt"]   = {group = "乌拉特克", name = "躲波方向点宏提醒", text = "点击方向宏"},
-    ["WaveLines"]             = {group = "乌拉特克", name = "P3 波浪辅助线", text = ""},
     ["InterruptAssignments"]  = {group = "乌拉特克", name = "打断分配", text = "打断"},
     ["TransitionPatternSoaks"] = {group = "乌拉特克", name = "转阶段分摊", text = "分摊"},
-    ["TransitionPatternArrow"] = {group = "乌拉特克", name = "转阶段箭头", text = ""},
 }

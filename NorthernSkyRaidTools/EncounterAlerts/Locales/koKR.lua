@@ -186,7 +186,6 @@ L[3455] = {
     ["Soaks"]       = {group = "바쉬니크", name = "바닥 맞기", text = "바닥 맞기"},
     ["Waves"]       = {group = "바쉬니크", name = "물결", text = "물결"},
     ["WaveSpread"] = {group = "바쉬니크", name = "물결 산개", text = "미리 산개"},
-    ["WavesLine"] = {group = "바쉬니크", name = "물결 선", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -217,7 +216,6 @@ L[3420] = {
     ["SerpentsFury"] = {group = "스조라크", name = "뱀의 격노", text = "뭉치기"},
     ["WindsHelper"] = {group = "스조라크", name = "바람 기믹 헬퍼"},
     ["VenomousSurgeTargets"] = {group = "스조라크", name = "디버프 대상"},
-    ["MarkerMap"] = {group = "스조라크", name = "징표 맵"},
 }
 
 -- The Twin Fangs (3421)
@@ -285,8 +283,6 @@ L[3492] = {
     ["WrongTarget"] = {group = "울라텍", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
     ["WaveDirection"] = {group = "울라텍", name = "파도 방향 디스플레이", text = ""},
     ["WaveDirectionPrompt"] = {group = "울라텍", name = "파도 방향 입력", text = "방향 입력"},
-    ["WaveLines"] = {group = "울라텍", name = "3페 파도 선", text = ""},
     ["InterruptAssignments"] = {group = "울라텍", name = "차단 배정", text = "차단"},
     ["TransitionPatternSoaks"] = {group = "울라텍", name = "사이페 바닥 맞기", text = "맞기"},
-    ["TransitionPatternArrow"] = {group = "울라텍", name = "사이페 화살표", text = ""},
 }

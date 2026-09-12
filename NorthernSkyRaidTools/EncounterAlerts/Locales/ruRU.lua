@@ -185,7 +185,6 @@ L[3455] = {
     ["Waves"] = {group = "Вашник", name = "Волны", text = "Волны"},
     ["Soaks"] = {group = "Вашник", name = "Поглощения", text = "Поглощения"},
     ["AoE"] = {group = "Вашник", name = "АоЕ", text = "АоЕ"},
-    ["WavesLine"] = {group = "Вашник", name = "Линия волн", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -216,7 +215,6 @@ L[3420] = {
     ["WindsHelper"] = {group = "Ссзорак", name = "Помощник ветров"},
     ["SerpentsFury"] = {group = "Ссзорак", name = "Змеиное неистовство", text = "Собраться"},
     ["VenomousSurgeTargets"] = {group = "Ссзорак", name = "Дебафф цели"},
-    ["MarkerMap"] = {group = "Ссзорак", name = "Карта меток"},
 }
 
 -- The Twin Fangs (3421)
@@ -284,8 +282,6 @@ L[3492] = {
     ["WrongTarget"] = {group = "Ула'тек", name = "Неверная цель", text = "НЕВЕРНАЯ ЦЕЛЬ"},
     ["WaveDirection"] = {group = "Ула'тек", name = "Отображение направления волны", text = ""},
     ["WaveDirectionPrompt"] = {group = "Ула'тек", name = "Направление волны", text = "Направление"},
-    ["WaveLines"] = {group = "Ула'тек", name = "Линии волн [3-я фаза]", text = ""},
     ["InterruptAssignments"] = {group = "Ула'тек", name = "Назначение прерываний", text = "Прерывания"},
     ["TransitionPatternSoaks"] = {group = "Ула'тек", name = "Поглощения на переходной фазе", text = "Поглощение"},
-    ["TransitionPatternArrow"] = {group = "Ула'тек", name = "Стрелка на переходной фазе", text = ""},
 }
