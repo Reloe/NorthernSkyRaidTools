@@ -188,7 +188,6 @@ L[3455] = {
     ["Soaks"]      = {group = "Vashnik", name = "Soaks", text = "Soaks"},
     ["Waves"]      = {group = "Vashnik", name = "Waves", text = "Waves"},
     ["WaveSpread"] = {group = "Vashnik", name = "Wave-Spread", text = "Pre-Spread"},
-    ["WavesLine"] = {group = "Vashnik", name = "Waves Line", text = ""},
 }
 
 -- The Lost Explorers (3497)
@@ -219,7 +218,6 @@ L[3420] = {
     ["SerpentsFury"] = {group = "Sszorak", name = "Serpent's Fury", text = "Stack Up"},
     ["WindsHelper"]  = {group = "Sszorak", name = "Winds Helper"},
     ["VenomousSurgeTargets"] = {group = "Sszorak", name = "Debuff Targets"},
-    ["MarkerMap"] = {group = "Sszorak", name = "Marker Map"},
 }
 
 -- The Twin Fangs (3421)
@@ -287,8 +285,6 @@ L[3492] = {
     ["WrongTarget"] = {group = "Ula'tek", name = "Wrong Target", text = "WRONG TARGET"},
     ["WaveDirection"] = {group = "Ula'tek", name = "Wave Direction Display", text = ""},
     ["WaveDirectionPrompt"] = {group = "Ula'tek", name = "Wave Direction Input", text = "Input Direction"},
-    ["WaveLines"] = {group = "Ula'tek", name = "P3 Wave lines", text = ""},
     ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
     ["TransitionPatternSoaks"] = {group = "Ula'tek", name = "Transition Soaks", text = "Soak"},
-    ["TransitionPatternArrow"] = {group = "Ula'tek", name = "Transition Arrow", text = ""},
 }
