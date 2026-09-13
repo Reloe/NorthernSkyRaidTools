@@ -94,4 +94,5 @@ NSMedia.BreakMemes = {
     {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ponkyBanane.blp]], 256, 174},
     {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\ponkyDespair.blp]], 256, 166},
     {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\docPog.blp]], 195, 211},
+    {[[Interface\AddOns\NorthernSkyRaidTools\Media\Memes\DocotorioApprovesTheBreak.blp]], 512, 512},
 }
