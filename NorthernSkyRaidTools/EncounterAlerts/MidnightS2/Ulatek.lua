@@ -59,7 +59,7 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         encID = encID,
         phase = self.Phase or 1,
         HideTimer = true,
-        TTS = false,
+        TTS = alert.TTS,
         countdown = false,
         IsAlert = false,
         ReloeReminder = true,
@@ -489,6 +489,9 @@ NSI.InitializeAlerts[encID] = function(self)
         {Type = "Slider", label = NSI:Loc("Duration Seconds"), min = 1, max = 30, step = 1,
             get = [[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection.dur end]],
             set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection.dur = value end]],},
+        {Type = "Checkbox", label = NSI:Loc("Enable TTS"),
+            get = [[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection.TTS == true end]],
+            set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection.TTS = value == true end]],},
     }
     for choiceIndex, choice in ipairs(WaveDirectionTexts) do
         waveDirectionOptions[#waveDirectionOptions + 1] = {
