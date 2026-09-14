@@ -62,6 +62,11 @@ function NSI:IsPTRPatch()
     return interfaceVersion >= 120150
 end
 
+function NSI:IsMidnightSeason3()
+    local interfaceVersion = select(4, GetBuildInfo())
+    return interfaceVersion >= 120200
+end
+
 function NSI:GetPrimaryPhase(phase)
     if type(phase) == "table" then
         local primaryPhase

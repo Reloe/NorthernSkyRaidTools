@@ -448,7 +448,8 @@ local function BuildAuraSoundsUI(parent)
         RaidSeason1 = true,
         RaidSeason2 = false,
         DungeonsSeason1 = true,
-        DungeonsSeason2 = false,
+        DungeonsSeason2 = NSI:IsMidnightSeason3(),
+        DungeonsSeason3 = not NSI:IsMidnightSeason3(),
     }
 
     local categoryRows, sectionRows = {}, {}
@@ -511,16 +512,41 @@ local function BuildAuraSoundsUI(parent)
         local categories = GetAuraSoundCategories(screen.categoryType)
         local sections
         if screen.categoryType == "Raid" or screen.categoryType == "Dungeons" then
-            local current, previous = {}, {}
-            for _, category in ipairs(categories) do
-                local isCurrent = screen.categoryType == "Raid" and NSI.CurrentEncounterIDs[category.key]
-                    or screen.categoryType == "Dungeons" and NSI.CurrentAuraSoundDungeonKeys[category.key]
-                table.insert(isCurrent and current or previous, category)
+            if screen.categoryType == "Dungeons" then
+                local seasons = {{}, {}, {}}
+                for _, category in ipairs(categories) do
+                    local categorySeasons = NSI.AuraSoundDungeonSeasonKeys[category.key] or 1
+                    if type(categorySeasons) == "table" then
+                        for _, season in ipairs(categorySeasons) do
+                            table.insert(seasons[season], category)
+                        end
+                    else
+                        table.insert(seasons[categorySeasons], category)
+                    end
+                end
+                if NSI:IsMidnightSeason3() then
+                    sections = {
+                        {key = "DungeonsSeason3", label = T("Season 3"), categories = seasons[3]},
+                        {key = "DungeonsSeason2", label = T("Season 2"), categories = seasons[2]},
+                        {key = "DungeonsSeason1", label = T("Season 1"), categories = seasons[1]},
+                    }
+                else
+                    sections = {
+                        {key = "DungeonsSeason2", label = T("Season 2"), categories = seasons[2]},
+                        {key = "DungeonsSeason1", label = T("Season 1"), categories = seasons[1]},
+                        {key = "DungeonsSeason3", label = T("Season 3"), categories = seasons[3]},
+                    }
+                end
+            else
+                local current, previous = {}, {}
+                for _, category in ipairs(categories) do
+                    table.insert(NSI.CurrentEncounterIDs[category.key] and current or previous, category)
+                end
+                sections = {
+                    {key = screen.categoryType .. "Season2", label = T("Season 2"), categories = current},
+                    {key = screen.categoryType .. "Season1", label = T("Season 1"), categories = previous},
+                }
             end
-            sections = {
-                {key = screen.categoryType .. "Season2", label = T("Season 2"), categories = current},
-                {key = screen.categoryType .. "Season1", label = T("Season 1"), categories = previous},
-            }
         elseif screen.categoryType == "Custom" then
             sections = {}
             local ungroupedCategories = {}
