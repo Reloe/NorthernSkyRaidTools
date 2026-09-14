@@ -637,6 +637,10 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             label:SetSize(width, height)
             return label, height
         end},
+        {Type = "Checkbox", label = NSI:Loc("Show all Soak timers"),
+            get = [[return function() return NSRT.EncounterAlerts[3492][16].TransitionPatternSoaks.ShowAllSoakTimers == true end]],
+            set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].TransitionPatternSoaks.ShowAllSoakTimers = value == true end]],
+        },
         {Type = "Link", label = NSI:Loc("Copy Group Assignment Image Link"), url = "https://i.imgur.com/kHYHnkv.png", width = 250,
             tooltip = {title = NSI:Loc("Copy Group Assignment Image Link"), desc = "https://i.imgur.com/kHYHnkv.png"}},
         {Type = "Button", label = NSI:Loc("Create Macros"), width = 180,
@@ -657,7 +661,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
     local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
+        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
 
@@ -704,10 +708,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                         if transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert) then
                             local reminderMarker = marker
                             local reminderRemaining = remaining
-                            local reminderDelay = math.max(0, reminderRemaining - 8)
-                            local previousSoak = assignedSoaks[#assignedSoaks - 1]
-                            if previousSoak then
-                                reminderDelay = math.min(reminderDelay, previousSoak.remaining)
+                            local reminderDelay = 0
+                            if not transitionSoakAlert.ShowAllSoakTimers then
+                                reminderDelay = math.max(0, reminderRemaining - 8)
+                                local previousSoak = assignedSoaks[#assignedSoaks - 1]
+                                if previousSoak then
+                                    reminderDelay = math.min(reminderDelay, previousSoak.remaining)
+                                end
                             end
                             local reminderDuration = reminderRemaining - reminderDelay
                             self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(reminderDelay, function()
