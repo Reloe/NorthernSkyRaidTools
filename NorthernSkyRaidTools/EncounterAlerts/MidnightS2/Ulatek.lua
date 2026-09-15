@@ -478,7 +478,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "PrePot", name = "Pre-Pot", text = "Pre-Pot", DisplayType = "Text", encID = encID, TTS = "Pre-Pot", TTSTimer = 2, dur = 8, spellID = 1295132, phase = 1,
-        difficulties = {16},
+        difficulties = {16}, isSpecialDisplay = true,
     }
     self:AddEncounterAlert(data)
 
