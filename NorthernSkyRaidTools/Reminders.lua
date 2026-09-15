@@ -1562,7 +1562,7 @@ function NSI:PlayReminderSound(info, default)
     end
 end
 
-function NSI:StartReminders(phase, testrun)
+function NSI:StartReminders(phase, testrun, startOffset)
     if not testrun then self:LogTimeline("NSRT_PHASE", phase) end
     self:FireCallback("NSRT_PHASE", phase, self.EncounterID, testrun)
     self:HideAllReminders()
@@ -1575,13 +1575,19 @@ function NSI:StartReminders(phase, testrun)
         end
         if not self.ProcessedReminder then self:ProcessReminder() end
         if not self.ProcessedReminder then return end
+        startOffset = startOffset or 0
+        local timerIndex = 0
         for encID, encData in pairs(self.ProcessedReminder) do
-            for i, info in ipairs(encData[phase] or {}) do
-                local time = math.max(info.time-info.dur, 0)
-                info.encID = encID
-                self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                    self:DisplayReminder(info)
-                end)
+            for _, info in ipairs(encData[phase] or {}) do
+                local appearAt = math.max((info.time or 0) - (info.dur or 0), 0)
+                local delay = appearAt - startOffset
+                if delay >= 0 then
+                    timerIndex = timerIndex + 1
+                    info.encID = encID
+                    self.ReminderTimer[timerIndex] = C_Timer.NewTimer(delay, function()
+                        self:DisplayReminder(info)
+                    end)
+                end
             end
         end
         return
