@@ -443,8 +443,6 @@ L["Tank Combo Soaks - Mythic"] = "Tank Combo Soaks - Mythic"
 L["Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."] = "Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."
 L["Tank Combo Soaks - Normal/Heroic"] = "Tank Combo Soaks - Normal/Heroic"
 L["Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."] = "Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."
-L["Coiled Altar Soaks - Mythic"] = "Coiled Altar Soaks - Mythic"
-L["Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."] = "Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."
 L["Coiled Altar Soaks - Heroic"] = "Coiled Altar Soaks - Heroic"
 L["Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."] = "Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."
 -- ============================================================================

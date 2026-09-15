@@ -424,8 +424,6 @@ L["Tank Combo Soaks - Mythic"] = "坦克連擊分傷 - 傳奇"
 L["Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."] = "將第1、2組與第3、4組分開。第一組指派吸收左側，第二組指派吸收右側。坦克不在考慮範圍內。"
 L["Tank Combo Soaks - Normal/Heroic"] = "坦克連擊分傷 - 普通/英雄"
 L["Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."] = "自動將玩家分成兩組角色平衡的隊伍，並指派吸收左側或右側。坦克不在考慮範圍內。"
-L["Coiled Altar Soaks - Mythic"] = "盤蛇祭壇分傷 - 傳奇"
-L["Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."] = "將第1、2組與第3、4組分開。每組僅在其指定施法時吸收，其他施法則不吸收。坦克不在考慮範圍內。"
 L["Coiled Altar Soaks - Heroic"] = "盤繞祭壇分傷 - 英雄"
 L["Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."] = "自動將玩家分成兩組角色平衡的隊伍，並告知在每次施法時是否吸收。坦克不在考慮範圍內。普通模式無此分配。"
 -- ============================================================================

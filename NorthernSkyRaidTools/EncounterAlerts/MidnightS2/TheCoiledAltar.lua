@@ -14,7 +14,6 @@ local p1SoakTimers = {
 
 local p3SoakTimers = {
     [15] = {22.3, 191.3},
-    [16] = {22.3, 191.3},
 }
 
 local debuffCircleFilter = "HARMFUL"
@@ -410,22 +409,17 @@ NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
     local settings = self.Assignments and self.Assignments[encID]
     if not settings or UnitGroupRolesAssigned("player") == "TANK" then return end
 
-    local diff = id or self:DifficultyCheck({15, 16})
-    if not diff or not p1SoakTimers[diff] then return end
+    local diff = id or self:DifficultyCheck({15})
+    if diff ~= 15 then return end
 
     local group
-    if diff == 16 then
-        if not settings.Mythic then return end
-        group = self:GetSubGroup("player") <= 2 and 1 or 2
-    else
-        if not settings.Heroic then return end
-        local _, first = self:GetSortedGroup(true, false, false)
-        group = 2
-        for _, member in ipairs(first) do
-            if UnitIsUnit(member.unitid, "player") then
-                group = 1
-                break
-            end
+    if not settings.Heroic then return end
+    local _, first = self:GetSortedGroup(true, false, false)
+    group = 2
+    for _, member in ipairs(first) do
+        if UnitIsUnit(member.unitid, "player") then
+            group = 1
+            break
         end
     end
     for phase, timers in pairs({[1] = p1SoakTimers[diff], [3] = p3SoakTimers[diff]}) do

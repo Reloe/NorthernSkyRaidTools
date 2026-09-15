@@ -443,8 +443,6 @@ L["Tank Combo Soaks - Mythic"] = "毁伤 - 史诗"
 L["Splits Groups 1&2 and Groups 3&4. The first group is assigned to soak left and the second group to soak right. Tanks are ignored."] = "分配小队1和2在左侧分摊，小队3和4在右侧分摊（忽略坦克）。"
 L["Tank Combo Soaks - Normal/Heroic"] = "毁伤 - 普通/英雄"
 L["Automatically splits players into two role-balanced groups and assigns them to soak left or right. Tanks are ignored."] = "自动按职责均衡拆分为两组，分别在左侧或右侧分摊（忽略坦克）。"
-L["Coiled Altar Soaks - Mythic"] = "处斩 - 史诗"
-L["Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."] = "分配小队1和2分摊第一次处斩，小队3和4分摊第二次（忽略坦克）。"
 L["Coiled Altar Soaks - Heroic"] = "处斩 - 英雄"
 L["Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."] = "自动按职责均衡拆分为两组，各分摊一次处斩（忽略坦克）。"
 -- ============================================================================

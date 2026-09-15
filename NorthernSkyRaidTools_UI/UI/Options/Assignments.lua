@@ -66,20 +66,6 @@ local function BuildAssignmentsOptions()
         {
             type = "toggle",
             boxfirst = true,
-            name = NSI:Loc("Coiled Altar Soaks - Mythic"),
-            desc = NSI:Loc("Splits Groups 1&2 and Groups 3&4. Each group is told to soak only on its assigned cast and not soak on the other cast. Tanks are ignored."),
-            get = function() return NSRT.AssignmentSettings[3429] and NSRT.AssignmentSettings[3429].Mythic end,
-            set = function(self, fixedparam, value)
-                NSRT.AssignmentSettings[3429] = NSRT.AssignmentSettings[3429] or {}
-                NSRT.AssignmentSettings[3429].Mythic = value
-            end,
-            nocombat = true,
-            icontexture = 7966625,
-            iconsize = {16, 16},
-        },
-        {
-            type = "toggle",
-            boxfirst = true,
             name = NSI:Loc("Coiled Altar Soaks - Heroic"),
             desc = NSI:Loc("Automatically splits players into two role-balanced groups and tells them to soak or not soak on each cast. Tanks are ignored. There is no Normal-mode assignment."),
             get = function() return NSRT.AssignmentSettings[3429] and NSRT.AssignmentSettings[3429].Heroic end,
