@@ -445,7 +445,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "AddSoak", name = "Add Soak", text = "Add Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
+    local data = {group = "Ula'tek", internalID = "AddSoak", name = "Add Soak", text = "Add Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1310763, phase = 1,
         difficulties = {16},
         timers = {
             [16] = {38.4, 70.5, 107.8, 140.3, 464.9, 497},
@@ -482,14 +482,14 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "FirstBreak", name = "First Break", text = "First Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
+    local data = {group = "Ula'tek", internalID = "FirstBreak", name = "First Break", text = "First Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1311602, phase = 1,
         timers = {
             [16] = {207},
         },
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "SecondBreak", name = "Second Break", text = "Second Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
+    local data = {group = "Ula'tek", internalID = "SecondBreak", name = "Second Break", text = "Second Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1311602, phase = 1,
         timers = {
             [16] = {215},
         },
