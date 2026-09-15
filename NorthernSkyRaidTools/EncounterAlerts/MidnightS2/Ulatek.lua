@@ -14,7 +14,7 @@ local WaveDirectionTexts = {
     {key = "SecondWaveRightLeft", label = "2nd Wave - Submerge Right, Wave Left", text = "< Left + Dodge"},
     {key = "SecondWaveRightRight", label = "2nd Wave - Submerge Right, Wave Right", text = "Right > + Dodge"},
 }
-local transitionSoakTimes = {337, 339, 343, 345, 349, 351, 353, 355}
+local transitionSoakTimes = {336.3, 338.3, 342.4, 344.4, 348.4, 350.9, 352.9, 354.5}
 local transitionPatterns = {
     CHAT_MSG_YELL = {7, 3, 4, 2, 8, 6, 1, 5},
     CHAT_MSG_RAID = {1, 3, 6, 8, 4, 2, 7, 5},
@@ -59,7 +59,7 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         encID = encID,
         phase = self.Phase or 1,
         HideTimer = true,
-        TTS = false,
+        TTS = alert.TTS,
         countdown = false,
         IsAlert = false,
         ReloeReminder = true,
@@ -335,7 +335,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {14.9, 81.9, 118.9, 377.1, 452.1, 528.1, 617.1, 732.1, 828.1},
-            [16] = {27, 97, 387.1, 472.1, 540.1},
+            [16] = {27, 96.9, 387.2, 472.1, 540.2},
         },
     }
     self:AddEncounterAlert(data)
@@ -343,7 +343,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "Waves", name = "Caustic Wave", text = "Waves", DisplayType = "Text", encID = encID, TTS = "Waves", dur = 5, spellID = 1292403, phase = 1,
         timers = {
             [15] = {48, 100, 416.7, 471.7, 521.7, 566.7},
-            [16] = {56, 113, 426.5, 481.6, 531.8, 575.6},
+            [16] = {56, 113, 426.7, 481.6, 531.7, 575.7},
         },
     }
     self:AddEncounterAlert(data)
@@ -376,7 +376,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {Version = {versionNumber = 1, [1] = {dur = 10}}, group = "Ula'tek", internalID = "PlatformBreak", name = "Circling Prey", text = "Platform Break", DisplayType = "Text", encID = encID, TTS = false, dur = 10, spellID = 1315341, phase = 1,
         timers = {
             [15] = {430.1, 481.2, 542.1},
-            [16] = {440.7, 491.7, 552.7},
+            [16] = {440.2, 491.2, 552.2},
         },
     }
     self:AddEncounterAlert(data)
@@ -400,7 +400,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "AddSoak", name = "Add Soak", text = "Add Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
         difficulties = {16},
         timers = {
-            [16] = {39.6, 72.6, 107.6, 141.6, 465.4, 497.4},
+            [16] = {38.4, 70.5, 107.8, 140.3, 464.9, 497},
         },
     }
     self:AddEncounterAlert(data)
@@ -440,7 +440,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1299010, phase = 1,
         timers = {
             [15] = {28, 30.4, 122.8, 125.6},
-            [16] = {40.3, 43.5, 134.3, 138},
+            [16] = {40.5, 43.7, 134.6, 137.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -489,6 +489,9 @@ NSI.InitializeAlerts[encID] = function(self)
         {Type = "Slider", label = NSI:Loc("Duration Seconds"), min = 1, max = 30, step = 1,
             get = [[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection.dur end]],
             set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection.dur = value end]],},
+        {Type = "Checkbox", label = NSI:Loc("Enable TTS"),
+            get = [[return function() return NSRT.EncounterAlerts[3492][16].WaveDirection.TTS == true end]],
+            set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].WaveDirection.TTS = value == true end]],},
     }
     for choiceIndex, choice in ipairs(WaveDirectionTexts) do
         waveDirectionOptions[#waveDirectionOptions + 1] = {
@@ -637,6 +640,10 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             label:SetSize(width, height)
             return label, height
         end},
+        {Type = "Checkbox", label = NSI:Loc("Show all Soak timers"),
+            get = [[return function() return NSRT.EncounterAlerts[3492][16].TransitionPatternSoaks.ShowAllSoakTimers == true end]],
+            set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].TransitionPatternSoaks.ShowAllSoakTimers = value == true end]],
+        },
         {Type = "Link", label = NSI:Loc("Copy Group Assignment Image Link"), url = "https://i.imgur.com/kHYHnkv.png", width = 250,
             tooltip = {title = NSI:Loc("Copy Group Assignment Image Link"), desc = "https://i.imgur.com/kHYHnkv.png"}},
         {Type = "Button", label = NSI:Loc("Create Macros"), width = 180,
@@ -657,7 +664,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
     local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
+        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
 
@@ -704,10 +711,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                         if transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert) then
                             local reminderMarker = marker
                             local reminderRemaining = remaining
-                            local reminderDelay = math.max(0, reminderRemaining - 8)
-                            local previousSoak = assignedSoaks[#assignedSoaks - 1]
-                            if previousSoak then
-                                reminderDelay = math.min(reminderDelay, previousSoak.remaining)
+                            local reminderDelay = 0
+                            if not transitionSoakAlert.ShowAllSoakTimers then
+                                reminderDelay = math.max(0, reminderRemaining - 8)
+                                local previousSoak = assignedSoaks[#assignedSoaks - 1]
+                                if previousSoak then
+                                    reminderDelay = math.min(reminderDelay, previousSoak.remaining)
+                                end
                             end
                             local reminderDuration = reminderRemaining - reminderDelay
                             self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(reminderDelay, function()
