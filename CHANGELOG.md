@@ -8,3 +8,4 @@
 - add TTS option to wave direction ulatek alert
 - Update Myth Ulatek Timers
 - Make Sszorak marker size scale with text size
+- Add Check for Raid dmg buff
