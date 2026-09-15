@@ -274,6 +274,8 @@ L[3492] = {
     ["AddSoak"]             = {group = "Ула'тек", name = "Поглощение адда", text = "Поглощение адда"},
     ["Adds"]                = {group = "Ула'тек", name = "Адды (3-я фаза)", text = "Адды"},
     ["BossSpawn"]           = {group = "Ула'тек", name = "Появление босса", text = "Появление босса"},
+    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
+    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
     ["Sweep"]               = {group = "Ула'тек", name = "Сбивание", text = "Сбивание"},
     ["Soak"]                = {group = "Ула'тек", name = "Поглощение", text = "Поглощение"},
     ["TransitionSoakFirst"] = {group = "Ула'тек", name = "Первое поглощение", text = "Первое поглощение"},

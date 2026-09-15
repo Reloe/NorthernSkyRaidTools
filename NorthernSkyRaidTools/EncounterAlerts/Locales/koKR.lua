@@ -275,6 +275,8 @@ L[3492] = {
     ["AddSoak"]             = {group = "울라텍", name = "쫄 맞기", text = "쫄 맞기"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
     ["BossSpawn"]           = {group = "울라텍", name = "보스 등장", text = "보스 등장"},
+    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
+    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
     ["Sweep"]               = {group = "울라텍", name = "휩쓸기", text = "휩쓸기"},
     ["Soak"]                = {group = "울라텍", name = "바닥 맞기", text = "맞기"},
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},

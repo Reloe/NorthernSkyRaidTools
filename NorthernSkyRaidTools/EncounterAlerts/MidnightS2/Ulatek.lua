@@ -429,6 +429,20 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Ula'tek", internalID = "FirstBreak", name = "First Break", text = "First Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
+        timers = {
+            [16] = {207},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Ula'tek", internalID = "SecondBreak", name = "Second Break", text = "Second Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
+        timers = {
+            [16] = {215},
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Ula'tek", internalID = "Sweep", name = "Sweep", text = "Sweep", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1296301, phase = 1,
         timers = {
             [15] = {38.9, 90.9},

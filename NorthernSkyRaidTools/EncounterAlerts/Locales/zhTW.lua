@@ -277,6 +277,8 @@ L[3492] = {
     ["AddSoak"]             = {group = "烏拉特克", name = "Add Soak", text = "Add Soak"},
     ["Adds"]                = {group = "烏拉特克", name = "P3 小怪", text = "小怪"},
     ["BossSpawn"]           = {group = "烏拉特克", name = "王出現", text = "王出現"},
+    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
+    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
     ["Sweep"]               = {group = "烏拉特克", name = "大圈", text = "大圈"},
     ["Soak"]                = {group = "烏拉特克", name = "分傷", text = "分傷"},
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},

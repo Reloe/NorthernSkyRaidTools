@@ -275,6 +275,8 @@ L[3492] = {
     ["AddSoak"]             = {group = "乌拉特克", name = "溃烂爆发（分摊）", text = "大怪分摊"},
     ["Adds"]                = {group = "乌拉特克", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
     ["BossSpawn"]           = {group = "乌拉特克", name = "首领刷新", text = "首领刷新"},
+    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
+    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
     ["Sweep"]               = {group = "乌拉特克", name = "恶臭痛击", text = "范围横扫"},
     ["Soak"]                = {group = "乌拉特克", name = "幽魂盘卷（分摊）", text = "分摊"},
     ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "1 分摊"},
