@@ -265,6 +265,7 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "Ула'тек", name = "Гнев матери", text = "Урон + удар"},
     ["Waves"]               = {group = "Ула'тек", name = "Едкие волны", text = "Волны"},
+    -- ["DragOut"]             = {group = "Ula'tek", name = "Drag out", text = "Drag out"},
     ["DamageAmpIn"]         = {group = "Ула'тек", name = "Ядовитое сердце", text = "Усиление урона через"},
     ["DamageAmp"]           = {group = "Ула'тек", name = "Ядовитое сердце", text = "Усиление урона"},
     ["PlatformBreak"]       = {group = "Ула'тек", name = "Обвивание добычи", text = "Разрушение платформы"},

@@ -268,6 +268,7 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "烏拉特克", name = "蛇母之怒", text = "擊退"},
     ["Waves"]               = {group = "烏拉特克", name = "腐蝕波", text = "波"},
+    -- ["DragOut"]             = {group = "Ula'tek", name = "Drag out", text = "Drag out"},
     ["DamageAmpIn"]         = {group = "烏拉特克", name = "劇毒心臟", text = "準備增傷"},
     ["DamageAmp"]           = {group = "烏拉特克", name = "劇毒心臟", text = "增傷"},
     ["PlatformBreak"]       = {group = "烏拉特克", name = "包圍獵物", text = "平台裂開"},

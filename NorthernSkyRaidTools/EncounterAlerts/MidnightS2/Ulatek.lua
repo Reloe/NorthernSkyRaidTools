@@ -396,6 +396,14 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Ula'tek", internalID = "DragOut", name = "Drag out", text = "Drag out", DisplayType = "Text", encID = encID, TTS = false, dur = 5, phase = 1,
+        loadConditions = tankConditions,
+        timers = {
+            [16] = {178.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local UlatekDamageAmpTimers = {
         [15] = {135.4, 284.5, 573.5},
         [16] = {145.4, 294.5, 583.6},
