@@ -478,7 +478,12 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "PrePot", name = "Pre-Pot", text = "Pre-Pot", DisplayType = "Text", encID = encID, TTS = "Pre-Pot", TTSTimer = 2, dur = 8, spellID = 1295132, phase = 1,
-        difficulties = {16}, isSpecialDisplay = true,
+        difficulties = {16}, isSpecialDisplay = true, BlockCopy = true,
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Ula'tek", internalID = "AutoRelease", name = "Auto Release", text = "Auto Release", customIcon = 20484, DisplayType = "Text", encID = encID, TTS = false, dur = 1, phase = 1,
+        difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -1058,6 +1063,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    local difficulty = self:DifficultyCheck({15, 16})
+    local autoReleaseAlert = difficulty and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficulty].AutoRelease
+    if autoReleaseAlert and autoReleaseAlert.enabled and self:EvaluateLoad(autoReleaseAlert) then
+        C_Timer.After(0.5, function()
+            RepopMe()
+        end)
+    end
     StopUlatekWaveDirection(self)
     StopUlatekTransition(self)
     self.UlatekInterruptAlert = nil

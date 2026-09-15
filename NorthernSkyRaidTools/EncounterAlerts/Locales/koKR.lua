@@ -288,4 +288,5 @@ L[3492] = {
     ["InterruptAssignments"] = {group = "울라텍", name = "차단 배정", text = "차단"},
     ["TransitionPatternSoaks"] = {group = "울라텍", name = "사이페 바닥 맞기", text = "맞기"},
     -- ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
+    -- ["AutoRelease"] = {group = "Ula'tek", name = "Auto Release", text = "Auto Release"},
 }
