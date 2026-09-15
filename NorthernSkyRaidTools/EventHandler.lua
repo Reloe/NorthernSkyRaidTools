@@ -14,6 +14,7 @@ f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_ADDED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_REMOVED")
 f:RegisterEvent("ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED")
 f:RegisterEvent("START_PLAYER_COUNTDOWN")
+f:RegisterEvent("CANCEL_PLAYER_COUNTDOWN")
 f:RegisterEvent("GROUP_ROSTER_UPDATE")
 f:RegisterEvent("PLAYER_ENTERING_WORLD")
 f:RegisterEvent("PLAYER_LOGOUT")
@@ -212,7 +213,11 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end)
             end
         end
-    elseif e == "START_PLAYER_COUNTDOWN" and wowevent then -- do basically the same thing as ready check in case one of them is skipped
+    elseif (e == "START_PLAYER_COUNTDOWN" or e == "CANCEL_PLAYER_COUNTDOWN") and wowevent then -- Do basically the same thing as ready check in case one of them is skipped.
+        for _, handler in pairs(self.PreCombatPullTimerHandlers) do
+            handler(self, e, ...)
+        end
+        if e == "CANCEL_PLAYER_COUNTDOWN" then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
         if UnitIsGroupLeader("player") and UnitInRaid("player") then

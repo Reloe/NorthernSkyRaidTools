@@ -289,4 +289,5 @@ L[3492] = {
     ["WaveDirectionPrompt"] = {group = "Ula'tek", name = "Wave Direction Input", text = "Input Direction"},
     ["InterruptAssignments"] = {group = "Ula'tek", name = "Interrupt Assignments", text = "Interrupts"},
     ["TransitionPatternSoaks"] = {group = "Ula'tek", name = "Transition Soaks", text = "Soak"},
+    ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
 }

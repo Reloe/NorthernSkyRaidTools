@@ -286,4 +286,5 @@ L[3492] = {
     ["WaveDirectionPrompt"] = {group = "Ула'тек", name = "Направление волны", text = "Направление"},
     ["InterruptAssignments"] = {group = "Ула'тек", name = "Назначение прерываний", text = "Прерывания"},
     ["TransitionPatternSoaks"] = {group = "Ула'тек", name = "Поглощения на переходной фазе", text = "Поглощение"},
+    -- ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
 }

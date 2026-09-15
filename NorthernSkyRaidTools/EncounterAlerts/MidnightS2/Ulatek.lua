@@ -1,6 +1,8 @@
 local _, NSI = ... -- Internal namespace
 
 local encID = 3492
+local UlatekBossRoomAreaID = 17702
+local PrePotExpiration = 15
 -- /run NSAPI:DebugEncounter(3492)
 
 local GRASPING_FANGS_LEFT = "UlatekGraspingFangsLeftSide"
@@ -30,6 +32,52 @@ local transitionGroupMarkers = {
 local function GetGraspingFangsAlert()
     local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16]
     return diffData and diffData.GraspingFangsOverview
+end
+
+local function StopUlatekPrePot(self)
+    if self.UlatekPrePotTimer then
+        self.UlatekPrePotTimer:Cancel()
+        self.UlatekPrePotTimer = nil
+    end
+    self.UlatekPrePotEndTime = nil
+    if self.UlatekPrePotFrame then
+        self.UlatekPrePotFrame:Hide()
+        self.UlatekPrePotFrame = nil
+    end
+end
+
+local function IsInUlatekBossRoom()
+    return GetMinimapZoneText() == C_Map.GetAreaInfo(UlatekBossRoomAreaID)
+end
+
+NSI.PreCombatPullTimerHandlers[encID] = function(self, event, _, timeRemaining)
+    if event == "CANCEL_PLAYER_COUNTDOWN" then
+        StopUlatekPrePot(self)
+        return
+    end
+    if UnitAffectingCombat("player") or not IsInUlatekBossRoom() then return end
+
+    StopUlatekPrePot(self)
+    local difficulty = self:DifficultyCheck({16})
+    local alert = difficulty and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficulty] and NSRT.EncounterAlerts[encID][difficulty].PrePot
+    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+
+    self.UlatekPrePotEndTime = GetTime() + timeRemaining
+    local duration = math.min(alert.dur, timeRemaining - PrePotExpiration)
+    if duration <= 0 then return end
+    self.UlatekPrePotTimer = C_Timer.NewTimer(timeRemaining - PrePotExpiration - duration, function()
+        local remaining = self.UlatekPrePotEndTime and self.UlatekPrePotEndTime - GetTime() - PrePotExpiration
+        if not remaining or remaining <= 0 or UnitAffectingCombat("player") or not IsInUlatekBossRoom() then return end
+        duration = math.min(alert.dur, remaining)
+        local reminder = CopyTable(alert)
+        reminder.dur = duration
+        reminder.time = duration
+        reminder.phase = 1
+        reminder.IsAlert = false
+        local info = self:CreateReminder(reminder, true)
+        self.UlatekPrePotTimer = nil
+        self.UlatekPrePotFrame = info and self:DisplayReminder(info)
+    end)
 end
 
 -- Each side gets its own subgroup string like "1,2"/"3,4" or "1,3,5,7"/"2,4,6,8"
@@ -429,6 +477,11 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Ula'tek", internalID = "PrePot", name = "Pre-Pot", text = "Pre-Pot", DisplayType = "Text", encID = encID, TTS = "Pre-Pot", TTSTimer = 2, dur = 8, spellID = 1295132, phase = 1,
+        difficulties = {16},
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Ula'tek", internalID = "FirstBreak", name = "First Break", text = "First Break", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
         timers = {
             [16] = {207},
@@ -685,6 +738,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
+    StopUlatekPrePot(self)
     id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     local overviewAlert = diffData and diffData.GraspingFangsOverview

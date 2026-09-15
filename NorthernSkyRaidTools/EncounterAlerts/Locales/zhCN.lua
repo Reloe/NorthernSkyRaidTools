@@ -287,4 +287,5 @@ L[3492] = {
     ["WaveDirectionPrompt"]   = {group = "乌拉特克", name = "躲波方向点宏提醒", text = "点击方向宏"},
     ["InterruptAssignments"]  = {group = "乌拉特克", name = "打断分配", text = "打断"},
     ["TransitionPatternSoaks"] = {group = "乌拉特克", name = "转阶段分摊", text = "分摊"},
+    -- ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
 }
