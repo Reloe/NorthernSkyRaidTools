@@ -14,7 +14,7 @@ local WaveDirectionTexts = {
     {key = "SecondWaveRightLeft", label = "2nd Wave - Submerge Right, Wave Left", text = "< Left + Dodge"},
     {key = "SecondWaveRightRight", label = "2nd Wave - Submerge Right, Wave Right", text = "Right > + Dodge"},
 }
-local transitionSoakTimes = {337, 339, 343, 345, 349, 351, 353, 355}
+local transitionSoakTimes = {336.3, 338.3, 342.4, 344.4, 348.4, 350.9, 352.9, 354.5}
 local transitionPatterns = {
     CHAT_MSG_YELL = {7, 3, 4, 2, 8, 6, 1, 5},
     CHAT_MSG_RAID = {1, 3, 6, 8, 4, 2, 7, 5},
@@ -335,7 +335,7 @@ NSI.InitializeAlerts[encID] = function(self)
         },
         timers = {
             [15] = {14.9, 81.9, 118.9, 377.1, 452.1, 528.1, 617.1, 732.1, 828.1},
-            [16] = {27, 97, 387.1, 472.1, 540.1},
+            [16] = {27, 96.9, 387.2, 472.1, 540.2},
         },
     }
     self:AddEncounterAlert(data)
@@ -343,7 +343,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "Waves", name = "Caustic Wave", text = "Waves", DisplayType = "Text", encID = encID, TTS = "Waves", dur = 5, spellID = 1292403, phase = 1,
         timers = {
             [15] = {48, 100, 416.7, 471.7, 521.7, 566.7},
-            [16] = {56, 113, 426.5, 481.6, 531.8, 575.6},
+            [16] = {56, 113, 426.7, 481.6, 531.7, 575.7},
         },
     }
     self:AddEncounterAlert(data)
@@ -376,7 +376,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {Version = {versionNumber = 1, [1] = {dur = 10}}, group = "Ula'tek", internalID = "PlatformBreak", name = "Circling Prey", text = "Platform Break", DisplayType = "Text", encID = encID, TTS = false, dur = 10, spellID = 1315341, phase = 1,
         timers = {
             [15] = {430.1, 481.2, 542.1},
-            [16] = {440.7, 491.7, 552.7},
+            [16] = {440.2, 491.2, 552.2},
         },
     }
     self:AddEncounterAlert(data)
@@ -400,7 +400,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {group = "Ula'tek", internalID = "AddSoak", name = "Add Soak", text = "Add Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, phase = 1,
         difficulties = {16},
         timers = {
-            [16] = {39.6, 72.6, 107.6, 141.6, 465.4, 497.4},
+            [16] = {38.4, 70.5, 107.8, 140.3, 464.9, 497},
         },
     }
     self:AddEncounterAlert(data)
@@ -440,7 +440,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1299010, phase = 1,
         timers = {
             [15] = {28, 30.4, 122.8, 125.6},
-            [16] = {40.3, 43.5, 134.3, 138},
+            [16] = {40.5, 43.7, 134.6, 137.8},
         },
     }
     self:AddEncounterAlert(data)
