@@ -3067,7 +3067,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             if state.container then
                 state.container:SetEnabled(false)
                 state.container:Hide()
-                state.buttonRegions = nil
             end
             if state.anchorFrame then
                 state.anchorFrame:Hide()
