@@ -280,6 +280,8 @@ L[3492] = {
     ["BossSpawn"]           = {group = "烏拉特克", name = "王出現", text = "王出現"},
     -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
     -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
+    -- ["FirstGate"]           = {group = "Ula'tek", name = "First Gate", text = "Gate"},
+    -- ["SecondGate"]          = {group = "Ula'tek", name = "Second Gate", text = "Gate"},
     ["Sweep"]               = {group = "烏拉特克", name = "大圈", text = "大圈"},
     ["Soak"]                = {group = "烏拉特克", name = "分傷", text = "分傷"},
     ["TransitionSoakFirst"] = {group = "烏拉特克", name = "分傷1", text = "分傷1"},
