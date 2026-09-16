@@ -467,12 +467,12 @@ function NSI:RebuildAuraSounds(updateDefaults)
     end
     for key, info in pairs(NSRT.AuraSounds) do
         if type(info) == "table" and info.sound then
-            self:AddAuraSound(info.spellID, info.sound, key, info.unit, info.eventType)
+            self:AddAuraSound(info.spellID, info.sound, key, info.unit, info.eventType, info.throttleSeconds)
         end
     end
 end
 
-function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType)
+function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSeconds)
     spellID = tonumber(spellID)
     if not spellID then return end
     if self:Restricted() then return end
@@ -490,6 +490,8 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType)
     local soundPath = GetSoundPath(sound)
     if soundPath and soundPath ~= 1 then
         local trigger = AuraSoundEventTriggers[eventType] or AuraSoundEventTriggers.applied
+        throttleSeconds = tonumber(throttleSeconds)
+        if not throttleSeconds or throttleSeconds < 0 then throttleSeconds = 1 end
         local soundIDs = {}
         for _, unitToken in ipairs(units) do
             local soundInfo = {
@@ -498,7 +500,11 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType)
                 soundFileName = soundPath,
                 outputChannel = NSRT.AuraSounds.SoundChannel or "Master",
             }
-            soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
+            if self:IsPTRPatch() then
+                soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo, throttleSeconds)
+            else
+                soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
+            end
         end
         self.AuraSoundIDs[entryKey] = (#soundIDs == 1) and soundIDs[1] or soundIDs
     end
@@ -526,7 +532,7 @@ function NSI:ApplyDefaultAuraSounds(changed, mplus, enabled) -- only registers/u
     end
 end
 
-function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, unit, eventType)
+function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, unit, eventType, throttleSeconds)
     spellID = tonumber(spellID)
     if not spellID then return end
     entryKey = entryKey or self:GetNextAuraSoundKey(spellID, unit, eventType)
@@ -534,6 +540,9 @@ function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, 
     local oldExisting = NSRT.AuraSounds[entryKey]
     unit = unit or (type(oldExisting) == "table" and oldExisting.unit) or "player"
     eventType = eventType or (type(oldExisting) == "table" and oldExisting.eventType) or "applied"
+    if throttleSeconds == nil and type(oldExisting) == "table" then
+        throttleSeconds = oldExisting.throttleSeconds
+    end
 
     NSRT.AuraSounds[entryKey] = {
         spellID = spellID,
@@ -544,7 +553,13 @@ function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, 
         categoryType = categoryType or (type(oldExisting) == "table" and oldExisting.categoryType) or nil,
         categoryKey = categoryKey or (type(oldExisting) == "table" and oldExisting.categoryKey) or nil,
     }
-    self:AddAuraSound(spellID, sound, entryKey, unit, eventType)
+    if throttleSeconds ~= nil then
+        throttleSeconds = tonumber(throttleSeconds)
+        if throttleSeconds and throttleSeconds >= 0 then
+            NSRT.AuraSounds[entryKey].throttleSeconds = throttleSeconds
+        end
+    end
+    self:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSeconds)
     return entryKey
 end
 
