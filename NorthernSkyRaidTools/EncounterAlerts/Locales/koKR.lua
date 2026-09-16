@@ -266,7 +266,7 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "울라텍", name = "어미의 분노", text = "공격+넉백"},
     ["Waves"]               = {group = "울라텍", name = "부식의 파도", text = "파도"},
-    -- ["DragOut"]             = {group = "Ula'tek", name = "Drag out", text = "Drag out"},
+    ["DragOut"]             = {group = "울라텍", name = "쫄 끌고 가기", text = "쫄 끌고 가기"},
     ["DamageAmpIn"]         = {group = "울라텍", name = "곧 약화", text = "곧 약화"},
     ["DamageAmp"]           = {group = "울라텍", name = "약화 타이머", text = "약화됨"},
     ["PlatformBreak"]       = {group = "울라텍", name = "사냥감 포위", text = "바닥 꺼짐"},
@@ -276,8 +276,8 @@ L[3492] = {
     ["AddSoak"]             = {group = "울라텍", name = "쫄 맞기", text = "쫄 맞기"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
     ["BossSpawn"]           = {group = "울라텍", name = "보스 등장", text = "보스 등장"},
-    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
-    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
+    ["FirstBreak"]          = {group = "울라텍", name = "1조 끊기", text = "1조 끊기"},
+    ["SecondBreak"]         = {group = "울라텍", name = "2조 끊기", text = "2조 끊기"},
     ["Sweep"]               = {group = "울라텍", name = "휩쓸기", text = "휩쓸기"},
     ["Soak"]                = {group = "울라텍", name = "바닥 맞기", text = "맞기"},
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
@@ -288,6 +288,6 @@ L[3492] = {
     ["WaveDirectionPrompt"] = {group = "울라텍", name = "파도 방향 입력", text = "방향 입력"},
     ["InterruptAssignments"] = {group = "울라텍", name = "차단 배정", text = "차단"},
     ["TransitionPatternSoaks"] = {group = "울라텍", name = "사이페 바닥 맞기", text = "맞기"},
-    -- ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
-    -- ["AutoRelease"] = {group = "Ula'tek", name = "Auto Release", text = "Auto Release"},
+    ["PrePot"] = {group = "울라텍", name = "시작 전 물약", text = "시작 전 물약"},
+    ["AutoRelease"] = {group = "울라텍", name = "자동 영혼 전환", text = "자동 영혼 전환"},
 }
