@@ -58,6 +58,7 @@ local mythicData = {
         {name = "Volatile Purge", spellID = 1305878, category = "raid damage, raid dot", phase = 1, times = {421.72, 486.7, 589.73}, duration = 15},
         {name = "Circling Prey", spellID = 1315341, category = "raid damage, knock", phase = 1, times = {432.19, 483.19, 544.2, 599}, duration = 0},
         {name = "Acidic Expulsion", spellID = 1313531, category = "raid dot, movement", phase = 1, times = {516.17, 518.21}, duration = 35},
+        {name = "Fester Burst", spellID = 1310763, category = "raid damage, raid dot", phase = 1, times = {35.91, 70.75, 104.78, 139.64, 461.46, 495.52}, duration = 12},
     },
 }
 
