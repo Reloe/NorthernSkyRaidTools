@@ -99,7 +99,7 @@ L[3183] = {
     ["Lura Taunts_P3"]          = {group = "르우라 탱커", name = "2페 도발", text = "도발"},
     ["Full Blaze"]              = {group = "르우라 1사이페", name = "전원 가시", text = "전원 가시"},
     ["Seed-Drop"]               = {group = "르우라 2페", name = "수정 떨구기", text = "수정 떨구기"},
-    ["Old-Seed-Drop"]           = {group = "르우라 2페", name = "무조건 수정 떨구기", text = "수정 떨구기"},
+    ["Old-Seed-Drop"]           = {group = "르우라 2페", name = "수정 떨구기 (특임 아닐때)", text = "수정 떨구기"},
     ["Galvanize"]               = {group = "르우라 2페 바닥 맞기", name = "일반 바닥 맞기", text = "바닥 맞기"},
     ["Soak Star"]               = {group = "르우라 2페 바닥 맞기", name = "별 맞기", text = "{rt1} 맞기"},
     ["Soak Orange"]             = {group = "르우라 2페 바닥 맞기", name = "동글 맞기", text = "{rt2} 맞기"},
@@ -201,8 +201,8 @@ L[3497] = {
     ["MushroomBait"]            = {group = "무역상 스킬", name = "버섯 유도", text = "유도"},
     ["ExplosiveSurprise"]       = {group = "무역상 스킬", name = "폭탄 디버프", text = "폭탄 걸림"},
     ["MushroomJump"]            = {group = "무역상 스킬", name = "버섯 점프", text = "점프"},
-    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던질 타이밍", text = "던질 타이밍"},
-    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던질 타이밍", text = "던질 타이밍"},
+    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던지기", text = "던질 타이밍"},
+    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "물고기 던지기 (특임 아닐때)", text = "던질 타이밍"},
 }
 
 -- Sszorak (3420)
