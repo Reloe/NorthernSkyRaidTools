@@ -144,6 +144,12 @@ function NSI:AddMissingDefaults()
             CustomCategories = {},
             NextCustomCategoryID = 1,
         },
+        AuraGlows = {
+            Custom = {},
+            Builtins = {},
+            UI = {},
+            Groups = {},
+        },
         PhaseTimings = {},
 
         -- Active reminder persistence
@@ -634,6 +640,7 @@ local ignored = {
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
     ["AuraTrackingSettings"] = true,
+    ["AuraGlows"] = true,
     ["AuraSounds"]       = true,
     ["NickNames"]        = true,
 }
@@ -652,6 +659,7 @@ local ProfileSharedDataKeys = {
     EncounterAlerts = true,
     AuraSounds = true,
     AuraTrackingSettings = true,
+    AuraGlows = true,
 }
 
 local function CopyProfileValue(key, value)
@@ -857,6 +865,10 @@ function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name 
             NSI:InitAuraTracking()
             NSI:RefreshAuraTrackingUI()
         end
+        if sharedData.AuraGlows then
+            NSI:RefreshAuraGlows()
+            NSI:RefreshAuraGlowsUI()
+        end
     end
     return name
 end
@@ -934,6 +946,10 @@ function NSAPI:OverrideProfile(importString, name, options)
         if sharedData.AuraTrackingSettings ~= nil then
             NSI:InitAuraTracking()
             NSI:RefreshAuraTrackingUI()
+        end
+        if sharedData.AuraGlows ~= nil then
+            NSI:RefreshAuraGlows()
+            NSI:RefreshAuraGlowsUI()
         end
     end
 

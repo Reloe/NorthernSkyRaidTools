@@ -16,6 +16,7 @@ local AuraTrackingExcludedSpellIDs = {
     [95809] = true, -- Insanity
     [160455] = true, -- Fatigued
 }
+NSI.AuraTrackingExcludedSpellIDs = AuraTrackingExcludedSpellIDs
 NSI.AuraTrackingFilterDefinitions = {
     { key = "Helpful", value = "HELPFUL" },
     { key = "Harmful", value = "HARMFUL" },

@@ -2069,6 +2069,7 @@ function NSI:CacheUnitFrames()
             if UnitIsUnit(unit, "player") then self.UnitFrames.player = frame end
         end
     end
+    self:RebuildAuraGlows()
 end
 
 function NSI:CreateMoveFrames()

@@ -28,6 +28,7 @@ UI\Options\Assignments.lua
 UI\Options\InterruptDisplay.lua
 UI\Options\ReadyCheck.lua
 UI\Options\AuraTracking.lua
+UI\Options\AuraGlows.lua
 UI\Options\PaceComparison.lua
 UI\Options\QoL.lua
 UI\Options\WAImports.lua

@@ -52,6 +52,7 @@ local BuildReadyCheckOptions       = NSI.UI.Options.ReadyCheck.BuildOptions
 local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
 local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking.BuildUI
+local BuildAuraGlowsUI           = NSI.UI.Options.AuraGlows.BuildUI
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
@@ -86,6 +87,9 @@ local TABS_GROUPS                  = {
     },
 }
 table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
+if NSI:IsPTRPatch() then
+    table.insert(TABS_GROUPS[3], 3, { name = "AuraGlows", textKey = "Aura Glows" })
+end
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
@@ -358,6 +362,7 @@ function NSUI:Init()
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
     local aurasounds_tab          = tabSystem:GetTabFrameByName("AuraSounds")
     local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
+    local auraglows_tab         = tabSystem:GetTabFrameByName("AuraGlows")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = tabSystem:GetTabFrameByName("QoL")
     -- local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
@@ -446,6 +451,10 @@ function NSUI:Init()
     coroutine.yield()
     NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
     coroutine.yield()
+    if auraglows_tab then
+        NSUI.auraglows_frame = BuildAuraGlowsUI(auraglows_tab)
+        coroutine.yield()
+    end
     NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
     DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,

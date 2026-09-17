@@ -49,6 +49,7 @@ ReadyCheck.lua
 ReadyCheckConsumables.lua
 AuraSounds.lua
 AuraTracking.lua
+AuraGlows.lua
 PaceComparison.lua
 QoL.lua
 QoLDisplay.lua
