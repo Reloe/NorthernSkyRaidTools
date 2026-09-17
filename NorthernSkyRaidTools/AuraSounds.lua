@@ -499,8 +499,9 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSec
                 spellID = spellID,
                 soundFileName = soundPath,
                 outputChannel = NSRT.AuraSounds.SoundChannel or "Master",
+                throttleSeconds = throttleSeconds,
             }
-            soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo, throttleSeconds)
+            soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
         end
         self.AuraSoundIDs[entryKey] = (#soundIDs == 1) and soundIDs[1] or soundIDs
     end
