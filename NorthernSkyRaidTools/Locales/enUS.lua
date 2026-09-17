@@ -678,6 +678,7 @@ L["Hide Duration Text"] = "Hide Duration Text"
 -- ============================================================================
 L["Aura Sounds"] = "Aura Sounds"
 L["Aura Glows"] = "Aura Glows"
+L["Gloombomb/Orb/Guillotine Glow"] = "Gloombomb/Orb/Guillotine Glow"
 L["|cFF00FFFFAura|r Glows"] = "|cFF00FFFFAura|r Glows"
 L["Create Aura Glow"] = "Create Aura Glow"
 L["Glow Appearance"] = "Glow Appearance"

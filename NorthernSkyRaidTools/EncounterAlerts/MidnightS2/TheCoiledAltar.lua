@@ -18,6 +18,14 @@ local p3SoakTimers = {
 
 local debuffCircleFilter = "HARMFUL"
 local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5}
+local gloombombOrbGuillotineGlowKey = "CoiledAltarGloombombOrbGuillotine"
+
+NSI:RegisterBuiltinAuraGlow(gloombombOrbGuillotineGlowKey, {
+    name = NSI:Loc("Gloombomb/Orb/Guillotine Glow"),
+    encounterID = encID,
+    roles = {HEALER = true},
+    candidateFilters = debuffCircleCandidateFilters,
+})
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
@@ -343,8 +351,16 @@ function NSI:UpdateCoiledAltarDebuffCircle()
     local alert = self.CoiledAltarDebuffCircleAlert
     if not alert then return end
 
-    local shown = alert.enabled and self:EvaluateLoad(alert) and self.Phase ~= 2.5
+    local shown = alert.enabled and self:EvaluateLoad(alert) and self.Phase ~= 2.5 and not self.CoiledAltarPhase3DelayPending
     self:UpdateAuraContainerCircle("CoiledAltarDebuffCircleContainer", "CoiledAltarDebuffCircleAuraSlot", alert, shown)
+end
+
+local function CancelCoiledAltarPhase3Delay(self)
+    if self.CoiledAltarPhase3DelayTimer then
+        self.CoiledAltarPhase3DelayTimer:Cancel()
+        self.CoiledAltarPhase3DelayTimer = nil
+    end
+    self.CoiledAltarPhase3DelayPending = nil
 end
 
 local function HideCoiledAltarWrongTarget(self)
@@ -1068,6 +1084,7 @@ local function ArmCoiledAltarEternalNightfall(self, phase)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
+    CancelCoiledAltarPhase3Delay(self)
     id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     self.CoiledAltarInterruptAlert = diffData and diffData.InterruptAssignments
@@ -1176,6 +1193,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.Phase = 2.5
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
+        self:DeactivateBuiltinAuraGlow(gloombombOrbGuillotineGlowKey)
         self:UpdateCoiledAltarDebuffCircle()
         local alert = self.CoiledAltarWrongTargetAlert
         if alert and alert.enabled and self:EvaluateLoad(alert) then
@@ -1190,6 +1208,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    CancelCoiledAltarPhase3Delay(self)
     HideCoiledAltarWrongTarget(self)
     self:HideAuraContainerCircle("CoiledAltarDebuffCircleContainer")
     self:HideReminderCirclePreview("CoiledAltarDebuffCirclePreview")
@@ -1236,7 +1255,15 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         SetCoiledAltarInterruptPhase(self, true)
         HideCoiledAltarWrongTarget(self)
         ArmCoiledAltarEternalNightfall(self, 3)
+        self.CoiledAltarPhase3DelayPending = true
         self:UpdateCoiledAltarDebuffCircle()
+        self.CoiledAltarPhase3DelayTimer = C_Timer.NewTimer(6, function()
+            self.CoiledAltarPhase3DelayTimer = nil
+            self.CoiledAltarPhase3DelayPending = nil
+            if self.EncounterID ~= encID or self.Phase ~= 3 then return end
+            self:ActivateBuiltinAuraGlow(gloombombOrbGuillotineGlowKey)
+            self:UpdateCoiledAltarDebuffCircle()
+        end)
         return
     end
 

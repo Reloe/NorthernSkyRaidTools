@@ -135,7 +135,7 @@ function NSI:GetAuraGlowSettings(key)
                 EncounterID = definition.encounterID,
                 AuraFilters = CopyTable(definition.auraFilters or {}),
                 CandidateFilters = CopyTable(definition.candidateFilters or {}),
-                loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {[definition.encounterID] = true} },
+                loadConditions = { Roles = CopyTable(definition.roles or {}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {[definition.encounterID] = true} },
             })
             NSRT.AuraGlows.Builtins[key] = settings
         end
