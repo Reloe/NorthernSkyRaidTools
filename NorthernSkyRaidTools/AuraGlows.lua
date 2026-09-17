@@ -117,20 +117,22 @@ end
 
 function NSI:RegisterBuiltinAuraGlow(key, definition)
     assert(type(key) == "string" and key ~= "", "built-in aura glow key must be a non-empty string")
-    assert(type(definition) == "table" and tonumber(definition.encounterID), "built-in aura glow requires one encounter ID")
+    assert(type(definition) == "table", "built-in aura glow requires a definition")
     self.AuraGlowBuiltins[key] = definition
 end
 
 local function CreateBuiltinAuraGlowSettings(self, key)
     local definition = self.AuraGlowBuiltins[key]
+    local encounterIDs = {}
+    if definition.encounterID then encounterIDs[definition.encounterID] = true end
     return self:CreateAuraGlowSettingsDefaults({
         Name = definition.name or key,
-        enabled = definition.enabled ~= false,
+        enabled = definition.enabled == true,
         builtin = true,
-        EncounterID = definition.encounterID,
+        Color = definition.color and CopyTable(definition.color) or nil,
         AuraFilters = CopyTable(definition.auraFilters or {}),
         CandidateFilters = CopyTable(definition.candidateFilters or {}),
-        loadConditions = { Roles = CopyTable(definition.roles or {}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {[definition.encounterID] = true} },
+        loadConditions = { Roles = CopyTable(definition.roles or {}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = encounterIDs },
     })
 end
 
