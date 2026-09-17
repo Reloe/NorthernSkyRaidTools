@@ -131,6 +131,8 @@ NSI.AuraSoundCategories = {
             {spellID = 1311611, sound = "Break"}, -- Grasping Fangs
         }},
         {key = 3513, entries = { -- Kith'ix
+            {spellID = 1304045, sound = "RunOut"}, -- Unspeakable Horrors
+            {spellID = 1304526, sound = "Safe"}, -- Light's Embrace
         }},
     },
     Dungeons = {
