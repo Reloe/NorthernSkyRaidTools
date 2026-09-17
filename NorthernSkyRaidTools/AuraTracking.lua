@@ -2273,68 +2273,78 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
     local subgroupFilter = BuildDebuffOverviewSubgroupFilter(overrides and overrides.subgroups)
     local containerStates = {}
 
-    for raidIndex = 1, 30 do
-        local unit = "raid" .. raidIndex
-        local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
-        for copyIndex = 1, copies do
-            local height = overrides and overrides.height or settings.Height
-            local state = {
-                unit = unit,
-                raidIndex = raidIndex,
-                subgroups = subgroupFilter,
-                sortByRole = overrides and overrides.sortByRole == true,
-                showInactive = overrides and overrides.showInactive == true,
-                inactiveColors = overrides and overrides.inactiveColors,
-                displayName = displayName,
-                invertFill = invertFill == true,
-                useBarColorAsBackground = useBarColorAsBackground == true,
-                useApplicationBar = useApplicationBar == true,
-                maxApplications = maxApplications or 1,
-                height = overrides and overrides.height,
-                barColors = overrides and overrides.barColors,
-                backgroundColors = overrides and overrides.backgroundColors,
-                sortByDuration = sortByDuration == true,
-                buttonRegions = {},
-            }
-            local container = CreateFrame(
-                "AuraContainer",
-                nil,
-                self.NSRTFrame,
-                "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate"
-            )
-            state.container = container
-            container:SetFrameStrata("HIGH")
-            container:SetSize(settings.Width + height, height)
-            container:SetUnit(unit)
-            container:SetFlowLayoutAxis(flowAxis)
-            container:SetFlowLayoutAnchorPoint(flowAnchor)
-            container:SetFlowLayoutGrowthDirection(flowHorizontal, flowVertical)
-            container:AddAuraGroup("DebuffOverview", regularFilter, {
-                maxFrameCount = frameCount,
-                sortMethod = state.sortByDuration and AuraContainerSortMethod.ExpirationOnly or (state.useApplicationBar and AuraContainerSortMethod.AuraInstanceIDOnly or nil),
-                sortDirection = state.sortByDuration and AuraContainerSortDirection.Reverse or (state.useApplicationBar and AuraContainerSortDirection.Normal or nil),
-                candidateFilters = candidateFilters or {},
-                initializeFrame = function(button)
-                    ConfigureDebuffOverviewButton(self, state, button, unit)
-                end,
-                layout = {
-                    elementWidth = settings.Width + height,
-                    elementHeight = height,
-                    elementSpacing = 0,
-                    lineSpacing = 0,
-                },
-            })
-            container:Hide()
-            container:SetEnabled(false)
-            if state.showInactive then EnsureDebuffOverviewBaseRow(self, state) end
-            containerStates[#containerStates + 1] = state
-        end
-    end
     if not self.DebuffOverviewContainerSetsByName[containerName] then
         self.DebuffOverviewContainerOrder[#self.DebuffOverviewContainerOrder + 1] = containerName
     end
     self.DebuffOverviewContainerSetsByName[containerName] = containerStates
-    self:LayoutDebuffOverviewSets()
+    local nextRaidIndex = 1
+    local function CreateContainerBatch()
+        local lastRaidIndex = math.min(nextRaidIndex + 3, 30)
+        for raidIndex = nextRaidIndex, lastRaidIndex do
+            local unit = "raid" .. raidIndex
+            local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
+            for copyIndex = 1, copies do
+                local height = overrides and overrides.height or settings.Height
+                local state = {
+                    unit = unit,
+                    raidIndex = raidIndex,
+                    subgroups = subgroupFilter,
+                    sortByRole = overrides and overrides.sortByRole == true,
+                    showInactive = overrides and overrides.showInactive == true,
+                    inactiveColors = overrides and overrides.inactiveColors,
+                    displayName = displayName,
+                    invertFill = invertFill == true,
+                    useBarColorAsBackground = useBarColorAsBackground == true,
+                    useApplicationBar = useApplicationBar == true,
+                    maxApplications = maxApplications or 1,
+                    height = overrides and overrides.height,
+                    barColors = overrides and overrides.barColors,
+                    backgroundColors = overrides and overrides.backgroundColors,
+                    sortByDuration = sortByDuration == true,
+                    buttonRegions = {},
+                }
+                local container = CreateFrame(
+                    "AuraContainer",
+                    nil,
+                    self.NSRTFrame,
+                    "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate"
+                )
+                state.container = container
+                container:SetFrameStrata("HIGH")
+                container:SetSize(settings.Width + height, height)
+                container:SetUnit(unit)
+                container:SetFlowLayoutAxis(flowAxis)
+                container:SetFlowLayoutAnchorPoint(flowAnchor)
+                container:SetFlowLayoutGrowthDirection(flowHorizontal, flowVertical)
+                container:AddAuraGroup("DebuffOverview", regularFilter, {
+                    maxFrameCount = frameCount,
+                    sortMethod = state.sortByDuration and AuraContainerSortMethod.ExpirationOnly or (state.useApplicationBar and AuraContainerSortMethod.AuraInstanceIDOnly or nil),
+                    sortDirection = state.sortByDuration and AuraContainerSortDirection.Reverse or (state.useApplicationBar and AuraContainerSortDirection.Normal or nil),
+                    candidateFilters = candidateFilters or {},
+                    initializeFrame = function(button)
+                        ConfigureDebuffOverviewButton(self, state, button, state.unit)
+                    end,
+                    layout = {
+                        elementWidth = settings.Width + height,
+                        elementHeight = height,
+                        elementSpacing = 0,
+                        lineSpacing = 0,
+                    },
+                })
+                container:Hide()
+                container:SetEnabled(false)
+                if state.showInactive then EnsureDebuffOverviewBaseRow(self, state) end
+                containerStates[#containerStates + 1] = state
+            end
+        end
+        nextRaidIndex = lastRaidIndex + 1
+        if nextRaidIndex <= 30 then
+            C_Timer.After(0, CreateContainerBatch)
+        else
+            self:LayoutDebuffOverviewSets()
+        end
+    end
+    C_Timer.After(0, CreateContainerBatch)
     return containerStates
 end
 
@@ -3067,7 +3077,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             if state.container then
                 state.container:SetEnabled(false)
                 state.container:Hide()
-                state.buttonRegions = nil
             end
             if state.anchorFrame then
                 state.anchorFrame:Hide()

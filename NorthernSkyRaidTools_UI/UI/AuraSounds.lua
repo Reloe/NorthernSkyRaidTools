@@ -218,6 +218,7 @@ local function PrepareAuraSoundData(screen)
                         unit = unit,
                         eventType = eventType,
                         sound = StripSoundColor(sound),
+                        throttleSeconds = type(saved) == "table" and saved.throttleSeconds or nil,
                         defaultSound = StripSoundColor(defaultSound),
                         isDefault = defaultSound ~= nil,
                         edited = type(saved) == "table" and saved.edited,
@@ -242,6 +243,7 @@ local function PrepareAuraSoundData(screen)
                     unit = info.unit or "player",
                     eventType = info.eventType or "applied",
                     sound = StripSoundColor(info.sound),
+                    throttleSeconds = info.throttleSeconds,
                     defaultSound = nil,
                     isDefault = false,
                     edited = true,
@@ -986,6 +988,7 @@ local function BuildAuraSoundsUI(parent)
     AddColumnHeader("UnitID", 321, 60)
     AddColumnHeader("Event Type", 380, 92)
     AddColumnHeader("Sound", 470, 130)
+    AddColumnHeader("Throttle", 600, 60)
 
     local ROW_HEIGHT = 20
     local auraRows = {}
@@ -1035,7 +1038,7 @@ local function BuildAuraSoundsUI(parent)
             end
             entry.unit = value ~= "" and value or "player"
             local sound = entry.deleted and nil or entry.sound
-            NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType)
+            NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType, entry.throttleSeconds)
             RefreshAuraScrollbox()
         end, 60, 20)
         row.unitEntry:SetPoint("LEFT", row.defaultText, "RIGHT", 5, 0)
@@ -1050,7 +1053,7 @@ local function BuildAuraSoundsUI(parent)
                     if not entry or entry.isDefault then return end
                     entry.eventType = value or "applied"
                     local sound = entry.deleted and nil or entry.sound
-                    NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType)
+                    NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType, entry.throttleSeconds)
                     RefreshAuraScrollbox()
                 end
             end
@@ -1069,7 +1072,7 @@ local function BuildAuraSoundsUI(parent)
                     local entry = row.entry
                     if not entry then return end
                     local sound = value ~= "__NONE__" and value or nil
-                    NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType)
+                    NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType, entry.throttleSeconds)
                     RefreshAuraScrollbox()
                 end
             end
@@ -1078,6 +1081,22 @@ local function BuildAuraSoundsUI(parent)
             return GetSoundDisplayLabel(row.entry and not row.entry.deleted and row.entry.sound or nil)
         end, 130, 20, nil, nil, nil, nil, true)
         row.soundDropdown:SetPoint("LEFT", row.eventDropdown.frame, "RIGHT", -1, 0)
+
+        row.throttleEntry = NSI.UI.Components.CreateTextEntry(row, nil, function()
+            return row.entry and row.entry.throttleSeconds or 1
+        end, function(_, value)
+            local entry = row.entry
+            local throttleSeconds = tonumber(value)
+            if not entry or not throttleSeconds or throttleSeconds < 0 then
+                row.throttleEntry:SetValue(entry and entry.throttleSeconds or 1)
+                return
+            end
+            entry.throttleSeconds = throttleSeconds
+            local sound = entry.deleted and nil or entry.sound
+            NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType, throttleSeconds)
+            RefreshAuraScrollbox()
+        end, 60, 20)
+        row.throttleEntry:SetPoint("LEFT", row.soundDropdown.frame, "RIGHT", -1, 0)
 
         row.deleteButton = CreateFrame("Button", nil, row)
         row.deleteButton:SetSize(16, 16)
@@ -1128,6 +1147,7 @@ local function BuildAuraSoundsUI(parent)
         row.defaultText:SetText(entry.deleted and T("Deleted") or (entry.edited and T("Edited") or T("Default")))
         row.icon:SetTexture(C_Spell.GetSpellTexture(entry.spellID) or 134400)
         row.unitEntry:SetValue(entry.unit or "player")
+        row.throttleEntry:SetValue(entry.throttleSeconds or 1)
         if entry.isDefault then
             row.unitEntry:Disable()
             row.eventDropdown:Disable()
