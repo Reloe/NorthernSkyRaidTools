@@ -25,6 +25,7 @@ local currentEncounterIDs = {
     3421, -- The Twin Fangs
     3429, -- The Coiled Altar
     3492, -- Ula'tek
+    3513, -- Kith'ix
 }
 
 NSI.CurrentEncounterIDList = currentEncounterIDs
@@ -66,6 +67,7 @@ NSI.BossNames = {
     [3421] = "The Twin Fangs",
     [3429] = "The Coiled Altar",
     [3492] = "Ula'tek",
+    [3513] = "Kith'ix",
 }
 
 -- UI-only deletion policy remains with the UI boss-data module.

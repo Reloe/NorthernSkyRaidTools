@@ -79,6 +79,7 @@ EncounterAlerts/MidnightS2/Sszorak.lua
 EncounterAlerts/MidnightS2/TheTwinFangs.lua
 EncounterAlerts/MidnightS2/TheCoiledAltar.lua
 EncounterAlerts/MidnightS2/Ulatek.lua
+EncounterAlerts/MidnightS2/Kithix.lua
 
 # Encounter Alerts Localization
 EncounterAlerts\Locales\Core.lua

@@ -292,3 +292,8 @@ L[3492] = {
     ["PrePot"] = {group = "Ула'тек", name = "Препот", text = "Препот"},
     ["AutoRelease"] = {group = "Ула'тек", name = "Автоматическое воскрешение", text = "Автоматическое воскрешение"},
 }
+
+-- Kith'ix (3513)
+L[3513] = {
+    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+}
