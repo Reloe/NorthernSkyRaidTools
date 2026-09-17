@@ -837,7 +837,7 @@ local function BuildAuraTrackingUI(screen)
                 row:Show()
 
                 local settings = item.settings
-                local willLoad = NSI:EvaluateLoad(settings)
+                local willLoad = NSI:EvaluateLoad(settings, true)
                 if selectedKey == item.settingsKey then
                     row.__background:SetVertexColor(0, 1, 1); row.__background:SetAlpha(1)
                 else
@@ -1883,17 +1883,19 @@ local function BuildAuraTrackingUI(screen)
         end
 
         local y = 0
-        local encounterData = BossData.BuildBossDropdownOptions(nil, false)
-        y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSel(cond.EncounterIDs))
-        if not loadCollapsed.Encounters then
-            for _, encounter in ipairs(encounterData) do
-                local encounterID = encounter.value
-                y = AddCheck(y, encounter.label, cond.EncounterIDs[encounterID],
-                    function() cond.EncounterIDs[encounterID] = (not cond.EncounterIDs[encounterID]) or nil end,
-                    0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+        if not s.builtin then
+            local encounterData = BossData.BuildBossDropdownOptions(nil, false)
+            y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSel(cond.EncounterIDs))
+            if not loadCollapsed.Encounters then
+                for _, encounter in ipairs(encounterData) do
+                    local encounterID = encounter.value
+                    y = AddCheck(y, encounter.label, cond.EncounterIDs[encounterID],
+                        function() cond.EncounterIDs[encounterID] = (not cond.EncounterIDs[encounterID]) or nil end,
+                        0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+                end
             end
+            y = y + 4
         end
-        y = y + 4
         -- Roles
         y = LoadSection(y, "Roles", NSI:Loc("Roles (leave all unchecked for any role)"), CountSel(cond.Roles))
         if not loadCollapsed.Roles then

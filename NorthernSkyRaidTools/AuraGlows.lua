@@ -121,28 +121,41 @@ function NSI:RegisterBuiltinAuraGlow(key, definition)
     self.AuraGlowBuiltins[key] = definition
 end
 
+local function CreateBuiltinAuraGlowSettings(self, key)
+    local definition = self.AuraGlowBuiltins[key]
+    return self:CreateAuraGlowSettingsDefaults({
+        Name = definition.name or key,
+        enabled = definition.enabled ~= false,
+        builtin = true,
+        EncounterID = definition.encounterID,
+        AuraFilters = CopyTable(definition.auraFilters or {}),
+        CandidateFilters = CopyTable(definition.candidateFilters or {}),
+        loadConditions = { Roles = CopyTable(definition.roles or {}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {[definition.encounterID] = true} },
+    })
+end
+
 function NSI:GetAuraGlowSettings(key)
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     if self.AuraGlowBuiltins[key] then
         NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
         local settings = NSRT.AuraGlows.Builtins[key]
         if not settings then
-            local definition = self.AuraGlowBuiltins[key]
-            settings = self:CreateAuraGlowSettingsDefaults({
-                Name = definition.name or key,
-                enabled = definition.enabled ~= false,
-                builtin = true,
-                EncounterID = definition.encounterID,
-                AuraFilters = CopyTable(definition.auraFilters or {}),
-                CandidateFilters = CopyTable(definition.candidateFilters or {}),
-                loadConditions = { Roles = CopyTable(definition.roles or {}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {[definition.encounterID] = true} },
-            })
+            settings = CreateBuiltinAuraGlowSettings(self, key)
             NSRT.AuraGlows.Builtins[key] = settings
         end
         return settings
     end
     local index = tonumber(tostring(key):match("^Custom:(%d+)$"))
     return index and NSRT.AuraGlows.Custom and NSRT.AuraGlows.Custom[index]
+end
+
+function NSI:ResetBuiltinAuraGlow(key)
+    assert(self.AuraGlowBuiltins[key], "unknown built-in aura glow: " .. tostring(key))
+    NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
+    NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
+    NSRT.AuraGlows.Builtins[key] = CreateBuiltinAuraGlowSettings(self, key)
+    self:RebuildAuraGlows()
+    self:RefreshAuraGlowPreview(key)
 end
 
 function NSI:IterateAuraGlowEntries()
@@ -211,6 +224,7 @@ end
 function NSI:DeleteCustomAuraGlow(key)
     local index = tonumber(tostring(key):match("^Custom:(%d+)$"))
     if not index or not NSRT.AuraGlows.Custom[index] then return end
+    self:HideAuraGlowPreview(false)
     table.remove(NSRT.AuraGlows.Custom, index)
     self:InitAuraGlows()
 end
@@ -236,6 +250,7 @@ function NSI:AddAuraGlowSpellIDs(key, value)
     end
     table.sort(settings.SpellIDs)
     self:RebuildAuraGlows()
+    self:RefreshAuraGlowPreview(key)
 end
 
 function NSI:RemoveAuraGlowSpellID(key, spellID)
@@ -246,6 +261,7 @@ function NSI:RemoveAuraGlowSpellID(key, spellID)
         if tonumber(value) == spellID then
             table.remove(settings.SpellIDs, index)
             self:RebuildAuraGlows()
+            self:RefreshAuraGlowPreview(key)
             return
         end
     end
@@ -302,7 +318,43 @@ function NSI:DeactivateBuiltinAuraGlow(key)
     self:SetBuiltinAuraGlowActive(key, false)
 end
 
-local function CreateAuraGlowBorder(button, settings)
+local function CreateAuraGlowIcon(button, settings, texture)
+    local icon = button:CreateTexture(nil, "ARTWORK")
+    local iconSize = settings.IconSize or 20
+    icon:SetSize(iconSize, iconSize)
+    icon:SetPoint("CENTER", button, "CENTER")
+    icon:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)
+    icon:SetAlpha(settings.ShowIcon and 1 or 0)
+    if texture then icon:SetTexture(texture) end
+    if settings.ShowIcon then
+        local iconBorder = {
+            top = button:CreateTexture(nil, "OVERLAY"),
+            bottom = button:CreateTexture(nil, "OVERLAY"),
+            left = button:CreateTexture(nil, "OVERLAY"),
+            right = button:CreateTexture(nil, "OVERLAY"),
+        }
+        for _, borderTexture in pairs(iconBorder) do
+            borderTexture:ClearAllPoints()
+            borderTexture:SetColorTexture(0, 0, 0, 1)
+            borderTexture:Show()
+        end
+        iconBorder.top:SetPoint("TOPLEFT", icon, "TOPLEFT", 0, 0)
+        iconBorder.top:SetPoint("TOPRIGHT", icon, "TOPRIGHT", 0, 0)
+        iconBorder.top:SetHeight(1)
+        iconBorder.bottom:SetPoint("BOTTOMLEFT", icon, "BOTTOMLEFT", 0, 0)
+        iconBorder.bottom:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0, 0)
+        iconBorder.bottom:SetHeight(1)
+        iconBorder.left:SetPoint("TOPLEFT", icon, "TOPLEFT", 0, 0)
+        iconBorder.left:SetPoint("BOTTOMLEFT", icon, "BOTTOMLEFT", 0, 0)
+        iconBorder.left:SetWidth(1)
+        iconBorder.right:SetPoint("TOPRIGHT", icon, "TOPRIGHT", 0, 0)
+        iconBorder.right:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0, 0)
+        iconBorder.right:SetWidth(1)
+    end
+    return icon
+end
+
+local function CreateAuraGlowBorder(button, settings, preview)
     local border = CreateFrame("Frame", nil, button)
     border:SetPoint("TOPLEFT", button, "TOPLEFT", 0.05, 0.05)
     border:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0.05)
@@ -475,12 +527,77 @@ local function CreateAuraGlowBorder(button, settings)
                 startIndex = followingIndex
             end
         end
-        button:AddAuraShownAnimation(animationGroup)
+        if preview then
+            animationGroup:Play()
+        else
+            button:AddAuraShownAnimation(animationGroup)
+        end
     end
 
     for index = 0, numberOfLines - 1 do
         AddPixelGlowRunner(perimeter * index / numberOfLines)
     end
+end
+
+function NSI:IsAuraGlowPreviewActive(key)
+    return self.AuraGlowPreviewActive and self.AuraGlowPreviewKey == key
+end
+
+function NSI:HideAuraGlowPreview(refreshUI)
+    if self.AuraGlowPreviewTimer then
+        self.AuraGlowPreviewTimer:Cancel()
+        self.AuraGlowPreviewTimer = nil
+    end
+    if self.AuraGlowPreviewFrame then
+        self.AuraGlowPreviewFrame:Hide()
+        self.AuraGlowPreviewFrame = nil
+    end
+    self.AuraGlowPreviewActive = false
+    self.AuraGlowPreviewKey = nil
+    if refreshUI ~= false then self:RefreshAuraGlowsUI() end
+end
+
+function NSI:ToggleAuraGlowPreview(key, refreshUI)
+    if self:IsAuraGlowPreviewActive(key) then
+        self:HideAuraGlowPreview(refreshUI)
+        return false
+    end
+    if self.IsBuilding or self:Restricted() then return false end
+
+    local settings = self:GetAuraGlowSettings(key)
+    if not settings then return false end
+
+    self:HideAuraGlowPreview(false)
+    local targetFrame = self.UnitFrames and self.UnitFrames.player
+    if not targetFrame then return false end
+    local spellIDs = UsesAuraGlowSpellIDs(settings) and GetAuraGlowSpellIDs(settings) or {}
+    local spellID = spellIDs[1] or 1286895
+    local previewFrame = CreateFrame("Frame", nil, UIParent)
+    previewFrame:SetAllPoints(targetFrame)
+    previewFrame:SetFrameStrata("HIGH")
+    previewFrame:Show()
+    CreateAuraGlowIcon(previewFrame, settings, C_Spell.GetSpellTexture(spellID) or 134400)
+    CreateAuraGlowBorder(previewFrame, settings, true)
+
+    self.AuraGlowPreviewFrame = previewFrame
+    self.AuraGlowPreviewKey = key
+    self.AuraGlowPreviewActive = true
+    local previewTimer
+    previewTimer = C_Timer.NewTimer(10, function()
+        if self.AuraGlowPreviewTimer == previewTimer and self:IsAuraGlowPreviewActive(key) then
+            self.AuraGlowPreviewTimer = nil
+            self:HideAuraGlowPreview()
+        end
+    end)
+    self.AuraGlowPreviewTimer = previewTimer
+    if refreshUI ~= false then self:RefreshAuraGlowsUI() end
+    return true
+end
+
+function NSI:RefreshAuraGlowPreview(key)
+    if not self:IsAuraGlowPreviewActive(key) then return false end
+    self:HideAuraGlowPreview(false)
+    return self:ToggleAuraGlowPreview(key, false)
 end
 
 local function IsAuraGlowActive(self, key, settings)
@@ -548,38 +665,8 @@ function NSI:InitAuraGlows()
                             initializeFrame = function(button)
                                 button:SetAllPoints(container)
                                 button:SetMouseMotionEnabled(false)
-                                local icon = button:CreateTexture(nil, "ARTWORK")
-                                local iconSize = settings.IconSize or 20
-                                icon:SetSize(iconSize, iconSize)
-                                icon:SetPoint("CENTER", button, "CENTER")
-                                icon:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)
-                                icon:SetAlpha(settings.ShowIcon and 1 or 0)
+                                local icon = CreateAuraGlowIcon(button, settings)
                                 button:SetIcon(icon)
-                                if settings.ShowIcon then
-                                    local iconBorder = {
-                                        top = button:CreateTexture(nil, "OVERLAY"),
-                                        bottom = button:CreateTexture(nil, "OVERLAY"),
-                                        left = button:CreateTexture(nil, "OVERLAY"),
-                                        right = button:CreateTexture(nil, "OVERLAY"),
-                                    }
-                                    for _, texture in pairs(iconBorder) do
-                                        texture:ClearAllPoints()
-                                        texture:SetColorTexture(0, 0, 0, 1)
-                                        texture:Show()
-                                    end
-                                    iconBorder.top:SetPoint("TOPLEFT", icon, "TOPLEFT", 0, 0)
-                                    iconBorder.top:SetPoint("TOPRIGHT", icon, "TOPRIGHT", 0, 0)
-                                    iconBorder.top:SetHeight(1)
-                                    iconBorder.bottom:SetPoint("BOTTOMLEFT", icon, "BOTTOMLEFT", 0, 0)
-                                    iconBorder.bottom:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0, 0)
-                                    iconBorder.bottom:SetHeight(1)
-                                    iconBorder.left:SetPoint("TOPLEFT", icon, "TOPLEFT", 0, 0)
-                                    iconBorder.left:SetPoint("BOTTOMLEFT", icon, "BOTTOMLEFT", 0, 0)
-                                    iconBorder.left:SetWidth(1)
-                                    iconBorder.right:SetPoint("TOPRIGHT", icon, "TOPRIGHT", 0, 0)
-                                    iconBorder.right:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 0, 0)
-                                    iconBorder.right:SetWidth(1)
-                                end
                                 CreateAuraGlowBorder(button, settings)
                             end,
                         })

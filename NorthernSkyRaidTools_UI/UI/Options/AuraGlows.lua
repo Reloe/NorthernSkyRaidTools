@@ -179,8 +179,12 @@ local function BuildAuraGlowsUI(screen)
     rightPanel:SetPoint("TOPLEFT", screen, "TOPLEFT", rightX, -10)
     rightPanel:SetSize(rightWidth, tabContentHeight - 10)
 
-    local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightWidth - 96, 22, nil, nil, nil, "NSUIAuraGlowName")
+    local nameEntry = CreateTextEntry(rightPanel, nil, nil, nil, rightWidth - 180, 22, nil, nil, nil, "NSUIAuraGlowName")
     nameEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
+    local previewButton = CreateLocalizedSubButton(rightPanel, "Preview", function()
+        if selectedKey then NSI:ToggleAuraGlowPreview(selectedKey) end
+    end, 76, "NSUIAuraGlowPreview")
+    previewButton:SetPoint("LEFT", nameEntry.frame, "RIGHT", 8, 0)
     local deleteButton = CreateLocalizedSubButton(rightPanel, "Delete", function()
         NSI:DeleteCustomAuraGlow(selectedKey)
         selectedKey = nil
@@ -188,7 +192,7 @@ local function BuildAuraGlowsUI(screen)
         RebuildList()
         RebuildTab()
     end, 76, "NSUIAuraGlowDelete")
-    deleteButton:SetPoint("LEFT", nameEntry.frame, "RIGHT", 8, 0)
+    deleteButton:SetPoint("LEFT", previewButton.frame, "RIGHT", 8, 0)
 
     local tabButtons, tabFrames = {}, {}
     for index, name in ipairs({"Display", "Trigger", "Load"}) do
@@ -206,6 +210,7 @@ local function BuildAuraGlowsUI(screen)
 
     local function ApplySettings()
         NSI:RebuildAuraGlows()
+        if selectedKey then NSI:RefreshAuraGlowPreview(selectedKey) end
         RebuildList()
     end
 
@@ -240,7 +245,13 @@ local function BuildAuraGlowsUI(screen)
         local items = {
             { type = "button", label = NSI:Loc("Export"), fnc = function() ShowAuraGlowExportPopup(NSI:ExportAuraGlowEntry(key)) end },
         }
-        if not entry.builtin then
+        if entry.builtin then
+            items[#items + 1] = { type = "button", label = NSI:Loc("Reset"), fnc = function()
+                NSI:ResetBuiltinAuraGlow(key)
+                RebuildList()
+                RebuildTab()
+            end }
+        else
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                 local newKey = NSI:DuplicateCustomAuraGlow(key)
                 RebuildList()
@@ -370,7 +381,7 @@ local function BuildAuraGlowsUI(screen)
                 row.label:SetPoint("LEFT", row.check.frame, "RIGHT", 5, 0)
                 row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
             end
-            local willLoad = NSI:EvaluateLoad(entry.settings)
+            local willLoad = NSI:EvaluateLoad(entry.settings, true)
             row.check:SetValue(entry.settings.enabled)
             row.check.frame:SetAlpha(willLoad and 1 or 0.4)
             row.lock:SetShown(entry.builtin)
@@ -899,17 +910,19 @@ local function BuildAuraGlowsUI(screen)
         end
 
         local y = 0
-        local encounterData = BossData.BuildBossDropdownOptions(nil, false)
-        y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSelected(conditions.EncounterIDs))
-        if not loadCollapsed.Encounters then
-            for _, encounter in ipairs(encounterData) do
-                local encounterID = encounter.value
-                y = AddCheck(y, encounter.label, conditions.EncounterIDs[encounterID],
-                    function() conditions.EncounterIDs[encounterID] = (not conditions.EncounterIDs[encounterID]) or nil end,
-                    0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+        if not NSI.AuraGlowBuiltins[selectedKey] then
+            local encounterData = BossData.BuildBossDropdownOptions(nil, false)
+            y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSelected(conditions.EncounterIDs))
+            if not loadCollapsed.Encounters then
+                for _, encounter in ipairs(encounterData) do
+                    local encounterID = encounter.value
+                    y = AddCheck(y, encounter.label, conditions.EncounterIDs[encounterID],
+                        function() conditions.EncounterIDs[encounterID] = (not conditions.EncounterIDs[encounterID]) or nil end,
+                        0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+                end
             end
+            y = y + 4
         end
-        y = y + 4
         y = LoadSection(y, "Roles", NSI:Loc("Roles (leave all unchecked for any role)"), CountSelected(conditions.Roles))
         if not loadCollapsed.Roles then
             for _, role in ipairs(RoleData) do

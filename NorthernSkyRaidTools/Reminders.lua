@@ -2571,10 +2571,10 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
-function NSI:EvaluateLoad(info)
+function NSI:EvaluateLoad(info, ignoreEncounter)
     local cond = info.loadConditions
     if not cond then return true end
-    if cond.EncounterIDs and next(cond.EncounterIDs) then
+    if not ignoreEncounter and cond.EncounterIDs and next(cond.EncounterIDs) then
         local encounterMatches = self.EncounterID and (cond.EncounterIDs[self.EncounterID] or cond.EncounterIDs[tostring(self.EncounterID)])
         if not encounterMatches then return false end
     end
