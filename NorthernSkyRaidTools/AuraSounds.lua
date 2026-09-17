@@ -130,6 +130,8 @@ NSI.AuraSoundCategories = {
             {spellID = 1301118, sound = "Debuff"}, -- Grasping Fangs
             {spellID = 1311611, sound = "Break"}, -- Grasping Fangs
         }},
+        {key = 3513, entries = { -- Kith'ix
+        }},
     },
     Dungeons = {
         -- Season 1
