@@ -130,8 +130,6 @@ local function ClassColor(class)
 end
 
 local function BuildAuraGlowsUI(screen)
-    if not NSI:IsPTRPatch() then return screen end
-
     local pad, leftWidth = 10, 240
     local rightX = leftWidth + pad * 2
     local rightWidth = contentWidth - rightX - pad

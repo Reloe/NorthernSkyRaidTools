@@ -500,11 +500,7 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSec
                 soundFileName = soundPath,
                 outputChannel = NSRT.AuraSounds.SoundChannel or "Master",
             }
-            if self:IsPTRPatch() then
-                soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo, throttleSeconds)
-            else
-                soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
-            end
+            soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo, throttleSeconds)
         end
         self.AuraSoundIDs[entryKey] = (#soundIDs == 1) and soundIDs[1] or soundIDs
     end

@@ -122,7 +122,6 @@ function NSI:RegisterBuiltinAuraGlow(key, definition)
 end
 
 function NSI:GetAuraGlowSettings(key)
-    if not self:IsPTRPatch() then return end
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     if self.AuraGlowBuiltins[key] then
         NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
@@ -180,7 +179,6 @@ function NSI:SetAuraGlowGroupCollapsed(group, collapsed)
 end
 
 function NSI:AddCustomAuraGlow(group)
-    if not self:IsPTRPatch() then return end
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     NSRT.AuraGlows.Custom = NSRT.AuraGlows.Custom or {}
     local index = #NSRT.AuraGlows.Custom + 1
@@ -503,7 +501,6 @@ function NSI:UpdateAuraGlowVisibility()
 end
 
 function NSI:RebuildAuraGlows()
-    if not self:IsPTRPatch() then return end
     for _, states in pairs(self.AuraGlowStates or {}) do
         for _, state in pairs(states) do
             state.container:Hide()
@@ -514,7 +511,7 @@ function NSI:RebuildAuraGlows()
 end
 
 function NSI:InitAuraGlows()
-    if not self:IsPTRPatch() or self.IsBuilding then return end
+    if self.IsBuilding then return end
     if self:Restricted() then
         self.PendingAuraGlowUpdate = true
         return
@@ -604,7 +601,6 @@ function NSI:InitAuraGlows()
 end
 
 function NSI:RefreshAuraGlows()
-    if not self:IsPTRPatch() then return end
     self:RebuildAuraGlows()
 end
 

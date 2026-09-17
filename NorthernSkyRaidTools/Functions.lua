@@ -57,11 +57,6 @@ function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
 
-function NSI:IsPTRPatch()
-    local interfaceVersion = select(4, GetBuildInfo())
-    return interfaceVersion >= 120105
-end
-
 function NSI:IsMidnightSeason3()
     local interfaceVersion = select(4, GetBuildInfo())
     return interfaceVersion >= 120200

@@ -121,11 +121,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             end
         end)
-        if self:IsPTRPatch() then
-            C_Timer.After(2, function()
-                self:CacheUnitFrames()
-            end)
-        end
+        C_Timer.After(2, function()
+            self:CacheUnitFrames()
+        end)
     elseif e == "READY_CHECK_FINISHED" and wowevent then
         self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
@@ -375,9 +373,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self:DifficultyCheck({14, 15, 16}) then
                 self:RefreshDebuffOverviewContainers()
             end
-            if self:IsPTRPatch() or self:DifficultyCheck({14, 15, 16}) then
-                self:CacheUnitFrames()
-            end
+            self:CacheUnitFrames()
             self:UpdateRaidBuffFrame()
         end)
         if self:Restricted() then return end

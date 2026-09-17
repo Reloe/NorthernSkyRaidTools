@@ -87,9 +87,7 @@ local TABS_GROUPS                  = {
     },
 }
 table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
-if NSI:IsPTRPatch() then
-    table.insert(TABS_GROUPS[3], 3, { name = "AuraGlows", textKey = "Aura Glows" })
-end
+table.insert(TABS_GROUPS[3], 3, { name = "AuraGlows", textKey = "Aura Glows" })
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148

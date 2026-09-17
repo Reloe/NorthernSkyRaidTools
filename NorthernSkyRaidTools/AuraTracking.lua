@@ -1898,7 +1898,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
     local isCustom = tostring(key):match("^Custom") and true or false
     local isGroupUnitTracking = isCustom and self:IsAuraTrackingGroupUnitInput(settings.Unit)
-    if (key == "External" or isCustom) and self:IsPTRPatch() then
+    if key == "External" or isCustom then
         if settings.NameEnabled and not isGroupUnitTracking then
             local casterName = EnsureAuraTrackingFontString(regions, "casterName")
             PositionAuraTrackingUnitName(casterName, button, settings)
@@ -2971,37 +2971,6 @@ local function SetAuraTrackingPlayerVehicleState(self, disabled)
     end
 end
 
-local function UpdateAuraTrackingAssistStates(self, unit)
-    if self:IsPTRPatch() then return end
-    local unitCanAssist = GetAuraTrackingUnitCanAssist(unit, true)
-    for _, state in pairs(self.AuraTrackingState or {}) do
-        if state.active and state.unit == unit and state.requiresAssist ~= nil then
-            state.unitCanAssist = unitCanAssist
-            local shouldShow = state.settings.enabled and self:EvaluateLoad(state.settings)
-            if unit == "player" then
-                shouldShow = shouldShow and not (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
-            end
-            shouldShow = shouldShow and unitCanAssist == state.requiresAssist
-            if state.container:IsShown() ~= shouldShow or state.container:IsEnabled() ~= shouldShow then
-                state.container:SetEnabled(shouldShow)
-                state.container:SetShown(shouldShow)
-                state.anchorFrame:SetShown(shouldShow)
-            end
-            if state.unitSetKey then
-                self:LayoutAuraTrackingUnitSet(state.unitSetKey)
-            end
-        end
-    end
-end
-
-local function RegisterAuraTrackingAssistRefreshEvents(self)
-    if self:IsPTRPatch() then return end
-    for unit in pairs(AuraTrackingUnitRefreshStates.faction) do
-        AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_FACTION", unit)
-        AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_FLAGS", unit)
-    end
-end
-
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
@@ -3092,7 +3061,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         boss = {},
         roster = rosterRefreshStates,
         playerControl = false,
-        faction = {},
     }
 
     if (NSRT.AuraTrackingSettings.Player and NSRT.AuraTrackingSettings.Player.enabled)
@@ -3108,9 +3076,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     AuraTrackingUnitRefreshStates[unit][#AuraTrackingUnitRefreshStates[unit] + 1] = state
                 elseif unit:match("^boss%d+$") then
                     AuraTrackingUnitRefreshStates.boss[#AuraTrackingUnitRefreshStates.boss + 1] = state
-                end
-                if state.requiresAssist ~= nil and not self:IsPTRPatch() then
-                    AuraTrackingUnitRefreshStates.faction[unit] = true
                 end
             end
         end
@@ -3131,7 +3096,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
     end
 
-    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 or next(AuraTrackingUnitRefreshStates.faction) or AuraTrackingUnitRefreshStates.playerControl then
+    if #AuraTrackingUnitRefreshStates.target > 0 or #AuraTrackingUnitRefreshStates.focus > 0 or #AuraTrackingUnitRefreshStates.mouseover > 0 or #AuraTrackingUnitRefreshStates.boss > 0 or #AuraTrackingUnitRefreshStates.roster > 0 or AuraTrackingUnitRefreshStates.playerControl then
         if not AuraTrackingUnitRefreshFrame then
             AuraTrackingUnitRefreshFrame = CreateFrame("Frame")
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event, unit)
@@ -3143,9 +3108,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                     end
                     NSI.AuraTrackingPlayerVehicleDisabled = true
                     SetAuraTrackingPlayerVehicleState(NSI, true)
-                    return
-                elseif event == "UNIT_FACTION" or event == "UNIT_FLAGS" then
-                    UpdateAuraTrackingAssistStates(NSI, unit)
                     return
                 elseif event == "UNIT_EXITED_VEHICLE" or event == "PLAYER_ENTERING_WORLD" then
                     if AuraTrackingVehicleStateTimer then
@@ -3235,7 +3197,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
             AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
         end
-        RegisterAuraTrackingAssistRefreshEvents(self)
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
     end

@@ -1224,7 +1224,7 @@ local function BuildAuraTrackingUI(screen)
                     and tip("Show Co-Tank Name", "Shows the co-tank name attached to visible aura icons.")
                     or isGroupUnitTracking
                     and tip("Show Unit Name", "Shows the class-colored nickname of the unit whose aura is shown. This replaces caster names for this display.")
-                    or tip("Show Source Name", "Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"),
+                    or tip("Show Source Name", "Shows the source name attached to visible aura icons."),
                 get = function() return isGroupUnitTracking and s.UnitNameEnabled or s.NameEnabled end,
                 set = function(_, v)
                     if isGroupUnitTracking then
