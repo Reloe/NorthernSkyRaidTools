@@ -1,5 +1,17 @@
 Changes since tag 1.6.2
 
+commit 08742c58361644d5c39917bda3f156b4884426a4
+Author: m33shoq <91337254+m33shoq@users.noreply.github.com>
+Date:   Fri Sep 11 20:30:14 2026 +0300
+
+    check for CanBeAccessedInContext before scanning the frame (#54)
+
+commit 9085b7bb0278665a61ea8002a3bcfca840e4e4c4
+Author: Gerrit Alex <admin@gerritalex.de>
+Date:   Fri Sep 11 18:47:56 2026 +0200
+
+    prioritize spotlights frames above other addons due to their nature (#52)
+
 commit 9d8d6f81a80a357c97c84a20bfe81f44e083702e
 Author: Ellesmere <57682642+EllesmereGaming@users.noreply.github.com>
 Date:   Tue Aug 18 10:58:36 2026 -0400
