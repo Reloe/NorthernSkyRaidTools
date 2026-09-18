@@ -245,6 +245,42 @@ function NSI:SortGroup(Flex, default, odds) -- default == tank, melee, ranged, h
     self:ArrangeGroups(true)
 end
 
+function NSI:StopGroupSort()
+    self.Groups.Processing = false
+    self.Groups.ProcessStart = nil
+    self.Groups.SortPending = false
+    if self.GroupSortTimer then
+        self.GroupSortTimer:Cancel()
+        self.GroupSortTimer = nil
+    end
+    self.LastGroupSort = nil
+end
+
+function NSI:StopGroupSortForCombat(units)
+    local combatPlayers = {}
+    local playerNames = {}
+    for _, unit in ipairs(units) do
+        if UnitAffectingCombat(unit) then
+            local name = UnitName(unit)
+            if name and not playerNames[name] then
+                playerNames[name] = true
+                table.insert(combatPlayers, name)
+            end
+        end
+    end
+    if #combatPlayers > 0 then
+        self:StopGroupSort()
+        print("Group sorting stopped because the following players are in combat: "..table.concat(combatPlayers, ", ")..".")
+        return true
+    end
+end
+
+function NSI:AbortGroupSort()
+    if not self.Groups.Processing and not self.Groups.SortPending then return end
+    self:StopGroupSort()
+    print("Group sorting aborted.")
+end
+
 function NSI:ShiftLeader(group)
     if not group then return end
     local currentpos = 0
@@ -277,8 +313,16 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
     local now = GetTime()
     if firstcall then
         self.Groups.Processing = true
+        self.Groups.SortPending = false
         self.Groups.Processed = 0
         self.Groups.ProcessStart = now
+        local groupUnits = {}
+        for i=1, 40 do
+            local unit = "raid"..i
+            if not UnitExists(unit) then break end
+            table.insert(groupUnits, unit)
+        end
+        if self:StopGroupSortForCombat(groupUnits) then return end
         for i=1, 40 do
             local group = math.ceil(i/5)
             local subgrouppos = i % 5 == 0 and 5 or i % 5
@@ -290,7 +334,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
             end
         end
     end
-    if self.Groups.ProcessStart and now > self.Groups.ProcessStart+25 then self.Groups.Processing = false return end -- backup stop if it takes super long we're probably in a loop somehow
+    if self.Groups.ProcessStart and now > self.Groups.ProcessStart+25 then self:StopGroupSort() return end -- backup stop if it takes super long we're probably in a loop somehow
     local groupSize = {0, 0, 0, 0, 0, 0, 0, 0}
     local postoindex = {}
     local indexlink = {}
@@ -328,12 +372,14 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
 
     for i=1, 40 do -- position in table is where the player should end up in
         local v = self.Groups.units[i]
-        if v and (not v.processed) and v.name and (not UnitAffectingCombat(v.name)) then
+        if v and (not v.processed) and v.name then
             local index = UnitInRaid(v.name)
             local indexgoal = postoindex[v.pos]
             if indexgoal ~= index then -- check if player is already in correct spot
+                if self:StopGroupSortForCombat({"raid"..index}) then return end
                 if groupSize[v.group] < v.subgrouppos and indexlink[index].subgroup ~= v.group then
                     if groupSize[v.group]+1 == v.subgrouppos then -- next free spot is in the correct position. It's not guranteed to end up in the correct position anyway so need to check on next call
+                        if self:StopGroupSortForCombat({"raid"..index}) then return end
                         SetRaidSubgroup(index, v.group)
                         break
                     else -- if not enough players are in the group to move this player to the desired spot we need to put someone who is not in the correct position yet there.
@@ -341,6 +387,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                             if i ~= j then
                                 local u = self.Groups.units[j]
                                 if u and (not u.processed) and v.group ~= indextosubgroup[UnitInRaid(u.name)] then
+                                    if self:StopGroupSortForCombat({"raid"..index, "raid"..UnitInRaid(u.name)}) then return end
                                     SetRaidSubgroup(UnitInRaid(u.name), v.group)
                                     break
                                 end
@@ -348,7 +395,8 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                         end
                         break
                     end
-                elseif indexgoal and indexlink[index] and indexlink[index].subgroup and indexlink[indexgoal] and indexlink[indexgoal].subgroup and indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and UnitExists("raid"..indexgoal) and (not UnitAffectingCombat("raid"..indexgoal)) then -- check if the player we need to swap with is in a different subgroup
+                elseif indexgoal and indexlink[index] and indexlink[index].subgroup and indexlink[indexgoal] and indexlink[indexgoal].subgroup and indexlink[index].subgroup ~= indexlink[indexgoal].subgroup and UnitExists("raid"..indexgoal) then -- check if the player we need to swap with is in a different subgroup
+                    if self:StopGroupSortForCombat({"raid"..index, "raid"..indexgoal}) then return end
                     SwapRaidSubgroup(indexgoal, index)
                     v.processed = true
                     self.Groups.Processed = self.Groups.Processed+1
@@ -357,14 +405,18 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                     local found = false
                     local u = self.Groups.units[indexlink[index].pos] -- first try to swap with the person who is meant to be in the position this player is in
                     if u and u.name and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and u.pos == indexlink[index].pos and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
-                        SwapRaidSubgroup(UnitInRaid(u.name), index)
+                        local swapIndex = UnitInRaid(u.name)
+                        if self:StopGroupSortForCombat({"raid"..index, "raid"..swapIndex}) then return end
+                        SwapRaidSubgroup(swapIndex, index)
                         found = true
                     end
                     if not found then -- next try to swap with someone who is not in the correct position yet
                         for j=1, 40 do
                             local u = self.Groups.units[j]
                             if u and (not u.processed) and u.name and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
-                                SwapRaidSubgroup(UnitInRaid(u.name), index)
+                                local swapIndex = UnitInRaid(u.name)
+                                if self:StopGroupSortForCombat({"raid"..index, "raid"..swapIndex}) then return end
+                                SwapRaidSubgroup(swapIndex, index)
                                 found = true
                                 break
                             end
@@ -374,7 +426,9 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                         for j=1, 40 do
                             local u = self.Groups.units[j]
                             if u and u.name and (not UnitIsGroupLeader(u.name)) and (not UnitAffectingCombat(u.name)) and (not UnitIsUnit(v.name, u.name)) and indexlink[index].subgroup ~= indexlink[UnitInRaid(u.name)].subgroup then
-                                SwapRaidSubgroup(UnitInRaid(u.name), index)
+                                local swapIndex = UnitInRaid(u.name)
+                                if self:StopGroupSortForCombat({"raid"..index, "raid"..swapIndex}) then return end
+                                SwapRaidSubgroup(swapIndex, index)
                                 found = true
                                 break
                             end
@@ -383,6 +437,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                     if not found then -- lastly put them into any group that has a free spot
                         for j=1, 8 do
                             if indexlink[index].subgroup ~= j and groupSize[j] < 5 then
+                                if self:StopGroupSortForCombat({"raid"..index}) then return end
                                 SetRaidSubgroup(index, j)
                                 found = true
                                 break
@@ -412,7 +467,11 @@ function NSI:SplitGroupInit(Flex, default, odds, MythicFlex)
             difficultyID = (instanceType == "raid" and difficultyID) or GetRaidDifficultyID() or 0
             if difficultyID == 16 then Flex = false else Flex = true end
             if difficultyID == 233 then MythicFlex = true end
-            C_Timer.After(2, function() self:SortGroup(Flex, default, odds, MythicFlex) end)
+            self.Groups.SortPending = true
+            self.GroupSortTimer = C_Timer.NewTimer(2, function()
+                self.GroupSortTimer = nil
+                if self.Groups.SortPending then self:SortGroup(Flex, default, odds, MythicFlex) end
+            end)
         else
             print("You hit the spam protection for sorting groups, please wait at least 5 seconds between pressing the button.")
         end
