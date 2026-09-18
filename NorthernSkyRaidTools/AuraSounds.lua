@@ -641,11 +641,11 @@ function NSI:ExportAuraSoundCategories(categoryType, categoryKeys, group)
             export.sounds[#export.sounds + 1] = {key = key, info = CopyTable(info)}
         end
     end
-    return self:EncodeExportData(export)
+    return self:EncodeExportData(export, "AuraSound")
 end
 
 function NSI:ImportAuraSoundString(text)
-    local import = self:DecodeExportData(text)
+    local import = self:DecodeExportData(text, "AuraSound")
     if type(import) ~= "table" or import.type ~= "NSRT_AURA_SOUNDS"
         or type(import.categoryType) ~= "string" or type(import.categories) ~= "table" or type(import.sounds) ~= "table"
     then

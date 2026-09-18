@@ -1475,12 +1475,12 @@ DF:SetAnchor(myWidget, anchorTable, parentFrame)
 - Description: Converts an array of values into a comma-separated string.
 - Parameters:
   - `t` (`table`) — array of values to join
-  - `bDoCompression` (`boolean?`) — when truthy, compresses the result using `LibDeflate` if the library is available
+  - `bDoCompression` (`boolean?`) — when truthy, compresses the result with `C_EncodingUtil`
 - Returns:
   - `string` — comma-separated string of values, optionally compressed
 - Notes:
   - Values are concatenated in order using `,` as the delimiter.
-  - Compression is only applied when `LibDeflate` is loaded and `bDoCompression` is truthy.
+  - Compression is applied when `bDoCompression` is truthy.
 - Example:
 ```lua
 local text = DF.strings.tabletostring({"apple", "banana", "cherry"})
@@ -1491,11 +1491,11 @@ print(text) -- apple,banana,cherry
 - Description: Splits a comma-delimited string into a table of values.
 - Parameters:
   - `thisString` (`string`) — comma-separated input text
-  - `bDoCompression` (`boolean?`) — when truthy, decompresses the string with `LibDeflate` before splitting
+  - `bDoCompression` (`boolean?`) — when truthy, decompresses the string with `C_EncodingUtil` before splitting
 - Returns:
   - `table` — array of values from the input string
 - Notes:
-  - If compression is requested, the function only decompresses when `LibDeflate` is available.
+  - If compression is requested, the function decompresses before splitting.
 - Example:
 ```lua
 local values = DF.strings.stringtotable("apple,banana,cherry")

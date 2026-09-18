@@ -444,9 +444,6 @@ function NSAPI:OpenAlert(encID, diffID, internalID)
     return false
 end
 
-local ExportSerializer = LibStub("LibSerialize")
-local ExportDeflate = LibStub("LibDeflate")
-
 local function CopySerializableValue(value, copies)
     local valueType = type(value)
     if valueType == "function" then return nil end
@@ -467,19 +464,26 @@ local function CopySerializableValue(value, copies)
     return copy
 end
 
-function NSI:EncodeExportData(data, serializer)
-    local serialized = (serializer or ExportSerializer):Serialize(CopySerializableValue(data))
-    local compressed = serialized and ExportDeflate:CompressDeflate(serialized)
-    return compressed and ExportDeflate:EncodeForPrint(compressed)
+function NSI:EncodeExportData(data, exportType)
+    local serialized = C_EncodingUtil.SerializeCBOR(CopySerializableValue(data))
+    local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)
+    local encoded = compressed and C_EncodingUtil.EncodeBase64(compressed, Enum.Base64Variant.StandardUrlSafe)
+    return encoded and "!NSRT:" .. exportType .. ":" .. encoded
 end
 
-function NSI:DecodeExportData(text, serializer)
+function NSI:DecodeExportData(text, exportType)
     if type(text) ~= "string" or text == "" then return end
-    local decoded = ExportDeflate:DecodeForPrint(text)
-    local decompressed = decoded and ExportDeflate:DecompressDeflate(decoded)
+    local prefix = "!NSRT:" .. exportType .. ":"
+    if text:sub(1, #prefix) ~= prefix then
+        if text:sub(1, 6) ~= "!NSRT:" then
+            print("|cFFFF0000NSRT:|r " .. self:Loc("This import string was exported before patch 12.1.5 and can no longer be imported."))
+        end
+        return
+    end
+    local decoded = C_EncodingUtil.DecodeBase64(text:sub(#prefix + 1), Enum.Base64Variant.StandardUrlSafe)
+    local decompressed = decoded and C_EncodingUtil.DecompressString(decoded, Enum.CompressionMethod.Deflate)
     if not decompressed then return end
-    local success, data = (serializer or ExportSerializer):Deserialize(decompressed)
-    return success and data or nil
+    return C_EncodingUtil.DeserializeCBOR(decompressed)
 end
 
 function NSI:SaveFramePosition(F, SettingsTable)

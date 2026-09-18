@@ -797,7 +797,7 @@ function NSI:ExportProfileString(includeSharedData)
         end
         exportTable.sharedData = sharedData
     end
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "Profile")
 end
 
 function NSAPI:ProfileExists(name)
@@ -825,7 +825,7 @@ function NSAPI:SetMainProfile(name)
 end
 
 function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name is optional
-    local exportTable = NSI:DecodeExportData(importString)
+    local exportTable = NSI:DecodeExportData(importString, "Profile")
     if type(exportTable) ~= "table" then return nil end
     local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
     if sharedData and next(sharedData) and not allowSharedData then
@@ -882,7 +882,7 @@ function NSAPI:OverrideProfile(importString, name, options)
         return nil, "profile_not_found"
     end
 
-    local exportTable = NSI:DecodeExportData(importString)
+    local exportTable = NSI:DecodeExportData(importString, "Profile")
     if type(exportTable) ~= "table" then
         return nil, "invalid_import"
     end
@@ -983,7 +983,7 @@ function NSI:ExportAlertsString(encID, diffID)
         diffID          = diffID,
         encounterAlerts = encounterAlerts,
     }
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "EncounterAlert")
 end
 
 function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
@@ -996,7 +996,7 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
         alertKey  = alertKey,
         data      = data,
     }
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "EncounterAlert")
 end
 
 function NSI:ExportGroupString(encID, groupName, diffID)
@@ -1025,11 +1025,11 @@ function NSI:ExportGroupString(encID, groupName, diffID)
         groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
         encounterAlerts = encounterAlerts,
     }
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "EncounterAlert")
 end
 
 function NSAPI:ImportAlertsString(importString)
-    local t = NSI:DecodeExportData(importString)
+    local t = NSI:DecodeExportData(importString, "EncounterAlert")
     if type(t) ~= "table" then return nil end
 
     local function ResolveImportedAlertKey(destDiff, alertKey, alert)

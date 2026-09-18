@@ -1,6 +1,4 @@
 local _, NSI = ...
-local AuraTrackingSerializer = LibStub("AceSerializer-3.0")
-
 local AuraTrackingFilters = {
     "HARMFUL",
 }
@@ -1209,7 +1207,7 @@ function NSI:ExportAuraTrackingEntry(settingsKey)
                 settings = CopyTable(settings),
             },
         },
-    }, AuraTrackingSerializer) or ""
+    }, "AuraTracking") or ""
 end
 
 function NSI:ExportAuraTrackingGroup(groupName)
@@ -1229,11 +1227,11 @@ function NSI:ExportAuraTrackingGroup(groupName)
         version = 1,
         group = groupName,
         entries = entries,
-    }, AuraTrackingSerializer) or ""
+    }, "AuraTracking") or ""
 end
 
 function NSI:ImportAuraTrackingString(text)
-    local payload = self:DecodeExportData(text, AuraTrackingSerializer)
+    local payload = self:DecodeExportData(text, "AuraTracking")
     if not payload or payload.type ~= "NSRT_AURA_TRACKING" or type(payload.entries) ~= "table" then
         return false
     end

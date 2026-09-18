@@ -1,6 +1,4 @@
 local _, NSI = ...
-local AuraGlowSerializer = LibStub("AceSerializer-3.0")
-
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
 NSI.AuraGlowBuiltinGroup = "Built-in"
 
@@ -272,7 +270,7 @@ end
 function NSI:ExportAuraGlowEntry(key)
     local settings = self:GetAuraGlowSettings(key)
     if not settings then return "" end
-    return self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, entries = { CopyTable(settings) } }, AuraGlowSerializer) or ""
+    return self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, entries = { CopyTable(settings) } }, "AuraGlow") or ""
 end
 
 function NSI:ExportAuraGlowGroup(group)
@@ -280,11 +278,11 @@ function NSI:ExportAuraGlowGroup(group)
     for _, entry in ipairs(self:IterateAuraGlowEntries()) do
         if not entry.builtin and entry.group == group then entries[#entries + 1] = CopyTable(entry.settings) end
     end
-    return #entries > 0 and (self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, group = group, entries = entries }, AuraGlowSerializer) or "") or ""
+    return #entries > 0 and (self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, group = group, entries = entries }, "AuraGlow") or "") or ""
 end
 
 function NSI:ImportAuraGlowString(text)
-    local payload = self:DecodeExportData(text, AuraGlowSerializer)
+    local payload = self:DecodeExportData(text, "AuraGlow")
     if not payload or payload.type ~= "NSRT_AURA_GLOW" or type(payload.entries) ~= "table" then return false end
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     NSRT.AuraGlows.Custom = NSRT.AuraGlows.Custom or {}
