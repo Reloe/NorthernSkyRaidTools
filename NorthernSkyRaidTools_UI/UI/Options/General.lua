@@ -305,8 +305,9 @@ local function BuildGeneralOptions()
                         label = name,
                         value = name,
                         onclick = function()
-                            NSI:SetMainProfile(name)
-                            print("|cFF00FFFFNSRT:|r " .. format(NSI:Loc("Main profile set to '|cFFFFFFFF%s|r'."), name))
+                            if name ~= NSRT.MainProfile then
+                                NSI:ConfirmApplyProfileToAllCharacters(name)
+                            end
                         end,
                     })
                 end

@@ -678,10 +678,17 @@ function NSI:GetProfileKey()
     return Realm and CharName.."-"..Realm
 end
 
-function NSI:SetMainProfile(name)
-    if NSRT.Profiles[name] then
-        NSRT.MainProfile = name
+function NSI:SetMainProfile(name, applyToAllCharacters)
+    if not NSRT.Profiles[name] then return false end
+
+    NSRT.MainProfile = name
+    if applyToAllCharacters then
+        for profileKey in pairs(NSRT.ProfileKeys) do
+            NSRT.ProfileKeys[profileKey] = name
+        end
+        self:LoadProfile(name)
     end
+    return true
 end
 
 function NSI:CreateProfile(name, init)
@@ -777,8 +784,13 @@ function NSI:CopyFromProfile(name)
     end
 end
 
-function NSI:ExportProfileString(includeSharedData)
-    local profileData = NSRT.Profiles[NSRT.CurrentProfile]
+function NSI:ExportProfileString(includeSharedData, profileName)
+    profileName = profileName or NSRT.CurrentProfile
+    if profileName == NSRT.CurrentProfile then
+        self:SaveProfile()
+    end
+
+    local profileData = NSRT.Profiles[profileName]
     if not profileData then return nil end
     local exportData = {}
     for key, value in pairs(profileData) do
@@ -787,7 +799,8 @@ function NSI:ExportProfileString(includeSharedData)
         end
     end
     local exportTable = {
-        profileName = NSRT.CurrentProfile,
+        profileName = profileName,
+        mainProfile = NSRT.MainProfile,
         data = exportData,
     }
     if includeSharedData then
@@ -798,6 +811,63 @@ function NSI:ExportProfileString(includeSharedData)
         exportTable.sharedData = sharedData
     end
     return self:EncodeExportData(exportTable, "Profile")
+end
+
+function NSAPI:ExportProfile(profileKey)
+    return NSI:ExportProfileString(false, profileKey)
+end
+
+function NSAPI:ImportProfile(profileString, profileKey)
+    if type(profileKey) ~= "string" or profileKey == "" then return false end
+
+    if NSAPI:ProfileExists(profileKey) then
+        return NSAPI:OverrideProfile(profileString, profileKey, {allowSharedData = false}) ~= nil
+    end
+    return NSAPI:ImportProfileString(profileString, profileKey, false) ~= nil
+end
+
+function NSAPI:DecodeProfileString(profileString)
+    local exportTable = NSI:DecodeExportData(profileString, "Profile")
+    if type(exportTable) ~= "table" or type(exportTable.data) ~= "table" then return nil end
+    return CopyTable(exportTable.data)
+end
+
+function NSAPI:SetProfile(profileKey)
+    if not NSAPI:ProfileExists(profileKey) then return false end
+    NSI:LoadProfile(profileKey)
+    return true
+end
+
+function NSAPI:GetProfileKeys()
+    local profileKeys = {}
+    for profileKey in pairs(NSRT.Profiles) do
+        profileKeys[profileKey] = true
+    end
+    return profileKeys
+end
+
+function NSAPI:GetProfileAssignments()
+    return CopyTable(NSRT.ProfileKeys)
+end
+
+function NSAPI:GetCurrentProfileKey()
+    return NSRT.CurrentProfile
+end
+
+function NSAPI:OpenConfig()
+    if NSI:LoadUI(true, "General") then
+        NSI.NSUI:Show()
+        NSI.NSUI.MenuFrame:SelectTabByName("General")
+        return true
+    end
+    return NSI.NSUI and NSI.NSUI.Initializing == true
+end
+
+function NSAPI:CloseConfig()
+    if not NSI.NSUI then return false end
+    NSI.NSUI.PendingShow = false
+    NSI.NSUI:Hide()
+    return true
 end
 
 function NSAPI:ProfileExists(name)

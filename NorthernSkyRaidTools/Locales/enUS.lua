@@ -273,6 +273,10 @@ L["Copied profile '|cFFFFFFFF%s|r' into '|cFFFFFFFF%s|r'."] = "Copied profile '|
 L["Reset profile '|cFFFFFFFF%s|r'."] = "Reset profile '|cFFFFFFFF%s|r'."
 L["Deleted profile '|cFFFFFFFF%s|r'."] = "Deleted profile '|cFFFFFFFF%s|r'."
 L["Main profile set to '|cFFFFFFFF%s|r'."] = "Main profile set to '|cFFFFFFFF%s|r'."
+L["Apply Profile to All Characters?"] = "Apply Profile to All Characters?"
+L["Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."] = "Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."
+L["Apply to All Characters"] = "Apply to All Characters"
+L["Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."] = "Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."
 -- ============================================================================
 -- UI/Options/Reminders.lua — Spell Settings
 -- ============================================================================

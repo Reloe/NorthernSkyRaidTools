@@ -10,6 +10,21 @@ local function T(key)
     return NSI:Loc(key)
 end
 
+function NSI:ConfirmApplyProfileToAllCharacters(name)
+    NSI.UI.Components.CreateDialog(
+        "NSRTApplyProfileToAllCharacters" .. name:gsub("%W", "_"),
+        T("Apply Profile to All Characters?"),
+        format(T("Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."), name),
+        T("Apply to All Characters"),
+        function()
+            if NSI:SetMainProfile(name, true) then
+                print("|cFF00FFFFNSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), name))
+            end
+        end,
+        T("Cancel")
+    )
+end
+
 local function ApplyUIFont(object, size, flags)
     if not object then return end
     if object.GetFontString then
@@ -134,6 +149,7 @@ local function BuildImportStringUI()
             print("|cFF00FFFFNSRT:|r " .. format(T("Imported profile '|cFFFFFFFF%s|r'."), importedName))
             popup:Hide()
             NSUI.MenuFrame:SelectTabByName("General")
+            NSI:ConfirmApplyProfileToAllCharacters(importedName)
         else
             statusLabel:SetText("|cFFFF0000" .. T("Invalid import string. Please check and try again.") .. "|r")
         end
