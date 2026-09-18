@@ -239,7 +239,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]       = {group = "똬리의 제단", name = "1페 전방스킬", text = "전방스킬"},
-    ["P1OrbDeadline"] = {group = "똬리의 제단", name = "구슬 운반 마감", text = "구슬 운반 마감"},
+    ["P1OrbDeadline"] = {group = "똬리의 제단", name = "구슬 들기 마감", text = "구슬 들기 마감"},
     ["P1Taunt"]         = {group = "똬리의 제단", name = "1페 도발", text = "도발"},
     ["P1Soak"]          = {group = "똬리의 제단", name = "1페 같이맞기", text = "같이맞기"},
     ["MindControls"] = {group = "똬리의 제단", name = "2페 정신 지배", text = "정신 지배"},
@@ -251,7 +251,7 @@ L[3429] = {
     ["EternalNightfallAbsorb"] = {group = "똬리의 제단", name = "영원한 일몰 보호막", text = ""},
     ["InterruptAdds"] = {group = "똬리의 제단", name = "2페 쫄 차단", text = "유령"},
     ["InterruptAssignments"] = {group = "똬리의 제단", name = "차단 배정", text = "차단"},
-    ["P3OrbDeadline"] = {group = "똬리의 제단", name = "3페 구슬 운반 마감", text = "구슬 운반 마감"},
+    ["P3OrbDeadline"] = {group = "똬리의 제단", name = "3페 구슬 들기 마감", text = "구슬 들기 마감"},
     ["P2_5WrongTarget"] = {group = "똬리의 제단", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
     ["P3Frontal"] = {group = "똬리의 제단", name = "3페 전방스킬", text = "전방스킬"},
     ["P3Soak"] = {group = "똬리의 제단", name = "3페 같이맞기", text = "같이맞기"},
