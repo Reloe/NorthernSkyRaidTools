@@ -19,6 +19,8 @@ function NSI:ConfirmApplyProfileToAllCharacters(name)
         function()
             if NSI:SetMainProfile(name, true) then
                 print("|cFF00FFFFNSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), name))
+                local generalTab = NSUI.MenuFrame:GetTabFrameByName("General")
+                generalTab:RefreshOptions()
             end
         end,
         T("Cancel")
