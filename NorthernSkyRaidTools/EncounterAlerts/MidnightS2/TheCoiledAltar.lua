@@ -75,7 +75,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar", name = "P2 Mind Controls"}}, group = "Coiled Altar", internalID = "MindControls", name = "P2 Mind Controls", text = "Mind Controls", DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 6, spellID = 1285643,
         timers = {
             [15] = {8.1, 44.7, 93.1, 129},
-            [16] = {8.1, 44.7, 93.1, 129, 177.4},
+            [16] = {8.1, 44.7, 93.1, 129, 177.4, 214.7},
         },
     }
     self:AddEncounterAlert(data)
