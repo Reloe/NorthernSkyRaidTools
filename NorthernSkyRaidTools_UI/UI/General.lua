@@ -105,7 +105,8 @@ local function BuildImportStringUI()
     end)
     NSI:SetUIFont(popup.test_string_text_box.editbox, 13, "OUTLINE")
 
-    local pendingImportString
+    local pendingSharedImport
+    local pendingConflictImport
     local CompleteImport
     local sharedImportPopup = DF:CreateSimplePanel(NSUI, 430, 170, T("Import Profile"), "NSUISharedImportConfirm", {
         DontRightClickClose = true
@@ -122,7 +123,7 @@ local function BuildImportStringUI()
     sharedImportLabel:SetWordWrap(true)
 
     local sharedImportCancelButton = DF:CreateButton(sharedImportPopup, function()
-        pendingImportString = nil
+        pendingSharedImport = nil
         sharedImportPopup:Hide()
     end, 120, 24, T("Cancel"))
     ApplyUIFont(sharedImportCancelButton, 12)
@@ -130,20 +131,68 @@ local function BuildImportStringUI()
     sharedImportCancelButton:SetTemplate(options_button_template)
 
     local sharedImportConfirmButton = DF:CreateButton(sharedImportPopup, function()
-        local importString = pendingImportString
-        pendingImportString = nil
+        local import = pendingSharedImport
+        pendingSharedImport = nil
         sharedImportPopup:Hide()
-        if importString then CompleteImport(importString, true) end
+        if import then CompleteImport(import.string, true, import.overwrite, import.profileName) end
     end, 120, 24, T("Proceed"))
     ApplyUIFont(sharedImportConfirmButton, 12)
     sharedImportConfirmButton:SetPoint("BOTTOMRIGHT", sharedImportPopup, "BOTTOMRIGHT", -55, 15)
     sharedImportConfirmButton:SetTemplate(options_button_template)
     sharedImportPopup:Hide()
 
-    CompleteImport = function(importString, allowSharedData)
-        local importedName, importError = NSAPI:ImportProfileString(importString, nil, allowSharedData)
+    local conflictImportPopup = DF:CreateSimplePanel(NSUI, 430, 170, T("Profile Already Exists"), "NSUIProfileImportConflict", {
+        DontRightClickClose = true
+    })
+    ApplyUIFont(conflictImportPopup.Title, 12)
+    conflictImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    conflictImportPopup:SetFrameLevel(110)
+
+    local conflictImportLabel = DF:CreateLabel(conflictImportPopup, "", DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"))
+    ApplyUIFont(conflictImportLabel, 12)
+    conflictImportLabel:SetPoint("TOPLEFT", conflictImportPopup, "TOPLEFT", 15, -35)
+    conflictImportLabel:SetPoint("RIGHT", conflictImportPopup, "RIGHT", -15, 0)
+    conflictImportLabel:SetJustifyH("LEFT")
+    conflictImportLabel:SetWordWrap(true)
+
+    local conflictImportCancelButton = DF:CreateButton(conflictImportPopup, function()
+        pendingConflictImport = nil
+        conflictImportPopup:Hide()
+    end, 110, 24, T("Cancel"))
+    ApplyUIFont(conflictImportCancelButton, 12)
+    conflictImportCancelButton:SetPoint("BOTTOMLEFT", conflictImportPopup, "BOTTOMLEFT", 15, 15)
+    conflictImportCancelButton:SetTemplate(options_button_template)
+
+    local conflictImportCopyButton = DF:CreateButton(conflictImportPopup, function()
+        local import = pendingConflictImport
+        pendingConflictImport = nil
+        conflictImportPopup:Hide()
+        if import then CompleteImport(import.string, false, false, import.profileName) end
+    end, 110, 24, T("Create Copy"))
+    ApplyUIFont(conflictImportCopyButton, 12)
+    conflictImportCopyButton:SetPoint("BOTTOM", conflictImportPopup, "BOTTOM", 0, 15)
+    conflictImportCopyButton:SetTemplate(options_button_template)
+
+    local conflictImportOverwriteButton = DF:CreateButton(conflictImportPopup, function()
+        local import = pendingConflictImport
+        pendingConflictImport = nil
+        conflictImportPopup:Hide()
+        if import then CompleteImport(import.string, false, true, import.profileName) end
+    end, 110, 24, T("Overwrite"))
+    ApplyUIFont(conflictImportOverwriteButton, 12)
+    conflictImportOverwriteButton:SetPoint("BOTTOMRIGHT", conflictImportPopup, "BOTTOMRIGHT", -15, 15)
+    conflictImportOverwriteButton:SetTemplate(options_button_template)
+    conflictImportPopup:Hide()
+
+    CompleteImport = function(importString, allowSharedData, overwrite, profileName)
+        local importedName, importError
+        if overwrite then
+            importedName, importError = NSAPI:OverrideProfile(importString, profileName, {allowSharedData = allowSharedData})
+        else
+            importedName, importError = NSAPI:ImportProfileString(importString, profileName, allowSharedData)
+        end
         if importError == "shared_data" then
-            pendingImportString = importString
+            pendingSharedImport = { string = importString, overwrite = overwrite, profileName = profileName }
             sharedImportPopup:Show()
         elseif importedName then
             print("|cFF00FFFFNSRT:|r " .. format(T("Imported profile '|cFFFFFFFF%s|r'."), importedName))
@@ -157,7 +206,20 @@ local function BuildImportStringUI()
 
     popup.import_confirm_button = DF:CreateButton(popup, function()
         local importString = popup.test_string_text_box:GetText()
-        CompleteImport(importString, false)
+        local exportTable = NSI:DecodeExportData(importString, "Profile")
+        if type(exportTable) ~= "table" then
+            statusLabel:SetText("|cFFFF0000" .. T("Invalid import string. Please check and try again.") .. "|r")
+            return
+        end
+
+        local profileName = exportTable.profileName or "Imported"
+        if NSAPI:ProfileExists(profileName) then
+            pendingConflictImport = { string = importString, profileName = profileName }
+            conflictImportLabel:SetText(format(T("A profile named '|cFFFFFFFF%s|r' already exists. Overwrite it or create a copy?"), profileName))
+            conflictImportPopup:Show()
+        else
+            CompleteImport(importString, false, false, profileName)
+        end
     end, 280, 20, T("Import"))
     ApplyUIFont(popup.import_confirm_button, 12)
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
