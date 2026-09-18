@@ -15,7 +15,7 @@ function NSI:ConfirmApplyProfileToAllCharacters(name)
         "NSRTApplyProfileToAllCharacters" .. name:gsub("%W", "_"),
         T("Apply Profile to All Characters?"),
         format(T("Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."), name),
-        T("Apply to All Characters"),
+        T("Apply to All"),
         function()
             if NSI:SetMainProfile(name, true) then
                 print("|cFF00FFFFNSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), name))
