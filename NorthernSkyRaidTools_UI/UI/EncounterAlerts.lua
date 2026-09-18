@@ -371,14 +371,14 @@ local function BuildEncounterAlertsUI(parentFrame)
             if screen.RebuildList then screen.RebuildList() end
         end
         return {
-            { label = NSI:Loc("M"), value = 16, onclick = function() switchDiff(16) end },
-            { label = NSI:Loc("H"), value = 15, onclick = function() switchDiff(15) end },
-            { label = NSI:Loc("N"), value = 14, onclick = function() switchDiff(14) end },
+            { label = NSI:Loc("Mythic"), value = 16, onclick = function() switchDiff(16) end },
+            { label = NSI:Loc("Heroic"), value = 15, onclick = function() switchDiff(15) end },
+            { label = NSI:Loc("Normal"), value = 14, onclick = function() switchDiff(14) end },
         }
     end
 
     local function getDiffSelected()
-        local names = { [16] = "M", [15] = "H", [14] = "N" }
+        local names = { [16] = "Mythic", [15] = "Heroic", [14] = "Normal" }
         return NSI:Loc(names[filterDiffID]) or tostring(filterDiffID)
     end
 

@@ -280,6 +280,8 @@ L[3492] = {
     ["BossSpawn"]           = {group = "Ula'tek", name = "Boss Spawn", text = "Boss Spawn"},
     ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
     ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
+    ["FirstGate"]           = {group = "Ula'tek", name = "First Gate", text = "Gate"},
+    ["SecondGate"]          = {group = "Ula'tek", name = "Second Gate", text = "Gate"},
     ["Sweep"]               = {group = "Ula'tek", name = "Sweep", text = "Sweep"},
     ["Soak"]                = {group = "Ula'tek", name = "Soak", text = "Soak"},
     ["TransitionSoakFirst"] = {group = "Ula'tek", name = "First Soak", text = "First Soak"},

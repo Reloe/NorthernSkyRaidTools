@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibGetFrame-1.0"
-local MINOR_VERSION = 77
+local MINOR_VERSION = 78
 if not LibStub then
   error(MAJOR_VERSION .. " requires LibStub.")
 end
@@ -18,6 +18,7 @@ local tinsert, CopyTable, wipe = tinsert, CopyTable, wipe
 local maxDepth = 50
 
 local defaultFramePriorities = {
+  "^SpotlightsSlotHeader%d+UnitButton%d+$", -- Spotlights
   -- raid frames
   "^Vd1", -- vuhdo
   "^Vd2", -- vuhdo
@@ -63,7 +64,6 @@ local defaultFramePriorities = {
   "^DandersFrames_Player$", -- Danders (used for party frames)
   "^ERFPartyHeaderUnitButton%d+$", -- EllesmereUI
   "^ERFPartySelfButton$", -- EllesmereUI (static self frame)
-  "^SpotlightsSlotHeader%d+UnitButton%d+$", -- Spotlights
   "^CompactRaid", -- blizz
   "^CompactParty", -- blizz
   "^PartyFrame",
@@ -399,7 +399,7 @@ local function ScanFrames(depth, frame, ...)
   if not frame then
     return
   end
-  if depth < maxDepth and frame.IsForbidden and not frame:IsForbidden() then
+  if depth < maxDepth and frame.IsForbidden and not frame:IsForbidden() and (not frame.CanBeAccessedInContext or frame:CanBeAccessedInContext()) then
     local frameType = frame:GetObjectType()
     if frameType == "Frame" or frameType == "Button" then
       ScanFrames(depth + 1, frame:GetChildren())

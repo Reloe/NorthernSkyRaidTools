@@ -679,6 +679,7 @@ local function GetPaceComparisonDeltaAlphaCurve(expected, tenth)
     local hidden = color.hidden
     local shown = color.shown
     local curve = C_CurveUtil.CreateColorCurve()
+    curve:SetType(Enum.LuaCurveType.Step)
 
     if upper <= 0 or lower >= 1 then
         curve:AddPoint(0, hidden)
@@ -691,8 +692,8 @@ local function GetPaceComparisonDeltaAlphaCurve(expected, tenth)
 
     if lower > 0 then
         curve:AddPoint(0, hidden)
-        curve:AddPoint(math.max(lower - epsilon, 0), hidden)
-        curve:AddPoint(lower, shown)
+        curve:AddPoint(lower, hidden)
+        curve:AddPoint(math.min(lower + epsilon, 1), shown)
     else
         curve:AddPoint(0, shown)
     end
@@ -716,6 +717,7 @@ local function GetPaceComparisonOverflowAlphaCurve(expected, isBehind)
     local hidden = color.hidden
     local shown = color.shown
     local curve = C_CurveUtil.CreateColorCurve()
+    curve:SetType(Enum.LuaCurveType.Step)
 
     if isBehind then
         local lower = (expected + 5.05) / 100
@@ -726,10 +728,8 @@ local function GetPaceComparisonOverflowAlphaCurve(expected, isBehind)
         end
 
         curve:AddPoint(0, hidden)
-        if lower > 0 then
-            curve:AddPoint(math.max(lower - epsilon, 0), hidden)
-        end
-        curve:AddPoint(math.max(lower, 0), shown)
+        curve:AddPoint(math.max(lower, 0), hidden)
+        curve:AddPoint(math.min(lower + epsilon, 1), shown)
         curve:AddPoint(1, shown)
     else
         local upper = (expected - 5.05) / 100
