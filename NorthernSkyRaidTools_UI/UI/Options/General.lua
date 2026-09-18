@@ -332,7 +332,7 @@ local function BuildGeneralOptions()
         {
             type = "button",
             name = "Export Profile + Data",
-            desc = "Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included.",
+            desc = "Exports your profile together with Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Nicknames are never included.",
             func = function(self)
                 NSUI.export_string_popup.IncludeSharedData = true
                 if NSUI.export_string_popup:IsShown() then

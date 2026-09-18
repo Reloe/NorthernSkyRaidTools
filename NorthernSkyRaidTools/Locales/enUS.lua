@@ -53,7 +53,9 @@ L["This import will overwrite your settings for Encounter Alerts, Aura Sounds an
 L["Export Profile + Shared Data"] = "Export Profile + Shared Data"
 L["Export Profile + Data"] = "Export Profile + Data"
 L["Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."
-L["Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."
+L["Includes Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Nicknames are never included."] = "Includes Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Nicknames are never included."
+L["This import will overwrite your settings for Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows, proceed?"] = "This import will overwrite your settings for Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows, proceed?"
+L["Exports your profile together with Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Nicknames are never included."] = "Exports your profile together with Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Nicknames are never included."
 L["Accept"] = "Accept"
 L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCFLeft click|r: Show/Hide Options Window"
 -- ============================================================================

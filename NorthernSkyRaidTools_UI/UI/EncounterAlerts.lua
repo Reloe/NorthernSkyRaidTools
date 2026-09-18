@@ -149,8 +149,8 @@ end
 
 local function ShowExportPopup(str, label)
     if not alertsExportPopup then
-        alertsExportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r",
-            "NSUIEncAlertExportString", { DontRightClickClose = true })
+        alertsExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r",
+            "NSUIEncAlertExportString", { UseScaleBar = false })
         alertsExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsExportPopup:SetFrameLevel(100)
 
@@ -182,8 +182,8 @@ end
 
 local function ShowImportPopup()
     if not alertsImportPopup then
-        alertsImportPopup = DF:CreateSimplePanel(NSUI, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
-            "NSUIEncAlertImportString", { DontRightClickClose = true })
+        alertsImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
+            "NSUIEncAlertImportString", { UseScaleBar = false })
         alertsImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsImportPopup:SetFrameLevel(100)
 

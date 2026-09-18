@@ -216,9 +216,9 @@ local function ShowAuraTrackingExportPopup(text, label)
         auraTrackingExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         NSI:SetUIFont(auraTrackingExportPopup.textbox.editbox, 13, "OUTLINE")
 
-        local doneBtn = DF:CreateButton(auraTrackingExportPopup, function()
+        local doneBtn = CreateLocalizedButton(auraTrackingExportPopup, "Done", function()
             auraTrackingExportPopup:Hide()
-        end, 100, 20, NSI:Loc("Done"))
+        end, 280, 20)
         doneBtn:SetPoint("BOTTOM", auraTrackingExportPopup, "BOTTOM", 0, 10)
     end
 
@@ -249,7 +249,7 @@ local function ShowAuraTrackingImportPopup(onImport)
         auraTrackingImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         NSI:SetUIFont(auraTrackingImportPopup.textbox.editbox, 13, "OUTLINE")
 
-        local importBtn = DF:CreateButton(auraTrackingImportPopup, function()
+        local importBtn = CreateLocalizedButton(auraTrackingImportPopup, "Import", function()
             local success, imported = NSI:ImportAuraTrackingString(auraTrackingImportPopup.textbox:GetText())
             if success then
                 auraTrackingImportPopup:Hide()
@@ -260,7 +260,7 @@ local function ShowAuraTrackingImportPopup(onImport)
             else
                 auraTrackingImportPopup.statusLabel:SetText("|cFFFF0000" .. NSI:Loc("Invalid Aura Tracking import string.") .. "|r")
             end
-        end, 100, 20, NSI:Loc("Import"))
+        end, 280, 20)
         importBtn:SetPoint("BOTTOM", auraTrackingImportPopup, "BOTTOM", 0, 10)
     end
 
