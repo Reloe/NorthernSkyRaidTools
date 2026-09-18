@@ -147,6 +147,14 @@ local function BuildAuraGlowsUI(screen)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -10)
     title:SetText(NSI:Loc("|cFF00FFFFAura|r Glows"))
 
+    local useBuiltinsCheckbox = CreateCheckButton(screen, NSI:Loc("Enable All Built-in Aura Glows"), function()
+        return NSRT.AuraGlows.UseBuiltinAuraGlows
+    end, function(_, enabled)
+        NSI:SetUseBuiltinAuraGlows(enabled)
+    end, leftWidth - pad * 2, 22, "NSUIAuraGlowUseBuiltins", NSI:Loc("Automatically enables all current and future built-in Aura Glows. Manual enabled-state changes are kept."))
+    useBuiltinsCheckbox:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -60)
+    NSI:SetUIFont(useBuiltinsCheckbox.label, 11, "")
+
     local searchEntry = CreateTextEntry(screen, nil, nil, nil, leftWidth - pad * 2, 22, nil, nil, nil, "NSUIAuraGlowSearch")
     searchEntry:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -34)
     local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -166,8 +174,8 @@ local function BuildAuraGlowsUI(screen)
     importButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowListScroll", screen, "UIPanelScrollFrameTemplate")
-    listScroll:SetSize(leftWidth - pad * 2, tabContentHeight - 88)
-    listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -60)
+    listScroll:SetSize(leftWidth - pad * 2, tabContentHeight - 114)
+    listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -86)
     ReskinScrollbar(listScroll)
     local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
     listChild:SetSize(leftWidth - pad * 2, 1)
@@ -397,6 +405,9 @@ local function BuildAuraGlowsUI(screen)
             end)
             row.check:SetOnChange(function(_, enabled)
                 row.entry.settings.enabled = enabled
+                if row.entry.builtin then
+                    row.entry.settings.enabledEdited = true
+                end
                 ApplySettings()
             end)
             row.trash:SetScript("OnClick", function() ConfirmDelete(row.entry.key, row.entry.settings.Name) end)

@@ -147,6 +147,7 @@ function NSI:AddMissingDefaults()
         AuraGlows = {
             Custom = {},
             Builtins = {},
+            UseBuiltinAuraGlows = false,
             UI = {},
             Groups = {},
         },

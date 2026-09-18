@@ -277,6 +277,8 @@ L["Apply Profile to All Characters?"] = "Apply Profile to All Characters?"
 L["Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."] = "Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."
 L["Apply to All Characters"] = "Apply to All Characters"
 L["Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."] = "Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."
+L["Enable All Built-in Aura Glows"] = "Enable All Built-in Aura Glows"
+L["Automatically enables all current and future built-in Aura Glows. Manual enabled-state changes are kept."] = "Automatically enables all current and future built-in Aura Glows. Manual enabled-state changes are kept."
 -- ============================================================================
 -- UI/Options/Reminders.lua — Spell Settings
 -- ============================================================================

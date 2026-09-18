@@ -125,7 +125,7 @@ local function CreateBuiltinAuraGlowSettings(self, key)
     if definition.encounterID then encounterIDs[definition.encounterID] = true end
     return self:CreateAuraGlowSettingsDefaults({
         Name = definition.name or key,
-        enabled = definition.enabled == true,
+        enabled = NSRT.AuraGlows.UseBuiltinAuraGlows == true or definition.enabled == true,
         builtin = true,
         Color = definition.color and CopyTable(definition.color) or nil,
         AuraFilters = CopyTable(definition.auraFilters or {}),
@@ -156,6 +156,18 @@ function NSI:ResetBuiltinAuraGlow(key)
     NSRT.AuraGlows.Builtins[key] = CreateBuiltinAuraGlowSettings(self, key)
     self:RebuildAuraGlows()
     self:RefreshAuraGlowPreview(key)
+end
+
+function NSI:SetUseBuiltinAuraGlows(enabled)
+    NSRT.AuraGlows.UseBuiltinAuraGlows = enabled == true
+    for key, definition in pairs(self.AuraGlowBuiltins) do
+        local settings = self:GetAuraGlowSettings(key)
+        if not settings.enabledEdited then
+            settings.enabled = enabled == true or definition.enabled == true
+        end
+    end
+    self:RebuildAuraGlows()
+    self:RefreshAuraGlowsUI()
 end
 
 function NSI:IterateAuraGlowEntries()
