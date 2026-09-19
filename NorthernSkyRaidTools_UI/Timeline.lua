@@ -1017,15 +1017,8 @@ function NSI:CreateTimelineWindow()
                     timelineWindow.editNote = nil
                     if timelineWindow.playButton then
                             -- Stop preview and hide play button in "All Reminders" mode
-                        if timelineWindow.previewActive then
-                            timelineWindow.previewActive = false
-                            timelineWindow.previewStartTime = nil
-                            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
-                                timelineWindow.timeline.previewLine:Hide()
-                            end
-                            NSI:HideAllReminders()
-                            timelineWindow.playButton.text = T("Play Preview")
-                            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                        if timelineWindow.StopPreview then
+                            timelineWindow.StopPreview(true)
                         end
                         timelineWindow.playButton:Hide()
                     end
@@ -1101,26 +1094,66 @@ function NSI:CreateTimelineWindow()
     local options_button_template = DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE")
     local playColor = { 20 / 255, 245 / 255, 87 / 255, 1 } -- {r,g,b,a}
     local stopColor = { 247 / 255, 32 / 255, 61 / 255, 1 } -- {r,g,b,a}
-    local playButton = DF:CreateButton(timelineWindow, function()
-        if timelineWindow.previewActive then
-            timelineWindow.previewActive = false
-            timelineWindow.previewStartTime = nil
-            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
-                timelineWindow.timeline.previewLine:Hide()
-            end
-            NSI:HideAllReminders()
-            timelineWindow.playButton.text = T("Play Preview")
-            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
-                14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
-        else
-            if not NSI.ProcessedReminder then NSI:ProcessReminder() end
-            if not NSI.ProcessedReminder then return end
-            timelineWindow.previewActive = true
-            timelineWindow.previewStartTime = GetTime()
-            NSI:StartReminders(1, true)
+
+    -- previewSeekTime is the parked playhead (absolute fight seconds). Play Preview
+    -- always starts from there; Shift+Click on the timeline moves it.
+    timelineWindow.previewSeekTime = 0
+
+    local function SetPlayButtonPlaying(playing)
+        if not timelineWindow.playButton then return end
+        if playing then
             timelineWindow.playButton.text = T("Stop Preview")
             timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\stop_icon.png", 14,
                 14, "OVERLAY", { 0.12, 0.88, 0.12, 0.88 }, stopColor)
+        else
+            timelineWindow.playButton.text = T("Play Preview")
+            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14,
+                14, "OVERLAY", { 0.1, 0.9, 0.09, 0.91 }, playColor)
+        end
+    end
+
+    function timelineWindow.StopPreview(resetSeek)
+        timelineWindow.previewActive = false
+        timelineWindow.previewStartTime = nil
+        if resetSeek then
+            timelineWindow.previewSeekTime = 0
+            if timelineWindow.timeline and timelineWindow.timeline.previewLine then
+                timelineWindow.timeline.previewLine:Hide()
+            end
+        end
+        NSI:HideAllReminders()
+        SetPlayButtonPlaying(false)
+    end
+
+    function timelineWindow.StartPreview(absoluteTime)
+        if not NSI.ProcessedReminder then NSI:ProcessReminder() end
+        if not NSI.ProcessedReminder then return end
+        if absoluteTime then
+            timelineWindow.previewSeekTime = math.max(0, absoluteTime)
+        end
+        local seek = timelineWindow.previewSeekTime or 0
+        local phase, phaseStart = NSI:PhaseFromTime(timelineWindow.currentEncounterID, seek, timelineWindow.currentDifficulty)
+        local phaseOffset = math.max(0, seek - (phaseStart or 0))
+        timelineWindow.previewActive = true
+        timelineWindow.previewStartTime = GetTime()
+        NSI:StartReminders(phase, true, phaseOffset)
+        SetPlayButtonPlaying(true)
+    end
+
+    function timelineWindow.SeekPreview(absoluteTime)
+        local timelineLength = (timelineWindow.timeline and timelineWindow.timeline.data and timelineWindow.timeline.data.length) or 300
+        local seek = math.max(0, math.min(timelineLength, absoluteTime or 0))
+        timelineWindow.previewSeekTime = seek
+        if timelineWindow.previewActive then
+            timelineWindow.StartPreview(seek)
+        end
+    end
+
+    local playButton = DF:CreateButton(timelineWindow, function()
+        if timelineWindow.previewActive then
+            timelineWindow.StopPreview(false)
+        else
+            timelineWindow.StartPreview()
         end
     end, 32, 22, T("Play Preview"))
     playButton:SetTemplate(options_button_template)
@@ -1661,6 +1694,20 @@ function NSI:CreateTimelineWindow()
 
             local payload = data.payload
 
+            -- Shift+Click seeks the preview playhead on any block (boss events
+            -- included). Personal-note blocks also get drag-to-retime below.
+            if not block._seekHookInstalled then
+                block._seekHookInstalled = true
+                block:EnableMouse(true)
+                block:HookScript("OnMouseDown", function(_, button)
+                    if button == "LeftButton" and IsShiftKeyDown() and timelineWindow.SeekPreview then
+                        local tl = timelineWindow.timeline
+                        local time = tl and tl.GetTimeUnderMouse and tl:GetTimeUnderMouse() or 0
+                        timelineWindow.SeekPreview(math.max(0, math.floor(time + 0.5)))
+                    end
+                end)
+            end
+
             -- Wire up drag-to-retime and right-click-add for personal-note blocks.
             -- Guard: install once per block (blocks are pooled and reused).
             if payload and payload.srcLineIndex and not block._dragHooksInstalled then
@@ -1669,6 +1716,14 @@ function NSI:CreateTimelineWindow()
 
                 block:HookScript("OnMouseDown", function(self, button)
                     if button == "LeftButton" then
+                        if IsShiftKeyDown() then
+                            local tl = timelineWindow.timeline
+                            local time = tl and tl.GetTimeUnderMouse and tl:GetTimeUnderMouse() or 0
+                            if timelineWindow.SeekPreview then
+                                timelineWindow.SeekPreview(math.max(0, math.floor(time + 0.5)))
+                            end
+                            return
+                        end
                         self._clickStartX, self._clickStartY = GetCursorPosition()
                         if timelineWindow.editNote then
                             timelineWindow.draggingBlock = self
@@ -2080,16 +2135,37 @@ function NSI:CreateTimelineWindow()
         end
     end
 
+    local function seekPreviewAtCursor()
+        if not timelineWindow.SeekPreview then return end
+        -- Don't let DetailsFramework's body-drag start panning on a seek click.
+        if timelineFrame.body then
+            timelineFrame.body.isDragging = false
+        end
+        local time
+        if timelineFrame.GetTimeUnderMouse then
+            time = timelineFrame:GetTimeUnderMouse()
+        else
+            local uiScale = 1 / timelineWindow:GetEffectiveScale()
+            local cursorX = GetCursorPosition() * uiScale
+            local bodyLeft = timelineFrame.body and (timelineFrame.body:GetLeft() or 0) or 0
+            local pps = (timelineFrame.options.pixels_per_second or 15) * (timelineFrame.currentScale or 1)
+            time = math.max(0, (cursorX - bodyLeft) / pps)
+        end
+        timelineWindow.SeekPreview(math.max(0, math.floor((time or 0) + 0.5)))
+    end
+
     timelineFrame:EnableMouse(true)
     timelineFrame:HookScript("OnMouseDown", function(self, button)
-        if button == "RightButton" then startRightDrag() end
+        if button == "RightButton" then startRightDrag()
+        elseif button == "LeftButton" and IsShiftKeyDown() then seekPreviewAtCursor() end
     end)
     timelineFrame:HookScript("OnMouseUp", function(self, button)
         if button == "RightButton" then stopRightDrag() end
     end)
 
     timelineFrame.body:HookScript("OnMouseDown", function(self, button)
-        if button == "RightButton" then startRightDrag() end
+        if button == "RightButton" then startRightDrag()
+        elseif button == "LeftButton" and IsShiftKeyDown() then seekPreviewAtCursor() end
     end)
     timelineFrame.body:HookScript("OnMouseUp", function(self, button)
         if button == "RightButton" then stopRightDrag() end
@@ -2237,8 +2313,11 @@ function NSI:CreateTimelineWindow()
                 dragGhostLine:Hide()
                 dragGhostIcon:Hide()
             end
+            local previewElapsed = timelineWindow.previewSeekTime or 0
             if timelineWindow.previewActive and timelineWindow.previewStartTime then
-                local previewElapsed = GetTime() - timelineWindow.previewStartTime
+                previewElapsed = previewElapsed + (GetTime() - timelineWindow.previewStartTime)
+            end
+            if timelineWindow.previewActive or (previewElapsed > 0) then
                 local pixelsPerSecond = timelineFrame.options.pixels_per_second or 15
                 local currentScale = timelineFrame.currentScale or 1
                 local elapsedHeight = timelineFrame.options.elapsed_timeline_height or 20
@@ -2260,16 +2339,18 @@ function NSI:CreateTimelineWindow()
                 end
 
                 local timelineLength = (timelineFrame.data and timelineFrame.data.length) or 300
-                if previewElapsed >= timelineLength then
-                    timelineWindow.previewActive = false
-                    timelineWindow.previewStartTime = nil
-                    previewLine:Hide()
-                    NSI:HideAllReminders()
-                    if timelineWindow.playButton then
-                        timelineWindow.playButton.text = T("Play Preview")
-                        timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                if timelineWindow.previewActive and previewElapsed >= timelineLength then
+                    if timelineWindow.StopPreview then
+                        timelineWindow.StopPreview(true)
+                    else
+                        timelineWindow.previewActive = false
+                        timelineWindow.previewStartTime = nil
+                        previewLine:Hide()
+                        NSI:HideAllReminders()
                     end
                 end
+            elseif not timelineWindow.previewActive then
+                previewLine:Hide()
             end
         end
     end)
@@ -2294,7 +2375,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Help text (positioned at bottom, below the sliders)
-    local helpLabel = DF:CreateLabel(timelineWindow, T("Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical | Edit mode: Right-click add, Left-drag retime"), 10, "gray")
+    local helpLabel = DF:CreateLabel(timelineWindow, T("Scroll: Zoom | Right-drag: Navigate | Ctrl+Scroll: Vertical | Shift+Click: Seek preview | Edit mode: Right-click add, Left-drag retime"), 10, "gray")
     helpLabel:SetPoint("BOTTOMLEFT", timelineWindow, "BOTTOMLEFT", 10, 5)
 
     -- Handle window resize to update timeline dimensions
@@ -2407,15 +2488,8 @@ function NSI:ViewNoteInTimeline(name, personal)
         window.editable = false
         window.editNote = nil
         if window.playButton then
-            if window.previewActive then
-                window.previewActive = false
-                window.previewStartTime = nil
-                if window.timeline and window.timeline.previewLine then
-                    window.timeline.previewLine:Hide()
-                end
-                self:HideAllReminders()
-                window.playButton.text = "Play Preview"
-                window.playButton:SetIcon(self.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+            if window.StopPreview then
+                window.StopPreview(true)
             end
             window.playButton:Hide()
         end
