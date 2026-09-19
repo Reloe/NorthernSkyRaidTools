@@ -519,6 +519,15 @@ local function BuildQoLOptions()
             spacement = true
         },
         {
+            type = "button",
+            name = "Abort Sorting",
+            desc = "Aborts the current group sorting process.",
+            func = function(self)
+                NSI:AbortGroupSort()
+            end,
+            spacement = true
+        },
+        {
             type = "toggle",
             boxfirst = true,
             name = "Show Missing Raidbuffs in Raid-Tab",
