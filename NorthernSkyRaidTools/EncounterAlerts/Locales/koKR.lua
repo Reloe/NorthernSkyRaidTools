@@ -99,7 +99,7 @@ L[3183] = {
     ["Lura Taunts_P3"]          = {group = "르우라 탱커", name = "2페 도발", text = "도발"},
     ["Full Blaze"]              = {group = "르우라 1사이페", name = "전원 가시", text = "전원 가시"},
     ["Seed-Drop"]               = {group = "르우라 2페", name = "수정 떨구기", text = "수정 떨구기"},
-    ["Old-Seed-Drop"]           = {group = "르우라 2페", name = "무조건 수정 떨구기", text = "수정 떨구기"},
+    ["Old-Seed-Drop"]           = {group = "르우라 2페", name = "수정 떨구기 (특임 아닐때)", text = "수정 떨구기"},
     ["Galvanize"]               = {group = "르우라 2페 바닥 맞기", name = "일반 바닥 맞기", text = "바닥 맞기"},
     ["Soak Star"]               = {group = "르우라 2페 바닥 맞기", name = "별 맞기", text = "{rt1} 맞기"},
     ["Soak Orange"]             = {group = "르우라 2페 바닥 맞기", name = "동글 맞기", text = "{rt2} 맞기"},
@@ -201,8 +201,8 @@ L[3497] = {
     ["MushroomBait"]            = {group = "무역상 스킬", name = "버섯 유도", text = "유도"},
     ["ExplosiveSurprise"]       = {group = "무역상 스킬", name = "폭탄 디버프", text = "폭탄 걸림"},
     ["MushroomJump"]            = {group = "무역상 스킬", name = "버섯 점프", text = "점프"},
-    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던질 타이밍", text = "던질 타이밍"},
-    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "무조건 물고기 던질 타이밍", text = "던질 타이밍"},
+    ["TimeToThrow"]             = {group = "무역상 스킬", name = "물고기 던지기", text = "던질 타이밍"},
+    ["TimeToThrowNonConditional"] = {group = "무역상 스킬", name = "물고기 던지기 (특임 아닐때)", text = "던질 타이밍"},
 }
 
 -- Sszorak (3420)
@@ -239,7 +239,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]       = {group = "똬리의 제단", name = "1페 전방스킬", text = "전방스킬"},
-    ["P1OrbDeadline"] = {group = "똬리의 제단", name = "구슬 운반 마감", text = "구슬 운반 마감"},
+    ["P1OrbDeadline"] = {group = "똬리의 제단", name = "구슬 들기 마감", text = "구슬 들기 마감"},
     ["P1Taunt"]         = {group = "똬리의 제단", name = "1페 도발", text = "도발"},
     ["P1Soak"]          = {group = "똬리의 제단", name = "1페 같이맞기", text = "같이맞기"},
     ["MindControls"] = {group = "똬리의 제단", name = "2페 정신 지배", text = "정신 지배"},
@@ -251,7 +251,7 @@ L[3429] = {
     ["EternalNightfallAbsorb"] = {group = "똬리의 제단", name = "영원한 일몰 보호막", text = ""},
     ["InterruptAdds"] = {group = "똬리의 제단", name = "2페 쫄 차단", text = "유령"},
     ["InterruptAssignments"] = {group = "똬리의 제단", name = "차단 배정", text = "차단"},
-    ["P3OrbDeadline"] = {group = "똬리의 제단", name = "3페 구슬 운반 마감", text = "구슬 운반 마감"},
+    ["P3OrbDeadline"] = {group = "똬리의 제단", name = "3페 구슬 들기 마감", text = "구슬 들기 마감"},
     ["P2_5WrongTarget"] = {group = "똬리의 제단", name = "타겟 잘못 잡음", text = "타겟 잘못 잡음"},
     ["P3Frontal"] = {group = "똬리의 제단", name = "3페 전방스킬", text = "전방스킬"},
     ["P3Soak"] = {group = "똬리의 제단", name = "3페 같이맞기", text = "같이맞기"},
@@ -266,7 +266,7 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "울라텍", name = "어미의 분노", text = "공격+넉백"},
     ["Waves"]               = {group = "울라텍", name = "부식의 파도", text = "파도"},
-    -- ["DragOut"]             = {group = "Ula'tek", name = "Drag out", text = "Drag out"},
+    ["DragOut"]             = {group = "울라텍", name = "쫄 끌고 가기", text = "쫄 끌고 가기"},
     ["DamageAmpIn"]         = {group = "울라텍", name = "곧 약화", text = "곧 약화"},
     ["DamageAmp"]           = {group = "울라텍", name = "약화 타이머", text = "약화됨"},
     ["PlatformBreak"]       = {group = "울라텍", name = "사냥감 포위", text = "바닥 꺼짐"},
@@ -276,10 +276,10 @@ L[3492] = {
     ["AddSoak"]             = {group = "울라텍", name = "쫄 맞기", text = "쫄 맞기"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
     ["BossSpawn"]           = {group = "울라텍", name = "보스 등장", text = "보스 등장"},
-    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
-    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
-    -- ["FirstGate"]           = {group = "Ula'tek", name = "First Gate", text = "Gate"},
-    -- ["SecondGate"]          = {group = "Ula'tek", name = "Second Gate", text = "Gate"},
+    ["FirstBreak"]          = {group = "울라텍", name = "1조 끊기", text = "1조 끊기"},
+    ["SecondBreak"]         = {group = "울라텍", name = "2조 끊기", text = "2조 끊기"},
+    ["FirstGate"]           = {group = "울라텍", name = "1조 관문", text = "관문"},
+    ["SecondGate"]          = {group = "울라텍", name = "2조 관문", text = "관문"},
     ["Sweep"]               = {group = "울라텍", name = "휩쓸기", text = "휩쓸기"},
     ["Soak"]                = {group = "울라텍", name = "바닥 맞기", text = "맞기"},
     ["TransitionSoakFirst"] = {group = "울라텍", name = "1조 맞기", text = "1조 맞기"},
@@ -290,6 +290,6 @@ L[3492] = {
     ["WaveDirectionPrompt"] = {group = "울라텍", name = "파도 방향 입력", text = "방향 입력"},
     ["InterruptAssignments"] = {group = "울라텍", name = "차단 배정", text = "차단"},
     ["TransitionPatternSoaks"] = {group = "울라텍", name = "사이페 바닥 맞기", text = "맞기"},
-    -- ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
-    -- ["AutoRelease"] = {group = "Ula'tek", name = "Auto Release", text = "Auto Release"},
+    ["PrePot"] = {group = "울라텍", name = "시작 전 물약", text = "시작 전 물약"},
+    ["AutoRelease"] = {group = "울라텍", name = "자동 영혼 전환", text = "자동 영혼 전환"},
 }
