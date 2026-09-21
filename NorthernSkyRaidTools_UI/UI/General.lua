@@ -9,23 +9,6 @@ local function T(key)
     return NSI:Loc(key)
 end
 
-function NSI:ConfirmApplyProfileToAllCharacters(name)
-    NSI.UI.Components.CreateDialog(
-        "NSRTApplyProfileToAllCharacters" .. name:gsub("%W", "_"),
-        T("Apply Profile to All Characters?"),
-        format(T("Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."), name),
-        T("Apply to All"),
-        function()
-            if NSI:SetMainProfile(name, true) then
-                print("|cFF00FFFFNSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), name))
-                local generalTab = NSUI.MenuFrame:GetTabFrameByName("General")
-                generalTab:RefreshOptions()
-            end
-        end,
-        T("Cancel")
-    )
-end
-
 local function CreateLabel(parent, text, size, flags)
     local label = parent:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(label, size or 12, flags or "")
@@ -40,6 +23,46 @@ local function CreateProfilePopup(width, height, name, title)
     popup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     popup:SetFrameLevel(100)
     return popup
+end
+
+local applyProfileToAllPopup
+local pendingApplyProfileName
+
+function NSI:ConfirmApplyProfileToAllCharacters(name)
+    if not applyProfileToAllPopup then
+        applyProfileToAllPopup = CreateProfilePopup(470, 170, "NSRTApplyProfileToAllCharacters", T("Apply Profile to All Characters?"))
+        applyProfileToAllPopup:SetFrameLevel(110)
+
+        local label = CreateLabel(applyProfileToAllPopup, "", 13)
+        label:SetTextColor(0.8, 0.8, 0.8, 1)
+        label:SetPoint("TOPLEFT", applyProfileToAllPopup, "TOPLEFT", 15, -35)
+        label:SetPoint("RIGHT", applyProfileToAllPopup, "RIGHT", -15, 0)
+        label:SetWordWrap(true)
+        applyProfileToAllPopup.label = label
+
+        local cancelButton = CreateLocalizedButton(applyProfileToAllPopup, "Cancel", function()
+            pendingApplyProfileName = nil
+            applyProfileToAllPopup:Hide()
+        end, 140, 24, "NSRTApplyProfileToAllCharactersCancel")
+        cancelButton:SetPoint("BOTTOMLEFT", applyProfileToAllPopup, "BOTTOMLEFT", 65, 15)
+
+        local applyButton = CreateLocalizedButton(applyProfileToAllPopup, "Apply to All", function()
+            local profileName = pendingApplyProfileName
+            pendingApplyProfileName = nil
+            applyProfileToAllPopup:Hide()
+            if NSI:SetMainProfile(profileName, true) then
+                print("|cFF00FFFFNSRT:|r " .. format(T("Profile '|cFFFFFFFF%s|r' is now the main profile for all characters."), profileName))
+                local generalTab = NSUI.MenuFrame:GetTabFrameByName("General")
+                generalTab:RefreshOptions()
+            end
+        end, 140, 24, "NSRTApplyProfileToAllCharactersConfirm")
+        applyButton:SetPoint("BOTTOMRIGHT", applyProfileToAllPopup, "BOTTOMRIGHT", -65, 15)
+        applyProfileToAllPopup:Hide()
+    end
+
+    pendingApplyProfileName = name
+    applyProfileToAllPopup.label:SetText(format(T("Apply profile '|cFFFFFFFF%s|r' to all characters? This replaces every existing character profile assignment."), name))
+    applyProfileToAllPopup:Show()
 end
 
 local function BuildExportStringUI()
@@ -104,10 +127,10 @@ local function BuildImportStringUI()
     local pendingSharedImport
     local pendingConflictImport
     local CompleteImport
-    local sharedImportPopup = CreateProfilePopup(430, 170, "NSUISharedImportConfirm", T("Import Profile"))
+    local sharedImportPopup = CreateProfilePopup(470, 170, "NSUISharedImportConfirm", T("Import Profile"))
     sharedImportPopup:SetFrameLevel(110)
 
-    local sharedImportLabel = CreateLabel(sharedImportPopup, T("This import will overwrite your settings for Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows, proceed?"), 13)
+    local sharedImportLabel = CreateLabel(sharedImportPopup, T("This import includes extra data that will overwrite your Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Choose what to import."), 13)
     sharedImportLabel:SetTextColor(0.8, 0.8, 0.8, 1)
     sharedImportLabel:SetPoint("TOPLEFT", sharedImportPopup, "TOPLEFT", 15, -35)
     sharedImportLabel:SetPoint("RIGHT", sharedImportPopup, "RIGHT", -15, 0)
@@ -117,19 +140,27 @@ local function BuildImportStringUI()
     local sharedImportCancelButton = CreateLocalizedButton(sharedImportPopup, "Cancel", function()
         pendingSharedImport = nil
         sharedImportPopup:Hide()
-    end, 120, 24, "NSUISharedImportCancel")
-    sharedImportCancelButton:SetPoint("BOTTOMLEFT", sharedImportPopup, "BOTTOMLEFT", 55, 15)
+    end, 100, 24, "NSUISharedImportCancel")
+    sharedImportCancelButton:SetPoint("BOTTOMLEFT", sharedImportPopup, "BOTTOMLEFT", 15, 15)
 
-    local sharedImportConfirmButton = CreateLocalizedButton(sharedImportPopup, "Proceed", function()
+    local sharedImportBasicSettingsButton = CreateLocalizedButton(sharedImportPopup, "Basic Settings Only", function()
+        local import = pendingSharedImport
+        pendingSharedImport = nil
+        sharedImportPopup:Hide()
+        if import then CompleteImport(import.string, false, import.overwrite, import.profileName, true) end
+    end, 160, 24, "NSUISharedImportBasicSettings")
+    sharedImportBasicSettingsButton:SetPoint("BOTTOM", sharedImportPopup, "BOTTOM", 0, 15)
+
+    local sharedImportAllDataButton = CreateLocalizedButton(sharedImportPopup, "Import All Data", function()
         local import = pendingSharedImport
         pendingSharedImport = nil
         sharedImportPopup:Hide()
         if import then CompleteImport(import.string, true, import.overwrite, import.profileName) end
-    end, 120, 24, "NSUISharedImportProceed")
-    sharedImportConfirmButton:SetPoint("BOTTOMRIGHT", sharedImportPopup, "BOTTOMRIGHT", -55, 15)
+    end, 128, 24, "NSUISharedImportAllData")
+    sharedImportAllDataButton:SetPoint("BOTTOMRIGHT", sharedImportPopup, "BOTTOMRIGHT", -15, 15)
     sharedImportPopup:Hide()
 
-    local conflictImportPopup = CreateProfilePopup(430, 170, "NSUIProfileImportConflict", T("Profile Already Exists"))
+    local conflictImportPopup = CreateProfilePopup(470, 170, "NSUIProfileImportConflict", T("Profile Already Exists"))
     conflictImportPopup:SetFrameLevel(110)
 
     local conflictImportLabel = CreateLabel(conflictImportPopup, "", 13)
@@ -162,12 +193,15 @@ local function BuildImportStringUI()
     conflictImportOverwriteButton:SetPoint("BOTTOMRIGHT", conflictImportPopup, "BOTTOMRIGHT", -15, 15)
     conflictImportPopup:Hide()
 
-    CompleteImport = function(importString, allowSharedData, overwrite, profileName)
+    CompleteImport = function(importString, allowSharedData, overwrite, profileName, ignoreSharedData)
         local importedName, importError
         if overwrite then
-            importedName, importError = NSAPI:OverrideProfile(importString, profileName, {allowSharedData = allowSharedData})
+            importedName, importError = NSAPI:OverrideProfile(importString, profileName, {
+                allowSharedData = allowSharedData,
+                ignoreSharedData = ignoreSharedData,
+            })
         else
-            importedName, importError = NSAPI:ImportProfileString(importString, profileName, allowSharedData)
+            importedName, importError = NSAPI:ImportProfileString(importString, profileName, allowSharedData, ignoreSharedData)
         end
         if importError == "shared_data" then
             pendingSharedImport = { string = importString, overwrite = overwrite, profileName = profileName }

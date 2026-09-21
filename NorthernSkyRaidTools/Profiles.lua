@@ -814,8 +814,8 @@ function NSI:ExportProfileString(includeSharedData, profileName)
     return self:EncodeExportData(exportTable, "Profile")
 end
 
-function NSAPI:ExportProfile(profileKey)
-    return NSI:ExportProfileString(false, profileKey)
+function NSAPI:ExportProfile(profileKey, includeExtraData)
+    return NSI:ExportProfileString(includeExtraData == true, profileKey)
 end
 
 function NSAPI:ImportProfile(profileString, profileKey)
@@ -895,12 +895,16 @@ function NSAPI:SetMainProfile(name)
     return true
 end
 
-function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name is optional
+function NSAPI:ImportProfileString(importString, name, allowSharedData, ignoreSharedData) -- name is optional
     local exportTable = NSI:DecodeExportData(importString, "Profile")
     if type(exportTable) ~= "table" then return nil end
     local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
     if sharedData and next(sharedData) and not allowSharedData then
-        return nil, "shared_data"
+        if ignoreSharedData then
+            sharedData = nil
+        else
+            return nil, "shared_data"
+        end
     end
     local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
@@ -962,7 +966,11 @@ function NSAPI:OverrideProfile(importString, name, options)
 
     local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
     if sharedData and next(sharedData) and not options.allowSharedData then
-        return nil, "shared_data"
+        if options.ignoreSharedData then
+            sharedData = nil
+        else
+            return nil, "shared_data"
+        end
     end
 
     local preserved = {}
