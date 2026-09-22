@@ -819,12 +819,19 @@ function NSAPI:ExportProfile(profileKey, includeExtraData)
 end
 
 function NSAPI:ImportProfile(profileString, profileKey)
-    if type(profileKey) ~= "string" or profileKey == "" then return false end
+    if type(profileString) ~= "string" or profileString == "" then return false end
+    if profileKey ~= nil and (type(profileKey) ~= "string" or profileKey == "") then return false end
 
-    if NSAPI:ProfileExists(profileKey) then
-        return NSAPI:OverrideProfile(profileString, profileKey, {allowSharedData = false}) ~= nil
+    if NSI:LoadUI() then
+        return NSI.NSUI.import_string_popup:ImportProfileFromAPI(profileString, profileKey)
     end
-    return NSAPI:ImportProfileString(profileString, profileKey, false) ~= nil
+
+    if NSI.NSUI and NSI.NSUI.Initializing then
+        NSI.PendingProfileImport = { string = profileString, profileKey = profileKey }
+        return true
+    end
+
+    return false
 end
 
 function NSAPI:DecodeProfileString(profileString)

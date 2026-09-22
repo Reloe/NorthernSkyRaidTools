@@ -521,6 +521,11 @@ function NSUI:Init()
             self.MenuFrame:SelectTabByName("EncounterAlerts")
             self.encounters_frame:OpenAlert(pendingOpenAlert.encID, pendingOpenAlert.diffID, pendingOpenAlert.internalID)
         end
+        local pendingProfileImport = NSI.PendingProfileImport
+        if pendingProfileImport then
+            NSI.PendingProfileImport = nil
+            self.import_string_popup:ImportProfileFromAPI(pendingProfileImport.string, pendingProfileImport.profileKey)
+        end
     end)
     end)
 

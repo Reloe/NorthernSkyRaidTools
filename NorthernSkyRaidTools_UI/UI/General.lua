@@ -127,6 +127,7 @@ local function BuildImportStringUI()
     local pendingSharedImport
     local pendingConflictImport
     local CompleteImport
+    local BeginImport
     local sharedImportPopup = CreateProfilePopup(470, 170, "NSUISharedImportConfirm", T("Import Profile"))
     sharedImportPopup:SetFrameLevel(110)
 
@@ -216,15 +217,14 @@ local function BuildImportStringUI()
         end
     end
 
-    popup.import_confirm_button = CreateLocalizedButton(popup, "Import", function()
-        local importString = popup.test_string_text_box:GetText()
+    BeginImport = function(importString, requestedProfileName)
         local exportTable = NSI:DecodeExportData(importString, "Profile")
         if type(exportTable) ~= "table" then
             statusLabel:SetText("|cFFFF0000" .. T("Invalid import string. Please check and try again.") .. "|r")
             return
         end
 
-        local profileName = exportTable.profileName or "Imported"
+        local profileName = requestedProfileName or exportTable.profileName or "Imported"
         if NSAPI:ProfileExists(profileName) then
             pendingConflictImport = { string = importString, profileName = profileName }
             conflictImportLabel:SetText(format(T("A profile named '|cFFFFFFFF%s|r' already exists. Overwrite it or create a copy?"), profileName))
@@ -232,15 +232,38 @@ local function BuildImportStringUI()
         else
             CompleteImport(importString, false, false, profileName)
         end
+    end
+
+    popup.import_confirm_button = CreateLocalizedButton(popup, "Import", function()
+        if not NSAPI:ImportProfile(popup.test_string_text_box:GetText()) then
+            statusLabel:SetText("|cFFFF0000" .. T("Invalid import string. Please check and try again.") .. "|r")
+        end
     end, 280, 20, "NSUIImportStringConfirm")
     popup.import_confirm_button:SetPoint("BOTTOM", popup, "BOTTOM", 0, 10)
 
     popup:HookScript("OnShow", function()
+        local pendingImport = popup.pendingAPIImport
+        popup.pendingAPIImport = nil
         popup:SetTitle("|cFF00FFFF" .. T("Import Profile") .. "|r")
         statusLabel:SetText(T("Paste a profile string below and click Import."))
         popup.test_string_text_box:SetText("")
         popup.test_string_text_box:SetFocus()
+        if pendingImport then
+            C_Timer.After(0, function()
+                if popup:IsShown() then BeginImport(pendingImport.string, pendingImport.profileKey) end
+            end)
+        end
     end)
+
+    function popup:ImportProfileFromAPI(importString, profileKey)
+        if self:IsShown() then
+            BeginImport(importString, profileKey)
+        else
+            self.pendingAPIImport = { string = importString, profileKey = profileKey }
+            self:Show()
+        end
+        return true
+    end
 
     popup:Hide()
     return popup
