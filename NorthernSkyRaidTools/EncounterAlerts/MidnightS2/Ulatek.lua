@@ -2,7 +2,6 @@ local _, NSI = ... -- Internal namespace
 
 local encID = 3492
 local UlatekBossRoomAreaID = 17702
-local PrePotExpiration = 15
 -- /run NSAPI:DebugEncounter(3492)
 
 local GRASPING_FANGS_LEFT = "UlatekGraspingFangsLeftSide"
@@ -62,11 +61,12 @@ NSI.PreCombatPullTimerHandlers[encID] = function(self, event, _, timeRemaining)
     local alert = difficulty and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficulty] and NSRT.EncounterAlerts[encID][difficulty].PrePot
     if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
 
+    local reminderLeadTime = alert.ReminderLeadTime or 15
     self.UlatekPrePotEndTime = GetTime() + timeRemaining
-    local duration = math.min(alert.dur, timeRemaining - PrePotExpiration)
+    local duration = math.min(alert.dur, timeRemaining - reminderLeadTime)
     if duration <= 0 then return end
-    self.UlatekPrePotTimer = C_Timer.NewTimer(timeRemaining - PrePotExpiration - duration, function()
-        local remaining = self.UlatekPrePotEndTime and self.UlatekPrePotEndTime - GetTime() - PrePotExpiration
+    self.UlatekPrePotTimer = C_Timer.NewTimer(timeRemaining - reminderLeadTime - duration, function()
+        local remaining = self.UlatekPrePotEndTime and self.UlatekPrePotEndTime - GetTime() - reminderLeadTime
         if not remaining or remaining <= 0 or UnitAffectingCombat("player") or not IsInUlatekBossRoom() then return end
         duration = math.min(alert.dur, remaining)
         local reminder = CopyTable(alert)
@@ -487,6 +487,12 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Ula'tek", internalID = "PrePot", name = "Pre-Pot", text = "Pre-Pot", DisplayType = "Text", encID = encID, TTS = "Pre-Pot", TTSTimer = 2, dur = 8, spellID = 1295132, phase = 1,
         difficulties = {16}, isSpecialDisplay = true, BlockCopy = true,
+        extraOptions = {
+            {Type = "Slider", label = NSI:Loc("Pre-Pot Reminder (Seconds Before Pull)"), min = 1, max = 30, step = 1,
+                get = [[return function() return NSRT.EncounterAlerts[3492][16].PrePot.ReminderLeadTime or 15 end]],
+                set = [[return function(NSI, value) NSRT.EncounterAlerts[3492][16].PrePot.ReminderLeadTime = value end]],
+                tooltip = {title = NSI:Loc("Pre-Pot Reminder (Seconds Before Pull)"), desc = NSI:Loc("How many seconds before the pull the pre-pot reminder appears.")}},
+        },
     }
     self:AddEncounterAlert(data)
 
