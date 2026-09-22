@@ -76,7 +76,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:CreateGenericDisplays()
         self:InitLDB()
-        self:InitQoL()
+        if self.InitQoL then self:InitQoL() end
         self:InitPlayerStatsDisplay()
         self:RestoreBreakTimer()
         self:CacheSounds()
@@ -358,7 +358,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
         self:NewNickName(unit, nickname, name, realm, channel)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
-        self:ArrangeGroups()
+        if self.ArrangeGroups then self:ArrangeGroups() end
         if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
         self.GroupUpdateTimer = C_Timer.After(2, function()
             self.GroupUpdateTimer = nil
@@ -367,10 +367,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:RefreshDebuffOverviewContainers()
                 self:CacheUnitFrames()
             end
-            self:UpdateRaidBuffFrame()
+            if self.UpdateRaidBuffFrame then self:UpdateRaidBuffFrame() end
         end)
         if self:Restricted() then return end
-        if self.InviteInProgress then
+        if self.InviteInProgress and self.InviteList then
             if not UnitInRaid("player") then
                 C_PartyInfo.ConvertToRaid()
                 C_Timer.After(1, function() -- send invites again if player is now in a raid
@@ -440,7 +440,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_BREAK_TIMER_SYNC" and internal then
         local unit, endServerTime, duration = ...
         self:ReceiveBreakTimerSync(unit, endServerTime, duration)
-    elseif e == "QoL_Comms" and internal then
+    elseif e == "QoL_Comms" and internal and self.QoLEvents then
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end

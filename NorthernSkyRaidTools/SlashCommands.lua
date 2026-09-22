@@ -62,11 +62,11 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg:match("^break") or msg:match("^brb") then
         NSI:BreakCommand(msg:match("^%a+%s*(.*)$"))
     elseif msg == "invite" then
-        NSI:InviteFromReminder(NSRT.ActiveReminder, true)
+        if NSI.InviteFromReminder then NSI:InviteFromReminder(NSRT.ActiveReminder, true) end
     elseif msg == "inv" then
-        NSI:InviteOnlineGuildMembers()
+        if NSI.InviteOnlineGuildMembers then NSI:InviteOnlineGuildMembers() end
     elseif msg == "arrange" then
-        NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
+        if NSI.ArrangeFromReminder then NSI:ArrangeFromReminder(NSRT.ActiveReminder, true) end
     elseif msg == "debuglogs" then
         NSRT.Settings.DebugLogs = not NSRT.Settings.DebugLogs
         NSI:UpdateDebugLogEvents()

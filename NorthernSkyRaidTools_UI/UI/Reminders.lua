@@ -869,7 +869,7 @@ local function BuildReminderScreen(personal, parentFrame)
     DeleteButton:SetPoint("LEFT", UpdateButton.frame, "RIGHT", 5, 0)
     table.insert(roleGatedButtons, DeleteButton)
 
-    if not personal then
+    if not personal and NSI.InviteFromReminder and NSI.ArrangeFromReminder then
         local function GetInviteReminderInput()
             if screen.viewingReceivedNote then
                 SaveReceivedNote()
