@@ -208,7 +208,7 @@ L[3497] = {
 -- Sszorak (3420)
 L[3420] = {
     ["TankCombo"]   = {group = "스조라크", name = "탱커 연속 공격", text = "탱커 연속 공격"},
-    ["SetMarkers"]  = {group = "스조라크", name = "바닥징 찍기 알림", text = "바닥징 찍기"},
+    ["SetMarkers"]  = {group = "스조라크", name = "징표 찍는 타이밍", text = "징표 찍기"},
     ["DamageAmp"]   = {group = "스조라크", name = "약화됨", text = "약화됨"},
     ["Bait"]        = {group = "스조라크", name = "유도", text = "유도"},
     ["WindDebuffs"] = {group = "스조라크", name = "바람 디버프", text = "바람 디버프"},
@@ -272,7 +272,7 @@ L[3492] = {
     ["PlatformBreak"]       = {group = "울라텍", name = "사냥감 포위", text = "바닥 꺼짐"},
     ["Debuffs"]             = {group = "울라텍", name = "뱀의 물어뜯기", text = "디버프"},
     ["Eggs"]                = {group = "울라텍", name = "알", text = "알"},
-    ["EggDeadline"]         = {group = "울라텍", name = "알 운반 마감", text = "알 운반 마감"},
+    ["EggDeadline"]         = {group = "울라텍", name = "알 들기 마감", text = "알 들기 마감"},
     ["AddSoak"]             = {group = "울라텍", name = "쫄 맞기", text = "쫄 맞기"},
     ["Adds"]                = {group = "울라텍", name = "3페 쫄", text = "쫄"},
     ["BossSpawn"]           = {group = "울라텍", name = "보스 등장", text = "보스 등장"},
