@@ -124,6 +124,11 @@ function NSI:LoadUI(showOptions, pendingTabName)
     return self.NSUI and self.NSUI.Initialized == true
 end
 
+function NSI:ShowUIDisabledMessage()
+    if C_AddOns.GetAddOnEnableState(self.UIAddonName, UnitGUID("player")) ~= 0 then return end
+    print(self:Loc("|cFF00FFFFNSRT|r Northern Sky Raid Tools UI is disabled. Enable the Northern Sky Raid Tools - UI addon in the AddOns list and reload the interface."))
+end
+
 function NSI:InitLDB()
     if LDB then
         local databroker = LDB:NewDataObject("NSRT", {
@@ -135,6 +140,8 @@ function NSI:InitLDB()
                 if button == "LeftButton" then
                     if NSI:LoadUI(true) then
                         NSI.NSUI:ToggleOptions()
+                    else
+                        NSI:ShowUIDisabledMessage()
                     end
                 end
             end,

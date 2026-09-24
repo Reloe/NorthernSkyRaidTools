@@ -56,6 +56,7 @@ L["Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tra
 L["Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."
 L["Accept"] = "Accept"
 L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCFLeft click|r: Show/Hide Options Window"
+L["|cFF00FFFFNSRT|r Northern Sky Raid Tools UI is disabled. Enable the Northern Sky Raid Tools - UI addon in the AddOns list and reload the interface."] = "|cFF00FFFFNSRT|r Northern Sky Raid Tools UI is disabled. Enable the Northern Sky Raid Tools - UI addon in the AddOns list and reload the interface."
 -- ============================================================================
 -- SlashCommands.lua
 -- ============================================================================
