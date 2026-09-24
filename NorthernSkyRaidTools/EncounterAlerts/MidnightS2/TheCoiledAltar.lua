@@ -218,8 +218,8 @@ local debuffCirclePreview = [[return function(NSI)
     local data = {Version = {versionNumber = 1, [1] = {group = "Coiled Altar"}}, group = "Coiled Altar", internalID = "P3Shield", name = "P3 Shield", text = "Shield", DisplayType = "Text", encID = encID, phase = 3, TTS = false, dur = 6,
         spellID = 1310752,
         timers = {
-            [15] = {41.9, 141.8},
-            [16] = {39, 139},
+            [15] = {39, 139},
+            [16] = {38, 134.8},
         },
     }
     self:AddEncounterAlert(data)
