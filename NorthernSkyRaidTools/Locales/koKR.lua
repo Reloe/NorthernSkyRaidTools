@@ -56,6 +56,7 @@ L["Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tra
 L["Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "공격대 경고, 오라 효과음, 오라 트래킹을 포함합니다. 닉네임은 포함되지 않습니다."
 L["Accept"] = "수락"
 L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCF왼쪽 클릭|r: 옵션 창 표시/숨기기"
+L["|cFF00FFFFNSRT|r Northern Sky Raid Tools UI is disabled. Enable the Northern Sky Raid Tools - UI addon in the AddOns list and reload the interface."] = "|cFF00FFFFNSRT|r Northern Sky Raid Tools UI가 비활성화 상태입니다. 애드온 목록에서 Northern Sky Raid Tools - UI 애드온을 활성화한 후 인터페이스를 재시작해주세요."
 -- ============================================================================
 -- SlashCommands.lua
 -- ============================================================================
