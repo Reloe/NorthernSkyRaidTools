@@ -219,7 +219,7 @@ local debuffCirclePreview = [[return function(NSI)
         spellID = 1310752,
         timers = {
             [15] = {41.9, 141.8},
-            [16] = {38, 134.8},
+            [16] = {39, 139},
         },
     }
     self:AddEncounterAlert(data)
