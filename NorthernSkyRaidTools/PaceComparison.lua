@@ -657,22 +657,25 @@ local function GetPaceComparisonDeltaColorKey(delta)
     return "FarBehindColor"
 end
 
-local function FormatPaceComparisonDeltaLabel(tenth)
-    if tenth == 0 then return "0%" end
-    local sign = tenth > 0 and "+" or "-"
-    local absoluteTenth = math.abs(tenth)
-    if absoluteTenth % 10 == 0 then
-        return sign .. (absoluteTenth / 10) .. "%"
-    end
-    return sign .. string.format("%.1f%%", absoluteTenth / 10)
+local function GetPaceComparisonDeltaStep()
+    local configuredStep = tonumber(NSRT.PaceComparison.Display.DeltaStep) or 0.5
+    return math.floor(math.max(0.1, math.min(configuredStep, 1)) * 10 + 0.5) / 10
 end
 
-local function GetPaceComparisonDeltaAlphaCurve(expected, tenth)
+local function FormatPaceComparisonDeltaLabel(delta)
+    if delta == 0 then return "0%" end
+    local sign = delta > 0 and "+" or "-"
+    return sign .. FormatPaceComparisonNumber(math.abs(delta), 1) .. "%"
+end
+
+local function GetPaceComparisonDeltaAlphaCurve(expected, stepIndex)
     expected = tonumber(expected) or 100
     expected = math.max(0, math.min(expected, 100))
-    local delta = tenth / 10
-    local lower = (expected + delta - 0.05) / 100
-    local upper = (expected + delta + 0.05) / 100
+    local step = GetPaceComparisonDeltaStep()
+    local delta = stepIndex * step
+    local halfStep = step / 2
+    local lower = (expected + delta - halfStep) / 100
+    local upper = (expected + delta + halfStep) / 100
     local colorKey = GetPaceComparisonDeltaColorKey(delta)
     local epsilon = 0.00001
     local color = NSI.PaceComparisonColorCache[colorKey]
@@ -712,6 +715,8 @@ local function GetPaceComparisonOverflowAlphaCurve(expected, isBehind)
     expected = tonumber(expected) or 100
     expected = math.max(0, math.min(expected, 100))
     local epsilon = 0.00001
+    local step = GetPaceComparisonDeltaStep()
+    local range = step * 50
     local colorKey = isBehind and "FarBehindColor" or "AheadColor"
     local color = NSI.PaceComparisonColorCache[colorKey]
     local hidden = color.hidden
@@ -720,7 +725,7 @@ local function GetPaceComparisonOverflowAlphaCurve(expected, isBehind)
     curve:SetType(Enum.LuaCurveType.Step)
 
     if isBehind then
-        local lower = (expected + 5.05) / 100
+        local lower = (expected + range + step / 2) / 100
         if lower >= 1 then
             curve:AddPoint(0, hidden)
             curve:AddPoint(1, hidden)
@@ -732,7 +737,7 @@ local function GetPaceComparisonOverflowAlphaCurve(expected, isBehind)
         curve:AddPoint(math.min(lower + epsilon, 1), shown)
         curve:AddPoint(1, shown)
     else
-        local upper = (expected - 5.05) / 100
+        local upper = (expected - range - step / 2) / 100
         if upper <= 0 then
             curve:AddPoint(0, hidden)
             curve:AddPoint(1, hidden)
@@ -766,18 +771,19 @@ end
 local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
     if not line.Deltas then return end
     local current = sample and sample.previewCurrent
-    local roundedTenth = current and math.floor(((current - sample.expected) * 10) + 0.5)
+    local step = GetPaceComparisonDeltaStep()
+    local roundedStep = current and math.floor(((current - sample.expected) / step) + 0.5)
     local unitExists = sample and UnitExists(unit)
 
-    for tenth = -50, 50 do
-        local label = line.Deltas[tenth]
+    for stepIndex = -50, 50 do
+        local label = line.Deltas[stepIndex]
         if sample then
-            if isPreview and roundedTenth then
-                local delta = tenth / 10
+            if isPreview and roundedStep then
+                local delta = stepIndex * step
                 local color = NSI.PaceComparisonColorCache[GetPaceComparisonDeltaColorKey(delta)]
-                label:SetTextColor(color.r, color.g, color.b, roundedTenth == tenth and 1 or 0)
+                label:SetTextColor(color.r, color.g, color.b, roundedStep == stepIndex and 1 or 0)
             elseif unitExists then
-                local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonDeltaAlphaCurve(sample.expected, tenth))
+                local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonDeltaAlphaCurve(sample.expected, stepIndex))
                 if type(r) == "table" and r.GetRGBA then
                     label:SetTextColor(r:GetRGBA())
                 else
@@ -796,8 +802,8 @@ local function UpdatePaceComparisonDeltaLabels(line, unit, sample, isPreview)
         local label = data.Label
         if sample then
             local color = NSI.PaceComparisonColorCache[data.ColorKey]
-            if isPreview and roundedTenth then
-                local visible = (data.IsBehind and roundedTenth > 50) or (not data.IsBehind and roundedTenth < -50)
+            if isPreview and roundedStep then
+                local visible = (data.IsBehind and roundedStep > 50) or (not data.IsBehind and roundedStep < -50)
                 label:SetTextColor(color.r, color.g, color.b, visible and 1 or 0)
             elseif unitExists then
                 local r, g, b, a = UnitHealthPercent(unit, true, GetPaceComparisonOverflowAlphaCurve(sample.expected, data.IsBehind))
@@ -817,16 +823,17 @@ end
 
 local function ApplyPaceComparisonLineStyle(line, fontPath, fontSize, fontFlags)
     line.Label:SetFont(fontPath, fontSize, fontFlags)
-    for tenth = -50, 50 do
-        if line.Deltas and line.Deltas[tenth] then
-            line.Deltas[tenth]:SetFont(fontPath, fontSize, fontFlags)
-            line.Deltas[tenth]:SetText(FormatPaceComparisonDeltaLabel(tenth))
+    local step = GetPaceComparisonDeltaStep()
+    for stepIndex = -50, 50 do
+        if line.Deltas and line.Deltas[stepIndex] then
+            line.Deltas[stepIndex]:SetFont(fontPath, fontSize, fontFlags)
+            line.Deltas[stepIndex]:SetText(FormatPaceComparisonDeltaLabel(stepIndex * step))
         end
     end
     if line.OverflowDeltas then
         for _, data in ipairs(line.OverflowDeltas) do
             data.Label:SetFont(fontPath, fontSize, fontFlags)
-            data.Label:SetText(data.Text)
+            data.Label:SetText("> " .. FormatPaceComparisonDeltaLabel((data.IsBehind and 1 or -1) * step * 50))
         end
     end
     line.Label:SetTextColor(1, 1, 1, 1)
@@ -859,21 +866,21 @@ function NSI:AcquirePaceComparisonLine(index)
     line.OverflowDeltas = {}
 
     line.Label:SetPoint("LEFT", line, "LEFT", 0, 0)
-    for tenth = -50, 50 do
+    for stepIndex = -50, 50 do
         local label = line:CreateFontString(nil, "OVERLAY")
         label:SetPoint("LEFT", line.Label, "RIGHT", 8, 0)
         label:SetTextColor(1, 1, 1, 0)
-        line.Deltas[tenth] = label
+        line.Deltas[stepIndex] = label
     end
     local aheadOverflow = line:CreateFontString(nil, "OVERLAY")
     aheadOverflow:SetPoint("LEFT", line.Label, "RIGHT", 8, 0)
     aheadOverflow:SetTextColor(1, 1, 1, 0)
-    line.OverflowDeltas[1] = { Label = aheadOverflow, Text = "> -5%", ColorKey = "AheadColor", IsBehind = false }
+    line.OverflowDeltas[1] = { Label = aheadOverflow, ColorKey = "AheadColor", IsBehind = false }
 
     local behindOverflow = line:CreateFontString(nil, "OVERLAY")
     behindOverflow:SetPoint("LEFT", line.Label, "RIGHT", 8, 0)
     behindOverflow:SetTextColor(1, 1, 1, 0)
-    line.OverflowDeltas[2] = { Label = behindOverflow, Text = "> +5%", ColorKey = "FarBehindColor", IsBehind = true }
+    line.OverflowDeltas[2] = { Label = behindOverflow, ColorKey = "FarBehindColor", IsBehind = true }
 
     if NSRT and NSRT.PaceComparison then
         local settings = NSRT.PaceComparison.Display
