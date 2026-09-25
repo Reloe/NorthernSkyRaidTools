@@ -470,8 +470,16 @@ function NSI:RebuildAuraSounds(updateDefaults)
         self:ApplyDefaultAuraSounds(false, true, NSRT.AuraSounds.UseDefaultDungeonAuraSounds)
     end
     for key, info in pairs(NSRT.AuraSounds) do
-        if type(info) == "table" and info.sound then
-            self:AddAuraSound(info.spellID, info.sound, key, info.unit, info.eventType, info.throttleSeconds)
+        if type(info) == "table" then
+            if info.throttleSeconds ~= nil then
+                local throttleSeconds = tonumber(info.throttleSeconds)
+                if throttleSeconds and throttleSeconds >= 0 then
+                    info.throttleSeconds = math.min(throttleSeconds, 5)
+                end
+            end
+            if info.sound then
+                self:AddAuraSound(info.spellID, info.sound, key, info.unit, info.eventType, info.throttleSeconds)
+            end
         end
     end
 end
@@ -496,6 +504,11 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSec
         local trigger = AuraSoundEventTriggers[eventType] or AuraSoundEventTriggers.applied
         throttleSeconds = tonumber(throttleSeconds)
         if not throttleSeconds or throttleSeconds < 0 then throttleSeconds = 1 end
+        throttleSeconds = math.min(throttleSeconds, 5)
+        local saved = entryKey and NSRT.AuraSounds[entryKey]
+        if type(saved) == "table" and saved.throttleSeconds ~= nil then
+            saved.throttleSeconds = throttleSeconds
+        end
         local soundIDs = {}
         for _, unitToken in ipairs(units) do
             local soundInfo = {
@@ -557,7 +570,8 @@ function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, 
     if throttleSeconds ~= nil then
         throttleSeconds = tonumber(throttleSeconds)
         if throttleSeconds and throttleSeconds >= 0 then
-            NSRT.AuraSounds[entryKey].throttleSeconds = throttleSeconds
+            NSRT.AuraSounds[entryKey].throttleSeconds = math.min(throttleSeconds, 5)
+            throttleSeconds = NSRT.AuraSounds[entryKey].throttleSeconds
         end
     end
     self:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSeconds)

@@ -1091,6 +1091,8 @@ local function BuildAuraSoundsUI(parent)
                 row.throttleEntry:SetValue(entry and entry.throttleSeconds or 1)
                 return
             end
+            throttleSeconds = math.min(throttleSeconds, 5)
+            row.throttleEntry:SetValue(throttleSeconds)
             entry.throttleSeconds = throttleSeconds
             local sound = entry.deleted and nil or entry.sound
             NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType, throttleSeconds)
