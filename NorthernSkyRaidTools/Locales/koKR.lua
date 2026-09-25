@@ -1485,6 +1485,7 @@ L["At how many seconds remaining you would like to hear a TTS countdown"] = "TTS
 L["Pace-Comparison"] = "공략 속도 비교"
 L["|cFF00FFFFPace|r-Comparison"] = "|cFF00FFFF공략 속도|r 비교"
 L["Pace Comparison Display"] = "공략 속도 비교 디스플레이"
+L["Step Size"] = "단계 크기"
 L["Line Spacing"] = "줄 간격"
 L["Update Interval"] = "업데이트 주기"
 L["Ahead Color"] = "앞서있음 색상"
