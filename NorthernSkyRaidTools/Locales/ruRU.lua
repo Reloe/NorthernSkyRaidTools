@@ -56,6 +56,7 @@ L["Exports your profile together with Encounter Alerts, Aura Sounds and Aura Tra
 L["Includes Encounter Alerts, Aura Sounds and Aura Tracking. Nicknames are never included."] = "Включает оповещения боёв, звуки аур и отслеживание аур. Никнеймы никогда не включаются."
 L["Accept"] = "Принять"
 L["|cFFCFCFCFLeft click|r: Show/Hide Options Window"] = "|cFFCFCFCFЛКМ|r: Показать/скрыть окно настроек"
+L["|cFF00FFFFNSRT|r Northern Sky Raid Tools UI is disabled. Enable the Northern Sky Raid Tools - UI addon in the AddOns list and reload the interface."] = "|cFF00FFFFNSRT|r Интерфейс Northern Sky Raid Tools отключён. Включите аддон Northern Sky Raid Tools - UI в списке аддонов и перезагрузите интерфейс."
 
 -- ============================================================================
 -- SlashCommands.lua
