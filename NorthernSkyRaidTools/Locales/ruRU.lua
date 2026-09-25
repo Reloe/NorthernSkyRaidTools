@@ -1515,6 +1515,7 @@ L["At how many seconds remaining you would like to hear a TTS countdown"] = "З�
 L["Pace-Comparison"] = "Сравнение темпа"
 L["|cFF00FFFFPace|r-Comparison"] = "|cFF00FFFFТемп|r Сравнение"
 L["Pace Comparison Display"] = "Отображение сравнения темпа"
+L["Step Size"] = "Размер шага"
 L["Line Spacing"] = "Межстрочный интервал"
 L["Update Interval"] = "Интервал обновления"
 L["Ahead Color"] = "Цвет опережения"
