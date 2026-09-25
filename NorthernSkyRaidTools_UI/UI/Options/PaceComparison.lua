@@ -555,7 +555,7 @@ function NSI:TogglePaceComparisonSettingsWindow(frame)
                     NSI:SchedulePaceComparisonPhase(NSI.Phase or 1, NSI.PaceComparisonState and NSI.PaceComparisonState.encID)
                 end
             end },
-        { Type = "Slider", label = "Pace Comparison Step", min = 0.1, max = 1, step = 0.1,
+        { Type = "Slider", label = "Step Size", min = 0.1, max = 1, step = 0.1,
             get = function() return display.DeltaStep or 0.5 end,
             set = function(_, value)
                 display.DeltaStep = value
