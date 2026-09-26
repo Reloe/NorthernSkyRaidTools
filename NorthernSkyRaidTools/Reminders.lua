@@ -1577,6 +1577,11 @@ function NSI:StartReminders(phase, testrun)
     self:HideAllReminders()
     self.AllGlows = {}
     self.ReminderTimer = {}
+    if not testrun and self.EncounterAlertHookEncounterID == self.EncounterID and phase ~= self.EncounterAlertHookPhase then
+        local oldPhase = self.EncounterAlertHookPhase
+        self.EncounterAlertHookPhase = phase
+        self:RunEncounterAlertHooks("onPhaseChange", self.EncounterAlertHookEncounterID, self.EncounterAlertHookDifficulty, oldPhase, phase)
+    end
     if testrun then
         if self:IsUsingTLReminders() then
             print("You have selected to display Reminders through TimelineReminders, thus the test run of NSRT will not display anything.")

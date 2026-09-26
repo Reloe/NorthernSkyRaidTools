@@ -1203,7 +1203,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
                                             payload.entries[#payload.entries + 1] = { key = "phaseTimers", value = CopyValue(alert.phaseTimers) }
                                             payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
-                                            for fieldIndex, key in ipairs({ "castDuration", "bossID", "bossEvent", "timerVariance", "onEncounterStart", "onEncounterEnd" }) do
+                                            for fieldIndex, key in ipairs({ "castDuration", "bossID", "bossEvent", "timerVariance", "onEncounterStart", "onEncounterEnd", "onPhaseChange" }) do
                                                 payload.entries[#payload.entries + 1] = { key = key, value = CopyValue(alert[key]) }
                                             end
                                         else
@@ -1852,6 +1852,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function RefreshEncounterHookDisplay(alert)
         local hasHook = (type(alert.onEncounterStart) == "string" and alert.onEncounterStart ~= "")
             or (type(alert.onEncounterEnd) == "string" and alert.onEncounterEnd ~= "")
+            or (type(alert.onPhaseChange) == "string" and alert.onPhaseChange ~= "")
         if hasHook and alert.isSpecialDisplay ~= true then
             alert.EncounterHookSpecialDisplay = true
             NSI:SaveAlertData(alert, "isSpecialDisplay", true)
@@ -1870,6 +1871,15 @@ local function BuildEncounterAlertsUI(parentFrame)
 -- alertTable is an internal table that is only accessible within this alert's code, you can think of this like aura_env from WeakAuras
 end]]
     local DEFAULT_ENCOUNTER_END_CODE = [[return function(self, alertData, alertTable, encounterID, encounterName, difficultyID, groupSize, success)
+-- This is an example of how to create and display a standard reminder using the existing alert data
+-- local alert = self:CreateReminder(alertData)
+-- self:DisplayReminder(alert)
+-- self is the internal NSI table so you have access to all internal addon functions here
+-- alertData is the data of the alert as written in the savedvariables. Editing this would be the same as editing the alert in the UI, you should probably never do that but you can read and use it's values.
+-- alertTable is an internal table that is only accessible within this alert's code, you can think of this like aura_env from WeakAuras
+end]]
+    local DEFAULT_PHASE_CHANGE_CODE = [[return function(self, alertData, alertTable, oldPhase, newPhase)
+-- oldPhase is the phase the encounter is leaving; newPhase is the phase it is entering
 -- This is an example of how to create and display a standard reminder using the existing alert data
 -- local alert = self:CreateReminder(alertData)
 -- self:DisplayReminder(alert)
@@ -1932,6 +1942,7 @@ end]]
                 encounterHookEditPopup:Hide()
                 trigF.encounterStartCodeBtn:SetText(NSI:Loc(alert.onEncounterStart and "Edit Encounter Start Code" or "Add Encounter Start Code"))
                 trigF.encounterEndCodeBtn:SetText(NSI:Loc(alert.onEncounterEnd and "Edit Encounter End Code" or "Add Encounter End Code"))
+                trigF.phaseChangeCodeBtn:SetText(NSI:Loc(alert.onPhaseChange and "Edit Phase Change Code" or "Add Phase Change Code"))
             end, 120, 22)
             encounterHookEditPopup.saveBtn:SetPoint("BOTTOMRIGHT", encounterHookEditPopup, "BOTTOMRIGHT", -138, 12)
 
@@ -1944,7 +1955,7 @@ end]]
         encounterHookEditPopup._alert = trigF._alert
         encounterHookEditPopup._hookKey = hookKey
         encounterHookEditPopup.codeLabel:SetText(NSI:Loc(labelKey))
-        encounterHookEditPopup.helpLabel:SetText(NSI:Loc("Return a function. It receives self (NSI), the alert data, an alertTable shared by this alert's code, and the encounter event arguments."))
+        encounterHookEditPopup.helpLabel:SetText(NSI:Loc("Return a function. It receives self (NSI), the alert data, an alertTable shared by this alert's code, and event-specific arguments."))
         encounterHookEditPopup.statusLabel:SetText("")
         encounterHookEditPopup.editor:SetText(trigF._alert[hookKey] or defaultCode)
         encounterHookEditPopup:Show()
@@ -1997,7 +2008,7 @@ end]]
             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
             payload.entries[#payload.entries + 1] = { key = "phaseTimers", value = CopyValue(alert.phaseTimers) }
             payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
-            for fieldIndex, key in ipairs({ "castDuration", "bossID", "bossEvent", "timerVariance", "onEncounterStart", "onEncounterEnd" }) do
+            for fieldIndex, key in ipairs({ "castDuration", "bossID", "bossEvent", "timerVariance", "onEncounterStart", "onEncounterEnd", "onPhaseChange" }) do
                 payload.entries[#payload.entries + 1] = { key = key, value = CopyValue(alert[key]) }
             end
         else
@@ -3027,6 +3038,13 @@ end]]
         { title = "Encounter End Code", desc = "Run custom code when this encounter ends. Alerts with encounter hooks are excluded from TimelineReminders." })
     encounterEndCodeBtn:SetPoint("LEFT", encounterStartCodeBtn.frame, "RIGHT", 8, 0)
     trigF.encounterEndCodeBtn = encounterEndCodeBtn
+
+    local phaseChangeCodeBtn = CreateLocalizedSubButton(trigF, "Add Phase Change Code", function()
+        OpenEncounterHookEditor("onPhaseChange", "Phase Change Function", DEFAULT_PHASE_CHANGE_CODE)
+    end, 170, "NSUIEncAlertPhaseChangeHookBtn",
+        { title = "Phase Change Code", desc = "Run custom code when this encounter changes phase. Alerts with encounter hooks are excluded from TimelineReminders." })
+    phaseChangeCodeBtn:SetPoint("LEFT", encounterEndCodeBtn.frame, "RIGHT", 8, 0)
+    trigF.phaseChangeCodeBtn = phaseChangeCodeBtn
 
     local function SaveTriggerSetting(editBox, key, isNumber)
         local value = editBox:GetText()
@@ -4345,6 +4363,7 @@ end]]
         trigF.conditionBtn:SetText(NSI:Loc(entry.isConditional and "Edit Condition" or "Add Condition"))
         trigF.encounterStartCodeBtn:SetText(NSI:Loc(entry.onEncounterStart and "Edit Encounter Start Code" or "Add Encounter Start Code"))
         trigF.encounterEndCodeBtn:SetText(NSI:Loc(entry.onEncounterEnd and "Edit Encounter End Code" or "Add Encounter End Code"))
+        trigF.phaseChangeCodeBtn:SetText(NSI:Loc(entry.onPhaseChange and "Edit Phase Change Code" or "Add Phase Change Code"))
         trigF.castDurationEntry:SetValue(entry.castDuration ~= nil and tostring(entry.castDuration) or "")
         trigF.bossIDEntry:SetValue(type(entry.bossID) == "table" and table.concat(entry.bossID, ", ") or (entry.bossID and tostring(entry.bossID) or ""))
         trigF.bossEventEntry:SetValue(entry.bossEvent or "")

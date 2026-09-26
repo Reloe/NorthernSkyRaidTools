@@ -156,6 +156,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartPaceComparison(self.EncounterID, diff)
+        self.EncounterAlertHookEncounterID = encounterID
+        self.EncounterAlertHookDifficulty = diff
+        self.EncounterAlertHookPhase = self.Phase
         self:StartReminders(self.Phase)
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
@@ -181,7 +184,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         self.CustomEvents = {}
-        if not diff then return end
+        self.EncounterAlertHookEncounterID = nil
+        self.EncounterAlertHookDifficulty = nil
+        self.EncounterAlertHookPhase = nil
+        if not diff then
+            if self.EncounterAlertEnvironments then self.EncounterAlertEnvironments[encID] = nil end
+            return
+        end
         self:RunEncounterAlertHooks("onEncounterEnd", encID, diff, encID, encounterName, eventDifficultyID, groupSize, success)
         self:EncounterRegister(nil, nil, nil, nil, true)
         self:StopPaceComparison()
