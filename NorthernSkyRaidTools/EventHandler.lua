@@ -102,11 +102,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
-            local name, realm = UnitName("player")
-            if not realm then
-                realm = GetNormalizedRealmName()
-            end
-            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
+            local name, realm = self:GetRealName("player")
+            local key = self:GetNickNameKey(name, realm)
+            if (not NSRT.NickNames[key]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[key]) then
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end

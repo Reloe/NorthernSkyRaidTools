@@ -3617,7 +3617,7 @@ function NSI:PreviewAuraTracking(key, show)
     local firstPreviewSuffix
     local secondPreviewSuffix
     if isCotankTracking then
-        local cotankPreviewName = NSAPI:GetName(previewPlayerName, "GlobalNickNames") or previewPlayerName
+        local cotankPreviewName = NSAPI:GetName(previewUnit, "GlobalNickNames") or previewPlayerName
         firstPreviewName = cotankPreviewName
         secondPreviewName = cotankPreviewName
         firstPreviewSuffix = " 1"

@@ -52,12 +52,16 @@ local function BuildNicknameEditUI()
             if nickData then
                 local line = self:GetLine(i)
 
-                local player, realm = strsplit("-", nickData.player)
+                local player, realm
+                if NSI:IsForever() then
+                    player = nickData.player
+                else
+                    player, realm = strsplit("-", nickData.player)
+                end
 
-                line.fullName = nickData.player
                 line.player = player
                 line.realm = realm
-                line.playerText.text = nickData.player
+                line.playerText.text = NSI:IsForever() and player or nickData.player
                 line.nicknameEntry.text = nickData.nickname
             end
         end
@@ -74,8 +78,9 @@ local function BuildNicknameEditUI()
         line.playerText:SetPoint("LEFT", line, "LEFT", 5, 0)
 
         line.nicknameEntry = DF:CreateTextEntry(line, function(self, _, value)
-            NSI:AddNickName(line.player, line.realm, string.sub(value, 1, 12))
-            line.nicknameEntry.text = string.sub(value, 1, 12)
+            local nickname = NSI:Utf8Sub(value, 1, NSI:GetNickNameMaxLength())
+            NSI:AddNickName(line.player, line.realm, nickname)
+            line.nicknameEntry.text = nickname
             parent:MasterRefresh()
         end, 120, 20)
         line.nicknameEntry:SetTemplate(options_dropdown_template)
@@ -141,12 +146,17 @@ local function BuildNicknameEditUI()
     local add_button = DF:CreateButton(nicknames_edit_frame, function()
         local name = new_player_entry:GetText()
         local nickname = new_nickname_entry:GetText()
-        if player ~= "" and nickname ~= "" then
-            local player, realm = strsplit("-", name)
-            if not realm then
-                realm = GetNormalizedRealmName()
+        if name ~= "" and nickname ~= "" then
+            local player, realm
+            if NSI:IsForever() then
+                player = name
+            else
+                player, realm = strsplit("-", name)
+                if not realm then
+                    realm = GetNormalizedRealmName()
+                end
             end
-            NSI:AddNickName(player, realm, nickname)
+            NSI:AddNickName(player, realm, NSI:Utf8Sub(nickname, 1, NSI:GetNickNameMaxLength()))
             new_player_entry:SetText("")
             new_nickname_entry:SetText("")
             nicknames_edit_scrollbox:MasterRefresh()

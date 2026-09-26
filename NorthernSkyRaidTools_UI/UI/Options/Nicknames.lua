@@ -84,7 +84,7 @@ local function BuildNicknamesOptions()
             get = function() return NSRT.Settings["MyNickName"] or "" end,
             set = function(self, fixedparam, value)
                 NSUI.OptionsChanged.nicknames["NICKNAME"] = true
-                NSRT.Settings["MyNickName"] = NSI:Utf8Sub(value, 1, 12)
+                NSRT.Settings["MyNickName"] = NSI:Utf8Sub(value, 1, NSI:GetNickNameMaxLength())
             end,
             hooks = {
                 OnEditFocusLost = function(self)
