@@ -458,36 +458,35 @@ local function StopRadarPreview(self)
     end
 end
 
-local function ScheduleBloodHitThreatCheck(self)
-    if self.BloodHitThreatTimer then self.BloodHitThreatTimer:Cancel() end
-
+local function TrackBloodHitCastSuccess(self)
     local difficultyID = self:DifficultyCheck({15, 16})
-    local alert = difficultyID and NSRT.EncounterAlerts[encID][difficultyID] and NSRT.EncounterAlerts[encID][difficultyID].BloodDropPool
-    local timers = alert and alert.phaseTimers and alert.phaseTimers[self.Phase or 1]
-    local timetocheck = timers and timers[#timers] -- only check last timer
-    if not timetocheck then return end
+    local encounterAlerts = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
+    local bloodHitAlert = encounterAlerts and encounterAlerts.BloodHits
+    local hitTimers = bloodHitAlert and bloodHitAlert.phaseTimers and bloodHitAlert.phaseTimers[self.Phase or 1]
+    local expectedHitTime = hitTimers and hitTimers[#hitTimers]
+    if not expectedHitTime or math.abs(GetTime() - self.PhaseSwapTime - expectedHitTime) > 4 then return end
 
-    self.BloodHitThreatTimer = C_Timer.NewTimer(timetocheck, function()
-        local threat = UnitThreatSituation("player", "boss2")
-        if threat and threat >= 2 then
-            self.BloodHitTimer = GetTime()
-            self.BloodHitPhase = self.Phase
-            if self.BloodHitPoolTimer then self.BloodHitPoolTimer:Cancel() end
-            self.BloodHitPoolTimer = C_Timer.NewTimer(40, function()
-                if self.EncounterID ~= encID or self.Phase ~= self.BloodHitPhase then return end
-                alert = CopyTable(alert)
-                alert.phase = self.Phase
-                alert.phaseTimers = nil
-                alert.isSpecialDisplay = nil
-                self:DisplayReminder(alert)
-                self.BloodHitTimer = nil
-                self.BloodHitPhase = nil
-            end)
-        else
+    local threat = UnitThreatSituation("player", "boss2")
+    if threat and threat >= 2 then
+        local alert = encounterAlerts.BloodDropPool
+        if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+        self.BloodHitTimer = GetTime()
+        self.BloodHitPhase = self.Phase
+        if self.BloodHitPoolTimer then self.BloodHitPoolTimer:Cancel() end
+        self.BloodHitPoolTimer = C_Timer.NewTimer(math.max(40 - alert.dur, 0), function()
+            if self.EncounterID ~= encID or self.Phase ~= self.BloodHitPhase then return end
+            alert = CopyTable(alert)
+            alert.phase = self.Phase
+            alert.phaseTimers = nil
+            alert.isSpecialDisplay = nil
+            self:DisplayReminder(alert)
             self.BloodHitTimer = nil
             self.BloodHitPhase = nil
-        end
-    end)
+        end)
+    else
+        self.BloodHitTimer = nil
+        self.BloodHitPhase = nil
+    end
 end
 
 local function AddBloodHitPoolTimer(self, now)
@@ -528,10 +527,15 @@ NSI.EncounterAlertStart[encID] = function(self, previewID, preview)
         self.BloodHitPoolTimer:Cancel()
         self.BloodHitPoolTimer = nil
     end
-    local id = self:DifficultyCheck({15, 16})
-    local DropPool = id and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].BloodDropPool
-    if DropPool and DropPool.enabled and self:EvaluateLoad(DropPool) then
-        ScheduleBloodHitThreatCheck(self)
+    local difficultyID = self:DifficultyCheck({15, 16})
+    local encounterAlerts = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
+    local dropPoolAlert = encounterAlerts and encounterAlerts.BloodDropPool
+    if dropPoolAlert and dropPoolAlert.enabled and self:EvaluateLoad(dropPoolAlert) then
+        self.BloodHitCastFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+        self.BloodHitCastFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "boss2")
+        self.BloodHitCastFrame:SetScript("OnEvent", function()
+            TrackBloodHitCastSuccess(self)
+        end)
     end
 
     StopRadarPreview(self)
@@ -539,8 +543,12 @@ NSI.EncounterAlertStart[encID] = function(self, previewID, preview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
-    if self.BloodHitThreatTimer then self.BloodHitThreatTimer:Cancel() end
     if self.BloodHitPoolTimer then self.BloodHitPoolTimer:Cancel() end
+    if self.BloodHitCastFrame then
+        self.BloodHitCastFrame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+        self.BloodHitCastFrame:SetScript("OnEvent", nil)
+        self.BloodHitCastFrame = nil
+    end
     self.BloodHitTimer = nil
     self.BloodHitPhase = nil
     self.BloodHitPoolTimer = nil
@@ -563,7 +571,6 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = self.Phase + 1
         AddBloodHitPoolTimer(self, now)
         self:StartReminders(self.Phase)
-        ScheduleBloodHitThreatCheck(self)
         StartRadar(self, self:DifficultyCheck({14, 15, 16}))
         self.Timelines = {}
         self.PhaseSwapTime = now
