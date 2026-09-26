@@ -1492,6 +1492,7 @@ L["At how many seconds remaining you would like to hear a TTS countdown"] = "设
 L["Pace-Comparison"] = "进度对比"
 L["|cFF00FFFFPace|r-Comparison"] = "|cFF00FFFF进度|r对比"
 L["Pace Comparison Display"] = "进度对比显示"
+L["Step Size"] = "偏差精度"
 L["Line Spacing"] = "行间距"
 L["Update Interval"] = "更新间隔"
 L["Ahead Color"] = "领先颜色"
