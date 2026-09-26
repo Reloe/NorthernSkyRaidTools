@@ -538,7 +538,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {Version = {versionNumber = 2, [1] = {dur = 8}, [2] = {DisplayType = "Bar", Ticks = {4.8, 4.8}}}, group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Bar", encID = encID, TTS = false, dur = 8, spellID = 1299010, phase = 1,
-        Ticks = {4.8, 4.8},
+        Ticks = {4.8},
         timers = {
             [15] = {30.4, 125.6},
             [16] = {43.7, 137.8},
