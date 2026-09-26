@@ -273,3 +273,69 @@ function NSI:RemoveEncounterAlert(encID, diffID, internalID)
         NSRT.EncounterAlerts[encID][diffID][internalID] = nil
     end
 end
+
+function NSI:GetEncounterAlertEnvironment(encID, alertID)
+    self.EncounterAlertEnvironments = self.EncounterAlertEnvironments or {}
+    self.EncounterAlertEnvironments[encID] = self.EncounterAlertEnvironments[encID] or {}
+    local environments = self.EncounterAlertEnvironments[encID]
+    environments[alertID] = environments[alertID] or {}
+    return environments[alertID]
+end
+
+function NSI:RunCustomAlertPreview(alertData, encID, alertID)
+    local previewCode = alertData.customPreview
+    if type(previewCode) ~= "string" or previewCode == "" then return false end
+
+    local chunk, err = loadstring(previewCode)
+    if not chunk then
+        geterrorhandler()(err)
+        return true
+    end
+
+    local compileOk, preview = pcall(chunk)
+    if not compileOk then
+        geterrorhandler()(preview)
+    elseif type(preview) ~= "function" then
+        geterrorhandler()("Custom alert preview must return a function")
+    else
+        local environment = self:GetEncounterAlertEnvironment(encID, alertData.internalID or alertID)
+        local previewOk, previewError = pcall(preview, self, alertData, environment)
+        if not previewOk then geterrorhandler()(previewError) end
+    end
+    return true
+end
+
+function NSI:RunEncounterAlertHooks(hookKey, encID, diffID, ...)
+    local alerts = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID]
+    if not alerts then
+        if hookKey == "onEncounterEnd" and self.EncounterAlertEnvironments then
+            self.EncounterAlertEnvironments[encID] = nil
+        end
+        return
+    end
+
+    for alertKey, alertData in pairs(alerts) do
+        local hookCode = type(alertData) == "table" and not alertData.ReloeReminder and alertData.enabled and alertData[hookKey]
+        if type(hookCode) == "string" and hookCode ~= "" and self:EvaluateLoad(alertData) then
+            local chunk, err = loadstring(hookCode)
+            if not chunk then
+                geterrorhandler()(err)
+            else
+                local compileOk, hook = pcall(chunk)
+                if not compileOk then
+                    geterrorhandler()(hook)
+                elseif type(hook) ~= "function" then
+                    geterrorhandler()("Encounter alert hook must return a function: " .. hookKey)
+                else
+                    local environment = self:GetEncounterAlertEnvironment(encID, alertData.internalID or alertKey)
+                    local hookOk, hookError = pcall(hook, self, alertData, environment, ...)
+                    if not hookOk then geterrorhandler()(hookError) end
+                end
+            end
+        end
+    end
+
+    if hookKey == "onEncounterEnd" and self.EncounterAlertEnvironments then
+        self.EncounterAlertEnvironments[encID] = nil
+    end
+end

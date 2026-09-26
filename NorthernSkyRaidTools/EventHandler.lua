@@ -122,12 +122,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "READY_CHECK_FINISHED" and wowevent then
         self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
+        local encounterID, encounterName, eventDifficultyID, groupSize = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
         if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
-        self.EncounterID = ...
+        self.EncounterID = encounterID
         self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
@@ -173,13 +174,15 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
+        self:RunEncounterAlertHooks("onEncounterStart", encounterID, diff, encounterID, encounterName, eventDifficultyID, groupSize)
     elseif e == "ENCOUNTER_END" and wowevent then
         self:LogTimeline(e, ...)
-        local encID, encounterName, _, _, kill = ...
+        local encID, encounterName, eventDifficultyID, groupSize, success = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         self.CustomEvents = {}
         if not diff then return end
+        self:RunEncounterAlertHooks("onEncounterEnd", encID, diff, encID, encounterName, eventDifficultyID, groupSize, success)
         self:EncounterRegister(nil, nil, nil, nil, true)
         self:StopPaceComparison()
         self:InitAuraSystem()
@@ -195,7 +198,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        if kill and kill ~= 0 then
+        if success and success ~= 0 then
             local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
             local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
             if NSRT.ReminderSettings.ClearOnKill then
