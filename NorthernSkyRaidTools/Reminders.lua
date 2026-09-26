@@ -125,6 +125,12 @@ function NSI:CreateReminder(info, preview)
     info.time = tonumber(info.time)
     info.TTSTimer = tonumber(info.TTSTimer)
     info.countdown = tonumber(info.countdown)
+    info.castDuration = tonumber(info.castDuration)
+    if info.castDuration then
+        info.bossID = info.bossID or "boss1"
+        info.timerVariance = tonumber(info.timerVariance) or 2
+        info.bossEvent = info.bossEvent or "UNIT_SPELLCAST_START"
+    end
     if info.dur > info.time then info.dur = info.time end -- force duration to be equal to time if an alert is set very early into the phase
     if info.TTSTimer > info.time then info.TTSTimer = info.time end -- same for TTSTimer
     if info.countdown and info.countdown > info.time then info.countdown = info.time end -- same for countdown
@@ -1562,6 +1568,9 @@ function NSI:PlayReminderSound(info, default)
     end
 end
 
+local RegisterBossCastAlertEvents
+local HandleBossCastAlertStart
+
 function NSI:StartReminders(phase, testrun)
     if not testrun then self:LogTimeline("NSRT_PHASE", phase) end
     self:FireCallback("NSRT_PHASE", phase, self.EncounterID, testrun)
@@ -1594,6 +1603,139 @@ function NSI:StartReminders(phase, testrun)
         self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
             self:DisplayReminder(info)
         end)
+    end
+    RegisterBossCastAlertEvents(self, self.ProcessedReminder[self.EncounterID][phase])
+end
+
+local function ClearBossCastAlertEvents(self)
+    for info, frames in pairs(self.BossCastAlertFrames or {}) do
+        for frameIndex, frame in ipairs(frames) do
+            frame:UnregisterEvent(info.bossEvent)
+            frame:SetScript("OnEvent", nil)
+        end
+    end
+    self.BossCastAlertFrames = {}
+    self.BossCastLastEventKey = nil
+end
+
+RegisterBossCastAlertEvents = function(self, reminders)
+    self.BossCastAlertFrames = {}
+    for index, info in ipairs(reminders) do
+        if info.bossID and info.castDuration then
+            local units = {}
+            if type(info.bossID) == "table" then
+                for unitIndex, unit in ipairs(info.bossID) do
+                    units[unit] = true
+                end
+            else
+                units[info.bossID] = true
+            end
+            self.BossCastAlertFrames[info] = {}
+            for unit in pairs(units) do
+                local frame = CreateFrame("Frame", nil, self.NSRTFrame)
+                frame:RegisterUnitEvent(info.bossEvent, unit)
+                frame:SetScript("OnEvent", function(eventFrame, event, eventUnit, castGUID)
+                    HandleBossCastAlertStart(self, eventUnit, event, castGUID)
+                end)
+                table.insert(self.BossCastAlertFrames[info], frame)
+            end
+        end
+    end
+end
+
+HandleBossCastAlertStart = function(self, unit, event, castGUID)
+    local reminders = self.ProcessedReminder and self.ProcessedReminder[self.EncounterID] and self.ProcessedReminder[self.EncounterID][self.Phase]
+    if not reminders then return end
+    local now = GetTime()
+    local eventKey = event..":"..unit..":"..tostring(castGUID or now)
+    if self.BossCastLastEventKey == eventKey then return end
+    local phaseElapsed = now - self.PhaseSwapTime
+    local matches = {}
+    for index, info in ipairs(reminders) do
+        local units = type(info.bossID) == "table" and info.bossID or {info.bossID}
+        local listensToUnit = false
+        for unitIndex, alertUnit in ipairs(units) do
+            if alertUnit == unit then
+                listensToUnit = true
+                break
+            end
+        end
+        if listensToUnit and info.bossEvent == event and info.castDuration and not info.BossCastMatched then
+            local expectedStart = info.time - info.castDuration
+            local difference = math.abs(phaseElapsed - expectedStart)
+            if difference <= (info.timerVariance or 0) then
+                local alertID = info.id or info
+                local current = matches[alertID]
+                if not current or difference < current.difference then
+                    matches[alertID] = {info = info, difference = difference}
+                end
+            end
+        end
+    end
+    if next(matches) then self.BossCastLastEventKey = eventKey end
+    for alertID, match in pairs(matches) do
+        local info = match.info
+        info.BossCastMatched = true
+        for frameIndex, frame in ipairs(self.BossCastAlertFrames[info] or {}) do
+            frame:UnregisterEvent(info.bossEvent)
+            frame:SetScript("OnEvent", nil)
+        end
+        self.BossCastAlertFrames[info] = nil
+        local targetTime = now + info.castDuration
+        info.time = targetTime - self.PhaseSwapTime
+        local activeFrame
+        for parentIndex, parentName in ipairs({"ReminderText", "ReminderIcon", "ReminderBar", "ReminderCircle"}) do
+            for frameIndex, frame in ipairs(self[parentName] or {}) do
+                if frame:IsShown() and frame.info == info then
+                    activeFrame = frame
+                    break
+                end
+            end
+            if activeFrame then break end
+        end
+        if activeFrame then
+            info.dur = math.max(targetTime - info.startTime, 0)
+            info.expires = targetTime
+            self:ScheduleReminderSoundTimers(info)
+            if info.DisplayType == "Bar" then
+                activeFrame:SetMinMaxValues(0, info.dur)
+                if activeFrame.Ticks and info.dur > 0 then
+                    local remaining = info.dur - (now - info.startTime)
+                    for index, tick in ipairs(info.Ticks or {}) do
+                        local marker = activeFrame.Ticks[index]
+                        if marker then
+                            marker.HideTimer = info.dur - tick
+                            marker:ClearAllPoints()
+                            marker:SetPoint("LEFT", activeFrame, "LEFT", NSRT.ReminderSettings.BarSettings.Width * tick / info.dur, 0)
+                            marker:SetShown(remaining > marker.HideTimer)
+                        end
+                    end
+                end
+            elseif activeFrame.Swipe and (info.DisplayType == "Icon" or info.DisplayType == "Circle") then
+                activeFrame.Swipe:SetCooldown(info.startTime, info.dur)
+            end
+            activeFrame.lastReminderDisplayBucket = nil
+            activeFrame.lastReminderTimerText = nil
+            activeFrame.reminderTimerTextIsRed = nil
+            self:UpdateReminderDisplay(info, activeFrame)
+            self:ArrangeStates(activeFrame.DisplayType)
+        else
+            local displayTime = targetTime - info.dur
+            for index, reminder in ipairs(reminders) do
+                if reminder == info then
+                    if displayTime > now then
+                        if self.ReminderTimer[index] then self.ReminderTimer[index]:Cancel() end
+                        self.ReminderTimer[index] = C_Timer.NewTimer(displayTime - now, function()
+                            self:DisplayReminder(info)
+                        end)
+                    else
+                        info.dur = math.max(targetTime - now, 0)
+                        self:DisplayReminder(info)
+                    end
+                    break
+                end
+            end
+        end
     end
 end
 
@@ -1696,6 +1838,7 @@ function NSI:DelayAllReminders(delay)
 end
 
 function NSI:HideAllReminders(FullReset)
+    ClearBossCastAlertEvents(self)
     self.GlowStarted = {}
     if self.ReminderSoundTimers then
         for _, timers in pairs(self.ReminderSoundTimers) do

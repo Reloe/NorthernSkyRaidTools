@@ -63,6 +63,10 @@ function NSI:MakeEncounterAlert(data, timers)
     a.name = name or data.internalID
     a.group = group
     a.TTSTimer = data.TTSTimer or data.dur
+    a.bossID = data.bossID
+    a.castDuration = data.castDuration
+    a.timerVariance = data.timerVariance
+    a.bossEvent = data.bossEvent
     a.timers = timers or data.timers or {}
     if data.loadConditions then
         a.loadConditions = CopyTable(data.loadConditions)
@@ -235,6 +239,10 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         existing.extraOptions = alertDef.extraOptions
         existing.Preview = alertDef.Preview
         existing.phase = alertDef.phase
+        existing.bossID = alertDef.bossID
+        existing.castDuration = alertDef.castDuration
+        existing.timerVariance = alertDef.timerVariance
+        existing.bossEvent = alertDef.bossEvent
         existing.isSpecialDisplay = alertDef.isSpecialDisplay
         existing.DefaultEnabled = alertDef.DefaultEnabled
         existing.BlockCopy = alertDef.BlockCopy

@@ -1891,6 +1891,9 @@ local function BuildEncounterAlertsUI(parentFrame)
             payload.entries[#payload.entries + 1] = { key = "timers", value = CopyValue(alert.timers) }
             payload.entries[#payload.entries + 1] = { key = "phaseTimers", value = CopyValue(alert.phaseTimers) }
             payload.entries[#payload.entries + 1] = { key = "isConditional", value = CopyValue(alert.isConditional) }
+            for _, key in ipairs({ "castDuration", "bossID", "bossEvent", "timerVariance" }) do
+                payload.entries[#payload.entries + 1] = { key = key, value = CopyValue(alert[key]) }
+            end
         else
             for _, key in ipairs(SECTION_COPY_FIELDS[sectionName] or {}) do
                 payload.entries[#payload.entries + 1] = { key = key, value = CopyValue(alert[key]) }
@@ -2901,6 +2904,87 @@ local function BuildEncounterAlertsUI(parentFrame)
     conditionBtn:SetPoint("TOPLEFT", addTimeEntry.frame, "BOTTOMLEFT", 0, -12)
     trigF.conditionBtn = conditionBtn
 
+    local function SaveTriggerSetting(editBox, key, isNumber)
+        local value = editBox:GetText()
+        if isNumber then
+            value = tonumber(value)
+        elseif key == "bossID" and value ~= "" then
+            local units = {}
+            for unit in value:gmatch("[^,]+") do
+                local unitToken = unit:gsub("^%s+", ""):gsub("%s+$", "")
+                if unitToken ~= "" then units[#units + 1] = unitToken end
+            end
+            if #units == 1 then
+                value = units[1]
+            elseif #units > 1 then
+                value = units
+            else
+                value = nil
+            end
+        elseif value == "" then
+            value = nil
+        end
+        if trigF._alert then NSI:SaveAlertData(trigF._alert, key, value) end
+    end
+
+    local castDurationLbl = trigF:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(castDurationLbl, 12, "")
+    castDurationLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    SetLocalizedText(castDurationLbl, "Cast Duration (seconds)")
+    castDurationLbl:SetPoint("TOPLEFT", conditionBtn.frame, "BOTTOMLEFT", 0, -10)
+
+    local bossIDLbl = trigF:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(bossIDLbl, 12, "")
+    bossIDLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    SetLocalizedText(bossIDLbl, "Boss ID (unit token)")
+    bossIDLbl:SetPoint("LEFT", trigF, "LEFT", rightW / 2, 0)
+    bossIDLbl:SetPoint("TOP", castDurationLbl, "TOP")
+
+    local castDurationEntry = CreateTextEntry(trigF, nil, nil, nil, 120, 22,
+        nil, nil, nil, "NSUIEncAlertCastDuration")
+    castDurationEntry:SetPoint("TOPLEFT", castDurationLbl, "BOTTOMLEFT", 0, -3)
+    castDurationEntry.editBox:SetScript("OnEditFocusLost", function(self)
+        SaveTriggerSetting(self, "castDuration", true)
+    end)
+    trigF.castDurationEntry = castDurationEntry
+
+    local bossIDEntry = CreateTextEntry(trigF, nil, nil, nil, 150, 22,
+        nil, nil, nil, "NSUIEncAlertBossID")
+    bossIDEntry:SetPoint("TOPLEFT", bossIDLbl, "BOTTOMLEFT", 0, -3)
+    bossIDEntry.editBox:SetScript("OnEditFocusLost", function(self)
+        SaveTriggerSetting(self, "bossID")
+    end)
+    trigF.bossIDEntry = bossIDEntry
+
+    local bossEventLbl = trigF:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(bossEventLbl, 12, "")
+    bossEventLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    SetLocalizedText(bossEventLbl, "Boss Event")
+    bossEventLbl:SetPoint("TOPLEFT", castDurationEntry.frame, "BOTTOMLEFT", 0, -10)
+
+    local timerVarianceLbl = trigF:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(timerVarianceLbl, 12, "")
+    timerVarianceLbl:SetTextColor(0.6, 0.6, 0.6, 1)
+    SetLocalizedText(timerVarianceLbl, "Timer Variance (seconds)")
+    timerVarianceLbl:SetPoint("LEFT", trigF, "LEFT", rightW / 2, 0)
+    timerVarianceLbl:SetPoint("TOP", bossEventLbl, "TOP")
+
+    local bossEventEntry = CreateTextEntry(trigF, nil, nil, nil, 150, 22,
+        nil, nil, nil, "NSUIEncAlertBossEvent")
+    bossEventEntry:SetPoint("TOPLEFT", bossEventLbl, "BOTTOMLEFT", 0, -3)
+    bossEventEntry.editBox:SetScript("OnEditFocusLost", function(self)
+        SaveTriggerSetting(self, "bossEvent")
+    end)
+    trigF.bossEventEntry = bossEventEntry
+
+    local timerVarianceEntry = CreateTextEntry(trigF, nil, nil, nil, 120, 22,
+        nil, nil, nil, "NSUIEncAlertTimerVariance")
+    timerVarianceEntry:SetPoint("TOPLEFT", timerVarianceLbl, "BOTTOMLEFT", 0, -3)
+    timerVarianceEntry.editBox:SetScript("OnEditFocusLost", function(self)
+        SaveTriggerSetting(self, "timerVariance", true)
+    end)
+    trigF.timerVarianceEntry = timerVarianceEntry
+
     -- Lock overlay for Trigger tab (shown when ReloeReminder is selected)
     -- transparent=true so the triggers are still visible, just not interactable
     trigF.lockOverlay = MakeLockOverlay(trigF, nil, true)
@@ -3511,8 +3595,27 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- ================================================================
     -- Helper: set panel into custom-alert mode vs reloeCreated mode
     -- ================================================================
+    local function SetTriggerEntriesEnabled(enabled)
+        for _, entry in ipairs({
+            trigF.phaseEntry,
+            trigF.addTimeEntry,
+            trigF.phaseSpecificEntry,
+            trigF.castDurationEntry,
+            trigF.bossIDEntry,
+            trigF.bossEventEntry,
+            trigF.timerVarianceEntry,
+        }) do
+            if enabled then
+                entry:Enable()
+            else
+                entry:Disable()
+            end
+        end
+    end
+
     local function SetCustomMode()
         trigF.lockOverlay:Hide()
+        SetTriggerEntriesEnabled(true)
         loadF.lockOverlay:Hide()
         dispF.lockOverlay:Hide()
         sndF.lockOverlay:Hide()
@@ -3526,6 +3629,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local function SetReloeCreatedMode(alert)
         trigF.lockOverlay:Show()
+        SetTriggerEntriesEnabled(false)
         loadF.lockOverlay:Hide()
         dispF.lockOverlay:SetShown(alert and alert.NoEdit == true)
         sndF.lockOverlay:SetShown(alert and alert.NoEdit == true)
@@ -3565,6 +3669,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     -- SelectAlert ── load any alert (Reloe or user-created) into the right panel
     -- ================================================================
     SelectAlert = function(key, diffID, encID)
+        SetTriggerEntriesEnabled(false)
         selectedKey    = key
         selectedEncID  = encID or selectedEncID
         selectedDiffID = diffID or selectedDiffID
@@ -3649,6 +3754,10 @@ local function BuildEncounterAlertsUI(parentFrame)
         if trigF.RefreshPhaseSpecificControls then trigF.RefreshPhaseSpecificControls() end
         trigF.RebuildTimeRows()
         trigF.conditionBtn:SetText(NSI:Loc(entry.isConditional and "Edit Condition" or "Add Condition"))
+        trigF.castDurationEntry:SetValue(entry.castDuration ~= nil and tostring(entry.castDuration) or "")
+        trigF.bossIDEntry:SetValue(type(entry.bossID) == "table" and table.concat(entry.bossID, ", ") or (entry.bossID and tostring(entry.bossID) or ""))
+        trigF.bossEventEntry:SetValue(entry.bossEvent or "")
+        trigF.timerVarianceEntry:SetValue(entry.timerVariance ~= nil and tostring(entry.timerVariance) or "")
 
         -- Sound tab
         local ttsActive = entry.TTS ~= false and entry.TTS ~= nil
