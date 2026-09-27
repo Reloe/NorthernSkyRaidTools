@@ -61,12 +61,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.GlowStarted = {}
             self.UnitFrames = {}
-            self:InitNickNames()
             if self:GetProfileKey() then
                 self.LoadedProfile = true
                 self:LoadMyProfile()
                 self:CreateMoveFrames()
             end
+            self:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         if not self.LoadedProfile then

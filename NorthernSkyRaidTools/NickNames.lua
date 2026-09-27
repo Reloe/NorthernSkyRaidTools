@@ -30,12 +30,15 @@ function NSI:GetRealName(unit)
         end
         return name
     end
-    return name, GetNormalizedRealmName()
+    if not secondName or secondName == "" then
+        secondName = GetNormalizedRealmName()
+    end
+    return name, secondName
 end
 
 function NSI:GetNickNameKey(name, realm)
     if self:IsForever() then
-        return realm and realm ~= "" and name .. " " .. realm or name
+        return name and (realm and realm ~= "" and name .. " " .. realm or name)
     end
     return name and realm and name .. "-" .. realm
 end
@@ -113,26 +116,19 @@ function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickn
     local newname, newrealm = nil
     if chars then
         for k, _ in pairs(chars) do
-            if NSI:IsForever() then
-                for unit in NSI:IterateGroupMembers() do
-                    local realName = NSI:GetRealName(unit)
-                    local i = UnitInRaid(unit)
-                    if realName == k and (UnitIsVisible(unit) or (i and select(3, GetRaidRosterInfo(i)) <= 4)) then
-                        return unit
-                    end
-                end
-            else
-                local characterName, realm = strsplit("-", k)
-                local i = UnitInRaid(k)
-                if UnitIsVisible(characterName) or (i and select(3, GetRaidRosterInfo(i)) <= 4) then
-                    newname, newrealm = characterName, realm
-                    if UnitIsUnit(characterName, "player") then
-                        return characterName, realm
-                    end
+            local characterName, realm = k, nil
+            if not NSI:IsForever() then
+                characterName, realm = strsplit("-", k)
+            end
+            local i = UnitInRaid(k)
+            if UnitIsVisible(characterName) or (i and select(3, GetRaidRosterInfo(i)) <= 4) then
+                newname, newrealm = characterName, realm
+                if UnitIsUnit(characterName, "player") then
+                    return characterName, realm
                 end
             end
         end
-        if newname and newrealm then
+        if newname then
             return newname, newrealm
         end
     end
@@ -363,10 +359,12 @@ end
 
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
-    if NSRT.Settings["GlobalNickNames"] then
-        for fullname, nickname in pairs(NSRT.NickNames) do
-            AddNicknameToCache(fullname, nickname)
-        end
+    wipe(fullCharList)
+    wipe(fullNameList)
+    wipe(sortedCharList)
+    wipe(CharList)
+    for fullname, nickname in pairs(NSRT.NickNames) do
+        AddNicknameToCache(fullname, nickname)
     end
 
     -- instant display update for all addons
@@ -393,6 +391,7 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:BlizzardNickNameUpdated()
     self:DandersFramesNickNameUpdated(all, unit)
     self:VuhDoNickNameUpdated()
+    self:RefreshDebuffOverviewContainers()
     self.Callbacks:Fire("NSRT_NICKNAME_UPDATED", all, unit, name, realm, oldnick, nickname)
 end
 
@@ -487,10 +486,7 @@ function NSI:SendNickName(channel, requestback)
     self.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or self:Restricted() then return end
-    local name, realm = UnitFullName("player")
-    if not self:IsForever() and not realm then
-        realm = GetNormalizedRealmName()
-    end
+    local name, realm = self:GetRealName("player")
     if nickname then
         if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) and (channel == "Any" or channel == "RAID") then
             self:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, requestback, "RAID")
@@ -508,14 +504,8 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
     end
     if not nickname or not name then return end
-    local isForever = self:IsForever()
-    if isForever and realm and realm ~= "" then
-        name = name .. " " .. realm
-        realm = nil
-    elseif not isForever and not realm then
-        return
-    end
     local key = self:GetNickNameKey(name, realm)
+    if not key then return end
     local oldnick = NSRT.NickNames[key]
     if oldnick and oldnick == nickname then  return end -- stop early if we already have this exact nickname
     if nickname == "" then
@@ -559,7 +549,7 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
 end
 
 function NSI:AddNickName(name, realm, nickname) -- keeping the nickname empty acts as removing the nickname for that character
-    if name and nickname and (realm or self:IsForever()) then
+    if name and nickname then
         local unit
         if UnitExists(name) then
             for u in self:IterateGroupMembers() do
