@@ -635,7 +635,8 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
                 frame.PreviewTicker = frame.PreviewTicker + elapsed
                 if frame.PreviewTicker < 0.025 then return end
                 frame.PreviewTicker = 0
-                local elapsedTime = GetTime() - (frame.PreviewStartedAt or GetTime())
+                local now = GetTime()
+                local elapsedTime = now - (frame.PreviewStartedAt or now)
                 for index, row in ipairs(frame.PreviewRows) do
                     local remaining = math.max(0, previewDurations[index] - elapsedTime)
                     row.Bar:SetValue(remaining)
@@ -725,7 +726,12 @@ function NSI:ArrangeStates(DisplayType)
     end
 end
 
+local function GetReminderRemaining(info, now)
+    return (info.totalDuration or info.dur) - (now - info.startTime)
+end
+
 function NSI:SetProperties(F, info, s)
+    local totalDuration = info.totalDuration or info.dur
     F.lastReminderText = nil
     F.lastReminderTimerText = nil
     F.lastReminderDisplayBucket = nil
@@ -782,7 +788,7 @@ function NSI:SetProperties(F, info, s)
             local shouldShow = info.showBackground == nil and s.showBackground or info.showBackground
             F.ring:SetShown(shouldShow)
         end
-        F.Swipe:SetCooldown(info.startTime, info.dur)
+        F.Swipe:SetCooldown(info.startTime, totalDuration)
         F.Swipe:SetSwipeTexture(texture)
         F.Swipe:SetSwipeColor(unpack(info.ringColors or s.ringColors))
     elseif info.DisplayType == "Icon" then
@@ -791,7 +797,7 @@ function NSI:SetProperties(F, info, s)
         if info.HideSwipe then
             if F.Swipe then F.Swipe:SetCooldown(0, 0) end
         else
-            if F.Swipe then F.Swipe:SetCooldown(GetTime(), info.dur) end
+            if F.Swipe then F.Swipe:SetCooldown(info.startTime, totalDuration) end
         end
         if F.TimerText then
             F.TimerText:SetTextColor(1, 1, 0, 1)
@@ -841,7 +847,8 @@ function NSI:SetProperties(F, info, s)
         -- only registered for player so spellID is never secret
         local _, _, spellID = ...
         if (not issecretvalue(info.spellID)) and spellID == info.spellID and self:IsShown() then
-            local rem = info.dur - (GetTime() - info.startTime)
+            local now = GetTime()
+            local rem = GetReminderRemaining(info, now)
             local hideThreshold = NSRT.ReminderSettings.HideThreshold or 5
             if rem and rem <= hideThreshold then
                 F:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
@@ -1287,7 +1294,8 @@ function NSI:ScheduleReminderSoundTimers(info)
     end
 
     local timers = {}
-    local remainingDuration = info.dur - (GetTime() - info.startTime)
+    local now = GetTime()
+    local remainingDuration = GetReminderRemaining(info, now)
     if info.sound or info.TTS then
         local soundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
         timers.sound = C_Timer.NewTimer(math.max(remainingDuration - soundTimer - 0.25, 0), function()
@@ -1321,10 +1329,16 @@ function NSI:DisplayReminder(info, bypass)
     end
     local now = GetTime()
     local dur = info.dur or 8
-    info.startTime = now
-    info.dur = dur
-    info.expires = now + dur
-    local rem = info.dur - (now - info.startTime)
+    local totalDuration = info.totalDuration or dur
+    if info.dur == nil then info.dur = dur end
+    if info.totalDuration then
+        info.expires = info.expires or now + dur
+        info.startTime = info.expires - totalDuration
+    else
+        info.startTime = now
+        info.expires = now + dur
+    end
+    local rem = GetReminderRemaining(info, now)
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
     end
@@ -1349,7 +1363,7 @@ function NSI:DisplayReminder(info, bypass)
         if info.DisplayType == "Bar" then
             F = self:CreateBar(info)
             local text, timerText = self:GetDisplayedText(remString, info, F)
-            F:SetMinMaxValues(0, info.dur)
+            F:SetMinMaxValues(0, totalDuration)
             F:SetValue(0)
             F:Show()
             self:ArrangeStates("Bars")
@@ -1371,8 +1385,8 @@ function NSI:DisplayReminder(info, bypass)
     end
     if info.Ticks then
         for _, tick in ipairs(info.Ticks) do
-            local perc = tick / info.dur
-            self:AddTickToBar(F, perc, info.dur-tick)
+            local perc = tick / totalDuration
+            self:AddTickToBar(F, perc, totalDuration-tick)
         end
     end
     if info.glowunit then
@@ -1428,8 +1442,8 @@ end
 
 function NSI:UpdateReminderDisplay(info, F)
     local now = GetTime()
-    local elapsed = now - info.startTime
-    local rem = info.dur - elapsed
+    local rem = GetReminderRemaining(info, now)
+    local displayElapsed = now - info.startTime
     local encId = info.encID or 0
     local phase = info.phase or 0
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
@@ -1477,7 +1491,7 @@ function NSI:UpdateReminderDisplay(info, F)
         end
         return
     elseif info.DisplayType == "Bar" then
-        if F.SetValue then F:SetValue(elapsed) end
+        if F.SetValue then F:SetValue(displayElapsed) end
         if F.Ticks then
             for _, tick in ipairs(F.Ticks) do
                 if tick.HideTimer and rem <= tick.HideTimer then
@@ -1669,13 +1683,14 @@ HandleBossCastAlertStart = function(self, unit, event)
                 local alertID = info.id or info
                 local current = matches[alertID]
                 if not current or difference < current.difference then
-                    matches[alertID] = {info = info, difference = difference}
+                    matches[alertID] = {info = info, difference = difference, index = index}
                 end
             end
         end
     end
     for alertID, match in pairs(matches) do
         local info = match.info
+        local reminderIndex = match.index
         info.BossCastMatched = true
         for frameIndex, frame in ipairs(self.BossCastAlertFrames[info] or {}) do
             frame:UnregisterEvent(info.bossEvent)
@@ -1684,6 +1699,10 @@ HandleBossCastAlertStart = function(self, unit, event)
         self.BossCastAlertFrames[info] = nil
         local targetTime = now + info.castDuration
         info.time = targetTime - self.PhaseSwapTime
+        if reminderIndex and self.ReminderTimer[reminderIndex] then
+            self.ReminderTimer[reminderIndex]:Cancel()
+            self.ReminderTimer[reminderIndex] = nil
+        end
         local activeFrame
         for parentIndex, parentName in ipairs({"ReminderText", "ReminderIcon", "ReminderBar", "ReminderCircle"}) do
             for frameIndex, frame in ipairs(self[parentName] or {}) do
@@ -1695,25 +1714,22 @@ HandleBossCastAlertStart = function(self, unit, event)
             if activeFrame then break end
         end
         if activeFrame then
-            info.dur = math.max(targetTime - info.startTime, 0)
+            info.totalDuration = info.totalDuration or info.dur
+            info.dur = math.max(targetTime - now, 0)
             info.expires = targetTime
+            info.startTime = targetTime - info.totalDuration
             self:ScheduleReminderSoundTimers(info)
-            if info.DisplayType == "Bar" then
-                activeFrame:SetMinMaxValues(0, info.dur)
-                if activeFrame.Ticks and info.dur > 0 then
-                    local remaining = info.dur - (now - info.startTime)
-                    for index, tick in ipairs(info.Ticks or {}) do
-                        local marker = activeFrame.Ticks[index]
-                        if marker then
-                            marker.HideTimer = info.dur - tick
-                            marker:ClearAllPoints()
-                            marker:SetPoint("LEFT", activeFrame, "LEFT", NSRT.ReminderSettings.BarSettings.Width * tick / info.dur, 0)
-                            marker:SetShown(remaining > marker.HideTimer)
-                        end
+            if info.DisplayType == "Bar" and activeFrame.Ticks and info.totalDuration > 0 then
+                local remaining = GetReminderRemaining(info, now)
+                for index, tick in ipairs(info.Ticks or {}) do
+                    local marker = activeFrame.Ticks[index]
+                    if marker then
+                        marker.HideTimer = info.totalDuration - tick
+                        marker:SetShown(remaining > marker.HideTimer)
                     end
                 end
             elseif activeFrame.Swipe and (info.DisplayType == "Icon" or info.DisplayType == "Circle") then
-                activeFrame.Swipe:SetCooldown(info.startTime, info.dur)
+                activeFrame.Swipe:SetCooldown(info.startTime, info.totalDuration)
             end
             activeFrame.lastReminderDisplayBucket = nil
             activeFrame.lastReminderTimerText = nil
@@ -1722,19 +1738,16 @@ HandleBossCastAlertStart = function(self, unit, event)
             self:ArrangeStates(activeFrame.DisplayType)
         else
             local displayTime = targetTime - info.dur
-            for index, reminder in ipairs(reminders) do
-                if reminder == info then
-                    if displayTime > now then
-                        if self.ReminderTimer[index] then self.ReminderTimer[index]:Cancel() end
-                        self.ReminderTimer[index] = C_Timer.NewTimer(displayTime - now, function()
-                            self:DisplayReminder(info)
-                        end)
-                    else
-                        info.dur = math.max(targetTime - now, 0)
-                        self:DisplayReminder(info)
-                    end
-                    break
-                end
+            if displayTime > now then
+                self.ReminderTimer[reminderIndex] = C_Timer.NewTimer(displayTime - now, function()
+                    self:DisplayReminder(info)
+                end)
+            else
+                info.totalDuration = info.totalDuration or info.dur
+                info.dur = math.max(targetTime - now, 0)
+                info.expires = targetTime
+                info.startTime = targetTime - info.totalDuration
+                self:DisplayReminder(info)
             end
         end
     end
