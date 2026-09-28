@@ -64,12 +64,12 @@ function NSI:AddToReminder(reminderInfo)
     table.insert(self.ProcessedReminder[info.encID][info.phase], info)
 end
 
-function NSI:CreateReminder(info)
+function NSI:CreateReminder(info, preview)
     if info.IsAssignment and self:IsUsingTLAssignments() then
         table.insert(self.TLAlerts, info)
         return nil
     end
-    if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not info.isSpecialDisplay then
+    if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not info.isSpecialDisplay and not preview then
         return nil
     end
     info = CopyReminderInfo(info)
@@ -1319,7 +1319,7 @@ end
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
-    if self:IsUsingTLAlerts() and info.isSpecialDisplay then
+    if self:IsUsingTLAlerts() then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
         -- return
     end

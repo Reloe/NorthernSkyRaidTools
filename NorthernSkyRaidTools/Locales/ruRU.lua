@@ -1354,7 +1354,6 @@ L["This Alert only shows if First Mate Nama was empowered"] = "Это опове
 L["This Alert only shows if Scrollsage Iku was empowered"] = "Это оповещение отображается только тогда, если Хранительница свитков Ику была усилена."
 L["This Alert only shows if you are holding the fish at the time."] = "Это оповещение отображается только тогда, если Вы в этот момент держите рыбу."
 -- Preview
-L["|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders."] = "|cFFFF0000NSRT:|r предпросмотр отключен, так как у Вас оповещения отображаются через TimelineReminders."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"] = "|cFF00FFFFNSRT:|r предпросмотр для этого оповещения недоступен. Оно привязано к индикатору здоровья врага."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r предпросмотр для этого оповещения недоступен. Оно использует настройки отображения текста на вкладке 'Общие'."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r предпросмотр для этого оповещения недоступен. Вы можете изменить настройки прерываний в меню отображения прерываний."

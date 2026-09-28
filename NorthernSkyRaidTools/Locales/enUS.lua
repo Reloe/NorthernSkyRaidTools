@@ -1392,7 +1392,6 @@ L["This Alert only shows if First Mate Nama was empowered"] = "This Alert only s
 L["This Alert only shows if Scrollsage Iku was empowered"] = "This Alert only shows if Scrollsage Iku was empowered"
 L["This Alert only shows if you are holding the fish at the time."] = "This Alert only shows if you are holding the fish at the time."
 -- Preview
-L["|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders."] = "|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."

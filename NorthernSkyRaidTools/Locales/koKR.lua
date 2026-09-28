@@ -1325,7 +1325,6 @@ L["This Alert only shows if First Mate Nama was empowered"] = "이 경고는 일
 L["This Alert only shows if Scrollsage Iku was empowered"] = "이 경고는 두루마리현자 이쿠가 강화됐을 때만 표시됩니다"
 L["This Alert only shows if you are holding the fish at the time."] = "이 경고는 물고기를 들고 있을 때만 표시됩니다."
 -- Preview
-L["|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders."] = "|cFFFF0000NSRT:|r TimelineReminders를 통해 경고를 표시중이므로 미리보기가 비활성화되었습니다."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"] = "|cFF00FFFFNSRT:|r 이 경고는 미리보기가 없습니다. 적 이름표에 뜨는 경고입니다"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r 이 경고는 미리보기가 없습니다. 일반 탭의 텍스트 디스플레이 설정을 사용합니다."
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r 이 경고는 미리보기가 없습니다. 차단 디스플레이 메뉴의 차단 설정으로 변경할 수 있습니다."
