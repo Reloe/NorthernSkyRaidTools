@@ -350,6 +350,8 @@ local function BuildAuraTrackingUI(screen)
 
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
+    local displaySearchEntry
+    local displaySearchText = ""
     local nameEntry, groupDD, anchorEntry
     local resetTriggerScroll = false
 
@@ -1555,6 +1557,28 @@ local function BuildAuraTrackingUI(screen)
         end
         local topPad = (activeTab == "Display") and DISPLAY_TOP or 0
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
+        if activeTab == "Display" and displaySearchText ~= "" then
+            local search = string.lower(displaySearchText)
+            local filteredDefs = {}
+            local currentHeader
+            local headerAdded = false
+            for _, def in ipairs(defs) do
+                if def.Type == "Label" and def.highlight then
+                    currentHeader = def
+                    headerAdded = false
+                else
+                    local label = def.label and NSI:Loc(def.label) or ""
+                    if string.find(string.lower(label), search, 1, true) then
+                        if currentHeader and not headerAdded then
+                            filteredDefs[#filteredDefs + 1] = currentHeader
+                            headerAdded = true
+                        end
+                        filteredDefs[#filteredDefs + 1] = def
+                    end
+                end
+            end
+            defs = filteredDefs
+        end
         local scrollObj = tabScroll[activeTab]
         if not scrollObj then
             scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
@@ -1939,6 +1963,7 @@ local function BuildAuraTrackingUI(screen)
             tabFrames[tn]:SetShown(tn == name)
             if tn == name then tabBtns[tn]:Select() else tabBtns[tn]:Deselect() end
         end
+        if displaySearchEntry then displaySearchEntry.frame:SetShown(name == "Display") end
         RebuildCurrentTab()
     end
 
@@ -1949,6 +1974,26 @@ local function BuildAuraTrackingUI(screen)
         btn:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", (i - 1) * (tabBtnW + tabBtnGap), tabRowY)
         tabBtns[name] = btn
     end
+
+    displaySearchEntry = CreateTextEntry(rightPanel, nil, nil, nil,
+        rightW - #SECTIONS * (tabBtnW + tabBtnGap) - 8, 22, nil, nil, nil, "NSUIAuraTrackDisplaySearch")
+    displaySearchEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", #SECTIONS * (tabBtnW + tabBtnGap), tabRowY)
+    local displaySearchHint = displaySearchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    displaySearchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
+    displaySearchHint:SetPoint("LEFT", displaySearchEntry.editBox, "LEFT", 2, 0)
+    displaySearchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
+    NSI:SetUIFont(displaySearchHint, 14, "")
+    local function UpdateDisplaySearchHint(editBox)
+        displaySearchHint:SetShown(editBox:GetText() == "" and not editBox:HasFocus())
+    end
+    displaySearchEntry.editBox:SetScript("OnTextChanged", function(self)
+        displaySearchText = self:GetText()
+        UpdateDisplaySearchHint(self)
+        if activeTab == "Display" then RebuildCurrentTab() end
+    end)
+    displaySearchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateDisplaySearchHint(self) end)
+    displaySearchEntry.editBox:HookScript("OnEditFocusLost", function(self) UpdateDisplaySearchHint(self) end)
+    displaySearchEntry.frame:Show()
 
     -- ── Player Stats Display panel ──────────────────────────────────────────
     -- A stripped-down version of the aura Display tab: same widget system
