@@ -74,7 +74,7 @@ NSI.PreCombatPullTimerHandlers[encID] = function(self, event, _, timeRemaining)
         reminder.time = duration
         reminder.phase = 1
         reminder.IsAlert = false
-        local info = self:CreateReminder(reminder, true)
+        local info = self:CreateReminder(reminder)
         self.UlatekPrePotTimer = nil
         self.UlatekPrePotFrame = info and self:DisplayReminder(info)
     end)
@@ -110,8 +110,9 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         TTS = alert.TTS,
         countdown = false,
         IsAlert = false,
+        isSpecialDisplay = true,
         ReloeReminder = true,
-    }, true)
+    })
     if not info then return end
     local frame = self:DisplayReminder(info, isPreview)
     if key then self[key] = {frame = frame, info = info} end
@@ -182,8 +183,9 @@ function NSI:PreviewUlatekTransitionSoak()
         phase = 1,
         TTS = false,
         IsAlert = false,
+        isSpecialDisplay = true,
         ReloeReminder = true,
-    }, true)
+    })
     if info then self:DisplayReminder(info, true) end
 end
 
@@ -837,8 +839,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                                     TTS = transitionSoakAlert.TTS,
                                     TTSTimer = transitionSoakAlert.TTSTimer,
                                     IsAlert = false,
+                                    isSpecialDisplay = true,
                                     ReloeReminder = true,
-                                }, true)
+                                })
                                 if info then self:DisplayReminder(info) end
                             end)
                         end
@@ -1065,8 +1068,9 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             sticky = wrongTargetAlert.sticky,
             TTS = false,
             IsAlert = false,
+            isSpecialDisplay = true,
             ReloeReminder = true,
-        }, true)
+        })
         self.UlatekWrongTargetFrame = info and self:DisplayReminder(info)
     end
 

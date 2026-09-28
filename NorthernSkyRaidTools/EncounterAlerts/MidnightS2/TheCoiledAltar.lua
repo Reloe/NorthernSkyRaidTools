@@ -400,6 +400,7 @@ local function UpdateCoiledAltarWrongTarget(self)
         sticky = alert.sticky,
         TTS = false,
         IsAlert = false,
+        isSpecialDisplay = true,
         ReloeReminder = true,
     })
     self.CoiledAltarWrongTargetFrame = info and self:DisplayReminder(info)

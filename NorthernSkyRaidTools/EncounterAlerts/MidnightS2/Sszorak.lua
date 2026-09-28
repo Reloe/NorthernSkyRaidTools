@@ -323,7 +323,8 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 TTS = false,
                 sticky = 0,
                 IsAlert = true,
-            }, true)
+                isSpecialDisplay = true,
+            })
             if not info then return end
             info.text = unitName
             local F = self:DisplayReminder(info)

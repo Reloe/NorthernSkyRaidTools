@@ -47,7 +47,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local InterruptWhisperAlertPreview = [[
         return function(self)
             local alert = NSRT.EncounterAlerts[3421][16].InterruptWhisperAlert
-            local info = self:CreateReminder(CopyTable(alert), true)
+            local info = self:CreateReminder(alert)
             if alert.ShowWhisperSender then
                 local sender = secretwrap(UnitName("player"))
                 local senderGUID = secretwrap(UnitGUID("player"))
@@ -209,7 +209,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
 
     local interruptWhisperAlert = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptWhisperAlert
     if interruptWhisperAlert and interruptWhisperAlert.enabled and self:EvaluateLoad(interruptWhisperAlert) then
-        local info = self:CreateReminder(CopyTable(interruptWhisperAlert), true)
+        local info = self:CreateReminder(interruptWhisperAlert)
         self:EncounterFunction("TwinFangsInterruptWhisper", function(_, _, _, sender, ...)
             if interruptWhisperAlert.ShowWhisperSender then
                 local senderGUID = select(10, ...)

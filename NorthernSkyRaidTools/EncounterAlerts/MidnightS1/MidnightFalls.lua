@@ -274,6 +274,7 @@ NSI.InitializeAlerts[encID] = function(self)
         customIcon = nil,
         difficulties = {14, 15, 16},
         timers = nil,
+        isSpecialDisplay = true,
         BlockCopy = true,
         enabled = false,
         HideTimer = false,
@@ -574,7 +575,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview) -- on ENCOUNTER_STA
     local crystalDropTimer = NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].CrystalDropTimer
     if crystalDropTimer and crystalDropTimer.enabled and self:EvaluateLoad(crystalDropTimer) and not preview then
         local s = NSRT.EncounterAlerts[encID][id].CrystalDropTimer
-        local info = self:CreateReminder(CopyTable(s), true)
+        local info = self:CreateReminder(s)
         self:EncounterRegister("CrystalDropTimer", "UNIT_SPELLCAST_SUCCEEDED", true, "player")
         self:EncounterRegister("CrystalDropTimer", "UPDATE_EXTRA_ACTIONBAR", true)
         self:EncounterFunction("CrystalDropTimer", function(_, e, unit, ...)

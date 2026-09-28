@@ -64,21 +64,19 @@ function NSI:AddToReminder(reminderInfo)
     table.insert(self.ProcessedReminder[info.encID][info.phase], info)
 end
 
-function NSI:CreateReminder(info, preview)
-    info = CopyReminderInfo(info)
-    if preview or not info.encID then
-        info.time = info.dur or 60
-        info.encID = info.encID or 0
-    end
-    self.ProcessedReminder = self.ProcessedReminder or {}
-    self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
-    if info.IsAssignment and self:IsUsingTLAssignments() and not preview then
+function NSI:CreateReminder(info)
+    if info.IsAssignment and self:IsUsingTLAssignments() then
         table.insert(self.TLAlerts, info)
         return nil
     end
-    if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not preview then
+    if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not info.isSpecialDisplay then
         return nil
     end
+    info = CopyReminderInfo(info)
+    info.time = info.time or info.dur or 60
+    info.encID = info.encID or 0
+    self.ProcessedReminder = self.ProcessedReminder or {}
+    self.ProcessedReminder[info.encID] = self.ProcessedReminder[info.encID] or {}
     if info.isTaunt then
         local class = select(3, UnitClass("player"))
         info.spellID = ClassToTauntID[class] or info.spellID
@@ -1321,6 +1319,10 @@ end
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
+    if self:IsUsingTLAlerts() and info.isSpecialDisplay then
+        self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
+        -- return
+    end
     local now = GetTime()
     local dur = info.dur or 8
     info.startTime = now
