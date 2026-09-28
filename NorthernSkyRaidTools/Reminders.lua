@@ -64,12 +64,8 @@ function NSI:AddToReminder(reminderInfo)
     table.insert(self.ProcessedReminder[info.encID][info.phase], info)
 end
 
-function NSI:CreateReminder(info, preview)
-    if info.IsAssignment and self:IsUsingTLAssignments() then
-        table.insert(self.TLAlerts, info)
-        return nil
-    end
-    if ((info.IsAlert and self:IsUsingTLAlerts()) or (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment))) and not info.isSpecialDisplay and not preview then
+function NSI:CreateReminder(info)
+    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
         return nil
     end
     info = CopyReminderInfo(info)
@@ -1319,7 +1315,7 @@ end
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
-    if self:IsUsingTLAlerts() then
+    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
         -- return
     end
@@ -2691,19 +2687,7 @@ end
 
 function NSI:IsUsingTLAlerts()
     local IsUsingAlerts = NSRT.ReminderSettings.UseTLAlerts and C_AddOns.IsAddOnLoaded("TimelineReminders")
-    if IsUsingAlerts then
-        local version = tonumber(C_AddOns.GetAddOnMetadata("TimelineReminders", "Version"):match("^v(.+)$"))
-        if version and version < 308 then -- outdated version check - only relevant for alerts since assignment use old system and reminders ist just the note.
-            if not self.HasTLWarning then
-                print("|cFF00FFFFNSRT:|r You have selected to use Timeline Reminders for NSRT Alerts but your version of Timeline Reminders is outdated and not compatible. NSRT will display these alerts instead until you update.")
-                self.HasTLWarning = true
-                C_Timer.After(60, function() self.HasTLWarning = nil end)
-            end
-            return false
-        end
-        return true
-    end
-    return false
+    return IsUsingAlerts
 end
 
 function NSI:IsUsingTLAssignments()
