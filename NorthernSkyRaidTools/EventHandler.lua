@@ -61,12 +61,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.GlowStarted = {}
             self.UnitFrames = {}
-            self:InitNickNames()
             if self:GetProfileKey() then
                 self.LoadedProfile = true
                 self:LoadMyProfile()
                 self:CreateMoveFrames()
             end
+            self:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         if not self.LoadedProfile then
@@ -102,11 +102,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
-            local name, realm = UnitName("player")
-            if not realm then
-                realm = GetNormalizedRealmName()
-            end
-            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
+            local name, realm = self:GetRealName("player")
+            local key = self:GetNickNameKey(name, realm)
+            if (not NSRT.NickNames[key]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[key]) then
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
@@ -124,12 +122,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "READY_CHECK_FINISHED" and wowevent then
         self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
+        local encounterID, encounterName, eventDifficultyID, groupSize = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
         if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
-        self.EncounterID = ...
+        self.EncounterID = encounterID
         self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
@@ -157,6 +156,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartPaceComparison(self.EncounterID, diff)
+        self.EncounterAlertHookEncounterID = encounterID
+        self.EncounterAlertHookDifficulty = diff
+        self.EncounterAlertHookPhase = self.Phase
         self:StartReminders(self.Phase)
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
@@ -175,13 +177,21 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
         self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
+        self:RunEncounterAlertHooks("onEncounterStart", encounterID, diff, encounterID, encounterName, eventDifficultyID, groupSize)
     elseif e == "ENCOUNTER_END" and wowevent then
         self:LogTimeline(e, ...)
-        local encID, encounterName, _, _, kill = ...
+        local encID, encounterName, eventDifficultyID, groupSize, success = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         self.CustomEvents = {}
-        if not diff then return end
+        self.EncounterAlertHookEncounterID = nil
+        self.EncounterAlertHookDifficulty = nil
+        self.EncounterAlertHookPhase = nil
+        if not diff then
+            if self.EncounterAlertEnvironments then self.EncounterAlertEnvironments[encID] = nil end
+            return
+        end
+        self:RunEncounterAlertHooks("onEncounterEnd", encID, diff, encID, encounterName, eventDifficultyID, groupSize, success)
         self:EncounterRegister(nil, nil, nil, nil, true)
         self:StopPaceComparison()
         self:InitAuraSystem()
@@ -197,7 +207,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        if kill and kill ~= 0 then
+        if success and success ~= 0 then
             local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
             local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
             if NSRT.ReminderSettings.ClearOnKill then

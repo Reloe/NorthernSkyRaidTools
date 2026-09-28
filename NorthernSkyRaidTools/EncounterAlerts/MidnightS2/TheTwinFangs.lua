@@ -24,6 +24,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 barColors = alert.BarColor or overviewSettings.barColors,
                 backgroundColors = overviewSettings.backgroundColors,
                 height = alert.BarHeight or overviewSettings.Height,
+                previewIcon = alert.customIcon,
             }, true)
         end
     ]]

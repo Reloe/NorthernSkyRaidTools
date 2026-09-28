@@ -2468,7 +2468,7 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
         frame:SetPoint("TOPLEFT", self.DebuffOverviewMover, "BOTTOMLEFT", barAnchorOffset, -8)
     end
     local fontPath = self.LSM:Fetch("font", settings.Font)
-    local iconInfo = C_Spell.GetSpellInfo(1311611)
+    local iconInfo = C_Spell.GetSpellInfo(overrides and overrides.previewIcon or 1311611)
     for rowIndex = 1, rowCount * #columns do
         local columnIndex = math.ceil(rowIndex / rowCount)
         local index = rowIndex - (columnIndex - 1) * rowCount
@@ -3617,7 +3617,7 @@ function NSI:PreviewAuraTracking(key, show)
     local firstPreviewSuffix
     local secondPreviewSuffix
     if isCotankTracking then
-        local cotankPreviewName = NSAPI:GetName(previewPlayerName, "GlobalNickNames") or previewPlayerName
+        local cotankPreviewName = NSAPI:GetName(previewUnit, "GlobalNickNames") or previewPlayerName
         firstPreviewName = cotankPreviewName
         secondPreviewName = cotankPreviewName
         firstPreviewSuffix = " 1"

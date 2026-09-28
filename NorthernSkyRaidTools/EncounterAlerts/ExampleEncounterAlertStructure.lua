@@ -15,6 +15,10 @@ NSRT.EncounterAlerts = {
                 IsAlert = true,        -- always true
                 countdown = nil,       -- nil/int
                 TTSTimer = nil,        -- nil/int
+                bossID = nil,          -- nil/string/table of unit tokens; defaults to "boss1" when castDuration is set
+                castDuration = nil,    -- nil/number, hardcoded boss cast duration in seconds
+                timerVariance = nil,   -- nil/number, accepted early/late cast-start window in seconds; defaults to 2 when castDuration is set
+                bossEvent = nil,       -- nil/string, unit event to listen for; defaults to "UNIT_SPELLCAST_START" when castDuration is set
                 TTS = nil,             -- nil = defined by user settings but possible to be overwritten as false/true or string
                 sound = nil,           -- nil/string
                 HideTimer = nil,         -- nil or true

@@ -17,7 +17,7 @@ local p3SoakTimers = {
 }
 
 local debuffCircleFilter = "HARMFUL"
-local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5}
+local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5, isBossAura = false}
 
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
