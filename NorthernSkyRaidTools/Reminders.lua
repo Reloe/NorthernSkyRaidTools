@@ -1620,7 +1620,6 @@ local function ClearBossCastAlertEvents(self)
         end
     end
     self.BossCastAlertFrames = {}
-    self.BossCastLastEventKey = nil
 end
 
 RegisterBossCastAlertEvents = function(self, reminders)
@@ -1637,10 +1636,12 @@ RegisterBossCastAlertEvents = function(self, reminders)
             end
             self.BossCastAlertFrames[info] = {}
             for unit in pairs(units) do
+                local registeredUnit = unit
+                local registeredEvent = info.bossEvent
                 local frame = CreateFrame("Frame", nil, self.NSRTFrame)
-                frame:RegisterUnitEvent(info.bossEvent, unit)
-                frame:SetScript("OnEvent", function(eventFrame, event, eventUnit, castGUID)
-                    HandleBossCastAlertStart(self, eventUnit, event, castGUID)
+                frame:RegisterUnitEvent(registeredEvent, registeredUnit)
+                frame:SetScript("OnEvent", function()
+                    HandleBossCastAlertStart(self, registeredUnit, registeredEvent)
                 end)
                 table.insert(self.BossCastAlertFrames[info], frame)
             end
@@ -1648,12 +1649,10 @@ RegisterBossCastAlertEvents = function(self, reminders)
     end
 end
 
-HandleBossCastAlertStart = function(self, unit, event, castGUID)
+HandleBossCastAlertStart = function(self, unit, event)
     local reminders = self.ProcessedReminder and self.ProcessedReminder[self.EncounterID] and self.ProcessedReminder[self.EncounterID][self.Phase]
     if not reminders then return end
     local now = GetTime()
-    local eventKey = event..":"..unit..":"..tostring(castGUID or now)
-    if self.BossCastLastEventKey == eventKey then return end
     local phaseElapsed = now - self.PhaseSwapTime
     local matches = {}
     for index, info in ipairs(reminders) do
@@ -1677,7 +1676,6 @@ HandleBossCastAlertStart = function(self, unit, event, castGUID)
             end
         end
     end
-    if next(matches) then self.BossCastLastEventKey = eventKey end
     for alertID, match in pairs(matches) do
         local info = match.info
         info.BossCastMatched = true
