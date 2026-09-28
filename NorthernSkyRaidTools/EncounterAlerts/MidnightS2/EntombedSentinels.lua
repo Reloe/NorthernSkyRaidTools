@@ -478,7 +478,6 @@ local function TrackBloodHitCastSuccess(self)
             alert = CopyTable(alert)
             alert.phase = self.Phase
             alert.phaseTimers = nil
-            alert.isSpecialDisplay = nil
             self:DisplayReminder(alert)
             self.BloodHitTimer = nil
             self.BloodHitPhase = nil
@@ -509,7 +508,6 @@ local function AddBloodHitPoolTimer(self, now)
             alert.phase = self.Phase
             alert.time = diff
             alert.phaseTimers = nil
-            alert.isSpecialDisplay = nil
             self:AddToReminder(alert) -- add alert for the new phase
         end
     end
