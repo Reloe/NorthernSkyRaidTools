@@ -87,7 +87,7 @@ NSI.PrePullEncounterZones = {
     -- [zoneID] = 3497, -- The Lost Explorers
     -- [zoneID] = 3420, -- Sszorak
     -- [zoneID] = 3421, -- The Twin Fangs
-    -- [zoneID] = 3429, -- The Coiled Altar
+    [17701] = 3429, -- The Coiled Altar
     [17702] = 3492, -- Ula'tek
 }
 
