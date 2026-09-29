@@ -7,6 +7,7 @@ local CharList = {}
 local LibTranslit = LibStub("LibTranslit-1.0")
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
+    if issecretvalue(str) then return end
     if not str then
         error("NSAPI:GetCharacters(str), str is nil")
         return
@@ -24,6 +25,7 @@ end
 
 function NSI:GetRealName(unit)
     local name, secondName = UnitFullName(unit)
+    if issecretvalue(name) or issecretvalue(secondName) then return name, secondName end
     if self:IsForever() then
         if secondName and secondName ~= "" then
             return name .. " " .. secondName
@@ -37,6 +39,7 @@ function NSI:GetRealName(unit)
 end
 
 function NSI:GetNickNameKey(name, realm)
+    if issecretvalue(name) or issecretvalue(realm) then return end
     if self:IsForever() then
         return name and (realm and realm ~= "" and name .. " " .. realm or name)
     end
@@ -109,6 +112,7 @@ function NSAPI:GetName(str, AddonName, skiptranslit) -- Returns Nickname
 end
 
 function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickname or Character Name with nick = true
+    if issecretvalue(name) then return name end
     if UnitExists(name) and UnitIsConnected(name) then return name end
     name = nick and NSAPI:GetName(name, AddonName, true) or name
     if UnitExists(name) and UnitIsConnected(name) then return name end
@@ -281,7 +285,7 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                 for u in self:IterateGroupMembers() do
                     local name, realm = self:GetRealName(u)
                     local key = self:GetNickNameKey(name, realm)
-                    if NSRT.NickNames[key] then
+                    if key and NSRT.NickNames[key] then
                         local nick = NSRT.NickNames[key]
                         local i = tIndexOf(CellDB.nicknames.list, key..":"..nick)
                         if i then -- update nickame if it already exists
