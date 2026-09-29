@@ -1347,7 +1347,7 @@ function NSI:DisplayReminder(info, bypass)
     if not isAllowed and not bypass then return end
     if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
-        -- return
+        return
     end
     local now = GetTime()
     local dur = info.dur or 8
