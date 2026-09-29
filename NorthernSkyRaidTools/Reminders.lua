@@ -65,7 +65,7 @@ function NSI:AddToReminder(reminderInfo)
 end
 
 function NSI:CreateReminder(info)
-    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment)) then
+    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment or info.IsPrePull)) then
         return nil
     end
     info = CopyReminderInfo(info)
@@ -1345,7 +1345,7 @@ end
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
-    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) then
+    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
         -- return
     end
@@ -1883,7 +1883,10 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
             activeReminder.encID = reminder.encID
             activeReminder.phase = 1
             local info = self:CreateReminder(activeReminder)
-            if info then self:DisplayReminder(info) end
+            if info then
+                info.IsPrePull = true
+                self:DisplayReminder(info)
+            end
         end
         if delay <= 0 then
             ShowPrePullReminder(0)
