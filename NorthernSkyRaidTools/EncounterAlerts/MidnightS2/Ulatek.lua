@@ -62,7 +62,6 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         TTS = alert.TTS,
         countdown = false,
         IsAlert = false,
-        isSpecialDisplay = true,
         ReloeReminder = true,
     })
     if not info then return end
@@ -135,7 +134,6 @@ function NSI:PreviewUlatekTransitionSoak()
         phase = 1,
         TTS = false,
         IsAlert = false,
-        isSpecialDisplay = true,
         ReloeReminder = true,
     })
     if info then self:DisplayReminder(info, true) end
@@ -447,7 +445,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "AutoRelease", name = "Auto Release", text = "Auto Release", customIcon = 20484, DisplayType = "Text", encID = encID, TTS = false, dur = 1, phase = 1,
-        difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        difficulties = {15, 16}, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -561,7 +559,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "WaveDirectionPrompt", name = "Wave Direction Input", text = "Input Direction", DisplayType = "Text", encID = encID, TTS = false, dur = 12, phase = 1,
-        difficulties = {16}, enabled = false, HideTimer = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        difficulties = {16}, enabled = false, HideTimer = true, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -627,7 +625,7 @@ NSI.InitializeAlerts[encID] = function(self)
             print(NSI:Loc("|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter."))
         end
     end]],
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
+        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, HideNameplateBox = false,
         extraOptions = {
             {Type = "Label", text = NSI:Loc("The Interrupt display will be displayed for the add that you focused. The order of lines in the interrupt note does not matter since it's not assigned to an actual boss unit but just to whatever you focus. Use raidmarker to ensure that people are focusing the same add."), height = 60},
@@ -715,7 +713,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
     local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
+        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
 
@@ -786,7 +784,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                                     TTS = transitionSoakAlert.TTS,
                                     TTSTimer = transitionSoakAlert.TTSTimer,
                                     IsAlert = false,
-                                    isSpecialDisplay = true,
                                     ReloeReminder = true,
                                 })
                                 if info then self:DisplayReminder(info) end
@@ -1015,7 +1012,6 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             sticky = wrongTargetAlert.sticky,
             TTS = false,
             IsAlert = false,
-            isSpecialDisplay = true,
             ReloeReminder = true,
         })
         self.UlatekWrongTargetFrame = info and self:DisplayReminder(info)

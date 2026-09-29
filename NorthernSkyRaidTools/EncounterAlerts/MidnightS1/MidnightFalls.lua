@@ -274,7 +274,6 @@ NSI.InitializeAlerts[encID] = function(self)
         customIcon = nil,
         difficulties = {14, 15, 16},
         timers = nil,
-        isSpecialDisplay = true,
         BlockCopy = true,
         enabled = false,
         HideTimer = false,

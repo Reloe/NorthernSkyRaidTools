@@ -146,7 +146,7 @@ local debuffCirclePreview = [[return function(NSI)
         },
     }
     local data = {group = "Coiled Altar", internalID = "DebuffCircle", name = "Orb/Bomb Circle", text = "", DisplayType = "Circle", encID = encID,
-        phase = nil, TTS = false, difficulties = {14, 15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        phase = nil, TTS = false, difficulties = {14, 15, 16}, BlockCopy = true, NoEdit = true,
         CircleColor = {1, 0, 0, 1}, CircleTexture = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_8px.png",
         Preview = debuffCirclePreview, extraOptions = debuffCircleOptions,
     }
@@ -170,7 +170,7 @@ local debuffCirclePreview = [[return function(NSI)
         },
     }
     local data = {Version = {versionNumber = 2, [1] = {group = "Coiled Altar"}, [2] = {customIcon = 1286918}}, group = "Coiled Altar", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", customIcon = 1286918, DisplayType = "Bar", encID = encID,
-        phase = nil, TTS = false, dur = eternalNightfallDuration, enabled = true, isSpecialDisplay = true, BlockCopy = true,
+        phase = nil, TTS = false, dur = eternalNightfallDuration, enabled = true, BlockCopy = true,
         BarColor = {0.6235, 0.2510, 1, 1}, BarWidth = 300, BarHeight = 40, Anchor = "TOP", relativeTo = "TOP", xOffset = 0, yOffset = -300,
         Preview = eternalNightfallPreview, extraOptions = eternalNightfallOptions, difficulties = {15, 16}, NoEdit = true,
     }
@@ -274,7 +274,7 @@ local debuffCirclePreview = [[return function(NSI)
     self:AddEncounterAlert(data)
 
     local data = {group = "Coiled Altar", internalID = "InterruptAssignments", name = "Interrupt Assignments", text = "Interrupts", customIcon = 6552, DisplayType = "Text", encID = encID, phase = 2, TTS = false, dur = 35,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, NumberFontSize = 12, NameFontSize = 12, BoxSize = 30,
+        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, NoEdit = true, NumberFontSize = 12, NameFontSize = 12, BoxSize = 30,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, ShowAll = false, DisplayStaticBox = false, HideNameplateBox = false,
         Version = {versionNumber = 4, [1] = {BoxSize = 30}, [2] = {NumberFontSize = 12, NameFontSize = 12}, [3] = {group = "Coiled Altar"}, [4] = {customIcon = 6552}},
         extraOptions = {
@@ -400,7 +400,6 @@ local function UpdateCoiledAltarWrongTarget(self)
         sticky = alert.sticky,
         TTS = false,
         IsAlert = false,
-        isSpecialDisplay = true,
         ReloeReminder = true,
     })
     self.CoiledAltarWrongTargetFrame = info and self:DisplayReminder(info)

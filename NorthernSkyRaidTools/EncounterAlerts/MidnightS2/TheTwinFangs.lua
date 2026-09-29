@@ -39,7 +39,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
 
     local data = {Version = {versionNumber = 1, [1] = {customIcon = 1290336}}, group = "Twin Fangs", internalID = "DebuffOverview", name = "Eternal Venom Overview", text = "Eternal Venom Overview", customIcon = 1290336, DisplayType = "Bar", encID = encID,
-        phase = 1, TTS = false, dur = 5, spellID = nil, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        phase = 1, TTS = false, dur = 5, spellID = nil, difficulties = {14, 15, 16}, enabled = false, BlockCopy = true, NoEdit = true,
         Preview = DebuffOverviewPreview, id = 0.3, BarHeight = 25, extraOptions = debuffOverviewOptions,
     }
     self:AddEncounterAlert(data)
@@ -61,7 +61,7 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Twin Fangs", internalID = "InterruptWhisperAlert", name = "Interrupt Whisper Alert", text = "Your Interrupt", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 3,
-        sound = "|cFF4BAAC8Interrupt|r", difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, id = 0.4, ShowWhisperSender = false, pinned = true,
+        sound = "|cFF4BAAC8Interrupt|r", difficulties = {16}, enabled = false, BlockCopy = true, id = 0.4, ShowWhisperSender = false, pinned = true,
         Preview = InterruptWhisperAlertPreview,
         extraOptions = {
             {Type = "Label", text = "This Alert shows up whenever you receive any whisper at all during the encounter. It cannot filter out wrong whispers."},

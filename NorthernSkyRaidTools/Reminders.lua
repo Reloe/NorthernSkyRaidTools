@@ -1882,7 +1882,6 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
             activeReminder.dur = math.min(reminderDuration, remaining)
             activeReminder.encID = reminder.encID
             activeReminder.phase = 1
-            activeReminder.isSpecialDisplay = true
             local info = self:CreateReminder(activeReminder)
             if info then self:DisplayReminder(info) end
         end
