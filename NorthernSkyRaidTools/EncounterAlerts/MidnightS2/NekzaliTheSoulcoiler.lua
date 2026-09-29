@@ -3,6 +3,14 @@ local _, NSI = ... -- Internal namespace
 local encID = 3470
 -- /run NSAPI:DebugEncounter(3470)
 
+NSI:RegisterBuiltinAuraGlow("NekzaliEssenceRendDispel", {
+    name = NSI:Loc("Essence Rend Dispel"),
+    encounterID = encID,
+    roles = {HEALER = true},
+    auraFilters = {Dispellable = "Enabled"},
+    candidateFilters = {DispelTypes = {Magic = "Enabled"}},
+})
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local nonTankConditions = self:DefaultLoadConditions()

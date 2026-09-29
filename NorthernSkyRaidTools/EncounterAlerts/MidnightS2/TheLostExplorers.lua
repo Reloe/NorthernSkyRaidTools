@@ -3,6 +3,13 @@ local _, NSI = ... -- Internal namespace
 local encID = 3497
 -- /run NSAPI:DebugEncounter(3497)
 
+NSI:RegisterBuiltinAuraGlow("LostExplorersBlinkNovaBombGlow", {
+    name = NSI:Loc("Blink Nova / Bomb Glow"),
+    encounterID = encID,
+    roles = {HEALER = true},
+    candidateFilters = {isBossOrRoleAura = true, MaxDuration = 12},
+})
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local TraderConditional = {

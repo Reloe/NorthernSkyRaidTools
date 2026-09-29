@@ -27,6 +27,14 @@ NSI:RegisterBuiltinAuraGlow(gloombombOrbGuillotineGlowKey, {
     candidateFilters = debuffCircleCandidateFilters,
 })
 
+NSI:RegisterBuiltinAuraGlow("CoiledAltarGraveboundGlow", {
+    name = NSI:Loc("Gravebound Glow"),
+    encounterID = encID,
+    roles = {HEALER = true},
+    auraFilters = {Important = "Enabled"},
+    candidateFilters = {MaxDuration = 20},
+})
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
