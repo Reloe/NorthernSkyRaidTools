@@ -129,6 +129,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         self.EncounterID = encounterID
+        self.PrePullTimerEndTime = GetTime()
         self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
@@ -182,6 +183,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         self.CustomEvents = {}
+        self.PrePullTimerEndTime = nil
         self.EncounterAlertHookEncounterID = nil
         self.EncounterAlertHookDifficulty = nil
         self.EncounterAlertHookPhase = nil
@@ -224,9 +226,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif (e == "START_PLAYER_COUNTDOWN" or e == "CANCEL_PLAYER_COUNTDOWN") and wowevent then -- Do basically the same thing as ready check in case one of them is skipped.
-        for _, handler in pairs(self.PreCombatPullTimerHandlers) do
-            handler(self, e, ...)
-        end
+        self:HandlePrePullReminders(e, ...)
         if e == "CANCEL_PLAYER_COUNTDOWN" then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
@@ -240,8 +240,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and wowevent then
         local initiator = ...
-        self.ProcessDone = false
         if self:DifficultyCheck({14, 15, 16, 23}) then
+            self:LoadPersReminder(self:GetEncounterIDFromCurrentZone())
             if NSRT.ReadyCheckSettings.ConsumablesDisplay then
                 self:ShowReadyCheckConsumables(initiator)
             else
@@ -277,7 +277,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
-            self.ProcessDone = true
             if skipcheck then self:FlashNoteBackgrounds() end -- only show animation if reminder was manually shared
             if assigntable then self.Assignments = assigntable end
         end
@@ -290,10 +289,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
                 self:SetDebuffOverviewContainersShown(shown, containerName)
             end
-        end
-        if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
-            self:ProcessReminder()
-            self:UpdateReminderFrame(true)
         end
         local text = ""
         if UnitLevel("player") < 90 then return end

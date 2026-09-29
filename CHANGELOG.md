@@ -1,4 +1,5 @@
 ## Changelog
+- Add support for Pre-Pull Reminders & Alerts by entering negative timers
 - Prevent group sort if anyone is in combat and print out which player is in combat
 - Add Gate Ulatek Alerts
 - Add Callbacks for TimelineReminders so that everything is displayed through there now if enabled
