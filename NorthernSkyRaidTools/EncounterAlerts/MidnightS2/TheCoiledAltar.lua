@@ -25,7 +25,7 @@ local guillotineGlowKey = "CoiledAltarGuillotine"
 NSI:RegisterBuiltinAuraGlow(gloombombOrbGlowKey, {
     name = NSI:Loc("Gloombomb/Orb"),
     encounterID = encID,
-    menuIcon = 7966625,
+    menuIcon = 1286895,
     roles = {HEALER = true},
     color = {1, 1, 1, 1},
     candidateFilters = gloombombOrbCandidateFilters,
@@ -34,7 +34,7 @@ NSI:RegisterBuiltinAuraGlow(gloombombOrbGlowKey, {
 NSI:RegisterBuiltinAuraGlow(guillotineGlowKey, {
     name = NSI:Loc("Guillotine"),
     encounterID = encID,
-    menuIcon = 7966625,
+    menuIcon = 1283485,
     roles = {HEALER = true},
     color = {0, 1, 0, 1},
     candidateFilters = {isBossAura = true, MaxDuration = 5.5},
@@ -43,7 +43,7 @@ NSI:RegisterBuiltinAuraGlow(guillotineGlowKey, {
 NSI:RegisterBuiltinAuraGlow("CoiledAltarGraveboundGlow", {
     name = NSI:Loc("Gravebound"),
     encounterID = encID,
-    menuIcon = 7966625,
+    menuIcon = 1286840,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},
     auraFilters = {Important = "Enabled"},

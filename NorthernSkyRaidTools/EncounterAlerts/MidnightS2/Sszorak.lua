@@ -6,7 +6,7 @@ local encID = 3420
 NSI:RegisterBuiltinAuraGlow("SszorakVenomousSurge", {
     name = NSI:Loc("Venomous Surge"),
     encounterID = encID,
-    menuIcon = 7966619,
+    menuIcon = 1305963,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},
     candidateFilters = {isBossAura = true, isRoleAura = false, MaxDuration = 12},

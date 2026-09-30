@@ -409,14 +409,16 @@ local function BuildAuraGlowsUI(screen)
             row.label:SetText(entry.settings.Name)
             local spellIDs = not entry.defaultSettings and entry.settings.AuraType == "Buffs" and entry.settings.BuffFiltering == "SpellIDs"
                 and NSI:GetAuraGlowSpellIDList(entry.key) or nil
-            local icon = entry.settings.menuIcon
+            local icon = entry.settings.menuIcon and C_Spell.GetSpellTexture(entry.settings.menuIcon)
             if entry.settings.customIcon then
-                local customSpell = C_Spell.GetSpellInfo(entry.settings.customIcon)
-                icon = customSpell and customSpell.iconID or icon
+                icon = C_Spell.GetSpellTexture(entry.settings.customIcon) or icon
             end
             if not icon and spellIDs and spellIDs[1] then
-                local spell = C_Spell.GetSpellInfo(spellIDs[1])
-                icon = spell and spell.iconID
+                icon = C_Spell.GetSpellTexture(spellIDs[1])
+            end
+            if not icon and entry.builtin then
+                local definition = NSI.AuraGlowBuiltins[entry.key]
+                icon = definition.encounterID and BossData.BossIcons[definition.encounterID]
             end
             if not entry.defaultSettings then
                 row.icon:SetTexture(icon or DefaultIcon)
