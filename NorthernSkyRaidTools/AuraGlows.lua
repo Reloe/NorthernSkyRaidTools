@@ -15,7 +15,7 @@ end
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
 NSI.AuraGlowDefaultSettingsKey = "DefaultSettings"
 
-local AuraGlowDisplaySettingKeys = { "Size", "IconSize", "NumberOfLines", "LineSize", "Frequency", "ShowBackground", "ShowIcon" }
+local AuraGlowDisplaySettingKeys = { "Size", "IconSize", "IconPosition", "IconOffsetX", "IconOffsetY", "NumberOfLines", "LineSize", "Frequency", "ShowBackground", "ShowIcon" }
 
 local function ParseAuraGlowSpellIDs(value)
     local spellIDs = {}
@@ -115,6 +115,9 @@ function NSI:CreateAuraGlowSettingsDefaults(overrides)
         Frequency = 0.25,
         ShowBackground = true,
         ShowIcon = false,
+        IconPosition = "CENTER",
+        IconOffsetX = 0,
+        IconOffsetY = 0,
         AuraType = "Debuffs",
         BuffFiltering = "SpellIDs",
         SpellIDs = {},
@@ -209,7 +212,7 @@ function NSI:ResetBuiltinAuraGlow(key)
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
     NSRT.AuraGlows.Builtins[key] = CreateBuiltinAuraGlowSettings(self, key, true)
-    self:RebuildAuraGlows()
+    self:RebuildAuraGlows(key)
     self:RefreshAuraGlowPreview(key)
 end
 
@@ -236,7 +239,7 @@ function NSI:SetUseBuiltinAuraGlows(enabled)
             settings.enabled = enabled == true or definition.enabled == true
         end
     end
-    self:RebuildAuraGlows()
+    self:UpdateAuraGlowVisibility()
     self:RefreshAuraGlowsUI()
 end
 
@@ -281,8 +284,9 @@ function NSI:AddCustomAuraGlow(group)
     local settings = self:CreateAuraGlowSettingsDefaults({ Name = "Custom Aura Glow " .. index, group = group ~= "" and group or nil })
     CopyAuraGlowDisplaySettings(settings, GetAuraGlowDefaultSettings(self))
     NSRT.AuraGlows.Custom[index] = settings
-    self:InitAuraGlows()
-    return "Custom:" .. index
+    local key = "Custom:" .. index
+    self:InitAuraGlows(key)
+    return key
 end
 
 function NSI:SetAuraGlowEntryGroup(key, group)
@@ -301,8 +305,9 @@ function NSI:DuplicateCustomAuraGlow(key)
     copy.builtin = nil
     copy.Name = (copy.Name or "Custom Aura Glow") .. " Copy"
     NSRT.AuraGlows.Custom[#NSRT.AuraGlows.Custom + 1] = copy
-    self:RebuildAuraGlows()
-    return "Custom:" .. #NSRT.AuraGlows.Custom
+    local newKey = "Custom:" .. #NSRT.AuraGlows.Custom
+    self:InitAuraGlows(newKey)
+    return newKey
 end
 
 function NSI:DeleteCustomAuraGlow(key)
@@ -333,7 +338,7 @@ function NSI:AddAuraGlowSpellIDs(key, value)
         end
     end
     table.sort(settings.SpellIDs)
-    self:RebuildAuraGlows()
+    self:RebuildAuraGlows(key)
     self:RefreshAuraGlowPreview(key)
 end
 
@@ -344,7 +349,7 @@ function NSI:RemoveAuraGlowSpellID(key, spellID)
     for index, value in ipairs(settings.SpellIDs) do
         if tonumber(value) == spellID then
             table.remove(settings.SpellIDs, index)
-            self:RebuildAuraGlows()
+            self:RebuildAuraGlows(key)
             self:RefreshAuraGlowPreview(key)
             return
         end
@@ -426,7 +431,7 @@ function NSI:SetBuiltinAuraGlowActive(key, active)
     else
         self.AuraGlowManualState[key] = active == true
     end
-    self:UpdateAuraGlowVisibility()
+    self:UpdateAuraGlowVisibility(key)
 end
 
 function NSI:ActivateBuiltinAuraGlow(key)
@@ -441,7 +446,8 @@ local function CreateAuraGlowIcon(button, settings, texture)
     local icon = button:CreateTexture(nil, "ARTWORK")
     local iconSize = settings.IconSize or 20
     icon:SetSize(iconSize, iconSize)
-    icon:SetPoint("CENTER", button, "CENTER")
+    local iconPosition = settings.IconPosition or "CENTER"
+    icon:SetPoint(iconPosition, button, iconPosition, settings.IconOffsetX or 0, settings.IconOffsetY or 0)
     icon:SetTexCoord(0.0625, 0.9375, 0.0625, 0.9375)
     icon:SetAlpha(settings.ShowIcon and 1 or 0)
     if texture then icon:SetTexture(texture) end
@@ -690,12 +696,18 @@ function NSI:ToggleAuraGlowPreview(key, refreshUI)
     local targetFrame = self.UnitFrames and self.UnitFrames.player
     if not targetFrame then return false end
     local spellIDs = UsesAuraGlowSpellIDs(settings) and GetAuraGlowSpellIDs(settings) or {}
-    local spellID = spellIDs[1] or 1286895
+    local iconTexture = settings.menuIcon and C_Spell.GetSpellTexture(settings.menuIcon)
+    if settings.customIcon then
+        iconTexture = C_Spell.GetSpellTexture(settings.customIcon) or iconTexture
+    end
+    if not iconTexture and spellIDs[1] then
+        iconTexture = C_Spell.GetSpellTexture(spellIDs[1])
+    end
     local previewFrame = CreateFrame("Frame", nil, UIParent)
     previewFrame:SetAllPoints(targetFrame)
-    previewFrame:SetFrameStrata("HIGH")
+    previewFrame:SetFrameStrata("TOOLTIP")
     previewFrame:Show()
-    CreateAuraGlowIcon(previewFrame, settings, C_Spell.GetSpellTexture(spellID) or 134400)
+    CreateAuraGlowIcon(previewFrame, settings, iconTexture or 134400)
     CreateAuraGlowBorder(previewFrame, settings, true)
 
     self.AuraGlowPreviewFrame = previewFrame
@@ -736,28 +748,38 @@ local function IsAuraGlowActive(self, key, settings)
     return manualState == nil or manualState
 end
 
-function NSI:UpdateAuraGlowVisibility()
+function NSI:UpdateAuraGlowVisibility(onlyKey)
     for key, states in pairs(self.AuraGlowStates or {}) do
-        local settings = self:GetAuraGlowSettings(key)
-        local enabled = settings and IsAuraGlowActive(self, key, settings)
-        for _, state in pairs(states) do
-            state.container:SetEnabled(enabled)
-            state.container:SetShown(enabled)
+        if not onlyKey or key == onlyKey then
+            local settings = self:GetAuraGlowSettings(key)
+            local enabled = settings and IsAuraGlowActive(self, key, settings)
+            for _, state in pairs(states) do
+                state.container:SetEnabled(enabled)
+                state.container:SetShown(enabled)
+            end
         end
     end
 end
 
-function NSI:RebuildAuraGlows()
-    for _, states in pairs(self.AuraGlowStates or {}) do
+function NSI:RebuildAuraGlows(key)
+    local auraGlowStates = self.AuraGlowStates or {}
+    local statesToRebuild = key and { [key] = auraGlowStates[key] } or auraGlowStates
+    for _, states in pairs(statesToRebuild or {}) do
         for _, state in pairs(states) do
             state.container:Hide()
         end
     end
-    self.AuraGlowStates = {}
-    self:InitAuraGlows()
+    if key then
+        self.AuraGlowStates = auraGlowStates
+        self.AuraGlowStates[key] = nil
+        self:InitAuraGlows(key)
+    else
+        self.AuraGlowStates = {}
+        self:InitAuraGlows()
+    end
 end
 
-function NSI:InitAuraGlows()
+function NSI:InitAuraGlows(onlyKey)
     if self.IsBuilding then return end
     if self:Restricted() then
         self.PendingAuraGlowUpdate = true
@@ -772,7 +794,7 @@ function NSI:InitAuraGlows()
     for _, entry in ipairs(self:IterateAuraGlowEntries()) do
         local key, settings = entry.key, entry.settings
         local usesSpellIDs = UsesAuraGlowSpellIDs(settings)
-        if not usesSpellIDs or #GetAuraGlowSpellIDs(settings) > 0 then
+        if (not onlyKey or key == onlyKey) and (not usesSpellIDs or #GetAuraGlowSpellIDs(settings) > 0) then
             activeKeys[key] = true
             self.AuraGlowStates[key] = self.AuraGlowStates[key] or {}
             local states = self.AuraGlowStates[key]
@@ -789,7 +811,7 @@ function NSI:InitAuraGlows()
                         container:SetAuraProcessingPolicy(policy)
                         container:SetUnit(unit)
                         container:SetAllPoints(targetFrame)
-                        container:SetFrameStrata("HIGH")
+                        container:SetFrameStrata("TOOLTIP")
                         local slot = container:AddAuraSlot("Glow", BuildAuraGlowFilterString(settings), {
                             candidateFilters = BuildAuraGlowCandidateFilters(settings),
                             initializeFrame = function(button)
@@ -808,13 +830,15 @@ function NSI:InitAuraGlows()
         end
     end
     for key, states in pairs(self.AuraGlowStates) do
-        for unit, state in pairs(states) do
-            if not activeKeys[key] or not UnitExists(unit) then
-                state.container:Hide()
+        if not onlyKey or key == onlyKey then
+            for unit, state in pairs(states) do
+                if not activeKeys[key] or not UnitExists(unit) then
+                    state.container:Hide()
+                end
             end
         end
     end
-    self:UpdateAuraGlowVisibility()
+    self:UpdateAuraGlowVisibility(onlyKey)
 end
 
 function NSI:RefreshAuraGlows()

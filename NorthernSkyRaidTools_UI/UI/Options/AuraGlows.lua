@@ -166,6 +166,7 @@ local function BuildAuraGlowsUI(screen)
     local listRows, headerRows = {}, {}
     local tabScroll = {}
     local RebuildList, RebuildTab, RebuildLoadTab, SelectEntry
+    local auraGlowRefreshTimer
 
     local title = screen:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 16, "OUTLINE")
@@ -242,9 +243,16 @@ local function BuildAuraGlowsUI(screen)
     end
 
     local function ApplySettings()
-        NSI:RebuildAuraGlows()
-        if selectedKey and selectedKey ~= NSI.AuraGlowDefaultSettingsKey then NSI:RefreshAuraGlowPreview(selectedKey) end
-        RebuildList()
+        if not selectedKey or selectedKey == NSI.AuraGlowDefaultSettingsKey then return end
+        if auraGlowRefreshTimer then auraGlowRefreshTimer:Cancel() end
+        local refreshKey = selectedKey
+        auraGlowRefreshTimer = C_Timer.NewTimer(0.05, function()
+            auraGlowRefreshTimer = nil
+            if refreshKey ~= NSI.AuraGlowDefaultSettingsKey then
+                NSI:RebuildAuraGlows(refreshKey)
+                NSI:RefreshAuraGlowPreview(refreshKey)
+            end
+        end)
     end
 
     local function GetSelectedSettings()
@@ -478,7 +486,8 @@ local function BuildAuraGlowsUI(screen)
                 if row.entry.builtin then
                     row.entry.settings.enabledEdited = true
                 end
-                ApplySettings()
+                NSI:UpdateAuraGlowVisibility(row.entry.key)
+                RebuildList()
             end)
             row.trash:SetScript("OnClick", function() ConfirmDelete(row.entry.key, row.entry.settings.Name) end)
             row:Show()
@@ -508,9 +517,6 @@ local function BuildAuraGlowsUI(screen)
             { Type = "Checkbox", label = "Show Background",
                 get = function() return settings.ShowBackground end,
                 set = function(_, value) settings.ShowBackground = value; ApplySettings() end },
-            { Type = "Checkbox", label = "Show Icon",
-                get = function() return settings.ShowIcon end,
-                set = function(_, value) settings.ShowIcon = value; ApplySettings(); RebuildTab() end },
         }
         if showCustomIcon then
             defs[#defs + 1] = { Type = "TextEntry", label = "Custom Icon (overrides icon in list)", numeric = true, min = 1,
@@ -527,10 +533,33 @@ local function BuildAuraGlowsUI(screen)
                     ApplySettings()
                 end }
         end
+        defs[#defs + 1] = { Type = "Checkbox", label = "Show Icon",
+            get = function() return settings.ShowIcon end,
+            set = function(_, value) settings.ShowIcon = value; ApplySettings(); RebuildTab() end }
         if settings.ShowIcon then
+            defs[#defs + 1] = { Type = "Dropdown", label = "Icon Position",
+                values = {
+                    { label = "Center", value = "CENTER" },
+                    { label = "Top Left", value = "TOPLEFT" },
+                    { label = "Top", value = "TOP" },
+                    { label = "Top Right", value = "TOPRIGHT" },
+                    { label = "Right", value = "RIGHT" },
+                    { label = "Bottom Right", value = "BOTTOMRIGHT" },
+                    { label = "Bottom", value = "BOTTOM" },
+                    { label = "Bottom Left", value = "BOTTOMLEFT" },
+                    { label = "Left", value = "LEFT" },
+                },
+                get = function() return settings.IconPosition or "CENTER" end,
+                set = function(_, value) settings.IconPosition = value; ApplySettings() end }
             defs[#defs + 1] = { Type = "Slider", label = "Icon Size", min = 1, max = 100, step = 1,
                 get = function() return settings.IconSize or 20 end,
                 set = function(_, value) settings.IconSize = value; ApplySettings() end }
+            defs[#defs + 1] = { Type = "Slider", label = "Icon X Offset", min = -100, max = 100, step = 1,
+                get = function() return settings.IconOffsetX or 0 end,
+                set = function(_, value) settings.IconOffsetX = value; ApplySettings() end }
+            defs[#defs + 1] = { Type = "Slider", label = "Icon Y Offset", min = -100, max = 100, step = 1,
+                get = function() return settings.IconOffsetY or 0 end,
+                set = function(_, value) settings.IconOffsetY = value; ApplySettings() end }
         end
         return defs
     end
