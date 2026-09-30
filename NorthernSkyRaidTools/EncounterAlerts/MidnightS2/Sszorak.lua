@@ -3,6 +3,14 @@ local _, NSI = ... -- Internal namespace
 local encID = 3420
 -- /run NSAPI:DebugEncounter(3420)
 
+NSI:RegisterBuiltinAuraGlow("SszorakVenomousSurge", {
+    name = NSI:Loc("Venomous Surge"),
+    encounterID = encID,
+    roles = {HEALER = true},
+    color = {1, 0, 0, 1},
+    candidateFilters = {isBossAura = true, isRoleAura = false, MaxDuration = 12},
+})
+
 local tankComboTimers = {
     [14] = {5.5, 57.7, 143.7, 196, 282, 334},
     [15] = {5.5, 57.7, 143.7, 196, 282, 334},

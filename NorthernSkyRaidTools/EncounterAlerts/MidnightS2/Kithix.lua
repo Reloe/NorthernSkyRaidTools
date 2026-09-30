@@ -8,7 +8,7 @@ NSI:RegisterBuiltinAuraGlow("KithixDispels", {
     enabled = false,
     encounterID = encID,
     roles = {HEALER = true},
-    color = {0, 0.8, 0.8, 1},
+    color = {64 / 255, 1, 1, 1},
     auraFilters = {RaidPlayerDispellable = "Enabled"},
     candidateFilters = {isFromPlayerOrPlayerPet = false},
 })

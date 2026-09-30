@@ -2574,6 +2574,10 @@ end
 function NSI:EvaluateLoad(info, ignoreEncounter)
     local cond = info.loadConditions
     if not cond then return true end
+    if cond.Difficulties and next(cond.Difficulties) then
+        local difficultyID = self:DifficultyCheck({14, 15, 16})
+        if not difficultyID or not (cond.Difficulties[difficultyID] or cond.Difficulties[tostring(difficultyID)]) then return false end
+    end
     if not ignoreEncounter and cond.EncounterIDs and next(cond.EncounterIDs) then
         local encounterMatches = self.EncounterID and (cond.EncounterIDs[self.EncounterID] or cond.EncounterIDs[tostring(self.EncounterID)])
         if not encounterMatches then return false end

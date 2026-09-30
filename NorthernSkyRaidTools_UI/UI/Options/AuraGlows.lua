@@ -111,6 +111,11 @@ local RoleColors = {
     TANK = { 0.3, 0.5, 1.0 }, HEALER = { 0.3, 0.9, 0.3 }, DAMAGER = { 0.9, 0.2, 0.2 },
     MELEE = { 0.95, 0.55, 0.2 }, RANGED = { 0.9, 0.8, 0.2 },
 }
+local DifficultyData = {
+    { id = 14, label = "Normal", color = {0.2, 0.8, 1} },
+    { id = 15, label = "Heroic", color = {0.7, 0.3, 1} },
+    { id = 16, label = "Mythic", color = {1, 0.2, 0.2} },
+}
 
 local ClassData = {
     { key = "WARRIOR", label = "Warrior" }, { key = "PALADIN", label = "Paladin" },
@@ -233,7 +238,7 @@ local function BuildAuraGlowsUI(screen)
 
     local function ApplySettings()
         NSI:RebuildAuraGlows()
-        if selectedKey then NSI:RefreshAuraGlowPreview(selectedKey) end
+        if selectedKey and selectedKey ~= NSI.AuraGlowDefaultSettingsKey then NSI:RefreshAuraGlowPreview(selectedKey) end
         RebuildList()
     end
 
@@ -264,6 +269,7 @@ local function BuildAuraGlowsUI(screen)
     end
 
     local function EntryContextMenu(entry)
+        if entry.defaultSettings then return end
         local key, settings = entry.key, entry.settings
         local items = {
             { type = "button", label = NSI:Loc("Export"), fnc = function() ShowAuraGlowExportPopup(NSI:ExportAuraGlowEntry(key)) end },
@@ -297,6 +303,13 @@ local function BuildAuraGlowsUI(screen)
 
     RebuildList = function()
         local entries = NSI:IterateAuraGlowEntries()
+        entries[#entries + 1] = {
+            key = NSI.AuraGlowDefaultSettingsKey,
+            settings = NSI:GetAuraGlowSettings(NSI.AuraGlowDefaultSettingsKey),
+            builtin = false,
+            defaultSettings = true,
+            group = NSI.AuraGlowBuiltinGroup,
+        }
         local grouped, groupOrder = {}, {}
         local search = string.lower(searchText)
         for _, entry in ipairs(entries) do
@@ -312,6 +325,11 @@ local function BuildAuraGlowsUI(screen)
             if a == "" then return false end
             if b == "" then return true end
             return a < b
+        end)
+        table.sort(grouped[NSI.AuraGlowBuiltinGroup] or {}, function(a, b)
+            if a.defaultSettings then return true end
+            if b.defaultSettings then return false end
+            return a.settings.Name < b.settings.Name
         end)
         for _, row in ipairs(listRows) do row:Hide() end
         for _, row in ipairs(headerRows) do row:Hide() end
@@ -389,7 +407,7 @@ local function BuildAuraGlowsUI(screen)
             row:SetWidth(listChild:GetWidth() - indent)
             row.entry = entry
             row.label:SetText(entry.settings.Name)
-            local spellIDs = entry.settings.AuraType == "Buffs" and entry.settings.BuffFiltering == "SpellIDs"
+            local spellIDs = not entry.defaultSettings and entry.settings.AuraType == "Buffs" and entry.settings.BuffFiltering == "SpellIDs"
                 and NSI:GetAuraGlowSpellIDList(entry.key) or nil
             if spellIDs and spellIDs[1] then
                 local spell = C_Spell.GetSpellInfo(spellIDs[1])
@@ -404,12 +422,13 @@ local function BuildAuraGlowsUI(screen)
                 row.label:SetPoint("LEFT", row.check.frame, "RIGHT", 5, 0)
                 row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
             end
-            local willLoad = NSI:EvaluateLoad(entry.settings, true)
+            local willLoad = entry.defaultSettings or NSI:EvaluateLoad(entry.settings, true)
             row.check:SetValue(entry.settings.enabled)
+            row.check.frame:SetShown(not entry.defaultSettings)
             row.check.frame:SetAlpha(willLoad and 1 or 0.4)
             row.lock:SetShown(entry.builtin)
-            row.trash:SetShown(not entry.builtin)
-            row.label:SetTextColor(1, 1, 1, willLoad and (entry.settings.enabled and 1 or 0.45) or 0.35)
+            row.trash:SetShown(not entry.builtin and not entry.defaultSettings)
+            row.label:SetTextColor(1, 1, 1, entry.defaultSettings and 1 or willLoad and (entry.settings.enabled and 1 or 0.45) or 0.35)
             row.lock:SetAlpha(willLoad and 1 or 0.35)
             row.trash:SetAlpha(willLoad and 1 or 0.35)
             row.__background:SetVertexColor(selectedKey == entry.key and 0 or 0.4, selectedKey == entry.key and 1 or 0.4, selectedKey == entry.key and 1 or 0.4)
@@ -419,6 +438,7 @@ local function BuildAuraGlowsUI(screen)
                 if button == "RightButton" then EntryContextMenu(row.entry) else SelectEntry(row.entry.key) end
             end)
             row.check:SetOnChange(function(_, enabled)
+                if row.entry.defaultSettings then return end
                 row.entry.settings.enabled = enabled
                 if row.entry.builtin then
                     row.entry.settings.enabledEdited = true
@@ -434,7 +454,7 @@ local function BuildAuraGlowsUI(screen)
         listChild:SetHeight(math.max(1, offset))
     end
 
-    local function BuildDisplayDefs(settings)
+    local function BuildDisplayDefs(settings, showColor)
         local defs = {
             { Type = "Label", text = "Glow Appearance", highlight = true },
             { Type = "Slider", label = "Glow Size", min = 1, max = 20, step = 1,
@@ -453,16 +473,19 @@ local function BuildAuraGlowsUI(screen)
             { Type = "Checkbox", label = "Show Background",
                 get = function() return settings.ShowBackground end,
                 set = function(_, value) settings.ShowBackground = value; ApplySettings() end },
-            { Type = "Color", label = "Glow Color",
-                get = function() return unpack(settings.Color) end,
-                set = function(_, red, green, blue, alpha)
-                    settings.Color = { red, green, blue, alpha or 1 }
-                    ApplySettings()
-                end },
             { Type = "Checkbox", label = "Show Icon",
                 get = function() return settings.ShowIcon end,
                 set = function(_, value) settings.ShowIcon = value; ApplySettings(); RebuildTab() end },
         }
+        if showColor then
+            defs[#defs + 1] = { Type = "Color", label = "Glow Color",
+                get = function() return unpack(settings.Color) end,
+                set = function(_, red, green, blue, alpha)
+                    NSI:MarkBuiltinAuraGlowColorEdited(selectedKey)
+                    settings.Color = { red, green, blue, alpha or 1 }
+                    ApplySettings()
+                end }
+        end
         if settings.ShowIcon then
             defs[#defs + 1] = { Type = "Slider", label = "Icon Size", min = 1, max = 100, step = 1,
                 get = function() return settings.IconSize or 20 end,
@@ -662,7 +685,7 @@ local function BuildAuraGlowsUI(screen)
     loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
     loadScroll:SetScrollChild(loadChild)
 
-    local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true }
+    local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true, Difficulties = true }
     local loadRowWidth = tabScrollW - 22
     local headerPool, checkPool = {}, {}
 
@@ -896,7 +919,7 @@ local function BuildAuraGlowsUI(screen)
         end
         settings.loadConditions = settings.loadConditions or {}
         local conditions = settings.loadConditions
-        conditions.Roles = conditions.Roles or {}; conditions.Classes = conditions.Classes or {}; conditions.SpecIDs = conditions.SpecIDs or {}; conditions.Names = conditions.Names or {}; conditions.EncounterIDs = conditions.EncounterIDs or {}
+        conditions.Roles = conditions.Roles or {}; conditions.Classes = conditions.Classes or {}; conditions.SpecIDs = conditions.SpecIDs or {}; conditions.Names = conditions.Names or {}; conditions.EncounterIDs = conditions.EncounterIDs or {}; conditions.Difficulties = conditions.Difficulties or {}
 
         local checkIndex = 0
         local function CountSelected(values) local count = 0; for _ in pairs(values) do count = count + 1 end; return count end
@@ -949,6 +972,17 @@ local function BuildAuraGlowsUI(screen)
             end
             y = y + 4
         end
+        y = LoadSection(y, "Difficulties", NSI:Loc("Difficulties (leave all unchecked for any difficulty)"), CountSelected(conditions.Difficulties))
+        if not loadCollapsed.Difficulties then
+            for difficultyIndex = 1, #DifficultyData do
+                local difficulty = DifficultyData[difficultyIndex]
+                local difficultyID = difficulty.id
+                y = AddCheck(y, NSI:Loc(difficulty.label), conditions.Difficulties[difficultyID],
+                    function() conditions.Difficulties[difficultyID] = (not conditions.Difficulties[difficultyID]) or nil end,
+                    difficulty.color[1], difficulty.color[2], difficulty.color[3])
+            end
+        end
+        y = y + 4
         y = LoadSection(y, "Roles", NSI:Loc("Roles (leave all unchecked for any role)"), CountSelected(conditions.Roles))
         if not loadCollapsed.Roles then
             for _, role in ipairs(RoleData) do
@@ -985,25 +1019,55 @@ local function BuildAuraGlowsUI(screen)
         rightPanel:SetShown(settings ~= nil)
         if not settings then return end
         local builtin = NSI.AuraGlowBuiltins[selectedKey] ~= nil
+        local defaultSettings = selectedKey == NSI.AuraGlowDefaultSettingsKey
         nameEntry:SetValue(settings.Name)
-        nameEntry.editBox:SetEnabled(not builtin)
-        deleteButton.frame:SetShown(not builtin)
+        nameEntry.editBox:SetEnabled(not builtin and not defaultSettings)
+        previewButton.frame:SetShown(not defaultSettings)
+        deleteButton.frame:SetShown(not builtin and not defaultSettings)
         nameEntry.editBox:SetScript("OnEnterPressed", function(editBox)
-            if not builtin then
+            if not builtin and not defaultSettings then
                 local value = editBox:GetText()
                 if value ~= "" then settings.Name = value; RebuildList() end
             end
             editBox:ClearFocus()
         end)
+        if defaultSettings then activeTab = "Display" end
         for name, frame in pairs(tabFrames) do
-            frame:SetShown(name == activeTab)
+            local shown = name == activeTab and (not defaultSettings or name == "Display")
+            frame:SetShown(shown)
+            tabButtons[name].frame:SetShown(not defaultSettings or name == "Display")
             if name == activeTab then tabButtons[name]:Select() else tabButtons[name]:Deselect() end
         end
         if activeTab == "Load" then
             RebuildLoadTab()
             return
         end
-        local defs = activeTab == "Display" and BuildDisplayDefs(settings) or BuildTriggerDefs(settings, builtin, selectedKey)
+        local defs
+        if activeTab == "Display" then
+            defs = BuildDisplayDefs(settings, not defaultSettings)
+            if defaultSettings then
+                defs[#defs + 1] = { Type = "Custom", build = function(parent, width, widgetName)
+                    local frame = CreateFrame("Frame", widgetName, parent)
+                    frame:SetSize(width, 28)
+                    local buttonWidth = (width - 6) / 2
+                    local resetButton = CreateLocalizedButton(frame, "Reset to Defaults", function()
+                        NSI:ResetDefaultAuraGlowSettings()
+                        RebuildList()
+                        RebuildTab()
+                    end, buttonWidth, 22, widgetName and (widgetName .. "Reset") or nil)
+                    resetButton:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+                    local applyButton = CreateLocalizedButton(frame, "Apply to All Glows now", function()
+                        NSI:ApplyDefaultAuraGlowSettingsToAll()
+                        RebuildList()
+                        RebuildTab()
+                    end, buttonWidth, 22, widgetName and (widgetName .. "ApplyAll") or nil)
+                    applyButton:SetPoint("TOPLEFT", resetButton.frame, "TOPRIGHT", 6, 0)
+                    return frame, 28
+                end }
+            end
+        else
+            defs = BuildTriggerDefs(settings, builtin, selectedKey)
+        end
         local scroll = tabScroll[activeTab]
         if not scroll then
             scroll = CreateScrollBox(tabFrames[activeTab], rightWidth - 16, tabFrames[activeTab]:GetHeight())

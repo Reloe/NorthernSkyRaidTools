@@ -4,9 +4,10 @@ local encID = 3497
 -- /run NSAPI:DebugEncounter(3497)
 
 NSI:RegisterBuiltinAuraGlow("LostExplorersBlinkNovaBombGlow", {
-    name = NSI:Loc("Blink Nova / Bomb Glow"),
+    name = NSI:Loc("Blink Nova / Bomb"),
     encounterID = encID,
     roles = {HEALER = true},
+    color = {1, 0, 0, 1},
     candidateFilters = {isBossOrRoleAura = true, MaxDuration = 12},
 })
 

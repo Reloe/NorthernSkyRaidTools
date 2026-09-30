@@ -7,6 +7,7 @@ NSI:RegisterBuiltinAuraGlow("NekzaliEssenceRendDispel", {
     name = NSI:Loc("Essence Rend Dispel"),
     encounterID = encID,
     roles = {HEALER = true},
+    color = {64 / 255, 1, 1, 1},
     auraFilters = {Dispellable = "Enabled"},
     candidateFilters = {DispelTypes = {Magic = "Enabled"}},
 })

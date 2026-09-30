@@ -141,6 +141,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.IsInPreview = false
         self:UpdateAuraTrackingEncounterVisibility()
         self.AuraGlowManualState = {}
+        self.AuraGlowLoadCache = {}
         self:UpdateAuraGlowVisibility()
         for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
             self:MakeDraggable(self[v], nil, false)
@@ -193,6 +194,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:HideAllReminders(true)
         self:UpdateAuraTrackingEncounterVisibility()
         self.AuraGlowManualState = {}
+        self.AuraGlowLoadCache = nil
         self:UpdateAuraGlowVisibility()
         if NSRT.ReminderSettings.NoteCountdown then
             self:UpdateReminderFrame(true) -- need to recalculate reminders if the user has countdown enabled

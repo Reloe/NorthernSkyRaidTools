@@ -21,16 +21,18 @@ local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDurati
 local gloombombOrbGuillotineGlowKey = "CoiledAltarGloombombOrbGuillotine"
 
 NSI:RegisterBuiltinAuraGlow(gloombombOrbGuillotineGlowKey, {
-    name = NSI:Loc("Gloombomb/Orb/Guillotine Glow"),
+    name = NSI:Loc("Gloombomb/Orb/Guillotine"),
     encounterID = encID,
     roles = {HEALER = true},
+    color = {1, 1, 1, 1},
     candidateFilters = debuffCircleCandidateFilters,
 })
 
 NSI:RegisterBuiltinAuraGlow("CoiledAltarGraveboundGlow", {
-    name = NSI:Loc("Gravebound Glow"),
+    name = NSI:Loc("Gravebound"),
     encounterID = encID,
     roles = {HEALER = true},
+    color = {1, 0, 0, 1},
     auraFilters = {Important = "Enabled"},
     candidateFilters = {MaxDuration = 20},
 })

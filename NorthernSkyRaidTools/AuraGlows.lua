@@ -1,6 +1,9 @@
 local _, NSI = ...
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
 NSI.AuraGlowBuiltinGroup = "Built-in"
+NSI.AuraGlowDefaultSettingsKey = "DefaultSettings"
+
+local AuraGlowDisplaySettingKeys = { "Size", "IconSize", "NumberOfLines", "LineSize", "Frequency", "ShowBackground", "ShowIcon" }
 
 local function ParseAuraGlowSpellIDs(value)
     local spellIDs = {}
@@ -105,12 +108,29 @@ function NSI:CreateAuraGlowSettingsDefaults(overrides)
         SpellIDs = {},
         AuraFilters = {},
         CandidateFilters = {},
-        loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {} },
+        loadConditions = { Roles = { HEALER = true }, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {}, Difficulties = {} },
     }
     for key, value in pairs(overrides or {}) do
         settings[key] = value
     end
     return settings
+end
+
+local function GetAuraGlowDefaultSettings(self)
+    NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
+    local settings = NSRT.AuraGlows.DefaultSettings
+    if not settings then
+        settings = self:CreateAuraGlowSettingsDefaults({ Name = self:Loc("Default Glow Settings") })
+        settings.Color = nil
+        NSRT.AuraGlows.DefaultSettings = settings
+    end
+    return settings
+end
+
+local function CopyAuraGlowDisplaySettings(settings, source)
+    for _, field in ipairs(AuraGlowDisplaySettingKeys) do
+        settings[field] = source[field]
+    end
 end
 
 function NSI:RegisterBuiltinAuraGlow(key, definition)
@@ -119,29 +139,43 @@ function NSI:RegisterBuiltinAuraGlow(key, definition)
     self.AuraGlowBuiltins[key] = definition
 end
 
-local function CreateBuiltinAuraGlowSettings(self, key)
+local function CreateBuiltinAuraGlowSettings(self, key, useDefaultDisplaySettings)
     local definition = self.AuraGlowBuiltins[key]
     local encounterIDs = {}
     if definition.encounterID then encounterIDs[definition.encounterID] = true end
-    return self:CreateAuraGlowSettingsDefaults({
+    local settings = self:CreateAuraGlowSettingsDefaults({
         Name = definition.name or key,
         enabled = NSRT.AuraGlows.UseBuiltinAuraGlows == true or definition.enabled == true,
         builtin = true,
         Color = definition.color and CopyTable(definition.color) or nil,
         AuraFilters = CopyTable(definition.auraFilters or {}),
         CandidateFilters = CopyTable(definition.candidateFilters or {}),
-        loadConditions = { Roles = CopyTable(definition.roles or {}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = encounterIDs },
+        loadConditions = { Roles = CopyTable(definition.roles or {HEALER = true}), Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = encounterIDs, Difficulties = { [16] = true } },
     })
+    if useDefaultDisplaySettings then
+        CopyAuraGlowDisplaySettings(settings, GetAuraGlowDefaultSettings(self))
+    end
+    return settings
 end
 
 function NSI:GetAuraGlowSettings(key)
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
+    if key == self.AuraGlowDefaultSettingsKey then return GetAuraGlowDefaultSettings(self) end
     if self.AuraGlowBuiltins[key] then
         NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
         local settings = NSRT.AuraGlows.Builtins[key]
         if not settings then
-            settings = CreateBuiltinAuraGlowSettings(self, key)
+            settings = CreateBuiltinAuraGlowSettings(self, key, true)
             NSRT.AuraGlows.Builtins[key] = settings
+        else
+            local definition = self.AuraGlowBuiltins[key]
+            if not settings.enabledEdited then
+                settings.enabled = NSRT.AuraGlows.UseBuiltinAuraGlows == true or definition.enabled == true
+            end
+            if definition.color and not (settings.builtinEdited and settings.builtinEdited.Color) then
+                settings.Color = CopyTable(definition.color)
+            end
+            settings.builtin = true
         end
         return settings
     end
@@ -149,13 +183,35 @@ function NSI:GetAuraGlowSettings(key)
     return index and NSRT.AuraGlows.Custom and NSRT.AuraGlows.Custom[index]
 end
 
+function NSI:MarkBuiltinAuraGlowColorEdited(key)
+    if not self.AuraGlowBuiltins[key] then return end
+    local settings = self:GetAuraGlowSettings(key)
+    settings.builtinEdited = settings.builtinEdited or {}
+    settings.builtinEdited.Color = true
+end
+
 function NSI:ResetBuiltinAuraGlow(key)
     assert(self.AuraGlowBuiltins[key], "unknown built-in aura glow: " .. tostring(key))
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
-    NSRT.AuraGlows.Builtins[key] = CreateBuiltinAuraGlowSettings(self, key)
+    NSRT.AuraGlows.Builtins[key] = CreateBuiltinAuraGlowSettings(self, key, true)
     self:RebuildAuraGlows()
     self:RefreshAuraGlowPreview(key)
+end
+
+function NSI:ApplyDefaultAuraGlowSettingsToAll()
+    local defaults = GetAuraGlowDefaultSettings(self)
+    for _, entry in ipairs(self:IterateAuraGlowEntries()) do
+        CopyAuraGlowDisplaySettings(entry.settings, defaults)
+    end
+    self:RebuildAuraGlows()
+end
+
+function NSI:ResetDefaultAuraGlowSettings()
+    local settings = GetAuraGlowDefaultSettings(self)
+    local defaults = self:CreateAuraGlowSettingsDefaults()
+    CopyAuraGlowDisplaySettings(settings, defaults)
+    return settings
 end
 
 function NSI:SetUseBuiltinAuraGlows(enabled)
@@ -208,7 +264,9 @@ function NSI:AddCustomAuraGlow(group)
     NSRT.AuraGlows.Custom = NSRT.AuraGlows.Custom or {}
     local index = #NSRT.AuraGlows.Custom + 1
     group = group and strtrim(tostring(group)) or ""
-    NSRT.AuraGlows.Custom[index] = self:CreateAuraGlowSettingsDefaults({ Name = "Custom Aura Glow " .. index, group = group ~= "" and group or nil })
+    local settings = self:CreateAuraGlowSettingsDefaults({ Name = "Custom Aura Glow " .. index, group = group ~= "" and group or nil })
+    CopyAuraGlowDisplaySettings(settings, GetAuraGlowDefaultSettings(self))
+    NSRT.AuraGlows.Custom[index] = settings
     self:InitAuraGlows()
     return "Custom:" .. index
 end
@@ -318,7 +376,11 @@ end
 function NSI:SetBuiltinAuraGlowActive(key, active)
     assert(self.AuraGlowBuiltins[key], "unknown built-in aura glow: " .. tostring(key))
     self.AuraGlowManualState = self.AuraGlowManualState or {}
-    self.AuraGlowManualState[key] = active == nil and nil or active == true
+    if active == nil then
+        self.AuraGlowManualState[key] = nil
+    else
+        self.AuraGlowManualState[key] = active == true
+    end
     self:UpdateAuraGlowVisibility()
 end
 
@@ -613,7 +675,18 @@ function NSI:RefreshAuraGlowPreview(key)
 end
 
 local function IsAuraGlowActive(self, key, settings)
-    if not settings.enabled or not self:EvaluateLoad(settings) then return false end
+    if not settings.enabled then return false end
+    local loadMatches
+    if self.AuraGlowLoadCache then
+        loadMatches = self.AuraGlowLoadCache[key]
+        if loadMatches == nil then
+            loadMatches = self:EvaluateLoad(settings)
+            self.AuraGlowLoadCache[key] = loadMatches
+        end
+    else
+        loadMatches = self:EvaluateLoad(settings)
+    end
+    if not loadMatches then return false end
     local manualState = self.AuraGlowManualState and self.AuraGlowManualState[key]
     return manualState == nil or manualState
 end

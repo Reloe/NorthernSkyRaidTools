@@ -3,6 +3,15 @@ local _, NSI = ... -- Internal namespace
 local encID = 3445
 -- /run NSAPI:DebugEncounter(3445)
 
+NSI:RegisterBuiltinAuraGlow("SentinelsProtovenomGlow", {
+    name = NSI:Loc("Protovenom"),
+    encounterID = encID,
+    roles = {HEALER = true},
+    color = {1, 0, 0, 1},
+    auraFilters = {Important = "Inverted"},
+    candidateFilters = {isBossAura = true, isRoleAura = false},
+})
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
     local healerConditions = self:DefaultLoadConditions()
