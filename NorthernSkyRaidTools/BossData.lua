@@ -82,11 +82,11 @@ NSI.PrePullEncounterZones = {
     -- [zoneID] = 3159, -- Rotmire
     -- [zoneID] = 3379, -- Nymrissa Wavecaller
     [17680] = 3470, -- Nek'zali the Soulcoiler
-    -- [zoneID] = 3445, -- Entombed Sentinels
+    [17688] = 3445, -- Entombed Sentinels
     -- [zoneID] = 3455, -- Vashnik the Malignant
     -- [zoneID] = 3497, -- The Lost Explorers
     -- [zoneID] = 3420, -- Sszorak
-    -- [zoneID] = 3421, -- The Twin Fangs
+    [17681] = 3421, -- The Twin Fangs
     [17701] = 3429, -- The Coiled Altar
     [17702] = 3492, -- Ula'tek
 }

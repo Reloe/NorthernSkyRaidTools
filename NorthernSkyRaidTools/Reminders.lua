@@ -1811,9 +1811,9 @@ function NSI:CountdownNoteFrame(frame)
         frame.CountdownSourceText = originalText
     end
 
-    local passedTime = self.PhaseSwapTime and GetTime() - self.PhaseSwapTime or 0
+    local passedTime = self.EncounterID and self.PhaseSwapTime and GetTime() - self.PhaseSwapTime or 0
     local pullRemaining = self.PrePullTimerEndTime and self.PrePullTimerEndTime - GetTime()
-    local currentPhase = self.Phase or 1
+    local currentPhase = self.EncounterID and self.Phase or 1
     local visibleLines = {}
     for entryIndex, entry in ipairs(lines) do
         if entry.phase >= currentPhase then
@@ -2036,6 +2036,7 @@ function NSI:HideAllReminders(FullReset)
     self.CustomEvents = {}
     if self.EncounterAlertStop[self.EncounterID] then self.EncounterAlertStop[self.EncounterID](self) end
     self.EncounterID = nil
+    self.Phase = nil
     self.TestingReminder = false
     self.ProcessedReminder = nil
 end
