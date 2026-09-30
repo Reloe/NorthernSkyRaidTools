@@ -18,21 +18,23 @@ local p3SoakTimers = {
 
 local debuffCircleFilter = "HARMFUL"
 local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5}
-local gloombombOrbGuillotineCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5, isBossAura = false}
-local gloombombOrbGuillotineGlowKey = "CoiledAltarGloombombOrbGuillotine"
+local gloombombOrbCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5, isBossAura = false}
+local gloombombOrbGlowKey = "CoiledAltarGloombombOrb"
 local guillotineGlowKey = "CoiledAltarGuillotine"
 
-NSI:RegisterBuiltinAuraGlow(gloombombOrbGuillotineGlowKey, {
-    name = NSI:Loc("Gloombomb/Orb/Guillotine"),
+NSI:RegisterBuiltinAuraGlow(gloombombOrbGlowKey, {
+    name = NSI:Loc("Gloombomb/Orb"),
     encounterID = encID,
+    menuIcon = 7966625,
     roles = {HEALER = true},
     color = {1, 1, 1, 1},
-    candidateFilters = gloombombOrbGuillotineCandidateFilters,
+    candidateFilters = gloombombOrbCandidateFilters,
 })
 
 NSI:RegisterBuiltinAuraGlow(guillotineGlowKey, {
     name = NSI:Loc("Guillotine"),
     encounterID = encID,
+    menuIcon = 7966625,
     roles = {HEALER = true},
     color = {0, 1, 0, 1},
     candidateFilters = {isBossAura = true, MaxDuration = 5.5},
@@ -41,6 +43,7 @@ NSI:RegisterBuiltinAuraGlow(guillotineGlowKey, {
 NSI:RegisterBuiltinAuraGlow("CoiledAltarGraveboundGlow", {
     name = NSI:Loc("Gravebound"),
     encounterID = encID,
+    menuIcon = 7966625,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},
     auraFilters = {Important = "Enabled"},
@@ -1243,7 +1246,7 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
         self.Phase = 2.5
         self:StartReminders(self.Phase)
         self.PhaseSwapTime = GetTime()
-        self:DeactivateBuiltinAuraGlow(gloombombOrbGuillotineGlowKey)
+        self:DeactivateBuiltinAuraGlow(gloombombOrbGlowKey)
         self:UpdateCoiledAltarDebuffCircle()
         local alert = self.CoiledAltarWrongTargetAlert
         if alert and alert.enabled and self:EvaluateLoad(alert) then
@@ -1313,7 +1316,7 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
             self.CoiledAltarPhase3DelayTimer = nil
             self.CoiledAltarPhase3DelayPending = nil
             if self.EncounterID ~= encID or self.Phase ~= 3 then return end
-            self:ActivateBuiltinAuraGlow(gloombombOrbGuillotineGlowKey)
+            self:ActivateBuiltinAuraGlow(gloombombOrbGlowKey)
             self:UpdateCoiledAltarDebuffCircle()
         end)
         CancelCoiledAltarGuillotineGlowTimers(self)

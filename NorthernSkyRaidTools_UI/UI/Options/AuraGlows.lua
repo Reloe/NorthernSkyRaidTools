@@ -409,9 +409,17 @@ local function BuildAuraGlowsUI(screen)
             row.label:SetText(entry.settings.Name)
             local spellIDs = not entry.defaultSettings and entry.settings.AuraType == "Buffs" and entry.settings.BuffFiltering == "SpellIDs"
                 and NSI:GetAuraGlowSpellIDList(entry.key) or nil
-            if spellIDs and spellIDs[1] then
+            local icon = entry.settings.menuIcon
+            if entry.settings.customIcon then
+                local customSpell = C_Spell.GetSpellInfo(entry.settings.customIcon)
+                icon = customSpell and customSpell.iconID or icon
+            end
+            if not icon and spellIDs and spellIDs[1] then
                 local spell = C_Spell.GetSpellInfo(spellIDs[1])
-                row.icon:SetTexture(spell and spell.iconID or DefaultIcon)
+                icon = spell and spell.iconID
+            end
+            if not entry.defaultSettings then
+                row.icon:SetTexture(icon or DefaultIcon)
                 row.icon:Show()
                 row.label:ClearAllPoints()
                 row.label:SetPoint("LEFT", row.icon, "RIGHT", 5, 0)
@@ -454,7 +462,7 @@ local function BuildAuraGlowsUI(screen)
         listChild:SetHeight(math.max(1, offset))
     end
 
-    local function BuildDisplayDefs(settings, showColor)
+    local function BuildDisplayDefs(settings, showColor, showCustomIcon)
         local defs = {
             { Type = "Label", text = "Glow Appearance", highlight = true },
             { Type = "Slider", label = "Glow Size", min = 1, max = 20, step = 1,
@@ -477,6 +485,12 @@ local function BuildAuraGlowsUI(screen)
                 get = function() return settings.ShowIcon end,
                 set = function(_, value) settings.ShowIcon = value; ApplySettings(); RebuildTab() end },
         }
+        if showCustomIcon then
+            defs[#defs + 1] = { Type = "TextEntry", label = "Custom Icon (overrides icon in list)", numeric = true, min = 1,
+                get = function() return settings.customIcon or "" end,
+                set = function(_, value) settings.customIcon = value; RebuildList() end,
+                tooltip = "Uses the spell ID's icon for display in the glow list. Does not change the in-combat display." }
+        end
         if showColor then
             defs[#defs + 1] = { Type = "Color", label = "Glow Color",
                 get = function() return unpack(settings.Color) end,
@@ -1044,7 +1058,7 @@ local function BuildAuraGlowsUI(screen)
         end
         local defs
         if activeTab == "Display" then
-            defs = BuildDisplayDefs(settings, not defaultSettings)
+            defs = BuildDisplayDefs(settings, not defaultSettings, not builtin and not defaultSettings)
             if defaultSettings then
                 defs[#defs + 1] = { Type = "Custom", build = function(parent, width, widgetName)
                     local frame = CreateFrame("Frame", widgetName, parent)

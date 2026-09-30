@@ -6,6 +6,7 @@ local encID = 3497
 NSI:RegisterBuiltinAuraGlow("LostExplorersBlinkNovaBombGlow", {
     name = NSI:Loc("Blink Nova / Bomb"),
     encounterID = encID,
+    menuIcon = 7966622,
     roles = {HEALER = true},
     color = {0, 1, 0, 1},
     candidateFilters = {isBossOrRoleAura = true, MaxDuration = 12},

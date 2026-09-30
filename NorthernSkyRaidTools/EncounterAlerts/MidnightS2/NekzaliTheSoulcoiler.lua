@@ -6,6 +6,7 @@ local encID = 3470
 NSI:RegisterBuiltinAuraGlow("NekzaliEssenceRendDispel", {
     name = NSI:Loc("Essence Rend Dispel"),
     encounterID = encID,
+    menuIcon = 7966621,
     roles = {HEALER = true},
     color = {64 / 255, 1, 1, 1},
     auraFilters = {Dispellable = "Enabled"},

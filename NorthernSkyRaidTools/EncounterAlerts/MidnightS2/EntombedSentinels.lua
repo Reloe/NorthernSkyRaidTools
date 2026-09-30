@@ -6,6 +6,7 @@ local encID = 3445
 NSI:RegisterBuiltinAuraGlow("SentinelsProtovenomGlow", {
     name = NSI:Loc("Protovenom"),
     encounterID = encID,
+    menuIcon = 7966620,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},
     auraFilters = {Important = "Inverted"},

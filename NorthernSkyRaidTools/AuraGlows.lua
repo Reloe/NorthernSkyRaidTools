@@ -147,6 +147,7 @@ local function CreateBuiltinAuraGlowSettings(self, key, useDefaultDisplaySetting
         Name = definition.name or key,
         enabled = NSRT.AuraGlows.UseBuiltinAuraGlows == true or definition.enabled == true,
         builtin = true,
+        menuIcon = definition.menuIcon,
         Color = definition.color and CopyTable(definition.color) or nil,
         AuraFilters = CopyTable(definition.auraFilters or {}),
         CandidateFilters = CopyTable(definition.candidateFilters or {}),
@@ -175,6 +176,7 @@ function NSI:GetAuraGlowSettings(key)
             if definition.color and not (settings.builtinEdited and settings.builtinEdited.Color) then
                 settings.Color = CopyTable(definition.color)
             end
+            settings.menuIcon = definition.menuIcon
             settings.builtin = true
         end
         return settings
