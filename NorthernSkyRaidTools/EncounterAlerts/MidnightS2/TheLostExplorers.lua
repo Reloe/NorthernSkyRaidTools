@@ -7,7 +7,7 @@ NSI:RegisterBuiltinAuraGlow("LostExplorersBlinkNovaBombGlow", {
     name = NSI:Loc("Blink Nova / Bomb"),
     encounterID = encID,
     roles = {HEALER = true},
-    color = {1, 0, 0, 1},
+    color = {0, 1, 0, 1},
     candidateFilters = {isBossOrRoleAura = true, MaxDuration = 12},
 })
 
