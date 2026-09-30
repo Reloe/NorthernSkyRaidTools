@@ -1,4 +1,17 @@
 local _, NSI = ...
+if NSI:IsForever() then
+    NSI.AuraGlowBuiltins = {}
+    function NSI:RegisterBuiltinAuraGlow() end
+    function NSI:SetBuiltinAuraGlowActive() end
+    function NSI:ActivateBuiltinAuraGlow() end
+    function NSI:DeactivateBuiltinAuraGlow() end
+    function NSI:UpdateAuraGlowVisibility() end
+    function NSI:RebuildAuraGlows() end
+    function NSI:InitAuraGlows() end
+    function NSI:RefreshAuraGlowsUI() end
+    return
+end
+
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
 NSI.AuraGlowDefaultSettingsKey = "DefaultSettings"
 

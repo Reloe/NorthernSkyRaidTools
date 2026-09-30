@@ -1,4 +1,9 @@
 local NSI = _G.NorthernSkyRaidTools
+if NSI:IsForever() then
+    NSI.UI.Options.AuraGlows = {}
+    return
+end
+
 local DF = _G["DetailsFramework"]
 
 local Core = NSI.UI.Core

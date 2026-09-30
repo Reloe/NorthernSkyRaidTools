@@ -57,6 +57,11 @@ function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
 end
 
+function NSI:IsForever()
+    local interfaceVersion = select(4, GetBuildInfo())
+    return interfaceVersion > 16000 and interfaceVersion < 20000
+end
+
 function NSI:IsMidnightSeason3()
     local interfaceVersion = select(4, GetBuildInfo())
     return interfaceVersion >= 120200

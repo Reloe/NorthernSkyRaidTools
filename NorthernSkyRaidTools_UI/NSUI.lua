@@ -87,7 +87,9 @@ local TABS_GROUPS                  = {
     },
 }
 table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
-table.insert(TABS_GROUPS[3], 3, { name = "AuraGlows", textKey = "Aura Glows" })
+if not NSI:IsForever() then
+    table.insert(TABS_GROUPS[3], 3, { name = "AuraGlows", textKey = "Aura Glows" })
+end
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
@@ -360,7 +362,7 @@ function NSUI:Init()
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
     local aurasounds_tab          = tabSystem:GetTabFrameByName("AuraSounds")
     local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
-    local auraglows_tab         = tabSystem:GetTabFrameByName("AuraGlows")
+    local auraglows_tab         = not NSI:IsForever() and tabSystem:GetTabFrameByName("AuraGlows")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = tabSystem:GetTabFrameByName("QoL")
     -- local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
