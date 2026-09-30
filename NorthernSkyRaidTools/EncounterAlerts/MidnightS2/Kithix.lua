@@ -8,6 +8,7 @@ NSI:RegisterBuiltinAuraGlow("KithixDispels", {
     enabled = false,
     encounterID = encID,
     group = "Season 2",
+    menuIcon = 1304046,
     roles = {HEALER = true},
     color = {64 / 255, 1, 1, 1},
     auraFilters = {RaidPlayerDispellable = "Enabled"},
