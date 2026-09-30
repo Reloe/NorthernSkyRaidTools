@@ -6,6 +6,7 @@ local encID = 3445
 NSI:RegisterBuiltinAuraGlow("SentinelsProtovenomGlow", {
     name = NSI:Loc("Protovenom"),
     encounterID = encID,
+    group = "Season 2",
     menuIcon = 1296878,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},

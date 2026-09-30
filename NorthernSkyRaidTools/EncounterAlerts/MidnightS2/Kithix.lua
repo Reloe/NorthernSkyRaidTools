@@ -7,6 +7,7 @@ NSI:RegisterBuiltinAuraGlow("KithixDispels", {
     name = NSI:Loc("Kith'ix Dispels"),
     enabled = false,
     encounterID = encID,
+    group = "Season 2",
     roles = {HEALER = true},
     color = {64 / 255, 1, 1, 1},
     auraFilters = {RaidPlayerDispellable = "Enabled"},

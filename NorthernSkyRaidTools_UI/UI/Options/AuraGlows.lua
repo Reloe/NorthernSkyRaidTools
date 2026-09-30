@@ -194,8 +194,8 @@ local function BuildAuraGlowsUI(screen)
     importButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowListScroll", screen, "UIPanelScrollFrameTemplate")
-    listScroll:SetSize(leftWidth - pad * 2, tabContentHeight - 114)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -86)
+    listScroll:SetPoint("BOTTOMRIGHT", createButton.frame, "TOPRIGHT", 0, 6)
     ReskinScrollbar(listScroll)
     local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
     listChild:SetSize(leftWidth - pad * 2, 1)
@@ -308,7 +308,7 @@ local function BuildAuraGlowsUI(screen)
             settings = NSI:GetAuraGlowSettings(NSI.AuraGlowDefaultSettingsKey),
             builtin = false,
             defaultSettings = true,
-            group = NSI.AuraGlowBuiltinGroup,
+            group = "",
         }
         local grouped, groupOrder = {}, {}
         local search = string.lower(searchText)
@@ -320,13 +320,17 @@ local function BuildAuraGlowsUI(screen)
             end
         end
         table.sort(groupOrder, function(a, b)
-            if a == NSI.AuraGlowBuiltinGroup then return true end
-            if b == NSI.AuraGlowBuiltinGroup then return false end
-            if a == "" then return false end
-            if b == "" then return true end
+            if a == b then return false end
+            if a == "" then return true end
+            if b == "" then return false end
+            local aSeason = tonumber(a:match("^Season (%d+)$"))
+            local bSeason = tonumber(b:match("^Season (%d+)$"))
+            if aSeason and bSeason then return aSeason < bSeason end
+            if aSeason then return true end
+            if bSeason then return false end
             return a < b
         end)
-        table.sort(grouped[NSI.AuraGlowBuiltinGroup] or {}, function(a, b)
+        table.sort(grouped[""] or {}, function(a, b)
             if a.defaultSettings then return true end
             if b.defaultSettings then return false end
             return a.settings.Name < b.settings.Name
@@ -358,10 +362,10 @@ local function BuildAuraGlowsUI(screen)
                     headerRows[headerIndex] = header
                 end
                 local collapsed = NSI:GetAuraGlowGroupCollapsed(group)
-                header:ClearAllPoints(); header:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -offset); header.label:SetText(group); header.count:SetText("(" .. #grouped[group] .. ")"); header.arrow:SetTexture(collapsed and ChevronDown or ChevronUp); header:Show(); offset = offset + 22
+                header:ClearAllPoints(); header:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -offset); header.label:SetText(NSI:Loc(group)); header.count:SetText("(" .. #grouped[group] .. ")"); header.arrow:SetTexture(collapsed and ChevronDown or ChevronUp); header:Show(); offset = offset + 22
                 local groupName = group
                 header:SetScript("OnMouseDown", function(_, button)
-                    if button == "RightButton" and groupName ~= NSI.AuraGlowBuiltinGroup then
+                    if button == "RightButton" then
                         ShowContextMenu({ { type = "button", label = NSI:Loc("Export Group"), fnc = function() ShowAuraGlowExportPopup(NSI:ExportAuraGlowGroup(groupName)) end } })
                     elseif button ~= "RightButton" then
                         NSI:SetAuraGlowGroupCollapsed(groupName, not NSI:GetAuraGlowGroupCollapsed(groupName))
@@ -432,7 +436,7 @@ local function BuildAuraGlowsUI(screen)
                 row.label:SetPoint("LEFT", row.check.frame, "RIGHT", 5, 0)
                 row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
             end
-            local willLoad = entry.defaultSettings or NSI:EvaluateLoad(entry.settings, true)
+            local willLoad = entry.defaultSettings or NSI:EvaluateLoad(entry.settings, true, true)
             row.check:SetValue(entry.settings.enabled)
             row.check.frame:SetShown(not entry.defaultSettings)
             row.check.frame:SetAlpha(willLoad and 1 or 0.4)
@@ -1062,6 +1066,7 @@ local function BuildAuraGlowsUI(screen)
         if activeTab == "Display" then
             defs = BuildDisplayDefs(settings, not defaultSettings, not builtin and not defaultSettings)
             if defaultSettings then
+                table.insert(defs, 2, { Type = "Label", text = "Any new builtin or custom made glow will start with these settings" })
                 defs[#defs + 1] = { Type = "Custom", build = function(parent, width, widgetName)
                     local frame = CreateFrame("Frame", widgetName, parent)
                     frame:SetSize(width, 28)

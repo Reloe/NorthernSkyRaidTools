@@ -1,6 +1,5 @@
 local _, NSI = ...
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
-NSI.AuraGlowBuiltinGroup = "Built-in"
 NSI.AuraGlowDefaultSettingsKey = "DefaultSettings"
 
 local AuraGlowDisplaySettingKeys = { "Size", "IconSize", "NumberOfLines", "LineSize", "Frequency", "ShowBackground", "ShowIcon" }
@@ -231,7 +230,7 @@ end
 function NSI:IterateAuraGlowEntries()
     local entries = {}
     for key in pairs(self.AuraGlowBuiltins) do
-        entries[#entries + 1] = { key = key, settings = self:GetAuraGlowSettings(key), builtin = true, group = self.AuraGlowBuiltinGroup }
+        entries[#entries + 1] = { key = key, settings = self:GetAuraGlowSettings(key), builtin = true, group = self.AuraGlowBuiltins[key].group }
     end
     table.sort(entries, function(a, b) return a.settings.Name < b.settings.Name end)
     for index, settings in ipairs(NSRT.AuraGlows and NSRT.AuraGlows.Custom or {}) do
@@ -348,7 +347,11 @@ end
 function NSI:ExportAuraGlowGroup(group)
     local entries = {}
     for _, entry in ipairs(self:IterateAuraGlowEntries()) do
-        if not entry.builtin and entry.group == group then entries[#entries + 1] = CopyTable(entry.settings) end
+        if entry.group == group then
+            local settings = CopyTable(entry.settings)
+            if entry.builtin then settings.builtinKey = entry.key end
+            entries[#entries + 1] = settings
+        end
     end
     return #entries > 0 and (self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, group = group, entries = entries }, "AuraGlow") or "") or ""
 end
@@ -358,15 +361,42 @@ function NSI:ImportAuraGlowString(text)
     if not payload or payload.type ~= "NSRT_AURA_GLOW" or type(payload.entries) ~= "table" then return false end
     NSRT.AuraGlows = NSRT.AuraGlows or { Custom = {}, Builtins = {}, UI = {} }
     NSRT.AuraGlows.Custom = NSRT.AuraGlows.Custom or {}
+    NSRT.AuraGlows.Builtins = NSRT.AuraGlows.Builtins or {}
     local group = payload.group and strtrim(tostring(payload.group)) or nil
     local imported = 0
     for _, entry in ipairs(payload.entries) do
         if type(entry) == "table" then
+            local builtinKey = entry.builtinKey
+            if not builtinKey and group then
+                for key, definition in pairs(self.AuraGlowBuiltins) do
+                    if definition.group == group and self:GetAuraGlowSettings(key).Name == entry.Name then
+                        builtinKey = key
+                        break
+                    end
+                end
+            end
+            entry.builtinKey = nil
             local settings = self:CreateAuraGlowSettingsDefaults(CopyTable(entry))
-            settings.builtin = nil
-            settings.group = group or settings.group
             settings.Name = settings.Name or "Imported Aura Glow"
-            NSRT.AuraGlows.Custom[#NSRT.AuraGlows.Custom + 1] = settings
+            if builtinKey and self.AuraGlowBuiltins[builtinKey] then
+                settings.builtin = true
+                NSRT.AuraGlows.Builtins[builtinKey] = settings
+            else
+                settings.builtin = nil
+                settings.group = group or settings.group
+                local matchingIndex
+                for index, existing in ipairs(NSRT.AuraGlows.Custom) do
+                    if existing.group == settings.group and existing.Name == settings.Name then
+                        matchingIndex = index
+                        break
+                    end
+                end
+                if matchingIndex then
+                    NSRT.AuraGlows.Custom[matchingIndex] = settings
+                else
+                    NSRT.AuraGlows.Custom[#NSRT.AuraGlows.Custom + 1] = settings
+                end
+            end
             imported = imported + 1
         end
     end

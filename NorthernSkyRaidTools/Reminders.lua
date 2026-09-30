@@ -2571,10 +2571,10 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
-function NSI:EvaluateLoad(info, ignoreEncounter)
+function NSI:EvaluateLoad(info, ignoreEncounter, ignoreDifficulty)
     local cond = info.loadConditions
     if not cond then return true end
-    if cond.Difficulties and next(cond.Difficulties) then
+    if not ignoreDifficulty and cond.Difficulties and next(cond.Difficulties) then
         local difficultyID = self:DifficultyCheck({14, 15, 16})
         if not difficultyID or not (cond.Difficulties[difficultyID] or cond.Difficulties[tostring(difficultyID)]) then return false end
     end

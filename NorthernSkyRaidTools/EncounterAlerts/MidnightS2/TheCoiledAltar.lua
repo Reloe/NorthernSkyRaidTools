@@ -25,6 +25,7 @@ local guillotineGlowKey = "CoiledAltarGuillotine"
 NSI:RegisterBuiltinAuraGlow(gloombombOrbGlowKey, {
     name = NSI:Loc("Gloombomb/Orb"),
     encounterID = encID,
+    group = "Season 2",
     menuIcon = 1286895,
     roles = {HEALER = true},
     color = {1, 1, 1, 1},
@@ -34,6 +35,7 @@ NSI:RegisterBuiltinAuraGlow(gloombombOrbGlowKey, {
 NSI:RegisterBuiltinAuraGlow(guillotineGlowKey, {
     name = NSI:Loc("Guillotine"),
     encounterID = encID,
+    group = "Season 2",
     menuIcon = 1283485,
     roles = {HEALER = true},
     color = {0, 1, 0, 1},
@@ -43,6 +45,7 @@ NSI:RegisterBuiltinAuraGlow(guillotineGlowKey, {
 NSI:RegisterBuiltinAuraGlow("CoiledAltarGraveboundGlow", {
     name = NSI:Loc("Gravebound"),
     encounterID = encID,
+    group = "Season 2",
     menuIcon = 1286840,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},

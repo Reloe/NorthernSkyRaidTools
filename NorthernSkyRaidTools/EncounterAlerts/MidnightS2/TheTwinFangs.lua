@@ -13,6 +13,7 @@ local spitIchorGlowKey = "TwinFangsSpitIchor"
 NSI:RegisterBuiltinAuraGlow(spitIchorGlowKey, {
     name = NSI:Loc("Spit & Ichor"),
     encounterID = encID,
+    group = "Season 2",
     menuIcon = 1290809,
     roles = {HEALER = true},
     color = {1, 0, 0, 1},
