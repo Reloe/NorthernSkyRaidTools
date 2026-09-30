@@ -324,6 +324,22 @@ local function BuildAuraGlowsUI(screen)
                 grouped[group][#grouped[group] + 1] = entry
             end
         end
+        for group, groupEntries in pairs(grouped) do
+            if group ~= "" then
+                table.sort(groupEntries, function(a, b)
+                    local aDefinition = a.builtin and NSI.AuraGlowBuiltins[a.key]
+                    local bDefinition = b.builtin and NSI.AuraGlowBuiltins[b.key]
+                    if aDefinition and not bDefinition then return true end
+                    if bDefinition and not aDefinition then return false end
+                    if aDefinition and bDefinition then
+                        local aOrder = NSI.EncounterOrder[aDefinition.encounterID] or math.huge
+                        local bOrder = NSI.EncounterOrder[bDefinition.encounterID] or math.huge
+                        if aOrder ~= bOrder then return aOrder < bOrder end
+                    end
+                    return a.settings.Name < b.settings.Name
+                end)
+            end
+        end
         table.sort(groupOrder, function(a, b)
             if a == b then return false end
             if a == "" then return true end
