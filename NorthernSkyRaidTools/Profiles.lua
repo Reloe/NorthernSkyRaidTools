@@ -91,6 +91,7 @@ local AuraTrackingBuiltinDefaultOverrides = {
         HideTooltip = true,
         HideDurationText = true,
         DispelBorderSize = 1,
+        DurationFontSize = 8,
         StackFontSize = 8,
         NameFontSize = 10,
         NameYOffset = 1,
