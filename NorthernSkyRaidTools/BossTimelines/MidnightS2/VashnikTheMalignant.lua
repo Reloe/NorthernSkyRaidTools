@@ -34,7 +34,7 @@ local mythicData = {
     },
     abilities = {
         {name = "Toxic Vapor", spellID = 1284561, category = "ramping rot, raid dot", phase = 1, times = {2.01}, duration = 498},
-        {name = "Dripping Fangs", spellID = 1280935, category = "tankbuster, tank debuff", phase = 1, times = {10.04, 37.1, 62.04, 87.03, 121.1, 146.08, 171.06, 205.13, 230.09, 255.08, 289.14, 314.09, 339.09, 373.16, 398.12, 423.1, 457.16, 484.97}, duration = 0},
+        {name = "Dripping Fangs", spellID = 1280935, category = "tankbuster, tank debuff", phase = 1, times = {10, 39.02, 66.03, 94.01, 123.05, 150.03, 178.05, 207.07, 234.09, 262.05, 291.09, 318.08, 346.07, 375.13, 402.1, 430.1, 459.13, 486.1}, duration = 0},
         {name = "Imbibe", spellID = 1284663, category = "event", phase = 1, times = {24.04, 108.05, 192.08, 276.08, 360.1, 444.11, 462.12, 473.02, 483.59}, duration = 0},
         {name = "Hemo Expulsion", spellID = 1298582, category = "raid damage", phase = 1, times = {24.04, 108.05, 192.08, 276.08, 360.1, 444.11, 462.12, 473.02, 483.59}, duration = 0},
         {name = "Conflagrating Expulsion", spellID = 1298587, category = "raid damage", phase = 1, times = {24.04, 108.05, 192.08, 276.08, 360.1, 444.11, 462.12, 473.02, 483.59}, duration = 0},
