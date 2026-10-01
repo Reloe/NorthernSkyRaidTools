@@ -1,10 +1,18 @@
 --@curseforge-project-slug: libspecialization@
 local wowID = WOW_PROJECT_ID
-local cataWowID = 14
-local mistsWowID = 19
-if wowID ~= 1 and wowID ~= cataWowID and wowID ~= mistsWowID then return end -- Retail, Cata, Mists
+local isRetail = wowID == 1
+local isCata = wowID == 14
+local isMists = wowID == 19
+local isForever = false
+do
+	local _, _, _, version = GetBuildInfo()
+	if version > 16000 and version < 20000 then
+		isForever = true
+	end
+end
+if not isRetail and not isCata and not isMists and not isForever then return end -- Retail, Cata, Mists, Forever
 
-local LS, oldminor = LibStub:NewLibrary("LibSpecialization", 27)
+local LS, oldminor = LibStub:NewLibrary("LibSpecialization", 28)
 if not LS then return end -- No upgrade needed
 
 LS.callbackMapGroup = LS.callbackMapGroup or {}
@@ -13,7 +21,7 @@ LS.callbackMapPlayerSpecChange = LS.callbackMapPlayerSpecChange or {}
 LS.frame = LS.frame or CreateFrame("Frame")
 
 -- Positions of roles
-local positionTable = wowID == cataWowID and {
+local positionTable = isCata and {
 	-- Death Knight
 	[398] = "MELEE", -- Blood (Tank)
 	[399] = "MELEE", -- Frost (DPS)
@@ -75,7 +83,7 @@ local positionTable = wowID == cataWowID and {
 	-- Hunter
 	[253] = "RANGED", -- Beast Mastery
 	[254] = "RANGED", -- Marksmanship
-	[255] = wowID == mistsWowID and "RANGED" or "MELEE", -- Survival [Ranged on Mists, Melee on Retail]
+	[255] = isMists and "RANGED" or "MELEE", -- Survival [Ranged on Mists, Melee on Retail]
 	-- Mage
 	[62] = "RANGED", -- Arcane
 	[63] = "RANGED", -- Fire
@@ -85,7 +93,7 @@ local positionTable = wowID == cataWowID and {
 	[269] = "MELEE", -- Windwalker (DPS)
 	[270] = "MELEE", -- Mistweaver (Heal)
 	-- Paladin
-	[65] = wowID == mistsWowID and "RANGED" or "MELEE", -- Holy (Heal) [Ranged on Mists, Melee on Retail]
+	[65] = isMists and "RANGED" or "MELEE", -- Holy (Heal) [Ranged on Mists, Melee on Retail]
 	[66] = "MELEE", -- Protection (Tank)
 	[70] = "MELEE", -- Retribution (DPS)
 	-- Priest
@@ -110,7 +118,7 @@ local positionTable = wowID == cataWowID and {
 	[73] = "MELEE", -- Protection (Tank)
 }
 -- Player roles
-local roleTable = wowID == cataWowID and {
+local roleTable = isCata and {
 	-- Death Knight
 	[398] = "TANK", -- Blood (Tank)
 	[399] = "DAMAGER", -- Frost (DPS)
@@ -207,7 +215,18 @@ local roleTable = wowID == cataWowID and {
 	[73] = "TANK", -- Protection (Tank)
 }
 -- Starter specs
-local starterSpecs = {
+local starterSpecs = isCata and {
+} or isForever and {
+	[1482] = true, -- Mage
+	[1484] = true, -- Druid
+	[1485] = true, -- Hunter
+	[1486] = true, -- Paladin
+	[1487] = true, -- Priest
+	[1488] = true, -- Rogue
+	[1489] = true, -- Shaman
+	[1490] = true, -- Warlock
+	[1491] = true, -- Warrior
+} or { -- Retail & Mists
 	[1444] = true, -- Shaman
 	[1446] = true, -- Warrior
 	[1447] = true, -- Druid
@@ -300,7 +319,7 @@ function LS.UnregisterPlayerSpecChange(addon)
 end
 
 local GetInfo
-if wowID == cataWowID then
+if isCata then
 	function GetInfo()
 		local specIndex = GetPrimaryTalentTree()
 		if specIndex then
@@ -314,12 +333,12 @@ if wowID == cataWowID then
 					end
 					return specId, role, position
 				else
-					geterrorhandler()(format("LibSpecialization: Unknown specId %q", specId))
+					geterrorhandler()(format("LibSpecialization: Unknown spec ID %q", specId))
 				end
 			end
 		end
 	end
-elseif wowID == mistsWowID then
+elseif isMists then
 	local GetSpecialization, GetSpecializationInfo = C_SpecializationInfo.GetSpecialization, C_SpecializationInfo.GetSpecializationInfo
 	local GetTalentInfo, GetGlyphSocketInfo = C_SpecializationInfo.GetTalentInfo, GetGlyphSocketInfo
 	local SerializeJSON = C_EncodingUtil.SerializeJSON
@@ -359,7 +378,7 @@ elseif wowID == mistsWowID then
 					local talentsAndGlyphsJSON = SerializeJSON(storageTable)
 					return specId, role, position, talentsAndGlyphsJSON
 				elseif not starterSpecs[specId] then
-					geterrorhandler()(format("LibSpecialization: Unknown specId %q", specId))
+					geterrorhandler()(format("LibSpecialization: Unknown spec ID %q", specId))
 				end
 			end
 		end
@@ -384,7 +403,7 @@ else
 					end
 					return specId, role, position
 				elseif not starterSpecs[specId] then
-					geterrorhandler()(format("LibSpecialization: Unknown specId %q", specId))
+					geterrorhandler()(format("LibSpecialization: Unknown spec ID %q", specId))
 				end
 			end
 		end
@@ -643,9 +662,9 @@ do
 	end)
 	LS.frame:RegisterEvent("CHAT_MSG_ADDON")
 	LS.frame:RegisterEvent("GROUP_FORMED")
-	if wowID == cataWowID then
+	if isCata then
 		LS.frame:RegisterEvent("PLAYER_TALENT_UPDATE")
-	elseif wowID == mistsWowID then
+	elseif isMists then
 		LS.frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
 	else
 		LS.frame:RegisterEvent("ACTIVE_COMBAT_CONFIG_CHANGED")

@@ -1,4 +1,5 @@
-## Interface: 120100
+## Interface: 120100, 16001
+## AllowLoadGameType: standard, camelot
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
 ## IconTexture: Interface\AddOns\NorthernSkyRaidTools\Media\NSLogo.blp
@@ -43,15 +44,15 @@ Comms.lua
 NickNames.lua
 EventHandler.lua
 VersionCheck.lua
-SetupManager.lua
+SetupManager.lua [AllowLoadGameType standard]
 CooldownCheck.lua
 ReadyCheck.lua
 ReadyCheckConsumables.lua
 AuraSounds.lua
 AuraTracking.lua
 PaceComparison.lua
-QoL.lua
-QoLDisplay.lua
+QoL.lua [AllowLoadGameType standard]
+QoLDisplay.lua [AllowLoadGameType standard]
 PlayerStatsDisplay.lua
 BreakTimer.lua
 Profiles.lua

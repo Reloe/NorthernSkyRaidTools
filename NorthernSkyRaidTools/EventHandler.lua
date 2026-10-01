@@ -61,12 +61,12 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self.ReminderTimer = {}
             self.GlowStarted = {}
             self.UnitFrames = {}
-            self:InitNickNames()
             if self:GetProfileKey() then
                 self.LoadedProfile = true
                 self:LoadMyProfile()
                 self:CreateMoveFrames()
             end
+            self:InitNickNames()
         end
     elseif e == "PLAYER_LOGIN" and wowevent then
         if not self.LoadedProfile then
@@ -76,7 +76,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:CreateGenericDisplays()
         self:InitLDB()
-        self:InitQoL()
+        if self.InitQoL then self:InitQoL() end
         self:InitPlayerStatsDisplay()
         self:RestoreBreakTimer()
         self:CacheSounds()
@@ -102,11 +102,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
-            local name, realm = UnitName("player")
-            if not realm then
-                realm = GetNormalizedRealmName()
-            end
-            if (not NSRT.NickNames[name.."-"..realm]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[name.."-"..realm]) then
+            local name, realm = self:GetRealName("player")
+            local key = self:GetNickNameKey(name, realm)
+            if (not NSRT.NickNames[key]) or (NSRT.Settings["MyNickName"] ~= NSRT.NickNames[key]) then
                 self:NewNickName("player", NSRT.Settings["MyNickName"], name, realm)
             end
         end
@@ -124,12 +122,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "READY_CHECK_FINISHED" and wowevent then
         self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
+        local encounterID, encounterName, eventDifficultyID, groupSize = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
         if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
-        self.EncounterID = ...
+        self.EncounterID = encounterID
+        self.PrePullTimerEndTime = GetTime()
         self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
             self:ProcessReminder()
@@ -152,11 +152,13 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.RemovedTimelines = {}
         self.CustomEvents = self.CustomEvents or {}
         self.DefaultAlertID = 10000
-        self.TLAlerts = {}
         if self.AddAssignments[self.EncounterID] then self.AddAssignments[self.EncounterID](self) end
         if self.EncounterAlertStart[self.EncounterID] then self.EncounterAlertStart[self.EncounterID](self) end
         self:FireEncounterAlerts(self.EncounterID, diff)
         self:StartPaceComparison(self.EncounterID, diff)
+        self.EncounterAlertHookEncounterID = encounterID
+        self.EncounterAlertHookDifficulty = diff
+        self.EncounterAlertHookPhase = self.Phase
         self:StartReminders(self.Phase)
         if NSRT.ReminderSettings.NoteCountdown then
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
@@ -174,14 +176,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        self:FireCallback("NSRT_ALERT_ADDED", self.TLAlerts)
+        self:RunEncounterAlertHooks("onEncounterStart", encounterID, diff, encounterID, encounterName, eventDifficultyID, groupSize)
     elseif e == "ENCOUNTER_END" and wowevent then
         self:LogTimeline(e, ...)
-        local encID, encounterName, _, _, kill = ...
+        local encID, encounterName, eventDifficultyID, groupSize, success = ...
         local diff = self:DifficultyCheck({14, 15, 16, 220})
         if internal then diff = 16 end
         self.CustomEvents = {}
-        if not diff then return end
+        self.PrePullTimerEndTime = nil
+        self.EncounterAlertHookEncounterID = nil
+        self.EncounterAlertHookDifficulty = nil
+        self.EncounterAlertHookPhase = nil
+        if not diff then
+            if self.EncounterAlertEnvironments then self.EncounterAlertEnvironments[encID] = nil end
+            return
+        end
+        self:RunEncounterAlertHooks("onEncounterEnd", encID, diff, encID, encounterName, eventDifficultyID, groupSize, success)
         self:EncounterRegister(nil, nil, nil, nil, true)
         self:StopPaceComparison()
         self:InitAuraSystem()
@@ -197,12 +207,14 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 end
             end
         end
-        if kill and kill ~= 0 then
+        if success and success ~= 0 then
             local NoteName = NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID]
             local HasAutoLoadNote = NoteName and NSRT.Reminders[NoteName]
             if NSRT.ReminderSettings.ClearOnKill then
-                if not HasAutoLoadNote then NSI:SetReminder(nil) end
-                NSI:SetReminder(nil, true)
+                C_Timer.After(0, function()
+                    if not HasAutoLoadNote then NSI:SetReminder(nil) end
+                    NSI:SetReminder(nil, true)
+                end)
             end
             if HasAutoLoadNote then
                 C_Timer.After(2, function()
@@ -214,9 +226,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif (e == "START_PLAYER_COUNTDOWN" or e == "CANCEL_PLAYER_COUNTDOWN") and wowevent then -- Do basically the same thing as ready check in case one of them is skipped.
-        for _, handler in pairs(self.PreCombatPullTimerHandlers) do
-            handler(self, e, ...)
-        end
+        self:HandlePrePullReminders(e, ...)
         if e == "CANCEL_PLAYER_COUNTDOWN" then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
         self.LastBroadcast = GetTime()
@@ -230,8 +240,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
     elseif e == "READY_CHECK" and wowevent then
         local initiator = ...
-        self.ProcessDone = false
         if self:DifficultyCheck({14, 15, 16, 23}) then
+            self:LoadPersReminder(self:GetEncounterIDFromCurrentZone())
             if NSRT.ReadyCheckSettings.ConsumablesDisplay then
                 self:ShowReadyCheckConsumables(initiator)
             else
@@ -267,7 +277,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
             self:ProcessReminder()
             self:UpdateReminderFrame(true)
-            self.ProcessDone = true
             if skipcheck then self:FlashNoteBackgrounds() end -- only show animation if reminder was manually shared
             if assigntable then self.Assignments = assigntable end
         end
@@ -280,10 +289,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
                 self:SetDebuffOverviewContainersShown(shown, containerName)
             end
-        end
-        if not self.ProcessDone then -- fallback do this here if no addon comms were received because the setting is disabled
-            self:ProcessReminder()
-            self:UpdateReminderFrame(true)
         end
         local text = ""
         if UnitLevel("player") < 90 then return end
@@ -358,7 +363,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if requestback and (UnitInRaid(unit) or UnitInParty(unit)) then self:SendNickName(channel, false) end -- send nickname back to the person who requested it
         self:NewNickName(unit, nickname, name, realm, channel)
     elseif e == "GROUP_ROSTER_UPDATE" and wowevent then
-        self:ArrangeGroups()
+        if self.ArrangeGroups then self:ArrangeGroups() end
         if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
         self.GroupUpdateTimer = C_Timer.After(2, function()
             self.GroupUpdateTimer = nil
@@ -367,10 +372,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:RefreshDebuffOverviewContainers()
                 self:CacheUnitFrames()
             end
-            self:UpdateRaidBuffFrame()
+            if self.UpdateRaidBuffFrame then self:UpdateRaidBuffFrame() end
         end)
         if self:Restricted() then return end
-        if self.InviteInProgress then
+        if self.InviteInProgress and self.InviteList then
             if not UnitInRaid("player") then
                 C_PartyInfo.ConvertToRaid()
                 C_Timer.After(1, function() -- send invites again if player is now in a raid
@@ -440,7 +445,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
     elseif e == "NSI_BREAK_TIMER_SYNC" and internal then
         local unit, endServerTime, duration = ...
         self:ReceiveBreakTimerSync(unit, endServerTime, duration)
-    elseif e == "QoL_Comms" and internal then
+    elseif e == "QoL_Comms" and internal and self.QoLEvents then
         self:QoLEvents(e, ...)
     elseif e == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
         if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e) end

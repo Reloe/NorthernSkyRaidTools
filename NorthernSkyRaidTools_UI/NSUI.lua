@@ -53,8 +53,8 @@ local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
 local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking.BuildUI
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
-local BuildQoLOptions              = NSI.UI.Options.QoL.BuildOptions
-local BuildQoLCallback             = NSI.UI.Options.QoL.BuildCallback
+local BuildQoLOptions              = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildOptions
+local BuildQoLCallback             = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildCallback
 local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
 local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 -- ============================================================
@@ -65,7 +65,6 @@ local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 local TABS_GROUPS                  = {
     {
         { name = "General",    textKey = "General" },
-        { name = "QoL",        textKey = "Quality of Life" },
         { name = "ReadyCheck", textKey = "Ready Check" },
     },
     {
@@ -85,6 +84,9 @@ local TABS_GROUPS                  = {
         { name = "Versions",  textKey = "Version Check" },
     },
 }
+if BuildQoLOptions then
+    table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life" })
+end
 table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
 
 -- Sidebar visual constants
@@ -275,23 +277,25 @@ function NSUI:Init()
     )
     anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
 
-    -- Export Group button (icon-only, immediately left of anchor button)
-    local exportGroupBtn = CreateButton(
-        NSUI,
-        "",  -- icon-only, no text
-        function()
-            if NSUI.group_export_popup then
-                NSUI.group_export_popup:Show()
-            end
-        end,
-        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
-        "NSUIExportGroupBtn",
-        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\external-link.png]],
-        nil,  -- textSize
-        { title = GetLocalizedText("Export Group"), desc = GetLocalizedText("Export your current raid composition to use with wowutils.com") },
-        function() return not InCombatLockdown() and IsInGroup() end
-    )
-    exportGroupBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + ANCHOR_BTN_SIZE + 6), NOTES_HEADER_BTN_Y)
+    if NSI.GetGroupExportString then
+        -- Export Group button (icon-only, immediately left of anchor button)
+        local exportGroupBtn = CreateButton(
+            NSUI,
+            "",  -- icon-only, no text
+            function()
+                if NSUI.group_export_popup then
+                    NSUI.group_export_popup:Show()
+                end
+            end,
+            ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+            "NSUIExportGroupBtn",
+            [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\external-link.png]],
+            nil,  -- textSize
+            { title = GetLocalizedText("Export Group"), desc = GetLocalizedText("Export your current raid composition to use with wowutils.com") },
+            function() return not InCombatLockdown() and IsInGroup() end
+        )
+        exportGroupBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + ANCHOR_BTN_SIZE + 6), NOTES_HEADER_BTN_Y)
+    end
 
     -- Timeline button (icon-only, immediately left of the export group button)
     local timelineBtn = CreateButton(
@@ -359,7 +363,7 @@ function NSUI:Init()
     local aurasounds_tab          = tabSystem:GetTabFrameByName("AuraSounds")
     local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
-    local QoL_tab                 = tabSystem:GetTabFrameByName("QoL")
+    local QoL_tab                 = BuildQoLOptions and tabSystem:GetTabFrameByName("QoL")
     -- local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
 
     -- --------------------------------------------------------
@@ -372,8 +376,8 @@ function NSUI:Init()
     local assignments_options1_table     = BuildAssignmentsOptions()
     local interruptdisplay_options1_table= BuildInterruptDisplayOptions()
     local readycheck_options1_table      = BuildReadyCheckOptions()
-    local RaidBuffMenu                   = BuildRaidBuffMenu()
-    local QoL_options1_table             = BuildQoLOptions()
+    local RaidBuffMenu                   = NSI.RaidBuffCheck and BuildRaidBuffMenu()
+    local QoL_options1_table             = BuildQoLOptions and BuildQoLOptions()
     -- local WAImports_options1_table       = BuildWAImportsOptions()
     local option_tables = {
         general_options1_table,
@@ -383,10 +387,10 @@ function NSUI:Init()
         assignments_options1_table,
         interruptdisplay_options1_table,
         readycheck_options1_table,
-        RaidBuffMenu,
-        QoL_options1_table,
         -- WAImports_options1_table,
     }
+    if RaidBuffMenu then option_tables[#option_tables + 1] = RaidBuffMenu end
+    if QoL_options1_table then option_tables[#option_tables + 1] = QoL_options1_table end
     for _, options in ipairs(option_tables) do
         options.language_addonId = addonId
     end
@@ -401,7 +405,7 @@ function NSUI:Init()
     local assignments_callback           = BuildAssignmentsCallback()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
-    local QoL_callback                   = BuildQoLCallback()
+    local QoL_callback                   = BuildQoLCallback and BuildQoLCallback()
     -- local WAImports_callback             = BuildWACallback()
 
     -- --------------------------------------------------------
@@ -441,23 +445,29 @@ function NSUI:Init()
         options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
         readycheck_callback)
     coroutine.yield()
-    DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template, options_dropdown_template,
-        options_switch_template, true, options_slider_template, options_button_template, nil)
+    if RaidBuffMenu then
+        DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template, options_dropdown_template,
+            options_switch_template, true, options_slider_template, options_button_template, nil)
+    end
     coroutine.yield()
     NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
     coroutine.yield()
     NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
-    DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        QoL_callback)
-    coroutine.yield()
+    if QoL_options1_table then
+        DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
+            options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
+            QoL_callback)
+        coroutine.yield()
+    end
     -- WA Imports is intentionally hidden for now. Keep its module and builder
     -- intact so the tab can be restored without rebuilding the feature.
     C_Timer.After(0.1, function()
         NSI:ApplySelectedLanguage()
     end)
-    NSI.RaidBuffCheck:SetMovable(false)
-    NSI.RaidBuffCheck:EnableMouse(false)
+    if NSI.RaidBuffCheck then
+        NSI.RaidBuffCheck:SetMovable(false)
+        NSI.RaidBuffCheck:EnableMouse(false)
+    end
 
     -- --------------------------------------------------------
     -- Build custom UI components
@@ -478,7 +488,9 @@ function NSUI:Init()
     coroutine.yield()
     NSUI.export_string_popup      = BuildExportStringUI()
     NSUI.import_string_popup      = BuildImportStringUI()
-    NSUI.group_export_popup       = BuildGroupExportUI()
+    if NSI.GetGroupExportString then
+        NSUI.group_export_popup = BuildGroupExportUI()
+    end
 
     -- --------------------------------------------------------
     -- Status bar text

@@ -21,6 +21,7 @@ local ZoneToRaidBuff = {
     [2912] = 93922, -- Voidspire
     [2913] = 93924, -- March on Queldanas
     [2939] = 93923, -- Dreamrift
+    [3004] = 96794, -- Venomous Abyss
 }
 
 local function UpdateText(text, newString)

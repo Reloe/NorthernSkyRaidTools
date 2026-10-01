@@ -1342,6 +1342,15 @@ local function CreateSlider(parent, label, getValue, setValue,
         thumb:SetVertexColor(0,   1, 1, 1)
         HideTooltip(tooltip)
     end)
+    local function RefreshThumb()
+        C_Timer.After(0, function()
+            slider:SetThumbTexture([[Interface\Buttons\WHITE8x8]])
+            thumb = slider:GetThumbTexture()
+            thumb:SetSize(8, 14)
+            thumb:SetVertexColor(0, 1, 1, 1)
+        end)
+    end
+    slider:HookScript("OnShow", RefreshThumb)
 
     local initVal = (getValue and getValue(NSI)) or (minVal or 0)
     local mn, mx = minVal or 0, maxVal or 100
@@ -1350,6 +1359,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     end
     initVal = math.max(mn, math.min(mx, initVal))
     slider:SetValue(initVal)
+    RefreshThumb()
     UpdateVisual(initVal)
     initialized = true
 

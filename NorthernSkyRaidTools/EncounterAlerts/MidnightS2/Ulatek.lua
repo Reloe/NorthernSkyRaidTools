@@ -1,8 +1,6 @@
 local _, NSI = ... -- Internal namespace
 
 local encID = 3492
-local UlatekBossRoomAreaID = 17702
-local PrePotExpiration = 15
 -- /run NSAPI:DebugEncounter(3492)
 
 local GRASPING_FANGS_LEFT = "UlatekGraspingFangsLeftSide"
@@ -32,52 +30,6 @@ local transitionGroupMarkers = {
 local function GetGraspingFangsAlert()
     local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16]
     return diffData and diffData.GraspingFangsOverview
-end
-
-local function StopUlatekPrePot(self)
-    if self.UlatekPrePotTimer then
-        self.UlatekPrePotTimer:Cancel()
-        self.UlatekPrePotTimer = nil
-    end
-    self.UlatekPrePotEndTime = nil
-    if self.UlatekPrePotFrame then
-        self.UlatekPrePotFrame:Hide()
-        self.UlatekPrePotFrame = nil
-    end
-end
-
-local function IsInUlatekBossRoom()
-    return GetMinimapZoneText() == C_Map.GetAreaInfo(UlatekBossRoomAreaID)
-end
-
-NSI.PreCombatPullTimerHandlers[encID] = function(self, event, _, timeRemaining)
-    if event == "CANCEL_PLAYER_COUNTDOWN" then
-        StopUlatekPrePot(self)
-        return
-    end
-    if UnitAffectingCombat("player") or not IsInUlatekBossRoom() then return end
-
-    StopUlatekPrePot(self)
-    local difficulty = self:DifficultyCheck({16})
-    local alert = difficulty and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficulty] and NSRT.EncounterAlerts[encID][difficulty].PrePot
-    if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
-
-    self.UlatekPrePotEndTime = GetTime() + timeRemaining
-    local duration = math.min(alert.dur, timeRemaining - PrePotExpiration)
-    if duration <= 0 then return end
-    self.UlatekPrePotTimer = C_Timer.NewTimer(timeRemaining - PrePotExpiration - duration, function()
-        local remaining = self.UlatekPrePotEndTime and self.UlatekPrePotEndTime - GetTime() - PrePotExpiration
-        if not remaining or remaining <= 0 or UnitAffectingCombat("player") or not IsInUlatekBossRoom() then return end
-        duration = math.min(alert.dur, remaining)
-        local reminder = CopyTable(alert)
-        reminder.dur = duration
-        reminder.time = duration
-        reminder.phase = 1
-        reminder.IsAlert = false
-        local info = self:CreateReminder(reminder, true)
-        self.UlatekPrePotTimer = nil
-        self.UlatekPrePotFrame = info and self:DisplayReminder(info)
-    end)
 end
 
 -- Each side gets its own subgroup string like "1,2"/"3,4" or "1,3,5,7"/"2,4,6,8"
@@ -111,7 +63,7 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         countdown = false,
         IsAlert = false,
         ReloeReminder = true,
-    }, true)
+    })
     if not info then return end
     local frame = self:DisplayReminder(info, isPreview)
     if key then self[key] = {frame = frame, info = info} end
@@ -183,7 +135,7 @@ function NSI:PreviewUlatekTransitionSoak()
         TTS = false,
         IsAlert = false,
         ReloeReminder = true,
-    }, true)
+    })
     if info then self:DisplayReminder(info, true) end
 end
 
@@ -486,12 +438,14 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "PrePot", name = "Pre-Pot", text = "Pre-Pot", DisplayType = "Text", encID = encID, TTS = "Pre-Pot", TTSTimer = 2, dur = 8, spellID = 1295132, phase = 1,
-        difficulties = {16}, isSpecialDisplay = true, BlockCopy = true,
+        timers = {
+            [16] = {-15},
+        },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "AutoRelease", name = "Auto Release", text = "Auto Release", customIcon = 20484, DisplayType = "Text", encID = encID, TTS = false, dur = 1, phase = 1,
-        difficulties = {15, 16}, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        difficulties = {15, 16}, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -509,6 +463,20 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
+    local data = {group = "Ula'tek", internalID = "FirstGate", name = "First Gate", text = "Gate", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 113942, phase = 1,
+        timers = {
+            [16] = {173},
+        },
+    }
+    self:AddEncounterAlert(data)
+
+    local data = {group = "Ula'tek", internalID = "SecondGate", name = "Second Gate", text = "Gate", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 113942, phase = 1,
+        timers = {
+            [16] = {174.5},
+        },
+    }
+    self:AddEncounterAlert(data)
+
     local data = {group = "Ula'tek", internalID = "Sweep", name = "Sweep", text = "Sweep", DisplayType = "Text", encID = encID, TTS = false, dur = 5, spellID = 1296301, phase = 1,
         timers = {
             [15] = {38.9, 90.9},
@@ -517,10 +485,11 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {Version = {versionNumber = 1, [1] = {dur = 8}}, group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Text", encID = encID, TTS = false, dur = 8, spellID = 1299010, phase = 1,
+    local data = {Version = {versionNumber = 2, [1] = {dur = 8}, [2] = {DisplayType = "Bar", Ticks = {4.8, 4.8}}}, group = "Ula'tek", internalID = "Soak", name = "Soak", text = "Soak", DisplayType = "Bar", encID = encID, TTS = false, dur = 8, spellID = 1299010, phase = 1,
+        Ticks = {4.8},
         timers = {
-            [15] = {28, 30.4, 122.8, 125.6},
-            [16] = {40.5, 43.7, 134.6, 137.8},
+            [15] = {30.4, 125.6},
+            [16] = {43.7, 137.8},
         },
     }
     self:AddEncounterAlert(data)
@@ -590,7 +559,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Ula'tek", internalID = "WaveDirectionPrompt", name = "Wave Direction Input", text = "Input Direction", DisplayType = "Text", encID = encID, TTS = false, dur = 12, phase = 1,
-        difficulties = {16}, enabled = false, HideTimer = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        difficulties = {16}, enabled = false, HideTimer = true, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 
@@ -656,7 +625,7 @@ NSI.InitializeAlerts[encID] = function(self)
             print(NSI:Loc("|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during this encounter."))
         end
     end]],
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
+        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, NoEdit = true, BoxSize = 30, NumberFontSize = 12, NameFontSize = 12,
         NameplateAnchor = "TOP", NameplateXOffset = 0, NameplateYOffset = 0, HideNameplateBox = false,
         extraOptions = {
             {Type = "Label", text = NSI:Loc("The Interrupt display will be displayed for the add that you focused. The order of lines in the interrupt note does not matter since it's not assigned to an actual boss unit but just to whatever you focus. Use raidmarker to ensure that people are focusing the same add."), height = 60},
@@ -744,14 +713,13 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
     local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
-        difficulties = {16}, enabled = true, pinned = true, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
+        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
 
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
-    StopUlatekPrePot(self)
     id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
     local overviewAlert = diffData and diffData.GraspingFangsOverview
@@ -817,7 +785,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                                     TTSTimer = transitionSoakAlert.TTSTimer,
                                     IsAlert = false,
                                     ReloeReminder = true,
-                                }, true)
+                                })
                                 if info then self:DisplayReminder(info) end
                             end)
                         end
@@ -1045,7 +1013,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             TTS = false,
             IsAlert = false,
             ReloeReminder = true,
-        }, true)
+        })
         self.UlatekWrongTargetFrame = info and self:DisplayReminder(info)
     end
 

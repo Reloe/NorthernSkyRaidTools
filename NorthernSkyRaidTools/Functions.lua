@@ -59,7 +59,12 @@ end
 
 function NSI:IsPTRPatch()
     local interfaceVersion = select(4, GetBuildInfo())
-    return interfaceVersion >= 120150
+    return interfaceVersion >= 120105
+end
+
+function NSI:IsForever()
+    local interfaceVersion = select(4, GetBuildInfo())
+    return interfaceVersion > 16000 and interfaceVersion < 20000
 end
 
 function NSI:IsMidnightSeason3()

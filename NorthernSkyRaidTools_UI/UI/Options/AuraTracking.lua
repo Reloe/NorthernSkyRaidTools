@@ -22,14 +22,7 @@ local BossData                 = NSI.UI.BossData
 -- ============================================================================
 -- Static option data
 -- ============================================================================
-local FONT_FLAGS = {
-    { label = "None", value = "" },
-    { label = "OUTLINE", value = "OUTLINE" },
-    { label = "THICKOUTLINE", value = "THICKOUTLINE" },
-    { label = "MONOCHROME", value = "MONOCHROME" },
-    { label = "OUTLINE, MONOCHROME", value = "OUTLINE, MONOCHROME" },
-    { label = "THICKOUTLINE, MONOCHROME", value = "THICKOUTLINE, MONOCHROME" },
-}
+local FontFlags = Core.build_fontflag_options()
 
 local GROW_DIRECTIONS = {
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
@@ -350,6 +343,8 @@ local function BuildAuraTrackingUI(screen)
 
     -- forward declarations
     local rightPanel, RebuildList, SelectEntry, RebuildCurrentTab
+    local displaySearchEntry
+    local displaySearchText = ""
     local nameEntry, groupDD, anchorEntry
     local resetTriggerScroll = false
 
@@ -648,13 +643,15 @@ local function BuildAuraTrackingUI(screen)
         local items = {
             { type = "button", label = NSI:Loc("Enable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, true) end },
             { type = "button", label = NSI:Loc("Disable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, false) end },
-            { type = "button", label = NSI:Loc("Duplicate Group"), fnc = function() NSI:DuplicateAuraTrackingGroup(groupName); RebuildList() end },
             { type = "button", label = NSI:Loc(groupPreviewLocked and "Unlock Group Preview" or "Lock Group Preview"), fnc = function() SetGroupPreviewLocked(groupName, not groupPreviewLocked) end },
             { type = "button", label = NSI:Loc("Export Group"), fnc = function()
                 ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r"), groupName))
             end },
         }
-        if groupName ~= NSI.AuraTrackingBuiltinGroup then
+        if groupName ~= NSI.AuraTrackingMatrixGroup then
+            table.insert(items, 3, { type = "button", label = NSI:Loc("Duplicate Group"), fnc = function() NSI:DuplicateAuraTrackingGroup(groupName); RebuildList() end })
+        end
+        if groupName ~= NSI.AuraTrackingBuiltinGroup and groupName ~= NSI.AuraTrackingMatrixGroup then
             items[#items + 1] = { type = "separator" }
             items[#items + 1] = { type = "button", label = NSI:Loc("Rename Group"), fnc = function() PromptRenameGroup(groupName) end }
             items[#items + 1] = { type = "button", label = NSI:Loc("Delete Group (keep auras)"), fnc = function()
@@ -779,7 +776,7 @@ local function BuildAuraTrackingUI(screen)
                 row:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -(slot - 1) * lineHeight)
                 row:SetWidth(listChild:GetWidth())
                 row.arrow:SetTexture(node.collapsed and CHEVRON_DOWN or CHEVRON_UP)
-                row.name:SetText(node.group == NSI.AuraTrackingBuiltinGroup and NSI:Loc(node.group) or node.group)
+                row.name:SetText((node.group == NSI.AuraTrackingBuiltinGroup or node.group == NSI.AuraTrackingMatrixGroup) and NSI:Loc(node.group) or node.group)
                 row.count:SetText("(" .. node.count .. ")")
                 row:Show()
                 local gname = node.group
@@ -856,7 +853,7 @@ local function BuildAuraTrackingUI(screen)
                 row.enabledCB:SetOnChange(function(_, v)
                     local es = NSI:GetAuraTrackingSettings(sk)
                     if es then
-                        es.enabled = v; NSI:InitAuraTracking(false, true)
+                        es.enabled = v; NSI:InitAuraTracking(false, sk ~= "AuraMatrix")
                         RebuildList()
                     end
                 end)
@@ -926,7 +923,7 @@ local function BuildAuraTrackingUI(screen)
     local function GetGroupSelected()
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         if not s then return "" end
-        if s.builtin then return NSI:Loc(NSI.AuraTrackingBuiltinGroup) end
+        if s.builtin then return NSI:Loc(s.builtin == "AuraMatrix" and NSI.AuraTrackingMatrixGroup or NSI.AuraTrackingBuiltinGroup) end
         return (s.group and s.group ~= "") and s.group or NSI:Loc("— No Group —")
     end
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
@@ -1043,6 +1040,12 @@ local function BuildAuraTrackingUI(screen)
             get = function() return s.FrameStrata or "MEDIUM" end, set = function(_, v) s.FrameStrata = v; apply(key) end })
 
         add({ Type = "Label", text = "Layout", highlight = true })
+        if key == "AuraMatrix" then
+            add({ Type = "Checkbox", label = "Disable Target Tracking",
+                tooltip = tip("Disable Target Tracking", "Hide all target rows and keep only player tracking. Target rows only track friendly units."),
+                get = function() return s.DisableTargetTracking end,
+                set = function(_, v) s.DisableTargetTracking = v; apply(key) end })
+        end
         add({ Type = "Dropdown", label = "Grow Direction", values = GROW_DIRECTIONS,
             tooltip = tip("Grow Direction", "Grow Direction"),
             get = function() return s.GrowDirection end, set = function(_, v) s.GrowDirection = v; apply(key) end })
@@ -1144,7 +1147,7 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
             tooltip = tip("Text Font", "Font used for duration and stack text"),
             get = function() return s.TextFont end, set = function(_, v) s.TextFont = v; apply(key) end })
-        add({ Type = "Dropdown", label = "Text Outline", values = FONT_FLAGS,
+        add({ Type = "Dropdown", label = "Text Outline", values = FontFlags,
             tooltip = tip("Text Outline", "Outline style used for duration and stack text"),
             get = function() return s.TextFontFlags end, set = function(_, v) s.TextFontFlags = v; apply(key) end })
 
@@ -1245,6 +1248,11 @@ local function BuildAuraTrackingUI(screen)
                 get = function() return s.NameYOffset end, set = function(_, v) s.NameYOffset = v; apply(key) end })
             add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
                 tooltip = tip("Name Font Size", "Font size of the " .. string.lower(nameType) .. " name."),
+                get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
+        end
+        if key == "AuraMatrix" then
+            add({ Type = "Label", text = "Aura Matrix Label Settings", highlight = true })
+            add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
                 get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
         end
         return defs
@@ -1368,6 +1376,10 @@ local function BuildAuraTrackingUI(screen)
     end
 
     local function BuildTriggerDefs(s, key)
+        if key == "AuraMatrix" then
+            return { { Type = "Label", text = "Aura Matrix tracks ten HARMFUL filters for both player and target. Display settings and the position apply to all twenty rows. Each row always shows its filter label. Use Lock Preview to move the entire matrix.",
+                height = 72, textColor = {0.9, 0.9, 0.9, 1} } }
+        end
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
                 and "This built-in display tracks a curated list of external/immunity buffs."
@@ -1555,6 +1567,28 @@ local function BuildAuraTrackingUI(screen)
         end
         local topPad = (activeTab == "Display") and DISPLAY_TOP or 0
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
+        if activeTab == "Display" and displaySearchText ~= "" then
+            local search = string.lower(displaySearchText)
+            local filteredDefs = {}
+            local currentHeader
+            local headerAdded = false
+            for _, def in ipairs(defs) do
+                if def.Type == "Label" and def.highlight then
+                    currentHeader = def
+                    headerAdded = false
+                else
+                    local label = def.label and NSI:Loc(def.label) or ""
+                    if string.find(string.lower(label), search, 1, true) then
+                        if currentHeader and not headerAdded then
+                            filteredDefs[#filteredDefs + 1] = currentHeader
+                            headerAdded = true
+                        end
+                        filteredDefs[#filteredDefs + 1] = def
+                    end
+                end
+            end
+            defs = filteredDefs
+        end
         local scrollObj = tabScroll[activeTab]
         if not scrollObj then
             scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
@@ -1939,6 +1973,7 @@ local function BuildAuraTrackingUI(screen)
             tabFrames[tn]:SetShown(tn == name)
             if tn == name then tabBtns[tn]:Select() else tabBtns[tn]:Deselect() end
         end
+        if displaySearchEntry then displaySearchEntry.frame:SetShown(name == "Display") end
         RebuildCurrentTab()
     end
 
@@ -1949,6 +1984,26 @@ local function BuildAuraTrackingUI(screen)
         btn:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", (i - 1) * (tabBtnW + tabBtnGap), tabRowY)
         tabBtns[name] = btn
     end
+
+    displaySearchEntry = CreateTextEntry(rightPanel, nil, nil, nil,
+        rightW - #SECTIONS * (tabBtnW + tabBtnGap) - 8, 22, nil, nil, nil, "NSUIAuraTrackDisplaySearch")
+    displaySearchEntry:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", #SECTIONS * (tabBtnW + tabBtnGap), tabRowY)
+    local displaySearchHint = displaySearchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    displaySearchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
+    displaySearchHint:SetPoint("LEFT", displaySearchEntry.editBox, "LEFT", 2, 0)
+    displaySearchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
+    NSI:SetUIFont(displaySearchHint, 14, "")
+    local function UpdateDisplaySearchHint(editBox)
+        displaySearchHint:SetShown(editBox:GetText() == "" and not editBox:HasFocus())
+    end
+    displaySearchEntry.editBox:SetScript("OnTextChanged", function(self)
+        displaySearchText = self:GetText()
+        UpdateDisplaySearchHint(self)
+        if activeTab == "Display" then RebuildCurrentTab() end
+    end)
+    displaySearchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateDisplaySearchHint(self) end)
+    displaySearchEntry.editBox:HookScript("OnEditFocusLost", function(self) UpdateDisplaySearchHint(self) end)
+    displaySearchEntry.frame:Show()
 
     -- ── Player Stats Display panel ──────────────────────────────────────────
     -- A stripped-down version of the aura Display tab: same widget system
@@ -2001,7 +2056,7 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Text Font", "Font used for the stats text"),
             get = function() return s.TextFont end,
             set = function(_, v) s.TextFont = v; NSI:RefreshPlayerStatsDisplayLive() end })
-        add({ Type = "Dropdown", label = "Text Outline", values = FONT_FLAGS,
+        add({ Type = "Dropdown", label = "Text Outline", values = FontFlags,
             tooltip = tip("Text Outline", "Outline style used for the stats text"),
             get = function() return s.TextFontFlags end,
             set = function(_, v) s.TextFontFlags = v; NSI:RefreshPlayerStatsDisplayLive() end })

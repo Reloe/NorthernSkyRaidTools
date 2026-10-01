@@ -185,6 +185,7 @@ local function BuildGroupExportUI()
 
     popup:HookScript("OnShow", function()
         popup:SetTitle(T("Export Group Composition"))
+        if not NSI.GetGroupExportString then return end
         local exportString = NSI:GetGroupExportString()
         popup.text_box:SetText(exportString or "")
         popup.text_box:SetFocus()

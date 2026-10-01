@@ -75,8 +75,8 @@ L[3306] = {
 L[3182] = {
     ["Feather Color"] = {name = "羽毛颜色"},
     ["Color Swap"]    = {name = "虚光汇流（换色）", text = "颜色交换"},
-    ["Gateway_P2"]    = {group = "贝洛朗 P1", name = "传送门", text = "传送门"},
-    ["Gateway_P3"]    = {group = "贝洛朗 P2", name = "传送门", text = "传送门"},
+    ["Gateway_P2"]    = {group = "贝洛朗 P1", name = "传送门", text = "点门"},
+    ["Gateway_P3"]    = {group = "贝洛朗 P2", name = "传送门", text = "点门"},
     ["Next Hit_P2"]   = {group = "贝洛朗 P1", name = "爆发倒计时", text = "下次爆发"},
     ["Next Hit_P3"]   = {group = "贝洛朗 P2", name = "爆发倒计时", text = "下次爆发"},
     ["Soaks_P1"]      = {group = "贝洛朗 P1", name = "俯冲（分摊）", text = "分摊"},
@@ -215,7 +215,7 @@ L[3420] = {
     ["Debuffs"]      = {group = "斯索拉克", name = "剧毒涌动（点名）", text = "点名囊肿"},
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
-    ["VenomousSurgeTargets"]    = {group = "斯索拉克", name = "剧毒涌动目标"},
+    ["VenomousSurgeTargets"] = {group = "斯索拉克", name = "剧毒涌动目标"},
 }
 
 -- The Twin Fangs (3421)
@@ -239,7 +239,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]       = {group = "盘卷祭坛", name = "P1 撕裂", text = "正面顺劈"},
-    ["P1OrbDeadline"]   = {group = "盘卷祭坛", name = "P1 搬球时限", text = "搬球时限"},
+    ["P1OrbDeadline"]   = {group = "盘卷祭坛", name = "P1 捡球时限", text = "捡球时限"},
     ["P1Taunt"]         = {group = "盘卷祭坛", name = "P1 嘲讽", text = "嘲讽"},
     ["P1Soak"]          = {group = "盘卷祭坛", name = "P1 处斩（分摊）", text = "分摊"},
     ["MindControls"]    = {group = "盘卷祭坛", name = "P2 恐惧行军（心控）", text = "心控"},
@@ -251,7 +251,7 @@ L[3429] = {
     ["EternalNightfallAbsorb"] = {group = "盘卷祭坛", name = "永恒夜幕吸收盾", text = ""},
     ["InterruptAdds"]          = {group = "盘卷祭坛", name = "P2 恐惧哀嚎（打断）", text = "打断怪刷新"},
     ["InterruptAssignments"]   = {group = "盘卷祭坛", name = "打断分配", text = "打断"},
-    ["P3OrbDeadline"]   = {group = "盘卷祭坛", name = "P3 搬球时限", text = "搬球时限"},
+    ["P3OrbDeadline"]   = {group = "盘卷祭坛", name = "P3 捡球时限", text = "捡球时限"},
     ["P2_5WrongTarget"] = {group = "盘卷祭坛", name = "易伤目标错误", text = "目标错误"},
     ["P3Frontal"]       = {group = "盘卷祭坛", name = "P3 凋零撕裂", text = "正面顺劈"},
     ["P3Soak"]          = {group = "盘卷祭坛", name = "P3 冷酷处斩（分摊）", text = "分摊"},
@@ -266,7 +266,7 @@ L[3429] = {
 L[3492] = {
     ["HitKnock"]            = {group = "乌拉特克", name = "蛇母之怒（坦克）", text = "坦克击退"},
     ["Waves"]               = {group = "乌拉特克", name = "腐蚀浪潮", text = "波浪"},
-    -- ["DragOut"]             = {group = "Ula'tek", name = "Drag out", text = "Drag out"},
+    ["DragOut"]             = {group = "乌拉特克", name = "拉出守卫", text = "拉出守卫"},
     ["DamageAmpIn"]         = {group = "乌拉特克", name = "被缚之怒（易伤）", text = "准备易伤"},
     ["DamageAmp"]           = {group = "乌拉特克", name = "易伤倒计时", text = "易伤"},
     ["PlatformBreak"]       = {group = "乌拉特克", name = "盘绕猎物（场地）", text = "摧毁平台"},
@@ -276,8 +276,10 @@ L[3492] = {
     ["AddSoak"]             = {group = "乌拉特克", name = "溃烂爆发（分摊）", text = "大怪分摊"},
     ["Adds"]                = {group = "乌拉特克", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
     ["BossSpawn"]           = {group = "乌拉特克", name = "首领刷新", text = "首领刷新"},
-    -- ["FirstBreak"]          = {group = "Ula'tek", name = "First Break", text = "First Break"},
-    -- ["SecondBreak"]         = {group = "Ula'tek", name = "Second Break", text = "Second Break"},
+    ["FirstBreak"]          = {group = "乌拉特克", name = "攫取毒牙（1拉断）", text = "1 拉断"},
+    ["SecondBreak"]         = {group = "乌拉特克", name = "攫取毒牙（2拉断）", text = "2 拉断"},
+    ["FirstGate"]           = {group = "乌拉特克", name = "1传送门", text = "点门"},
+    ["SecondGate"]          = {group = "乌拉特克", name = "2传送门", text = "点门"},
     ["Sweep"]               = {group = "乌拉特克", name = "恶臭痛击", text = "范围横扫"},
     ["Soak"]                = {group = "乌拉特克", name = "幽魂盘卷（分摊）", text = "分摊"},
     ["TransitionSoakFirst"]   = {group = "乌拉特克", name = "幽魂盘卷（1分摊）", text = "1 分摊"},
@@ -288,6 +290,6 @@ L[3492] = {
     ["WaveDirectionPrompt"]   = {group = "乌拉特克", name = "躲波方向点宏提醒", text = "点击方向宏"},
     ["InterruptAssignments"]  = {group = "乌拉特克", name = "打断分配", text = "打断"},
     ["TransitionPatternSoaks"] = {group = "乌拉特克", name = "转阶段分摊", text = "分摊"},
-    -- ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
-    -- ["AutoRelease"] = {group = "Ula'tek", name = "Auto Release", text = "Auto Release"},
+    ["PrePot"]      = {group = "乌拉特克", name = "预先喝药", text = "预先喝药"},
+    ["AutoRelease"] = {group = "乌拉特克", name = "自动释放", text = "自动释放"},
 }
