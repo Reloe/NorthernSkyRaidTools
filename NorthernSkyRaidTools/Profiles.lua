@@ -77,6 +77,24 @@ local AuraTrackingBuiltinDefaultOverrides = {
         NameXOffset = 0,
         NameYOffset = 0,
     },
+    AuraMatrix = {
+        Name = "Aura Matrix",
+        builtin = "AuraMatrix",
+        enabled = false,
+        DisableTargetTracking = false,
+        Width = 20,
+        Height = 20,
+        Anchor = "TOPLEFT",
+        relativeTo = "TOPLEFT",
+        xOffset = 300,
+        yOffset = -50,
+        HideTooltip = true,
+        HideDurationText = true,
+        DispelBorderSize = 1,
+        StackFontSize = 8,
+        NameFontSize = 10,
+        NameYOffset = 1,
+    },
 }
 
 function NSI:GetDefaultAuraTrackingSettings(settingsKey)
@@ -414,9 +432,11 @@ function NSI:AddMissingDefaults()
             Player = self:GetDefaultAuraTrackingSettings("Player"),
             Tank = self:GetDefaultAuraTrackingSettings("Tank"),
             External = self:GetDefaultAuraTrackingSettings("External"),
+            AuraMatrix = self:GetDefaultAuraTrackingSettings("AuraMatrix"),
             Custom = {},
             Groups = {
                 ["Built-in"] = { collapsed = false },
+                ["Aura Matrix"] = { collapsed = false },
             },
         },
         PaceComparison = {

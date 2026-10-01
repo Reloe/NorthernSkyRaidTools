@@ -650,13 +650,15 @@ local function BuildAuraTrackingUI(screen)
         local items = {
             { type = "button", label = NSI:Loc("Enable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, true) end },
             { type = "button", label = NSI:Loc("Disable All"), fnc = function() NSI:SetAuraTrackingGroupEnabled(groupName, false) end },
-            { type = "button", label = NSI:Loc("Duplicate Group"), fnc = function() NSI:DuplicateAuraTrackingGroup(groupName); RebuildList() end },
             { type = "button", label = NSI:Loc(groupPreviewLocked and "Unlock Group Preview" or "Lock Group Preview"), fnc = function() SetGroupPreviewLocked(groupName, not groupPreviewLocked) end },
             { type = "button", label = NSI:Loc("Export Group"), fnc = function()
                 ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r"), groupName))
             end },
         }
-        if groupName ~= NSI.AuraTrackingBuiltinGroup then
+        if groupName ~= NSI.AuraTrackingMatrixGroup then
+            table.insert(items, 3, { type = "button", label = NSI:Loc("Duplicate Group"), fnc = function() NSI:DuplicateAuraTrackingGroup(groupName); RebuildList() end })
+        end
+        if groupName ~= NSI.AuraTrackingBuiltinGroup and groupName ~= NSI.AuraTrackingMatrixGroup then
             items[#items + 1] = { type = "separator" }
             items[#items + 1] = { type = "button", label = NSI:Loc("Rename Group"), fnc = function() PromptRenameGroup(groupName) end }
             items[#items + 1] = { type = "button", label = NSI:Loc("Delete Group (keep auras)"), fnc = function()
@@ -781,7 +783,7 @@ local function BuildAuraTrackingUI(screen)
                 row:SetPoint("TOPLEFT", listChild, "TOPLEFT", 0, -(slot - 1) * lineHeight)
                 row:SetWidth(listChild:GetWidth())
                 row.arrow:SetTexture(node.collapsed and CHEVRON_DOWN or CHEVRON_UP)
-                row.name:SetText(node.group == NSI.AuraTrackingBuiltinGroup and NSI:Loc(node.group) or node.group)
+                row.name:SetText((node.group == NSI.AuraTrackingBuiltinGroup or node.group == NSI.AuraTrackingMatrixGroup) and NSI:Loc(node.group) or node.group)
                 row.count:SetText("(" .. node.count .. ")")
                 row:Show()
                 local gname = node.group
@@ -928,7 +930,7 @@ local function BuildAuraTrackingUI(screen)
     local function GetGroupSelected()
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         if not s then return "" end
-        if s.builtin then return NSI:Loc(NSI.AuraTrackingBuiltinGroup) end
+        if s.builtin then return NSI:Loc(s.builtin == "AuraMatrix" and NSI.AuraTrackingMatrixGroup or NSI.AuraTrackingBuiltinGroup) end
         return (s.group and s.group ~= "") and s.group or NSI:Loc("— No Group —")
     end
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
@@ -1045,6 +1047,12 @@ local function BuildAuraTrackingUI(screen)
             get = function() return s.FrameStrata or "MEDIUM" end, set = function(_, v) s.FrameStrata = v; apply(key) end })
 
         add({ Type = "Label", text = "Layout", highlight = true })
+        if key == "AuraMatrix" then
+            add({ Type = "Checkbox", label = "Disable Target Tracking",
+                tooltip = tip("Disable Target Tracking", "Hide all target rows and keep only player tracking. Target rows only track friendly units."),
+                get = function() return s.DisableTargetTracking end,
+                set = function(_, v) s.DisableTargetTracking = v; apply(key) end })
+        end
         add({ Type = "Dropdown", label = "Grow Direction", values = GROW_DIRECTIONS,
             tooltip = tip("Grow Direction", "Grow Direction"),
             get = function() return s.GrowDirection end, set = function(_, v) s.GrowDirection = v; apply(key) end })
@@ -1249,6 +1257,11 @@ local function BuildAuraTrackingUI(screen)
                 tooltip = tip("Name Font Size", "Font size of the " .. string.lower(nameType) .. " name."),
                 get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
         end
+        if key == "AuraMatrix" then
+            add({ Type = "Label", text = "Aura Matrix Label Settings", highlight = true })
+            add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
+                get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
+        end
         return defs
     end
 
@@ -1370,6 +1383,10 @@ local function BuildAuraTrackingUI(screen)
     end
 
     local function BuildTriggerDefs(s, key)
+        if key == "AuraMatrix" then
+            return { { Type = "Label", text = "Aura Matrix tracks ten HARMFUL filters for both player and target. Display settings and the position apply to all twenty rows. Each row always shows its filter label. Use Lock Preview to move the entire matrix.",
+                height = 72, textColor = {0.9, 0.9, 0.9, 1} } }
+        end
         if tostring(key):match("^Custom:") == nil then
             return { { Type = "Label", text = (key == "External")
                 and "This built-in display tracks a curated list of external/immunity buffs."
