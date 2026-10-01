@@ -22,14 +22,7 @@ local BossData                 = NSI.UI.BossData
 -- ============================================================================
 -- Static option data
 -- ============================================================================
-local FONT_FLAGS = {
-    { label = "None", value = "" },
-    { label = "OUTLINE", value = "OUTLINE" },
-    { label = "THICKOUTLINE", value = "THICKOUTLINE" },
-    { label = "MONOCHROME", value = "MONOCHROME" },
-    { label = "OUTLINE, MONOCHROME", value = "OUTLINE, MONOCHROME" },
-    { label = "THICKOUTLINE, MONOCHROME", value = "THICKOUTLINE, MONOCHROME" },
-}
+local FontFlags = Core.build_fontflag_options()
 
 local GROW_DIRECTIONS = {
     { label = "LEFT", value = "LEFT" }, { label = "RIGHT", value = "RIGHT" },
@@ -1154,7 +1147,7 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
             tooltip = tip("Text Font", "Font used for duration and stack text"),
             get = function() return s.TextFont end, set = function(_, v) s.TextFont = v; apply(key) end })
-        add({ Type = "Dropdown", label = "Text Outline", values = FONT_FLAGS,
+        add({ Type = "Dropdown", label = "Text Outline", values = FontFlags,
             tooltip = tip("Text Outline", "Outline style used for duration and stack text"),
             get = function() return s.TextFontFlags end, set = function(_, v) s.TextFontFlags = v; apply(key) end })
 
@@ -2063,7 +2056,7 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Text Font", "Font used for the stats text"),
             get = function() return s.TextFont end,
             set = function(_, v) s.TextFont = v; NSI:RefreshPlayerStatsDisplayLive() end })
-        add({ Type = "Dropdown", label = "Text Outline", values = FONT_FLAGS,
+        add({ Type = "Dropdown", label = "Text Outline", values = FontFlags,
             tooltip = tip("Text Outline", "Outline style used for the stats text"),
             get = function() return s.TextFontFlags end,
             set = function(_, v) s.TextFontFlags = v; NSI:RefreshPlayerStatsDisplayLive() end })
