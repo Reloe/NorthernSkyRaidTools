@@ -860,7 +860,7 @@ local function BuildAuraTrackingUI(screen)
                 row.enabledCB:SetOnChange(function(_, v)
                     local es = NSI:GetAuraTrackingSettings(sk)
                     if es then
-                        es.enabled = v; NSI:InitAuraTracking(false, true)
+                        es.enabled = v; NSI:InitAuraTracking(false, sk ~= "AuraMatrix")
                         RebuildList()
                     end
                 end)

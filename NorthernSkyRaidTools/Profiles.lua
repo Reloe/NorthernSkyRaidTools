@@ -112,7 +112,7 @@ function NSI:ResetBuiltinAuraTracking(settingsKey)
     for key, value in pairs(defaults) do
         settings[key] = value
     end
-    self:InitAuraTracking()
+    self:InitAuraTracking(false, true)
     self:RefreshAuraTrackingUI()
 end
 

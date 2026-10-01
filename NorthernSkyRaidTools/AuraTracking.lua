@@ -1649,27 +1649,38 @@ function NSI:UpdateAuraMatrixAnchor(settings)
         label:ClearAllPoints()
         label:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", row.xOffset + settings.NameXOffset, row.yOffset + maxY + settings.NameYOffset)
         label:SetText(NSI:Loc(row.label))
-        label:Show()
     end
-    anchor:SetShown(self.AuraMatrixPreviewActive or settings.enabled and self:EvaluateLoad(settings))
-    self:RefreshAuraMatrixTarget()
+    self:RefreshAuraMatrixVisibility()
 end
 
-function NSI:RefreshAuraMatrixTarget()
+function NSI:RefreshAuraMatrixVisibility(refreshTargetAuras)
     local settings = NSRT.AuraTrackingSettings.AuraMatrix
-    local shouldShow = settings.enabled and not settings.DisableTargetTracking and self:EvaluateLoad(settings)
+    local matrixShown = settings.enabled and self:EvaluateLoad(settings)
+    local playerShown = matrixShown and not (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
+    local targetShown = matrixShown and not settings.DisableTargetTracking
         and UnitCanAssist("player", "target", true, true)
+    if self.AuraMatrixAnchor then
+        self.AuraMatrixAnchor:SetShown(self.AuraMatrixPreviewActive or matrixShown)
+    end
     for _, row in ipairs(AuraMatrixRows) do
-        if row.unit == "target" then
-            local state = self.AuraTrackingState and self.AuraTrackingState[row.key]
-            if state and state.active then
-                state.container:SetEnabled(shouldShow)
-                state.container:SetShown(shouldShow)
-                state.anchorFrame:SetShown(shouldShow)
+        local shouldShow = playerShown
+        if row.unit == "target" then shouldShow = targetShown end
+        local state = self.AuraTrackingState and self.AuraTrackingState[row.key]
+        if state then
+            state.container:SetEnabled(shouldShow)
+            state.container:SetShown(shouldShow)
+            state.anchorFrame:SetShown(shouldShow)
+            -- Rows enabled during combat may not belong to the initializer's active refresh list yet.
+            if refreshTargetAuras and row.unit == "target" and shouldShow and not state.active then
+                state.container:UpdateAllAuras()
             end
-            local label = self.AuraMatrixAnchor and self.AuraMatrixAnchor[row.key .. "Label"]
-            if label then
+        end
+        local label = self.AuraMatrixAnchor and self.AuraMatrixAnchor[row.key .. "Label"]
+        if label then
+            if row.unit == "target" then
                 label:SetShown(not settings.DisableTargetTracking and (self.AuraMatrixPreviewActive or shouldShow))
+            else
+                label:SetShown(self.AuraMatrixPreviewActive or matrixShown)
             end
         end
     end
@@ -2735,6 +2746,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     self.AuraTrackingState = self.AuraTrackingState or {}
     self.AuraTrackingState[key] = self.AuraTrackingState[key] or {}
     local state = self.AuraTrackingState[key]
+    reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or (matrixRow and state.settings ~= settings)
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
         state.buttonRegions = {}
@@ -2873,6 +2885,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         for button in pairs(state.buttonRegions) do
             ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
         end
+        state.buttonSettingsDirty = nil
     end
     for index, group in ipairs(auraGroups) do
         local groupKey = group.customGroup and state.customAuraGroupKey or (groupKeyPrefix .. index)
@@ -3031,7 +3044,7 @@ end
 function NSI:UpdateAuraTrackingEncounterVisibility()
     local playerVehicleDisabled = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
     for _, state in pairs(self.AuraTrackingState or {}) do
-        if state.encounterConditioned and state.container then
+        if state.encounterConditioned and state.container and not AuraMatrixRowsByKey[state.key] then
             local shouldShow = self:EvaluateLoad(state.settings)
             if state.unit == "player" and playerVehicleDisabled then
                 shouldShow = false
@@ -3051,6 +3064,7 @@ function NSI:UpdateAuraTrackingEncounterVisibility()
     for unitSetKey in pairs(self.AuraTrackingUnitSets or {}) do
         self:LayoutAuraTrackingUnitSet(unitSetKey)
     end
+    self:RefreshAuraMatrixVisibility()
 end
 
 local function InitAuraTrackingTankSet(self, settings, firstKey, reconfigureButtons)
@@ -3086,7 +3100,7 @@ end
 
 local function SetAuraTrackingPlayerVehicleState(self, disabled)
     for _, state in pairs(self.AuraTrackingState or {}) do
-        if state.active and state.unit == "player" then
+        if state.active and state.unit == "player" and not AuraMatrixRowsByKey[state.key] then
             local shouldShow = not disabled and state.settings.enabled and self:EvaluateLoad(state.settings)
             if state.requiresAssist ~= nil then
                 state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
@@ -3100,6 +3114,7 @@ local function SetAuraTrackingPlayerVehicleState(self, disabled)
     for unitSetKey in pairs(self.AuraTrackingUnitSets or {}) do
         self:LayoutAuraTrackingUnitSet(unitSetKey)
     end
+    self:RefreshAuraMatrixVisibility()
 end
 
 local function UpdateAuraTrackingAssistStates(self, unit)
@@ -3141,6 +3156,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
         self.PendingAuraTrackingUpdate = true
         self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
+        self:RefreshAuraMatrixVisibility()
         return
     end
 
@@ -3152,6 +3168,8 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         state.active = false
+        -- Keep display edits pending for disabled trackers until they can refresh their buttons.
+        if reconfigureButtons then state.buttonSettingsDirty = true end
     end
 
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.Player, "Player", reconfigureButtons)
@@ -3229,6 +3247,9 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         end
     end
 
+    -- Existing Matrix rows can be re-enabled in combat after a full init left them inactive.
+    local matrixPlayerState = self.AuraTrackingState and self.AuraTrackingState.AuraMatrixplayer1
+    local matrixTargetState = self.AuraTrackingState and self.AuraTrackingState.AuraMatrixtarget1
     AuraTrackingUnitRefreshStates = {
         target = {},
         focus = {},
@@ -3238,13 +3259,13 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         playerControl = false,
         faction = {},
     }
-    if matrixSettings.enabled and not matrixSettings.DisableTargetTracking then
+    if matrixTargetState or matrixSettings.enabled and not matrixSettings.DisableTargetTracking then
         AuraTrackingUnitRefreshStates.faction.target = true
     end
 
     if (NSRT.AuraTrackingSettings.Player and NSRT.AuraTrackingSettings.Player.enabled)
         or (NSRT.AuraTrackingSettings.External and NSRT.AuraTrackingSettings.External.enabled)
-        or matrixSettings.enabled then
+        or matrixSettings.enabled or matrixPlayerState then
         AuraTrackingUnitRefreshStates.playerControl = true
     end
 
@@ -3285,7 +3306,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             AuraTrackingUnitRefreshFrame:SetScript("OnEvent", function(_, event, unit)
                 if NSI.IsBuilding then return end
                 if event == "PLAYER_TARGET_CHANGED" or event == "UNIT_FACTION" or event == "UNIT_FLAGS" or event == "PLAYER_ENTERING_WORLD" then
-                    NSI:RefreshAuraMatrixTarget()
+                    NSI:RefreshAuraMatrixVisibility(event == "PLAYER_TARGET_CHANGED")
                 end
                 if event == "UNIT_ENTERED_VEHICLE" then
                     if AuraTrackingVehicleStateTimer then
@@ -3369,7 +3390,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             end)
         end
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
-        if #AuraTrackingUnitRefreshStates.target > 0 then
+        if #AuraTrackingUnitRefreshStates.target > 0 or matrixTargetState then
             AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
         end
         if #AuraTrackingUnitRefreshStates.focus > 0 then
@@ -3847,6 +3868,7 @@ function NSI:UpdateAuraTrackingDisplay(key)
     if self:Restricted() then
         self.PendingAuraTrackingUpdate = true
         self.PendingAuraTrackingReconfigure = true
+        if key == "AuraMatrix" then self:RefreshAuraMatrixVisibility() end
         return
     end
 
