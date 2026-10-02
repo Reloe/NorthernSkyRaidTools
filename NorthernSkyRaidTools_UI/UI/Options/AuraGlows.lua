@@ -561,6 +561,30 @@ local function BuildAuraGlowsUI(screen)
                 get = function() return settings.IconOffsetY or 0 end,
                 set = function(_, value) settings.IconOffsetY = value; ApplySettings() end }
         end
+        defs[#defs + 1] = { Type = "Checkbox", label = "Show Duration Swipe",
+            get = function() return settings.ShowDurationSwipe ~= false end,
+            set = function(_, value) settings.ShowDurationSwipe = value; ApplySettings() end }
+        defs[#defs + 1] = { Type = "Checkbox", label = "Show Duration Text",
+            get = function() return settings.ShowDurationText == true end,
+            set = function(_, value) settings.ShowDurationText = value; ApplySettings(); RebuildTab() end }
+        if settings.ShowDurationText then
+            local durationFontValues = {}
+            for _, name in ipairs(NSI.LSM:List("font")) do
+                durationFontValues[#durationFontValues + 1] = { label = name, value = name }
+            end
+            defs[#defs + 1] = { Type = "Dropdown", label = "Duration Font", values = durationFontValues,
+                get = function() return settings.DurationFont or "Expressway" end,
+                set = function(_, value) settings.DurationFont = value; ApplySettings() end }
+            defs[#defs + 1] = { Type = "Slider", label = "Duration Font Size", min = 6, max = 80, step = 1,
+                get = function() return settings.DurationFontSize or 10 end,
+                set = function(_, value) settings.DurationFontSize = value; ApplySettings() end }
+            defs[#defs + 1] = { Type = "Color", label = "Duration Text Color",
+                get = function() return unpack(settings.DurationColor or {1, 1, 1, 1}) end,
+                set = function(_, red, green, blue, alpha)
+                    settings.DurationColor = { red, green, blue, alpha or 1 }
+                    ApplySettings()
+                end }
+        end
         return defs
     end
 

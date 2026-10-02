@@ -15,7 +15,33 @@ end
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
 NSI.AuraGlowDefaultSettingsKey = "DefaultSettings"
 
-local AuraGlowDisplaySettingKeys = { "Size", "IconSize", "IconPosition", "IconOffsetX", "IconOffsetY", "NumberOfLines", "LineSize", "Frequency", "ShowBackground", "ShowIcon" }
+local AuraGlowDisplaySettingKeys = {
+    "Size", "IconSize", "IconPosition", "IconOffsetX", "IconOffsetY",
+    "NumberOfLines", "LineSize", "Frequency", "ShowBackground", "ShowIcon",
+    "ShowDurationSwipe", "ShowDurationText", "DurationFont", "DurationFontSize", "DurationColor",
+}
+
+local AuraGlowDurationFormatter = C_StringUtil.CreateNumericRuleFormatter()
+AuraGlowDurationFormatter:SetBreakpoints({
+    {
+        threshold = 60,
+        rounding = Enum.NumericRuleFormatRounding.Down,
+        format = "%dm",
+        components = {
+            {
+                div = 60,
+                step = 1,
+                rounding = Enum.NumericRuleFormatRounding.Down,
+            },
+        },
+    },
+    {
+        threshold = 0,
+        step = 1,
+        rounding = Enum.NumericRuleFormatRounding.Up,
+        format = "%d",
+    },
+})
 
 local function ParseAuraGlowSpellIDs(value)
     local spellIDs = {}
@@ -118,6 +144,11 @@ function NSI:CreateAuraGlowSettingsDefaults(overrides)
         IconPosition = "CENTER",
         IconOffsetX = 0,
         IconOffsetY = 0,
+        ShowDurationSwipe = true,
+        ShowDurationText = false,
+        DurationFont = "Expressway",
+        DurationFontSize = 10,
+        DurationColor = {1, 1, 1, 1},
         AuraType = "Debuffs",
         BuffFiltering = "SpellIDs",
         SpellIDs = {},
@@ -674,6 +705,7 @@ function NSI:HideAuraGlowPreview(refreshUI)
         self.AuraGlowPreviewTimer = nil
     end
     if self.AuraGlowPreviewFrame then
+        self.AuraGlowPreviewFrame:SetScript("OnUpdate", nil)
         self.AuraGlowPreviewFrame:Hide()
         self.AuraGlowPreviewFrame = nil
     end
@@ -694,6 +726,9 @@ function NSI:ToggleAuraGlowPreview(key, refreshUI)
 
     self:HideAuraGlowPreview(false)
     local targetFrame = self.UnitFrames and self.UnitFrames.player
+    if not targetFrame then
+        targetFrame = self.LGF.GetUnitFrame("player")
+    end
     if not targetFrame then return false end
     local spellIDs = UsesAuraGlowSpellIDs(settings) and GetAuraGlowSpellIDs(settings) or {}
     local iconTexture = settings.menuIcon and C_Spell.GetSpellTexture(settings.menuIcon)
@@ -706,8 +741,36 @@ function NSI:ToggleAuraGlowPreview(key, refreshUI)
     local previewFrame = CreateFrame("Frame", nil, UIParent)
     previewFrame:SetAllPoints(targetFrame)
     previewFrame:SetFrameStrata("TOOLTIP")
+    previewFrame:SetFrameLevel(targetFrame:GetFrameLevel() + 1)
     previewFrame:Show()
-    CreateAuraGlowIcon(previewFrame, settings, iconTexture or 134400)
+    local icon = CreateAuraGlowIcon(previewFrame, settings, iconTexture or 134400)
+    if settings.ShowIcon and settings.ShowDurationSwipe ~= false then
+        local cooldown = CreateFrame("Cooldown", nil, previewFrame, "CooldownFrameTemplate")
+        cooldown:SetAllPoints(icon)
+        cooldown:SetFrameLevel(previewFrame:GetFrameLevel() + 1)
+        cooldown:SetDrawBling(false)
+        cooldown:SetDrawEdge(false)
+        cooldown:SetHideCountdownNumbers(true)
+        cooldown:SetReverse(true)
+        cooldown:SetCooldown(GetTime(), 10)
+        cooldown:Show()
+    end
+    if settings.ShowIcon and settings.ShowDurationText then
+        local textOverlay = CreateFrame("Frame", nil, previewFrame)
+        textOverlay:SetAllPoints(previewFrame)
+        textOverlay:SetFrameLevel(previewFrame:GetFrameLevel() + 2)
+        textOverlay:EnableMouse(false)
+        local duration = textOverlay:CreateFontString(nil, "OVERLAY")
+        duration:SetPoint("CENTER", icon, "CENTER")
+        local fontPath = self.LSM:Fetch("font", settings.DurationFont or "Expressway")
+        duration:SetFont(fontPath, settings.DurationFontSize or 10, "OUTLINE")
+        duration:SetTextColor(unpack(settings.DurationColor or {1, 1, 1, 1}))
+        local previewStartedAt = GetTime()
+        previewFrame:SetScript("OnUpdate", function()
+            duration:SetText(tostring(math.ceil(math.max(10 - (GetTime() - previewStartedAt), 0))))
+        end)
+        duration:SetText("10")
+    end
     CreateAuraGlowBorder(previewFrame, settings, true)
 
     self.AuraGlowPreviewFrame = previewFrame
@@ -812,13 +875,42 @@ function NSI:InitAuraGlows(onlyKey)
                         container:SetUnit(unit)
                         container:SetAllPoints(targetFrame)
                         container:SetFrameStrata("TOOLTIP")
+                        -- Each AuraContainer aura slot has one stable aura frame, so one slot caps this glow at one icon.
                         local slot = container:AddAuraSlot("Glow", BuildAuraGlowFilterString(settings), {
+                            maxFrameCount = 1,
                             candidateFilters = BuildAuraGlowCandidateFilters(settings),
                             initializeFrame = function(button)
                                 button:SetAllPoints(container)
                                 button:SetMouseMotionEnabled(false)
                                 local icon = CreateAuraGlowIcon(button, settings)
                                 button:SetIcon(icon)
+                                if settings.ShowIcon and settings.ShowDurationText then
+                                    local textOverlay = CreateFrame("Frame", nil, button)
+                                    textOverlay:SetAllPoints(button)
+                                    textOverlay:SetFrameLevel(button:GetFrameLevel() + 3)
+                                    textOverlay:EnableMouse(false)
+                                    local duration = textOverlay:CreateFontString(nil, "OVERLAY")
+                                    duration:SetPoint("CENTER", icon, "CENTER")
+                                    local fontPath = self.LSM:Fetch("font", settings.DurationFont or "Expressway")
+                                    duration:SetFont(fontPath, settings.DurationFontSize or 10, "OUTLINE")
+                                    duration:SetTextColor(unpack(settings.DurationColor or {1, 1, 1, 1}))
+                                    button:SetDurationText(duration, {textFormatter = AuraGlowDurationFormatter})
+                                else
+                                    button:ClearDurationText()
+                                end
+                                if settings.ShowIcon and settings.ShowDurationSwipe ~= false then
+                                    local cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
+                                    cooldown:SetAllPoints(icon)
+                                    cooldown:SetFrameLevel(button:GetFrameLevel() + 1)
+                                    cooldown:SetDrawBling(false)
+                                    cooldown:SetDrawEdge(false)
+                                    cooldown:SetHideCountdownNumbers(true)
+                                    cooldown:SetReverse(true)
+                                    cooldown:Show()
+                                    button:SetDurationCooldown(cooldown)
+                                else
+                                    button:ClearDurationCooldown()
+                                end
                                 CreateAuraGlowBorder(button, settings)
                             end,
                         })
