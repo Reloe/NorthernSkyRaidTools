@@ -55,8 +55,6 @@ local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking.BuildUI
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildCallback
-local BuildWAImportsOptions        = NSI.UI.Options.WAImports.BuildOptions
-local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 -- ============================================================
 -- Vertical tab sidebar layout
 -- ============================================================
@@ -65,20 +63,20 @@ local BuildWACallback              = NSI.UI.Options.WAImports.BuildCallback
 local TABS_GROUPS                  = {
     {
         { name = "General",    textKey = "General" },
-        { name = "ReadyCheck", textKey = "Ready Check" },
+        { name = "ReadyCheck", textKey = "Ready Check", retailOnly = true },
     },
     {
-        { name = "Reminders",        textKey = "Reminders" },
-        { name = "Reminders-Note",   textKey = "Note-Display" },
-        { name = "EncounterAlerts",  textKey = "Encounter Alerts" },
+        { name = "Reminders",        textKey = "Reminders", retailOnly = true },
+        { name = "Reminders-Note",   textKey = "Note-Display", retailOnly = true },
+        { name = "EncounterAlerts",  textKey = "Encounter Alerts", retailOnly = true },
     },
     {
         { name = "AuraSounds", textKey = "Aura Sounds" },
         { name = "AuraTracking", textKey = "Aura Tracking" },
     },
     {
-        { name = "Assignments",      textKey = "Assignments" },
-        { name = "InterruptDisplay", textKey = "Interrupt Display" },
+        { name = "Assignments",      textKey = "Assignments", retailOnly = true },
+        { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true },
         -- { name = "WAImports",        textKey = "WA Imports" },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
@@ -87,7 +85,7 @@ local TABS_GROUPS                  = {
 if BuildQoLOptions then
     table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life" })
 end
-table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison" })
+table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true })
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
@@ -168,17 +166,10 @@ function NSUI:Init()
     -- Create one content frame + one sidebar button per tab
     -- --------------------------------------------------------
     local btnY = -5 -- running y cursor inside sidebarBg
+    local isForever = NSI:IsForever()
 
-    for gIdx, group in ipairs(TABS_GROUPS) do
-        -- Draw a subtle horizontal rule between groups
-        if gIdx > 1 then
-            local rule = sidebarBg:CreateTexture(nil, "artwork")
-            rule:SetColorTexture(0, 1, 1, 0.12)
-            rule:SetHeight(1)
-            rule:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
-            rule:SetPoint("TOPRIGHT", sidebarBg, "TOPRIGHT", -8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
-        end
-
+    for groupIndex, group in ipairs(TABS_GROUPS) do
+        local groupHasButtons = false
         for _, tab in ipairs(group) do
             -- Content frame – occupies the right portion below the shared header, hidden by default
             local contentFrame = CreateFrame("frame", "NSUI_TabFrame_" .. tab.name, NSUI, "BackdropTemplate")
@@ -191,26 +182,33 @@ function NSUI:Init()
             tabSystem.AllFramesByName[tab.name] = contentFrame
             table.insert(tabSystem.AllFrames, contentFrame)
 
-            -- Sidebar button
-            local btn = CreateButton(
-                sidebarBg,
-                GetLocalizedText(tab.textKey),
-                function() SelectTab(tab.name) end,
-                SIDEBAR_BTN_WIDTH, SIDEBAR_BTN_HEIGHT,
-                "NSUITabBtn_" .. tab.name
-            )
-            btn:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 5, btnY)
-            btn._textKey = tab.textKey
+            if not (isForever and tab.retailOnly) then
+                -- Add spacing only when a group has a visible sidebar button.
+                if not groupHasButtons and #tabSystem.AllButtons > 0 then
+                    btnY = btnY - SIDEBAR_GROUP_GAP
+                    local rule = sidebarBg:CreateTexture(nil, "artwork")
+                    rule:SetColorTexture(0, 1, 1, 0.12)
+                    rule:SetHeight(1)
+                    rule:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
+                    rule:SetPoint("TOPRIGHT", sidebarBg, "TOPRIGHT", -8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
+                end
+                groupHasButtons = true
 
-            tabSystem.AllButtonsByName[tab.name] = btn
-            table.insert(tabSystem.AllButtons, btn)
+                local btn = CreateButton(
+                    sidebarBg,
+                    GetLocalizedText(tab.textKey),
+                    function() SelectTab(tab.name) end,
+                    SIDEBAR_BTN_WIDTH, SIDEBAR_BTN_HEIGHT,
+                    "NSUITabBtn_" .. tab.name
+                )
+                btn:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 5, btnY)
+                btn._textKey = tab.textKey
 
-            btnY = btnY - SIDEBAR_BTN_HEIGHT - SIDEBAR_BTN_GAP
-        end
+                tabSystem.AllButtonsByName[tab.name] = btn
+                table.insert(tabSystem.AllButtons, btn)
 
-        -- Extra gap between groups (but not after the last group)
-        if gIdx < #TABS_GROUPS then
-            btnY = btnY - SIDEBAR_GROUP_GAP
+                btnY = btnY - SIDEBAR_BTN_HEIGHT - SIDEBAR_BTN_GAP
+            end
         end
     end
 
@@ -240,42 +238,45 @@ function NSUI:Init()
         tabSystem.AllFramesByName[nt.name] = notesFrame
         table.insert(tabSystem.AllFrames, notesFrame)
 
-        -- Persistent header button (lives on NSUI, always visible)
-        local hdrBtn = CreateButton(
-            NSUI,
-            GetLocalizedText(nt.textKey),
-            function() SelectTab(nt.name) end,
-            NOTES_HEADER_BTN_W, NOTES_HEADER_BTN_H,
-            "NSUIHeaderBtn_" .. nt.name,
-            nt.icon,
-            18
-        )
-        hdrBtn:SetPoint(
-            "TOPLEFT", NSUI, "TOPLEFT",
-            162 + 10 + (i - 1) * (NOTES_HEADER_BTN_W + 6),
-            NOTES_HEADER_BTN_Y
-        )
-        hdrBtn._textKey = nt.textKey
+        if not isForever then
+            local hdrBtn = CreateButton(
+                NSUI,
+                GetLocalizedText(nt.textKey),
+                function() SelectTab(nt.name) end,
+                NOTES_HEADER_BTN_W, NOTES_HEADER_BTN_H,
+                "NSUIHeaderBtn_" .. nt.name,
+                nt.icon,
+                18
+            )
+            hdrBtn:SetPoint(
+                "TOPLEFT", NSUI, "TOPLEFT",
+                162 + 10 + (i - 1) * (NOTES_HEADER_BTN_W + 6),
+                NOTES_HEADER_BTN_Y
+            )
+            hdrBtn._textKey = nt.textKey
 
-        tabSystem.AllButtonsByName[nt.name] = hdrBtn
-        table.insert(tabSystem.AllButtons, hdrBtn)
+            tabSystem.AllButtonsByName[nt.name] = hdrBtn
+            table.insert(tabSystem.AllButtons, hdrBtn)
+        end
     end
 
     -- --------------------------------------------------------
     -- Anchor/Preview button (icon-only, far right of header)
     -- --------------------------------------------------------
     local ANCHOR_BTN_SIZE = 26
-    local anchorBtn = CreateButton(
-        NSUI,
-        "",  -- icon-only, no text
-        function() NSI:TogglePreviewMode() end,
-        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
-        "NSUIAnchorBtn",
-        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
-        nil,  -- textSize
-        { title = GetLocalizedText("Preview Alerts"), desc = GetLocalizedText("Preview Reminders and unlock their anchors to move them around") }
-    )
-    anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
+    if not isForever then
+        local anchorBtn = CreateButton(
+            NSUI,
+            "",  -- icon-only, no text
+            function() NSI:TogglePreviewMode() end,
+            ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+            "NSUIAnchorBtn",
+            [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\anchor.png]],
+            nil,  -- textSize
+            { title = GetLocalizedText("Preview Alerts"), desc = GetLocalizedText("Preview Reminders and unlock their anchors to move them around") }
+        )
+        anchorBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -10, NOTES_HEADER_BTN_Y)
+    end
 
     if NSI.GetGroupExportString then
         -- Export Group button (icon-only, immediately left of anchor button)
@@ -297,18 +298,19 @@ function NSUI:Init()
         exportGroupBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + ANCHOR_BTN_SIZE + 6), NOTES_HEADER_BTN_Y)
     end
 
-    -- Timeline button (icon-only, immediately left of the export group button)
-    local timelineBtn = CreateButton(
-        NSUI,
-        "",  -- icon-only, no text
-        function() NSI:ToggleTimelineWindow() end,
-        ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
-        "NSUITimelineBtn",
-        [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\clock.png]],
-        nil,  -- textSize
-        { title = GetLocalizedText("Timeline"), desc = GetLocalizedText("Open the Timeline window") }
-    )
-    timelineBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + (ANCHOR_BTN_SIZE + 6) * 2), NOTES_HEADER_BTN_Y)
+    if not isForever then
+        local timelineBtn = CreateButton(
+            NSUI,
+            "",  -- icon-only, no text
+            function() NSI:ToggleTimelineWindow() end,
+            ANCHOR_BTN_SIZE, ANCHOR_BTN_SIZE,
+            "NSUITimelineBtn",
+            [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\clock.png]],
+            nil,  -- textSize
+            { title = GetLocalizedText("Timeline"), desc = GetLocalizedText("Open the Timeline window") }
+        )
+        timelineBtn:SetPoint("TOPRIGHT", NSUI, "TOPRIGHT", -(10 + (ANCHOR_BTN_SIZE + 6) * 2), NOTES_HEADER_BTN_Y)
+    end
 
     -- --------------------------------------------------------
     -- Tab selection logic (matches Details' SelectOptionsSection)

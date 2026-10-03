@@ -31,7 +31,7 @@ UI\Options\ReadyCheck.lua
 UI\Options\AuraTracking.lua
 UI\Options\PaceComparison.lua
 UI\Options\QoL.lua [AllowLoadGameType standard]
-UI\Options\WAImports.lua
+UI\Options\WAImports.lua [AllowLoadGameType standard]
 UI\AnchorWindow.lua
 Timeline.lua
 

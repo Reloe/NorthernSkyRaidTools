@@ -331,9 +331,9 @@ end
 local function BuildAuraSoundsUI(parent)
     local screen = CreateFrame("Frame", "$parentAuraSounds", parent, "BackdropTemplate")
     screen:SetAllPoints()
-    screen.categoryType = "Raid"
-    local firstRaidCategory = GetAuraSoundCategories("Raid")[1]
-    screen.categoryKey = firstRaidCategory and firstRaidCategory.key
+    screen.categoryType = NSI:IsForever() and "Custom" or "Raid"
+    local firstCategory = GetAuraSoundCategories(screen.categoryType)[1]
+    screen.categoryKey = firstCategory and firstCategory.key
 
     local function ResetSpellToDefault(entryKey, spellID, defaultSound, unit, eventType)
         if not spellID then return end
@@ -1230,16 +1230,25 @@ local function BuildAuraSoundsUI(parent)
     newEventDropdown:SetPoint("LEFT", newEventLabel, "RIGHT", 8, 0)
 
     local addButton = NSI.UI.Components.CreateButton(rightPanel, T("Add"), function()
-        if screen.categoryType == "Custom" and not screen.categoryKey then return end
         local spellID = tonumber(newSpellEntry:GetValue())
         local sound = newSoundValue ~= "__NONE__" and newSoundValue or nil
         local unit = newUnitEntry:GetValue()
         unit = unit ~= "" and unit or "player"
         local eventType = newEventValue or "applied"
         if not spellID or not sound then return end
+        if screen.categoryType == "Custom" and not screen.categoryKey then
+            local category = GetAuraSoundCategories("Custom")[1]
+            if not category then
+                local nextID = tonumber(NSRT.AuraSounds.NextCustomCategoryID) or 1
+                category = {key = "custom_" .. nextID, label = T("Default"), entries = {}}
+                NSRT.AuraSounds.NextCustomCategoryID = nextID + 1
+                NSRT.AuraSounds.CustomCategories[#NSRT.AuraSounds.CustomCategories + 1] = category
+            end
+            screen.categoryKey = category.key
+        end
         local entryKey = NSI:GetNextAuraSoundKey(spellID, unit, eventType)
         NSI:SaveAuraSound(entryKey, spellID, sound, screen.categoryType, screen.categoryKey, unit, eventType)
-        RefreshAuraScrollbox()
+        RefreshCategorySelection()
         newSpellEntry:SetValue("")
         newUnitEntry:SetValue("player")
         newSoundValue = "__NONE__"
@@ -1249,7 +1258,7 @@ local function BuildAuraSoundsUI(parent)
     end, 70, 20, nil, nil, 11)
     addButton:SetPoint("LEFT", newEventDropdown.frame, "RIGHT", 10, 0)
 
-    SelectCategoryType("Raid")
+    SelectCategoryType(screen.categoryType)
     return screen
 end
 
