@@ -55,6 +55,7 @@ NSI.AuraTrackingCandidateDispelTypes = {
 }
 
 local AuraTrackingUnitRefreshFrame
+local AuraTrackingButtonRefreshFrame
 local AuraTrackingVehicleStateTimer
 local GetAuraTrackingPreviewOffset
 local AuraTrackingUnitRefreshStates = {
@@ -2074,6 +2075,53 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     return button
 end
 
+local function QueueAuraTrackingButtonRefresh(self, state)
+    local buttons = {}
+    for button in pairs(state.buttonRegions) do
+        buttons[#buttons + 1] = button
+    end
+    state.buttonSettingsDirty = nil
+    if #buttons == 0 then return end
+
+    if not AuraTrackingButtonRefreshFrame then
+        AuraTrackingButtonRefreshFrame = CreateFrame("Frame")
+        AuraTrackingButtonRefreshFrame.pending = {}
+        AuraTrackingButtonRefreshFrame:SetScript("OnUpdate", function(frame)
+            if self:Restricted() or self.IsBuilding then return end
+            -- Share the batch limit across all containers so Matrix rows cannot multiply the work per frame.
+            local remaining = 5
+            while #frame.pending > 0 and remaining > 0 do
+                local refresh = frame.pending[1]
+                local refreshState = refresh.state
+                if refreshState.active then
+                    local button = refresh.buttons[refresh.nextIndex]
+                    ConfigureAuraTrackingButton(self, refreshState, button, refreshState.width, refreshState.height, refreshState.settings, refreshState.unit, refreshState.key)
+                    refresh.nextIndex = refresh.nextIndex + 1
+                    remaining = remaining - 1
+                else
+                    refreshState.buttonSettingsDirty = true
+                end
+                if not refreshState.active or refresh.nextIndex > #refresh.buttons then
+                    refreshState.buttonRefresh = nil
+                    table.remove(frame.pending, 1)
+                end
+            end
+            if #frame.pending == 0 then frame:Hide() end
+        end)
+    end
+
+    local refresh = state.buttonRefresh
+    if not refresh then
+        refresh = { state = state }
+        state.buttonRefresh = refresh
+        AuraTrackingButtonRefreshFrame.pending[#AuraTrackingButtonRefreshFrame.pending + 1] = refresh
+    end
+    -- Restart pending work after another display edit, using the latest settings for every button.
+    refresh.buttons = buttons
+    refresh.nextIndex = 1
+    AuraTrackingButtonRefreshFrame:Show()
+end
+
 local function ConfigureDebuffOverviewButton(self, state, button, unit)
     local settings = NSRT.ReminderSettings.DebuffOverviewSettings
     local width = settings.Width
@@ -2903,10 +2951,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     end
     if reconfigureButtons then
         -- New buttons are configured by initializeFrame; only refresh the existing buttons here.
-        for button in pairs(state.buttonRegions) do
-            ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
-        end
-        state.buttonSettingsDirty = nil
+        QueueAuraTrackingButtonRefresh(self, state)
     end
     for index, group in ipairs(auraGroups) do
         local groupKey = group.customGroup and state.customAuraGroupKey or (groupKeyPrefix .. index)
