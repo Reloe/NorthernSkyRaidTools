@@ -65,7 +65,7 @@ function NSI:AddToReminder(reminderInfo)
 end
 
 function NSI:CreateReminder(info)
-    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment or info.IsPrePull)) then
+    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment or info.IsPrePull or info.isAnchorPreview)) then
         return nil
     end
     info = CopyReminderInfo(info)
@@ -1345,7 +1345,7 @@ end
 function NSI:DisplayReminder(info, bypass)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
-    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) then
+    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) and not info.isAnchorPreview then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
         return
     end
