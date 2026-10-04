@@ -3471,7 +3471,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
     end)
 end
 
-local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName)
+local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName, previewSourceName)
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0, 0, 1}
     fontPath = fontPath or GetAuraTrackingFontPath(self, settings)
@@ -3593,7 +3593,19 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     local isCustom = tostring(key):match("^Custom") and true or false
     local isGroupUnitTracking = isCustom and self:IsAuraTrackingGroupUnitInput(settings.Unit)
     local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
-    local showUnitName = (key == "External" or key == "Tank" or isCotankTracking) and settings.NameEnabled
+    local showCasterName = (key == "External" or isCustom) and settings.NameEnabled and not isGroupUnitTracking
+    if showCasterName then
+        local casterName = EnsureAuraTrackingFontString(frame, "CasterName")
+        PositionAuraTrackingUnitName(casterName, frame, settings)
+        casterName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
+        casterName:SetText(previewSourceName or "")
+        casterName:Show()
+    elseif frame.CasterName then
+        frame.CasterName:SetText("")
+        frame.CasterName:Hide()
+    end
+
+    local showUnitName = (key == "Tank" or isCotankTracking) and settings.NameEnabled
         or isCustom and isGroupUnitTracking and settings.UnitNameEnabled
     if showUnitName then
         local unitName = EnsureAuraTrackingFontString(frame, "UnitName")
@@ -3751,6 +3763,10 @@ function NSI:PreviewAuraTracking(key, show)
     local previewPlayerName = UnitName(previewUnit) or previewUnit
     local previewClass = select(2, UnitClass(previewUnit))
     local previewColor = GetClassColorObj(previewClass)
+    local previewSourceName = previewPlayerName
+    if previewColor then
+        previewSourceName = previewColor:WrapTextInColorCode(previewSourceName)
+    end
     local firstPreviewName = previewPlayerName
     local secondPreviewName
     local firstPreviewSuffix
@@ -3786,7 +3802,7 @@ function NSI:PreviewAuraTracking(key, show)
             local xOffset, yOffset = GetAuraTrackingPreviewOffset(settings, settings.GrowDirection, i, #entries)
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName, previewSourceName)
             icon:Show()
         else
             icon.PreviewExpires = nil
@@ -3809,7 +3825,7 @@ function NSI:PreviewAuraTracking(key, show)
                 local xOffset, yOffset = GetAuraTrackingPreviewOffset(settings, secondMover.GrowDirection, i, #entries)
                 icon:ClearAllPoints()
                 icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
-                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName)
+                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName, previewSourceName)
                 icon:Show()
             else
                 icon.PreviewExpires = nil
