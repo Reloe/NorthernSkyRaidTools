@@ -1313,14 +1313,16 @@ function NSI:ScheduleReminderSoundTimers(info)
         for _, timer in pairs(existingTimers) do
             timer:Cancel()
         end
+        self.ReminderSoundTimers[info] = nil
     end
 
     local timers = {}
     local now = GetTime()
     local remainingDuration = GetReminderRemaining(info, now)
-    if info.sound or info.TTS then
+    if (info.sound or info.TTS) and not info.SoundPlayed then
         local soundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
         timers.sound = C_Timer.NewTimer(math.max(remainingDuration - soundTimer - 0.25, 0), function()
+            info.SoundPlayed = true
             self:PlayReminderSound(info)
             timers.sound = nil
             if not timers.countdown then
@@ -1328,8 +1330,9 @@ function NSI:ScheduleReminderSoundTimers(info)
             end
         end)
     end
-    if info.countdown then
+    if info.countdown and not info.CountdownPlayed then
         timers.countdown = C_Timer.NewTimer(math.max(remainingDuration - info.countdown - 0.25, 0), function()
+            info.CountdownPlayed = true
             NSAPI:TTSCountdown(info.countdown)
             timers.countdown = nil
             if not timers.sound then
@@ -1342,7 +1345,7 @@ function NSI:ScheduleReminderSoundTimers(info)
     end
 end
 
-function NSI:DisplayReminder(info, bypass)
+function NSI:DisplayReminder(info, bypass, reschedule)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
     if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) and not info.isAnchorPreview then
@@ -1363,6 +1366,10 @@ function NSI:DisplayReminder(info, bypass)
     local rem = GetReminderRemaining(info, now)
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
+    end
+    if not reschedule then
+        info.SoundPlayed = nil
+        info.CountdownPlayed = nil
     end
     self:ScheduleReminderSoundTimers(info)
     local remString = self:GetRemainingText(rem, info)
@@ -1762,14 +1769,14 @@ HandleBossCastAlertStart = function(self, unit, event)
             local displayTime = targetTime - info.dur
             if displayTime > now then
                 self.ReminderTimer[reminderIndex] = C_Timer.NewTimer(displayTime - now, function()
-                    self:DisplayReminder(info)
+                    self:DisplayReminder(info, nil, true)
                 end)
             else
                 info.totalDuration = info.totalDuration or info.dur
                 info.dur = math.max(targetTime - now, 0)
                 info.expires = targetTime
                 info.startTime = targetTime - info.totalDuration
-                self:DisplayReminder(info)
+                self:DisplayReminder(info, nil, true)
             end
         end
     end
@@ -1943,7 +1950,7 @@ end
 
 function NSI:DelayAllReminders(delay)
     if not self.ReminderTimer then return end
-    for i, v in ipairs(self.ReminderTimer) do
+    for i, v in pairs(self.ReminderTimer) do
         v:Cancel()
     end
     if not self.EncounterID then return end
@@ -1992,7 +1999,7 @@ function NSI:HideAllReminders(FullReset)
         self.ReminderSoundTimers = {}
     end
     if self.ReminderTimer then
-        for i, v in ipairs(self.ReminderTimer) do
+        for i, v in pairs(self.ReminderTimer) do
             v:Cancel()
         end
     end
