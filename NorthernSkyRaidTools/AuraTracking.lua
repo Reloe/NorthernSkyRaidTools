@@ -2748,7 +2748,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local state = self.AuraTrackingState[key]
     reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or (matrixRow and state.settings ~= settings)
     if not state.container then
-        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
+        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate")
         state.buttonRegions = {}
     end
     state.buttonRegions = state.buttonRegions or {}
@@ -2778,19 +2778,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
     state.active = true
     self.AuraTrackingStateOrder[#self.AuraTrackingStateOrder + 1] = key
-
-    if unitSetKey and not state.unitSetSizeHooked then
-        state.unitSetSizeHooked = true
-        container:HookScript("OnSizeChanged", function()
-            local unitSet = NSI.AuraTrackingUnitSets and NSI.AuraTrackingUnitSets[unitSetKey]
-            if not unitSet or unitSet.layoutPending then return end
-            unitSet.layoutPending = true
-            C_Timer.After(0, function()
-                unitSet.layoutPending = nil
-                NSI:LayoutAuraTrackingUnitSet(unitSetKey)
-            end)
-        end)
-    end
 
     if isCustom then
         -- Blizzard only populates processedAuraType while this policy is active.
@@ -2828,6 +2815,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection, settings.GridGrowDirection or "UP")
     local rowWidth = GetAuraTrackingRowWidth(settings)
     local layoutAxis = GetAuraTrackingLayoutAxis(settings)
+    local elementWidth, elementHeight = width, height
+    local elementSpacing = settings.Spacing or 0
+    local lineSpacing = settings.GridSpacing ~= nil and settings.GridSpacing or elementSpacing
     if settings.AurasPerRowColumn == 1 then
         -- With one icon per line, only grid growth matters; Blizzard wraps onto the perpendicular axis.
         local gridGrowDirection = settings.GridGrowDirection or "UP"
@@ -2837,6 +2827,25 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         else
             layoutAxis = AnchorUtil.FlowLayoutAxis.Vertical
             rowWidth = height
+        end
+    end
+    if unitSetKey then
+        -- Empty Blizzard containers are one pixel wide/high. Include the unit gap only in occupied bounds,
+        -- then overlap containers by one pixel so empty raid units contribute no gap to the anchor chain.
+        local unitSpacing = elementSpacing + 1
+        local growDirection = settings.GrowDirection or "RIGHT"
+        local unitSetAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+        if growDirection == "UP" or growDirection == "DOWN" then
+            unitSetAxis = AnchorUtil.FlowLayoutAxis.Vertical
+            elementHeight = height + unitSpacing
+        else
+            elementWidth = width + unitSpacing
+        end
+        if layoutAxis == unitSetAxis then
+            elementSpacing = elementSpacing - unitSpacing
+            rowWidth = rowWidth + unitSpacing
+        else
+            lineSpacing = lineSpacing - unitSpacing
         end
     end
     container:SetFlowLayoutAxis(layoutAxis)
@@ -2968,10 +2977,10 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
             end,
             candidateFilters = candidateFilters,
             layout = {
-                elementWidth = width,
-                elementHeight = height,
-                elementSpacing = settings.Spacing or 0,
-                lineSpacing = settings.GridSpacing ~= nil and settings.GridSpacing or settings.Spacing or 0,
+                elementWidth = elementWidth,
+                elementHeight = elementHeight,
+                elementSpacing = elementSpacing,
+                lineSpacing = lineSpacing,
             },
         }
 
@@ -3033,7 +3042,7 @@ function NSI:LayoutAuraTrackingUnitSet(unitSetKey)
 
     local anchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
     local growDirection = settings.GrowDirection or "RIGHT"
-    local spacing = settings.Spacing or 0
+    local spacing = -1
     local previous
     for _, state in ipairs(activeStates) do
         local container = state.container
@@ -3214,7 +3223,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             local unitSet = { settings = settings, states = {} }
             self.AuraTrackingUnitSets[unitSetKey] = unitSet
             for unitIndex, unit in ipairs(units) do
-                local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, unitSetKey)
+                local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, #units > 1 and unitSetKey)
                 if state then
                     unitSet.states[#unitSet.states + 1] = state
                 end
