@@ -281,7 +281,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if assigntable then self.Assignments = assigntable end
         end
     elseif e == "NSI_READY_CHECK" and internal then
-        self:InitAuraSystem(false, true)
+        self:InitAuraSystem()
         self:RebuildAuraSounds()
         if self:DifficultyCheck({14, 15, 16}) then
             self:CacheUnitFrames()
@@ -367,7 +367,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.GroupUpdateTimer then self.GroupUpdateTimer:Cancel() end
         self.GroupUpdateTimer = C_Timer.After(2, function()
             self.GroupUpdateTimer = nil
-            self:InitAuraSystem(false, true)
+            self:InitAuraSystem()
             if self:DifficultyCheck({14, 15, 16}) then
                 self:RefreshDebuffOverviewContainers()
                 self:CacheUnitFrames()
