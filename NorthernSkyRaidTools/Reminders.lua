@@ -173,7 +173,7 @@ function NSI:CreateReminder(info)
     if info.DisplayType == "Icon" and info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings.IconSettings.HideTimerText end
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
-    info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
+    info.glowColors = info.glowunit and (info.glowColors or NSRT.ReminderSettings.GlowSettings.colors)
     if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
     if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
     return info
