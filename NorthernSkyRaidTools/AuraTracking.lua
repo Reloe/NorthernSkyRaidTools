@@ -2746,7 +2746,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     self.AuraTrackingState = self.AuraTrackingState or {}
     self.AuraTrackingState[key] = self.AuraTrackingState[key] or {}
     local state = self.AuraTrackingState[key]
-    reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or (matrixRow and state.settings ~= settings)
+    reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or state.settings ~= settings
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate")
         state.buttonRegions = {}
@@ -3174,6 +3174,7 @@ end
 
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
+    reconfigureButtons = reconfigureButtons or self.PendingAuraTrackingReconfigure
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
         self.PendingAuraTrackingUpdate = true
         self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
