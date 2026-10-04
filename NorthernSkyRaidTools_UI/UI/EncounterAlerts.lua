@@ -255,70 +255,6 @@ local function BuildEncounterAlertsUI(parentFrame)
     local searchText         = ""
     local groupsByEnc        = {}    -- [encID] = { [groupName] = true } — populated each RebuildScrollData
     local copiedAlertSection = nil
-    local SharedAlertDataKeys = {
-        enabled = true,
-        DisplayType = true,
-        text = true,
-        spellID = true,
-        isTaunt = true,
-        customIcon = true,
-        dur = true,
-        sticky = true,
-        HideTimer = true,
-        HideSwipe = true,
-        glowunit = true,
-        glowColors = true,
-        textColors = true,
-        ringColors = true,
-        showBackground = true,
-        Texture = true,
-        Ticks = true,
-        barColors = true,
-        TTS = true,
-        TTSTimer = true,
-        countdown = true,
-        sound = true,
-        loadConditions = true,
-    }
-
-    function NSI:SaveAlertData(alert, dataKey, newData)
-        if alert then
-            alert[dataKey] = newData
-            if alert.internalID and SharedAlertDataKeys[dataKey] and (dataKey ~= "enabled" or newData ~= false) then
-                local encounterID = alert.encID or selectedEncID
-                local encounterAlerts = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encounterID]
-                if encounterAlerts then
-                    for difficultyID, difficultyAlerts in pairs(encounterAlerts) do
-                        for alertKey, sibling in pairs(difficultyAlerts) do
-                            if sibling ~= alert and sibling.internalID == alert.internalID then
-                                sibling[dataKey] = type(newData) == "table" and CopyTable(newData) or newData
-                                if dataKey == "text" and sibling.ReloeReminder == true then
-                                    sibling.UserModifiedText = true
-                                end
-                                if dataKey == "enabled" and sibling.ReloeReminder == true then
-                                    sibling.UserModifiedEnabled = true
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            if dataKey == "text" and alert.ReloeReminder == true then
-                alert.UserModifiedText = true
-            end
-            if selectedEncID and selectedDiffID and selectedKey then
-                if not self._saveAlertDebounce then
-                    self._saveAlertDebounce = true
-                    local eid, did, key = selectedEncID, selectedDiffID, selectedKey
-                    C_Timer.After(0, function()
-                        self._saveAlertDebounce = false
-                        self:FireCallback("NSRT_ALERT_CHANGED", eid, did, key)
-                    end)
-                end
-            end
-        end
-    end
-
     -- forward declarations
     local rightPanel, SelectAlert, PreviewAlert, enabledCB, groupDD
     local copySectionBtn, applySectionBtn, previewBtn, tabSep, conditionHint
@@ -874,8 +810,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 if diffTable then
                                     for akey, alert in pairs(diffTable) do
                                         if type(alert) == "table" and alert.group == gname then
-                                            NSI:SaveAlertData(alert, "enabled", true)
-                                            NSI:FireCallback("NSRT_ALERT_CHANGED", gencID, filterDiffID, akey)
+                                            NSI:SaveAlertData(alert, "enabled", true, gencID, filterDiffID, akey)
                                         end
                                     end
                                 end
@@ -887,8 +822,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                                 if diffTable then
                                     for akey, alert in pairs(diffTable) do
                                         if type(alert) == "table" and alert.group == gname then
-                                            NSI:SaveAlertData(alert, "enabled", false)
-                                            NSI:FireCallback("NSRT_ALERT_CHANGED", gencID, filterDiffID, akey)
+                                            NSI:SaveAlertData(alert, "enabled", false, gencID, filterDiffID, akey)
                                         end
                                     end
                                 end
@@ -1002,12 +936,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                                    and NSRT.EncounterAlerts[eid][did]
                                    and NSRT.EncounterAlerts[eid][did][akey]
                         if e then
-                            NSI:SaveAlertData(e, "enabled", v)
-                            e.UserModifiedEnabled = true
+                            NSI:SaveAlertData(e, "enabled", v, eid, did, akey)
                             if selectedEncID == eid and selectedDiffID == did and selectedKey == akey then
                                 enabledCB:SetValue(v)
                             end
-                            NSI:FireCallback("NSRT_ALERT_CHANGED", eid, did, akey)
                         end
                     end)
                 else
@@ -1016,11 +948,10 @@ local function BuildEncounterAlertsUI(parentFrame)
                     local aencID  = entry.encID
                     local adid    = entry.diffID
                     row.enabledCB:SetOnChange(function(nsi, v)
-                        NSI:SaveAlertData(alert, "enabled", v)
+                        NSI:SaveAlertData(alert, "enabled", v, aencID, adid, akey)
                         if selectedKey == akey and selectedEncID == aencID then
                             enabledCB:SetValue(v)
                         end
-                        NSI:FireCallback("NSRT_ALERT_CHANGED", aencID, adid, akey)
                     end)
                 end
 
@@ -1450,9 +1381,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 if type(diffTable) == "table" then
                     for akey, alert in pairs(diffTable) do
                         if type(alert) == "table" and alert.ReloeReminder then
-                            NSI:SaveAlertData(alert, "enabled", enabled)
-                            alert.UserModifiedEnabled = true
-                            NSI:FireCallback("NSRT_ALERT_CHANGED", encID, filterDiffID, akey)
+                            NSI:SaveAlertData(alert, "enabled", enabled, encID, filterDiffID, akey)
                         end
                     end
                 end
@@ -2621,7 +2550,7 @@ end]]
             end
             if not inserted then table.insert(dispF._alert.Ticks, v) end
             addTickEntry:SetValue("")
-            NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, filterDiffID, selectedKey)
+            NSI:SaveAlertData(dispF._alert, "Ticks", dispF._alert.Ticks)
             RebuildTickRows()
         end
     end
@@ -2976,7 +2905,6 @@ end]]
                 NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
             end
             addTimeEntry:SetValue("")
-            NSI:FireCallback("NSRT_ALERT_CHANGED", selectedEncID, filterDiffID, selectedKey)
             RebuildTimeRows()
         end
     end
@@ -4313,12 +4241,7 @@ end]]
             end)
         end
         enabledCB:SetOnChange(function(nsi, v)
-            NSI:SaveAlertData(entry, "enabled", v)
-            entry.enabled = v
-            if entry.ReloeReminder then
-                NSI:SaveAlertData(entry, "UserModifiedEnabled", true)
-                entry.UserModifiedEnabled = true
-            end
+            NSI:SaveAlertData(entry, "enabled", v, selectedEncID, selectedDiffID, selectedKey)
             RebuildList()
         end)
 
