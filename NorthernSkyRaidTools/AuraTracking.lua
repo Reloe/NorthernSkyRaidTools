@@ -2827,7 +2827,19 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     end
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection, settings.GridGrowDirection or "UP")
     local rowWidth = GetAuraTrackingRowWidth(settings)
-    container:SetFlowLayoutAxis(GetAuraTrackingLayoutAxis(settings))
+    local layoutAxis = GetAuraTrackingLayoutAxis(settings)
+    if settings.AurasPerRowColumn == 1 then
+        -- With one icon per line, only grid growth matters; Blizzard wraps onto the perpendicular axis.
+        local gridGrowDirection = settings.GridGrowDirection or "UP"
+        if gridGrowDirection == "UP" or gridGrowDirection == "DOWN" then
+            layoutAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+            rowWidth = width
+        else
+            layoutAxis = AnchorUtil.FlowLayoutAxis.Vertical
+            rowWidth = height
+        end
+    end
+    container:SetFlowLayoutAxis(layoutAxis)
     container:SetFlowLayoutAnchorPoint(layoutAnchorPoint)
     container:SetFlowLayoutGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
     container:SetFlowLayoutMaximumLineSize(rowWidth)
