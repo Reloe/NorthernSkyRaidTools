@@ -7,6 +7,7 @@ local CharList = {}
 local LibTranslit = LibStub("LibTranslit-1.0")
 
 function NSAPI:GetCharacters(str) -- Returns table of all Characters from Nickname or Character Name
+    if issecretvalue(str) then return end
     if not str then
         error("NSAPI:GetCharacters(str), str is nil")
         return
@@ -22,9 +23,61 @@ function NSAPI:GetAllCharacters()
     return CopyTable(fullCharList)
 end
 
+function NSI:GetRealName(unit)
+    local name, secondName = UnitFullName(unit)
+    if issecretvalue(name) or issecretvalue(secondName) then return name, secondName end
+    if self:IsForever() then
+        if secondName and secondName ~= "" then
+            return name .. " " .. secondName
+        end
+        return name
+    end
+    if not secondName or secondName == "" then
+        secondName = GetNormalizedRealmName()
+    end
+    return name, secondName
+end
+
+function NSI:GetNickNameKey(name, realm)
+    if issecretvalue(name) or issecretvalue(realm) then return end
+    if self:IsForever() then
+        return name and (realm and realm ~= "" and name .. " " .. realm or name)
+    end
+    return name and realm and name .. "-" .. realm
+end
+
+function NSI:GetNickNameMaxLength()
+    return self:IsForever() and 25 or 12
+end
+
+local function AddNicknameToCache(fullname, nickname)
+    local characterName
+    if NSI:IsForever() then
+        characterName = fullname
+    else
+        characterName = strsplit("-", fullname)
+    end
+    fullCharList[fullname] = nickname
+    fullNameList[characterName] = nickname
+    if not sortedCharList[nickname] then
+        sortedCharList[nickname] = {}
+    end
+    sortedCharList[nickname][fullname] = true
+    if not CharList[nickname] then
+        CharList[nickname] = {}
+    end
+    CharList[nickname][characterName] = true
+end
+
 function NSAPI:GetName(str, AddonName, skiptranslit) -- Returns Nickname
     if (not str) or issecretvalue(str) then return str end
-    local unitname = UnitExists(str) and UnitName(str) or str
+    local isUnit = UnitExists(str)
+    local unitname
+    if isUnit then
+        unitname = NSI:GetRealName(str)
+    else
+        unitname = str
+    end
     if issecretvalue(unitname) then return unitname end
     -- check if setting for the requesting addon is enabled, if not return the original name.
     -- if no AddonName is given we assume it's from an old WeakAura as they never specified
@@ -35,13 +88,10 @@ function NSAPI:GetName(str, AddonName, skiptranslit) -- Returns Nickname
         return unitname
     end
 
-    if UnitExists(str) then
-        local name, realm = UnitFullName(str)
-        if not realm then
-            realm = GetNormalizedRealmName()
-        end
+    if isUnit then
+        local name, realm = NSI:GetRealName(str)
         if (issecretvalue(name) or issecretvalue(realm)) then return name end
-        local nickname = name and realm and fullCharList[name.."-"..realm]
+        local nickname = fullCharList[NSI:GetNickNameKey(name, realm)]
         if nickname and NSRT.Settings["Translit"] and not skiptranslit then
             nickname = LibTranslit:Transliterate(nickname)
         end
@@ -62,6 +112,7 @@ function NSAPI:GetName(str, AddonName, skiptranslit) -- Returns Nickname
 end
 
 function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickname or Character Name with nick = true
+    if issecretvalue(name) then return name end
     if UnitExists(name) and UnitIsConnected(name) then return name end
     name = nick and NSAPI:GetName(name, AddonName, true) or name
     if UnitExists(name) and UnitIsConnected(name) then return name end
@@ -69,16 +120,19 @@ function NSAPI:GetChar(name, nick, AddonName) -- Returns Char in Raid from Nickn
     local newname, newrealm = nil
     if chars then
         for k, _ in pairs(chars) do
-            local name, realm = strsplit("-", k)
+            local characterName, realm = k, nil
+            if not NSI:IsForever() then
+                characterName, realm = strsplit("-", k)
+            end
             local i = UnitInRaid(k)
-            if UnitIsVisible(name) or (i and select(3, GetRaidRosterInfo(i)) <= 4)  then
-                newname, newrealm = name, realm
-                if UnitIsUnit(name, "player") then
-                    return name, realm
+            if UnitIsVisible(characterName) or (i and select(3, GetRaidRosterInfo(i)) <= 4) then
+                newname, newrealm = characterName, realm
+                if UnitIsUnit(characterName, "player") then
+                    return characterName, realm
                 end
             end
         end
-        if newname and newrealm then
+        if newname then
             return newname, newrealm
         end
     end
@@ -91,11 +145,8 @@ end
 
 -- Own NickName Change
 function NSI:NickNameUpdated(nickname)
-    local name, realm = UnitFullName("player")
-    if not realm then
-        realm = GetNormalizedRealmName()
-    end
-    local oldnick = NSRT.NickNames[name .. "-" .. realm]
+    local name, realm = self:GetRealName("player")
+    local oldnick = NSRT.NickNames[self:GetNickNameKey(name, realm)]
     if (not oldnick) or oldnick ~= nickname then
         self:SendNickName("Any")
         self:NewNickName("player", nickname, name, realm)
@@ -138,8 +189,7 @@ function NSI:DandersFramesNickNameUpdated(all, unit)
         end
         if NSRT.Settings["DandersFrames"] then
             function DandersFrames:GetUnitName(unit)
-                local name = UnitName(unit)
-                return name and NSAPI:GetName(name, "DandersFrames") or name
+                return NSAPI:GetName(unit, "DandersFrames")
             end
         end
     end
@@ -233,16 +283,14 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
         if NSRT.Settings["Cell"] and NSRT.Settings["GlobalNickNames"] then
             if all then -- update all units
                 for u in self:IterateGroupMembers() do
-                    local name, realm = UnitFullName(u)
-                    if not realm then
-                        realm = GetNormalizedRealmName()
-                    end
-                    if NSRT.NickNames[name.."-"..realm] then
-                        local nick = NSRT.NickNames[name.."-"..realm]
-                        local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..nick)
+                    local name, realm = self:GetRealName(u)
+                    local key = self:GetNickNameKey(name, realm)
+                    if key and NSRT.NickNames[key] then
+                        local nick = NSRT.NickNames[key]
+                        local i = tIndexOf(CellDB.nicknames.list, key..":"..nick)
                         if i then -- update nickame if it already exists
-                            CellDB.nicknames.list[i] = name.."-"..realm..":"..nick
-                            Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nick)
+                            CellDB.nicknames.list[i] = key..":"..nick
+                            Cell.Fire("UpdateNicknames", "list-update", key, nick)
                         else -- insert if it doesn't exist yet
                             self:CellInsertName(name, realm, nick, true)
                         end
@@ -251,10 +299,11 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                 return
             elseif nickname == "" then -- newnick is an empty string so remove any old nick we still have
                 if oldnick then -- if there is an oldnick, remove it
-                    local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
+                    local key = self:GetNickNameKey(name, realm)
+                    local i = tIndexOf(CellDB.nicknames.list, key..":"..oldnick)
                     if i then
                         table.remove(CellDB.nicknames.list, i)
-                        Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, name)
+                        Cell.Fire("UpdateNicknames", "list-update", key, name)
                     end
                 end
             elseif unit then -- if the function was called for a sepcific unit
@@ -265,12 +314,13 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
                         break
                     end
                 end
+                local key = self:GetNickNameKey(name, realm)
                 if oldnick then -- check if oldnick exists in database already and overwrite it if it does, otherwise insert
-                    local i = tIndexOf(CellDB.nicknames.list, name.."-"..realm..":"..oldnick)
+                    local i = tIndexOf(CellDB.nicknames.list, key..":"..oldnick)
                     if i then
-                        CellDB.nicknames.list[i] = name.."-"..realm..":"..nickname
+                        CellDB.nicknames.list[i] = key..":"..nickname
                         if ingroup then
-                            Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
+                            Cell.Fire("UpdateNicknames", "list-update", key, nickname)
                         end
                     else
                         self:CellInsertName(name, realm, nickname, ingroup)
@@ -286,8 +336,9 @@ function NSI:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname)
 end
 
 function NSI:CellInsertName(name, realm, nickname, ingroup)
-    if tInsertUnique(CellDB.nicknames.list, name.."-"..realm..":"..nickname) and ingroup then
-        Cell.Fire("UpdateNicknames", "list-update", name.."-"..realm, nickname)
+    local key = self:GetNickNameKey(name, realm)
+    if tInsertUnique(CellDB.nicknames.list, key..":"..nickname) and ingroup then
+        Cell.Fire("UpdateNicknames", "list-update", key, nickname)
     end
 end
 
@@ -312,20 +363,12 @@ end
 
 -- Global NickName Option Change
 function NSI:GlobalNickNameUpdate()
-    if NSRT.Settings["GlobalNickNames"] then
-        for fullname, nickname in pairs(NSRT.NickNames) do
-            local name, realm = strsplit("-", fullname)
-            fullCharList[fullname] = nickname
-            fullNameList[name] = nickname
-            if not sortedCharList[nickname] then
-                sortedCharList[nickname] = {}
-            end
-            sortedCharList[nickname][fullname] = true
-            if not CharList[nickname] then
-                CharList[nickname] = {}
-            end
-            CharList[nickname][name] = true
-        end
+    wipe(fullCharList)
+    wipe(fullNameList)
+    wipe(sortedCharList)
+    wipe(CharList)
+    for fullname, nickname in pairs(NSRT.NickNames) do
+        AddNicknameToCache(fullname, nickname)
     end
 
     -- instant display update for all addons
@@ -336,12 +379,15 @@ end
 
 function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:CellNickNameUpdated(all, unit, name, realm, oldnick, nickname) -- always have to do cell before doing any changes to the nickname database
-    if nickname == ""  and NSRT.NickNames[name.."-"..realm] then
-        NSRT.NickNames[name.."-"..realm] = nil
-        fullCharList[name.."-"..realm] = nil
+    local key = self:GetNickNameKey(name, realm)
+    if nickname == "" and NSRT.NickNames[key] then
+        NSRT.NickNames[key] = nil
+        fullCharList[key] = nil
         fullNameList[name] = nil
-        sortedCharList[nickname] = nil
-        CharList[nickname] = nil
+        if oldnick then
+            sortedCharList[oldnick] = nil
+            CharList[oldnick] = nil
+        end
     end
     self:Grid2NickNameUpdated(unit)
     self:ElvUINickNameUpdated()
@@ -349,23 +395,13 @@ function NSI:UpdateNickNameDisplay(all, unit, name, realm, oldnick, nickname)
     self:BlizzardNickNameUpdated()
     self:DandersFramesNickNameUpdated(all, unit)
     self:VuhDoNickNameUpdated()
+    self:RefreshDebuffOverviewContainers()
     self.Callbacks:Fire("NSRT_NICKNAME_UPDATED", all, unit, name, realm, oldnick, nickname)
 end
 
 function NSI:InitNickNames()
-
     for fullname, nickname in pairs(NSRT and NSRT.NickNames or {}) do
-        local name, realm = strsplit("-", fullname)
-        fullCharList[fullname] = nickname
-        fullNameList[name] = nickname
-        if not sortedCharList[nickname] then
-            sortedCharList[nickname] = {}
-        end
-        sortedCharList[nickname][fullname] = true
-        if not CharList[nickname] then
-            CharList[nickname] = {}
-        end
-        CharList[nickname][name] = true
+        AddNicknameToCache(fullname, nickname)
     end
 
     if NSRT and NSRT.Settings["GlobalNickNames"] and NSRT.Settings["Blizzard"] then
@@ -390,8 +426,7 @@ function NSI:InitNickNames()
         end
 
         function Grid2Status:GetText(unit)
-            local name = UnitName(unit)
-            return name and NSAPI:GetName(name, "Grid2") or name
+            return NSAPI:GetName(unit, "Grid2")
         end
 
         local function Create(baseKey, dbx)
@@ -407,14 +442,12 @@ function NSI:InitNickNames()
     if ElvUF and ElvUF.Tags then
         ElvUF.Tags.Events['NSNickName'] = 'UNIT_NAME_UPDATE'
         ElvUF.Tags.Methods['NSNickName'] = function(unit)
-            local name = UnitName(unit)
-            return name and NSAPI:GetName(name, "ElvUI") or name
+            return NSAPI:GetName(unit, "ElvUI")
         end
         for i=1, 12 do
             ElvUF.Tags.Events['NSNickName:'..i] = 'UNIT_NAME_UPDATE'
             ElvUF.Tags.Methods['NSNickName:'..i] = function(unit)
-                local name = UnitName(unit)
-                name = name and NSAPI:GetName(name, "ElvUI") or name
+                local name = NSAPI:GetName(unit, "ElvUI")
                 return NSI:Utf8Sub(name, 1, i)
             end
         end
@@ -430,20 +463,17 @@ function NSI:InitNickNames()
 
     if DandersFrames and NSRT and NSRT.Settings["DandersFrames"] then
         function DandersFrames:GetUnitName(unit)
-            local name = UnitName(unit)
-            return name and NSAPI:GetName(name, "DandersFrames") or name
+            return NSAPI:GetName(unit, "DandersFrames")
         end
     end
 
     if UUFG then
         UUFG:AddTag("NSNickName", "UNIT_NAME_UPDATE", function(unit)
-            local name = UnitName(unit)
-            return name and NSAPI:GetName(name, "Unhalted") or name
+            return NSAPI:GetName(unit, "Unhalted")
         end, "Name", "[NSRT] NickName")
         for i=1, 12 do
             UUFG:AddTag("NSNickName:"..i, "UNIT_NAME_UPDATE", function(unit)
-                local name = UnitName(unit)
-                name = name and NSAPI:GetName(name, "Unhalted") or name
+                local name = NSAPI:GetName(unit, "Unhalted")
                 return NSI:Utf8Sub(name, 1, i)
             end, "Name", "[NSRT] NickName Shortened "..i)
         end
@@ -460,10 +490,7 @@ function NSI:SendNickName(channel, requestback)
     self.LastNickNameSend = now
     local nickname = NSRT.Settings["MyNickName"]
     if (not nickname) or self:Restricted() then return end
-    local name, realm = UnitFullName("player")
-    if not realm then
-        realm = GetNormalizedRealmName()
-    end
+    local name, realm = self:GetRealName("player")
     if nickname then
         if UnitInRaid("player") and (NSRT.Settings["ShareNickNames"] == 1 or NSRT.Settings["ShareNickNames"] == 3) and (channel == "Any" or channel == "RAID") then
             self:Broadcast("NSI_NICKNAMES_COMMS", "RAID", nickname, name, realm, requestback, "RAID")
@@ -480,25 +507,18 @@ function NSI:NewNickName(unit, nickname, name, realm, channel)
         if channel == "GUILD" and NSRT.Settings["AcceptNickNames"] ~= 2 then return end
         if channel == "RAID" and NSRT.Settings["AcceptNickNames"] ~= 1 then return end
     end
-    if not nickname or not name or not realm then return end
-    local oldnick = NSRT.NickNames[name.."-"..realm]
+    if not nickname or not name then return end
+    local key = self:GetNickNameKey(name, realm)
+    if not key then return end
+    local oldnick = NSRT.NickNames[key]
     if oldnick and oldnick == nickname then  return end -- stop early if we already have this exact nickname
     if nickname == "" then
         self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
         return
     end
-    nickname = self:Utf8Sub(nickname, 1, 12)
-    NSRT.NickNames[name.."-"..realm] = nickname
-    fullCharList[name.."-"..realm] = nickname
-    fullNameList[name] = nickname
-    if not sortedCharList[nickname] then
-        sortedCharList[nickname] = {}
-    end
-    sortedCharList[nickname][name.."-"..realm] = true
-    if not CharList[nickname] then
-        CharList[nickname] = {}
-    end
-    CharList[nickname][name] = true
+    nickname = self:Utf8Sub(nickname, 1, self:GetNickNameMaxLength())
+    NSRT.NickNames[key] = nickname
+    AddNicknameToCache(key, nickname)
     if NSRT.Settings["GlobalNickNames"] then
         self:UpdateNickNameDisplay(false, unit, name, realm, oldnick, nickname)
     end
@@ -507,15 +527,20 @@ end
 
 function NSI:ImportNickNames(string) -- string format is charactername-realm:nickname;charactername-realm:nickname;...
     if string ~= "" then
-        string = string.gsub(string, "%s+", "") -- remove all whitespaces
+        if not self:IsForever() then
+            string = string.gsub(string, "%s+", "") -- remove all whitespaces
+        end
         for _, str in pairs({strsplit(";", string)}) do
             if str ~= "" then
                 local namewithrealm, nickname = strsplit(":", str)
                 if namewithrealm and nickname then
-                    local name, realm = strsplit("-", namewithrealm)
-                    local unit
-                    if name and realm then
-                        NSRT.NickNames[name.."-"..realm] = nickname
+                    if self:IsForever() then
+                        NSRT.NickNames[namewithrealm] = self:Utf8Sub(nickname, 1, self:GetNickNameMaxLength())
+                    else
+                        local name, realm = strsplit("-", namewithrealm)
+                        if name and realm then
+                            NSRT.NickNames[name.."-"..realm] = self:Utf8Sub(nickname, 1, self:GetNickNameMaxLength())
+                        end
                     end
                 else
                     error("Error parsing names: "..str, 1)
@@ -528,7 +553,7 @@ function NSI:ImportNickNames(string) -- string format is charactername-realm:nic
 end
 
 function NSI:AddNickName(name, realm, nickname) -- keeping the nickname empty acts as removing the nickname for that character
-    if name and realm and nickname then
+    if name and nickname then
         local unit
         if UnitExists(name) then
             for u in self:IterateGroupMembers() do

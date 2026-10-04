@@ -22,7 +22,7 @@ NSI.InitializeAlerts[encID] = function(self)
     rangedConditions.Roles.RANGED = true
 
     local data = {group = "Sentinels", internalID = "PoisonHits", name = "Poison Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 5,
-        textColors = {1, 0, 0, 1}, spellID = 1284458,
+        textColors = {1, 0, 0, 1}, spellID = 1284458, castDuration = 1.5,
         isConditional = {
             text = "This Alert only shows if you have threat on boss1.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat >= 2 end]],
@@ -46,7 +46,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
     local data = {group = "Sentinels", internalID = "BloodHits", name = "Blood Tank-Hit", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        textColors = {1, 0, 0, 1}, spellID = 1284487,
+        textColors = {1, 0, 0, 1}, spellID = 1284487, bossID = "boss2", castDuration = 1.5,
         isConditional = {
             text = "This Alert only shows if you have threat on boss2.",
             func = [[return function() local threat = UnitThreatSituation("player", "boss2") return threat and threat >= 2 end]],
@@ -96,7 +96,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Sentinels", internalID = "BloodSoak", name = "Blood Soak", text = "Blood-Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8,
-        textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
+        textColors = {1, 0.37, 0.25, 1}, spellID = 1288232, bossID = "boss2", castDuration = 1,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss2.",
             func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss2") return minRange and minRange < 40 end]],
@@ -121,7 +121,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {Version = {versionNumber = 2, [1] = {dur = 6}, [2] = {DisplayType = "Text"}}, group = "Sentinels", internalID = "BloodSoakPool", name = "Soak-Pool", text = "Drop Pool", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        textColors = {1, 0.37, 0.25, 1}, spellID = 1288232,
+        textColors = {1, 0.37, 0.25, 1}, spellID = 1288232, bossID = "boss2", castDuration = 8, bossEvent = "UNIT_SPELLCAST_SUCCEEDED",
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss2.",
             func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss2") return minRange and minRange < 40 end]],
@@ -171,7 +171,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {group = "Sentinels", internalID = "PoisonAdd", name = "Poison Add", text = "Poison Add", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 6,
-        textColors = {0.62, 1, 0.25, 1}, spellID = 1284251,
+        textColors = {0.62, 1, 0.25, 1}, spellID = 1284251, castDuration = 1.5,
         isConditional = {
             text = "This Alert only shows if you are within 40y of boss1.",
             func = [[return function() local minRange = NSAPI and NSAPI:GetRange("boss1") return minRange and minRange < 40 end]],
@@ -196,7 +196,7 @@ NSI.InitializeAlerts[encID] = function(self)
     self:AddEncounterAlert(data)
 
     local data = {Version = {versionNumber = 1, [1] = {text = "Orbs", dur = 8}}, group = "Sentinels", internalID = "OrbSpawn", name = "Orb Spawn", text = "Bait Orbs", DisplayType = "Text", encID = encID, phase = 1, TTS = "Bait", dur = 6,
-        spellID = 1284434,
+        spellID = 1284434, castDuration = 2,
         phaseTimers = {
             [15] ={
                 {17.2},
@@ -262,7 +262,7 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Sentinels", internalID = "Radar", name = "Radar", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5, loadConditions = rangedConditions,
-        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true, Preview = RadarPreview,
+        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = false, BlockCopy = true, NoEdit = true, Preview = RadarPreview,
         customIcon = 1284500,
         Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = 0, yOffset = 250, FontSize = 20, SafeDistance = 40, UpdateInterval = 0.5,
         BackgroundColor = {0.06, 0.06, 0.06, 0.9}, BorderColor = {0, 0, 0, 1}, TickColor = {0.13, 0.85, 0.13, 1},
@@ -469,36 +469,34 @@ local function StopRadarPreview(self)
     end
 end
 
-local function ScheduleBloodHitThreatCheck(self)
-    if self.BloodHitThreatTimer then self.BloodHitThreatTimer:Cancel() end
-
+local function TrackBloodHitCastSuccess(self)
     local difficultyID = self:DifficultyCheck({15, 16})
-    local alert = difficultyID and NSRT.EncounterAlerts[encID][difficultyID] and NSRT.EncounterAlerts[encID][difficultyID].BloodDropPool
-    local timers = alert and alert.phaseTimers and alert.phaseTimers[self.Phase or 1]
-    local timetocheck = timers and timers[#timers] -- only check last timer
-    if not timetocheck then return end
+    local encounterAlerts = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
+    local bloodHitAlert = encounterAlerts and encounterAlerts.BloodHits
+    local hitTimers = bloodHitAlert and bloodHitAlert.phaseTimers and bloodHitAlert.phaseTimers[self.Phase or 1]
+    local expectedHitTime = hitTimers and hitTimers[#hitTimers]
+    if not expectedHitTime or math.abs(GetTime() - self.PhaseSwapTime - expectedHitTime) > 4 then return end
 
-    self.BloodHitThreatTimer = C_Timer.NewTimer(timetocheck, function()
-        local threat = UnitThreatSituation("player", "boss2")
-        if threat and threat >= 2 then
-            self.BloodHitTimer = GetTime()
-            self.BloodHitPhase = self.Phase
-            if self.BloodHitPoolTimer then self.BloodHitPoolTimer:Cancel() end
-            self.BloodHitPoolTimer = C_Timer.NewTimer(40, function()
-                if self.EncounterID ~= encID or self.Phase ~= self.BloodHitPhase then return end
-                alert = CopyTable(alert)
-                alert.phase = self.Phase
-                alert.phaseTimers = nil
-                alert.isSpecialDisplay = nil
-                self:DisplayReminder(alert)
-                self.BloodHitTimer = nil
-                self.BloodHitPhase = nil
-            end)
-        else
+    local threat = UnitThreatSituation("player", "boss2")
+    if threat and threat >= 2 then
+        local alert = encounterAlerts.BloodDropPool
+        if not alert or not alert.enabled or not self:EvaluateLoad(alert) then return end
+        self.BloodHitTimer = GetTime()
+        self.BloodHitPhase = self.Phase
+        if self.BloodHitPoolTimer then self.BloodHitPoolTimer:Cancel() end
+        self.BloodHitPoolTimer = C_Timer.NewTimer(math.max(40 - alert.dur, 0), function()
+            if self.EncounterID ~= encID or self.Phase ~= self.BloodHitPhase then return end
+            alert = CopyTable(alert)
+            alert.phase = self.Phase
+            alert.phaseTimers = nil
+            self:DisplayReminder(alert)
             self.BloodHitTimer = nil
             self.BloodHitPhase = nil
-        end
-    end)
+        end)
+    else
+        self.BloodHitTimer = nil
+        self.BloodHitPhase = nil
+    end
 end
 
 local function AddBloodHitPoolTimer(self, now)
@@ -521,7 +519,6 @@ local function AddBloodHitPoolTimer(self, now)
             alert.phase = self.Phase
             alert.time = diff
             alert.phaseTimers = nil
-            alert.isSpecialDisplay = nil
             self:AddToReminder(alert) -- add alert for the new phase
         end
     end
@@ -539,10 +536,15 @@ NSI.EncounterAlertStart[encID] = function(self, previewID, preview)
         self.BloodHitPoolTimer:Cancel()
         self.BloodHitPoolTimer = nil
     end
-    local id = self:DifficultyCheck({15, 16})
-    local DropPool = id and NSRT.EncounterAlerts[encID][id] and NSRT.EncounterAlerts[encID][id].BloodDropPool
-    if DropPool and DropPool.enabled and self:EvaluateLoad(DropPool) then
-        ScheduleBloodHitThreatCheck(self)
+    local difficultyID = self:DifficultyCheck({15, 16})
+    local encounterAlerts = difficultyID and NSRT.EncounterAlerts[encID][difficultyID]
+    local dropPoolAlert = encounterAlerts and encounterAlerts.BloodDropPool
+    if dropPoolAlert and dropPoolAlert.enabled and self:EvaluateLoad(dropPoolAlert) then
+        self.BloodHitCastFrame = CreateFrame("Frame", nil, self.NSRTFrame)
+        self.BloodHitCastFrame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "boss2")
+        self.BloodHitCastFrame:SetScript("OnEvent", function()
+            TrackBloodHitCastSuccess(self)
+        end)
     end
 
     StopRadarPreview(self)
@@ -550,8 +552,12 @@ NSI.EncounterAlertStart[encID] = function(self, previewID, preview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
-    if self.BloodHitThreatTimer then self.BloodHitThreatTimer:Cancel() end
     if self.BloodHitPoolTimer then self.BloodHitPoolTimer:Cancel() end
+    if self.BloodHitCastFrame then
+        self.BloodHitCastFrame:UnregisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+        self.BloodHitCastFrame:SetScript("OnEvent", nil)
+        self.BloodHitCastFrame = nil
+    end
     self.BloodHitTimer = nil
     self.BloodHitPhase = nil
     self.BloodHitPoolTimer = nil
@@ -574,7 +580,6 @@ NSI.DetectPhaseChange[encID] = function(self, e, info)
         self.Phase = self.Phase + 1
         AddBloodHitPoolTimer(self, now)
         self:StartReminders(self.Phase)
-        ScheduleBloodHitThreatCheck(self)
         StartRadar(self, self:DifficultyCheck({14, 15, 16}))
         self.Timelines = {}
         self.PhaseSwapTime = now

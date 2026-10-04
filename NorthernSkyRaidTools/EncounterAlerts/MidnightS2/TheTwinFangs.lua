@@ -49,6 +49,7 @@ NSI.InitializeAlerts[encID] = function(self)
                 barColors = alert.BarColor or overviewSettings.barColors,
                 backgroundColors = overviewSettings.backgroundColors,
                 height = alert.BarHeight or overviewSettings.Height,
+                previewIcon = alert.customIcon,
             }, true)
         end
     ]]
@@ -63,7 +64,7 @@ NSI.InitializeAlerts[encID] = function(self)
     }
 
     local data = {Version = {versionNumber = 1, [1] = {customIcon = 1290336}}, group = "Twin Fangs", internalID = "DebuffOverview", name = "Eternal Venom Overview", text = "Eternal Venom Overview", customIcon = 1290336, DisplayType = "Bar", encID = encID,
-        phase = 1, TTS = false, dur = 5, spellID = nil, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, NoEdit = true,
+        phase = 1, TTS = false, dur = 5, spellID = nil, difficulties = {14, 15, 16}, enabled = false, BlockCopy = true, NoEdit = true,
         Preview = DebuffOverviewPreview, id = 0.3, BarHeight = 25, extraOptions = debuffOverviewOptions,
     }
     self:AddEncounterAlert(data)
@@ -71,7 +72,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local InterruptWhisperAlertPreview = [[
         return function(self)
             local alert = NSRT.EncounterAlerts[3421][16].InterruptWhisperAlert
-            local info = self:CreateReminder(CopyTable(alert), true)
+            local info = self:CreateReminder(alert)
             if alert.ShowWhisperSender then
                 local sender = secretwrap(UnitName("player"))
                 local senderGUID = secretwrap(UnitGUID("player"))
@@ -85,7 +86,7 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Twin Fangs", internalID = "InterruptWhisperAlert", name = "Interrupt Whisper Alert", text = "Your Interrupt", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 3,
-        sound = "|cFF4BAAC8Interrupt|r", difficulties = {16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, id = 0.4, ShowWhisperSender = false, pinned = true,
+        sound = "|cFF4BAAC8Interrupt|r", difficulties = {16}, enabled = false, BlockCopy = true, id = 0.4, ShowWhisperSender = false, pinned = true,
         Preview = InterruptWhisperAlertPreview,
         extraOptions = {
             {Type = "Label", text = "This Alert shows up whenever you receive any whisper at all during the encounter. It cannot filter out wrong whispers."},
@@ -243,7 +244,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
 
     local interruptWhisperAlert = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16] and NSRT.EncounterAlerts[encID][16].InterruptWhisperAlert
     if interruptWhisperAlert and interruptWhisperAlert.enabled and self:EvaluateLoad(interruptWhisperAlert) then
-        local info = self:CreateReminder(CopyTable(interruptWhisperAlert), true)
+        local info = self:CreateReminder(interruptWhisperAlert)
         self:EncounterFunction("TwinFangsInterruptWhisper", function(_, _, _, sender, ...)
             if interruptWhisperAlert.ShowWhisperSender then
                 local senderGUID = select(10, ...)

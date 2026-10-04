@@ -122,7 +122,7 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Sszorak", internalID = "WindsHelper", name = "Winds Helper", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5,
-        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = true, isSpecialDisplay = true, BlockCopy = true, Preview = WindsPreview,
+        spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = true, BlockCopy = true, Preview = WindsPreview,
         Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, BackgroundColor = {0.2, 0.2, 0.2, 1}, ShowSenderNames = false,
         customIcon = 1285732,
         extraOptions = {
@@ -173,7 +173,7 @@ NSI.InitializeAlerts[encID] = function(self)
     ]]
 
     local data = {group = "Sszorak", internalID = "VenomousSurgeTargets", name = "Debuff Targets", text = nil, DisplayType = "Bar", encID = encID, phase = nil, TTS = false, dur = bombDuration,
-        spellID = 1305959, id = 0.1, difficulties = {14, 15, 16}, enabled = false, isSpecialDisplay = true, BlockCopy = true, Preview = BombPreview,
+        spellID = 1305959, id = 0.1, difficulties = {14, 15, 16}, enabled = false, BlockCopy = true, Preview = BombPreview,
         customIcon = 1305959,
     }
     self:AddEncounterAlert(data)
@@ -333,7 +333,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
                 TTS = false,
                 sticky = 0,
                 IsAlert = true,
-            }, true)
+            })
             if not info then return end
             info.text = unitName
             local F = self:DisplayReminder(info)

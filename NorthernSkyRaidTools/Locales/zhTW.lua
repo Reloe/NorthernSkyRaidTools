@@ -1134,7 +1134,6 @@ L["This Alert only shows if First Mate Nama was empowered"] = "此警報僅在�
 L["This Alert only shows if Scrollsage Iku was empowered"] = "此警報僅在卷軸賢者伊庫被賦能時顯示"
 L["This Alert only shows if you are holding the fish at the time."] = "此警報僅在你當時持有魚時顯示。"
 -- Preview
-L["|cFFFF0000NSRT:|r Preview is disabled because you are displaying alerts through TimelineReminders."] = "|cFFFF0000NSRT:|r 由於你正透過 TimelineReminders 顯示警報，預覽已停用。"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It is anchored to the enemy nameplate"] = "|cFF00FFFFNSRT:|r 此警報無法預覽。它是錨定於敵人姓名版上"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. It uses the settings of the Text Display from General tab."] = "|cFF00FFFFNSRT:|r 此警報無法預覽。它使用一般分頁中文字提醒的設定。"
 L["|cFF00FFFFNSRT:|r no preview available for this Alert. You can change Interrupt settings in the Interrupt Display menu."] = "|cFF00FFFFNSRT:|r 此警報無法預覽。你可以在打斷提醒選單中變更打斷設定。"

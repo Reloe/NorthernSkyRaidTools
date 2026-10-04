@@ -3,8 +3,14 @@ local _, NSI = ... -- Internal namespace
 SLASH_NSUI1 = "/ns"
 SLASH_NSUI2 = "/nsrt"
 SlashCmdList["NSUI"] = function(msg)
+    local function LoadUI(showOptions, pendingTabName)
+        if NSI:LoadUI(showOptions, pendingTabName) then return true end
+        NSI:ShowUIDisabledMessage()
+        return false
+    end
+
     local function OpenUI(tabName)
-        if not NSI:LoadUI(true, tabName) then return end
+        if not LoadUI(true, tabName) then return end
         NSI.NSUI:Show()
         if tabName then NSI.NSUI.MenuFrame:SelectTabByName(tabName) end
     end
@@ -21,7 +27,7 @@ SlashCmdList["NSUI"] = function(msg)
             print(NSI:Loc("|cFF00FFFFNSRT|r Debug mode is now enabled, please disable it when you are done testing."))
         end
     elseif msg == "cd" then
-        if not NSI:LoadUI() then return end
+        if not LoadUI() then return end
         if NSI.NSUI.cooldowns_frame:IsShown() then
             NSI.NSUI.cooldowns_frame:Hide()
         else
@@ -56,17 +62,17 @@ SlashCmdList["NSUI"] = function(msg)
     elseif msg == "pclear" or msg == "pc" then -- Clear Active Personal Reminder
         NSI:SetReminder(nil, true)
     elseif msg == "timeline" or msg == "tl" then
-        if NSI:LoadUI() then
+        if LoadUI() then
             NSI:ToggleTimelineWindow()
         end
     elseif msg:match("^break") or msg:match("^brb") then
         NSI:BreakCommand(msg:match("^%a+%s*(.*)$"))
     elseif msg == "invite" then
-        NSI:InviteFromReminder(NSRT.ActiveReminder, true)
+        if NSI.InviteFromReminder then NSI:InviteFromReminder(NSRT.ActiveReminder, true) end
     elseif msg == "inv" then
-        NSI:InviteOnlineGuildMembers()
+        if NSI.InviteOnlineGuildMembers then NSI:InviteOnlineGuildMembers() end
     elseif msg == "arrange" then
-        NSI:ArrangeFromReminder(NSRT.ActiveReminder, true)
+        if NSI.ArrangeFromReminder then NSI:ArrangeFromReminder(NSRT.ActiveReminder, true) end
     elseif msg == "debuglogs" then
         NSRT.Settings.DebugLogs = not NSRT.Settings.DebugLogs
         NSI:UpdateDebugLogEvents()
@@ -97,10 +103,10 @@ SlashCmdList["NSUI"] = function(msg)
         print(NSI:Loc("  |cFF00FFFF/ns inv|r - Invite online guild members (same as the QoL tab button)"))
         print(NSI:Loc("  |cFF00FFFF/ns arrange|r - Arrange players from active reminder in group"))
     elseif msg == "" then
-        if NSI:LoadUI(true) then NSI.NSUI:ToggleOptions() end
+        if LoadUI(true) then NSI.NSUI:ToggleOptions() end
     elseif msg then
         print(NSI:Loc("|cFF00FFFFNSRT|r Unknown command. Type |cFF00FFFF/ns help|r for a list of commands."))
     else
-        if NSI:LoadUI(true) then NSI.NSUI:ToggleOptions() end
+        if LoadUI(true) then NSI.NSUI:ToggleOptions() end
     end
 end
