@@ -1432,6 +1432,17 @@ function NSI:DisplayReminder(info, bypass, reschedule)
     return F
 end
 
+function NSI:HideReminder(info, frame)
+    local isSecretText = info.text and issecretvalue(info.text)
+    if ((info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders())) and (not info.isAnchorPreview) and (not isSecretText) then
+        self:FireCallback("NSRT_ALERT_WOULD_HIDE", info)
+        return
+    end
+    if frame and frame.info == info then
+        frame:Hide()
+    end
+end
+
 function NSI:PreviewReminderCircle(previewKey, duration, ringColors, texture)
     local frame = self[previewKey]
     if frame and frame:IsShown() then

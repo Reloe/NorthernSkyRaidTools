@@ -44,13 +44,14 @@ end
 local function HideUlatekWaveText(self, key)
     local display = self[key]
     if not display then return end
-    if display.frame and display.frame.info == display.info then display.frame:Hide() end
+    self:HideReminder(display.info, display.frame)
     self[key] = nil
 end
 
 local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
     if key then HideUlatekWaveText(self, key) end
     local info = self:CreateReminder({
+        internalID = alert.internalID,
         text = text,
         DisplayType = "Text",
         textColors = alert.textColors,
@@ -61,7 +62,7 @@ local function ShowUlatekWaveText(self, alert, text, duration, key, isPreview)
         HideTimer = true,
         TTS = alert.TTS,
         countdown = false,
-        IsAlert = false,
+        IsAlert = true,
         ReloeReminder = true,
     })
     if not info then return end
@@ -126,6 +127,7 @@ end
 function NSI:PreviewUlatekTransitionSoak()
     local marker = math.random(1, 8)
     local info = self:CreateReminder({
+        internalID = "TransitionPatternSoaks",
         text = NSI:EncounterAlertLoc("Soak").." {rt"..marker.."}",
         DisplayType = "Text",
         dur = 8,
@@ -133,7 +135,7 @@ function NSI:PreviewUlatekTransitionSoak()
         encID = encID,
         phase = 1,
         TTS = false,
-        IsAlert = false,
+        IsAlert = true,
         ReloeReminder = true,
     })
     if info then self:DisplayReminder(info, true) end
@@ -719,6 +721,14 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
 
 end
 
+local function HideUlatekWrongTarget(self)
+    local info = self.UlatekWrongTargetInfo
+    if not info then return end
+    self:HideReminder(info, self.UlatekWrongTargetFrame)
+    self.UlatekWrongTargetInfo = nil
+    self.UlatekWrongTargetFrame = nil
+end
+
 NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
     id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
@@ -772,6 +782,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                             self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(reminderDelay, function()
                                 if self.EncounterID ~= encID or not transitionSoakAlert.enabled or not self:EvaluateLoad(transitionSoakAlert) then return end
                                 local info = self:CreateReminder({
+                                    internalID = transitionSoakAlert.internalID,
                                     text = transitionSoakAlert.text.." {rt"..reminderMarker.."}",
                                     DisplayType = transitionSoakAlert.DisplayType,
                                     textColors = transitionSoakAlert.textColors,
@@ -783,7 +794,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                                     phase = self.Phase,
                                     TTS = transitionSoakAlert.TTS,
                                     TTSTimer = transitionSoakAlert.TTSTimer,
-                                    IsAlert = false,
+                                    IsAlert = true,
                                     ReloeReminder = true,
                                 })
                                 if info then self:DisplayReminder(info) end
@@ -972,35 +983,27 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
 
     local UpdateWrongTarget = function()
         if not self.UlatekWrongTargetEndTime or GetTime() >= self.UlatekWrongTargetEndTime then
-            if self.UlatekWrongTargetFrame then
-                self.UlatekWrongTargetFrame:Hide()
-                self.UlatekWrongTargetFrame = nil
-            end
+            HideUlatekWrongTarget(self)
             return
         end
 
         local targetExists = UnitExists("target")
         if issecretvalue(targetExists) or not targetExists then
-            if self.UlatekWrongTargetFrame then
-                self.UlatekWrongTargetFrame:Hide()
-                self.UlatekWrongTargetFrame = nil
-            end
+            HideUlatekWrongTarget(self)
             return
         end
 
         local isBossTarget = UnitIsUnit("target", "boss2")
         if issecretvalue(isBossTarget) then return end
         if isBossTarget then
-            if self.UlatekWrongTargetFrame then
-                self.UlatekWrongTargetFrame:Hide()
-                self.UlatekWrongTargetFrame = nil
-            end
+            HideUlatekWrongTarget(self)
             return
         end
 
-        if self.UlatekWrongTargetFrame and self.UlatekWrongTargetFrame:IsShown() then return end
+        if self.UlatekWrongTargetInfo then return end
         local remainingDuration = self.UlatekWrongTargetEndTime - GetTime()
         local info = self:CreateReminder({
+            internalID = "WrongTarget",
             text = wrongTargetAlert.text,
             DisplayType = wrongTargetAlert.DisplayType,
             textColors = wrongTargetAlert.textColors,
@@ -1011,10 +1014,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             HideTimer = true,
             sticky = wrongTargetAlert.sticky,
             TTS = false,
-            IsAlert = false,
+            IsAlert = true,
             ReloeReminder = true,
         })
-        self.UlatekWrongTargetFrame = info and self:DisplayReminder(info)
+        self.UlatekWrongTargetInfo = info
+        self.UlatekWrongTargetFrame = self:DisplayReminder(info)
     end
 
     self:EncounterFunction("UlatekWrongTarget", UpdateWrongTarget)
@@ -1024,10 +1028,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
         self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = C_Timer.NewTimer(ampTime, function()
             if self.EncounterID ~= encID then return end
             self.UlatekWrongTargetEndTime = GetTime() + (wrongTargetAlert.dur or 20)
-            if self.UlatekWrongTargetFrame then
-                self.UlatekWrongTargetFrame:Hide()
-                self.UlatekWrongTargetFrame = nil
-            end
+            HideUlatekWrongTarget(self)
             UpdateWrongTarget()
         end)
         self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = C_Timer.NewTimer(ampTime + (wrongTargetAlert.dur or 20), function()
@@ -1075,8 +1076,5 @@ NSI.EncounterAlertStop[encID] = function(self)
     end
     self:EncounterRegister("UlatekWrongTarget", "PLAYER_TARGET_CHANGED", false)
     self.UlatekWrongTargetEndTime = nil
-    if self.UlatekWrongTargetFrame then
-        self.UlatekWrongTargetFrame:Hide()
-        self.UlatekWrongTargetFrame = nil
-    end
+    HideUlatekWrongTarget(self)
 end

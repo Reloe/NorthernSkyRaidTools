@@ -347,6 +347,14 @@ function NSI:UpdateCoiledAltarDebuffCircle()
     self:UpdateAuraContainerCircle("CoiledAltarDebuffCircleContainer", "CoiledAltarDebuffCircleAuraSlot", alert, shown)
 end
 
+local function HideCoiledAltarWrongTargetReminder(self)
+    local info = self.CoiledAltarWrongTargetInfo
+    if not info then return end
+    self:HideReminder(info, self.CoiledAltarWrongTargetFrame)
+    self.CoiledAltarWrongTargetInfo = nil
+    self.CoiledAltarWrongTargetFrame = nil
+end
+
 local function HideCoiledAltarWrongTarget(self)
     self:EncounterRegister("CoiledAltarWrongTarget", "PLAYER_TARGET_CHANGED", false)
     self.CoiledAltarWrongTargetEndTime = nil
@@ -354,10 +362,7 @@ local function HideCoiledAltarWrongTarget(self)
         self.CoiledAltarWrongTargetTimer:Cancel()
         self.CoiledAltarWrongTargetTimer = nil
     end
-    if self.CoiledAltarWrongTargetFrame then
-        self.CoiledAltarWrongTargetFrame:Hide()
-        self.CoiledAltarWrongTargetFrame = nil
-    end
+    HideCoiledAltarWrongTargetReminder(self)
 end
 
 local function UpdateCoiledAltarWrongTarget(self)
@@ -368,27 +373,22 @@ local function UpdateCoiledAltarWrongTarget(self)
 
     local targetExists = UnitExists("target")
     if issecretvalue(targetExists) or not targetExists then
-        if self.CoiledAltarWrongTargetFrame then
-            self.CoiledAltarWrongTargetFrame:Hide()
-            self.CoiledAltarWrongTargetFrame = nil
-        end
+        HideCoiledAltarWrongTargetReminder(self)
         return
     end
 
     local isBossTarget = UnitIsUnit("target", "boss1")
     if issecretvalue(isBossTarget) then return end
     if isBossTarget then
-        if self.CoiledAltarWrongTargetFrame then
-            self.CoiledAltarWrongTargetFrame:Hide()
-            self.CoiledAltarWrongTargetFrame = nil
-        end
+        HideCoiledAltarWrongTargetReminder(self)
         return
     end
 
-    if self.CoiledAltarWrongTargetFrame and self.CoiledAltarWrongTargetFrame:IsShown() then return end
+    if self.CoiledAltarWrongTargetInfo then return end
     local remainingDuration = self.CoiledAltarWrongTargetEndTime - GetTime()
     local alert = self.CoiledAltarWrongTargetAlert
     local info = self:CreateReminder({
+        internalID = "P2_5WrongTarget",
         text = alert.text,
         DisplayType = alert.DisplayType,
         textColors = alert.textColors,
@@ -399,10 +399,11 @@ local function UpdateCoiledAltarWrongTarget(self)
         HideTimer = true,
         sticky = alert.sticky,
         TTS = false,
-        IsAlert = false,
+        IsAlert = true,
         ReloeReminder = true,
     })
-    self.CoiledAltarWrongTargetFrame = info and self:DisplayReminder(info)
+    self.CoiledAltarWrongTargetInfo = info
+    self.CoiledAltarWrongTargetFrame = self:DisplayReminder(info)
 end
 
 NSI.AddAssignments[encID] = function(self, id) -- on ENCOUNTER_START
