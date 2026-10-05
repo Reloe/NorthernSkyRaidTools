@@ -129,6 +129,10 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
         self.NSRTFrame.generic_display:Hide()
         self.EncounterID = encounterID
+        if self.PrePullReminderTimers then
+            for timerIndex, timer in ipairs(self.PrePullReminderTimers) do timer:Cancel() end
+        end
+        self.PrePullReminderTimers = {}
         self.PrePullTimerEndTime = GetTime()
         self:LoadPersReminder(self.EncounterID)
         if not self.ProcessedReminder then -- should only happen if there was never a ready check, good to have this fallback though in case the user connected/zoned in after a ready check or they never did a ready check
@@ -226,6 +230,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             end
         end
     elseif (e == "START_PLAYER_COUNTDOWN" or e == "CANCEL_PLAYER_COUNTDOWN") and wowevent then -- Do basically the same thing as ready check in case one of them is skipped.
+        if self.EncounterID then return end
         self:HandlePrePullReminders(e, ...)
         if e == "CANCEL_PLAYER_COUNTDOWN" then return end
         if self.LastBroadcast and self.LastBroadcast > GetTime() - 30 then return end -- only do this if there was no recent ready check basically
