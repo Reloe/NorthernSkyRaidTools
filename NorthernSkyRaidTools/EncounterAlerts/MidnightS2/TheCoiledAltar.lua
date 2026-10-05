@@ -16,9 +16,7 @@ local p3SoakTimers = {
     [15] = {22.3, 191.3},
 }
 
-local debuffCircleFilter = "HARMFUL"
-local debuffCircleCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5}
-local gloombombOrbCandidateFilters = {isFromPlayerOrPlayerPet = false, maxDuration = 5.5, isBossAura = false}
+local gloombombOrbCandidateFilters = {isFromPlayerOrPlayerPet = false, MaxDuration = 5.5, isBossAura = false}
 local gloombombOrbGlowKey = "CoiledAltarGloombombOrb"
 local guillotineGlowKey = "CoiledAltarGuillotine"
 
@@ -1150,7 +1148,10 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     local debuffCircleLoad = self.CoiledAltarDebuffCircleAlert and self:EvaluateLoad(self.CoiledAltarDebuffCircleAlert)
     StopCoiledAltarEternalNightfallListening(self, true)
     if self.CoiledAltarDebuffCircleAlert and self.CoiledAltarDebuffCircleAlert.enabled and debuffCircleLoad then
-        self:CreateAuraContainerCircle("CoiledAltarDebuffCircleContainer", "CoiledAltarDebuffCircleAuraSlot", self.CoiledAltarDebuffCircleAlert, debuffCircleFilter, debuffCircleCandidateFilters)
+        local candidateFilters = CopyTable(gloombombOrbCandidateFilters)
+        candidateFilters.maxDuration = candidateFilters.MaxDuration
+        candidateFilters.MaxDuration = nil
+        self:CreateAuraContainerCircle("CoiledAltarDebuffCircleContainer", "CoiledAltarDebuffCircleAuraSlot", self.CoiledAltarDebuffCircleAlert, "HARMFUL", candidateFilters)
         self:UpdateCoiledAltarDebuffCircle()
     else
         self:HideAuraContainerCircle("CoiledAltarDebuffCircleContainer")
