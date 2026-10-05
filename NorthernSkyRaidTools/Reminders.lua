@@ -1348,7 +1348,8 @@ end
 function NSI:DisplayReminder(info, bypass, reschedule)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
-    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) and not info.isAnchorPreview then
+    local isSecretText = info.text and issecretvalue(info.text)
+    if ((info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders())) and (not info.isAnchorPreview) and (not isSecretText) then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
         return
     end
