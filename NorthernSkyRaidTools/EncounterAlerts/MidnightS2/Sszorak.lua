@@ -324,6 +324,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
             local classColor = C_ClassColor.GetClassColor(classFilename)
             unitName = C_ColorUtil.WrapTextInColor(unitName, classColor)
             local info = self:CreateReminder({
+                internalID = bombs.internalID,
                 text = "",
                 DisplayType = "Bar",
                 spellID = 1305959,

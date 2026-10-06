@@ -401,34 +401,111 @@ function NSI:RefreshEncounterAlertsUI()
     end
 end
 
-function NSAPI:SetEncounterAlertState(encID, internalID, enabled, difficultyID)
-    local alertTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID]
-    if not alertTable then return false end
+local SharedAlertDataKeys = {
+    enabled = true,
+    DisplayType = true,
+    text = true,
+    spellID = true,
+    isTaunt = true,
+    customIcon = true,
+    dur = true,
+    sticky = true,
+    HideTimer = true,
+    HideSwipe = true,
+    glowunit = true,
+    glowColors = true,
+    textColors = true,
+    ringColors = true,
+    showBackground = true,
+    Texture = true,
+    Ticks = true,
+    barColors = true,
+    TTS = true,
+    TTSTimer = true,
+    countdown = true,
+    sound = true,
+    loadConditions = true,
+}
 
-    local newState = enabled == true
-    if not newState then
-        difficultyID = difficultyID or NSI:DifficultyCheck({14, 15, 16, 220})
-    end
-
-    local found = false
-    for alertDifficultyID, difficultyAlerts in pairs(alertTable) do
-        if newState or alertDifficultyID == difficultyID then
-            local alert = difficultyAlerts[internalID]
-            if alert then
-                found = true
-                alert.enabled = newState
-                if alert.ReloeReminder == true then
-                    alert.UserModifiedEnabled = true
+function NSI:SaveAlertData(alert, dataKey, newData, encID, diffID, internalID)
+    if not alert then return false end
+    if not encID then
+        for encounterID, encounterAlerts in pairs(NSRT.EncounterAlerts) do
+            for difficultyID, difficultyAlerts in pairs(encounterAlerts) do
+                for alertKey, savedAlert in pairs(difficultyAlerts) do
+                    if savedAlert == alert then
+                        encID, diffID, internalID = encounterID, difficultyID, alertKey
+                        break
+                    end
                 end
-                NSI:FireCallback("NSRT_ALERT_CHANGED", encID, alertDifficultyID, internalID)
+                if encID then break end
+            end
+            if encID then break end
+        end
+    end
+    if not encID then return false end
+
+    local changedAlerts = {[diffID] = {[internalID] = alert}}
+    if alert.internalID and SharedAlertDataKeys[dataKey] and (dataKey ~= "enabled" or newData ~= false) then
+        for difficultyID, difficultyAlerts in pairs(NSRT.EncounterAlerts[encID]) do
+            for alertKey, sibling in pairs(difficultyAlerts) do
+                if sibling.internalID == alert.internalID then
+                    changedAlerts[difficultyID] = changedAlerts[difficultyID] or {}
+                    changedAlerts[difficultyID][alertKey] = sibling
+                end
             end
         end
     end
 
-    if found then
-        NSI:RefreshEncounterAlertsUI()
+    local pendingChanges = self.PendingAlertChanges
+    if not pendingChanges then
+        pendingChanges = {}
+        self.PendingAlertChanges = pendingChanges
+        C_Timer.After(0, function()
+            self.PendingAlertChanges = nil
+            for encounterID, encounterChanges in pairs(pendingChanges) do
+                for difficultyID, difficultyChanges in pairs(encounterChanges) do
+                    for alertKey, changedAlert in pairs(difficultyChanges) do
+                        local hasTimers = changedAlert.timers and next(changedAlert.timers) ~= nil
+                        if not hasTimers and changedAlert.phaseTimers then
+                            -- Phase entries can exist even when every timer list is empty.
+                            for phase, timers in pairs(changedAlert.phaseTimers) do
+                                if next(timers) then
+                                    hasTimers = true
+                                    break
+                                end
+                            end
+                        end
+                        if hasTimers then
+                            self:FireCallback("NSRT_ALERT_CHANGED", encounterID, difficultyID, alertKey)
+                        end
+                    end
+                end
+            end
+        end)
     end
-    return found
+    pendingChanges[encID] = pendingChanges[encID] or {}
+    for difficultyID, difficultyAlerts in pairs(changedAlerts) do
+        local encounterChanges = pendingChanges[encID]
+        encounterChanges[difficultyID] = encounterChanges[difficultyID] or {}
+        for alertKey, changedAlert in pairs(difficultyAlerts) do
+            changedAlert[dataKey] = changedAlert ~= alert and type(newData) == "table" and CopyTable(newData) or newData
+            if changedAlert.ReloeReminder == true then
+                if dataKey == "text" then changedAlert.UserModifiedText = true end
+                if dataKey == "enabled" then changedAlert.UserModifiedEnabled = true end
+            end
+            encounterChanges[difficultyID][alertKey] = changedAlert
+        end
+    end
+    return true
+end
+
+function NSAPI:SaveAlertData(encID, diffID, internalID, dataKey, newData)
+    if not encID or not diffID or not internalID or not dataKey then return false end
+    local alert = NSRT.EncounterAlerts and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][diffID] and NSRT.EncounterAlerts[encID][diffID][internalID]
+    if not NSI:SaveAlertData(alert, dataKey, newData, encID, diffID, internalID) then return false end
+    NSI:RefreshEncounterAlertsUI()
+    return true
 end
 
 function NSAPI:OpenAlert(encID, diffID, internalID)

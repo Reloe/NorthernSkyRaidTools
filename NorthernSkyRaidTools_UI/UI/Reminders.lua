@@ -34,6 +34,7 @@ function NSI:SpawnPreviewReminders()
         spellID = 22812,
         TTS = false,
         countdown = false,
+        isAnchorPreview = true,
     }
     local info2 = {
         text = NSI:Loc("Stack on").. " |TInterface\\TargetingFrame\\UI-RaidTargetingIcon_7:0|t",
@@ -41,6 +42,7 @@ function NSI:SpawnPreviewReminders()
         dur = 8,
         TTS = false,
         countdown = false,
+        isAnchorPreview = true,
     }
     local info3 = {
         text = NSI:Loc("Give Ironbark"),
@@ -50,6 +52,7 @@ function NSI:SpawnPreviewReminders()
         glowunit = "player",
         TTS = false,
         countdown = false,
+        isAnchorPreview = true,
     }
     local spellInfo = NSRT.ReminderSettings.SpellName and C_Spell.GetSpellInfo(115203)
     local info4 = {
@@ -59,6 +62,7 @@ function NSI:SpawnPreviewReminders()
         spellID = 115203,
         TTS = false,
         countdown = false,
+        isAnchorPreview = true,
     }
     local info5 = {
         text = NSI:Loc("Breath"),
@@ -66,12 +70,14 @@ function NSI:SpawnPreviewReminders()
         dur = 8,
         spellID = 1256855,
         TTS = false,
+        isAnchorPreview = true,
     }
     local info6 = {
         text = NSI:Loc("Dodge"),
         DisplayType = "Bar",
         dur = 8,
         TTS = false,
+        isAnchorPreview = true,
     }
     local info7 = {
         text = NSI:Loc("Dispel"),
@@ -79,6 +85,7 @@ function NSI:SpawnPreviewReminders()
         dur = 8,
         spellID = 528,
         TTS = false,
+        isAnchorPreview = true,
     }
     self:DisplayReminder(self:CreateReminder(info1, true))
     self:DisplayReminder(self:CreateReminder(info2, true))

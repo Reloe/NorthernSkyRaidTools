@@ -65,7 +65,7 @@ function NSI:AddToReminder(reminderInfo)
 end
 
 function NSI:CreateReminder(info)
-    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment or info.IsPrePull)) then
+    if (self:IsUsingTLReminders() and not (info.IsAlert or info.IsAssignment or info.IsPrePull or info.isAnchorPreview)) then
         return nil
     end
     info = CopyReminderInfo(info)
@@ -173,7 +173,7 @@ function NSI:CreateReminder(info)
     if info.DisplayType == "Icon" and info.HideTimer == nil then info.HideTimer = NSRT.ReminderSettings.IconSettings.HideTimerText end
     info.id = #self.ProcessedReminder[info.encID][info.phase]+1
     info.sticky = info.sticky or NSRT.ReminderSettings[settingsRef[info.DisplayType]].Sticky
-    info.glowColors = info.glowColors or NSRT.ReminderSettings.GlowSettings.colors
+    info.glowColors = info.glowunit and (info.glowColors or NSRT.ReminderSettings.GlowSettings.colors)
     if info.Decimals == nil then info.Decimals = NSRT.ReminderSettings[settingsRef[info.DisplayType]].Decimals end
     if info.DisplayType == "Icon" and info.HideSwipe == nil then info.HideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
     return info
@@ -619,6 +619,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     local F = self.DebuffOverviewMover
     if F then
         local s = NSRT.ReminderSettings.DebuffOverviewSettings
+        local coloredPlayerName = NSAPI:Shorten("player", s.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
         local previewDurations = {8, 7, 6}
         F:SetSize(s.Width, s.Height)
         F.Border:SetBackdropBorderColor(unpack(s.borderColors))
@@ -644,6 +645,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             row.LeftText:SetPoint("LEFT", row.Bar, "LEFT", s.xTextOffset, s.yTextOffset)
             row.LeftText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             row.LeftText:SetTextColor(unpack(s.textColors))
+            row.LeftText:SetText(coloredPlayerName)
             row.RightText:ClearAllPoints()
             row.RightText:SetPoint("RIGHT", row.Bar, "RIGHT", s.xTimer, s.yTimer)
             row.RightText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
@@ -1313,14 +1315,16 @@ function NSI:ScheduleReminderSoundTimers(info)
         for _, timer in pairs(existingTimers) do
             timer:Cancel()
         end
+        self.ReminderSoundTimers[info] = nil
     end
 
     local timers = {}
     local now = GetTime()
     local remainingDuration = GetReminderRemaining(info, now)
-    if info.sound or info.TTS then
+    if (info.sound or info.TTS) and not info.SoundPlayed then
         local soundTimer = info.TTSTimer or (info.spellID and NSRT.ReminderSettings.SpellTTSTimer or NSRT.ReminderSettings.TextTTSTimer)
         timers.sound = C_Timer.NewTimer(math.max(remainingDuration - soundTimer - 0.25, 0), function()
+            info.SoundPlayed = true
             self:PlayReminderSound(info)
             timers.sound = nil
             if not timers.countdown then
@@ -1328,8 +1332,9 @@ function NSI:ScheduleReminderSoundTimers(info)
             end
         end)
     end
-    if info.countdown then
+    if info.countdown and not info.CountdownPlayed then
         timers.countdown = C_Timer.NewTimer(math.max(remainingDuration - info.countdown - 0.25, 0), function()
+            info.CountdownPlayed = true
             NSAPI:TTSCountdown(info.countdown)
             timers.countdown = nil
             if not timers.sound then
@@ -1342,10 +1347,11 @@ function NSI:ScheduleReminderSoundTimers(info)
     end
 end
 
-function NSI:DisplayReminder(info, bypass)
+function NSI:DisplayReminder(info, bypass, reschedule)
     local isAllowed = self:CheckReminderLogic(info)
     if not isAllowed and not bypass then return end
-    if (info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders()) then
+    local isSecretText = info.text and issecretvalue(info.text)
+    if ((info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders())) and (not info.isAnchorPreview) and (not isSecretText) then
         self:FireCallback("NSRT_ALERT_WOULD_SHOW", info)
         return
     end
@@ -1363,6 +1369,10 @@ function NSI:DisplayReminder(info, bypass)
     local rem = GetReminderRemaining(info, now)
     if rem <= 0 and (info.sticky and rem <= (0-info.sticky)) then
         return
+    end
+    if not reschedule then
+        info.SoundPlayed = nil
+        info.CountdownPlayed = nil
     end
     self:ScheduleReminderSoundTimers(info)
     local remString = self:GetRemainingText(rem, info)
@@ -1422,6 +1432,17 @@ function NSI:DisplayReminder(info, bypass)
     end
     self:FireCallback("NSRT_REMINDER_SHOW", info, F)
     return F
+end
+
+function NSI:HideReminder(info, frame)
+    local isSecretText = info.text and issecretvalue(info.text)
+    if ((info.IsAssignment and self:IsUsingTLAssignments()) or (info.IsAlert and self:IsUsingTLAlerts()) or (info.IsPrePull and self:IsUsingTLReminders())) and (not info.isAnchorPreview) and (not isSecretText) then
+        self:FireCallback("NSRT_ALERT_WOULD_HIDE", info)
+        return
+    end
+    if frame and frame.info == info then
+        frame:Hide()
+    end
 end
 
 function NSI:PreviewReminderCircle(previewKey, duration, ringColors, texture)
@@ -1762,14 +1783,14 @@ HandleBossCastAlertStart = function(self, unit, event)
             local displayTime = targetTime - info.dur
             if displayTime > now then
                 self.ReminderTimer[reminderIndex] = C_Timer.NewTimer(displayTime - now, function()
-                    self:DisplayReminder(info)
+                    self:DisplayReminder(info, nil, true)
                 end)
             else
                 info.totalDuration = info.totalDuration or info.dur
                 info.dur = math.max(targetTime - now, 0)
                 info.expires = targetTime
                 info.startTime = targetTime - info.totalDuration
-                self:DisplayReminder(info)
+                self:DisplayReminder(info, nil, true)
             end
         end
     end
@@ -1943,7 +1964,7 @@ end
 
 function NSI:DelayAllReminders(delay)
     if not self.ReminderTimer then return end
-    for i, v in ipairs(self.ReminderTimer) do
+    for i, v in pairs(self.ReminderTimer) do
         v:Cancel()
     end
     if not self.EncounterID then return end
@@ -1992,7 +2013,7 @@ function NSI:HideAllReminders(FullReset)
         self.ReminderSoundTimers = {}
     end
     if self.ReminderTimer then
-        for i, v in ipairs(self.ReminderTimer) do
+        for i, v in pairs(self.ReminderTimer) do
             v:Cancel()
         end
     end
@@ -2387,7 +2408,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             local F = self[Name]
             F.PreviewRows = {}
             local previewSpellIDs = {1311611, 1311611, 1311611}
-            local coloredPlayerName = NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
+            local coloredPlayerName = NSAPI:Shorten("player", SettingsTable.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
             for index, spellID in ipairs(previewSpellIDs) do
                 local row = CreateFrame("Frame", nil, F)
                 row:SetFrameLevel(F:GetFrameLevel() + 10)
@@ -2613,7 +2634,6 @@ end
 -- Iterates NSRT.EncounterAlerts[encID][id] and fires all enabled ReloeReminder alerts.
 -- loadConditions role filtering is handled at display time, not here.
 function NSI:FireEncounterAlerts(encID, id)
-    if self:IsUsingTLAlerts() then return end
     if not NSRT.EncounterAlerts or not NSRT.EncounterAlerts[encID] then return end
     local diffTable = NSRT.EncounterAlerts[encID][id]
     if not diffTable then return end

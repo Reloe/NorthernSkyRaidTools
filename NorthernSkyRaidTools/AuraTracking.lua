@@ -54,6 +54,7 @@ NSI.AuraTrackingCandidateDispelTypes = {
 }
 
 local AuraTrackingUnitRefreshFrame
+local AuraTrackingButtonRefreshFrame
 local AuraTrackingVehicleStateTimer
 local GetAuraTrackingPreviewOffset
 local AuraTrackingUnitRefreshStates = {
@@ -214,6 +215,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         NameXOffset = 0,
         NameYOffset = 4,
         NameFontSize = 30,
+        NameLength = 12,
         TrackingMode = "SpellIDs",
         SpellIDPlayerFilter = "Disabled",
         SpellIDs = {},
@@ -656,7 +658,7 @@ local AuraTrackingDisplayFields = {
     "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
     "StackColor", "DurationFontSize", "StackFontSize",
     "TextFont", "TextFontFlags", "DurationAnchorPoint", "DurationXOffset", "DurationYOffset", "StackAnchorPoint", "StackXOffset", "StackYOffset",
-    "NameEnabled", "UnitNameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
+    "NameEnabled", "UnitNameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize", "NameLength",
     "DisableTargetTracking",
     "OnlyShowFirstTank",
     "MultiTankGrow", "MultiTankXOffset", "MultiTankYOffset",
@@ -2045,7 +2047,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-        unitName:SetText(NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or "")
+        local nameLength = (tostring(key):match("^Tank") or isCotankTracking) and (settings.NameLength or 12) or nil
+        unitName:SetText(NSAPI:Shorten(unit, nameLength, false, "GlobalNickNames") or "")
         unitName:Show()
     elseif regions.unitName then
         regions.unitName:SetText("")
@@ -2071,6 +2074,53 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         end
     end
     return button
+end
+
+local function QueueAuraTrackingButtonRefresh(self, state)
+    local buttons = {}
+    for button in pairs(state.buttonRegions) do
+        buttons[#buttons + 1] = button
+    end
+    state.buttonSettingsDirty = nil
+    if #buttons == 0 then return end
+
+    if not AuraTrackingButtonRefreshFrame then
+        AuraTrackingButtonRefreshFrame = CreateFrame("Frame")
+        AuraTrackingButtonRefreshFrame.pending = {}
+        AuraTrackingButtonRefreshFrame:SetScript("OnUpdate", function(frame)
+            if self:Restricted() or self.IsBuilding then return end
+            -- Share the batch limit across all containers so Matrix rows cannot multiply the work per frame.
+            local remaining = 5
+            while #frame.pending > 0 and remaining > 0 do
+                local refresh = frame.pending[1]
+                local refreshState = refresh.state
+                if refreshState.active then
+                    local button = refresh.buttons[refresh.nextIndex]
+                    ConfigureAuraTrackingButton(self, refreshState, button, refreshState.width, refreshState.height, refreshState.settings, refreshState.unit, refreshState.key)
+                    refresh.nextIndex = refresh.nextIndex + 1
+                    remaining = remaining - 1
+                else
+                    refreshState.buttonSettingsDirty = true
+                end
+                if not refreshState.active or refresh.nextIndex > #refresh.buttons then
+                    refreshState.buttonRefresh = nil
+                    table.remove(frame.pending, 1)
+                end
+            end
+            if #frame.pending == 0 then frame:Hide() end
+        end)
+    end
+
+    local refresh = state.buttonRefresh
+    if not refresh then
+        refresh = { state = state }
+        state.buttonRefresh = refresh
+        AuraTrackingButtonRefreshFrame.pending[#AuraTrackingButtonRefreshFrame.pending + 1] = refresh
+    end
+    -- Restart pending work after another display edit, using the latest settings for every button.
+    refresh.buttons = buttons
+    refresh.nextIndex = 1
+    AuraTrackingButtonRefreshFrame:Show()
 end
 
 local function ConfigureDebuffOverviewButton(self, state, button, unit)
@@ -2412,7 +2462,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
         local lastRaidIndex = math.min(nextRaidIndex + 3, 30)
         for raidIndex = nextRaidIndex, lastRaidIndex do
             local unit = "raid" .. raidIndex
-            local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
+            local displayName = NSAPI:Shorten(unit, settings.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
             for copyIndex = 1, copies do
                 local height = overrides and overrides.height or settings.Height
                 local state = {
@@ -2486,6 +2536,7 @@ function NSI:UpdateDebuffOverviewContainers()
 
     for _, states in pairs(sets) do
         for _, state in ipairs(states) do
+            state.displayName = NSAPI:Shorten(state.unit, settings.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
             local container = state.container
             local height = state.height or settings.Height
             container:SetSize(settings.Width + height, height)
@@ -2518,6 +2569,7 @@ end
 
 function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     local sets = self.DebuffOverviewContainerSetsByName or {}
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
     containerName = containerName or "Default"
     local states = sets[containerName]
     if not states then return end
@@ -2532,7 +2584,7 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
     if not self:Restricted() then
         for _, state in ipairs(states) do
-            local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
+            local displayName = NSAPI:Shorten(state.unit, settings.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
             state.displayName = displayName
             for button, regions in pairs(state.buttonRegions) do
                 if regions.name then
@@ -2665,7 +2717,10 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
         row.Name:SetPoint("LEFT", row.Bar, "LEFT", settings.xTextOffset, settings.yTextOffset)
         row.Name:SetFont(fontPath, settings.FontSize, settings.FontFlags)
         row.Name:SetTextColor(unpack(settings.textColors))
-        row.Name:SetText(rowIndex == 1 and (NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or "Player") or "Player " .. rowIndex)
+        local nameLength = settings.NameLength or 12
+        local displayName = rowIndex == 1 and (NSAPI:Shorten("player", nameLength, false, "GlobalNickNames", true, true) or "Player") or "Player " .. rowIndex
+        if rowIndex ~= 1 then displayName = self:Utf8Sub(displayName, 1, nameLength) end
+        row.Name:SetText(displayName)
         row.Value:SetPoint("RIGHT", row.Bar, "RIGHT", settings.xTimer, settings.yTimer)
         row.Value:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
         row.Value:SetTextColor(unpack(settings.textColors))
@@ -2745,9 +2800,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     self.AuraTrackingState = self.AuraTrackingState or {}
     self.AuraTrackingState[key] = self.AuraTrackingState[key] or {}
     local state = self.AuraTrackingState[key]
-    reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or (matrixRow and state.settings ~= settings)
+    reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or state.settings ~= settings
     if not state.container then
-        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate")
+        state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate")
         state.buttonRegions = {}
     end
     state.buttonRegions = state.buttonRegions or {}
@@ -2778,19 +2833,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     state.active = true
     self.AuraTrackingStateOrder[#self.AuraTrackingStateOrder + 1] = key
 
-    if unitSetKey and not state.unitSetSizeHooked then
-        state.unitSetSizeHooked = true
-        container:HookScript("OnSizeChanged", function()
-            local unitSet = NSI.AuraTrackingUnitSets and NSI.AuraTrackingUnitSets[unitSetKey]
-            if not unitSet or unitSet.layoutPending then return end
-            unitSet.layoutPending = true
-            C_Timer.After(0, function()
-                unitSet.layoutPending = nil
-                NSI:LayoutAuraTrackingUnitSet(unitSetKey)
-            end)
-        end)
-    end
-
     if isCustom then
         -- Blizzard only populates processedAuraType while this policy is active.
         local processedAuraType = customUsesFilters and settings.CandidateFilters and settings.CandidateFilters.ProcessedAuraType
@@ -2817,7 +2859,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local showUnitName = (tostring(key):match("^Tank") or isCotankTracking) and settings.NameEnabled
         or isGroupUnitTracking and settings.UnitNameEnabled
     if showUnitName then
-        local unitName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or ""
+        local nameLength = (tostring(key):match("^Tank") or isCotankTracking) and (settings.NameLength or 12) or nil
+        local unitName = NSAPI:Shorten(unit, nameLength, false, "GlobalNickNames") or ""
         for _, regions in pairs(state.buttonRegions) do
             if regions.unitName then
                 regions.unitName:SetText(unitName)
@@ -2826,7 +2869,41 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     end
     local horizontalGrowthDirection, verticalGrowthDirection = GetAuraTrackingFlowDirections(settings.GrowDirection, settings.GridGrowDirection or "UP")
     local rowWidth = GetAuraTrackingRowWidth(settings)
-    container:SetFlowLayoutAxis(GetAuraTrackingLayoutAxis(settings))
+    local layoutAxis = GetAuraTrackingLayoutAxis(settings)
+    local elementWidth, elementHeight = width, height
+    local elementSpacing = settings.Spacing or 0
+    local lineSpacing = settings.GridSpacing ~= nil and settings.GridSpacing or elementSpacing
+    if settings.AurasPerRowColumn == 1 then
+        -- With one icon per line, only grid growth matters; Blizzard wraps onto the perpendicular axis.
+        local gridGrowDirection = settings.GridGrowDirection or "UP"
+        if gridGrowDirection == "UP" or gridGrowDirection == "DOWN" then
+            layoutAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+            rowWidth = width
+        else
+            layoutAxis = AnchorUtil.FlowLayoutAxis.Vertical
+            rowWidth = height
+        end
+    end
+    if unitSetKey then
+        -- Empty Blizzard containers are one pixel wide/high. Include the unit gap only in occupied bounds,
+        -- then overlap containers by one pixel so empty raid units contribute no gap to the anchor chain.
+        local unitSpacing = elementSpacing + 1
+        local growDirection = settings.GrowDirection or "RIGHT"
+        local unitSetAxis = AnchorUtil.FlowLayoutAxis.Horizontal
+        if growDirection == "UP" or growDirection == "DOWN" then
+            unitSetAxis = AnchorUtil.FlowLayoutAxis.Vertical
+            elementHeight = height + unitSpacing
+        else
+            elementWidth = width + unitSpacing
+        end
+        if layoutAxis == unitSetAxis then
+            elementSpacing = elementSpacing - unitSpacing
+            rowWidth = rowWidth + unitSpacing
+        else
+            lineSpacing = lineSpacing - unitSpacing
+        end
+    end
+    container:SetFlowLayoutAxis(layoutAxis)
     container:SetFlowLayoutAnchorPoint(layoutAnchorPoint)
     container:SetFlowLayoutGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
     container:SetFlowLayoutMaximumLineSize(rowWidth)
@@ -2881,10 +2958,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     end
     if reconfigureButtons then
         -- New buttons are configured by initializeFrame; only refresh the existing buttons here.
-        for button in pairs(state.buttonRegions) do
-            ConfigureAuraTrackingButton(self, state, button, state.width, state.height, state.settings, state.unit, state.key)
-        end
-        state.buttonSettingsDirty = nil
+        QueueAuraTrackingButtonRefresh(self, state)
     end
     for index, group in ipairs(auraGroups) do
         local groupKey = group.customGroup and state.customAuraGroupKey or (groupKeyPrefix .. index)
@@ -2955,10 +3029,10 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
             end,
             candidateFilters = candidateFilters,
             layout = {
-                elementWidth = width,
-                elementHeight = height,
-                elementSpacing = settings.Spacing or 0,
-                lineSpacing = settings.GridSpacing ~= nil and settings.GridSpacing or settings.Spacing or 0,
+                elementWidth = elementWidth,
+                elementHeight = elementHeight,
+                elementSpacing = elementSpacing,
+                lineSpacing = lineSpacing,
             },
         }
 
@@ -3020,7 +3094,7 @@ function NSI:LayoutAuraTrackingUnitSet(unitSetKey)
 
     local anchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
     local growDirection = settings.GrowDirection or "RIGHT"
-    local spacing = settings.Spacing or 0
+    local spacing = -1
     local previous
     for _, state in ipairs(activeStates) do
         local container = state.container
@@ -3118,6 +3192,7 @@ end
 
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
+    reconfigureButtons = reconfigureButtons or self.PendingAuraTrackingReconfigure
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
         self.PendingAuraTrackingUpdate = true
         self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
@@ -3167,7 +3242,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             local unitSet = { settings = settings, states = {} }
             self.AuraTrackingUnitSets[unitSetKey] = unitSet
             for unitIndex, unit in ipairs(units) do
-                local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, unitSetKey)
+                local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, #units > 1 and unitSetKey)
                 if state then
                     unitSet.states[#unitSet.states + 1] = state
                 end
@@ -3772,13 +3847,13 @@ function NSI:PreviewAuraTracking(key, show)
     local firstPreviewSuffix
     local secondPreviewSuffix
     if isCotankTracking then
-        local cotankPreviewName = NSAPI:GetName(previewUnit, "GlobalNickNames") or previewPlayerName
+        local cotankPreviewName = NSAPI:Shorten(previewUnit, settings.NameLength or 12, false, "GlobalNickNames") or previewPlayerName
         firstPreviewName = cotankPreviewName
         secondPreviewName = cotankPreviewName
         firstPreviewSuffix = " 1"
         secondPreviewSuffix = " 2"
     end
-    if previewColor then
+    if previewColor and not isCotankTracking then
         firstPreviewName = previewColor:WrapTextInColorCode(firstPreviewName)
         if secondPreviewName then
             secondPreviewName = previewColor:WrapTextInColorCode(secondPreviewName)
