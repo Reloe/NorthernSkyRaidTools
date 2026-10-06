@@ -216,6 +216,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         NameXOffset = 0,
         NameYOffset = 4,
         NameFontSize = 30,
+        NameLength = 12,
         TrackingMode = "SpellIDs",
         SpellIDPlayerFilter = "Disabled",
         SpellIDs = {},
@@ -658,7 +659,7 @@ local AuraTrackingDisplayFields = {
     "DurationColor", "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
     "StackColor", "DurationFontSize", "StackFontSize",
     "TextFont", "TextFontFlags", "DurationAnchorPoint", "DurationXOffset", "DurationYOffset", "StackAnchorPoint", "StackXOffset", "StackYOffset",
-    "NameEnabled", "UnitNameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize",
+    "NameEnabled", "UnitNameEnabled", "NamePosition", "NameXOffset", "NameYOffset", "NameFontSize", "NameLength",
     "DisableTargetTracking",
     "OnlyShowFirstTank",
     "MultiTankGrow", "MultiTankXOffset", "MultiTankYOffset",
@@ -2047,7 +2048,8 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         local unitName = EnsureAuraTrackingFontString(regions, "unitName")
         PositionAuraTrackingUnitName(unitName, button, settings)
         unitName:SetFont(fontPath, settings.NameFontSize or settings.StackFontSize, settings.TextFontFlags)
-        unitName:SetText(NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or "")
+        local nameLength = (tostring(key):match("^Tank") or isCotankTracking) and (settings.NameLength or 12) or nil
+        unitName:SetText(NSAPI:Shorten(unit, nameLength, false, "GlobalNickNames") or "")
         unitName:Show()
     elseif regions.unitName then
         regions.unitName:SetText("")
@@ -2461,7 +2463,7 @@ function NSI:CreateDebuffOverviewContainers(regularFilter, candidateFilters, con
         local lastRaidIndex = math.min(nextRaidIndex + 3, 30)
         for raidIndex = nextRaidIndex, lastRaidIndex do
             local unit = "raid" .. raidIndex
-            local displayName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
+            local displayName = NSAPI:Shorten(unit, settings.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName(unit) or unit
             for copyIndex = 1, copies do
                 local height = overrides and overrides.height or settings.Height
                 local state = {
@@ -2535,6 +2537,7 @@ function NSI:UpdateDebuffOverviewContainers()
 
     for _, states in pairs(sets) do
         for _, state in ipairs(states) do
+            state.displayName = NSAPI:Shorten(state.unit, settings.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
             local container = state.container
             local height = state.height or settings.Height
             container:SetSize(settings.Width + height, height)
@@ -2567,6 +2570,7 @@ end
 
 function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     local sets = self.DebuffOverviewContainerSetsByName or {}
+    local settings = NSRT.ReminderSettings.DebuffOverviewSettings
     containerName = containerName or "Default"
     local states = sets[containerName]
     if not states then return end
@@ -2581,7 +2585,7 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
     end
     if not self:Restricted() then
         for _, state in ipairs(states) do
-            local displayName = NSAPI:Shorten(state.unit, nil, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
+            local displayName = NSAPI:Shorten(state.unit, settings.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName(state.unit) or state.unit
             state.displayName = displayName
             for button, regions in pairs(state.buttonRegions) do
                 if regions.name then
@@ -2714,7 +2718,10 @@ function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApp
         row.Name:SetPoint("LEFT", row.Bar, "LEFT", settings.xTextOffset, settings.yTextOffset)
         row.Name:SetFont(fontPath, settings.FontSize, settings.FontFlags)
         row.Name:SetTextColor(unpack(settings.textColors))
-        row.Name:SetText(rowIndex == 1 and (NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or "Player") or "Player " .. rowIndex)
+        local nameLength = settings.NameLength or 12
+        local displayName = rowIndex == 1 and (NSAPI:Shorten("player", nameLength, false, "GlobalNickNames", true, true) or "Player") or "Player " .. rowIndex
+        if rowIndex ~= 1 then displayName = self:Utf8Sub(displayName, 1, nameLength) end
+        row.Name:SetText(displayName)
         row.Value:SetPoint("RIGHT", row.Bar, "RIGHT", settings.xTimer, settings.yTimer)
         row.Value:SetFont(fontPath, settings.TimerFontSize, settings.FontFlags)
         row.Value:SetTextColor(unpack(settings.textColors))
@@ -2853,7 +2860,8 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local showUnitName = (tostring(key):match("^Tank") or isCotankTracking) and settings.NameEnabled
         or isGroupUnitTracking and settings.UnitNameEnabled
     if showUnitName then
-        local unitName = NSAPI:Shorten(unit, nil, false, "GlobalNickNames") or ""
+        local nameLength = (tostring(key):match("^Tank") or isCotankTracking) and (settings.NameLength or 12) or nil
+        local unitName = NSAPI:Shorten(unit, nameLength, false, "GlobalNickNames") or ""
         for _, regions in pairs(state.buttonRegions) do
             if regions.unitName then
                 regions.unitName:SetText(unitName)
@@ -3866,13 +3874,13 @@ function NSI:PreviewAuraTracking(key, show)
     local firstPreviewSuffix
     local secondPreviewSuffix
     if isCotankTracking then
-        local cotankPreviewName = NSAPI:GetName(previewUnit, "GlobalNickNames") or previewPlayerName
+        local cotankPreviewName = NSAPI:Shorten(previewUnit, settings.NameLength or 12, false, "GlobalNickNames") or previewPlayerName
         firstPreviewName = cotankPreviewName
         secondPreviewName = cotankPreviewName
         firstPreviewSuffix = " 1"
         secondPreviewSuffix = " 2"
     end
-    if previewColor then
+    if previewColor and not isCotankTracking then
         firstPreviewName = previewColor:WrapTextInColorCode(firstPreviewName)
         if secondPreviewName then
             secondPreviewName = previewColor:WrapTextInColorCode(secondPreviewName)

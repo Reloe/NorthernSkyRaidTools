@@ -1249,6 +1249,12 @@ local function BuildAuraTrackingUI(screen)
             add({ Type = "Slider", label = "Name Font Size", min = 6, max = 80, step = 1,
                 tooltip = tip("Name Font Size", "Font size of the " .. string.lower(nameType) .. " name."),
                 get = function() return s.NameFontSize end, set = function(_, v) s.NameFontSize = v; apply(key) end })
+            if isCotankTracking then
+                add({ Type = "Slider", label = "Name Length", min = 1, max = 12, step = 1,
+                    tooltip = tip("Name Length", "Maximum number of characters in the displayed name."),
+                    get = function() return s.NameLength or 12 end,
+                    set = function(self, v) s.NameLength = v; apply(key) end })
+            end
         end
         if key == "AuraMatrix" then
             add({ Type = "Label", text = "Aura Matrix Label Settings", highlight = true })

@@ -619,6 +619,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
     local F = self.DebuffOverviewMover
     if F then
         local s = NSRT.ReminderSettings.DebuffOverviewSettings
+        local coloredPlayerName = NSAPI:Shorten("player", s.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
         local previewDurations = {8, 7, 6}
         F:SetSize(s.Width, s.Height)
         F.Border:SetBackdropBorderColor(unpack(s.borderColors))
@@ -644,6 +645,7 @@ function NSI:UpdateExistingFrames() -- called when user changes settings to not 
             row.LeftText:SetPoint("LEFT", row.Bar, "LEFT", s.xTextOffset, s.yTextOffset)
             row.LeftText:SetFont(self.LSM:Fetch("font", s.Font), s.FontSize, GetReminderFontFlags(s))
             row.LeftText:SetTextColor(unpack(s.textColors))
+            row.LeftText:SetText(coloredPlayerName)
             row.RightText:ClearAllPoints()
             row.RightText:SetPoint("RIGHT", row.Bar, "RIGHT", s.xTimer, s.yTimer)
             row.RightText:SetFont(self.LSM:Fetch("font", s.Font), s.TimerFontSize, GetReminderFontFlags(s))
@@ -2405,7 +2407,7 @@ function NSI:CreateReminderMoverFrame(Name, SettingsTable, SettingsName, IsText)
             local F = self[Name]
             F.PreviewRows = {}
             local previewSpellIDs = {1311611, 1311611, 1311611}
-            local coloredPlayerName = NSAPI:Shorten("player", nil, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
+            local coloredPlayerName = NSAPI:Shorten("player", SettingsTable.NameLength or 12, false, "GlobalNickNames", true, true) or UnitName("player") or "Player"
             for index, spellID in ipairs(previewSpellIDs) do
                 local row = CreateFrame("Frame", nil, F)
                 row:SetFrameLevel(F:GetFrameLevel() + 10)

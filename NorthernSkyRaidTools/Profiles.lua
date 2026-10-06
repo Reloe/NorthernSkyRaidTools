@@ -337,6 +337,7 @@ function NSI:AddMissingDefaults()
                 Decimals = 3,
             },
             DebuffOverviewSettings = {
+                NameLength = 12,
                 GrowDirection = "Up",
                 Anchor = "LEFT",
                 relativeTo = "LEFT",
