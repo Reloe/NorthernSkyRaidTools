@@ -959,6 +959,7 @@ function NSAPI:ImportProfileString(importString, name, allowSharedData, ignoreSh
                 NSRT[key] = CopyProfileValue(key, sharedData[key])
             end
         end
+        NSI:AddMissingDefaults()
         if sharedData.EncounterAlerts then
             NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
         end
@@ -1042,6 +1043,8 @@ function NSAPI:OverrideProfile(importString, name, options)
                 NSRT[key] = CopyProfileValue(key, sharedData[key])
             end
         end
+
+        NSI:AddMissingDefaults()
 
         if sharedData.EncounterAlerts ~= nil then
             NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
