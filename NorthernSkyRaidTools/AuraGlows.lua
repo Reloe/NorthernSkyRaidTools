@@ -8,6 +8,7 @@ if NSI:IsForever() then
     function NSI:UpdateAuraGlowVisibility() end
     function NSI:RebuildAuraGlows() end
     function NSI:InitAuraGlows() end
+    function NSI:RefreshAuraGlows() end
     function NSI:RefreshAuraGlowsUI() end
     return
 end
@@ -216,6 +217,7 @@ function NSI:GetAuraGlowSettings(key)
             NSRT.AuraGlows.Builtins[key] = settings
         else
             local definition = self.AuraGlowBuiltins[key]
+            settings.Name = definition.name or key
             if not settings.enabledEdited then
                 settings.enabled = NSRT.AuraGlows.UseBuiltinAuraGlows == true or definition.enabled == true
             end
@@ -346,7 +348,7 @@ function NSI:DeleteCustomAuraGlow(key)
     if not index or not NSRT.AuraGlows.Custom[index] then return end
     self:HideAuraGlowPreview(false)
     table.remove(NSRT.AuraGlows.Custom, index)
-    self:InitAuraGlows()
+    self:RebuildAuraGlows()
 end
 
 function NSI:GetAuraGlowSpellIDList(key)
@@ -390,7 +392,9 @@ end
 function NSI:ExportAuraGlowEntry(key)
     local settings = self:GetAuraGlowSettings(key)
     if not settings then return "" end
-    return self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, entries = { CopyTable(settings) } }, "AuraGlow") or ""
+    local entry = CopyTable(settings)
+    if self.AuraGlowBuiltins[key] then entry.builtinKey = key end
+    return self:EncodeExportData({ type = "NSRT_AURA_GLOW", version = 1, entries = { entry } }, "AuraGlow") or ""
 end
 
 function NSI:ExportAuraGlowGroup(group)
@@ -520,7 +524,7 @@ local function CreateAuraGlowBorder(button, settings, preview)
     local width, height = button:GetSize()
     local lineLength = settings.LineSize
     if lineLength == 0 then
-        lineLength = math.floor((width + height) * (2 / numberOfLines - 0.1))
+        lineLength = math.max(1, math.floor((width + height) * (2 / numberOfLines - 0.1)))
     end
     lineLength = math.min(lineLength, math.min(width, height))
     local thickness = settings.Size or 1

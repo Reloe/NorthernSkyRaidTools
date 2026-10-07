@@ -4,7 +4,7 @@ local encID = 3513
 -- /run NSAPI:DebugEncounter(3513)
 
 NSI:RegisterBuiltinAuraGlow("KithixDispels", {
-    name = NSI:Loc("Kith'ix Dispels"),
+    name = NSI:Loc("Overwhelming Fear"),
     enabled = false,
     encounterID = encID,
     group = "Season 2",
@@ -13,6 +13,27 @@ NSI:RegisterBuiltinAuraGlow("KithixDispels", {
     color = {64 / 255, 1, 1, 1},
     auraFilters = {RaidPlayerDispellable = "Enabled"},
     candidateFilters = {isFromPlayerOrPlayerPet = false},
+})
+
+NSI:RegisterBuiltinAuraGlow("KithixMindsting", {
+    name = NSI:Loc("Mindsting"),
+    encounterID = encID,
+    group = "Season 2",
+    menuIcon = 1304040,
+    roles = {HEALER = true},
+    color = {1, 0, 0, 1},
+    auraFilters = {CrowdControl = "Enabled"},
+    candidateFilters = {MaxDuration = 5},
+})
+
+NSI:RegisterBuiltinAuraGlow("KithixNullGate", {
+    name = NSI:Loc("Null Gate"),
+    encounterID = encID,
+    group = "Season 2",
+    menuIcon = 1308873,
+    roles = {HEALER = true},
+    color = {0, 1, 0, 1},
+    candidateFilters = {isBossAura = true, MaxDuration = 5},
 })
 
 NSI.InitializeAlerts[encID] = function(self)
