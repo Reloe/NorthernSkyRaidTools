@@ -386,7 +386,7 @@ function NSI:ArrangeGroups(firstcall, finalcheck)
                         for j=1, 40 do
                             if i ~= j then
                                 local u = self.Groups.units[j]
-                                if u and (not u.processed) and v.group ~= indextosubgroup[UnitInRaid(u.name)] then
+                                if u and (not u.processed) and v.group ~= indexlink[UnitInRaid(u.name)].subgroup then
                                     if self:StopGroupSortForCombat({"raid"..index, "raid"..UnitInRaid(u.name)}) then return end
                                     SetRaidSubgroup(UnitInRaid(u.name), v.group)
                                     break
