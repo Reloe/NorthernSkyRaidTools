@@ -1892,7 +1892,7 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
     self:ProcessReminder()
     self:UpdateReminderFrame(true)
     self.PrePullTimerEndTime = pullEncounterID and GetTime() + timeRemaining or nil
-    local function SchedulePrePullReminder(reminder, alertTime)
+    local function SchedulePrePullReminder(reminder, alertTime, isAlert)
         local reminderDuration = tonumber(reminder.dur) or (reminder.spellID and NSRT.ReminderSettings.SpellDuration or NSRT.ReminderSettings.TextDuration)
         local delay = timeRemaining + alertTime - reminderDuration
         local function ShowPrePullReminder(elapsed)
@@ -1903,9 +1903,10 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
             activeReminder.dur = math.min(reminderDuration, remaining)
             activeReminder.encID = reminder.encID
             activeReminder.phase = 1
+            activeReminder.IsAlert = isAlert or reminder.IsAlert
+            activeReminder.IsPrePull = true
             local info = self:CreateReminder(activeReminder)
             if info then
-                info.IsPrePull = true
                 self:DisplayReminder(info)
             end
         end
@@ -1932,7 +1933,7 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
                     for phase, alertTimes in pairs(alert.phaseTimers) do
                         if tonumber(phase) == 1 then
                             for alertTimeIndex, alertTime in ipairs(alertTimes) do
-                                if alertTime < 0 then SchedulePrePullReminder(alert, alertTime) end
+                                if alertTime < 0 then SchedulePrePullReminder(alert, alertTime, true) end
                             end
                         end
                     end
@@ -1945,7 +1946,7 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
                     end
                     if hasPhaseOne then
                         for alertTimeIndex, alertTime in ipairs(alert.timers or {}) do
-                            if alertTime < 0 then SchedulePrePullReminder(alert, alertTime) end
+                            if alertTime < 0 then SchedulePrePullReminder(alert, alertTime, true) end
                         end
                     end
                 end
@@ -1968,9 +1969,7 @@ function NSI:DelayAllReminders(delay)
         v:Cancel()
     end
     if not self.EncounterID then return end
-    if not self.ProcessedReminder[self.EncounterID] then return end
     local phase = self.Phase or 1
-    if not self.ProcessedReminder[self.EncounterID][phase] then return end
     local timediff = GetTime() - self.PhaseSwapTime -- time since phase change
 
     local parents = {"ReminderText", "ReminderIcon", "ReminderBar", "ReminderCircle", "UnitIcon"}
@@ -1990,13 +1989,22 @@ function NSI:DelayAllReminders(delay)
         end
     end
 
-    for i, info in ipairs(self.ProcessedReminder[self.EncounterID][phase]) do
+    local reminders = self.ProcessedReminder[self.EncounterID]
+    for i, info in ipairs(reminders and reminders[phase] or {}) do
         if info.time-info.dur > timediff then -- if time is 0 then this reminder has already started
             local time = math.max(info.time-info.dur-timediff+delay, 0)
             info.time = info.time + delay
-            self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
-                self:DisplayReminder(info)
-            end)
+            if info.time > timediff then
+                self.ReminderTimer[i] = C_Timer.NewTimer(time, function()
+                    -- An early transition can move the display start into the past.
+                    info.totalDuration = info.totalDuration or info.dur
+                    info.expires = self.PhaseSwapTime + info.time
+                    info.startTime = info.expires - info.totalDuration
+                    self:DisplayReminder(info)
+                end)
+            else
+                self.ReminderTimer[i] = nil
+            end
         end
     end
 end
@@ -2639,6 +2647,7 @@ function NSI:FireEncounterAlerts(encID, id)
     local now = GetTime()
     for _, entry in pairs(diffTable) do
         if type(entry) == "table" and entry.enabled and not entry.isSpecialDisplay then
+            entry.IsAlert = true
             if self:EvaluateLoad(entry) then
                 if entry.phaseTimers then
                     for _, phase in ipairs(self:GetSortedPhaseKeys(entry.phaseTimers)) do
