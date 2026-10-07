@@ -3298,10 +3298,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         roster = rosterRefreshStates,
         playerControl = false,
     }
-    if matrixTargetState or matrixSettings.enabled and not matrixSettings.DisableTargetTracking then
-        AuraTrackingUnitRefreshStates.faction.target = true
-    end
-
     if (NSRT.AuraTrackingSettings.Player and NSRT.AuraTrackingSettings.Player.enabled)
         or (NSRT.AuraTrackingSettings.External and NSRT.AuraTrackingSettings.External.enabled)
         or matrixSettings.enabled or matrixPlayerState then
@@ -3425,6 +3421,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
         if #AuraTrackingUnitRefreshStates.target > 0 or matrixTargetState then
             AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+        end
+        if matrixTargetState or matrixSettings.enabled and not matrixSettings.DisableTargetTracking then
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_FACTION", "target")
+            AuraTrackingUnitRefreshFrame:RegisterUnitEvent("UNIT_FLAGS", "target")
         end
         if #AuraTrackingUnitRefreshStates.focus > 0 then
             AuraTrackingUnitRefreshFrame:RegisterEvent("PLAYER_FOCUS_CHANGED")

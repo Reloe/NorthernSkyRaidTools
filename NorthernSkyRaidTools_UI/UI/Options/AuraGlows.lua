@@ -753,7 +753,13 @@ local function BuildAuraGlowsUI(screen)
                     return "Disabled"
                 end,
                 set = function(_, value)
-                    settings.CandidateFilters[filterKey] = value == "Enabled" and true or value == "Inverted" and false or nil
+                    if value == "Enabled" then
+                        settings.CandidateFilters[filterKey] = true
+                    elseif value == "Inverted" then
+                        settings.CandidateFilters[filterKey] = false
+                    else
+                        settings.CandidateFilters[filterKey] = nil
+                    end
                     ApplySettings()
                 end }
         end

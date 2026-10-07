@@ -1,4 +1,4 @@
-## Interface: 120100, 16001
+## Interface: 120105, 16001
 ## AllowLoadGameType: standard, camelot
 ## Title: |cFF00FFFFNorthern Sky Raid Tools - UI|r
 ## Version: @project-version@
