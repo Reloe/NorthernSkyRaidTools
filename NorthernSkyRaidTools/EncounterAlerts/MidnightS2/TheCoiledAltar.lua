@@ -628,7 +628,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local phaseAllowed = self.Phase == 2 or self.Phase == 2.5 or self.Phase == 3
     local alertLoad = alert and self:EvaluateLoad(alert)
     local active = self.CoiledAltarInterruptActive and self.CoiledAltarInterruptBoss3Available ~= false and phaseAllowed and alert and alert.enabled and alertLoad
-    if not active or not assignmentTable or not assignmentTable[2] or not assignmentTable[3] then
+    if not active or not assignmentTable then
         for displayKey, display in pairs(self.CoiledAltarInterruptNameplates or {}) do
             for boxIndex, box in ipairs(display.boxes) do
                 box:Hide()
@@ -674,13 +674,13 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
         local focusMarker = focusIsGhost and GetRaidTargetIndex("focus")
         local focusHasMarker = focusIsGhost and issecretvalue(focusMarker)
         local displayLine = focusHasMarker and 2 or 1
+        local lineNames = assignmentTable[displayLine + 1] or {}
         local ghost = self.CoiledAltarInterruptUnits["focus"]
         local castCount = ghost and ghost.castCount
-        local boxVisible = focusIsGhost and castCount and (alert.ShowAll or assignedLine == displayLine)
+        local boxVisible = focusIsGhost and castCount and #lineNames > 0 and (alert.ShowAll or assignedLine == displayLine)
         if boxVisible then
-            local lineNames = assignmentTable[displayLine + 1]
-            local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
-            local nextName = #lineNames > 0 and lineNames[(castCount % #lineNames) + 1]
+            local currentName = lineNames[((castCount - 1) % #lineNames) + 1]
+            local nextName = lineNames[(castCount % #lineNames) + 1]
             local boxColor = interruptSettings.InterruptDefaultColor
             local textColor = interruptSettings.InterruptDefaultTextColor
             if currentName and UnitIsUnit(currentName, "player") then
@@ -722,7 +722,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
             end
             for bossIndex, box in ipairs(display.boxes) do
                 local displayLine = bossIndex == 2 and 2 or 1
-                local lineNames = assignmentTable[displayLine + 1]
+                local lineNames = assignmentTable[displayLine + 1] or {}
                 local castCount = ghost.castCount
                 local currentName = #lineNames > 0 and lineNames[((castCount - 1) % #lineNames) + 1]
                 local nextName = #lineNames > 0 and lineNames[(castCount % #lineNames) + 1]
@@ -739,7 +739,7 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
                 box:SetPoint(boxAnchor, display.plate, plateAnchor, nameplateXOffset, nameplateYOffset)
                 box:SetSize(boxSize, boxSize)
                 box.Background:SetColorTexture(unpack(boxColor))
-                local boxVisible = (alert.ShowAll or assignedLine == displayLine) and ((bossIndex == 2) == hasRaidMarker)
+                local boxVisible = #lineNames > 0 and (alert.ShowAll or assignedLine == displayLine) and ((bossIndex == 2) == hasRaidMarker)
                 if boxVisible then
                     box:SetAlpha(1)
                     box:Show()
@@ -1120,7 +1120,7 @@ end
 NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
     id = id or self:DifficultyCheck({15, 16})
     local diffData = id and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id]
-    self.CoiledAltarInterruptAlert = diffData and diffData.InterruptAssignments
+    self.CoiledAltarInterruptAlert = id == 16 and diffData and diffData.InterruptAssignments
     self.CoiledAltarEternalNightfallAlert = diffData and diffData.EternalNightfallAbsorb
     self.CoiledAltarDebuffCircleAlert = diffData and diffData.DebuffCircle
     self.CoiledAltarEternalNightfallPreview = false
