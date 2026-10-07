@@ -74,6 +74,7 @@ local TABS_GROUPS                  = {
     {
         { name = "AuraSounds", textKey = "Aura Sounds" },
         { name = "AuraTracking", textKey = "Aura Tracking" },
+        { name = "AuraGlows", textKey = "Aura Glows", retailOnly = true },
     },
     {
         { name = "Assignments",      textKey = "Assignments", retailOnly = true },
@@ -86,7 +87,7 @@ local TABS_GROUPS                  = {
 if BuildQoLOptions then
     table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life" })
 end
-table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true })
+table.insert(TABS_GROUPS[3], { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true })
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
