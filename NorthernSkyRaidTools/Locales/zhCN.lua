@@ -14,7 +14,6 @@ L["Note-Display"] = "方案显示"
 L["Encounter Alerts"] = "首领预警"
 L["Interrupt Display"] = "打断显示"
 L["Assignments"] = "任务分配"
-L["WA Imports"] = "WA导入"
 L["Nicknames"] = "昵称"
 L["Version Check"] = "版本检查"
 L["Shared Notes"] = "共享方案"
@@ -1121,9 +1120,6 @@ L["Show Background Ring"] = "显示背景环"
 L["Ring Color"] = "环颜色"
 L["Ring Size"] = "环尺寸"
 -- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
--- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
 -- Export/Import popups
@@ -1435,7 +1431,6 @@ L["Reminders"] = "提醒"
 L["Note-Display"] = "方案显示"
 L["Encounter Alerts"] = "首领预警"
 L["Assignments"] = "任务分配"
-L["WA Imports"] = "WA导入"
 L["Nicknames"] = "昵称"
 L["Version Check"] = "版本检查"
 L["Shared Notes"] = "共享方案"

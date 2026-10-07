@@ -14,7 +14,6 @@ L["Note-Display"] = "Notiz-Anzeige"
 L["Encounter Alerts"] = "Begegnungswarnungen"
 L["Interrupt Display"] = "Unterbrechungsanzeige"
 L["Assignments"] = "Zuweisungen"
-L["WA Imports"] = "WA Importe"
 L["Nicknames"] = "Spitznamen"
 L["Version Check"] = "Versionsprüfung"
 L["Shared Notes"] = "Geteilte Notizen"
@@ -791,9 +790,6 @@ L["Size"] = "Größe"
 L["Show Background Ring"] = "Hintergrundring anzeigen"
 L["Ring Color"] = "Ringfarbe"
 -- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
--- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
 -- Export/Import popups
@@ -921,7 +917,6 @@ L["Reminders"] = "Erinnerungen"
 L["Note-Display"] = "Notizanzeige"
 L["Encounter Alerts"] = "Begegnungswarnungen"
 L["Assignments"] = "Zuweisungen"
-L["WA Imports"] = "WA-Importe"
 L["Nicknames"] = "Spitznamen"
 L["Version Check"] = "Versionsprüfung"
 L["Shared Notes"] = "Geteilte Notizen"

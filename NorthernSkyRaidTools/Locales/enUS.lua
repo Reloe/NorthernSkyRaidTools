@@ -14,7 +14,6 @@ L["Note-Display"] = "Note-Display"
 L["Encounter Alerts"] = "Encounter Alerts"
 L["Interrupt Display"] = "Interrupt Display"
 L["Assignments"] = "Assignments"
-L["WA Imports"] = "WA Imports"
 L["Nicknames"] = "Nicknames"
 L["Version Check"] = "Version Check"
 L["Shared Notes"] = "Shared Notes"
@@ -1201,9 +1200,6 @@ L["Show Background Ring"] = "Show Background Ring"
 L["Ring Color"] = "Ring Color"
 L["Ring Size"] = "Ring Size"
 -- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
--- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
 -- Export/Import popups
@@ -1516,7 +1512,6 @@ L["Reminders"] = "Reminders"
 L["Note-Display"] = "Note-Display"
 L["Encounter Alerts"] = "Encounter Alerts"
 L["Assignments"] = "Assignments"
-L["WA Imports"] = "WA Imports"
 L["Nicknames"] = "Nicknames"
 L["Version Check"] = "Version Check"
 L["Shared Notes"] = "Shared Notes"

@@ -79,7 +79,6 @@ local TABS_GROUPS                  = {
     {
         { name = "Assignments",      textKey = "Assignments", retailOnly = true },
         { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true },
-        -- { name = "WAImports",        textKey = "WA Imports" },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
     },
@@ -369,7 +368,6 @@ function NSUI:Init()
     local auraglows_tab           = tabSystem:GetTabFrameByName("AuraGlows")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = BuildQoLOptions and tabSystem:GetTabFrameByName("QoL")
-    -- local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
 
     -- --------------------------------------------------------
     -- Build options tables
@@ -383,7 +381,6 @@ function NSUI:Init()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = NSI.RaidBuffCheck and BuildRaidBuffMenu()
     local QoL_options1_table             = BuildQoLOptions and BuildQoLOptions()
-    -- local WAImports_options1_table       = BuildWAImportsOptions()
     local option_tables = {
         general_options1_table,
         nicknames_options1_table,
@@ -392,7 +389,6 @@ function NSUI:Init()
         assignments_options1_table,
         interruptdisplay_options1_table,
         readycheck_options1_table,
-        -- WAImports_options1_table,
     }
     if RaidBuffMenu then option_tables[#option_tables + 1] = RaidBuffMenu end
     if QoL_options1_table then option_tables[#option_tables + 1] = QoL_options1_table end
@@ -411,7 +407,6 @@ function NSUI:Init()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
     local QoL_callback                   = BuildQoLCallback and BuildQoLCallback()
-    -- local WAImports_callback             = BuildWACallback()
 
     -- --------------------------------------------------------
     -- Build options menus into each content frame
@@ -466,8 +461,6 @@ function NSUI:Init()
             QoL_callback)
         coroutine.yield()
     end
-    -- WA Imports is intentionally hidden for now. Keep its module and builder
-    -- intact so the tab can be restored without rebuilding the feature.
     C_Timer.After(0.1, function()
         NSI:ApplySelectedLanguage()
     end)

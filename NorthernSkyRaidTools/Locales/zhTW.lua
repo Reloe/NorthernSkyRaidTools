@@ -15,7 +15,6 @@ L["Note-Display"] = "筆記提醒"
 L["Encounter Alerts"] = "首領戰鬥警報"
 L["Interrupt Display"] = "打斷提醒"
 L["Assignments"] = "分配"
-L["WA Imports"] = "WA 匯入"
 L["Nicknames"] = "暱稱"
 L["Version Check"] = "版本檢查"
 L["Shared Notes"] = "團隊筆記"
@@ -994,9 +993,6 @@ L["Size"] = "大小"
 L["Show Background Ring"] = "顯示背景環"
 L["Ring Color"] = "環顏色"
 -- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
--- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
 -- Export/Import popups
@@ -1170,7 +1166,6 @@ L["Reminders"] = "提醒"
 L["Note-Display"] = "筆記提醒"
 L["Encounter Alerts"] = "首領戰鬥警報"
 L["Assignments"] = "分配"
-L["WA Imports"] = "WeakAuras 匯入"
 L["Nicknames"] = "暱稱"
 L["Version Check"] = "版本檢查"
 L["Shared Notes"] = "共享筆記"

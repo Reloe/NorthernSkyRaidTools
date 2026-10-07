@@ -32,7 +32,6 @@ UI\Options\AuraTracking.lua
 UI\Options\AuraGlows.lua
 UI\Options\PaceComparison.lua
 UI\Options\QoL.lua [AllowLoadGameType standard]
-UI\Options\WAImports.lua [AllowLoadGameType standard]
 UI\AnchorWindow.lua
 Timeline.lua
 

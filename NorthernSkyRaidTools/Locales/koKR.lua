@@ -14,7 +14,6 @@ L["Note-Display"] = "메모 표시"
 L["Encounter Alerts"] = "공격대 경고"
 L["Interrupt Display"] = "차단 알림"
 L["Assignments"] = "특임 배정"
-L["WA Imports"] = "위크오라 가져오기"
 L["Nicknames"] = "닉네임"
 L["Version Check"] = "버전 확인"
 L["Shared Notes"] = "공유 메모"
@@ -1115,9 +1114,6 @@ L["Show Background Ring"] = "배경 원 표시"
 L["Ring Color"] = "원 색상"
 L["Ring Size"] = "원 크기"
 -- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
--- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
 -- Export/Import popups
@@ -1428,7 +1424,6 @@ L["Reminders"] = "리마인더"
 L["Note-Display"] = "메모 표시"
 L["Encounter Alerts"] = "공격대 경고"
 L["Assignments"] = "특임 배정"
-L["WA Imports"] = "위크오라 가져오기"
 L["Nicknames"] = "닉네임"
 L["Version Check"] = "버전 확인"
 L["Shared Notes"] = "공유 메모"
