@@ -2825,7 +2825,10 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     else
         state.requiresAssist = nil
     end
-    state.unitCanAssist = state.requiresAssist ~= nil and GetAuraTrackingUnitCanAssist(unit, state.requiresAssist) or nil
+    state.unitCanAssist = nil
+    if state.requiresAssist ~= nil then
+        state.unitCanAssist = GetAuraTrackingUnitCanAssist(unit, state.requiresAssist)
+    end
     state.encounterConditioned = hasEncounterConditions
     state.width = width
     state.height = height

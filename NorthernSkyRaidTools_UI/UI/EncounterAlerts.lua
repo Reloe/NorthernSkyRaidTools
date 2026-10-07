@@ -2292,7 +2292,7 @@ end]]
             if dispF._alert.HideSwipe ~= nil then return dispF._alert.HideSwipe end
             return NSRT.ReminderSettings.IconSettings.HideSwipe or false
         end,
-        function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideSwipe", v or nil) end end,
+        function(_, v) if dispF._alert then NSI:SaveAlertData(dispF._alert, "HideSwipe", v) end end,
         110, 22, "NSUIEncAlertHideSwipe")
     hideSwipeCB:SetLocaleKey("Hide Swipe")
     hideSwipeCB:SetPoint("LEFT", hideTimerCB.frame, "RIGHT", 20, 0)
@@ -4223,7 +4223,7 @@ end]]
         PositionInnerTabLayout(GetConditionText(entry.isConditional))
 
         dispF._alert = entry; dispF._hardcodedEncID = nil
-        trigF._alert = isReloe and nil or entry; trigF._hardcodedEncID = nil
+        trigF._alert = not isReloe and entry or nil; trigF._hardcodedEncID = nil
         sndF._alert  = entry; sndF._hardcodedEncID  = nil
         loadF._alert = entry; loadF._hardcodedEncID = nil
 
@@ -4263,8 +4263,11 @@ end]]
         dispF.durEntry:SetValue(tostring(entry.dur or 8))
         dispF.stickyEntry:SetValue(entry.sticky and tostring(entry.sticky) or "")
         dispF.hideTimerCB:SetValue(entry.HideTimer ~= nil and entry.HideTimer or false)
-        dispF.hideSwipeCB:SetValue(entry.HideSwipe ~= nil and entry.HideSwipe or (NSRT.ReminderSettings.IconSettings.HideSwipe or false))
-        local showBg = entry.showBackground ~= nil and entry.showBackground or NSRT.ReminderSettings.CircleSettings.showBackground
+        local hideSwipe = entry.HideSwipe
+        if hideSwipe == nil then hideSwipe = NSRT.ReminderSettings.IconSettings.HideSwipe end
+        dispF.hideSwipeCB:SetValue(hideSwipe)
+        local showBg = entry.showBackground
+        if showBg == nil then showBg = NSRT.ReminderSettings.CircleSettings.showBackground end
         dispF.showBgCB:SetValue(showBg ~= false)
         dispF.glowunitEntry:SetValue(entry.glowunit or "")
         dispF.colorsPicker:Refresh()

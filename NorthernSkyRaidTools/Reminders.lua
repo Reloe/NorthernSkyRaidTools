@@ -2906,7 +2906,7 @@ function NSI:EvaluateLoad(info, ignoreEncounter, ignoreDifficulty, encounterID)
     if cond.Names and next(cond.Names) then
         shouldLoad = false
         local myName = UnitName("player")
-        if cond.Names[myName] then return true end
+        if cond.Names[myName] or (self:IsForever() and cond.Names[self:GetRealName("player")]) then return true end
     end
     return shouldLoad
 end

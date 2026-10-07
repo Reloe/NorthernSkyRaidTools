@@ -30,6 +30,16 @@ end
 function NSI:ResolveGroupMemberUnit(unit)
     if type(unit) ~= "string" or unit == "" then return end
 
+    if self:IsForever() then
+        local inputName = strlower(unit)
+        for member in self:IterateGroupMembers() do
+            local name = self:GetRealName(member)
+            local firstName = UnitFullName(member)
+            if name and (strlower(name) == inputName or strlower(firstName) == inputName) then return member end
+        end
+        return
+    end
+
     local inputName, inputRealm = strsplit("-", unit)
     if not inputName or inputName == "" then return end
 
@@ -817,12 +827,9 @@ end
 
 function NSI:IsInSameGuild(unit, playerName)
     if not playerName then
-        local name, realm = UnitName(unit)
-        if not realm then
-            realm = select(2, UnitFullName("player"))
-        end
+        local name, realm = self:GetRealName(unit)
         if not name then return false end
-        playerName = name.."-"..realm
+        playerName = self:GetNickNameKey(name, realm)
     end
     for i=1, GetNumGuildMembers() do
         local name = GetGuildRosterInfo(i)

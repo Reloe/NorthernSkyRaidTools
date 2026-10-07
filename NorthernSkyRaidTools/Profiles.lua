@@ -727,7 +727,7 @@ function NSI:CreateProfile(name, init)
     end
     NSRT.Profiles[name] = {}
     self:SaveProfile()
-    if not name == "default" then
+    if name ~= "default" then
         for k, v in pairs(NSRT) do
             if not ignored[k] then
                 NSRT[k] = nil
