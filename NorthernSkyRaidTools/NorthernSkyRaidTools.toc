@@ -81,6 +81,7 @@ EncounterAlerts/MidnightS2/Sszorak.lua [AllowLoadGameType standard]
 EncounterAlerts/MidnightS2/TheTwinFangs.lua [AllowLoadGameType standard]
 EncounterAlerts/MidnightS2/TheCoiledAltar.lua [AllowLoadGameType standard]
 EncounterAlerts/MidnightS2/Ulatek.lua [AllowLoadGameType standard]
+EncounterAlerts/MidnightS2/Kithix.lua [AllowLoadGameType standard]
 
 # Encounter Alerts Localization
 EncounterAlerts\Locales\Core.lua
