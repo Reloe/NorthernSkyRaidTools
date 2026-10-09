@@ -1246,6 +1246,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         local s = NSRT.ReminderSettings
         diffTable[newKey] = {
             internalID    = newKey,
+            IsAlert       = true,
             name          = NSI:Loc("New Alert"),
             enabled       = true,
             phase         = 1,

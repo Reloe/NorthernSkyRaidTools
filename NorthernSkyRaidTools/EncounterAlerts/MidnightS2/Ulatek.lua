@@ -458,8 +458,8 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local data = {group = "Ula'tek", internalID = "AutoRelease", name = "Auto Release", text = "Auto Release", customIcon = 20484, DisplayType = "Text", encID = encID, TTS = false, dur = 1, phase = 1,
-        difficulties = {15, 16}, BlockCopy = true, NoEdit = true,
+    local data = {Version = {versionNumber = 1, [1] = {enabled = true}}, group = "Ula'tek", internalID = "AutoRelease", name = "Auto Release", text = "Auto Release", customIcon = 20484, DisplayType = "Text", encID = encID, TTS = false, dur = 1, phase = 1,
+        difficulties = {15, 16}, enabled = true, BlockCopy = true, NoEdit = true,
     }
     self:AddEncounterAlert(data)
 

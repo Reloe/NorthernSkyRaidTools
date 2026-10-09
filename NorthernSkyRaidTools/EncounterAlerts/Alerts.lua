@@ -283,6 +283,7 @@ function NSI:GetEncounterAlertEnvironment(encID, alertID)
 end
 
 function NSI:RunCustomAlertPreview(alertData, encID, alertID)
+    alertData.IsAlert = true
     local previewCode = alertData.customPreview
     if type(previewCode) ~= "string" or previewCode == "" then return false end
 
@@ -317,6 +318,7 @@ function NSI:RunEncounterAlertHooks(hookKey, encID, diffID, ...)
     for alertKey, alertData in pairs(alerts) do
         local hookCode = type(alertData) == "table" and not alertData.ReloeReminder and alertData.enabled and alertData[hookKey]
         if type(hookCode) == "string" and hookCode ~= "" and self:EvaluateLoad(alertData) then
+            alertData.IsAlert = true
             local chunk, err = loadstring(hookCode)
             if not chunk then
                 geterrorhandler()(err)
