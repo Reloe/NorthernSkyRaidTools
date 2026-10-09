@@ -56,6 +56,7 @@ NSI.LSM:Register("sound", color .. "Ranged|r", [[Interface\Addons\NorthernSkyRai
 NSI.LSM:Register("sound", color .. "Boss|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Boss.ogg]])
 NSI.LSM:Register("sound", color .. "Suck|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Suck.ogg]])
 NSI.LSM:Register("sound", color .. "RunOut|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\RunOut.ogg]])
+NSI.LSM:Register("sound", color .. "Safe|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Safe.ogg]])
 NSI.LSM:Register("sound", color .. "Fire|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Fire.ogg]])
 NSI.LSM:Register("sound", color .. "Frost|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\Frost.ogg]])
 NSI.LSM:Register("sound", color .. "North|r", [[Interface\Addons\NorthernSkyRaidTools\Media\Sounds\North.ogg]])

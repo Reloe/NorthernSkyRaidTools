@@ -529,14 +529,14 @@ See `pools.md` for the standalone pool documentation.
 
 ## Script comms (`_GSC` channel)
 
-Three external libs (loaded via LibStub when present) back this: `AceComm-3.0`, `AceSerializer-3.0`, `LibDeflate`. If any is missing, the registration and dispatch are silently no-op.
+`AceComm-3.0` transports these messages. The payload is serialized, compressed, and URL-safe Base64 encoded with Blizzard's `C_EncodingUtil`.
 
 ```lua
 DF:RegisterScriptComm(ID, function(sourcePlayerName, ...) ... end)
 DF:SendScriptComm(ID, ...)
 ```
 
-Wire format: AceSerializer pack of `(ID, GUID, "name-realm", ..., timestamp?)` → `LibDeflate:CompressDeflate(level=9)` → `LibDeflate:EncodeForWoWAddonChannel` → AceComm "PARTY" channel under prefix `"_GSC"`. Inbound handlers run inside `DF:Dispatch` (xpcall) and have their environment swapped via `DF:MakeFunctionSecure` (see Secure environments).
+Wire format: CBOR table of `(ID, GUID, "name-realm", ..., timestamp?)` → `C_EncodingUtil.CompressString(Deflate, OptimizeForSize)` → URL-safe Base64 → AceComm "PARTY" channel under prefix `"_GSC"`. Inbound handlers run inside `DF:Dispatch` (xpcall) and have their environment swapped via `DF:MakeFunctionSecure` (see Secure environments).
 
 Each `ID` may only register one handler; subsequent calls overwrite. Sending with an `ID` you haven't registered is a no-op — that's the gate, not a separate auth step.
 
@@ -668,8 +668,8 @@ The methods (`PlayFrameShake`, `StopFrameShake`, `UpdateFrameShake`, `SetFrameSh
 ### `OnLoginSchedules` only fires once
 Don't register handlers that need to re-run on `/reload` separately — `PLAYER_LOGIN` fires after every reload, so the schedule runs again. But if you register additional functions after the first `PLAYER_LOGIN` fires (e.g. lazy-load an addon module), they will *not* be invoked. Register at file load.
 
-### Script comms silently drop when libs are missing
-If `AceComm-3.0`, `AceSerializer-3.0`, or `LibDeflate` aren't available, both `RegisterScriptComm` and `SendScriptComm` short-circuit without errors. If your script comm isn't working and the bus seems "asleep", verify all three libs are loaded.
+### Script comms require AceComm
+If `AceComm-3.0` is unavailable, script comms cannot be sent or received. The payload encoding is provided by Blizzard's built-in `C_EncodingUtil`.
 
 ### `DF.folder` can be wrong if the file isn't named `fw.lua`
 The detection uses `debugstack(1, 1, 0):match("AddOns\\(.+)fw.lua")`. If someone renames the file or repackages the lib under a different filename, `DF.folder` is the cached old value or `""`. Always-pass-along paths via `DF:GetFrameworkFolder()` rather than re-deriving in consumers.

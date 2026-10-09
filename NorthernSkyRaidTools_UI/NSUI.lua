@@ -52,6 +52,7 @@ local BuildReadyCheckOptions       = NSI.UI.Options.ReadyCheck.BuildOptions
 local BuildRaidBuffMenu            = NSI.UI.Options.ReadyCheck.BuildRaidBuffMenu
 local BuildReadyCheckCallback      = NSI.UI.Options.ReadyCheck.BuildCallback
 local BuildAuraTrackingUI          = NSI.UI.Options.AuraTracking.BuildUI
+local BuildAuraGlowsUI             = NSI.UI.Options.AuraGlows.BuildUI
 local BuildPaceComparisonEditorUI  = NSI.UI.Options.PaceComparison.BuildEditorUI
 local BuildQoLOptions              = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildOptions
 local BuildQoLCallback             = NSI.UI.Options.QoL and NSI.UI.Options.QoL.BuildCallback
@@ -73,11 +74,11 @@ local TABS_GROUPS                  = {
     {
         { name = "AuraSounds", textKey = "Aura Sounds" },
         { name = "AuraTracking", textKey = "Aura Tracking" },
+        { name = "AuraGlows", textKey = "Aura Glows" },
     },
     {
         { name = "Assignments",      textKey = "Assignments", retailOnly = true },
         { name = "InterruptDisplay", textKey = "Interrupt Display", retailOnly = true },
-        -- { name = "WAImports",        textKey = "WA Imports" },
         { name = "Nicknames", textKey = "Nicknames" },
         { name = "Versions",  textKey = "Version Check" },
     },
@@ -85,7 +86,7 @@ local TABS_GROUPS                  = {
 if BuildQoLOptions then
     table.insert(TABS_GROUPS[1], 2, { name = "QoL", textKey = "Quality of Life" })
 end
-table.insert(TABS_GROUPS[3], 3, { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true })
+table.insert(TABS_GROUPS[3], { name = "PaceComparison", textKey = "Pace-Comparison", retailOnly = true })
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
@@ -364,9 +365,9 @@ function NSUI:Init()
     local readycheck_tab          = tabSystem:GetTabFrameByName("ReadyCheck")
     local aurasounds_tab          = tabSystem:GetTabFrameByName("AuraSounds")
     local auratracking_tab        = tabSystem:GetTabFrameByName("AuraTracking")
+    local auraglows_tab           = tabSystem:GetTabFrameByName("AuraGlows")
     local pacecomparison_tab      = tabSystem:GetTabFrameByName("PaceComparison")
     local QoL_tab                 = BuildQoLOptions and tabSystem:GetTabFrameByName("QoL")
-    -- local WAImports_tab           = tabSystem:GetTabFrameByName("WAImports")
 
     -- --------------------------------------------------------
     -- Build options tables
@@ -380,7 +381,6 @@ function NSUI:Init()
     local readycheck_options1_table      = BuildReadyCheckOptions()
     local RaidBuffMenu                   = NSI.RaidBuffCheck and BuildRaidBuffMenu()
     local QoL_options1_table             = BuildQoLOptions and BuildQoLOptions()
-    -- local WAImports_options1_table       = BuildWAImportsOptions()
     local option_tables = {
         general_options1_table,
         nicknames_options1_table,
@@ -389,7 +389,6 @@ function NSUI:Init()
         assignments_options1_table,
         interruptdisplay_options1_table,
         readycheck_options1_table,
-        -- WAImports_options1_table,
     }
     if RaidBuffMenu then option_tables[#option_tables + 1] = RaidBuffMenu end
     if QoL_options1_table then option_tables[#option_tables + 1] = QoL_options1_table end
@@ -408,7 +407,6 @@ function NSUI:Init()
     local interruptdisplay_callback      = BuildInterruptDisplayCallback()
     local readycheck_callback            = BuildReadyCheckCallback()
     local QoL_callback                   = BuildQoLCallback and BuildQoLCallback()
-    -- local WAImports_callback             = BuildWACallback()
 
     -- --------------------------------------------------------
     -- Build options menus into each content frame
@@ -454,6 +452,8 @@ function NSUI:Init()
     coroutine.yield()
     NSUI.auratracking_frame = BuildAuraTrackingUI(auratracking_tab)
     coroutine.yield()
+    NSUI.auraglows_frame = BuildAuraGlowsUI(auraglows_tab)
+    coroutine.yield()
     NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
     if QoL_options1_table then
         DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
@@ -461,8 +461,6 @@ function NSUI:Init()
             QoL_callback)
         coroutine.yield()
     end
-    -- WA Imports is intentionally hidden for now. Keep its module and builder
-    -- intact so the tab can be restored without rebuilding the feature.
     C_Timer.After(0.1, function()
         NSI:ApplySelectedLanguage()
     end)
@@ -527,6 +525,11 @@ function NSUI:Init()
             NSI.PendingOpenAlert = nil
             self.MenuFrame:SelectTabByName("EncounterAlerts")
             self.encounters_frame:OpenAlert(pendingOpenAlert.encID, pendingOpenAlert.diffID, pendingOpenAlert.internalID)
+        end
+        local pendingProfileImport = NSI.PendingProfileImport
+        if pendingProfileImport then
+            NSI.PendingProfileImport = nil
+            self.import_string_popup:ImportProfileFromAPI(pendingProfileImport.string, pendingProfileImport.profileKey)
         end
     end)
     end)

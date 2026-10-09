@@ -163,6 +163,13 @@ function NSI:AddMissingDefaults()
             CustomCategories = {},
             NextCustomCategoryID = 1,
         },
+        AuraGlows = {
+            Custom = {},
+            Builtins = {},
+            UseBuiltinAuraGlows = false,
+            UI = {},
+            Groups = {},
+        },
         PhaseTimings = {},
 
         -- Active reminder persistence
@@ -657,6 +664,7 @@ local ignored = {
     ["MainProfile"]      = true,
     ["EncounterAlerts"]  = true,
     ["AuraTrackingSettings"] = true,
+    ["AuraGlows"] = true,
     ["AuraSounds"]       = true,
     ["NickNames"]        = true,
 }
@@ -675,6 +683,7 @@ local ProfileSharedDataKeys = {
     EncounterAlerts = true,
     AuraSounds = true,
     AuraTrackingSettings = true,
+    AuraGlows = true,
 }
 
 local function CopyProfileValue(key, value)
@@ -693,10 +702,17 @@ function NSI:GetProfileKey()
     return Realm and CharName.."-"..Realm
 end
 
-function NSI:SetMainProfile(name)
-    if NSRT.Profiles[name] then
-        NSRT.MainProfile = name
+function NSI:SetMainProfile(name, applyToAllCharacters)
+    if not NSRT.Profiles[name] then return false end
+
+    NSRT.MainProfile = name
+    if applyToAllCharacters then
+        for profileKey in pairs(NSRT.ProfileKeys) do
+            NSRT.ProfileKeys[profileKey] = name
+        end
+        self:LoadProfile(name)
     end
+    return true
 end
 
 function NSI:CreateProfile(name, init)
@@ -711,7 +727,7 @@ function NSI:CreateProfile(name, init)
     end
     NSRT.Profiles[name] = {}
     self:SaveProfile()
-    if not name == "default" then
+    if name ~= "default" then
         for k, v in pairs(NSRT) do
             if not ignored[k] then
                 NSRT[k] = nil
@@ -792,8 +808,13 @@ function NSI:CopyFromProfile(name)
     end
 end
 
-function NSI:ExportProfileString(includeSharedData)
-    local profileData = NSRT.Profiles[NSRT.CurrentProfile]
+function NSI:ExportProfileString(includeSharedData, profileName)
+    profileName = profileName or NSRT.CurrentProfile
+    if profileName == NSRT.CurrentProfile then
+        self:SaveProfile()
+    end
+
+    local profileData = NSRT.Profiles[profileName]
     if not profileData then return nil end
     local exportData = {}
     for key, value in pairs(profileData) do
@@ -802,7 +823,8 @@ function NSI:ExportProfileString(includeSharedData)
         end
     end
     local exportTable = {
-        profileName = NSRT.CurrentProfile,
+        profileName = profileName,
+        mainProfile = NSRT.MainProfile,
         data = exportData,
     }
     if includeSharedData then
@@ -812,7 +834,71 @@ function NSI:ExportProfileString(includeSharedData)
         end
         exportTable.sharedData = sharedData
     end
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "Profile")
+end
+
+function NSAPI:ExportProfile(profileKey, includeExtraData)
+    return NSI:ExportProfileString(includeExtraData == true, profileKey)
+end
+
+function NSAPI:ImportProfile(profileString, profileKey)
+    if type(profileString) ~= "string" or profileString == "" then return false end
+    if profileKey ~= nil and (type(profileKey) ~= "string" or profileKey == "") then return false end
+
+    if NSI:LoadUI() then
+        return NSI.NSUI.import_string_popup:ImportProfileFromAPI(profileString, profileKey)
+    end
+
+    if NSI.NSUI and NSI.NSUI.Initializing then
+        NSI.PendingProfileImport = { string = profileString, profileKey = profileKey }
+        return true
+    end
+
+    return false
+end
+
+function NSAPI:DecodeProfileString(profileString)
+    local exportTable = NSI:DecodeExportData(profileString, "Profile")
+    if type(exportTable) ~= "table" or type(exportTable.data) ~= "table" then return nil end
+    return CopyTable(exportTable.data)
+end
+
+function NSAPI:SetProfile(profileKey)
+    if not NSAPI:ProfileExists(profileKey) then return false end
+    NSI:LoadProfile(profileKey)
+    return true
+end
+
+function NSAPI:GetProfileKeys()
+    local profileKeys = {}
+    for profileKey in pairs(NSRT.Profiles) do
+        profileKeys[profileKey] = true
+    end
+    return profileKeys
+end
+
+function NSAPI:GetProfileAssignments()
+    return CopyTable(NSRT.ProfileKeys)
+end
+
+function NSAPI:GetCurrentProfileKey()
+    return NSRT.CurrentProfile
+end
+
+function NSAPI:OpenConfig()
+    if NSI:LoadUI(true, "General") then
+        NSI.NSUI:Show()
+        NSI.NSUI.MenuFrame:SelectTabByName("General")
+        return true
+    end
+    return NSI.NSUI and NSI.NSUI.Initializing == true
+end
+
+function NSAPI:CloseConfig()
+    if not NSI.NSUI then return false end
+    NSI.NSUI.PendingShow = false
+    NSI.NSUI:Hide()
+    return true
 end
 
 function NSAPI:ProfileExists(name)
@@ -839,12 +925,16 @@ function NSAPI:SetMainProfile(name)
     return true
 end
 
-function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name is optional
-    local exportTable = NSI:DecodeExportData(importString)
+function NSAPI:ImportProfileString(importString, name, allowSharedData, ignoreSharedData) -- name is optional
+    local exportTable = NSI:DecodeExportData(importString, "Profile")
     if type(exportTable) ~= "table" then return nil end
     local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
     if sharedData and next(sharedData) and not allowSharedData then
-        return nil, "shared_data"
+        if ignoreSharedData then
+            sharedData = nil
+        else
+            return nil, "shared_data"
+        end
     end
     local name = name or exportTable.profileName or "Imported"
     local function EnsureUniqueName(name)
@@ -870,6 +960,7 @@ function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name 
                 NSRT[key] = CopyProfileValue(key, sharedData[key])
             end
         end
+        NSI:AddMissingDefaults()
         if sharedData.EncounterAlerts then
             NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
         end
@@ -879,6 +970,10 @@ function NSAPI:ImportProfileString(importString, name, allowSharedData) -- name 
         if sharedData.AuraTrackingSettings then
             NSI:InitAuraTracking()
             NSI:RefreshAuraTrackingUI()
+        end
+        if sharedData.AuraGlows then
+            NSI:RefreshAuraGlows()
+            NSI:RefreshAuraGlowsUI()
         end
     end
     return name
@@ -893,7 +988,7 @@ function NSAPI:OverrideProfile(importString, name, options)
         return nil, "profile_not_found"
     end
 
-    local exportTable = NSI:DecodeExportData(importString)
+    local exportTable = NSI:DecodeExportData(importString, "Profile")
     if type(exportTable) ~= "table" then
         return nil, "invalid_import"
     end
@@ -902,7 +997,11 @@ function NSAPI:OverrideProfile(importString, name, options)
 
     local sharedData = type(exportTable.sharedData) == "table" and exportTable.sharedData or nil
     if sharedData and next(sharedData) and not options.allowSharedData then
-        return nil, "shared_data"
+        if options.ignoreSharedData then
+            sharedData = nil
+        else
+            return nil, "shared_data"
+        end
     end
 
     local preserved = {}
@@ -946,6 +1045,8 @@ function NSAPI:OverrideProfile(importString, name, options)
             end
         end
 
+        NSI:AddMissingDefaults()
+
         if sharedData.EncounterAlerts ~= nil then
             NSI:FireCallback("NSRT_ALERT_FULL_UPDATE")
         end
@@ -957,6 +1058,10 @@ function NSAPI:OverrideProfile(importString, name, options)
         if sharedData.AuraTrackingSettings ~= nil then
             NSI:InitAuraTracking()
             NSI:RefreshAuraTrackingUI()
+        end
+        if sharedData.AuraGlows ~= nil then
+            NSI:RefreshAuraGlows()
+            NSI:RefreshAuraGlowsUI()
         end
     end
 
@@ -990,7 +1095,7 @@ function NSI:ExportAlertsString(encID, diffID)
         diffID          = diffID,
         encounterAlerts = encounterAlerts,
     }
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "EncounterAlert")
 end
 
 function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
@@ -1003,7 +1108,7 @@ function NSI:ExportSingleAlertString(alertType, encID, diffID, alertKey, data)
         alertKey  = alertKey,
         data      = data,
     }
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "EncounterAlert")
 end
 
 function NSI:ExportGroupString(encID, groupName, diffID)
@@ -1032,11 +1137,11 @@ function NSI:ExportGroupString(encID, groupName, diffID)
         groupMeta       = (NSRT.Alerts and NSRT.Alerts.Groups and NSRT.Alerts.Groups[gk]) or {},
         encounterAlerts = encounterAlerts,
     }
-    return self:EncodeExportData(exportTable)
+    return self:EncodeExportData(exportTable, "EncounterAlert")
 end
 
 function NSAPI:ImportAlertsString(importString)
-    local t = NSI:DecodeExportData(importString)
+    local t = NSI:DecodeExportData(importString, "EncounterAlert")
     if type(t) ~= "table" then return nil end
 
     local function ResolveImportedAlertKey(destDiff, alertKey, alert)

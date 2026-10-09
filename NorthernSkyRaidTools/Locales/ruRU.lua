@@ -14,7 +14,6 @@ L["Note-Display"] = "Отображение заметок"
 L["Encounter Alerts"] = "Оповещения в сражениях"
 L["Interrupt Display"] = "Отображение прерываний"
 L["Assignments"] = "Назначения"
-L["WA Imports"] = "Импорт WeakAuras"
 L["Nicknames"] = "Никнеймы"
 L["Version Check"] = "Проверка версий"
 L["Shared Notes"] = "Общие заметки"
@@ -890,7 +889,6 @@ L["Show Source Name"] = "Показывать имя источника"
 L["Unit Name Settings"] = "Настройки имени цели"
 L["Show Unit Name"] = "Показывать имя цели"
 L["Shows the class-colored nickname of the unit whose aura is shown. This replaces caster names for this display."] = "Показывает никнейм цели, окрашенный по классу, для отображаемой ауры. Заменяет имена заклинателей в этом элементе."
-L["Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"] = "Показывает имя источника, прикреплённое к видимым иконкам аур. Эта функция пока недоступна. Blizzard добавит её в патче 12.1.5."
 L["Season 1"] = "1-й сезон"
 L["Season 2"] = "2-й сезон"
 L["Season 3"] = "3-й сезон"
@@ -1142,10 +1140,6 @@ L["Size"] = "Размер"
 L["Show Background Ring"] = "Показывать фоновое кольцо"
 L["Ring Color"] = "Цвет кольца"
 L["Ring Size"] = "Размер кольца"
-
--- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
 
 -- ============================================================================
 -- UI/EncounterAlerts.lua
@@ -1461,7 +1455,6 @@ L["Reminders"] = "Напоминания"
 L["Note-Display"] = "Отображение заметок"
 L["Encounter Alerts"] = "Оповещения в сражениях"
 L["Assignments"] = "Назначения"
-L["WA Imports"] = "Импорт WeakAuras"
 L["Nicknames"] = "Никнеймы"
 L["Version Check"] = "Проверка версии"
 L["Shared Notes"] = "Общие заметки"

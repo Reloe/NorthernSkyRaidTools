@@ -292,3 +292,13 @@ L[3492] = {
     ["PrePot"] = {group = "Ула'тек", name = "Препот", text = "Препот"},
     ["AutoRelease"] = {group = "Ула'тек", name = "Автоматическое воскрешение", text = "Автоматическое воскрешение"},
 }
+
+-- Kith'ix (3513)
+L[3513] = {
+    -- ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
+    -- ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
+    -- ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
+    -- ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
+    -- ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
+    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+}

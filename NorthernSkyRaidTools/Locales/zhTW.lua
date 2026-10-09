@@ -15,7 +15,6 @@ L["Note-Display"] = "筆記提醒"
 L["Encounter Alerts"] = "首領戰鬥警報"
 L["Interrupt Display"] = "打斷提醒"
 L["Assignments"] = "分配"
-L["WA Imports"] = "WA 匯入"
 L["Nicknames"] = "暱稱"
 L["Version Check"] = "版本檢查"
 L["Shared Notes"] = "團隊筆記"
@@ -761,7 +760,6 @@ L["Show Co-Tank Name"] = "顯示副坦克名稱"
 L["Shows the co-tank name attached to visible aura icons."] = "在可見的光環圖示上顯示副坦克名稱。"
 L["Source Name Settings"] = "來源名稱設定"
 L["Show Source Name"] = "顯示來源名稱"
-L["Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"] = "在可見的光環圖示上顯示來源名稱。此功能尚未提供，暴雪將於 12.1.5 版本中加入此功能。"
 L["Season 1"] = "第一賽季"
 L["Season 2"] = "第二賽季"
 L["Rename"] = "重新命名"
@@ -995,9 +993,6 @@ L["Size"] = "大小"
 L["Show Background Ring"] = "顯示背景環"
 L["Ring Color"] = "環顏色"
 -- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
--- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
 -- Export/Import popups
@@ -1171,7 +1166,6 @@ L["Reminders"] = "提醒"
 L["Note-Display"] = "筆記提醒"
 L["Encounter Alerts"] = "首領戰鬥警報"
 L["Assignments"] = "分配"
-L["WA Imports"] = "WeakAuras 匯入"
 L["Nicknames"] = "暱稱"
 L["Version Check"] = "版本檢查"
 L["Shared Notes"] = "共享筆記"

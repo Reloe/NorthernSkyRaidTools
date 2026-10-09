@@ -3,6 +3,31 @@ local _, NSI = ... -- Internal namespace
 local encID = 3421
 -- /run NSAPI:DebugEncounter(3421)
 
+local soakTimers = {
+    [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
+    [16] = {64.7, 125.7, 219.8, 280.8, 374.9, 435.9},
+}
+
+local spitIchorGlowKey = "TwinFangsSpitIchor"
+
+NSI:RegisterBuiltinAuraGlow(spitIchorGlowKey, {
+    name = NSI:Loc("Spit & Ichor"),
+    encounterID = encID,
+    group = "Season 2",
+    menuIcon = 1290809,
+    roles = {HEALER = true},
+    color = {1, 0, 0, 1},
+    candidateFilters = {isBossAura = true, isRoleAura = false, MaxDuration = 14},
+})
+
+local function CancelSpitIchorGlowTimers(self)
+    local timers = self.SpitIchorGlowTimers or {}
+    for timerIndex = 1, #timers do
+        timers[timerIndex]:Cancel()
+    end
+    self.SpitIchorGlowTimers = {}
+end
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
@@ -73,10 +98,6 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 
-    local soakTimers = {
-        [15] = {71.4, 139.1, 240.8, 308.6, 410.3, 478.1},
-        [16] = {64.7, 125.7, 219.8, 280.8, 374.9, 435.9},
-    }
     local soak1Timers = {}
     local soak2Timers = {}
     local soak3Timers = {}
@@ -194,6 +215,20 @@ NSI.InitializeAlerts[encID] = function(self)
 end
 
 NSI.EncounterAlertStart[encID] = function(self, id)
+    CancelSpitIchorGlowTimers(self)
+    self:ActivateBuiltinAuraGlow(spitIchorGlowKey)
+    local difficultyID = id or self:DifficultyCheck({14, 15, 16})
+    local soakTimes = soakTimers[difficultyID] or {}
+    for soakTimeIndex = 1, #soakTimes do
+        local soakTime = soakTimes[soakTimeIndex]
+        self.SpitIchorGlowTimers[#self.SpitIchorGlowTimers + 1] = C_Timer.NewTimer(soakTime - 10, function()
+            self:DeactivateBuiltinAuraGlow(spitIchorGlowKey)
+        end)
+        self.SpitIchorGlowTimers[#self.SpitIchorGlowTimers + 1] = C_Timer.NewTimer(soakTime + 10, function()
+            self:ActivateBuiltinAuraGlow(spitIchorGlowKey)
+        end)
+    end
+
     local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][id or self:DifficultyCheck({14, 15, 16})]
     local alert = diffData and diffData.DebuffOverview
     if alert and alert.enabled and self:EvaluateLoad(alert) then
@@ -227,5 +262,7 @@ NSI.EncounterAlertStart[encID] = function(self, id)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    CancelSpitIchorGlowTimers(self)
+    self:SetBuiltinAuraGlowActive(spitIchorGlowKey, nil)
     self:SetDebuffOverviewContainersShown(false, "TwinFangsDebuffOverview")
 end

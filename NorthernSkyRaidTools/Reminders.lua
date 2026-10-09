@@ -1928,7 +1928,7 @@ function NSI:HandlePrePullReminders(event, timerType, timeRemaining)
         local difficulty = self:DifficultyCheck({14, 15, 16, 220})
         local diffTable = difficulty and NSRT.EncounterAlerts[pullEncounterID] and NSRT.EncounterAlerts[pullEncounterID][difficulty]
         for alertKey, alert in pairs(diffTable or {}) do
-            if type(alert) == "table" and alert.enabled and self:EvaluateLoad(alert, pullEncounterID) then
+            if type(alert) == "table" and alert.enabled and self:EvaluateLoad(alert, nil, nil, pullEncounterID) then
                 if alert.phaseTimers then
                     for phase, alertTimes in pairs(alert.phaseTimers) do
                         if tonumber(phase) == 1 then
@@ -2391,6 +2391,7 @@ function NSI:CacheUnitFrames()
             if UnitIsUnit(unit, "player") then self.UnitFrames.player = frame end
         end
     end
+    self:RebuildAuraGlows()
 end
 
 function NSI:CreateMoveFrames()
@@ -2882,10 +2883,14 @@ function NSI:AddRemindersFromTable(Alert, timers)
      end
 end
 
-function NSI:EvaluateLoad(info, encounterID)
+function NSI:EvaluateLoad(info, ignoreEncounter, ignoreDifficulty, encounterID)
     local cond = info.loadConditions
     if not cond then return true end
-    if cond.EncounterIDs and next(cond.EncounterIDs) then
+    if not ignoreDifficulty and cond.Difficulties and next(cond.Difficulties) then
+        local difficultyID = self:DifficultyCheck({14, 15, 16})
+        if not difficultyID or not (cond.Difficulties[difficultyID] or cond.Difficulties[tostring(difficultyID)]) then return false end
+    end
+    if not ignoreEncounter and cond.EncounterIDs and next(cond.EncounterIDs) then
         encounterID = encounterID or self.EncounterID
         local encounterMatches = encounterID and (cond.EncounterIDs[encounterID] or cond.EncounterIDs[tostring(encounterID)])
         if not encounterMatches then return false end
@@ -2910,7 +2915,7 @@ function NSI:EvaluateLoad(info, encounterID)
     if cond.Names and next(cond.Names) then
         shouldLoad = false
         local myName = UnitName("player")
-        if cond.Names[myName] then return true end
+        if cond.Names[myName] or (self:IsForever() and cond.Names[self:GetRealName("player")]) then return true end
     end
     return shouldLoad
 end

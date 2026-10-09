@@ -119,6 +119,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
                 self:UpdateNoteFrame("ExtraReminderFrame", NSRT.ReminderSettings.ExtraReminderFrame, "skip")
             end
         end)
+        C_Timer.After(2, function()
+            self:CacheUnitFrames()
+        end)
     elseif e == "READY_CHECK_FINISHED" and wowevent then
         self:HideReadyCheckConsumables()
     elseif e == "ENCOUNTER_START" and wowevent then
@@ -141,6 +144,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.TestingReminder = false
         self.IsInPreview = false
         self:UpdateAuraTrackingEncounterVisibility()
+        self.AuraGlowManualState = {}
+        self.AuraGlowLoadCache = {}
+        self:UpdateAuraGlowVisibility()
         for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
             self:MakeDraggable(self[v], nil, false)
         end
@@ -201,6 +207,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:InitAuraSystem()
         self:HideAllReminders(true)
         self:UpdateAuraTrackingEncounterVisibility()
+        self.AuraGlowManualState = {}
+        self.AuraGlowLoadCache = nil
+        self:UpdateAuraGlowVisibility()
         if NSRT.ReminderSettings.NoteCountdown then
             self:UpdateReminderFrame(true) -- need to recalculate reminders if the user has countdown enabled
             local frames = {"ReminderFrame", "PersonalReminderFrame"}
@@ -375,8 +384,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             self:InitAuraSystem()
             if self:DifficultyCheck({14, 15, 16}) then
                 self:RefreshDebuffOverviewContainers()
-                self:CacheUnitFrames()
             end
+            self:CacheUnitFrames()
             if self.UpdateRaidBuffFrame then self:UpdateRaidBuffFrame() end
         end)
         if self:Restricted() then return end
@@ -403,15 +412,22 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self.PendingUnitFramesUpdate then
                 self:CacheUnitFrames()
             end
+            if self.PendingAuraGlowUpdate then
+                self:InitAuraGlows()
+            end
             self:RefreshDebuffOverviewContainers()
         end
     elseif e == "PLAYER_REGEN_ENABLED" and wowevent then
         if self.PendingAuraTrackingUpdate then
             self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
         end
+        if self.PendingAuraGlowUpdate then
+            self:InitAuraGlows()
+        end
         self:RefreshDebuffOverviewContainers()
     elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
         self:InitAuraTracking()
+        self:UpdateAuraGlowVisibility()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck({8, 14, 15, 16}) then return end
         local info = ...

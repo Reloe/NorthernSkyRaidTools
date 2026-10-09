@@ -3,6 +3,18 @@ local _, NSI = ... -- Internal namespace
 local encID = 3492
 -- /run NSAPI:DebugEncounter(3492)
 
+local p3WavesSoakGlowKey = "UlatekP3WavesSoak"
+
+NSI:RegisterBuiltinAuraGlow(p3WavesSoakGlowKey, {
+    name = NSI:Loc("Ula'tek P3 Waves & Soak-dot"),
+    encounterID = encID,
+    group = "Season 2",
+    menuIcon = 1316356,
+    roles = {HEALER = true},
+    color = {1, 0, 0, 1},
+    candidateFilters = {isFromPlayerOrPlayerPet = false, MaxDuration = 20, isBossOrRoleAura = false},
+})
+
 local GRASPING_FANGS_LEFT = "UlatekGraspingFangsLeftSide"
 local GRASPING_FANGS_RIGHT = "UlatekGraspingFangsRightSide"
 local WaveDirectionEvents = {"CHAT_MSG_YELL", "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}
@@ -741,6 +753,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
 
     StopUlatekTransition(self)
     if isPreview then return end
+    if self.UlatekP3GlowTimer then self.UlatekP3GlowTimer:Cancel() end
+    self:DeactivateBuiltinAuraGlow(p3WavesSoakGlowKey)
+    self.UlatekP3GlowTimer = C_Timer.NewTimer(400, function()
+        self.UlatekP3GlowTimer = nil
+        if self.EncounterID == encID then self:ActivateBuiltinAuraGlow(p3WavesSoakGlowKey) end
+    end)
     if transitionSoakAlert and transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert) then
         self.UlatekTransitionStartTime = GetTime()
         self.UlatekTransitionTimers = {}
@@ -1040,6 +1058,11 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    if self.UlatekP3GlowTimer then
+        self.UlatekP3GlowTimer:Cancel()
+        self.UlatekP3GlowTimer = nil
+    end
+    self:DeactivateBuiltinAuraGlow(p3WavesSoakGlowKey)
     local difficulty = self:DifficultyCheck({15, 16})
     local autoReleaseAlert = difficulty and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficulty].AutoRelease
     if autoReleaseAlert and autoReleaseAlert.enabled and self:EvaluateLoad(autoReleaseAlert) then
