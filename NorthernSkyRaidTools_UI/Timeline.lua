@@ -1025,7 +1025,7 @@ function NSI:CreateTimelineWindow()
                             end
                             NSI:HideAllReminders()
                             timelineWindow.playButton.text = T("Play Preview")
-                            timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                            timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
                         end
                         timelineWindow.playButton:Hide()
                     end
@@ -2267,7 +2267,7 @@ function NSI:CreateTimelineWindow()
                     NSI:HideAllReminders()
                     if timelineWindow.playButton then
                         timelineWindow.playButton.text = T("Play Preview")
-                        timelineWindow.playButton:SetIcon(NSI.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                        timelineWindow.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
                     end
                 end
             end
@@ -2415,7 +2415,7 @@ function NSI:ViewNoteInTimeline(name, personal)
                 end
                 self:HideAllReminders()
                 window.playButton.text = "Play Preview"
-                window.playButton:SetIcon(self.LSM:Fetch("statusbar", "play_icon"), 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
+                window.playButton:SetIcon("Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Icons\\play_icon.png", 14, 14, "OVERLAY", nil, {0, 1, 0, 1})
             end
             window.playButton:Hide()
         end
