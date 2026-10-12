@@ -5,7 +5,7 @@ local _, NSI = ... -- Internal namespace
 local encID = 3429
 -- /run NSAPI:DebugEncounter(3429)
 
-local eternalNightfallDuration = 15
+local eternalNightfallDuration = 17
 local eternalNightfallPreviewAbsorb = 5200000
 local p1SoakTimers = {
     [15] = {48, 133},
@@ -169,7 +169,7 @@ local debuffCirclePreview = [[return function(NSI)
             set = [[return function(NSI, value) for difficultyID = 15, 16 do NSRT.EncounterAlerts[3429][difficultyID].EternalNightfallAbsorb.BarHeight = value end NSI:UpdateCoiledAltarEternalNightfall() end]],
         },
     }
-    local data = {Version = {versionNumber = 2, [1] = {group = "Coiled Altar"}, [2] = {customIcon = 1286918}}, group = "Coiled Altar", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", customIcon = 1286918, DisplayType = "Bar", encID = encID,
+    local data = {Version = {versionNumber = 3, [1] = {group = "Coiled Altar"}, [2] = {customIcon = 1286918}, [3] = {dur = eternalNightfallDuration}}, group = "Coiled Altar", internalID = "EternalNightfallAbsorb", name = "Eternal Nightfall Absorb", text = "", customIcon = 1286918, DisplayType = "Bar", encID = encID,
         phase = nil, TTS = false, dur = eternalNightfallDuration, enabled = true, BlockCopy = true,
         BarColor = {0.6235, 0.2510, 1, 1}, BarWidth = 300, BarHeight = 40, Anchor = "TOP", relativeTo = "TOP", xOffset = 0, yOffset = -300,
         Preview = eternalNightfallPreview, extraOptions = eternalNightfallOptions, difficulties = {15, 16}, NoEdit = true,
