@@ -9,3 +9,4 @@
 - add new feature that corrects the time of reminders on cast events
 - Add Callbacks for TimelineReminders so that everything is displayed through there now if enabled
 - Prepare Coiled Altar Interrupt Alert for 12.1.5 API changes. It is now required to focus the add you are interrupting.
+- Allow adding Sound/TTS to some Alerts that didn't allow previously
