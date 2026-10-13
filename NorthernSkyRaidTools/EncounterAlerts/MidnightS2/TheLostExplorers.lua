@@ -10,7 +10,7 @@ NSI:RegisterBuiltinAuraGlow("LostExplorersBlinkNovaGlow", {
     menuIcon = 1290743,
     roles = {HEALER = true},
     color = {0, 1, 0, 1},
-    candidateFilters = {isPriorityAura = true, MaxDuration = 12},
+    candidateFilters = {isPriorityAura = true, isFromPlayerOrPlayerPet = false, MaxDuration = 12},
 })
 
 NSI.InitializeAlerts[encID] = function(self)
