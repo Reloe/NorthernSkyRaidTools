@@ -51,7 +51,7 @@ NSI.InitializeAlerts[encID] = function(self)
     local tankConditions = self:DefaultLoadConditions()
     tankConditions.Roles.TANK = true
 
-    local darkDevastationTimers = {23.028, 43.028, 65.996, 132.007, 152.011, 175.003, 241.005, 261.010, 283.996, 350.028}
+    local darkDevastationTimers = {23, 43, 66, 132, 152, 175, 241, 261, 284, 350}
     local data = {group = "Kith'ix", internalID = "DarkDevastation", name = "Dark Devastation", text = "Tank-Hit", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1304930,
         textColors = {1, 0, 0, 1}, loadConditions = tankConditions,
         isConditional = {
@@ -71,28 +71,28 @@ NSI.InitializeAlerts[encID] = function(self)
             func = [[return function() local threat = UnitThreatSituation("player", "boss1") return threat and threat < 2 end]],
         },
         timers = {
-            [16] = {23.528, 43.528, 66.496, 132.507, 152.511, 175.503, 241.505, 261.510, 284.496, 350.528},
+            [16] = {23.5, 43.5, 66.5, 132.5, 152.5, 175.5, 241.5, 261.5, 284.5, 350.5},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Kith'ix", internalID = "AoE", name = "AoE", text = "Get Orb", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 10, spellID = 1304424,
         timers = {
-            [16] = {37.034, 79.032, 146.038, 188.002, 255.032, 297.032},
+            [16] = {36, 78, 145, 187, 254, 296},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Kith'ix", internalID = "Darkness", name = "Darkness", text = "Darkness", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1302951,
         timers = {
-            [16] = {57.024, 166.037, 275.050},
+            [16] = {57, 166, 275},
         },
     }
     self:AddEncounterAlert(data)
 
     local data = {group = "Kith'ix", internalID = "Adds", name = "Adds", text = "Adds", DisplayType = "Text", encID = encID, phase = 1, TTS = true, dur = 8, spellID = 1301511,
         timers = {
-            [16] = {8.030, 117.022, 226.012, 335.002},
+            [16] = {8, 117, 226, 335},
         },
     }
     self:AddEncounterAlert(data)
