@@ -1571,10 +1571,16 @@ local function BuildAuraTrackingUI(screen)
         if previousScroll then
             previousScroll.frame:Hide()
         end
-        local topPad = (activeTab == "Display") and DISPLAY_TOP or 0
+        local topPad = 0
+        local search = string.lower(displaySearchText)
+        if activeTab == "Display" then
+            local showAnchor = search == "" or string.find(string.lower(NSI:Loc("Anchor Frame")), search, 1, true) ~= nil
+            anchorLbl:SetShown(showAnchor)
+            anchorEntry.frame:SetShown(showAnchor)
+            topPad = showAnchor and DISPLAY_TOP or 0
+        end
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
-        if activeTab == "Display" and displaySearchText ~= "" then
-            local search = string.lower(displaySearchText)
+        if activeTab == "Display" and search ~= "" then
             local filteredDefs = {}
             local currentHeader
             local headerAdded = false
@@ -1613,7 +1619,7 @@ local function BuildAuraTrackingUI(screen)
         local totalH = BuildWidgets(scrollObj.scrollChild, defs, scrollObj.scrollChild:GetWidth(), "NSRTAuraTrack" .. activeTab)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         scrollObj:UpdateScrollBar()
-        scrollObj.frame:SetVerticalScroll(scrollPosition)
+        scrollObj.frame:SetVerticalScroll(math.min(scrollPosition, math.max(0, scrollObj.scrollChild:GetHeight() - scrollObj.frame:GetHeight())))
         tabScroll[activeTab] = scrollObj
     end
 
@@ -2007,7 +2013,10 @@ local function BuildAuraTrackingUI(screen)
     displaySearchEntry.editBox:SetScript("OnTextChanged", function(self)
         displaySearchText = self:GetText()
         UpdateDisplaySearchHint(self)
-        if activeTab == "Display" then RebuildCurrentTab() end
+        if activeTab == "Display" then
+            if tabScroll.Display then tabScroll.Display.frame:SetVerticalScroll(0) end
+            RebuildCurrentTab()
+        end
     end)
     displaySearchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateDisplaySearchHint(self) end)
     displaySearchEntry.editBox:HookScript("OnEditFocusLost", function(self) UpdateDisplaySearchHint(self) end)

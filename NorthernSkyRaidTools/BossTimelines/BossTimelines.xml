@@ -21,4 +21,5 @@
     <Script file="MidnightS2/TheTwinFangs.lua"/>
     <Script file="MidnightS2/TheCoiledAltar.lua"/>
     <Script file="MidnightS2/Ulatek.lua"/>
+    <Script file="MidnightS2/Kithix.lua"/>
 </Ui>
