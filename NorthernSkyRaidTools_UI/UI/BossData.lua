@@ -20,6 +20,7 @@ local BossIcons = {
     [3421] = 7966623, -- The Twin Fangs
     [3429] = 7966625, -- The Coiled Altar
     [3492] = 7966624, -- Ula'tek
+    [3513] = 8214194, -- Kith'ix
 }
 
 function NSI:CanDeleteEncounterAlert(alert, encID)

@@ -14,7 +14,6 @@ L["Note-Display"] = "方案显示"
 L["Encounter Alerts"] = "首领预警"
 L["Interrupt Display"] = "打断显示"
 L["Assignments"] = "任务分配"
-L["WA Imports"] = "WA导入"
 L["Nicknames"] = "昵称"
 L["Version Check"] = "版本检查"
 L["Shared Notes"] = "共享方案"
@@ -871,7 +870,6 @@ L["Show Source Name"] = "显示来源名称"
 L["Unit Name Settings"] = "单位名称设置"
 L["Show Unit Name"] = "显示单位名称"
 L["Shows the class-colored nickname of the unit whose aura is shown. This replaces caster names for this display."] = "在光环图标上显示带有此光环的单位名称（替代来源名称）。"
-L["Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"] = "在光环图标上显示来源名称（更新12.1.5后可用）。"
 L["Season 1"] = "第1赛季"
 L["Season 2"] = "第2赛季"
 L["Season 3"] = "第3赛季"
@@ -1123,9 +1121,6 @@ L["Size"] = "尺寸"
 L["Show Background Ring"] = "显示背景环"
 L["Ring Color"] = "环颜色"
 L["Ring Size"] = "环尺寸"
--- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
 -- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
@@ -1438,7 +1433,6 @@ L["Reminders"] = "提醒"
 L["Note-Display"] = "方案显示"
 L["Encounter Alerts"] = "首领预警"
 L["Assignments"] = "任务分配"
-L["WA Imports"] = "WA导入"
 L["Nicknames"] = "昵称"
 L["Version Check"] = "版本检查"
 L["Shared Notes"] = "共享方案"

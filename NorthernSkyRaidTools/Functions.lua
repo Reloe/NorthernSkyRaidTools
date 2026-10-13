@@ -30,6 +30,16 @@ end
 function NSI:ResolveGroupMemberUnit(unit)
     if type(unit) ~= "string" or unit == "" then return end
 
+    if self:IsForever() then
+        local inputName = strlower(unit)
+        for member in self:IterateGroupMembers() do
+            local name = self:GetRealName(member)
+            local firstName = UnitFullName(member)
+            if name and (strlower(name) == inputName or strlower(firstName) == inputName) then return member end
+        end
+        return
+    end
+
     local inputName, inputRealm = strsplit("-", unit)
     if not inputName or inputName == "" then return end
 
@@ -55,11 +65,6 @@ end
 
 function NSI:Restricted()
     return C_Secrets.ShouldAurasBeSecret()
-end
-
-function NSI:IsPTRPatch()
-    local interfaceVersion = select(4, GetBuildInfo())
-    return interfaceVersion >= 120105
 end
 
 function NSI:IsForever()
@@ -531,9 +536,6 @@ function NSAPI:OpenAlert(encID, diffID, internalID)
     return false
 end
 
-local ExportSerializer = LibStub("LibSerialize")
-local ExportDeflate = LibStub("LibDeflate")
-
 local function CopySerializableValue(value, copies)
     local valueType = type(value)
     if valueType == "function" then return nil end
@@ -554,19 +556,26 @@ local function CopySerializableValue(value, copies)
     return copy
 end
 
-function NSI:EncodeExportData(data, serializer)
-    local serialized = (serializer or ExportSerializer):Serialize(CopySerializableValue(data))
-    local compressed = serialized and ExportDeflate:CompressDeflate(serialized)
-    return compressed and ExportDeflate:EncodeForPrint(compressed)
+function NSI:EncodeExportData(data, exportType)
+    local serialized = C_EncodingUtil.SerializeCBOR(CopySerializableValue(data))
+    local compressed = C_EncodingUtil.CompressString(serialized, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)
+    local encoded = compressed and C_EncodingUtil.EncodeBase64(compressed, Enum.Base64Variant.StandardUrlSafe)
+    return encoded and "!NSRT:" .. exportType .. ":" .. encoded
 end
 
-function NSI:DecodeExportData(text, serializer)
+function NSI:DecodeExportData(text, exportType)
     if type(text) ~= "string" or text == "" then return end
-    local decoded = ExportDeflate:DecodeForPrint(text)
-    local decompressed = decoded and ExportDeflate:DecompressDeflate(decoded)
+    local prefix = "!NSRT:" .. exportType .. ":"
+    if text:sub(1, #prefix) ~= prefix then
+        if text:sub(1, 6) ~= "!NSRT:" then
+            print("|cFFFF0000NSRT:|r " .. self:Loc("This import string was exported before patch 12.1.5 and can no longer be imported."))
+        end
+        return
+    end
+    local decoded = C_EncodingUtil.DecodeBase64(text:sub(#prefix + 1), Enum.Base64Variant.StandardUrlSafe)
+    local decompressed = decoded and C_EncodingUtil.DecompressString(decoded, Enum.CompressionMethod.Deflate)
     if not decompressed then return end
-    local success, data = (serializer or ExportSerializer):Deserialize(decompressed)
-    return success and data or nil
+    return C_EncodingUtil.DeserializeCBOR(decompressed)
 end
 
 function NSI:SaveFramePosition(F, SettingsTable)
@@ -818,12 +827,9 @@ end
 
 function NSI:IsInSameGuild(unit, playerName)
     if not playerName then
-        local name, realm = UnitName(unit)
-        if not realm then
-            realm = select(2, UnitFullName("player"))
-        end
+        local name, realm = self:GetRealName(unit)
         if not name then return false end
-        playerName = name.."-"..realm
+        playerName = self:GetNickNameKey(name, realm)
     end
     for i=1, GetNumGuildMembers() do
         local name = GetGuildRosterInfo(i)

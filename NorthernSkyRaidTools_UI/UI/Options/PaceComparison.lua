@@ -5,6 +5,7 @@ local Core = NSI.UI.Core
 local BossData = NSI.UI.BossData
 local C = NSI.UI.Components
 local CreateTextEntry = C.CreateTextEntry
+local CreateLocalizedButton = C.CreateLocalizedButton
 local CreateLocalizedSubButton = C.CreateLocalizedSubButton
 local ReskinScrollbar = C.ReskinScrollbar
 local BuildWidgets = C.BuildWidgets
@@ -40,7 +41,7 @@ local paceImportPopup
 local function ShowPaceComparisonExportPopup(text, label)
     if not paceExportPopup then
         paceExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r",
-            "NSUIPaceComparisonExportString", { DontRightClickClose = true })
+            "NSUIPaceComparisonExportString", { UseScaleBar = false })
         paceExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         paceExportPopup:SetFrameLevel(100)
 
@@ -58,12 +59,10 @@ local function ShowPaceComparisonExportPopup(text, label)
         paceExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         NSI:SetUIFont(paceExportPopup.textbox.editbox, 13, "OUTLINE")
 
-        local doneBtn = DF:CreateButton(paceExportPopup, function()
+        local doneBtn = CreateLocalizedButton(paceExportPopup, "Done", function()
             paceExportPopup:Hide()
-        end, 280, 20, NSI:Loc("Done"))
+        end, 280, 20)
         doneBtn:SetPoint("BOTTOM", paceExportPopup, "BOTTOM", 0, 10)
-        doneBtn:SetTemplate(options_button_template)
-        ApplyUIFont(doneBtn, 11)
     end
 
     paceExportPopup.infoLabel:SetText(label or "")
@@ -75,7 +74,7 @@ end
 local function ShowPaceComparisonImportPopup(onImport)
     if not paceImportPopup then
         paceImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
-            "NSUIPaceComparisonImportString", { DontRightClickClose = true })
+            "NSUIPaceComparisonImportString", { UseScaleBar = false })
         paceImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         paceImportPopup:SetFrameLevel(100)
 
@@ -94,7 +93,7 @@ local function ShowPaceComparisonImportPopup(onImport)
         paceImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
         NSI:SetUIFont(paceImportPopup.textbox.editbox, 13, "OUTLINE")
 
-        local importBtn = DF:CreateButton(paceImportPopup, function()
+        local importBtn = CreateLocalizedButton(paceImportPopup, "Import", function()
             local success, bossCount, thresholdCount = NSI:ImportPaceComparisonString(paceImportPopup.textbox:GetText())
             if success then
                 paceImportPopup:Hide()
@@ -105,10 +104,8 @@ local function ShowPaceComparisonImportPopup(onImport)
             else
                 paceImportPopup.statusLabel:SetText("|cFFFF0000" .. NSI:Loc("Invalid Pace Comparison import string.") .. "|r")
             end
-        end, 280, 20, NSI:Loc("Import"))
+        end, 280, 20)
         importBtn:SetPoint("BOTTOM", paceImportPopup, "BOTTOM", 0, 10)
-        importBtn:SetTemplate(options_button_template)
-        ApplyUIFont(importBtn, 11)
     end
 
     paceImportPopup.onImport = onImport

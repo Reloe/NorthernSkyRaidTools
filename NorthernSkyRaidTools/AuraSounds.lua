@@ -130,6 +130,10 @@ NSI.AuraSoundCategories = {
             {spellID = 1301118, sound = "Debuff"}, -- Grasping Fangs
             {spellID = 1311611, sound = "Break"}, -- Grasping Fangs
         }},
+        {key = 3513, entries = { -- Kith'ix
+            {spellID = 1304045, sound = "RunOut"}, -- Unspeakable Horrors
+            {spellID = 1304526, sound = "Safe"}, -- Light's Embrace
+        }},
     },
     Dungeons = {
         -- Season 1
@@ -466,8 +470,16 @@ function NSI:RebuildAuraSounds(updateDefaults)
         self:ApplyDefaultAuraSounds(false, true, NSRT.AuraSounds.UseDefaultDungeonAuraSounds)
     end
     for key, info in pairs(NSRT.AuraSounds) do
-        if type(info) == "table" and info.sound then
-            self:AddAuraSound(info.spellID, info.sound, key, info.unit, info.eventType, info.throttleSeconds)
+        if type(info) == "table" then
+            if info.throttleSeconds ~= nil then
+                local throttleSeconds = tonumber(info.throttleSeconds)
+                if throttleSeconds and throttleSeconds >= 0 then
+                    info.throttleSeconds = math.min(throttleSeconds, 5)
+                end
+            end
+            if info.sound then
+                self:AddAuraSound(info.spellID, info.sound, key, info.unit, info.eventType, info.throttleSeconds)
+            end
         end
     end
 end
@@ -492,6 +504,11 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSec
         local trigger = AuraSoundEventTriggers[eventType] or AuraSoundEventTriggers.applied
         throttleSeconds = tonumber(throttleSeconds)
         if not throttleSeconds or throttleSeconds < 0 then throttleSeconds = 1 end
+        throttleSeconds = math.min(throttleSeconds, 5)
+        local saved = entryKey and NSRT.AuraSounds[entryKey]
+        if type(saved) == "table" and saved.throttleSeconds ~= nil then
+            saved.throttleSeconds = throttleSeconds
+        end
         local soundIDs = {}
         for _, unitToken in ipairs(units) do
             local soundInfo = {
@@ -499,12 +516,9 @@ function NSI:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSec
                 spellID = spellID,
                 soundFileName = soundPath,
                 outputChannel = NSRT.AuraSounds.SoundChannel or "Master",
+                throttleSeconds = throttleSeconds,
             }
-            if self:IsPTRPatch() then
-                soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo, throttleSeconds)
-            else
-                soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
-            end
+            soundIDs[#soundIDs + 1] = C_UnitAuras.AddAuraSound(trigger, soundInfo)
         end
         self.AuraSoundIDs[entryKey] = (#soundIDs == 1) and soundIDs[1] or soundIDs
     end
@@ -556,7 +570,8 @@ function NSI:SaveAuraSound(entryKey, spellID, sound, categoryType, categoryKey, 
     if throttleSeconds ~= nil then
         throttleSeconds = tonumber(throttleSeconds)
         if throttleSeconds and throttleSeconds >= 0 then
-            NSRT.AuraSounds[entryKey].throttleSeconds = throttleSeconds
+            NSRT.AuraSounds[entryKey].throttleSeconds = math.min(throttleSeconds, 5)
+            throttleSeconds = NSRT.AuraSounds[entryKey].throttleSeconds
         end
     end
     self:AddAuraSound(spellID, sound, entryKey, unit, eventType, throttleSeconds)
@@ -640,11 +655,11 @@ function NSI:ExportAuraSoundCategories(categoryType, categoryKeys, group)
             export.sounds[#export.sounds + 1] = {key = key, info = CopyTable(info)}
         end
     end
-    return self:EncodeExportData(export)
+    return self:EncodeExportData(export, "AuraSound")
 end
 
 function NSI:ImportAuraSoundString(text)
-    local import = self:DecodeExportData(text)
+    local import = self:DecodeExportData(text, "AuraSound")
     if type(import) ~= "table" or import.type ~= "NSRT_AURA_SOUNDS"
         or type(import.categoryType) ~= "string" or type(import.categories) ~= "table" or type(import.sounds) ~= "table"
     then

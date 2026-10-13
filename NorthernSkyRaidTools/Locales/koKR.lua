@@ -14,7 +14,6 @@ L["Note-Display"] = "메모 표시"
 L["Encounter Alerts"] = "공격대 경고"
 L["Interrupt Display"] = "차단 알림"
 L["Assignments"] = "특임 배정"
-L["WA Imports"] = "위크오라 가져오기"
 L["Nicknames"] = "닉네임"
 L["Version Check"] = "버전 확인"
 L["Shared Notes"] = "공유 메모"
@@ -867,7 +866,6 @@ L["Show Source Name"] = "시전자 이름 표시"
 L["Unit Name Settings"] = "유닛 이름 설정"
 L["Show Unit Name"] = "유닛 이름 표시"
 L["Shows the class-colored nickname of the unit whose aura is shown. This replaces caster names for this display."] = "표시된 오라를 건 유닛의 닉네임을 직업 색상을 입혀 표시합니다. 이 옵션을 사용하면 디스플레이 상의 시전자 이름을 대체합니다."
-L["Shows the source name attached to visible aura icons. This feature is not yet available. Blizzard will add the functionality in Patch 12.1.5"] = "오라 아이콘에 시전자 이름을 표시합니다. 이 기능은 아직 사용할 수 없습니다. 블리자드가 12.1.5 패치에 기능을 추가할 예정입니다"
 L["Season 1"] = "1시즌"
 L["Season 2"] = "2시즌"
 L["Season 3"] = "3시즌"
@@ -1117,9 +1115,6 @@ L["Size"] = "크기"
 L["Show Background Ring"] = "배경 원 표시"
 L["Ring Color"] = "원 색상"
 L["Ring Size"] = "원 크기"
--- ============================================================================
--- UI/Options/WAImports.lua
--- ============================================================================
 -- ============================================================================
 -- UI/EncounterAlerts.lua
 -- ============================================================================
@@ -1431,7 +1426,6 @@ L["Reminders"] = "리마인더"
 L["Note-Display"] = "메모 표시"
 L["Encounter Alerts"] = "공격대 경고"
 L["Assignments"] = "특임 배정"
-L["WA Imports"] = "위크오라 가져오기"
 L["Nicknames"] = "닉네임"
 L["Version Check"] = "버전 확인"
 L["Shared Notes"] = "공유 메모"

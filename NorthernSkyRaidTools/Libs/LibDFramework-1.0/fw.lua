@@ -1268,7 +1268,7 @@ function DF.string.FormatDateByLocale(timestamp, ignoreYear)
 end
 
 ---receive an array and output a string with the values separated by commas
----if bDoCompression is true, the string will be compressed using LibDeflate
+---if bDoCompression is true, the string will be compressed with C_EncodingUtil
 ---@param t table
 ---@param bDoCompression boolean|nil
 ---@return string
@@ -1281,10 +1281,7 @@ function DF.strings.tabletostring(t, bDoCompression)
 	newString = newString:sub(1, -2)
 
 	if (bDoCompression) then
-		local LibDeflate = LibStub:GetLibrary("LibDeflate")
-		if (LibDeflate) then
-			newString = LibDeflate:CompressDeflate(newString, {level = 9})
-		end
+		newString = C_EncodingUtil.CompressString(newString, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)
 	end
 
 	return newString
@@ -1292,10 +1289,7 @@ end
 
 function DF.strings.stringtotable(thisString, bDoCompression)
 	if (bDoCompression) then
-		local LibDeflate = LibStub:GetLibrary("LibDeflate")
-		if (LibDeflate) then
-			thisString = LibDeflate:DecompressDeflate(thisString)
-		end
+		thisString = C_EncodingUtil.DecompressString(thisString, Enum.CompressionMethod.Deflate)
 	end
 
 	local newTable = {strsplit(",", thisString)}
@@ -6096,28 +6090,26 @@ end
 --DetailsFramework:SendScriptComm (ID, ...)
 
 	local aceComm = LibStub:GetLibrary ("AceComm-3.0", true)
-	local LibAceSerializer = LibStub:GetLibrary ("AceSerializer-3.0", true)
-	local LibDeflate = LibStub:GetLibrary ("LibDeflate", true)
 
 	DF.RegisteredScriptsComm = DF.RegisteredScriptsComm or {}
 
 	function DF.OnReceiveScriptComm (...)
 		local prefix, encodedString, channel, commSource = ...
 
-		local decodedString = LibDeflate:DecodeForWoWAddonChannel (encodedString)
+		local decodedString = C_EncodingUtil.DecodeBase64(encodedString, Enum.Base64Variant.StandardUrlSafe)
 		if (decodedString) then
-			local uncompressedString = LibDeflate:DecompressDeflate (decodedString)
+			local uncompressedString = C_EncodingUtil.DecompressString(decodedString, Enum.CompressionMethod.Deflate)
 			if (uncompressedString) then
-				local data = {LibAceSerializer:Deserialize (uncompressedString)}
-				if (data[1]) then
-					local ID = data[2]
+				local data = C_EncodingUtil.DeserializeCBOR(uncompressedString)
+				if (type(data) == "table") then
+					local ID = data[1]
 					if (ID) then
-						local sourceName = data[4]
+						local sourceName = data[3]
 						if (Ambiguate (sourceName, "none") == commSource) then
 							local func = DF.RegisteredScriptsComm [ID]
 							if (func) then
 								DF:MakeFunctionSecure(func)
-								DF:Dispatch (func, commSource, select(5, unpack(data))) --this use xpcall
+								DF:Dispatch (func, commSource, select(4, unpack(data))) --this use xpcall
 							end
 						end
 					end
@@ -6139,14 +6131,14 @@ end
 	function DF:SendScriptComm (ID, ...)
 		if (DF.RegisteredScriptsComm [ID]) then
 			local sourceName = UnitName ("player") .. "-" .. GetRealmName()
-			local data = LibAceSerializer:Serialize (ID, UnitGUID("player"), sourceName, ...)
-			data = LibDeflate:CompressDeflate (data, {level = 9})
-			data = LibDeflate:EncodeForWoWAddonChannel (data)
+			local data = C_EncodingUtil.SerializeCBOR({ID, UnitGUID("player"), sourceName, ...})
+			data = C_EncodingUtil.CompressString(data, Enum.CompressionMethod.Deflate, Enum.CompressionLevel.OptimizeForSize)
+			data = C_EncodingUtil.EncodeBase64(data, Enum.Base64Variant.StandardUrlSafe)
 			aceComm:SendCommMessage ("_GSC", data, "PARTY")
 		end
 	end
 
-	if (aceComm and LibAceSerializer and LibDeflate) then
+	if (aceComm) then
 		aceComm:RegisterComm ("_GSC", DF.OnReceiveScriptComm)
 	end
 

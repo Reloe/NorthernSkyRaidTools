@@ -1,4 +1,4 @@
-## Interface: 120100, 16001
+## Interface: 120105, 16001
 ## AllowLoadGameType: standard, camelot
 ## Title: |cFF00FFFFNorthern Sky Raid Tools - UI|r
 ## Version: @project-version@
@@ -29,9 +29,9 @@ UI\Options\Assignments.lua
 UI\Options\InterruptDisplay.lua
 UI\Options\ReadyCheck.lua
 UI\Options\AuraTracking.lua
+UI\Options\AuraGlows.lua
 UI\Options\PaceComparison.lua
 UI\Options\QoL.lua [AllowLoadGameType standard]
-UI\Options\WAImports.lua [AllowLoadGameType standard]
 UI\AnchorWindow.lua
 Timeline.lua
 

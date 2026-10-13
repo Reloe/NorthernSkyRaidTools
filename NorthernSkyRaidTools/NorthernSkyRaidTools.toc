@@ -1,4 +1,4 @@
-## Interface: 120100, 16001
+## Interface: 120105, 16001
 ## AllowLoadGameType: standard, camelot
 ## Title: |cFF00FFFFNorthern Sky Raid Tools|r
 ## Version: @project-version@
@@ -51,6 +51,7 @@ ReadyCheck.lua
 ReadyCheckConsumables.lua
 AuraSounds.lua
 AuraTracking.lua
+AuraGlows.lua
 PaceComparison.lua
 QoL.lua [AllowLoadGameType standard]
 QoLDisplay.lua [AllowLoadGameType standard]
@@ -80,6 +81,7 @@ EncounterAlerts/MidnightS2/Sszorak.lua [AllowLoadGameType standard]
 EncounterAlerts/MidnightS2/TheTwinFangs.lua [AllowLoadGameType standard]
 EncounterAlerts/MidnightS2/TheCoiledAltar.lua [AllowLoadGameType standard]
 EncounterAlerts/MidnightS2/Ulatek.lua [AllowLoadGameType standard]
+EncounterAlerts/MidnightS2/Kithix.lua [AllowLoadGameType standard]
 
 # Encounter Alerts Localization
 EncounterAlerts\Locales\Core.lua

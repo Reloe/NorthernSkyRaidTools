@@ -293,3 +293,13 @@ L[3492] = {
     ["PrePot"] = {group = "울라텍", name = "시작 전 물약", text = "시작 전 물약"},
     ["AutoRelease"] = {group = "울라텍", name = "자동 영혼 전환", text = "자동 영혼 전환"},
 }
+
+-- Kith'ix (3513)
+L[3513] = {
+    -- ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
+    -- ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
+    -- ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
+    -- ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
+    -- ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
+    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+}

@@ -205,7 +205,10 @@ local function PrepareAuraSoundData(screen)
                     local saved = NSRT.AuraSounds[entryKey]
                     local unit = type(saved) == "table" and saved.unit or defaultUnit or "player"
                     local eventType = type(saved) == "table" and saved.eventType or defaultEventType or "applied"
-                    local useDefaultSounds = screen.categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
+                    local useDefaultSounds = NSRT.AuraSounds.UseDefaultRaidAuraSounds
+                    if screen.categoryType == "Dungeons" then
+                        useDefaultSounds = NSRT.AuraSounds.UseDefaultDungeonAuraSounds
+                    end
                     local sound = useDefaultSounds and defaultSound or nil
                     if type(saved) == "table" and saved.edited then
                         sound = saved.sound
@@ -338,7 +341,10 @@ local function BuildAuraSoundsUI(parent)
     local function ResetSpellToDefault(entryKey, spellID, defaultSound, unit, eventType)
         if not spellID then return end
         NSRT.AuraSounds[entryKey] = nil
-        local enabled = screen.categoryType == "Dungeons" and NSRT.AuraSounds.UseDefaultDungeonAuraSounds or NSRT.AuraSounds.UseDefaultRaidAuraSounds
+        local enabled = NSRT.AuraSounds.UseDefaultRaidAuraSounds
+        if screen.categoryType == "Dungeons" then
+            enabled = NSRT.AuraSounds.UseDefaultDungeonAuraSounds
+        end
         NSI:AddAuraSound(spellID, enabled and defaultSound or nil, entryKey, unit or "player", eventType or "applied")
     end
 
@@ -1091,6 +1097,8 @@ local function BuildAuraSoundsUI(parent)
                 row.throttleEntry:SetValue(entry and entry.throttleSeconds or 1)
                 return
             end
+            throttleSeconds = math.min(throttleSeconds, 5)
+            row.throttleEntry:SetValue(throttleSeconds)
             entry.throttleSeconds = throttleSeconds
             local sound = entry.deleted and nil or entry.sound
             NSI:SaveAuraSound(entry.key, entry.spellID, sound, screen.categoryType, screen.categoryKey, entry.unit, entry.eventType, throttleSeconds)

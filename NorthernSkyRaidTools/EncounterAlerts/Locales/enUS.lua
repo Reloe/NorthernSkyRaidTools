@@ -295,3 +295,12 @@ L[3492] = {
     ["PrePot"] = {group = "Ula'tek", name = "Pre-Pot", text = "Pre-Pot"},
     ["AutoRelease"] = {group = "Ula'tek", name = "Auto Release", text = "Auto Release"},
 }
+
+-- Kith'ix (3513)
+L[3513] = {
+    ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
+    ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
+    ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
+    ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
+    ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
+}
