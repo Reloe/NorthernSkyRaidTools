@@ -23,10 +23,14 @@ function NSI:Broadcast(event, channel, ...) -- using internal broadcast function
 end
 
 local function ReceiveComm(text, chan, sender, whisper, internal)
-    local decoded = C_EncodingUtil.DecodeBase64(text, Enum.Base64Variant.StandardUrlSafe)
-    local decompressed = decoded and C_EncodingUtil.DecompressString(decoded, Enum.CompressionMethod.Deflate)
-    local payload = decompressed and C_EncodingUtil.DeserializeCBOR(decompressed)
-    if type(payload) ~= "table" or type(payload.event) ~= "string" or type(payload.args) ~= "table" then return end
+    -- filter out comms from older versions
+    if text:find("[^A-Za-z0-9_%-=]") then return end
+    local decodeSuccess, decoded = pcall(C_EncodingUtil.DecodeBase64, text, Enum.Base64Variant.StandardUrlSafe)
+    if not decodeSuccess or not decoded then return end
+    local decompressSuccess, decompressed = pcall(C_EncodingUtil.DecompressString, decoded, Enum.CompressionMethod.Deflate)
+    if not decompressSuccess or not decompressed then return end
+    local deserializeSuccess, payload = pcall(C_EncodingUtil.DeserializeCBOR, decompressed)
+    if not deserializeSuccess or type(payload) ~= "table" or type(payload.event) ~= "string" or type(payload.args) ~= "table" then return end
 
     local event = payload.event
     if (UnitExists(sender) and (UnitInRaid(sender) or UnitInParty(sender))) or (chan == "GUILD" and allowedcomms[event]) then -- block addon msg's from outside the raid, only exception being the guild nickname comms.
