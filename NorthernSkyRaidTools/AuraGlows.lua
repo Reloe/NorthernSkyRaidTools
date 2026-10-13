@@ -1,4 +1,5 @@
 local _, NSI = ...
+local auraGlowBuildFrame
 
 NSI.AuraGlowBuiltins = NSI.AuraGlowBuiltins or {}
 NSI.AuraGlowDefaultSettingsKey = "DefaultSettings"
@@ -79,13 +80,13 @@ local function BuildAuraGlowFilterString(settings)
     return table.concat(parts, "|")
 end
 
-local function BuildAuraGlowCandidateFilters(settings)
+local function BuildAuraGlowCandidateFilters(settings, spellIDs)
     local configured = settings.CandidateFilters or {}
     local filters = {}
     filters.excludeSpellIDs = NSI.AuraTrackingExcludedSpellIDs
     if UsesAuraGlowSpellIDs(settings) then
         filters.includeSpellIDs = {}
-        for _, spellID in ipairs(GetAuraGlowSpellIDs(settings)) do
+        for _, spellID in ipairs(spellIDs or GetAuraGlowSpellIDs(settings)) do
             filters.includeSpellIDs[spellID] = true
         end
         return filters
@@ -259,7 +260,7 @@ function NSI:SetUseBuiltinAuraGlows(enabled)
             settings.enabled = enabled == true or definition.enabled == true
         end
     end
-    self:UpdateAuraGlowVisibility()
+    self:InitAuraGlows()
     self:RefreshAuraGlowsUI()
 end
 
@@ -453,7 +454,11 @@ function NSI:SetBuiltinAuraGlowActive(key, active)
     else
         self.AuraGlowManualState[key] = active == true
     end
-    self:UpdateAuraGlowVisibility(key)
+    if active == false then
+        self:UpdateAuraGlowVisibility(key)
+    else
+        self:InitAuraGlows(key)
+    end
 end
 
 function NSI:ActivateBuiltinAuraGlow(key)
@@ -808,18 +813,21 @@ function NSI:UpdateAuraGlowVisibility(onlyKey)
             local settings = self:GetAuraGlowSettings(key)
             local enabled = settings and IsAuraGlowActive(self, key, settings)
             for _, state in pairs(states) do
-                state.container:SetEnabled(enabled)
-                state.container:SetShown(enabled)
+                state.container:SetEnabled(enabled == true)
+                state.container:SetShown(enabled == true)
             end
         end
     end
 end
 
 function NSI:RebuildAuraGlows(key)
+    self.AuraGlowBuildGeneration = (self.AuraGlowBuildGeneration or 0) + 1
+    self.AuraGlowBuildPending = false
     local auraGlowStates = self.AuraGlowStates or {}
     local statesToRebuild = key and { [key] = auraGlowStates[key] } or auraGlowStates
     for _, states in pairs(statesToRebuild or {}) do
         for _, state in pairs(states) do
+            state.container:SetEnabled(false)
             state.container:Hide()
         end
     end
@@ -835,41 +843,123 @@ end
 
 function NSI:InitAuraGlows(onlyKey)
     if self.IsBuilding then return end
+    self.AuraGlowBuildGeneration = (self.AuraGlowBuildGeneration or 0) + 1
+    local generation = self.AuraGlowBuildGeneration
+    self.AuraGlowBuildPending = false
+    if auraGlowBuildFrame then
+        auraGlowBuildFrame:Hide()
+        auraGlowBuildFrame.queue = nil
+    end
     if self:Restricted() then
         self.PendingAuraGlowUpdate = true
+        self.AuraGlowBuildPending = false
+        return
+    end
+    self.PendingAuraGlowUpdate = nil
+    self.AuraGlowStates = self.AuraGlowStates or {}
+    local activeKeys = {}
+    local queue = {}
+    for _, entry in ipairs(self:IterateAuraGlowEntries()) do
+        local key, settings = entry.key, entry.settings
+        local usesSpellIDs = UsesAuraGlowSpellIDs(settings)
+        local spellIDs = usesSpellIDs and GetAuraGlowSpellIDs(settings) or nil
+        if not usesSpellIDs or #spellIDs > 0 then
+            activeKeys[key] = true
+            self.AuraGlowStates[key] = self.AuraGlowStates[key] or {}
+            local states = self.AuraGlowStates[key]
+            local filterString, candidateFilters
+            local shouldCreate = IsAuraGlowActive(self, key, settings)
+            if shouldCreate then
+                filterString = BuildAuraGlowFilterString(settings)
+                candidateFilters = BuildAuraGlowCandidateFilters(settings, spellIDs)
+            end
+            for unit in self:IterateGroupMembers() do
+                local targetFrame = self.UnitFrames and self.UnitFrames[unit]
+                if targetFrame then
+                    local state = states[unit]
+                    if state then
+                        state.container:ClearAllPoints()
+                        state.container:SetAllPoints(targetFrame)
+                    elseif shouldCreate then
+                        queue[#queue + 1] = {
+                            key = key,
+                            settings = settings,
+                            unit = unit,
+                            filterString = filterString,
+                            candidateFilters = candidateFilters,
+                            usesSpellIDs = usesSpellIDs,
+                        }
+                    end
+                end
+            end
+        end
+    end
+    for key, states in pairs(self.AuraGlowStates) do
+        if not onlyKey or key == onlyKey then
+            for unit, state in pairs(states) do
+                if not activeKeys[key] or not UnitExists(unit) or not (self.UnitFrames and self.UnitFrames[unit]) then
+                    state.container:SetEnabled(false)
+                    state.container:Hide()
+                end
+            end
+        end
+    end
+    self:UpdateAuraGlowVisibility(onlyKey)
+    if #queue == 0 then
+        self.AuraGlowBuildPending = false
         return
     end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
         C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
-    self.PendingAuraGlowUpdate = nil
-    self.AuraGlowStates = self.AuraGlowStates or {}
-    local activeKeys = {}
-    for _, entry in ipairs(self:IterateAuraGlowEntries()) do
-        local key, settings = entry.key, entry.settings
-        local usesSpellIDs = UsesAuraGlowSpellIDs(settings)
-        if (not onlyKey or key == onlyKey) and (not usesSpellIDs or #GetAuraGlowSpellIDs(settings) > 0) then
-            activeKeys[key] = true
-            self.AuraGlowStates[key] = self.AuraGlowStates[key] or {}
-            local states = self.AuraGlowStates[key]
-            for unit in self:IterateGroupMembers() do
-                local targetFrame = self.UnitFrames and self.UnitFrames[unit]
-                if targetFrame then
-                    local state = states[unit]
-                    if not state then
+    self.AuraGlowBuildPending = true
+    if not auraGlowBuildFrame then
+        auraGlowBuildFrame = CreateFrame("Frame")
+        auraGlowBuildFrame:SetScript("OnUpdate", function(frame)
+            if frame.generation ~= self.AuraGlowBuildGeneration then
+                frame:Hide()
+                frame.queue = nil
+                return
+            end
+            if self.IsBuilding then return end
+            if self:Restricted() then
+                self.PendingAuraGlowUpdate = true
+                self.AuraGlowBuildPending = false
+                frame:Hide()
+                frame.queue = nil
+                return
+            end
+
+            local remaining = 3
+            while remaining > 0 and frame.nextIndex <= #frame.queue do
+                local work = frame.queue[frame.nextIndex]
+                frame.nextIndex = frame.nextIndex + 1
+                remaining = remaining - 1
+
+                local states = self.AuraGlowStates[work.key]
+                if IsAuraGlowActive(self, work.key, work.settings) and self:GetAuraGlowSettings(work.key) == work.settings and states and not states[work.unit] then
+                    local targetFrame = self.UnitFrames and self.UnitFrames[work.unit]
+                    if targetFrame then
+                        local settings = work.settings
                         local container = CreateFrame("AuraContainer", nil, UIParent, "CustomAuraContainerTemplate")
-                        local processedAuraType = not usesSpellIDs and settings.CandidateFilters and settings.CandidateFilters.ProcessedAuraType
+                        container:SetEnabled(false)
+                        container:Hide()
+                        local processedAuraType = not work.usesSpellIDs and settings.CandidateFilters and settings.CandidateFilters.ProcessedAuraType
                         local policy = processedAuraType and processedAuraType ~= "Disabled"
                             and CustomAuraContainerAuraProcessingPolicy.ProcessAura
                             or CustomAuraContainerAuraProcessingPolicy.None
                         container:SetAuraProcessingPolicy(policy)
-                        container:SetUnit(unit)
+                        container:SetUnit(work.unit)
                         container:SetAllPoints(targetFrame)
                         container:SetFrameStrata("TOOLTIP")
-                        -- Each AuraContainer aura slot has one stable aura frame, so one slot caps this glow at one icon.
-                        local slot = container:AddAuraSlot("Glow", BuildAuraGlowFilterString(settings), {
+                        local candidateFilters = {}
+                        for filter, value in pairs(work.candidateFilters) do
+                            candidateFilters[filter] = value
+                        end
+                        -- One aura slot keeps each target frame's glow to a single stable icon.
+                        local slot = container:AddAuraSlot("Glow", work.filterString, {
                             maxFrameCount = 1,
-                            candidateFilters = BuildAuraGlowCandidateFilters(settings),
+                            candidateFilters = candidateFilters,
                             initializeFrame = function(button)
                                 button:SetAllPoints(container)
                                 button:SetMouseMotionEnabled(false)
@@ -905,27 +995,31 @@ function NSI:InitAuraGlows(onlyKey)
                                 CreateAuraGlowBorder(button, settings)
                             end,
                         })
-                        state = { container = container, slot = slot }
-                        states[unit] = state
+                        states[work.unit] = { container = container, slot = slot }
+                        local enabled = IsAuraGlowActive(self, work.key, settings)
+                        container:SetEnabled(enabled)
+                        container:SetShown(enabled)
                     end
                 end
             end
-        end
-    end
-    for key, states in pairs(self.AuraGlowStates) do
-        if not onlyKey or key == onlyKey then
-            for unit, state in pairs(states) do
-                if not activeKeys[key] or not UnitExists(unit) then
-                    state.container:Hide()
-                end
+
+            if frame.nextIndex > #frame.queue then
+                frame:Hide()
+                frame.queue = nil
+                self.AuraGlowBuildPending = false
+                self:UpdateAuraGlowVisibility()
             end
-        end
+        end)
     end
-    self:UpdateAuraGlowVisibility(onlyKey)
+    auraGlowBuildFrame.queue = queue
+    auraGlowBuildFrame.nextIndex = 1
+    auraGlowBuildFrame.generation = generation
+    auraGlowBuildFrame.onlyKey = onlyKey
+    auraGlowBuildFrame:Show()
 end
 
 function NSI:RefreshAuraGlows()
-    self:RebuildAuraGlows()
+    self:InitAuraGlows()
 end
 
 function NSI:RefreshAuraGlowsUI()

@@ -482,7 +482,7 @@ local function BuildAuraGlowsUI(screen)
                 if row.entry.builtin then
                     row.entry.settings.enabledEdited = true
                 end
-                NSI:UpdateAuraGlowVisibility(row.entry.key)
+                NSI:InitAuraGlows(row.entry.key)
                 RebuildList()
             end)
             row.trash:SetScript("OnClick", function() ConfirmDelete(row.entry.key, row.entry.settings.Name) end)
@@ -960,6 +960,7 @@ local function BuildAuraGlowsUI(screen)
                 local currentSettings = GetSelectedSettings()
                 if currentSettings and currentSettings.loadConditions and currentSettings.loadConditions.Names then
                     currentSettings.loadConditions.Names[rowName] = nil
+                    NSI.AuraGlowLoadCache = nil
                     NSI:InitAuraGlows()
                     RebuildList()
                     RebuildNameRows()
@@ -995,6 +996,7 @@ local function BuildAuraGlowsUI(screen)
         settings.loadConditions.Names = settings.loadConditions.Names or {}
         settings.loadConditions.Names[name] = true
         nameInput.editBox:SetText("")
+        NSI.AuraGlowLoadCache = nil
         NSI:InitAuraGlows()
         RebuildList()
         RebuildNameRows()
@@ -1049,7 +1051,7 @@ local function BuildAuraGlowsUI(screen)
                     checkIndex % 2 == 0 and 0.12 or 0,
                     checkIndex % 2 == 0 and 0.5 or 0)
             end
-            row:SetScript("OnClick", function() onToggle(); NSI:InitAuraGlows(); RebuildList(); RebuildLoadTab() end)
+            row:SetScript("OnClick", function() onToggle(); NSI.AuraGlowLoadCache = nil; NSI:InitAuraGlows(); RebuildList(); RebuildLoadTab() end)
             row:Show()
             return y + 20
         end

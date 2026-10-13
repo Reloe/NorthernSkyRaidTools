@@ -146,7 +146,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:UpdateAuraTrackingEncounterVisibility()
         self.AuraGlowManualState = {}
         self.AuraGlowLoadCache = {}
-        self:UpdateAuraGlowVisibility()
+        self:InitAuraGlows()
         for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
             self:MakeDraggable(self[v], nil, false)
         end
@@ -427,7 +427,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:RefreshDebuffOverviewContainers()
     elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
         self:InitAuraTracking()
-        self:UpdateAuraGlowVisibility()
+        self.AuraGlowLoadCache = nil
+        self:InitAuraGlows()
     elseif e == "ENCOUNTER_TIMELINE_EVENT_ADDED" and wowevent then
         if not self:DifficultyCheck({8, 14, 15, 16}) then return end
         local info = ...
