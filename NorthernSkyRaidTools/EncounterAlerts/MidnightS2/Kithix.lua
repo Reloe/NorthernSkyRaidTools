@@ -36,6 +36,15 @@ NSI:RegisterBuiltinAuraGlow("KithixNullGate", {
     candidateFilters = {isBossAura = true, MaxDuration = 5},
 })
 
+NSI:RegisterBuiltinAuraGlow("KithixUnspeakableHorrors", {
+    name = NSI:Loc("Unspeakable Horrors"),
+    encounterID = encID,
+    group = "Season 2",
+    roles = {HEALER = true},
+    color = {0, 1, 0, 1},
+    candidateFilters = {isBossAura = true, MaxDuration = 6},
+})
+
 NSI.InitializeAlerts[encID] = function(self)
     NSRT.EncounterAlerts[encID] = NSRT.EncounterAlerts[encID] or {}
 
