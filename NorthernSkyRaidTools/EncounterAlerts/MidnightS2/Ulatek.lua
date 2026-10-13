@@ -27,6 +27,32 @@ local transitionGroupMarkers = {
     CHAT_MSG_RAID_LEADER = {{1, 2, 8}, {4, 3, 5}, {7, 6}},
     CHAT_MSG_RAID_WARNING = {{1, 2, 8}, {4, 3, 5}, {7, 6}},
 }
+
+local function ScheduleUlatekTimer(self, delay, callback)
+    local timers = self.UlatekScheduledTimers
+    local entry = {expires = GetTime() + delay}
+    entry.callback = function()
+        timers[entry] = nil
+        callback()
+    end
+    function entry:Cancel()
+        self.timer:Cancel()
+        timers[self] = nil
+    end
+    entry.timer = C_Timer.NewTimer(math.max(delay, 0), entry.callback)
+    self.UlatekScheduledTimers[entry] = true
+    return entry
+end
+
+local function StopUlatekTimerTracking(self)
+    self:EncounterRegister("UlatekEarlyTransition", {"UNIT_SPELLCAST_CHANNEL_STOP", "ENCOUNTER_WARNING"}, false)
+    for entry in pairs(self.UlatekScheduledTimers or {}) do
+        entry:Cancel()
+    end
+    self.UlatekScheduledTimers = {}
+    self.UlatekTimerOffset = 0
+end
+
 local function GetGraspingFangsAlert()
     local diffData = NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][16]
     return diffData and diffData.GraspingFangsOverview
@@ -126,18 +152,10 @@ end
 
 function NSI:PreviewUlatekTransitionSoak()
     local marker = math.random(1, 8)
-    local info = self:CreateReminder({
-        internalID = "TransitionPatternSoaks",
-        text = NSI:EncounterAlertLoc("Soak").." {rt"..marker.."}",
-        DisplayType = "Text",
-        dur = 8,
-        time = 8,
-        encID = encID,
-        phase = 1,
-        TTS = false,
-        IsAlert = true,
-        ReloeReminder = true,
-    })
+    local alert = CopyTable(NSRT.EncounterAlerts[encID][16].TransitionPatternSoaks)
+    alert.text = (alert.text or "").." {rt"..marker.."}"
+    alert.time = alert.dur
+    local info = self:CreateReminder(alert)
     if info then self:DisplayReminder(info, true) end
 end
 
@@ -715,7 +733,7 @@ For one of the patterns all assigned soaks are shifted counter-clockwise by 1]]
             tooltip = {title = NSI:Loc("Create Macros"), desc = NSI:Loc("Creates the three chat macros used to select Ula'tek's transition pattern.")}},
     }
     local data = {group = "Ula'tek", internalID = "TransitionPatternSoaks", name = "Transition Soaks", text = "Soak", DisplayType = "Text", encID = encID, phase = 1, TTS = false, dur = 8, spellID = 1299010,
-        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, NoEdit = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
+        difficulties = {16}, enabled = true, pinned = true, BlockCopy = true, ShowAllSoakTimers = false, Preview = [[return function(NSI) NSI:PreviewUlatekTransitionSoak() end]], extraOptions = transitionSoakOptions,
     }
     self:AddEncounterAlert(data)
 
@@ -741,8 +759,50 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
 
     StopUlatekTransition(self)
     if isPreview then return end
+    StopUlatekTimerTracking(self)
+    self.UlatekEncounterStartTime = GetTime()
+    if id == 16 then
+        self:EncounterFunction("UlatekEarlyTransition", function(frame, event, info)
+            if self.EncounterID ~= encID then return end
+            local expectedTime
+            if event == "UNIT_SPELLCAST_CHANNEL_STOP" and info == "boss1" then
+                expectedTime = 165.5
+            elseif event == "ENCOUNTER_WARNING" and info.duration == 3.5 and info.severity == 1 then
+                expectedTime = 319.23
+            else
+                return
+            end
+            self:EncounterRegister("UlatekEarlyTransition", event, false)
+            local now = GetTime()
+            -- The second transition is already earlier by the first transition's offset.
+            expectedTime = self.UlatekEncounterStartTime + expectedTime + self.UlatekTimerOffset
+            if now > expectedTime - 0.5 then return end
+            local offset = now - expectedTime
+            self:DelayAllReminders(offset)
+            self.UlatekTimerOffset = self.UlatekTimerOffset + offset
+            if self.UlatekWrongTargetEndTime then
+                self.UlatekWrongTargetEndTime = self.UlatekWrongTargetEndTime + offset
+            end
+            for entry in pairs(self.UlatekScheduledTimers) do
+                entry.timer:Cancel()
+                entry.expires = entry.expires + offset
+                entry.timer = C_Timer.NewTimer(math.max(entry.expires - now, 0), entry.callback)
+            end
+        end)
+        ScheduleUlatekTimer(self, 145.5, function()
+            self:EncounterRegister("UlatekEarlyTransition", "UNIT_SPELLCAST_CHANNEL_STOP", true, "boss1")
+        end)
+        ScheduleUlatekTimer(self, 166, function()
+            self:EncounterRegister("UlatekEarlyTransition", "UNIT_SPELLCAST_CHANNEL_STOP", false)
+        end)
+        ScheduleUlatekTimer(self, 290, function()
+            self:EncounterRegister("UlatekEarlyTransition", "ENCOUNTER_WARNING", true)
+        end)
+        ScheduleUlatekTimer(self, 319.73, function()
+            self:EncounterRegister("UlatekEarlyTransition", "ENCOUNTER_WARNING", false)
+        end)
+    end
     if transitionSoakAlert and transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert) then
-        self.UlatekTransitionStartTime = GetTime()
         self.UlatekTransitionTimers = {}
         self:EncounterFunction("UlatekTransitionPattern", function(_, event)
             if not self.UlatekTransitionListening then return end
@@ -764,39 +824,31 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             local assignedSoaks = {}
             for index, marker in ipairs(pattern) do
                 if assignments[marker] then
-                    local remaining = transitionSoakTimes[index] - (now - self.UlatekTransitionStartTime)
+                    local remaining = transitionSoakTimes[index] + self.UlatekTimerOffset - (now - self.UlatekEncounterStartTime)
                     if remaining > 0 then
                         assignedSoaks[#assignedSoaks + 1] = {marker = marker, remaining = remaining}
                         if transitionSoakAlert.enabled and self:EvaluateLoad(transitionSoakAlert) then
                             local reminderMarker = marker
+                            local soakTime = transitionSoakTimes[index]
                             local reminderRemaining = remaining
                             local reminderDelay = 0
                             if not transitionSoakAlert.ShowAllSoakTimers then
-                                reminderDelay = math.max(0, reminderRemaining - 8)
+                                reminderDelay = math.max(0, reminderRemaining - transitionSoakAlert.dur)
                                 local previousSoak = assignedSoaks[#assignedSoaks - 1]
                                 if previousSoak then
                                     reminderDelay = math.min(reminderDelay, previousSoak.remaining)
                                 end
                             end
-                            local reminderDuration = reminderRemaining - reminderDelay
-                            self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(reminderDelay, function()
+                            self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = ScheduleUlatekTimer(self, reminderDelay, function()
                                 if self.EncounterID ~= encID or not transitionSoakAlert.enabled or not self:EvaluateLoad(transitionSoakAlert) then return end
-                                local info = self:CreateReminder({
-                                    internalID = transitionSoakAlert.internalID,
-                                    text = transitionSoakAlert.text.." {rt"..reminderMarker.."}",
-                                    DisplayType = transitionSoakAlert.DisplayType,
-                                    textColors = transitionSoakAlert.textColors,
-                                    barColors = transitionSoakAlert.barColors,
-                                    ringColors = transitionSoakAlert.ringColors,
-                                    dur = reminderDuration,
-                                    time = reminderDuration,
-                                    encID = encID,
-                                    phase = self.Phase,
-                                    TTS = transitionSoakAlert.TTS,
-                                    TTSTimer = transitionSoakAlert.TTSTimer,
-                                    IsAlert = true,
-                                    ReloeReminder = true,
-                                })
+                                local reminderDuration = self.UlatekEncounterStartTime + soakTime + self.UlatekTimerOffset - GetTime()
+                                if reminderDuration <= 0 then return end
+                                local alert = CopyTable(transitionSoakAlert)
+                                alert.text = (alert.text or "").." {rt"..reminderMarker.."}"
+                                alert.dur = reminderDuration
+                                alert.time = reminderDuration
+                                alert.phase = self.Phase
+                                local info = self:CreateReminder(alert)
                                 if info then self:DisplayReminder(info) end
                             end)
                         end
@@ -804,12 +856,12 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                 end
             end
         end)
-        self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(325, function()
+        self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = ScheduleUlatekTimer(self, 325, function()
             if self.EncounterID ~= encID then return end
             self.UlatekTransitionListening = true
             self:EncounterRegister("UlatekTransitionPattern", {"CHAT_MSG_YELL", "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING"}, true)
         end)
-        self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = C_Timer.NewTimer(340, function()
+        self.UlatekTransitionTimers[#self.UlatekTransitionTimers + 1] = ScheduleUlatekTimer(self, 340, function()
             if self.EncounterID ~= encID then return end
             self.UlatekTransitionListening = false
             self:EncounterRegister("UlatekTransitionPattern", {"CHAT_MSG_YELL", "CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER", "CHAT_MSG_RAID_WARNING"}, false)
@@ -825,10 +877,10 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
         self:UpdateUlatekGraspingFangsOverviews(overviewAlert)
         self.UlatekGraspingFangsTimers = {}
         for _, applyTime in ipairs(overviewAlert.timers or {}) do
-            self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime, function()
+            self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = ScheduleUlatekTimer(self, applyTime, function()
                 if self.EncounterID == encID then self:SetUlatekGraspingFangsOverviewsShown(true) end
             end)
-            self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = C_Timer.NewTimer(applyTime + (overviewAlert.dur or 40), function()
+            self.UlatekGraspingFangsTimers[#self.UlatekGraspingFangsTimers + 1] = ScheduleUlatekTimer(self, applyTime + (overviewAlert.dur or 40), function()
                 if self.EncounterID == encID then self:SetUlatekGraspingFangsOverviewsShown(false) end
             end)
         end
@@ -868,7 +920,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             {name = "SecondWave", time = wavesAlert.timers[2]},
         }
         for windowIndex, window in ipairs(windows) do
-            self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(window.time - 6, function()
+            self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = ScheduleUlatekTimer(self, window.time - 6, function()
                 if self.EncounterID ~= encID then return end
                 self.UlatekWaveDirectionWindow = window.name
                 self:EncounterRegister("UlatekWaveDirection", WaveDirectionEvents, true)
@@ -876,7 +928,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
                     ShowUlatekWaveText(self, waveDirectionPromptAlert, waveDirectionPromptAlert.text, 12, "UlatekWaveDirectionPrompt")
                 end
             end)
-            self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = C_Timer.NewTimer(window.time + 6, function()
+            self.UlatekWaveDirectionTimers[#self.UlatekWaveDirectionTimers + 1] = ScheduleUlatekTimer(self, window.time + 6, function()
                 if self.EncounterID ~= encID then return end
                 self.UlatekWaveDirectionWindow = nil
                 self:EncounterRegister("UlatekWaveDirection", WaveDirectionEvents, false)
@@ -951,7 +1003,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
             end
             self.UlatekInterruptBossCounts[unit] = castCount
         end)
-        self.UlatekInterruptResetTimer = C_Timer.NewTimer(240, function()
+        self.UlatekInterruptResetTimer = ScheduleUlatekTimer(self, 240, function()
             if self.EncounterID ~= encID then return end
             self.UlatekInterruptBossCounts = {boss2 = 1, boss3 = 1, boss4 = 1, boss5 = 1}
             self.UlatekInterruptCastStarts = {}
@@ -1025,13 +1077,13 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
     self:EncounterRegister("UlatekWrongTarget", "PLAYER_TARGET_CHANGED", true)
     self.UlatekWrongTargetTimers = {}
     for _, ampTime in ipairs(wrongTargetAlert.timers or {}) do
-        self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = C_Timer.NewTimer(ampTime, function()
+        self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = ScheduleUlatekTimer(self, ampTime, function()
             if self.EncounterID ~= encID then return end
             self.UlatekWrongTargetEndTime = GetTime() + (wrongTargetAlert.dur or 20)
             HideUlatekWrongTarget(self)
             UpdateWrongTarget()
         end)
-        self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = C_Timer.NewTimer(ampTime + (wrongTargetAlert.dur or 20), function()
+        self.UlatekWrongTargetTimers[#self.UlatekWrongTargetTimers + 1] = ScheduleUlatekTimer(self, ampTime + (wrongTargetAlert.dur or 20), function()
             if self.EncounterID ~= encID then return end
             self.UlatekWrongTargetEndTime = nil
             UpdateWrongTarget()
@@ -1040,6 +1092,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, isPreview)
 end
 
 NSI.EncounterAlertStop[encID] = function(self)
+    StopUlatekTimerTracking(self)
     local difficulty = self:DifficultyCheck({15, 16})
     local autoReleaseAlert = difficulty and NSRT.EncounterAlerts[encID] and NSRT.EncounterAlerts[encID][difficulty].AutoRelease
     if autoReleaseAlert and autoReleaseAlert.enabled and self:EvaluateLoad(autoReleaseAlert) then
