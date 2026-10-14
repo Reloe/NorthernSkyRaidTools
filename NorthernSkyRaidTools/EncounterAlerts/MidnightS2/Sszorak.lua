@@ -123,7 +123,7 @@ NSI.InitializeAlerts[encID] = function(self)
 
     local data = {group = "Sszorak", internalID = "WindsHelper", name = "Winds Helper", text = nil, DisplayType = "Text", encID = encID, phase = nil, TTS = false, dur = 5,
         spellID = nil, id = 0, difficulties = {14, 15, 16}, enabled = true, BlockCopy = true, Preview = WindsPreview,
-        Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, BackgroundColor = {0.2, 0.2, 0.2, 1}, ShowSenderNames = false,
+        Scale = 1, Anchor = "CENTER", relativeTo = "CENTER", xOffset = -500, yOffset = 400, BackgroundColor = {0.2, 0.2, 0.2, 1}, ShowSenderNames = false, RaidLeaderOnly = false,
         customIcon = 1285732,
         extraOptions = {
             { Type = "Label", text = "Winds Helper" },
@@ -143,6 +143,10 @@ NSI.InitializeAlerts[encID] = function(self)
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3420][16].WindsHelper.ShowSenderNames  or false  end]],
                 set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].WindsHelper.ShowSenderNames  = v end NSI.EncounterAlertStop[3420](NSI, true) NSI.EncounterAlertStart[3420](NSI, 16, "Winds Helper") end]],
                 tooltip = {title = "ShowSenderNames", desc = "Shows the sender next to each entered number."}},
+            { Type = "Checkbox", label = "RaidLeaderOnly",
+                get = [[return function(NSI) return NSRT.EncounterAlerts[3420][16].WindsHelper.RaidLeaderOnly  or false  end]],
+                set = [[return function(NSI, v) for i=14, 16 do NSRT.EncounterAlerts[3420][i].WindsHelper.RaidLeaderOnly  = v end end]],
+                tooltip = {title = "RaidLeaderOnly", desc = "Only raid chat messages from the raid leader fill the display, so other people talking in raid chat can't mess up the order. The person pressing the macros has to be raid leader."}},
             { Type = "Button", label = "Create Macros", width = 150,
                 func = [[return function()
                     local iconIDs = {"137001", "137002", "137003", "137004", "137005", "137006", "137007", "137008"}
@@ -294,6 +298,7 @@ NSI.EncounterAlertStart[encID] = function(self, id, preview)
 
         self:EncounterRegister("SszorakWinds", {"CHAT_MSG_RAID", "CHAT_MSG_RAID_LEADER"}, true)
         self:EncounterFunction("SszorakWinds", function(_, event, message, sender, ...)
+            if s.RaidLeaderOnly and event ~= "CHAT_MSG_RAID_LEADER" then return end
             local senderGUID = select(10, ...)
             local senderDisplayName = event == "CHAT_MSG_RAID_LEADER" and UnitExists("raid1") and NSAPI:Shorten("raid1", 12, false, "GlobalNickNames") or nil
             DisplayWind(nil, message, sender, senderGUID, senderDisplayName)
