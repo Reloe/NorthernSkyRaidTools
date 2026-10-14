@@ -637,7 +637,8 @@ end
 local function FormatPaceComparisonDeltaLabel(delta)
     if delta == 0 then return "0%" end
     local sign = delta > 0 and "+" or "-"
-    return sign .. FormatPaceComparisonNumber(math.abs(delta), 1) .. "%"
+    local formatted = string.format("%.1f", math.abs(delta)):gsub("%.0$", "")
+    return sign .. formatted .. "%"
 end
 
 local function GetPaceComparisonDeltaAlphaCurve(expected, stepIndex)
