@@ -1,4 +1,5 @@
 ## Changelog
+- Fixed Aura Glows
 - Swap to Blizzard's Encoding
 - Add Aura Glows
 - Add support for Pre-Pull Reminders & Alerts by entering negative timers
