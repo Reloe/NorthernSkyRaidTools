@@ -240,26 +240,26 @@ L[3421] = {
 
 -- The Coiled Altar (3429)
 L[3429] = {
-    ["P1Frontal"]     = {group = "盤蛇祭壇", name = "P1 頭前", text = "頭前"},
+    ["P1Frontal"]     = {group = "盤蛇祭壇", name = "P1 劈刀", text = "劈刀"},
     ["P1OrbDeadline"] = {group = "盤蛇祭壇", name = "停止搬球", text = "停止搬球"},
     ["P1Taunt"]       = {group = "盤蛇祭壇", name = "P1 嘲諷", text = "嘲諷"},
     ["P1Soak"]        = {group = "盤蛇祭壇", name = "P1 分傷", text = "分傷"},
     ["MindControls"]  = {group = "盤蛇祭壇", name = "P2 心控", text = "心控"},
-    ["P2Frontal"]     = {group = "盤蛇祭壇", name = "P2 頭前", text = "頭前"},
+    ["P2Frontal"]     = {group = "盤蛇祭壇", name = "P2 劈刀", text = "劈刀"},
     ["P2Taunt"]       = {group = "盤蛇祭壇", name = "P2 嘲諷", text = "嘲諷"},
-    ["P2Debuffs"]     = {group = "盤蛇祭壇", name = "P2 Debuff", text = "Debuff"},
+    ["P2Debuffs"]     = {group = "盤蛇祭壇", name = "P2 炸彈", text = "炸彈"},
     ["P2Shield"]      = {group = "盤蛇祭壇", name = "P2 盾", text = "P2 盾"},
     ["DebuffCircle"] = {group = "盤蛇祭壇", name = "放球", text = ""},
     ["EternalNightfallAbsorb"] = {group = "盤蛇祭壇", name = "吸收盾", text = ""},
-    ["InterruptAdds"] = {group = "盤蛇祭壇", name = "P2 打斷小怪", text = "鬼"},
+    ["InterruptAdds"] = {group = "盤蛇祭壇", name = "P2 出小怪", text = "小怪"},
     ["InterruptAssignments"] = {group = "盤蛇祭壇", name = "打斷分配", text = "打斷"},
     ["P3OrbDeadline"] = {group = "盤蛇祭壇", name = "P3 停止搬球", text = "停止搬球"},
     ["P2_5WrongTarget"] = {group = "盤蛇祭壇", name = "打錯目標", text = "打錯目標"},
-    ["P3Frontal"] = {group = "盤蛇祭壇", name = "P3 頭前", text = "頭前"},
+    ["P3Frontal"] = {group = "盤蛇祭壇", name = "P3 劈刀", text = "劈刀"},
     ["P3Soak"] = {group = "盤蛇祭壇", name = "P3 分傷", text = "分傷"},
     ["P3Shield"] = {group = "盤蛇祭壇", name = "P3 盾", text = "盾"},
-    ["P3Debuffs"] = {group = "盤蛇祭壇", name = "P3 Debuff", text = "Debuff"},
-    ["P3InterruptAdds"] = {group = "盤蛇祭壇", name = "P3 打斷小怪", text = "鬼"},
+    ["P3Debuffs"] = {group = "盤蛇祭壇", name = "P3 炸彈", text = "炸彈"},
+    ["P3InterruptAdds"] = {group = "盤蛇祭壇", name = "P3 出小怪", text = "小怪"},
     ["P3MindControls"] = {group = "盤蛇祭壇", name = "P3 心控", text = "心控"},
     ["P3Taunt"] = {group = "盤蛇祭壇", name = "P3 嘲諷", text = "嘲諷"},
 }
@@ -300,10 +300,10 @@ L[3492] = {
 
 -- Kith'ix (3513)
 L[3513] = {
-    -- ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
-    -- ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
-    -- ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
-    -- ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
-    -- ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
-    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+    ["DarkDevastation"] = {group = "克希斯", name = "打坦技", text = "打坦技"},
+    ["Taunt"]           = {group = "克希斯", name = "嘲諷", text = "嘲諷"},
+    ["AoE"]             = {group = "克希斯", name = "AoE", text = "撿球"},
+    ["Darkness"]        = {group = "克希斯", name = "黑暗", text = "黑暗"},
+    ["Adds"]            = {group = "克希斯", name = "小怪", text = "小怪"},
+    ["AlertID"]         = {group = "克希斯", name = "提醒名稱", text = "提醒文字"},
 }
