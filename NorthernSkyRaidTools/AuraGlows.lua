@@ -821,6 +821,12 @@ function NSI:UpdateAuraGlowVisibility(onlyKey)
 end
 
 function NSI:RebuildAuraGlows(key)
+    if self:Restricted() then
+        self.PendingAuraGlowUpdate = true
+        self.PendingAuraGlowRebuild = true
+        return
+    end
+    self.PendingAuraGlowRebuild = nil
     self.AuraGlowBuildGeneration = (self.AuraGlowBuildGeneration or 0) + 1
     self.AuraGlowBuildPending = false
     local auraGlowStates = self.AuraGlowStates or {}
@@ -850,16 +856,29 @@ function NSI:InitAuraGlows(onlyKey)
         auraGlowBuildFrame:Hide()
         auraGlowBuildFrame.queue = nil
     end
-    if self:Restricted() then
-        self.PendingAuraGlowUpdate = true
-        self.AuraGlowBuildPending = false
-        return
-    end
     self.PendingAuraGlowUpdate = nil
     self.AuraGlowStates = self.AuraGlowStates or {}
+    local entries = self:IterateAuraGlowEntries()
+    local restricted = self:Restricted()
+    if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        local hasEnabledGlow = false
+        for _, entry in ipairs(entries) do
+            if entry.settings.enabled then
+                hasEnabledGlow = true
+                break
+            end
+        end
+        if hasEnabledGlow then
+            if restricted then
+                self.PendingAuraGlowUpdate = true
+                return
+            end
+            C_AddOns.LoadAddOn("Blizzard_AuraContainer")
+        end
+    end
     local activeKeys = {}
     local queue = {}
-    for _, entry in ipairs(self:IterateAuraGlowEntries()) do
+    for _, entry in ipairs(entries) do
         local key, settings = entry.key, entry.settings
         local usesSpellIDs = UsesAuraGlowSpellIDs(settings)
         local spellIDs = usesSpellIDs and GetAuraGlowSpellIDs(settings) or nil
@@ -878,8 +897,10 @@ function NSI:InitAuraGlows(onlyKey)
                 if targetFrame then
                     local state = states[unit]
                     if state then
-                        state.container:ClearAllPoints()
-                        state.container:SetAllPoints(targetFrame)
+                        if not restricted then
+                            state.container:ClearAllPoints()
+                            state.container:SetAllPoints(targetFrame)
+                        end
                     elseif shouldCreate then
                         queue[#queue + 1] = {
                             key = key,
@@ -910,6 +931,10 @@ function NSI:InitAuraGlows(onlyKey)
         return
     end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
+        if restricted then
+            self.PendingAuraGlowUpdate = true
+            return
+        end
         C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
     self.AuraGlowBuildPending = true
@@ -922,14 +947,6 @@ function NSI:InitAuraGlows(onlyKey)
                 return
             end
             if self.IsBuilding then return end
-            if self:Restricted() then
-                self.PendingAuraGlowUpdate = true
-                self.AuraGlowBuildPending = false
-                frame:Hide()
-                frame.queue = nil
-                return
-            end
-
             local remaining = 3
             while remaining > 0 and frame.nextIndex <= #frame.queue do
                 local work = frame.queue[frame.nextIndex]
