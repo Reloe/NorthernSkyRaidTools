@@ -459,6 +459,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:LogTimeline(e, ...)
         local state = C_EncounterTimeline.GetEventState(eventID)
+        if self:Restricted() and self.EncounterID and self.DetectPhaseChange[self.EncounterID] then self.DetectPhaseChange[self.EncounterID](self, e, nil, state) end
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end

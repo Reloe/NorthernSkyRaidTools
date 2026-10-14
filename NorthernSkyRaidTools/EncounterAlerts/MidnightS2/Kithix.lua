@@ -97,3 +97,21 @@ NSI.InitializeAlerts[encID] = function(self)
     }
     self:AddEncounterAlert(data)
 end
+
+NSI.DetectPhaseChange[encID] = function(self, e, info, state)
+    local now = GetTime()
+    if e ~= "ENCOUNTER_TIMELINE_EVENT_STATE_CHANGED" or state ~= Enum.EncounterTimelineEventState.Canceled or self.Phase ~= 1 or (not self.PhaseSwapTime) or (not (now > self.PhaseSwapTime + 5)) then return end
+
+    table.insert(self.Timelines, now)
+
+    local canceledCount = 0
+    for index, timestamp in ipairs(self.Timelines) do
+        if now < timestamp + 0.3 then canceledCount = canceledCount + 1 end
+    end
+    if canceledCount >= 3 then
+        self.Phase = 2
+        self:StartReminders(self.Phase)
+        self.Timelines = {}
+        self.PhaseSwapTime = now
+    end
+end
