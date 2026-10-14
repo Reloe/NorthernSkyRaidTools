@@ -412,7 +412,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             if self.PendingUnitFramesUpdate then
                 self:CacheUnitFrames()
             end
-            if self.PendingAuraGlowUpdate then
+            if self.PendingAuraGlowRebuild then
+                self:RebuildAuraGlows()
+            elseif self.PendingAuraGlowUpdate then
                 self:InitAuraGlows()
             end
             self:RefreshDebuffOverviewContainers()
@@ -421,7 +423,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.PendingAuraTrackingUpdate then
             self:InitAuraTracking(false, self.PendingAuraTrackingReconfigure)
         end
-        if self.PendingAuraGlowUpdate then
+        if self.PendingAuraGlowRebuild then
+            self:RebuildAuraGlows()
+        elseif self.PendingAuraGlowUpdate then
             self:InitAuraGlows()
         end
         self:RefreshDebuffOverviewContainers()
