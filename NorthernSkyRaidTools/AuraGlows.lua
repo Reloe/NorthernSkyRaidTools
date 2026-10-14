@@ -302,7 +302,7 @@ function NSI:AddCustomAuraGlow(group)
     NSRT.AuraGlows.Custom = NSRT.AuraGlows.Custom or {}
     local index = #NSRT.AuraGlows.Custom + 1
     group = group and strtrim(tostring(group)) or ""
-    local settings = self:CreateAuraGlowSettingsDefaults({ Name = "Custom Aura Glow " .. index, group = group ~= "" and group or nil })
+    local settings = self:CreateAuraGlowSettingsDefaults({ Name = self:Loc("Custom Aura Glow") .. " " .. index, group = group ~= "" and group or nil })
     CopyAuraGlowDisplaySettings(settings, GetAuraGlowDefaultSettings(self))
     NSRT.AuraGlows.Custom[index] = settings
     local key = "Custom:" .. index
@@ -324,7 +324,7 @@ function NSI:DuplicateCustomAuraGlow(key)
     NSRT.AuraGlows.Custom = NSRT.AuraGlows.Custom or {}
     local copy = CopyTable(settings)
     copy.builtin = nil
-    copy.Name = (copy.Name or "Custom Aura Glow") .. " Copy"
+    copy.Name = (copy.Name or "Custom Aura Glow") .. NSI:Loc("DUPLICATE_SUFFIX")
     NSRT.AuraGlows.Custom[#NSRT.AuraGlows.Custom + 1] = copy
     local newKey = "Custom:" .. #NSRT.AuraGlows.Custom
     self:InitAuraGlows(newKey)
