@@ -454,9 +454,9 @@ function NSI:SetBuiltinAuraGlowActive(key, active)
     else
         self.AuraGlowManualState[key] = active == true
     end
-    if active == false then
-        self:UpdateAuraGlowVisibility(key)
-    else
+    -- Apply manual state immediately to already prepared containers.
+    self:UpdateAuraGlowVisibility(key)
+    if active ~= false then
         self:InitAuraGlows(key)
     end
 end
@@ -849,6 +849,8 @@ end
 
 function NSI:InitAuraGlows(onlyKey)
     if self.IsBuilding then return end
+    -- Apply visibility even if initialization cannot load Blizzard_AuraContainer.
+    self:UpdateAuraGlowVisibility(onlyKey)
     self.AuraGlowBuildGeneration = (self.AuraGlowBuildGeneration or 0) + 1
     local generation = self.AuraGlowBuildGeneration
     self.AuraGlowBuildPending = false
@@ -887,7 +889,9 @@ function NSI:InitAuraGlows(onlyKey)
             self.AuraGlowStates[key] = self.AuraGlowStates[key] or {}
             local states = self.AuraGlowStates[key]
             local filterString, candidateFilters
-            local shouldCreate = IsAuraGlowActive(self, key, settings)
+            -- Prepare enabled encounter glows before combat; keep actual
+            -- visibility gated by IsAuraGlowActive below.
+            local shouldCreate = settings.enabled and self:EvaluateLoad(settings, true)
             if shouldCreate then
                 filterString = BuildAuraGlowFilterString(settings)
                 candidateFilters = BuildAuraGlowCandidateFilters(settings, spellIDs)
@@ -954,7 +958,7 @@ function NSI:InitAuraGlows(onlyKey)
                 remaining = remaining - 1
 
                 local states = self.AuraGlowStates[work.key]
-                if IsAuraGlowActive(self, work.key, work.settings) and self:GetAuraGlowSettings(work.key) == work.settings and states and not states[work.unit] then
+                if work.settings.enabled and self:EvaluateLoad(work.settings, true) and self:GetAuraGlowSettings(work.key) == work.settings and states and not states[work.unit] then
                     local targetFrame = self.UnitFrames and self.UnitFrames[work.unit]
                     if targetFrame then
                         local settings = work.settings
