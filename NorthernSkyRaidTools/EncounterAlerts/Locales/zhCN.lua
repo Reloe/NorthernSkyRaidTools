@@ -211,8 +211,8 @@ L[3420] = {
     ["SetMarkers"]   = {group = "斯索拉克", name = "设置标记提醒", text = "设置标记"},
     ["DamageAmp"]    = {group = "斯索拉克", name = "掘地固守（易伤）", text = "易伤"},
     ["Bait"]         = {group = "斯索拉克", name = "剧毒涌动（引诱）", text = "引水"},
-    ["WindDebuffs"]  = {group = "斯索拉克", name = "狂怒侧风（点名）", text = "点名狂风"},
-    ["Debuffs"]      = {group = "斯索拉克", name = "剧毒涌动（点名）", text = "点名囊肿"},
+    ["WindDebuffs"]  = {group = "斯索拉克", name = "狂怒侧风（点名）", text = "点名击退"},
+    ["Debuffs"]      = {group = "斯索拉克", name = "剧毒涌动（点名）", text = "点名放球"},
     ["SerpentsFury"] = {group = "斯索拉克", name = "毒蛇之怒（集合）", text = "集合"},
     ["WindsHelper"]  = {group = "斯索拉克", name = "呼啸漩涡助手"},
     ["VenomousSurgeTargets"] = {group = "斯索拉克", name = "剧毒涌动目标"},
@@ -239,7 +239,7 @@ L[3421] = {
 -- The Coiled Altar (3429)
 L[3429] = {
     ["P1Frontal"]       = {group = "盘卷祭坛", name = "P1 撕裂", text = "正面顺劈"},
-    ["P1OrbDeadline"]   = {group = "盘卷祭坛", name = "P1 捡球时限", text = "捡球时限"},
+    ["P1OrbDeadline"]   = {group = "盘卷祭坛", name = "P1 搬球时限", text = "搬球时限"},
     ["P1Taunt"]         = {group = "盘卷祭坛", name = "P1 嘲讽", text = "嘲讽"},
     ["P1Soak"]          = {group = "盘卷祭坛", name = "P1 处斩（分摊）", text = "分摊"},
     ["MindControls"]    = {group = "盘卷祭坛", name = "P2 恐惧行军（心控）", text = "心控"},
@@ -251,7 +251,7 @@ L[3429] = {
     ["EternalNightfallAbsorb"] = {group = "盘卷祭坛", name = "永恒夜幕吸收盾", text = ""},
     ["InterruptAdds"]          = {group = "盘卷祭坛", name = "P2 恐惧哀嚎（打断）", text = "打断怪刷新"},
     ["InterruptAssignments"]   = {group = "盘卷祭坛", name = "打断分配", text = "打断"},
-    ["P3OrbDeadline"]   = {group = "盘卷祭坛", name = "P3 捡球时限", text = "捡球时限"},
+    ["P3OrbDeadline"]   = {group = "盘卷祭坛", name = "P3 搬球时限", text = "搬球时限"},
     ["P2_5WrongTarget"] = {group = "盘卷祭坛", name = "易伤目标错误", text = "目标错误"},
     ["P3Frontal"]       = {group = "盘卷祭坛", name = "P3 凋零撕裂", text = "正面顺劈"},
     ["P3Soak"]          = {group = "盘卷祭坛", name = "P3 冷酷处斩（分摊）", text = "分摊"},
@@ -270,7 +270,7 @@ L[3492] = {
     ["DamageAmpIn"]         = {group = "乌拉特克", name = "被缚之怒（易伤）", text = "准备易伤"},
     ["DamageAmp"]           = {group = "乌拉特克", name = "易伤倒计时", text = "易伤"},
     ["PlatformBreak"]       = {group = "乌拉特克", name = "盘绕猎物（场地）", text = "摧毁平台"},
-    ["Debuffs"]             = {group = "乌拉特克", name = "毒蛇之咬（点名）", text = "点名毒液"},
+    ["Debuffs"]             = {group = "乌拉特克", name = "毒蛇之咬（点名）", text = "点名吸圈"},
     ["Eggs"]                = {group = "乌拉特克", name = "毒蛇呼唤（蛋）", text = "蛋刷新"},
     ["EggDeadline"]         = {group = "乌拉特克", name = "搬蛋时限", text = "搬蛋时限"},
     ["AddSoak"]             = {group = "乌拉特克", name = "溃烂爆发（分摊）", text = "大怪分摊"},
@@ -296,10 +296,9 @@ L[3492] = {
 
 -- Kith'ix (3513)
 L[3513] = {
-    -- ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
-    -- ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
-    -- ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
-    -- ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
-    -- ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
-    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+    ["DarkDevastation"] = {group = "基希克斯", name = "黑暗毁灭（坦克）", text = "坦克打击"},
+    ["Taunt"]           = {group = "基希克斯", name = "嘲讽", text = "嘲讽"},
+    ["AoE"]             = {group = "基希克斯", name = "熄灭（吃球）", text = "吃球"},
+    ["Darkness"]        = {group = "基希克斯", name = "窒息黑暗", text = "窒息黑暗"},
+    ["Adds"]            = {group = "基希克斯", name = "虚空虫群（小怪）", text = "小怪刷新"},
 }
