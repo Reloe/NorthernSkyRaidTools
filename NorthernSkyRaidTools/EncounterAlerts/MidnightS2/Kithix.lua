@@ -40,6 +40,7 @@ NSI:RegisterBuiltinAuraGlow("KithixUnspeakableHorrors", {
     name = NSI:Loc("Unspeakable Horrors"),
     encounterID = encID,
     group = "Season 2",
+    menuIcon = 1304045,
     roles = {HEALER = true},
     color = {0, 1, 0, 1},
     candidateFilters = {isBossAura = true, MaxDuration = 6},
