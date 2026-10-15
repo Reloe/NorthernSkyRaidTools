@@ -295,10 +295,10 @@ L[3492] = {
 
 -- Kith'ix (3513)
 L[3513] = {
-    -- ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
-    -- ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
-    -- ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
-    -- ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
-    -- ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
-    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+    ["DarkDevastation"] = {group = "Кит'икс", name = "Темное опустошение", text = "Урон по танку"},
+    ["Taunt"]           = {group = "Кит'икс", name = "Taunt", text = "Таунт"},
+    ["AoE"]             = {group = "Кит'икс", name = "АоЕ", text = "Взять сферу"},
+    ["Darkness"]        = {group = "Кит'икс", name = "Мрак", text = "Мрак"},
+    ["Adds"]            = {group = "Кит'икс", name = "Адды", text = "Адды"},
+    ["AlertID"]         = {group = "Кит'икс", name = "Название оповещения", text = "Текст оповещения"},
 }
