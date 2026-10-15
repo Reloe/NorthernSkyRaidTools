@@ -296,10 +296,9 @@ L[3492] = {
 
 -- Kith'ix (3513)
 L[3513] = {
-    -- ["DarkDevastation"] = {group = "Kith'ix", name = "Dark Devastation", text = "Tank-Hit"},
-    -- ["Taunt"]           = {group = "Kith'ix", name = "Taunt", text = "Taunt"},
-    -- ["AoE"]             = {group = "Kith'ix", name = "AoE", text = "Get Orb"},
-    -- ["Darkness"]        = {group = "Kith'ix", name = "Darkness", text = "Darkness"},
-    -- ["Adds"]            = {group = "Kith'ix", name = "Adds", text = "Adds"},
-    -- ["AlertID"] = {group = "Kith'ix", name = "Alert Name", text = "Alert Text"},
+    ["DarkDevastation"] = {group = "키식스", name = "암흑 황폐", text = "탱커 공격"},
+    ["Taunt"]           = {group = "키식스", name = "도발", text = "도발"},
+    ["AoE"]             = {group = "키식스", name = "광역뎀", text = "구슬 먹기"},
+    ["Darkness"]        = {group = "키식스", name = "암흑", text = "암흑"},
+    ["Adds"]            = {group = "키식스", name = "쫄", text = "쫄"},
 }
