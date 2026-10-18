@@ -282,14 +282,13 @@ local function BuildAuraGlowsUI(screen)
         local key, settings = entry.key, entry.settings
         local items = {
             { type = "button", label = NSI:Loc("Export"), fnc = function() ShowAuraGlowExportPopup(NSI:ExportAuraGlowEntry(key)) end },
-        }
-        if entry.builtin then
-            items[#items + 1] = { type = "button", label = NSI:Loc("Reset"), fnc = function()
-                NSI:ResetBuiltinAuraGlow(key)
+            { type = "button", label = NSI:Loc("Reset"), fnc = function()
+                NSI:ResetAuraGlow(key)
                 RebuildList()
                 RebuildTab()
-            end }
-        else
+            end },
+        }
+        if not entry.builtin then
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                 local newKey = NSI:DuplicateCustomAuraGlow(key)
                 RebuildList()

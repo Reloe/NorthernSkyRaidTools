@@ -2373,6 +2373,7 @@ end
 function NSI:CacheUnitFrames()
     if self:Restricted() then
         self.PendingUnitFramesUpdate = true
+        self:InitAuraGlows()
         return
     end
     self.PendingUnitFramesUpdate = false

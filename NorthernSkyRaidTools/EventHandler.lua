@@ -81,6 +81,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:RestoreBreakTimer()
         self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
+        self.LGF.RegisterCallback(self, "GETFRAME_REFRESH", "CacheUnitFrames")
         local MyFrame = self.LGF.GetUnitFrame("player") -- need to call this once to init the library properly I think
         self:InitAuraSystem(true)
         self:UpdateLibSpecRegistration()
@@ -99,6 +100,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
             print("|cFF00FFFFNSRT|r Debug mode is currently enabled. Please disable it with '/ns debug' unless you are specifically testing something.")
         end
         self:ImportReloeReminders()
+        self:CacheUnitFrames()
         if self:Restricted() then return end
         if NSRT.Settings["MyNickName"] then self:SendNickName("Any") end -- only send nickname if it exists. If user has ever interacted with it it will create an empty string instead which will serve as deleting the nickname
         if NSRT.Settings["GlobalNickNames"] then -- add own nickname if not already in database (for new characters)
