@@ -1,13 +1,3 @@
 ## Changelog
-- Fixed Aura Glows
-- Swap to Blizzard's Encoding
-- Add Aura Glows
-- Add support for Pre-Pull Reminders & Alerts by entering negative timers
-- Add "Aura Matrix" in Aura Tracking
-- Add Searchbar in Aura Tracking
-- Add Custom Code option for Custom made alerts, runs on encounter start/end and on phase changes
-- fix nicknames on forever
-- add new feature that corrects the time of reminders on cast events
-- Add Callbacks for TimelineReminders so that everything is displayed through there now if enabled
-- Prepare Coiled Altar Interrupt Alert for 12.1.5 API changes. It is now required to focus the add you are interrupting.
-- Allow adding Sound/TTS to some Alerts that didn't allow previously
+- Add Setting to only listen to raidleader on sszorak
+- Improve glow handling
