@@ -1433,16 +1433,16 @@ L["NSRT: Break is over!"] = "NSRT：休息結束！"
 L["NSRT: Break cancelled."] = "NSRT：休息已取消。"
 L["This import string was exported before patch 12.1.5 and can no longer be imported."] = "此匯入字串是在 12.1.5 版本之前匯出的，已無法再匯入。"
 L["Kith'ix"] = "克希斯"
-L["Overwhelming Fear"] = "Overwhelming Fear" -- TODO: needs zhTW ability name
-L["Mindsting"] = "Mindsting" -- TODO: needs zhTW ability name
-L["Null Gate"] = "Null Gate" -- TODO: needs zhTW ability name
-L["Unspeakable Horrors"] = "Unspeakable Horrors" -- TODO: needs zhTW ability name
-L["Gravebound"] = "Gravebound" -- TODO: needs zhTW ability name
+L["Overwhelming Fear"] = "極度恐懼"
+L["Mindsting"] = "螫心"
+L["Null Gate"] = "空無之門"
+L["Unspeakable Horrors"] = "難言恐懼"
+L["Gravebound"] = "墓縛"
 L["Essence Rend Dispel"] = "精華撕裂（驅散）"
 L["Blink Nova"] = "閃現新星"
 L["Protovenom"] = "原型毒液"
-L["Venomous Surge"] = "Venomous Surge" -- TODO: needs zhTW ability name
-L["Spit & Ichor"] = "Spit & Ichor" -- TODO: needs zhTW ability name
+L["Venomous Surge"] = "毒素湧流"
+L["Spit & Ichor"] = "腐蝕唾液／盤繞膿液"
 L["Difficulties (leave all unchecked for any difficulty)"] = "難度（全部不勾選表示任何難度）"
 L["Abort Sorting"] = "中止排序"
 L["Aborts the current group sorting process."] = "中止目前的隊伍排序。"
@@ -1506,7 +1506,7 @@ L["Aura Glows"] = "光環發光"
 L["Custom Aura Glow"] = "自訂光環發光"
 L["Gloombomb/Orb"] = "炸彈/球"
 L["Guillotine"] = "斬首"
-L["Ula'tek P3 Waves & Soak-dot"] = "Ula'tek P3 Waves & Soak-dot" -- TODO: mechanic slang "Soak-dot"; Ula'tek is 烏拉特克 and Waves is 波浪 elsewhere
+L["Ula'tek P3 Waves & Soak-dot"] = "烏拉特克 P3 腐蝕波／毒蛇之咬"
 L["Default Glow Settings"] = "預設發光設定"
 L["Any new builtin or custom made glow will start with these settings"] = "任何新建的內建或自訂發光都會從這些設定開始"
 L["Reset to Defaults"] = "重設為預設"
@@ -1678,6 +1678,23 @@ L["Show all Soak timers"] = "顯示所有分傷計時"
 L["/yell X"] = "/yell 叉"
 L["/raid Star"] = "/raid 星星"
 L["/rw Triangle"] = "/rw 三角"
+L[ [=[Use the following note format to assign players to one of the 3 soaking groups:
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+There are 3 possible patterns. To determine the correct pattern, one player (who must either be raidleader or have assist) creates the 3 macros at the bottom and presses the corresponding macro for the first appearing Slam. From there on assignments will happen automatically.
+From the following screenshot Group1 is soaking the 3 orange-marked positions, Group2 the purple-marked positions, and Group3 the red-marked positions.
+For one of the patterns all assigned soaks are shifted counter-clockwise by 1]=] ] = [=[使用以下筆記格式，將玩家分配到 3 個分傷組之一：
+transitionStart
+Reloe Senfi Ponky
+Impy Liebre Gladrien
+Hori Shiru Robin
+transitionEnd
+共有 3 種可能的模式。要判斷正確模式，一名玩家（必須是團隊隊長或助理）要建立底部的 3 個巨集，並在第一次猛擊出現時按下對應的巨集。之後分配會自動進行。
+在以下截圖中，第1組分傷 3 個橘色標記位置，第2組分傷紫色標記位置，第3組分傷紅色標記位置。
+其中一種模式的所有已分配分傷會逆時針偏移 1 格。]=]
 L["Copy Group Assignment Image Link"] = "複製隊伍分配圖片連結"
 L["Creates the three chat macros used to select Ula'tek's transition pattern."] = "建立用來選擇烏拉特克轉階段模式的三個聊天巨集。"
 L["Creates one raid macro for each wave direction and updates them if they already exist."] = "為每個波浪方向建立一個團隊巨集，若已存在則更新。"
