@@ -305,5 +305,4 @@ L[3513] = {
     ["AoE"]             = {group = "克希斯", name = "AoE", text = "撿球"},
     ["Darkness"]        = {group = "克希斯", name = "黑暗", text = "黑暗"},
     ["Adds"]            = {group = "克希斯", name = "小怪", text = "小怪"},
-    ["AlertID"]         = {group = "克希斯", name = "提醒名稱", text = "提醒文字"},
 }
