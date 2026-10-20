@@ -489,7 +489,8 @@ local function TrackBloodHitCastSuccess(self)
             alert = CopyTable(alert)
             alert.phase = self.Phase
             alert.phaseTimers = nil
-            self:DisplayReminder(alert)
+            local info = self:CreateReminder(alert)
+            self:DisplayReminder(info)
             self.BloodHitTimer = nil
             self.BloodHitPhase = nil
         end)
