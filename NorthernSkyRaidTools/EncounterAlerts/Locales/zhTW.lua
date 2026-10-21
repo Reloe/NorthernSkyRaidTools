@@ -12,129 +12,129 @@ NSI.EncounterAlertLocales["zhTW"] = L
 -- ============================================================================
 -- Imperator Averzian (3176)
 L[3176] = {
-    -- ["Soaks"] = {name = "Soaks", text = "Soak"},
+    ["Soaks"] = {name = "分傷", text = "分傷"},
 }
 
 -- Vorasius (3177)
 L[3177] = {
-    -- ["Knock"]  = {name = "Knock", text = "Knock"},
-    -- ["Breath"] = {name = "Breath", text = "Breath"},
+    ["Knock"]  = {name = "擊退", text = "擊退"},
+    ["Breath"] = {name = "吐息", text = "吐息"},
 }
 
 -- Fallen King Salhadaar (3179)
 L[3179] = {
-    -- ["Beams"]      = {name = "Beams", text = "Beams"},
-    -- ["Orbs"]       = {name = "Orbs", text = "Orbs"},
-    -- ["CC 小怪"]    = {name = "CC 小怪", text = "CC 小怪"},
-    -- ["CC Display"] = {name = "CC Display"},
+    ["Beams"]      = {name = "光束", text = "光束"},
+    ["Orbs"]       = {name = "球", text = "球"},
+    ["CC Adds"]    = {name = "CC 小怪", text = "CC 小怪"},
+    ["CC Display"] = {name = "CC 顯示"},
 }
 
 -- Vaelgor & Ezzorak (3178)
 L[3178] = {
-    -- ["Spread"]        = {name = "Spread", text = "Spread"},
-    -- ["Tether"]        = {name = "Tether", text = "Tether"},
-    -- ["Breath"]        = {name = "Breath", text = "Breath"},
-    -- ["HealthDisplay"] = {name = "HealthDisplay"},
+    ["Spread"]        = {name = "分散", text = "分散"},
+    ["Tether"]        = {name = "連線", text = "連線"},
+    ["Breath"]        = {name = "吐息", text = "吐息"},
+    ["HealthDisplay"] = {name = "血量顯示"},
 }
 
 -- Lightblinded Vanguard (3180)
 L[3180] = {
-    -- ["Sacred Toll"]       = {name = "Sacred Toll", text = "Sacred Toll"},
-    -- ["Heal Absorb Ticks"] = {name = "Heal Absorb Ticks"},
-    -- ["Peace Aura"]        = {group = "Paladin Auras", name = "Peace Aura", text = "Peace Aura"},
-    -- ["Devotion Aura"]     = {group = "Paladin Auras", name = "Devotion Aura", text = "Devotion Aura"},
-    -- ["Aura of Wrath"]     = {group = "Paladin Auras", name = "Aura of Wrath", text = "Aura of Wrath"},
-    -- ["TauntAlerts"]       = {name = "TauntAlerts", text = "Taunt"},
+    ["Sacred Toll"]       = {name = "神聖代償", text = "神聖代償"},
+    ["Heal Absorb Ticks"] = {name = "治療吸收跳數"},
+    ["Peace Aura"]        = {group = "聖騎士光環", name = "和平光環", text = "和平光環"},
+    ["Devotion Aura"]     = {group = "聖騎士光環", name = "奉獻光環", text = "奉獻光環"},
+    ["Aura of Wrath"]     = {group = "聖騎士光環", name = "憤慨光環", text = "憤慨光環"},
+    ["TauntAlerts"]       = {name = "嘲諷提醒", text = "嘲諷"},
 }
 
 -- Crown of the Cosmos (3181)
 L[3181] = {
-    -- ["Stop Cast"]          = {group = "Alleria P1", name = "Stop Cast", text = "Stop Cast"},
-    -- ["Ranged Obelisk_P1"]  = {group = "Alleria P1", name = "Ranged Obelisk", text = "Obelisk"},
-    -- ["Ranged Obelisk_P3"]  = {group = "Alleria P2", name = "Ranged Obelisk", text = "Obelisk"},
-    -- ["Ranged Obelisk_P5"]  = {group = "Alleria P3", name = "Ranged Obelisk", text = "Obelisk"},
-    -- ["Melee Obelisk_P1"]   = {group = "Alleria P1", name = "Melee Obelisk", text = "Obelisk"},
-    -- ["Melee Obelisk_P3"]   = {group = "Alleria P2", name = "Melee Obelisk", text = "Obelisk"},
-    -- ["Melee Obelisk_P5"]   = {group = "Alleria P3", name = "Melee Obelisk", text = "Obelisk"},
-    -- ["Bait_P1"]            = {group = "Alleria P1", name = "Bait", text = "Bait"},
-    -- ["Bait_P3"]            = {group = "Alleria P2", name = "Bait", text = "Bait"},
-    -- ["Bait_P5"]            = {group = "Alleria P3", name = "Bait", text = "Bait"},
-    -- ["Arrows"]             = {group = "Alleria P1", name = "Arrows", text = "Arrows"},
-    -- ["Explosion_P1"]       = {group = "Alleria P1", name = "Explosion", text = "Explosion"},
-    -- ["Explosion_P3"]       = {group = "Alleria P2", name = "Explosion", text = "Explosion"},
-    -- ["Explosion_P5"]       = {group = "Alleria P3", name = "Explosion", text = "Explosion"},
-    -- ["Boss-Immune"]        = {name = "Boss-Immune", text = "Immune"},
-    -- ["Tether"]             = {group = "Alleria P3", name = "Tether", text = "Tether"},
+    ["Stop Cast"]          = {group = "艾蘭里亞 P1", name = "停止唱法", text = "停止唱法"},
+    ["Ranged Obelisk_P1"]  = {group = "艾蘭里亞 P1", name = "遠程方尖碑", text = "方尖碑"},
+    ["Ranged Obelisk_P3"]  = {group = "艾蘭里亞 P2", name = "遠程方尖碑", text = "方尖碑"},
+    ["Ranged Obelisk_P5"]  = {group = "艾蘭里亞 P3", name = "遠程方尖碑", text = "方尖碑"},
+    ["Melee Obelisk_P1"]   = {group = "艾蘭里亞 P1", name = "近戰方尖碑", text = "方尖碑"},
+    ["Melee Obelisk_P3"]   = {group = "艾蘭里亞 P2", name = "近戰方尖碑", text = "方尖碑"},
+    ["Melee Obelisk_P5"]   = {group = "艾蘭里亞 P3", name = "近戰方尖碑", text = "方尖碑"},
+    ["Bait_P1"]            = {group = "艾蘭里亞 P1", name = "Bait", text = "Bait"},
+    ["Bait_P3"]            = {group = "艾蘭里亞 P2", name = "Bait", text = "Bait"},
+    ["Bait_P5"]            = {group = "艾蘭里亞 P3", name = "Bait", text = "Bait"},
+    ["Arrows"]             = {group = "艾蘭里亞 P1", name = "箭", text = "箭"},
+    ["Explosion_P1"]       = {group = "艾蘭里亞 P1", name = "爆炸", text = "爆炸"},
+    ["Explosion_P3"]       = {group = "艾蘭里亞 P2", name = "爆炸", text = "爆炸"},
+    ["Explosion_P5"]       = {group = "艾蘭里亞 P3", name = "爆炸", text = "爆炸"},
+    ["Boss-Immune"]        = {name = "首領免疫", text = "免疫"},
+    ["Tether"]             = {group = "艾蘭里亞 P3", name = "連線", text = "連線"},
 }
 
 -- Chimaerus (3306)
 L[3306] = {
-    -- ["Debuffs_P1"] = {name = "Debuffs", text = "Debuffs"},
-    -- ["Debuffs_P2"] = {name = "Debuffs", text = "Debuffs"},
+    ["Debuffs_P1"] = {name = "Debuff", text = "Debuff"},
+    ["Debuffs_P2"] = {name = "Debuff", text = "Debuff"},
 }
 
 -- Belo'ren (3182)
 L[3182] = {
-    -- ["Feather Color"] = {name = "Feather Color"},
-    -- ["Color Swap"]    = {name = "Color Swap", text = "SWAPPED"},
-    -- ["Gateway_P2"]    = {group = "Beloren P1", name = "Gateway", text = "Gateway"},
-    -- ["Gateway_P3"]    = {group = "Beloren P2", name = "Gateway", text = "Gateway"},
-    -- ["Next Hit_P2"]   = {group = "Beloren P2", name = "Next Hit", text = "Next Hit"},
-    -- ["Next Hit_P3"]   = {group = "Beloren P2", name = "Next Hit", text = "Next Hit"},
-    -- ["Soaks_P1"]      = {group = "Beloren P1", name = "Soaks", text = "Soaks"},
-    -- ["Soaks_P2"]      = {group = "Beloren P2", name = "Soaks", text = "Soaks"},
-    -- ["Quills_P1"]     = {group = "Beloren P1", name = "Quills", text = "Quills"},
-    -- ["Quills_P2"]     = {group = "Beloren P2", name = "Quills", text = "Quills"},
+    ["Feather Color"] = {name = "羽毛顏色"},
+    ["Color Swap"]    = {name = "換色", text = "已交換"},
+    ["Gateway_P2"]    = {group = "貝羅倫 P1", name = "傳送門", text = "傳送門"},
+    ["Gateway_P3"]    = {group = "貝羅倫 P2", name = "傳送門", text = "傳送門"},
+    ["Next Hit_P2"]   = {group = "貝羅倫 P2", name = "下次命中", text = "下次命中"},
+    ["Next Hit_P3"]   = {group = "貝羅倫 P2", name = "下次命中", text = "下次命中"},
+    ["Soaks_P1"]      = {group = "貝羅倫 P1", name = "分傷", text = "分傷"},
+    ["Soaks_P2"]      = {group = "貝羅倫 P2", name = "分傷", text = "分傷"},
+    ["Quills_P1"]     = {group = "貝羅倫 P1", name = "注能刺羽", text = "刺羽"},
+    ["Quills_P2"]     = {group = "貝羅倫 P2", name = "注能刺羽", text = "刺羽"},
 }
 
 -- Midnight Falls (3183)
 L[3183] = {
-    -- ["MemoryGame"]            = {group = "Lura P1", name = "MemoryGame", text = "Memory Game"},
-    -- ["Glaives"]               = {group = "Lura P1", name = "Glaives", text = "Glaives"},
-    -- ["Interrupts"]            = {group = "Lura P1", name = "Interrupts", text = "Interrupts"},
-    -- ["Beams"]                 = {group = "Lura P1", name = "Beams", text = "Beams"},
-    -- ["Transition Beams"]      = {group = "Lura P1 Transition", name = "Beams", text = "Beams"},
-    -- ["Lura Tank-Hits_P1"]     = {group = "Lura Tanks", name = "P1 Tank-Hits", text = "Tank-Hit"},
-    -- ["Lura Tank-Hits_P3"]     = {group = "Lura Tanks", name = "P2 Tank-Hits", text = "Tank-Hit"},
-    -- ["Lura Tank-Hits_P4"]     = {group = "Lura Tanks", name = "P3 Tank-Hits", text = "Tank-Hit"},
-    -- ["Lura Taunts_P1"]        = {group = "Lura Tanks", name = "P1 Taunts", text = "Taunt"},
-    -- ["Lura Taunts_P3"]        = {group = "Lura Tanks", name = "P2 Taunts", text = "Taunt"},
-    -- ["Full Blaze"]            = {group = "Lura P1 Transition", name = "Full Blaze", text = "Full Blaze"},
-    -- ["Seed-Drop"]             = {group = "Lura P2", name = "Seed-Drop", text = "Seed-Drop"},
-    -- ["Old-Seed-Drop"]         = {group = "Lura P2", name = "non-conditional Seed-Drop", text = "Seed-Drop"},
-    -- ["Galvanize"]             = {group = "Lura P2 Soaks", name = "Generic Soak", text = "Soaks"},
-    -- ["Soak Star"]             = {group = "Lura P2 Soaks", name = "Star Soak", text = "Soak {rt1}"},
-    -- ["Soak Orange"]           = {group = "Lura P2 Soaks", name = "Orange Soak", text = "Soak {rt2}"},
-    -- ["Soak Skull"]            = {group = "Lura P2 Soaks", name = "Skull Soak", text = "Soak {rt8}"},
-    -- ["Soak Cross"]            = {group = "Lura P2 Soaks", name = "Cross Soak", text = "Soak {rt7}"},
-    -- ["Spread"]                = {group = "Lura P2", name = "Spread", text = "Spread"},
-    -- ["Orbs"]                  = {group = "Lura P2", name = "Orbs", text = "Orbs"},
-    -- ["HC Soaks"]              = {group = "Lura P3", name = "HC Soaks", text = "Soaks"},
-    -- ["Move"]                  = {group = "Lura P3", name = "Move", text = "Move"},
-    -- ["Left Memory Game"]      = {group = "Lura P3 Left", name = "Left Memory Game", text = "Memory Game"},
-    -- ["Right Memory Game"]     = {group = "Lura P3 Right", name = "Right Memory Game", text = "Memory Game"},
-    -- ["Left Soaks"]            = {group = "Lura P3 Left", name = "Left Soaks", text = "Soaks"},
-    -- ["Right Soaks"]           = {group = "Lura P3 Right", name = "Right Soaks", text = "Soaks"},
-    -- ["Left Soak-Time"]        = {group = "Lura P3 Left", name = "Left Soak-Time", text = "Soak-Time"},
-    -- ["Right Soak-Time"]       = {group = "Lura P3 Right", name = "Right Soak-Time", text = "Soak-Time"},
-    -- ["Left Stars"]            = {group = "Lura P3 Left", name = "Left Stars", text = "Stars"},
-    -- ["Right Stars"]           = {group = "Lura P3 Right", name = "Right Stars", text = "Stars"},
-    -- ["Final Slice Stars"]     = {group = "Lura P3", name = "Final Slice Stars", text = "Stars"},
-    -- ["Blazes"]                = {group = "Lura P4", name = "Blazes", text = "Blazes"},
-    -- ["P4 Move"]               = {group = "Lura P4", name = "Move", text = "Move"},
-    -- ["CrystalDropTimer"]      = {name = "Time to Pick Crystal", text = "PICK UP"},
-    -- ["RunesDisplay"]          = {name = "RunesDisplay"},
-    -- ["InterruptDisplay"]      = {name = "Interrupt Display"},
+    ["MemoryGame"]            = {group = "路拉 P1", name = "記憶遊戲", text = "記憶遊戲"},
+    ["Glaives"]               = {group = "路拉 P1", name = "天堂戰刃", text = "戰刃"},
+    ["Interrupts"]            = {group = "路拉 P1", name = "打斷", text = "打斷"},
+    ["Beams"]                 = {group = "路拉 P1", name = "光束", text = "光束"},
+    ["Transition Beams"]      = {group = "路拉 P1 轉階段", name = "光束", text = "光束"},
+    ["Lura Tank-Hits_P1"]     = {group = "路拉 坦克", name = "P1 打坦技", text = "打坦技"},
+    ["Lura Tank-Hits_P3"]     = {group = "路拉 坦克", name = "P2 打坦技", text = "打坦技"},
+    ["Lura Tank-Hits_P4"]     = {group = "路拉 坦克", name = "P3 打坦技", text = "打坦技"},
+    ["Lura Taunts_P1"]        = {group = "路拉 坦克", name = "P1 嘲諷", text = "嘲諷"},
+    ["Lura Taunts_P3"]        = {group = "路拉 坦克", name = "P2 嘲諷", text = "嘲諷"},
+    ["Full Blaze"]            = {group = "路拉 P1 轉階段", name = "星辰破片（全團）", text = "全團破片"},
+    ["Seed-Drop"]             = {group = "路拉 P2", name = "丟下黎明水晶", text = "丟水晶"},
+    ["Old-Seed-Drop"]         = {group = "路拉 P2", name = "丟下黎明水晶（無條件）", text = "丟水晶"},
+    ["Galvanize"]             = {group = "路拉 P2 分傷", name = "通用分傷", text = "分傷"},
+    ["Soak Star"]             = {group = "路拉 P2 分傷", name = "星星分傷", text = "分傷 {rt1}"},
+    ["Soak Orange"]           = {group = "路拉 P2 分傷", name = "橘色分傷", text = "分傷 {rt2}"},
+    ["Soak Skull"]            = {group = "路拉 P2 分傷", name = "骷髏分傷", text = "分傷 {rt8}"},
+    ["Soak Cross"]            = {group = "路拉 P2 分傷", name = "叉分傷", text = "分傷 {rt7}"},
+    ["Spread"]                = {group = "路拉 P2", name = "分散", text = "分散"},
+    ["Orbs"]                  = {group = "路拉 P2", name = "球", text = "球"},
+    ["HC Soaks"]              = {group = "路拉 P3", name = "英雄分傷", text = "分傷"},
+    ["Move"]                  = {group = "路拉 P3", name = "移動", text = "移動"},
+    ["Left Memory Game"]      = {group = "路拉 P3 左", name = "左側記憶遊戲", text = "記憶遊戲"},
+    ["Right Memory Game"]     = {group = "路拉 P3 右", name = "右側記憶遊戲", text = "記憶遊戲"},
+    ["Left Soaks"]            = {group = "路拉 P3 左", name = "左側分傷", text = "分傷"},
+    ["Right Soaks"]           = {group = "路拉 P3 右", name = "右側分傷", text = "分傷"},
+    ["Left Soak-Time"]        = {group = "路拉 P3 左", name = "左側分傷時間", text = "分傷時間"},
+    ["Right Soak-Time"]       = {group = "路拉 P3 右", name = "右側分傷時間", text = "分傷時間"},
+    ["Left Stars"]            = {group = "路拉 P3 左", name = "左側星星", text = "星星"},
+    ["Right Stars"]           = {group = "路拉 P3 右", name = "右側星星", text = "星星"},
+    ["Final Slice Stars"]     = {group = "路拉 P3", name = "黑暗星宿（最後）", text = "星星"},
+    ["Blazes"]                = {group = "路拉 P4", name = "星辰破片", text = "破片"},
+    ["P4 Move"]               = {group = "路拉 P4", name = "移動", text = "移動"},
+    ["CrystalDropTimer"]      = {name = "撿水晶時間", text = "撿起"},
+    ["RunesDisplay"]          = {name = "符文顯示"},
+    ["InterruptDisplay"]      = {name = "打斷提醒"},
 }
 
 -- Rotmire (3159)
 L[3159] = {
-    -- ["小怪"]             = {name = "小怪", text = "小怪"},
-    -- ["Shrooms"]          = {name = "Shrooms", text = "Shrooms"},
-    -- ["BurstingPustules"] = {name = "AoE", text = "AoE"},
-    -- ["InterruptDisplay"] = {name = "Interrupt Display"},
-    -- ["Taunts"]           = {group = "Rotmire Tanks", name = "Taunts", text = "Taunt"},
-    -- ["Tankhits"]         = {group = "Rotmire Tanks", name = "Tankhits", text = "Tank-Hit"},
+    ["Adds"]             = {name = "小怪", text = "小怪"},
+    ["Shrooms"]          = {name = "蘑菇", text = "蘑菇"},
+    ["BurstingPustules"] = {name = "AE", text = "AE"},
+    ["InterruptDisplay"] = {name = "打斷提醒"},
+    ["Taunts"]           = {group = "腐沼 坦克", name = "嘲諷", text = "嘲諷"},
+    ["Tankhits"]         = {group = "腐沼 坦克", name = "打坦技", text = "打坦技"},
 }
 
 -- ============================================================================
@@ -305,5 +305,4 @@ L[3513] = {
     ["AoE"]             = {group = "克希斯", name = "AoE", text = "撿球"},
     ["Darkness"]        = {group = "克希斯", name = "黑暗", text = "黑暗"},
     ["Adds"]            = {group = "克希斯", name = "小怪", text = "小怪"},
-    ["AlertID"]         = {group = "克希斯", name = "提醒名稱", text = "提醒文字"},
 }
