@@ -502,6 +502,13 @@ local function ConfigureAuraGlowBorder(button, settings, display, preview, width
     end
     border:SetFrameLevel(button:GetFrameLevel() + 8)
 
+    -- Unit frames can have zero size before their layout is ready.
+    if width <= 0 or height <= 0 then
+        border:Hide()
+        return
+    end
+    border:Show()
+
     local numberOfLines = settings.NumberOfLines
     local lineLength = settings.LineSize
     if lineLength == 0 then
