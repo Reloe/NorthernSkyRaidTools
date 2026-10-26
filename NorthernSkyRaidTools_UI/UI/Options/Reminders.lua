@@ -266,8 +266,8 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.UnitIconSettings.xOffset = value
                 NSI:UpdateExistingFrames()
             end,
-            min = -3000,
-            max = 3000,
+            min = 5,
+            max = 60,
             nocombat = true,
         },
         {
@@ -279,8 +279,8 @@ local function BuildReminderOptions()
                 NSRT.ReminderSettings.UnitIconSettings.yOffset = value
                 NSI:UpdateExistingFrames()
             end,
-            min = -3000,
-            max = 3000,
+            min = 5,
+            max = 60,
             nocombat = true,
         },
         {
