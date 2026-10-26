@@ -65,6 +65,11 @@ local AuraTrackingUnitRefreshStates = {
     roster = {},
 }
 
+local function GetAuraTrackingDisplayLimit(settings)
+    if settings.DisplayType == "Circle" or settings.DisplayType == "Text" then return 1 end
+    return settings.Limit or 1
+end
+
 local function GetAuraTrackingFlowDirections(growDirection, gridGrowDirection)
     local horizontal = AnchorUtil.FlowDirection.Right
     local vertical = AnchorUtil.FlowDirection.Down
@@ -165,6 +170,23 @@ NSI.DefaultPlayerAuraTrackingSpellIDs = {}
 
 function NSI:CreateAuraTrackingSettingsDefaults(overrides)
     local settings = {
+        DisplayType = "Icon",
+        DisplayLayouts = {},
+        CircleTexture = [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]],
+        RingColor = {1, 1, 1, 1},
+        ShowBackgroundRing = false,
+        BarTexture = "Atrocity",
+        BarColor = {1, 0, 0, 1},
+        BarBackgroundColor = {0, 0, 0, 0.8},
+        BarShowIcon = true,
+        BarIconPosition = "LEFT",
+        BarInvertFill = false,
+        AuraNameEnabled = false,
+        AuraNameFontSize = 24,
+        AuraNameColor = {1, 1, 1, 1},
+        AuraNameXOffset = 4,
+        AuraNameYOffset = 0,
+        CustomTexts = {},
         Spacing = -1,
         Limit = 10,
         AurasPerRowColumn = 20,
@@ -230,9 +252,34 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         MultiTankGrow = "Same",
         loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {} },
     }
+    local displayType = overrides and overrides.DisplayType or settings.DisplayType
+    if displayType == "Bar" then
+        settings.Width = 300
+        settings.Height = 40
+        settings.GrowDirection = "UP"
+        settings.DurationAnchorPoint = "RIGHT"
+        settings.DurationXOffset = -4
+        settings.StackAnchorPoint = "LEFT"
+        settings.StackXOffset = 4
+        settings.StackYOffset = 0
+    elseif displayType == "Circle" then
+        settings.Width = 80
+        settings.Height = 80
+        settings.InverseCooldownSwipe = false
+    elseif displayType == "Text" then
+        settings.Width = 300
+        settings.Height = 100
+        settings.AuraNameEnabled = true
+        settings.HideDurationText = true
+        settings.HideStackText = true
+        settings.StackAnchorPoint = "CENTER"
+        settings.StackXOffset = 0
+        settings.StackYOffset = 0
+    end
     for key, value in pairs(overrides or {}) do
         settings[key] = value
     end
+    settings.Limit = GetAuraTrackingDisplayLimit(settings)
     return settings
 end
 
@@ -382,7 +429,7 @@ function NSI:IsAuraTrackingGroupUnitInput(input)
 end
 
 local function GetAuraTrackingCustomFrameLimit(settings, unit)
-    local limit = settings and settings.Limit or 0
+    local limit = GetAuraTrackingDisplayLimit(settings)
     local wantedUnitType = ResolveAuraTrackingCustomUnitType(settings, unit)
     unit = unit and strtrim(tostring(unit)) or ""
     if unit ~= "" and UnitExists(unit) then
@@ -650,6 +697,9 @@ local AuraTrackingSectionFields = {
 }
 
 local AuraTrackingDisplayFields = {
+    "DisplayType", "DisplayLayouts", "CircleTexture", "RingColor", "ShowBackgroundRing",
+    "BarTexture", "BarColor", "BarBackgroundColor", "BarShowIcon", "BarIconPosition", "BarInvertFill", "CustomTexts",
+    "AuraNameEnabled", "AuraNameFontSize", "AuraNameColor", "AuraNameAnchorPoint", "AuraNameXOffset", "AuraNameYOffset",
     "Spacing", "Limit", "AurasPerRowColumn", "GridGrowDirection", "GridSpacing", "GrowDirection", "Width", "Height", "Zoom",
     "Anchor", "relativeTo", "CustomAnchorFrame", "xOffset", "yOffset",
     "FrameStrata", "BorderSize", "BorderColor", "BorderSwipeMode", "DispelBorderMode", "DispelBorderSize",
@@ -1333,7 +1383,7 @@ local function CreateAuraTrackingBorder(parent)
 end
 
 local function IsAuraTrackingBorderFollowingSwipe(settings)
-    return settings.BorderSwipeMode == "FollowSwipe"
+    return (settings.DisplayType or "Icon") == "Icon" and settings.BorderSwipeMode == "FollowSwipe"
 end
 
 local function UpdateAuraTrackingBorder(border, parent, size, color)
@@ -1628,8 +1678,9 @@ function NSI:UpdateAuraMatrixAnchor(settings)
     end
     local anchor = self.AuraMatrixAnchor
     local minX, maxX, minY, maxY = 0, 0, 0, 0
-    for index = 1, settings.Limit do
-        local xOffset, yOffset = GetAuraTrackingPreviewOffset(settings, settings.GrowDirection, index, settings.Limit)
+    local limit = GetAuraTrackingDisplayLimit(settings)
+    for index = 1, limit do
+        local xOffset, yOffset = GetAuraTrackingPreviewOffset(settings, settings.GrowDirection, index, limit)
         minX, maxX = math.min(minX, xOffset), math.max(maxX, xOffset)
         minY, maxY = math.min(minY, yOffset), math.max(maxY, yOffset)
     end
@@ -1892,7 +1943,107 @@ function NSI:HideAuraContainerCircle(containerKey)
     end
 end
 
+local function ConfigureAuraTrackingVisual(self, parent, regions, settings, width, height)
+    local displayType = settings.DisplayType or "Icon"
+    local showIcon = displayType == "Icon" or (displayType == "Bar" and settings.BarShowIcon ~= false)
+    local iconWidth = showIcon and math.min(height, math.max(0, width - 1)) or 0
+    regions.icon:ClearAllPoints()
+    if displayType == "Bar" then
+        regions.icon:SetSize(iconWidth, height)
+        regions.icon:SetPoint(settings.BarIconPosition or "LEFT", parent, settings.BarIconPosition or "LEFT", 0, 0)
+    else
+        regions.icon:SetAllPoints(parent)
+    end
+    regions.icon:SetShown(showIcon)
+
+    if displayType == "Bar" then
+        if not regions.bar then
+            regions.bar = CreateFrame("StatusBar", nil, parent, "BackdropTemplate")
+            regions.bar:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8x8"})
+        end
+        regions.bar:SetFrameLevel(parent:GetFrameLevel())
+        regions.bar:ClearAllPoints()
+        regions.bar:SetPoint("TOPLEFT", parent, "TOPLEFT", settings.BarIconPosition ~= "RIGHT" and iconWidth or 0, 0)
+        regions.bar:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", settings.BarIconPosition == "RIGHT" and -iconWidth or 0, 0)
+        regions.bar:SetStatusBarTexture(self.LSM:Fetch("statusbar", settings.BarTexture or "Atrocity"))
+        regions.bar:SetStatusBarColor(unpack(settings.BarColor or {1, 0, 0, 1}))
+        regions.bar:SetBackdropColor(unpack(settings.BarBackgroundColor or {0, 0, 0, 0.8}))
+        regions.bar:Show()
+    elseif regions.bar then
+        regions.bar:Hide()
+    end
+
+    if displayType == "Circle" then
+        if not regions.circle then regions.circle = parent:CreateTexture(nil, "BACKGROUND") end
+        regions.circle:SetAllPoints(parent)
+        regions.circle:SetTexture(settings.CircleTexture or [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]])
+        regions.circle:SetVertexColor(0, 0, 0, 0.85)
+        regions.circle:SetShown(settings.ShowBackgroundRing == true or not settings.EnableCooldownSwipe)
+    elseif regions.circle then
+        regions.circle:Hide()
+    end
+
+    local useSwipe = (displayType == "Icon" or displayType == "Circle") and settings.EnableCooldownSwipe
+    if regions.cooldown then regions.cooldown:Hide() end
+    if useSwipe then
+        local cooldownKey = displayType == "Circle" and "circleCooldown" or "iconCooldown"
+        if not regions[cooldownKey] then
+            local cooldown = CreateFrame("Cooldown", nil, parent, "CooldownFrameTemplate")
+            cooldown:SetDrawEdge(false)
+            cooldown:SetDrawBling(false)
+            cooldown:SetHideCountdownNumbers(true)
+            regions[cooldownKey] = cooldown
+        end
+        regions.cooldown = regions[cooldownKey]
+        regions.cooldown:ClearAllPoints()
+        regions.cooldown:SetAllPoints(parent)
+        regions.cooldown:SetFrameLevel(parent:GetFrameLevel() + (IsAuraTrackingBorderFollowingSwipe(settings) and 2 or 1))
+        regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
+        if displayType == "Circle" then
+            regions.cooldown:SetSwipeTexture(settings.CircleTexture or [[Interface\AddOns\NorthernSkyRaidTools\Media\Textures\circle_8px.png]])
+            regions.cooldown:SetSwipeColor(unpack(settings.RingColor or {1, 1, 1, 1}))
+        end
+        regions.cooldown:Show()
+    end
+    if displayType == "Circle" and not settings.EnableCooldownSwipe then
+        regions.circle:SetVertexColor(unpack(settings.RingColor or {1, 1, 1, 1}))
+    end
+
+    if (displayType == "Text" or displayType == "Bar") and settings.AuraNameEnabled then
+        local auraName = EnsureAuraTrackingFontString(regions, "auraName")
+        local anchor = settings.AuraNameAnchorPoint or (displayType == "Bar" and "LEFT" or "CENTER")
+        auraName:ClearAllPoints()
+        auraName:SetPoint(anchor, displayType == "Bar" and regions.bar or parent, anchor, settings.AuraNameXOffset or 0, settings.AuraNameYOffset or 0)
+        auraName:SetFont(GetAuraTrackingFontPath(self, settings), settings.AuraNameFontSize or 24, settings.TextFontFlags)
+        auraName:SetTextColor(unpack(settings.AuraNameColor or {1, 1, 1, 1}))
+        auraName:Show()
+    elseif regions.auraName then
+        regions.auraName:Hide()
+    end
+
+    for index = 1, 2 do
+        local textSettings = settings.CustomTexts and settings.CustomTexts[index]
+        local textKey = "customText" .. index
+        if textSettings and textSettings.Enabled then
+            local text = EnsureAuraTrackingFontString(regions, textKey)
+            text:ClearAllPoints()
+            text:SetPoint(textSettings.Anchor or "CENTER", parent, textSettings.relativeTo or "CENTER", textSettings.XOffset or 0, textSettings.YOffset or 0)
+            text:SetFont(self.LSM:Fetch("font", textSettings.Font or settings.TextFont), textSettings.FontSize or 24, textSettings.FontFlags or settings.TextFontFlags)
+            text:SetTextColor(unpack(textSettings.Color or {1, 1, 1, 1}))
+            text:SetText(textSettings.Text or "")
+            text:Show()
+        elseif regions[textKey] then
+            regions[textKey]:Hide()
+        end
+    end
+    return showIcon, useSwipe
+end
+
 local function ConfigureAuraTrackingButton(self, state, button, width, height, settings, unit, key)
+    button:ClearIcon()
+    button:ClearSpellName()
+    button:ClearDurationBar()
+    button:ClearDurationCooldown()
     state.buttonRegions = state.buttonRegions or {}
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local fontPath = GetAuraTrackingFontPath(self, settings)
@@ -1903,7 +2054,6 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
 
         regions.icon = button:CreateTexture(nil, "ARTWORK")
         regions.icon:SetAllPoints(button)
-        button:SetIcon(regions.icon)
 
         regions.textOverlay = CreateFrame("Frame", nil, button)
         regions.textOverlay:SetAllPoints(button)
@@ -1913,6 +2063,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     local regions = state.buttonRegions[button]
+    local displayType = settings.DisplayType or "Icon"
     button:SetSize(width, height)
     local zoom = ((settings.Zoom or 0) * 0.25) / 100
     regions.icon:SetTexCoord(zoom, 1 - zoom, zoom, 1 - zoom)
@@ -1926,10 +2077,10 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     local borderLevel = buttonLevel + (followSwipe and 0 or 2)
     regions.border, regions.borderParent = UpdateAuraTrackingBorderLayer(
         regions.borderOverlay, borderLevel, regions.border, regions.borderParent,
-        settings.BorderSize, settings.BorderColor
+        (displayType == "Icon" or displayType == "Bar") and settings.BorderSize or 0, settings.BorderColor
     )
 
-    if AuraTrackingWantsDispelBorder(settings, key) then
+    if displayType == "Icon" and AuraTrackingWantsDispelBorder(settings, key) then
         if not regions.dispelOverlay then
             regions.dispelOverlay = CreateFrame("Frame", nil, button)
             regions.dispelOverlay:SetAllPoints(regions.icon)
@@ -1991,6 +2142,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         button:ClearDispelTypeText()
     end
 
+    local showIcon, useSwipe = ConfigureAuraTrackingVisual(self, button, regions, settings, width, height)
     if settings.HideStackText then
         button:ClearApplicationCount()
         if regions.count then
@@ -2001,7 +2153,7 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
         local count = EnsureAuraTrackingFontString(regions, "count")
         count:ClearAllPoints()
         local stackAnchorPoint = settings.StackAnchorPoint or "BOTTOMRIGHT"
-        count:SetPoint(stackAnchorPoint, button, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
+        count:SetPoint(stackAnchorPoint, displayType == "Bar" and regions.bar or button, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
         count:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
         count:SetTextColor(unpack(settings.StackColor))
         count:Show()
@@ -2056,22 +2208,19 @@ local function ConfigureAuraTrackingButton(self, state, button, width, height, s
     end
 
     button:SetMouseMotionEnabled(not settings.HideTooltip)
-    if settings.EnableCooldownSwipe then
-        if not regions.cooldown then
-            regions.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-            regions.cooldown:SetAllPoints(regions.icon)
-            regions.cooldown:SetDrawEdge(false)
-            regions.cooldown:SetHideCountdownNumbers(true)
-        end
-        regions.cooldown:SetFrameLevel(buttonLevel + (followSwipe and 2 or 1))
-        regions.cooldown:SetReverse(settings.InverseCooldownSwipe)
-        regions.cooldown:Show()
+    if showIcon then
+        button:SetIcon(regions.icon)
+    end
+    if displayType == "Bar" then
+        button:SetDurationBar(regions.bar, {
+            direction = settings.BarInvertFill and Enum.StatusBarTimerDirection.ElapsedTime or Enum.StatusBarTimerDirection.RemainingTime,
+        })
+    end
+    if (displayType == "Text" or displayType == "Bar") and settings.AuraNameEnabled then
+        button:SetSpellName(regions.auraName)
+    end
+    if useSwipe then
         button:SetDurationCooldown(regions.cooldown)
-    else
-        button:ClearDurationCooldown()
-        if regions.cooldown then
-            regions.cooldown:Hide()
-        end
     end
     return button
 end
@@ -2773,6 +2922,7 @@ end
 
 local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons, unitSetKey, matrixRow)
     if not unit or not settings or not settings.enabled then return end
+    settings.Limit = GetAuraTrackingDisplayLimit(settings)
     local loadMatches = self:EvaluateLoad(settings)
     local encounterConditions = settings.loadConditions and settings.loadConditions.EncounterIDs
     local hasEncounterConditions = encounterConditions and next(encounterConditions) ~= nil
@@ -3007,7 +3157,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         end
         local maxFrameCount = group.maxFrameCount
         if maxFrameCount == nil then
-            maxFrameCount = settings.Limit
+            maxFrameCount = GetAuraTrackingDisplayLimit(settings)
         end
         local sortMode = settings.SortMode or "AuraInstanceID"
         local sortMethod = AuraContainerSortMethod.Default
@@ -3464,7 +3614,7 @@ end
 
 local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
     local entries = {}
-    local limit = math.min(settings.Limit or 1, 20)
+    local limit = math.min(GetAuraTrackingDisplayLimit(settings), 20)
     local previewData = GetAuraTrackingPreviewData(key)
     local spellIDs = previewData and previewData.previewSpellIDs or GetAuraTrackingSpellIDs(settings, key)
     local shuffledSpellIDs = {}
@@ -3477,8 +3627,9 @@ local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
     end
     for i = 1, limit do
         local texture = fallbackTexture
+        local spellID
         if #shuffledSpellIDs > 0 then
-            local spellID = shuffledSpellIDs[((i - 1) % #shuffledSpellIDs) + 1]
+            spellID = shuffledSpellIDs[((i - 1) % #shuffledSpellIDs) + 1]
             texture = C_Spell.GetSpellTexture(spellID) or fallbackTexture
         end
         local dispelType
@@ -3491,6 +3642,7 @@ local function BuildAuraTrackingPreviewEntries(settings, key, fallbackTexture)
             index = i,
             duration = math.random(10, 120),
             texture = texture,
+            name = spellID and C_Spell.GetSpellName(spellID) or NSI:Loc("Aura Name"),
             dispelType = dispelType,
         }
     end
@@ -3520,7 +3672,7 @@ local function StartAuraTrackingPreviewTimer(self, key)
     local colorUnderThreshold = settings.ColorDurationUnderThreshold
     local durationThreshold = math.max(tonumber(settings.ColorDurationThreshold) or 3, 0.1)
     local timerKey = previewData.timerKey
-    self[timerKey] = C_Timer.NewTicker(settings.HideDurationText and 1 or 0.05, function()
+    self[timerKey] = C_Timer.NewTicker(settings.HideDurationText and settings.DisplayType ~= "Bar" and 1 or 0.05, function()
         local now = GetTime()
         local iconKey = previewData.iconKey
         local secondIconKey = previewData.secondIconKey
@@ -3542,6 +3694,9 @@ local function StartAuraTrackingPreviewTimer(self, key)
                                 frame.Duration:SetTextColor(unpack(durationColor))
                             end
                         end
+                        if settings.DisplayType == "Bar" then
+                            frame.visualRegions.bar:SetValue(settings.BarInvertFill and frame.PreviewDuration - remaining or remaining)
+                        end
                     end
                 end
             end
@@ -3549,12 +3704,14 @@ local function StartAuraTrackingPreviewTimer(self, key)
     end)
 end
 
-local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName, previewSourceName)
+local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, key, index, duration, dispelType, fontPath, previewData, previewUnitName, previewSourceName, previewAuraName)
+    local displayType = settings.DisplayType or "Icon"
     local durationColor = settings.DurationColor or {1, 1, 0.25, 1}
     local thresholdColor = settings.DurationThresholdColor or {1, 0, 0, 1}
     fontPath = fontPath or GetAuraTrackingFontPath(self, settings)
     local now = GetTime()
     duration = duration or 10
+    frame.PreviewDuration = duration
     frame.PreviewExpires = now + duration
     frame:SetSize(settings.Width, settings.Height)
     frame.Icon:SetTexture(texture)
@@ -3570,10 +3727,10 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     local borderLevel = frame:GetFrameLevel() + (followSwipe and 0 or 2)
     frame.Border, frame.BorderParent = UpdateAuraTrackingBorderLayer(
         frame.BorderOverlay, borderLevel, frame.Border, frame.BorderParent,
-        settings.BorderSize, settings.BorderColor
+        (displayType == "Icon" or displayType == "Bar") and settings.BorderSize or 0, settings.BorderColor
     )
 
-    if AuraTrackingWantsDispelBorder(settings, key) and dispelType then
+    if displayType == "Icon" and AuraTrackingWantsDispelBorder(settings, key) and dispelType then
         if not frame.DispelOverlay then
             frame.DispelOverlay = CreateFrame("Frame", nil, frame)
             frame.DispelOverlay:SetAllPoints(frame.Icon)
@@ -3616,21 +3773,13 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
         HideAuraTrackingPreviewDispelRegions(frame)
     end
 
-    if settings.EnableCooldownSwipe then
-        if not frame.Cooldown then
-            frame.Cooldown = CreateFrame("Cooldown", nil, frame, "CooldownFrameTemplate")
-            frame.Cooldown:SetAllPoints(frame.Icon)
-            frame.Cooldown:SetDrawEdge(false)
-            frame.Cooldown:SetHideCountdownNumbers(true)
-        end
-        frame.Cooldown:SetFrameLevel(frame:GetFrameLevel() + (followSwipe and 2 or 1))
-        frame.Cooldown:SetCooldown(now, duration)
-        frame.Cooldown:SetReverse(settings.InverseCooldownSwipe)
-        frame.Cooldown:Show()
-    elseif frame.Cooldown then
-        frame.Cooldown:Hide()
+    if not frame.TextOverlay then
+        frame.TextOverlay = CreateFrame("Frame", nil, frame)
+        frame.TextOverlay:SetAllPoints(frame)
     end
-
+    frame.TextOverlay:SetFrameLevel(frame:GetFrameLevel() + 3)
+    frame.visualRegions = frame.visualRegions or {icon = frame.Icon, textOverlay = frame.TextOverlay}
+    local useSwipe = select(2, ConfigureAuraTrackingVisual(self, frame, frame.visualRegions, settings, settings.Width, settings.Height))
     if settings.HideStackText then
         if frame.Stack then
             frame.Stack:SetText("")
@@ -3640,7 +3789,7 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
         local stack = EnsureAuraTrackingFontString(frame, "Stack")
         stack:ClearAllPoints()
         local stackAnchorPoint = settings.StackAnchorPoint or "BOTTOMRIGHT"
-        stack:SetPoint(stackAnchorPoint, frame, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
+        stack:SetPoint(stackAnchorPoint, displayType == "Bar" and frame.visualRegions.bar or frame, stackAnchorPoint, settings.StackXOffset, settings.StackYOffset)
         stack:SetFont(fontPath, settings.StackFontSize, settings.TextFontFlags)
         stack:SetTextColor(unpack(settings.StackColor))
         stack:SetText(index)
@@ -3694,6 +3843,14 @@ local function UpdateAuraTrackingPreviewFrame(self, frame, settings, texture, ke
     elseif frame.UnitName then
         frame.UnitName:SetText("")
         frame.UnitName:Hide()
+    end
+    if useSwipe then frame.visualRegions.cooldown:SetCooldown(now, duration) end
+    if displayType == "Bar" then
+        frame.visualRegions.bar:SetMinMaxValues(0, duration)
+        frame.visualRegions.bar:SetValue(settings.BarInvertFill and 0 or duration)
+    end
+    if (displayType == "Text" or displayType == "Bar") and settings.AuraNameEnabled then
+        frame.visualRegions.auraName:SetText(previewAuraName or NSI:Loc("Aura Name"))
     end
 end
 
@@ -3880,7 +4037,7 @@ function NSI:PreviewAuraTracking(key, show)
             local xOffset, yOffset = GetAuraTrackingPreviewOffset(settings, settings.GrowDirection, i, #entries)
             icon:ClearAllPoints()
             icon:SetPoint("CENTER", mover, "CENTER", xOffset, yOffset)
-            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName, previewSourceName)
+            UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, firstPreviewName, previewSourceName, entry.name)
             icon:Show()
         else
             icon.PreviewExpires = nil
@@ -3903,7 +4060,7 @@ function NSI:PreviewAuraTracking(key, show)
                 local xOffset, yOffset = GetAuraTrackingPreviewOffset(settings, secondMover.GrowDirection, i, #entries)
                 icon:ClearAllPoints()
                 icon:SetPoint("CENTER", secondMover, "CENTER", xOffset, yOffset)
-                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName, previewSourceName)
+                UpdateAuraTrackingPreviewFrame(self, icon, settings, entry.texture or texture, key, i, entry.duration, entry.dispelType, fontPath, previewData, secondPreviewName, previewSourceName, entry.name)
                 icon:Show()
             else
                 icon.PreviewExpires = nil

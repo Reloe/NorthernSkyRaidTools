@@ -282,6 +282,7 @@ local function BuildAuraTrackingUI(screen)
     local rightW      = content_width - rightX - pad
     local tabContentH = tab_content_height - 20 - 68 - 6
     local DISPLAY_TOP = 46   -- fixed anchor row height at top of Display tab
+    local displayTypeHeight = 30
     -- Scroll frames inside each inner tab are narrower than the panel so the
     -- native UIPanelScrollFrameTemplate scrollbar (anchored just outside the
     -- frame's right edge) stays inside the NSUI window instead of spilling past it.
@@ -969,13 +970,46 @@ local function BuildAuraTrackingUI(screen)
         end
     end
 
-    -- ── Fixed anchor row at the top of the Display tab ───────────────────────
     local displayF = tabFrames["Display"]
+    local displayTypeButtons = {}
+    for index, displayType in ipairs({"Icon", "Bar", "Text", "Circle"}) do
+        local button = CreateLocalizedSubButton(displayF, displayType, function()
+            local settings = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
+            if not settings or (settings.DisplayType or "Icon") == displayType then return end
+            local previousType = settings.DisplayType or "Icon"
+            settings.DisplayLayouts = settings.DisplayLayouts or {}
+            local layoutFields = {
+                "Width", "Height", "GrowDirection", "InverseCooldownSwipe", "Limit", "AuraNameEnabled",
+                "DurationAnchorPoint", "DurationXOffset", "DurationYOffset", "HideDurationText", "DurationFontSize", "DurationColor",
+                "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
+                "StackAnchorPoint", "StackXOffset", "StackYOffset", "HideStackText", "StackFontSize", "StackColor",
+            }
+            local previousLayout = {}
+            for fieldIndex, field in ipairs(layoutFields) do
+                local value = settings[field]
+                previousLayout[field] = type(value) == "table" and CopyTable(value) or value
+            end
+            settings.DisplayLayouts[previousType] = previousLayout
+            settings.DisplayType = displayType
+            local layout = settings.DisplayLayouts[displayType] or NSI:CreateAuraTrackingSettingsDefaults({DisplayType = displayType})
+            for fieldIndex, field in ipairs(layoutFields) do
+                local value = layout[field]
+                settings[field] = type(value) == "table" and CopyTable(value) or value
+            end
+            if displayType == "Circle" or displayType == "Text" then settings.Limit = 1 end
+            apply(selectedKey)
+            RebuildCurrentTab()
+        end, 84, "NSUIAuraTrackType" .. displayType)
+        button:SetPoint("TOPLEFT", displayF, "TOPLEFT", (index - 1) * 87, 0)
+        displayTypeButtons[displayType] = button
+    end
+
+    -- ── Fixed anchor row below the display type selector ────────────────────
     local anchorLbl = displayF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(anchorLbl, 11, "")
     anchorLbl:SetTextColor(1, 0.82, 0, 1)
     anchorLbl:SetText(NSI:Loc("Anchor Frame"))
-    anchorLbl:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, 0)
+    anchorLbl:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -displayTypeHeight)
 
     anchorEntry = CreateTextEntry(displayF, nil,
         function() local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey); return s and s.CustomAnchorFrame or "UIParent" end,
@@ -993,16 +1027,66 @@ local function BuildAuraTrackingUI(screen)
         end,
         rightW, 22, nil, nil, nil, "NSUIAuraTrackAnchorEntry",
         { title = NSI:Loc("Anchor Frame"), desc = NSI:Loc("Aura Tracking Anchor Frame Tooltip") })
-    anchorEntry:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -18)
+    anchorEntry:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -displayTypeHeight - 18)
 
     -- ── Definition builders (Display / Trigger via BuildWidgets) ─────
     local function BuildDisplayDefs(s, key)
         local defs = {}
+        local displayType = s.DisplayType or "Icon"
+        local isSingle = displayType == "Circle" or displayType == "Text"
         s.DurationColor = s.DurationColor or {1, 1, 0.25, 1}
         s.DurationThresholdColor = s.DurationThresholdColor or {1, 0.25, 0.25, 1}
         local function add(d) defs[#defs + 1] = d end
         local function tip(title, desc)
             return { title = title, desc = desc }
+        end
+        if displayType == "Circle" then
+            add({ Type = "Label", text = "Circle", highlight = true })
+            add({ Type = "Slider", label = "Size", min = 10, max = 500, step = 1,
+                get = function() return s.Width end,
+                set = function(widget, v) s.Width = v; s.Height = v; apply(key) end })
+            local textures = {}
+            for textureIndex, size in ipairs({2, 5, 8, 10, 15}) do
+                textures[#textures + 1] = {label = size .. " px", value = "Interface\\AddOns\\NorthernSkyRaidTools\\Media\\Textures\\circle_" .. size .. "px.png"}
+            end
+            add({ Type = "Dropdown", label = "Texture", values = textures,
+                get = function() return s.CircleTexture or textures[3].value end,
+                set = function(widget, v) s.CircleTexture = v; apply(key) end })
+            add({ Type = "Color", label = "Ring Color",
+                get = function() return unpack(s.RingColor or {1, 1, 1, 1}) end,
+                set = function(widget, r, g, b, a) s.RingColor = {r, g, b, a}; apply(key) end })
+            add({ Type = "Checkbox", label = "Show Background Ring",
+                get = function() return s.ShowBackgroundRing end,
+                set = function(widget, v) s.ShowBackgroundRing = v; apply(key) end })
+        elseif displayType == "Bar" then
+            add({ Type = "Label", text = "Bar", highlight = true })
+            add({ Type = "Dropdown", label = "Texture", values = function()
+                local textures = {}
+                for mediaIndex, name in ipairs(NSI.LSM:List("statusbar")) do textures[#textures + 1] = {label = name, value = name} end
+                return textures
+            end,
+                get = function() return s.BarTexture or "Atrocity" end,
+                set = function(widget, v) s.BarTexture = v; apply(key) end })
+            add({ Type = "Color", label = "Bar Fill Color",
+                get = function() return unpack(s.BarColor or {1, 0, 0, 1}) end,
+                set = function(widget, r, g, b, a) s.BarColor = {r, g, b, a}; apply(key) end })
+            add({ Type = "Color", label = "Background Color",
+                get = function() return unpack(s.BarBackgroundColor or {0, 0, 0, 0.8}) end,
+                set = function(widget, r, g, b, a) s.BarBackgroundColor = {r, g, b, a}; apply(key) end })
+            add({ Type = "Checkbox", label = "Invert Bar Fill",
+                get = function() return s.BarInvertFill end,
+                set = function(widget, v) s.BarInvertFill = v; apply(key) end })
+            add({ Type = "Checkbox", label = "Show Icon",
+                get = function() return s.BarShowIcon ~= false end,
+                set = function(widget, v) s.BarShowIcon = v; apply(key); RebuildCurrentTab() end })
+            if s.BarShowIcon ~= false then
+                add({ Type = "Dropdown", label = "Icon Position", values = {{label = "LEFT", value = "LEFT"}, {label = "RIGHT", value = "RIGHT"}},
+                    get = function() return s.BarIconPosition or "LEFT" end,
+                    set = function(widget, v) s.BarIconPosition = v; apply(key) end })
+            end
+        end
+        if isSingle then
+            add({ Type = "Label", text = "Maximum auras: 1", height = 24 })
         end
         add({ Type = "Label", text = "Position Settings", highlight = true })
         add({ Type = "Dropdown", label = "Anchor Point", values = ANCHOR_POINTS,
@@ -1052,30 +1136,36 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Slider", label = "Spacing", min = -5, max = 20, step = 1,
             tooltip = tip("Spacing", "Spacing between Aura Tracking icons"),
             get = function() return s.Spacing end, set = function(_, v) s.Spacing = v; apply(key) end })
-        add({ Type = "Slider", label = "Width", min = 10, max = 500, step = 1,
-            tooltip = tip("Width", "Width of the Aura Tracking icons"),
-            get = function() return s.Width end, set = function(_, v) s.Width = v; apply(key) end })
-        add({ Type = "Slider", label = "Height", min = 10, max = 500, step = 1,
-            tooltip = tip("Height", "Height of the Aura Tracking icons"),
-            get = function() return s.Height end, set = function(_, v) s.Height = v; apply(key) end })
-        add({ Type = "Slider", label = "Zoom", min = 0, max = 100, step = 1,
-            tooltip = tip("Zoom", "Zooms the icon texture inwards"),
-            get = function() return s.Zoom end, set = function(_, v) s.Zoom = v; apply(key) end })
-        add({ Type = "Slider", label = "Max Icons", min = 1, max = 20, step = 1,
-            tooltip = tip("Max Icons", "Maximum number of auras to display"),
-            get = function() return s.Limit end, set = function(_, v) s.Limit = v; apply(key) end })
-        add({ Type = "Slider", label = "Auras per Row/Column", min = 1, max = 20, step = 1,
-            tooltip = tip("Auras per Row/Column", "Maximum number of aura icons placed in each row or column before the grid grows in its Grid-Grow Direction."),
-            get = function() return s.AurasPerRowColumn or 20 end,
-            set = function(_, v) s.AurasPerRowColumn = v; apply(key) end })
-        add({ Type = "Dropdown", label = "Grid-Grow Direction", values = GridGrowDirections,
-            tooltip = tip("Grid-Grow Direction", "Direction in which the next grid row or column is placed."),
-            get = function() return s.GridGrowDirection or "UP" end,
-            set = function(_, v) s.GridGrowDirection = v; apply(key) end })
-        add({ Type = "Slider", label = "Grid-Spacing", min = -5, max = 50, step = 1,
-            tooltip = tip("Grid-Spacing", "Spacing between rows or columns in the Aura Tracking grid."),
-            get = function() return s.GridSpacing ~= nil and s.GridSpacing or s.Spacing end,
-            set = function(_, v) s.GridSpacing = v; apply(key) end })
+        if displayType ~= "Circle" then
+            add({ Type = "Slider", label = "Width", min = 10, max = 500, step = 1,
+                tooltip = tip("Width", "Width of the Aura Tracking icons"),
+                get = function() return s.Width end, set = function(widget, v) s.Width = v; apply(key) end })
+            add({ Type = "Slider", label = "Height", min = 10, max = 500, step = 1,
+                tooltip = tip("Height", "Height of the Aura Tracking icons"),
+                get = function() return s.Height end, set = function(widget, v) s.Height = v; apply(key) end })
+        end
+        if displayType == "Icon" or displayType == "Bar" and s.BarShowIcon ~= false then
+            add({ Type = "Slider", label = "Zoom", min = 0, max = 100, step = 1,
+                tooltip = tip("Zoom", "Zooms the icon texture inwards"),
+                get = function() return s.Zoom end, set = function(widget, v) s.Zoom = v; apply(key) end })
+        end
+        if not isSingle then
+            add({ Type = "Slider", label = "Max Auras", min = 1, max = 20, step = 1,
+                tooltip = tip("Max Auras", "Maximum number of auras to display"),
+                get = function() return s.Limit end, set = function(widget, v) s.Limit = v; apply(key) end })
+            add({ Type = "Slider", label = "Auras per Row/Column", min = 1, max = 20, step = 1,
+                tooltip = tip("Auras per Row/Column", "Maximum number of aura icons placed in each row or column before the grid grows in its Grid-Grow Direction."),
+                get = function() return s.AurasPerRowColumn or 20 end,
+                set = function(widget, v) s.AurasPerRowColumn = v; apply(key) end })
+            add({ Type = "Dropdown", label = "Grid-Grow Direction", values = GridGrowDirections,
+                tooltip = tip("Grid-Grow Direction", "Direction in which the next grid row or column is placed."),
+                get = function() return s.GridGrowDirection or "UP" end,
+                set = function(widget, v) s.GridGrowDirection = v; apply(key) end })
+            add({ Type = "Slider", label = "Grid-Spacing", min = -5, max = 50, step = 1,
+                tooltip = tip("Grid-Spacing", "Spacing between rows or columns in the Aura Tracking grid."),
+                get = function() return s.GridSpacing ~= nil and s.GridSpacing or s.Spacing end,
+                set = function(widget, v) s.GridSpacing = v; apply(key) end })
+        end
         local isCotankTracking = key == "Tank" or (s.Unit and string.lower(strtrim(s.Unit)) == "cotank")
         if isCotankTracking then
             add({ Type = "Checkbox", label = "Only show first tank",
@@ -1097,33 +1187,39 @@ local function BuildAuraTrackingUI(screen)
             tooltip = tip("Sort Order", "Default uses Blizzard's aura order, which usually follows application order and uses the aura instance ID as a final tie-breaker. Long Duration first shows the longest remaining aura first. Short Duration first shows the shortest remaining aura first. Aura Instance ID sorts only by aura instance ID."),
             get = function() return s.SortMode or "AuraInstanceID" end, set = function(_, v) s.SortMode = v or "AuraInstanceID"; apply(key) end })
 
-        add({ Type = "Label", text = "Icon", highlight = true })
-        add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
-            tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
-            get = function() return s.BorderSize end, set = function(_, v) s.BorderSize = v; apply(key) end })
-        add({ Type = "Color", label = "Border Color",
-            tooltip = tip("Border Color", "Color of the border around tracked aura icons."),
-            get = function() return unpack(s.BorderColor) end, set = function(_, r, g, b, a) s.BorderColor = {r, g, b, a}; apply(key) end })
-        add({ Type = "Dropdown", label = "Border Behavior", values = BORDER_SWIPE_MODES,
-            tooltip = tip("Border Behavior", "Choose whether the regular and dispel borders remain fully visible or follow the cooldown swipe."),
-            get = function() return s.BorderSwipeMode or "Static" end,
-            set = function(_, v) s.BorderSwipeMode = v or "Static"; apply(key) end })
-        if key ~= "External" then
-            add({ Type = "Dropdown", label = "Dispel Border", values = DISPEL_BORDER_MODES,
-                tooltip = tip("Dispel Border", "Select a colored border, a colored border with a dispel icon, an icon without a border, or no dispel indicator."),
-                get = function() return s.DispelBorderMode end,
-                set = function(_, v) s.DispelBorderMode = v; apply(key) end })
-            add({ Type = "Slider", label = "Dispel Border Size", min = 0, max = 10, step = 1,
-                tooltip = tip("Dispel Border Size", "Size of the colored dispel border. Set to 0 to disable it."),
-                get = function() return s.DispelBorderSize ~= nil and s.DispelBorderSize or 3 end,
-                set = function(_, v) s.DispelBorderSize = v; apply(key) end })
+        if displayType == "Icon" or displayType == "Bar" then
+            add({ Type = "Label", text = "Border", highlight = true })
+            add({ Type = "Slider", label = "Border Size", min = 0, max = 10, step = 1,
+                tooltip = tip("Border Size", "Size of the black border around tracked aura icons. Set to 0 to disable it."),
+                get = function() return s.BorderSize end, set = function(widget, v) s.BorderSize = v; apply(key) end })
+            add({ Type = "Color", label = "Border Color",
+                tooltip = tip("Border Color", "Color of the border around tracked aura icons."),
+                get = function() return unpack(s.BorderColor) end, set = function(widget, r, g, b, a) s.BorderColor = {r, g, b, a}; apply(key) end })
         end
-        add({ Type = "Checkbox", label = "Enable Cooldown Swipe",
-            tooltip = tip("Enable Cooldown Swipe", "Shows a cooldown swipe on tracked aura icons."),
-            get = function() return s.EnableCooldownSwipe end, set = function(_, v) s.EnableCooldownSwipe = v; apply(key) end })
-        add({ Type = "Checkbox", label = "Inverse Cooldown Swipe",
-            tooltip = tip("Inverse Cooldown Swipe", "Reverses the cooldown swipe direction on tracked aura icons."),
-            get = function() return s.InverseCooldownSwipe end, set = function(_, v) s.InverseCooldownSwipe = v; apply(key) end })
+        if displayType == "Icon" then
+            add({ Type = "Dropdown", label = "Border Behavior", values = BORDER_SWIPE_MODES,
+                tooltip = tip("Border Behavior", "Choose whether the regular and dispel borders remain fully visible or follow the cooldown swipe."),
+                get = function() return s.BorderSwipeMode or "Static" end,
+                set = function(widget, v) s.BorderSwipeMode = v or "Static"; apply(key) end })
+            if key ~= "External" then
+                add({ Type = "Dropdown", label = "Dispel Border", values = DISPEL_BORDER_MODES,
+                    tooltip = tip("Dispel Border", "Select a colored border, a colored border with a dispel icon, an icon without a border, or no dispel indicator."),
+                    get = function() return s.DispelBorderMode end,
+                    set = function(widget, v) s.DispelBorderMode = v; apply(key) end })
+                add({ Type = "Slider", label = "Dispel Border Size", min = 0, max = 10, step = 1,
+                    tooltip = tip("Dispel Border Size", "Size of the colored dispel border. Set to 0 to disable it."),
+                    get = function() return s.DispelBorderSize ~= nil and s.DispelBorderSize or 3 end,
+                    set = function(widget, v) s.DispelBorderSize = v; apply(key) end })
+            end
+        end
+        if displayType == "Icon" or displayType == "Circle" then
+            add({ Type = "Checkbox", label = "Enable Cooldown Swipe",
+                tooltip = tip("Enable Cooldown Swipe", "Shows a cooldown swipe on tracked aura icons."),
+                get = function() return s.EnableCooldownSwipe end, set = function(widget, v) s.EnableCooldownSwipe = v; apply(key) end })
+            add({ Type = "Checkbox", label = "Inverse Cooldown Swipe",
+                tooltip = tip("Inverse Cooldown Swipe", "Reverses the cooldown swipe direction on tracked aura icons."),
+                get = function() return s.InverseCooldownSwipe end, set = function(widget, v) s.InverseCooldownSwipe = v; apply(key) end })
+        end
         add({ Type = "Checkbox", label = "Disable Tooltip",
             tooltip = tip("Disable Tooltip", "Hide tooltips on mouseover. The frame will be clickthrough regardless."),
             get = function() return s.HideTooltip end, set = function(_, v) s.HideTooltip = v; apply(key) end })
@@ -1150,6 +1246,71 @@ local function BuildAuraTrackingUI(screen)
         add({ Type = "Dropdown", label = "Text Outline", values = FontFlags,
             tooltip = tip("Text Outline", "Outline style used for duration and stack text"),
             get = function() return s.TextFontFlags end, set = function(_, v) s.TextFontFlags = v; apply(key) end })
+
+        if displayType == "Text" or displayType == "Bar" then
+            add({ Type = "Label", text = "Aura Name Text", highlight = true })
+            add({ Type = "Checkbox", label = "Show Aura Name",
+                get = function() return s.AuraNameEnabled end,
+                set = function(widget, v) s.AuraNameEnabled = v; apply(key); RebuildCurrentTab() end })
+            if s.AuraNameEnabled then
+                add({ Type = "Slider", label = "Font Size", min = 6, max = 80, step = 1,
+                    get = function() return s.AuraNameFontSize or 24 end,
+                    set = function(widget, v) s.AuraNameFontSize = v; apply(key) end })
+                add({ Type = "Color", label = "Text Color",
+                    get = function() return unpack(s.AuraNameColor or {1, 1, 1, 1}) end,
+                    set = function(widget, r, g, b, a) s.AuraNameColor = {r, g, b, a}; apply(key) end })
+                add({ Type = "Dropdown", label = "Text Anchor Point", values = TextAnchorPoints,
+                    get = function() return s.AuraNameAnchorPoint or (displayType == "Bar" and "LEFT" or "CENTER") end,
+                    set = function(widget, v) s.AuraNameAnchorPoint = v; apply(key) end })
+                add({ Type = "Slider", label = "Text X-Offset", min = -500, max = 500, step = 1,
+                    get = function() return s.AuraNameXOffset or 0 end,
+                    set = function(widget, v) s.AuraNameXOffset = v; apply(key) end })
+                add({ Type = "Slider", label = "Text Y-Offset", min = -500, max = 500, step = 1,
+                    get = function() return s.AuraNameYOffset or 0 end,
+                    set = function(widget, v) s.AuraNameYOffset = v; apply(key) end })
+            end
+        end
+
+        s.CustomTexts = s.CustomTexts or {}
+        for index = 1, 2 do
+            s.CustomTexts[index] = s.CustomTexts[index] or {Text = "", FontSize = 24, Color = {1, 1, 1, 1}, Anchor = "CENTER", relativeTo = "CENTER", XOffset = 0, YOffset = 0}
+            local textSettings = s.CustomTexts[index]
+            local label = "Custom Text " .. index
+            add({ Type = "Label", text = label, highlight = true })
+            add({ Type = "Checkbox", label = "Enable Custom Text",
+                get = function() return textSettings.Enabled end,
+                set = function(widget, v) textSettings.Enabled = v; apply(key); RebuildCurrentTab() end })
+            if textSettings.Enabled then
+                add({ Type = "Label", text = "Text" })
+                add({ Type = "TextEntry",
+                    get = function() return textSettings.Text or "" end,
+                    set = function(widget, v) textSettings.Text = v; apply(key) end })
+                add({ Type = "Dropdown", label = "Text Font", values = BuildFontValues,
+                    get = function() return textSettings.Font or s.TextFont end,
+                    set = function(widget, v) textSettings.Font = v; apply(key) end })
+                add({ Type = "Dropdown", label = "Text Outline", values = FontFlags,
+                    get = function() return textSettings.FontFlags or s.TextFontFlags end,
+                    set = function(widget, v) textSettings.FontFlags = v; apply(key) end })
+                add({ Type = "Slider", label = "Font Size", min = 6, max = 100, step = 1,
+                    get = function() return textSettings.FontSize or 24 end,
+                    set = function(widget, v) textSettings.FontSize = v; apply(key) end })
+                add({ Type = "Color", label = "Text Color",
+                    get = function() return unpack(textSettings.Color or {1, 1, 1, 1}) end,
+                    set = function(widget, r, g, b, a) textSettings.Color = {r, g, b, a}; apply(key) end })
+                add({ Type = "Dropdown", label = "Text Anchor Point", values = TextAnchorPoints,
+                    get = function() return textSettings.Anchor or "CENTER" end,
+                    set = function(widget, v) textSettings.Anchor = v; apply(key) end })
+                add({ Type = "Dropdown", label = "Relative Point", values = TextAnchorPoints,
+                    get = function() return textSettings.relativeTo or "CENTER" end,
+                    set = function(widget, v) textSettings.relativeTo = v; apply(key) end })
+                add({ Type = "Slider", label = "Text X-Offset", min = -500, max = 500, step = 1,
+                    get = function() return textSettings.XOffset or 0 end,
+                    set = function(widget, v) textSettings.XOffset = v; apply(key) end })
+                add({ Type = "Slider", label = "Text Y-Offset", min = -500, max = 500, step = 1,
+                    get = function() return textSettings.YOffset or 0 end,
+                    set = function(widget, v) textSettings.YOffset = v; apply(key) end })
+            end
+        end
 
         add({ Type = "Label", text = "Duration Text", highlight = true })
         add({ Type = "Checkbox", label = "Hide Duration Text",
@@ -1577,7 +1738,7 @@ local function BuildAuraTrackingUI(screen)
             local showAnchor = search == "" or string.find(string.lower(NSI:Loc("Anchor Frame")), search, 1, true) ~= nil
             anchorLbl:SetShown(showAnchor)
             anchorEntry.frame:SetShown(showAnchor)
-            topPad = showAnchor and DISPLAY_TOP or 0
+            topPad = displayTypeHeight + (showAnchor and DISPLAY_TOP or 0)
         end
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
         if activeTab == "Display" and search ~= "" then
@@ -1978,6 +2139,10 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Tab dispatch ─────────────────────────────────────────────────────────
     RebuildCurrentTab = function()
+        local settings = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
+        for displayType, button in pairs(displayTypeButtons) do
+            if settings and (settings.DisplayType or "Icon") == displayType then button:Select() else button:Deselect() end
+        end
         if activeTab == "Load" then RebuildLoadTab() else RebuildWidgetTab() end
     end
 
