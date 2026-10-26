@@ -979,7 +979,7 @@ local function BuildAuraTrackingUI(screen)
             local previousType = settings.DisplayType or "Icon"
             settings.DisplayLayouts = settings.DisplayLayouts or {}
             local layoutFields = {
-                "Width", "Height", "GrowDirection", "InverseCooldownSwipe", "Limit", "AuraNameEnabled",
+                "Width", "Height", "GrowDirection", "InverseCooldownSwipe", "Limit", "AuraNameEnabled", "CustomTexts",
                 "DurationAnchorPoint", "DurationXOffset", "DurationYOffset", "HideDurationText", "DurationFontSize", "DurationColor",
                 "ShowDecimalSeconds", "DecimalThreshold", "ColorDurationUnderThreshold", "ColorDurationThreshold", "DurationThresholdColor",
                 "StackAnchorPoint", "StackXOffset", "StackYOffset", "HideStackText", "StackFontSize", "StackColor",
@@ -1273,7 +1273,7 @@ local function BuildAuraTrackingUI(screen)
 
         s.CustomTexts = s.CustomTexts or {}
         for index = 1, 2 do
-            s.CustomTexts[index] = s.CustomTexts[index] or {Text = "", FontSize = 24, Color = {1, 1, 1, 1}, Anchor = "CENTER", relativeTo = "CENTER", XOffset = 0, YOffset = 0}
+            s.CustomTexts[index] = s.CustomTexts[index] or NSI:CreateAuraTrackingSettingsDefaults({DisplayType = displayType}).CustomTexts[index]
             local textSettings = s.CustomTexts[index]
             local label = "Custom Text " .. index
             add({ Type = "Label", text = label, highlight = true })

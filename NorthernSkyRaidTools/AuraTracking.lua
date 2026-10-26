@@ -186,7 +186,10 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         AuraNameColor = {1, 1, 1, 1},
         AuraNameXOffset = 4,
         AuraNameYOffset = 0,
-        CustomTexts = {},
+        CustomTexts = {
+            {Enabled = false, Text = "", FontSize = 24, Color = {1, 1, 1, 1}, Anchor = "TOP", relativeTo = "BOTTOM", XOffset = 0, YOffset = 0},
+            {Enabled = false, Text = "", FontSize = 24, Color = {1, 1, 1, 1}, Anchor = "BOTTOM", relativeTo = "TOP", XOffset = 0, YOffset = 0},
+        },
         Spacing = -1,
         Limit = 10,
         AurasPerRowColumn = 20,
@@ -262,10 +265,19 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         settings.StackAnchorPoint = "LEFT"
         settings.StackXOffset = 4
         settings.StackYOffset = 0
+        settings.HideStackText = true
+        settings.CustomTexts[1].Anchor = "LEFT"
+        settings.CustomTexts[1].relativeTo = "LEFT"
+        settings.CustomTexts[1].XOffset = 4
+        settings.CustomTexts[2].Anchor = "RIGHT"
+        settings.CustomTexts[2].relativeTo = "RIGHT"
+        settings.CustomTexts[2].XOffset = -4
     elseif displayType == "Circle" then
         settings.Width = 80
         settings.Height = 80
         settings.InverseCooldownSwipe = false
+        settings.CustomTexts[1].Anchor = "CENTER"
+        settings.CustomTexts[1].relativeTo = "CENTER"
     elseif displayType == "Text" then
         settings.Width = 300
         settings.Height = 100
@@ -275,6 +287,11 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         settings.StackAnchorPoint = "CENTER"
         settings.StackXOffset = 0
         settings.StackYOffset = 0
+        for index, textSettings in ipairs(settings.CustomTexts) do
+            textSettings.Anchor = "CENTER"
+            textSettings.relativeTo = "CENTER"
+        end
+        settings.CustomTexts[2].YOffset = -20
     end
     for key, value in pairs(overrides or {}) do
         settings[key] = value
@@ -2027,7 +2044,7 @@ local function ConfigureAuraTrackingVisual(self, parent, regions, settings, widt
         if textSettings and textSettings.Enabled then
             local text = EnsureAuraTrackingFontString(regions, textKey)
             text:ClearAllPoints()
-            text:SetPoint(textSettings.Anchor or "CENTER", parent, textSettings.relativeTo or "CENTER", textSettings.XOffset or 0, textSettings.YOffset or 0)
+            text:SetPoint(textSettings.Anchor or "CENTER", displayType == "Bar" and regions.bar or parent, textSettings.relativeTo or "CENTER", textSettings.XOffset or 0, textSettings.YOffset or 0)
             text:SetFont(self.LSM:Fetch("font", textSettings.Font or settings.TextFont), textSettings.FontSize or 24, textSettings.FontFlags or settings.TextFontFlags)
             text:SetTextColor(unpack(textSettings.Color or {1, 1, 1, 1}))
             text:SetText(textSettings.Text or "")
