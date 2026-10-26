@@ -579,6 +579,19 @@ local function BuildQoLOptions()
         {
             type = "toggle",
             boxfirst = true,
+            name = "Listen to DBM and BigWigs Break Timers",
+            desc = "Display break timers sent by group leaders or assistants through DBM or BigWigs in NSRT. Neither addon needs to be installed. Disabled by default.",
+            get = function() return NSRT.BreakTimer.ListenToBossMods end,
+            set = function(self, fixedparam, value)
+                NSRT.BreakTimer.ListenToBossMods = value
+                if not value and NSI.ActiveBreak and NSI.ActiveBreak.external then
+                    NSI:StopBreakTimer()
+                end
+            end,
+        },
+        {
+            type = "toggle",
+            boxfirst = true,
             name = "Break Timer Sound",
             desc = "Plays a sound when the break starts, during the last minute and when it is over.",
             get = function() return NSRT.BreakTimer.PlaySound end,

@@ -541,6 +541,7 @@ function NSI:AddMissingDefaults()
         -- Break Timer
         BreakTimer = {
             enabled = true,
+            ListenToBossMods = false,
             Anchor = "CENTER",
             relativeTo = "CENTER",
             xOffset = 0,

@@ -203,7 +203,7 @@ end
 
 -- senderName is the name shown in the chat announcement. It is left out when a
 -- break gets restored after a /reload, so the restore stays silent.
-function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds, endServerTime)
+function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds, endServerTime, external)
     seconds = tonumber(seconds)
     if not seconds or seconds <= 0 then return end
     if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
@@ -216,8 +216,9 @@ function NSI:StartBreakTimer(seconds, senderName, duration, announcedThresholds,
         endServerTime = endServerTime,
         duration = duration,
         announced = announcedThresholds,
+        external = external,
     }
-    NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration, announced = announcedThresholds}
+    NSRT.BreakTimerState = {endTime = self.ActiveBreak.endServerTime, duration = self.ActiveBreak.duration, announced = announcedThresholds, external = external}
     self.CurrentBreakMeme = PickBreakMeme()
     if senderName then
         PrintBreak(string.format(self:Loc("%s started a %s break."), senderName, FormatBreakTime(duration)))
@@ -254,6 +255,39 @@ function NSI:ReceiveBreakTimer(unit, seconds, endServerTime, duration)
     end
 end
 
+function NSI:ReceiveExternalBreakTimer(prefix, message, channel, sender)
+    if not NSRT.BreakTimer.ListenToBossMods then return end
+    if prefix ~= "D5" and prefix ~= "BigWigs" then return end
+    if channel ~= "RAID" and channel ~= "PARTY" and channel ~= "INSTANCE_CHAT" then return end
+    if issecretvalue(message) or issecretvalue(sender) or IsEncounterInProgress() then return end
+
+    local seconds
+    if prefix == "D5" then
+        seconds = message:match("^[^\t]+\t1\tBT\t([^\t]+)$")
+    else
+        seconds = message:match("^P%^Break%^([^%^]+)$")
+    end
+    seconds = tonumber(seconds)
+    if not seconds or not (seconds >= 0 and seconds <= 3600) then return end
+
+    sender = Ambiguate(sender, "none")
+    if not UnitExists(sender) or not (UnitInRaid(sender) or UnitInParty(sender)) then return end
+    if not (UnitIsGroupLeader(sender) or UnitIsGroupAssistant(sender)) then return end
+
+    -- BigWigs sends both its own break message and a DBM compatibility message.
+    local now = GetTime()
+    local lastBreak = self.LastExternalBreak
+    if lastBreak and lastBreak.sender == sender and lastBreak.seconds == seconds and now - lastBreak.time < 1 then return end
+    self.LastExternalBreak = {sender = sender, seconds = seconds, time = now}
+
+    local senderName = NSAPI:Shorten(sender, 12, false, "GlobalNickNames") or UnitName(sender)
+    if seconds == 0 then
+        self:StopBreakTimer(senderName)
+    else
+        self:StartBreakTimer(seconds, senderName, nil, nil, nil, true)
+    end
+end
+
 function NSI:RequestBreakTimerSync()
     if self.ActiveBreak or self.BreakTimerSyncRequested or not IsInGroup() then return end
     if C_ChatInfo.InChatMessagingLockdown() then
@@ -269,7 +303,8 @@ function NSI:SendBreakTimerSync(unit)
     if not UnitExists(unit) or UnitIsUnit(unit, "player") or not UnitIsGroupLeader("player") then return end
     if C_ChatInfo.InChatMessagingLockdown() then return end
     local activeBreak = self.ActiveBreak
-    if not activeBreak then return end
+    -- Syncing an imported break would bypass the receiving player's opt-in.
+    if not activeBreak or activeBreak.external then return end
     self:Broadcast("NSI_BREAK_TIMER_SYNC", "WHISPER", unit, activeBreak.endServerTime, activeBreak.duration)
 end
 
@@ -292,9 +327,10 @@ function NSI:RestoreBreakTimer()
     local state = NSRT.BreakTimerState
     NSRT.BreakTimerState = nil
     if type(state) ~= "table" or not tonumber(state.endTime) then return end
+    if state.external and not NSRT.BreakTimer.ListenToBossMods then return end
     local remaining = state.endTime - GetServerTime()
     if remaining <= MinRestoreSeconds then return end
-    self:StartBreakTimer(remaining, nil, state.duration, state.announced, state.endTime)
+    self:StartBreakTimer(remaining, nil, state.duration, state.announced, state.endTime, state.external)
 end
 
 function NSI:BreakCommand(msg)

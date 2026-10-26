@@ -79,6 +79,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if self.InitQoL then self:InitQoL() end
         self:InitPlayerStatsDisplay()
         self:RestoreBreakTimer()
+        C_ChatInfo.RegisterAddonMessagePrefix("D5")
+        C_ChatInfo.RegisterAddonMessagePrefix("BigWigs")
+        f:RegisterEvent("CHAT_MSG_ADDON")
         self:CacheSounds()
         self.NSRTFrame:SetAllPoints(UIParent)
         self.LGF.RegisterCallback(self, "GETFRAME_REFRESH", "CacheUnitFrames")
@@ -465,6 +468,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if state == Enum.EncounterTimelineEventState.Canceled then
             self:EventHandler("ENCOUNTER_TIMELINE_EVENT_REMOVED", true, false, eventID)
         end
+    elseif e == "CHAT_MSG_ADDON" and wowevent then
+        self:ReceiveExternalBreakTimer(...)
     elseif e == "NSI_BREAK_TIMER" and internal then
         local unit, seconds, endServerTime, duration = ...
         self:ReceiveBreakTimer(unit, seconds, endServerTime, duration)
