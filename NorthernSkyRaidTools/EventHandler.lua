@@ -301,10 +301,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:RebuildAuraSounds()
         if self:DifficultyCheck({14, 15, 16}) then
             self:CacheUnitFrames()
-            for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
-                local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
-                self:SetDebuffOverviewContainersShown(shown, containerName)
-            end
+            self:RefreshDebuffOverviewContainers()
         end
         local text = ""
         if UnitLevel("player") < 90 then return end

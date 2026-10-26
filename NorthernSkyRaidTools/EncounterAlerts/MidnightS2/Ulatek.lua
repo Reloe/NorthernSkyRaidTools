@@ -196,7 +196,7 @@ function NSI:UpdateUlatekGraspingFangsOverviews(alert)
 end
 
 function NSI:SetUlatekGraspingFangsOverviewsShown(shown)
-    self:SetDebuffOverviewContainersShown(shown, GRASPING_FANGS_LEFT)
+    self:SetDebuffOverviewContainersShown(shown, GRASPING_FANGS_LEFT, true)
     self:SetDebuffOverviewContainersShown(shown, GRASPING_FANGS_RIGHT)
 end
 

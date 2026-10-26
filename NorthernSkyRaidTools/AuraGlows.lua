@@ -904,7 +904,7 @@ function NSI:UpdateAuraGlowVisibility(onlyKey)
             local settings = self:GetAuraGlowSettings(key)
             local active = settings and IsAuraGlowActive(self, key, settings)
             for unit, state in pairs(states) do
-                local enabled = active == true and state.available == true and UnitExists(unit)
+                local enabled = active == true and state.available == true and (not state.dirty or state.enabled == true) and UnitExists(unit)
                     and self.UnitFrames and self.UnitFrames[unit] ~= nil or false
                 if state.enabled ~= enabled then
                     state.container:SetEnabled(enabled)
@@ -1031,45 +1031,48 @@ function NSI:InitAuraGlows(onlyKey)
             self.AuraGlowStates[key] = self.AuraGlowStates[key] or {}
             local states = self.AuraGlowStates[key]
             local shouldCreate = hasCandidates and IsAuraGlowActive(self, key, settings)
-            local filterString, candidateFilters, filterSignature
-            for unit in self:IterateGroupMembers() do
-                local targetFrame = self.UnitFrames and self.UnitFrames[unit]
-                local state = states[unit]
-                if state then state.available = hasCandidates end
-                if not targetFrame and (state or shouldCreate) then
-                    targetFrame = self.LGF.GetUnitFrame(unit)
-                    self.UnitFrames[unit] = targetFrame
-                end
-                if targetFrame then
-                    local width, height = targetFrame:GetSize()
-                    local needsConfigure = state and (state.dirty or state.settings ~= settings
-                        or state.targetFrame ~= targetFrame or state.width ~= width or state.height ~= height)
-                    if needsConfigure and restricted then
-                        state.dirty = true
-                        self.PendingAuraGlowRebuild = true
-                    elseif needsConfigure or (not state and shouldCreate) then
-                        if not filterString then
-                            filterString = BuildAuraGlowFilterString(settings)
-                            candidateFilters = BuildAuraGlowCandidateFilters(settings, spellIDs)
-                            local signature = {}
-                            for filter, value in pairs(candidateFilters) do
-                                if type(value) == "table" then
-                                    for candidate, enabled in pairs(value) do
-                                        signature[#signature + 1] = filter .. ":" .. tostring(candidate) .. "=" .. tostring(enabled)
+            for unit, state in pairs(states) do state.available = hasCandidates end
+            if shouldCreate then
+                local filterString, candidateFilters, filterSignature
+                for unit in self:IterateGroupMembers() do
+                    local targetFrame = self.UnitFrames and self.UnitFrames[unit]
+                    local state = states[unit]
+                    if not targetFrame then
+                        targetFrame = self.LGF.GetUnitFrame(unit)
+                        self.UnitFrames[unit] = targetFrame
+                    end
+                    if targetFrame then
+                        local width, height = targetFrame:GetSize()
+                        local needsConfigure = state and (state.dirty or state.settings ~= settings
+                            or state.targetFrame ~= targetFrame or state.width ~= width or state.height ~= height)
+                        if needsConfigure and restricted then
+                            state.dirty = true
+                            self.PendingAuraGlowRebuild = true
+                        elseif needsConfigure or not state then
+                            if state then state.dirty = true end
+                            if not filterString then
+                                filterString = BuildAuraGlowFilterString(settings)
+                                candidateFilters = BuildAuraGlowCandidateFilters(settings, spellIDs)
+                                local signature = {}
+                                for filter, value in pairs(candidateFilters) do
+                                    if type(value) == "table" then
+                                        for candidate, enabled in pairs(value) do
+                                            signature[#signature + 1] = filter .. ":" .. tostring(candidate) .. "=" .. tostring(enabled)
+                                        end
+                                    else
+                                        signature[#signature + 1] = filter .. "=" .. tostring(value)
                                     end
-                                else
-                                    signature[#signature + 1] = filter .. "=" .. tostring(value)
                                 end
+                                table.sort(signature)
+                                filterSignature = table.concat(signature, "|")
                             end
-                            table.sort(signature)
-                            filterSignature = table.concat(signature, "|")
+                            queue[#queue + 1] = {
+                                key = key, settings = settings, unit = unit, state = state,
+                                targetFrame = targetFrame, filterString = filterString,
+                                candidateFilters = candidateFilters, filterSignature = filterSignature,
+                                usesSpellIDs = usesSpellIDs, hasCandidates = hasCandidates,
+                            }
                         end
-                        queue[#queue + 1] = {
-                            key = key, settings = settings, unit = unit, state = state,
-                            targetFrame = targetFrame, filterString = filterString,
-                            candidateFilters = candidateFilters, filterSignature = filterSignature,
-                            usesSpellIDs = usesSpellIDs, hasCandidates = hasCandidates,
-                        }
                     end
                 end
             end
@@ -1099,7 +1102,7 @@ function NSI:InitAuraGlows(onlyKey)
                 remaining = remaining - 1
                 local states = self.AuraGlowStates[work.key]
                 if self:GetAuraGlowSettings(work.key) == work.settings and states and states[work.unit] == work.state
-                    and (work.state or IsAuraGlowActive(self, work.key, work.settings)) then
+                    and IsAuraGlowActive(self, work.key, work.settings) then
                     local targetFrame = self.UnitFrames and self.UnitFrames[work.unit]
                     if targetFrame and UnitExists(work.unit) then
                         if work.state and self:Restricted() then

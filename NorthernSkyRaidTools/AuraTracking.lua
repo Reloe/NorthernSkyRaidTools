@@ -2804,7 +2804,7 @@ function NSI:UpdateDebuffOverviewContainers()
     end
 end
 
-function NSI:SetDebuffOverviewContainersShown(shown, containerName)
+function NSI:SetDebuffOverviewContainersShown(shown, containerName, deferLayout)
     local sets = self.DebuffOverviewContainerSetsByName or {}
     local settings = NSRT.ReminderSettings.DebuffOverviewSettings
     containerName = containerName or "Default"
@@ -2833,7 +2833,7 @@ function NSI:SetDebuffOverviewContainersShown(shown, containerName)
             end
         end
     end
-    self:LayoutDebuffOverviewSets()
+    if not deferLayout then self:LayoutDebuffOverviewSets() end
 end
 
 function NSI:RefreshDebuffOverviewContainers()
@@ -2844,8 +2844,9 @@ function NSI:RefreshDebuffOverviewContainers()
     self.PendingDebuffOverviewUpdate = nil
     for containerName in pairs(self.DebuffOverviewContainerSetsByName or {}) do
         local shown = self.DebuffOverviewShownSets and self.DebuffOverviewShownSets[containerName] or false
-        self:SetDebuffOverviewContainersShown(shown, containerName)
+        self:SetDebuffOverviewContainersShown(shown, containerName, true)
     end
+    self:LayoutDebuffOverviewSets()
 end
 
 function NSI:UpdateDebuffOverviewFakePreview(rowCount, useApplicationBar, maxApplications, overrides, backgroundOnly)
