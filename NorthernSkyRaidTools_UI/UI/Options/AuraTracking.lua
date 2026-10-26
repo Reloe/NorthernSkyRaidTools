@@ -291,6 +291,9 @@ local function BuildAuraTrackingUI(screen)
     NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
     local selectedKey = NSRT.AuraTrackingSettings.UI.Selected
     local autoPreviewKey
+    NSI.RegisterCallback("NSRT_AuraTrackingPreviews", "NSRT_STOP_PREVIEWS", function()
+        autoPreviewKey = nil
+    end)
     local function SetSelectedKey(key)
         selectedKey = key
         NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}

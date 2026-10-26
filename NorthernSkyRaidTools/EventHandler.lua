@@ -134,6 +134,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         if internal then diff = 16 end
         if not internal then self:LogTimeline(e, ...) end
         if not diff then return end -- everything else is enabled in lfr, normal, heroic, mythic and story mode because people like to test in there.
+        if self.NSUI then self:StopAllPreviews() end
         self.NSRTFrame.generic_display:Hide()
         self.EncounterID = encounterID
         if self.PrePullReminderTimers then
@@ -151,9 +152,6 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self.AuraGlowManualState = {}
         self.AuraGlowLoadCache = {}
         self:InitAuraGlows()
-        for _, v in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
-            self:MakeDraggable(self[v], nil, false)
-        end
         self.Phase = 1
         self.PhaseSwapTime = GetTime()
         self.ReminderText = self.ReminderText or {}

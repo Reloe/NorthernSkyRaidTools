@@ -2009,6 +2009,42 @@ function NSI:DelayAllReminders(delay)
     end
 end
 
+function NSI:StopAllPreviews()
+    self.IsInPreview = false
+    self.TestingReminder = false
+    if self.PreviewTicker then
+        self.PreviewTicker:Cancel()
+        self.PreviewTicker = nil
+    end
+    self:FireCallback("NSRT_STOP_PREVIEWS")
+    self:HideAllReminders()
+    for _, key in ipairs({"IconMover", "BarMover", "TextMover", "CircleMover", "DebuffOverviewMover"}) do
+        if self[key] then self[key]:StopMovingOrSizing() end
+        self:MakeDraggable(self[key], nil, false)
+    end
+    if self.PreviewBar then self.PreviewBar:Hide() end
+
+    self:StopAllAuraTrackingPreviews()
+    self:HideAuraGlowPreview(false)
+    if self.DebuffOverviewContainerPreviewActive then self:PreviewDebuffOverviewContainers() end
+    if self.IsPlayerStatsPreview then self:SetPlayerStatsPreview(false) end
+    if self.IsBreakTimerPreview then self:SetBreakTimerPreview(false) end
+    if self.IsQoLTextPreview then
+        self.IsQoLTextPreview = false
+        self:ToggleQoLTextPreview()
+    end
+    if self.PaceComparisonPreview then self:PreviewPaceComparison() end
+    self:MakeDraggable(self.InterruptDisplay, nil, false)
+    self:HideInterrupt()
+    if self.TextHideTimer then
+        self.TextHideTimer:Cancel()
+        self.TextHideTimer = nil
+    end
+    self:MakeDraggable(self.NSRTFrame.generic_display, nil, false)
+    self.NSUI.PendingShow = false
+    self.NSUI:Hide()
+end
+
 function NSI:HideAllReminders(FullReset)
     ClearBossCastAlertEvents(self)
     self.GlowStarted = {}
