@@ -132,6 +132,8 @@ local function GetWidgetDefs(settingsName)
     if settingsName == "IconSettings" then
         return {
             DDGrow(true),
+            Slider(T("x-Offset"),           "xOffset",       -3000, 3000),
+            Slider(T("y-Offset"),           "yOffset",       -3000, 3000),
             Slider(T("Width"),              "Width",         20,   200),
             Slider(T("Height"),             "Height",        20,   200),
             Slider(T("Spacing"),            "Spacing",       -5,   20),
@@ -168,6 +170,8 @@ local function GetWidgetDefs(settingsName)
         local function SetBarBackgroundColor(_, r, g, b, a) W("backgroundColors", {r, g, b, a}) end
         return {
             DDGrow(false),
+            Slider(T("x-Offset"),           "xOffset",       -3000, 3000),
+            Slider(T("y-Offset"),           "yOffset",       -3000, 3000),
             Slider(T("Width"),              "Width",         80,   500),
             Slider(T("Height"),             "Height",        1,    100),
             Slider(T("Spacing"),            "Spacing",       -5,   20),
@@ -211,6 +215,8 @@ local function GetWidgetDefs(settingsName)
         local function SetBarBackgroundColor(_, r, g, b, a) W("backgroundColors", {r, g, b, a}) end
         return {
             DDGrow(false),
+            Slider(T("x-Offset"),           "xOffset",       -3000, 3000),
+            Slider(T("y-Offset"),           "yOffset",       -3000, 3000),
             Slider(T("Width"),              "Width",         80,   500),
             Slider(T("Height"),             "Height",        10,   100),
             {Type="Slider", label=T("Name Length"), min=1, max=12, step=1,
@@ -239,6 +245,8 @@ local function GetWidgetDefs(settingsName)
     elseif settingsName == "TextSettings" then
         return {
             DDGrow(false),
+            Slider(T("x-Offset"),           "xOffset",       -3000, 3000),
+            Slider(T("y-Offset"),           "yOffset",       -3000, 3000),
             DD    (T("Font"),               "Font",          MediaValuesFn()),
             DD    (T("Font Outline"),       "FontFlags",     FontFlagValues),
             {Type="TextEntry", label=T("Text Format"), inputWidth=180, get=function() return R("TextFormat") end, set=function(_, v) W("TextFormat", v) end,
@@ -262,6 +270,8 @@ local function GetWidgetDefs(settingsName)
         local function SetRingColor(_, r, g, b, a) W("ringColors", {r, g, b, a}) end
         return {
             DDGrow(true),
+            Slider(T("x-Offset"),           "xOffset",       -3000, 3000),
+            Slider(T("y-Offset"),           "yOffset",       -3000, 3000),
             Slider(T("Size"),               "Size",          40,  200),
             Slider(T("Spacing"),            "Spacing",       -50, 100),
             DD    (T("Texture"),            "Texture",       CircleTextureValues),
@@ -334,7 +344,6 @@ local function RebuildWindowContent(win, settingsName, rowW)
     scrollBox:UpdateScrollBar()
     win:SetHeight(PAD_TOP + scrollHeight + 8)
     win.Content = scrollBox.frame
-    win.LanguageId = NSI:GetSelectedLanguage()
 end
 
 function NSI:RefreshAnchorSettingsWindows()
@@ -356,9 +365,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
             local win = moverFrame.SettingsWindow
             win:SetWidth(GetAnchorWindowWidth(moverFrame))
             win.RowWidth = win:GetWidth() - PAD_X * 2
-            if win.LanguageId ~= NSI:GetSelectedLanguage() then
-                RebuildWindowContent(win, settingsName, win.RowWidth)
-            end
+            RebuildWindowContent(win, settingsName, win.RowWidth)
             PositionSettingsWindow(win, moverFrame, settingsName)
             win:Show()
         end
