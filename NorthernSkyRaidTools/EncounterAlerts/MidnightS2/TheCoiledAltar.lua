@@ -353,7 +353,7 @@ local debuffCirclePreview = [[return function(NSI)
             { Type = "Checkbox", label = NSI:Loc("Display static box"),
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.DisplayStaticBox or false end]],
                 set = [[return function(NSI, value) local alert = NSRT.EncounterAlerts[3429][16].InterruptAssignments alert.DisplayStaticBox = value NSI:UpdateCoiledAltarInterruptDisplay() NSI:UpdateCoiledAltarInterruptPreview() end]],
-                tooltip = {title = "Display static box", desc = NSI:Loc("Use the global Interrupt Display settings for the static box.")},
+                tooltip = {title = "Display static box", desc = NSI:Loc("Use the global Interrupt Display settings for the static box. Your assigned add is selected by raidmarker when unambiguous. Focus your assigned add when the marker states are ambiguous.")},
             },
             { Type = "Checkbox", label = NSI:Loc("Hide nameplate box"),
                 get = [[return function(NSI) return NSRT.EncounterAlerts[3429][16].InterruptAssignments.HideNameplateBox or false end]],
@@ -685,6 +685,30 @@ function NSI:PreviewCoiledAltarInterruptDisplay()
     return true
 end
 
+local function GetCoiledAltarInterruptStaticGhost(self)
+    local alert = self.CoiledAltarInterruptAlert
+    local assignedLine = self.Interrupts.myID == 2 and 1 or self.Interrupts.myID == 3 and 2
+    local focusedGhost = self.CoiledAltarInterruptUnits["focus"]
+    if focusedGhost and UnitExists("focus") and UnitLevel("focus") == 92 then
+        local displayLine = issecretvalue(GetRaidTargetIndex("focus")) and 2 or 1
+        if alert.ShowAll or assignedLine == displayLine then
+            return focusedGhost, displayLine
+        end
+    end
+    if not assignedLine then return end
+    local bosses = self.CoiledAltarInterruptBosses
+    if #bosses == 0 or not UnitExists(bosses[#bosses].unit) then return end
+    local matchingGhost
+    for bossIndex, ghost in ipairs(bosses) do
+        local displayLine = issecretvalue(GetRaidTargetIndex(ghost.unit)) and 2 or 1
+        if displayLine == assignedLine then
+            if matchingGhost then return end
+            matchingGhost = ghost
+        end
+    end
+    return matchingGhost, assignedLine
+end
+
 function NSI:UpdateCoiledAltarInterruptDisplay()
     local alert = self.CoiledAltarInterruptAlert
     local interrupts = self.Interrupts
@@ -732,16 +756,11 @@ function NSI:UpdateCoiledAltarInterruptDisplay()
     local numberFontPath = self.LSM:Fetch("font", interruptSettings.NumberFont)
     local fontScale = boxSize / 30
 
-    if alert.DisplayStaticBox and UnitExists("focus") then
-        local focusExists = UnitExists("focus")
-        local focusIsGhost = focusExists and UnitLevel("focus") == 92
-        local focusMarker = focusIsGhost and GetRaidTargetIndex("focus")
-        local focusHasMarker = focusIsGhost and issecretvalue(focusMarker)
-        local displayLine = focusHasMarker and 2 or 1
-        local lineNames = assignmentTable[displayLine + 1] or {}
-        local ghost = self.CoiledAltarInterruptUnits["focus"]
+    if alert.DisplayStaticBox then
+        local ghost, displayLine = GetCoiledAltarInterruptStaticGhost(self)
+        local lineNames = displayLine and assignmentTable[displayLine + 1] or {}
         local castCount = ghost and ghost.castCount
-        local boxVisible = focusIsGhost and castCount and #lineNames > 0 and (alert.ShowAll or assignedLine == displayLine)
+        local boxVisible = castCount and #lineNames > 0
         if boxVisible then
             local currentName = lineNames[((castCount - 1) % #lineNames) + 1]
             local nextName = lineNames[(castCount % #lineNames) + 1]
@@ -1283,8 +1302,12 @@ NSI.EncounterAlertStart[encID] = function(self, id) -- on ENCOUNTER_START
                 end
                 local ghost = interruptUnits[unit]
                 if not ghost then return end
-                if interruptUnits["focus"] == ghost then
-                    PlayCoiledAltarInterruptSound(self, "focus", ghost.castCount)
+                local soundGhost = interruptUnits["focus"]
+                if self.CoiledAltarInterruptAlert.DisplayStaticBox then
+                    soundGhost = GetCoiledAltarInterruptStaticGhost(self)
+                end
+                if soundGhost == ghost then
+                    PlayCoiledAltarInterruptSound(self, unit, ghost.castCount)
                 end
                 NSI:UpdateCoiledAltarInterruptDisplay()
             elseif event == "UNIT_SPELLCAST_INTERRUPTED" then

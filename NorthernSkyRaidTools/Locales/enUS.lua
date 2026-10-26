@@ -1686,6 +1686,7 @@ L["The Interrupt display will be displayed for the add that you focused. The ord
 L["Hide nameplate box"] = "Hide nameplate box"
 L["Hide the nameplate box while keeping the static box visible."] = "Hide the nameplate box while keeping the static box visible."
 L["Use the global Interrupt Display settings for the static box."] = "Use the global Interrupt Display settings for the static box."
+L["Use the global Interrupt Display settings for the static box. Your assigned add is selected by raidmarker when unambiguous. Focus your assigned add when the marker states are ambiguous."] = "Use the global Interrupt Display settings for the static box. Your assigned add is selected by raidmarker when unambiguous. Focus your assigned add when the marker states are ambiguous."
 L["|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3."] = "|cFF00FFFFNSRT:|r the live display uses the global Interrupt Display settings during phases 2 and 3."
 L["Show the interrupt box at a saved static position instead of on the add nameplate. You must focus the ghost for this mode to work."] = "Show the interrupt box at a saved static position instead of on the add nameplate. You must focus the ghost for this mode to work."
 L["|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3."] = "|cFF00FFFFNSRT:|r the live display is shown at the saved static position during phases 2 and 3."
