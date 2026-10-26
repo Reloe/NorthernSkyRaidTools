@@ -100,7 +100,11 @@ local AuraTrackingBuiltinDefaultOverrides = {
 
 function NSI:GetDefaultAuraTrackingSettings(settingsKey)
     local overrides = AuraTrackingBuiltinDefaultOverrides[settingsKey]
-    return overrides and self:CreateAuraTrackingSettingsDefaults(overrides)
+    if overrides then return self:CreateAuraTrackingSettingsDefaults(overrides) end
+    local settings = self:GetAuraTrackingSettings(settingsKey)
+    if settings and self.AuraTrackingBossBuiltins[settings.builtin] then
+        return self:CreateBuiltinAuraTrackingSettings(settings.builtin)
+    end
 end
 
 function NSI:ResetBuiltinAuraTracking(settingsKey)

@@ -312,6 +312,56 @@ NSI.AuraTrackingBuiltins = {
     { key = "AuraMatrix", name = "Aura Matrix", group = NSI.AuraTrackingMatrixGroup },
 }
 
+NSI.AuraTrackingBossBuiltins = {}
+
+function NSI:RegisterBuiltinAuraTracking(key, definition)
+    assert(type(key) == "string" and key ~= "", "built-in aura tracking key must be a non-empty string")
+    assert(type(definition) == "table" and type(definition.encounterID) == "number", "built-in aura tracking requires an encounterID")
+    assert(not key:match("^Custom:"), "built-in aura tracking key cannot use the Custom: prefix")
+    for index, info in ipairs(self.AuraTrackingBuiltins) do
+        assert(info.key ~= key, "built-in aura tracking key is reserved: " .. key)
+    end
+    self.AuraTrackingBossBuiltins[key] = definition
+end
+
+function NSI:ApplyBuiltinAuraTrackingEncounter(settings)
+    local definition = settings and self.AuraTrackingBossBuiltins[settings.builtin]
+    if not definition then return end
+    settings.loadConditions = settings.loadConditions or {}
+    settings.loadConditions.EncounterIDs = {[definition.encounterID] = true}
+end
+
+function NSI:CreateBuiltinAuraTrackingSettings(key)
+    local definition = self.AuraTrackingBossBuiltins[key]
+    local settings = self:CreateAuraTrackingSettingsDefaults(CopyTable(definition.defaults or {}))
+    settings.Name = settings.Name or definition.name or key
+    settings.group = settings.group or definition.group
+    settings.builtin = key
+    self:ApplyBuiltinAuraTrackingEncounter(settings)
+    return settings
+end
+
+function NSI:EnsureBuiltinAuraTrackings()
+    local root = NSRT.AuraTrackingSettings
+    if not root then return end
+    root.Custom = root.Custom or {}
+    local existing = {}
+    for index, settings in ipairs(root.Custom) do
+        if self.AuraTrackingBossBuiltins[settings.builtin] then
+            existing[settings.builtin] = true
+            self:ApplyBuiltinAuraTrackingEncounter(settings)
+        end
+    end
+    local keys = {}
+    for key in pairs(self.AuraTrackingBossBuiltins) do keys[#keys + 1] = key end
+    table.sort(keys)
+    for index, key in ipairs(keys) do
+        if not existing[key] then
+            root.Custom[#root.Custom + 1] = self:CreateBuiltinAuraTrackingSettings(key)
+        end
+    end
+end
+
 local AuraMatrixFilters = {
     { label = "All Debuffs" },
     { label = "isFromPlayerOrPlayerPet", candidate = "isFromPlayerOrPlayerPet" },
@@ -469,6 +519,7 @@ end
 -- Ordered list of every tracking entry: built-ins first (in defined order),
 -- then custom entries. Each item: { settingsKey, settings, builtin, group }.
 function NSI:IterateAuraTrackingEntries()
+    self:EnsureBuiltinAuraTrackings()
     local list = {}
     local root = NSRT.AuraTrackingSettings
     if not root then return list end
@@ -487,7 +538,7 @@ function NSI:IterateAuraTrackingEntries()
         list[#list + 1] = {
             settingsKey = "Custom:" .. index,
             settings = settings,
-            builtin = nil,
+            builtin = self.AuraTrackingBossBuiltins[settings.builtin] and settings.builtin or nil,
             group = settings.group,
         }
     end
@@ -559,7 +610,7 @@ end
 
 function NSI:SetAuraTrackingEntryGroup(settingsKey, groupName)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings or settings.builtin then return end
+    if not settings or (settings.builtin and not self.AuraTrackingBossBuiltins[settings.builtin]) then return end
     groupName = groupName and strtrim(tostring(groupName)) or ""
     settings.group = (groupName ~= "" and groupName ~= NSI.AuraTrackingBuiltinGroup and groupName ~= NSI.AuraTrackingMatrixGroup) and groupName or nil
     settings.GroupOrder = nil
@@ -589,7 +640,7 @@ end
 
 function NSI:MoveAuraTrackingEntry(settingsKey, direction)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings or not settings.group or settings.builtin then return end
+    if not settings or not settings.group or (settings.builtin and not self.AuraTrackingBossBuiltins[settings.builtin]) then return end
 
     local entries = GetOrderedAuraTrackingGroupEntries(settings.group)
     local currentIndex
@@ -659,8 +710,14 @@ function NSI:DeleteAuraTrackingGroup(name, keepEntries)
         end
     else
         for index = #(root.Custom or {}), 1, -1 do
-            if root.Custom[index].group == name then
-                table.remove(root.Custom, index)
+            local settings = root.Custom[index]
+            if settings.group == name then
+                if self.AuraTrackingBossBuiltins[settings.builtin] then
+                    settings.group = nil
+                    settings.GroupOrder = nil
+                else
+                    table.remove(root.Custom, index)
+                end
             end
         end
     end
@@ -766,6 +823,7 @@ function NSI:PasteAuraTrackingSection(settingsKey, section)
     for key, value in pairs(clip.data) do
         settings[key] = CopyAuraTrackingValue(value)
     end
+    self:ApplyBuiltinAuraTrackingEncounter(settings)
     self:InitAuraTracking()
     self:RefreshAuraTrackingUI()
 end
@@ -858,7 +916,9 @@ function NSI:GetAuraTrackingSettings(settingsKey)
     if AuraMatrixRowsByKey[settingsKey] then return NSRT.AuraTrackingSettings.AuraMatrix end
     local customIndex = tostring(settingsKey or ""):match("^Custom:(%d+)$")
     if customIndex then
-        return NSRT.AuraTrackingSettings.Custom and NSRT.AuraTrackingSettings.Custom[tonumber(customIndex)]
+        local settings = NSRT.AuraTrackingSettings.Custom and NSRT.AuraTrackingSettings.Custom[tonumber(customIndex)]
+        self:ApplyBuiltinAuraTrackingEncounter(settings)
+        return settings
     end
     return NSRT.AuraTrackingSettings[settingsKey]
 end
@@ -1278,6 +1338,8 @@ end
 function NSI:DeleteCustomAuraTracking(settingsKey)
     local customIndex = tonumber(tostring(settingsKey or ""):match("^Custom:(%d+)$"))
     if not customIndex or not NSRT.AuraTrackingSettings.Custom then return end
+    local settings = NSRT.AuraTrackingSettings.Custom[customIndex]
+    if settings and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     self:PreviewAuraTracking(settingsKey, false)
     table.remove(NSRT.AuraTrackingSettings.Custom, customIndex)
     NSRT.AuraTrackingSettings.UI = NSRT.AuraTrackingSettings.UI or {}
@@ -1308,13 +1370,15 @@ local function NormalizeAuraTrackingImport(settings, builtinKey, groupName)
     else
         data.Name = data.Name or "Imported Aura Tracking"
     end
+    NSI:ApplyBuiltinAuraTrackingEncounter(data)
     return NSI:CreateAuraTrackingSettingsDefaults(data)
 end
 
 function NSI:ExportAuraTrackingEntry(settingsKey)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings then return "" end
-    local builtinKey = AuraTrackingBuiltinKeys[settingsKey] and settingsKey or nil
+    local builtinKey = AuraTrackingBuiltinKeys[settingsKey] and settingsKey
+        or (self.AuraTrackingBossBuiltins[settings.builtin] and settings.builtin) or nil
     return self:EncodeExportData({
         type = "NSRT_AURA_TRACKING",
         version = 1,
@@ -1371,10 +1435,17 @@ function NSI:ImportAuraTrackingString(text)
 
     local imported = 0
     for _, entry in ipairs(payload.entries) do
-        local builtinKey = AuraTrackingBuiltinKeys[entry.builtin] and entry.builtin or nil
+        local bossBuiltin = self.AuraTrackingBossBuiltins[entry.builtin]
+        local builtinKey = (AuraTrackingBuiltinKeys[entry.builtin] or bossBuiltin) and entry.builtin or nil
         local settings = NormalizeAuraTrackingImport(entry.settings, builtinKey, groupName)
         if settings then
-            if builtinKey then
+            if bossBuiltin then
+                local existingIndex
+                for index, current in ipairs(root.Custom) do
+                    if current.builtin == builtinKey then existingIndex = index; break end
+                end
+                root.Custom[existingIndex or (#root.Custom + 1)] = settings
+            elseif builtinKey then
                 root[builtinKey] = settings
             else
                 root.Custom[#root.Custom + 1] = settings
@@ -3362,6 +3433,7 @@ end
 
 function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
+    self:EnsureBuiltinAuraTrackings()
     reconfigureButtons = reconfigureButtons or self.PendingAuraTrackingReconfigure
     if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
         self.PendingAuraTrackingUpdate = true

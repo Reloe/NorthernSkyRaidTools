@@ -704,11 +704,11 @@ local function BuildAuraTrackingUI(screen)
             items[#items + 1] = { type = "button", label = NSI:Loc("Reset"), fnc = function()
                 StopPreview(sk)
                 NSI:ResetBuiltinAuraTracking(sk)
-                RebuildList()
+                SelectEntry(sk, false)
             end }
         end
 
-        if not item.builtin then
+        if not item.builtin or NSI.AuraTrackingBossBuiltins[item.builtin] then
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                 local newKey = NSI:DuplicateCustomAuraTracking(sk)
                 RebuildList(); if newKey then SelectEntry(newKey) end
@@ -909,7 +909,7 @@ local function BuildAuraTrackingUI(screen)
 
     local function BuildGroupItems()
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
-        if not s or s.builtin then return {} end
+        if not s or (s.builtin and not NSI.AuraTrackingBossBuiltins[s.builtin]) then return {} end
         local items = { { label = NSI:Loc("— No Group —"), value = "", onclick = function()
             NSI:SetAuraTrackingEntryGroup(selectedKey, ""); groupDD:Refresh(); RebuildList()
         end } }
@@ -927,7 +927,7 @@ local function BuildAuraTrackingUI(screen)
     local function GetGroupSelected()
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         if not s then return "" end
-        if s.builtin then return NSI:Loc(s.builtin == "AuraMatrix" and NSI.AuraTrackingMatrixGroup or NSI.AuraTrackingBuiltinGroup) end
+        if s.builtin and not NSI.AuraTrackingBossBuiltins[s.builtin] then return NSI:Loc(s.builtin == "AuraMatrix" and NSI.AuraTrackingMatrixGroup or NSI.AuraTrackingBuiltinGroup) end
         return (s.group and s.group ~= "") and s.group or NSI:Loc("— No Group —")
     end
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
@@ -1809,6 +1809,12 @@ local function BuildAuraTrackingUI(screen)
     loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
     loadScroll:SetScrollChild(loadChild)
 
+    local lockedEncounterLabel = loadChild:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(lockedEncounterLabel, 12, "")
+    lockedEncounterLabel:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 4, -2)
+    lockedEncounterLabel:SetTextColor(1, 0.82, 0, 1)
+    lockedEncounterLabel:Hide()
+
     local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true }
     local loadRowW = tabScrollW - 22
     local hdrPool, chkPool = {}, {}
@@ -2040,6 +2046,7 @@ local function BuildAuraTrackingUI(screen)
     end)
 
     RebuildLoadTab = function()
+        lockedEncounterLabel:Hide()
         for _, h in ipairs(hdrPool) do h:Hide() end
         for _, r in ipairs(chkPool) do r:Hide() end
         if not selectedKey then
@@ -2093,7 +2100,13 @@ local function BuildAuraTrackingUI(screen)
         end
 
         local y = 0
-        if not s.builtin then
+        local bossBuiltin = NSI.AuraTrackingBossBuiltins[s.builtin]
+        if bossBuiltin then
+            local encounterName = NSI:Loc(NSI.BossNames[bossBuiltin.encounterID] or tostring(bossBuiltin.encounterID))
+            lockedEncounterLabel:SetText(string.format(NSI:Loc("Encounter: %s (locked)"), encounterName))
+            lockedEncounterLabel:Show()
+            y = y + 24
+        elseif not s.builtin then
             local encounterData = BossData.BuildBossDropdownOptions(nil, false)
             y = LoadSection(y, "Encounters", NSI:Loc("Encounters (leave all unchecked for any encounter)"), CountSel(cond.EncounterIDs))
             if not loadCollapsed.Encounters then
@@ -2385,8 +2398,9 @@ local function BuildAuraTrackingUI(screen)
         if not settings then StopAutoPreview(key); SetSelectedKey(nil); rightPanel:Hide(); RebuildList(); return end
         rightPanel:Show()
         nameEntry:SetValue(settings.builtin and NSI:Loc(settings.Name or "") or (settings.Name or ""))
-        nameEntry.editBox:SetEnabled(not settings.builtin)
-        nameEntry.editBox:SetAlpha(settings.builtin and 0.5 or 1)
+        local nameEditable = not settings.builtin or NSI.AuraTrackingBossBuiltins[settings.builtin] ~= nil
+        nameEntry.editBox:SetEnabled(nameEditable)
+        nameEntry.editBox:SetAlpha(nameEditable and 1 or 0.5)
         anchorEntry:SetValue(settings.CustomAnchorFrame or "UIParent")
         groupDD:Refresh()
         SelectInnerTab(activeTab)
