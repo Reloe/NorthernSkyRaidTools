@@ -272,9 +272,9 @@ function NSI:ProcessReminder()
             local text = line:match("text:([^;]+)")
             local spellID = line:match("spellid:(%d+)")
             local phase = line:match("ph:(%d*%.?%d+)")
-            local dur = line:match("dur:(%d+)")
+            local dur = line:match("dur:(%d*%.?%d+)")
             local TTS = line:match("TTS:([^;]+)")
-            local TTSTimer = line:match("TTSTimer:(%d+)")
+            local TTSTimer = line:match("TTSTimer:(%d*%.?%d+)")
             local countdown = line:match("countdown:(%d+)")
             local sound = line:match("sound:([^;]+)")
             local rawSound = sound
@@ -346,13 +346,13 @@ function NSI:ProcessReminder()
                         displayLine = displayLine:gsub("TTS:"..TTS, "")
                     end
                     if TTSTimer then
-                        displayLine = displayLine:gsub("TTSTimer:"..TTSTimer, "")
+                        displayLine = displayLine:gsub("TTSTimer:%d*%.?%d+", "")
                     end
                     if sound then
                         displayLine = displayLine:gsub("sound:"..rawSound, "")
                     end
                     if dur then
-                        displayLine = displayLine:gsub("dur:"..dur, "")
+                        displayLine = displayLine:gsub("dur:%d*%.?%d+", "")
                     end
                     if colors then
                         displayLine = displayLine:gsub("colors:"..colors, "")

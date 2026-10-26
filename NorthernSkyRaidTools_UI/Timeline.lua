@@ -653,7 +653,7 @@ function NSI:GetAllTimelineData(reminderName, personal, includeBossAbilities, bo
         local tag = line:match("tag:([^;]+)")
         local time = line:match("time:(%d*%.?%d+)")
         local spellID = line:match("spellid:(%d+)")
-        local dur = line:match("dur:(%d+)")
+        local dur = line:match("dur:(%d*%.?%d+)")
         local text = line:match("text:([^;]+)")
         local phase = line:match("ph:(%d*%.?%d+)") or "1"
         local glowUnit = line:match("glowunit:([^;]+)")
@@ -3150,7 +3150,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     -- Parse existing field values from the raw reminder line when editing
     local existingSpellID  = (bd and bd[5]) and tostring(bd[5]) or ""
     local existingText     = srcRaw:match("text:([^;]+)") or ""
-    local existingDur      = srcRaw:match("dur:(%d+)") or tostring(NSRT.ReminderSettings.SpellDuration or 5)
+    local existingDur      = srcRaw:match("dur:(%d*%.?%d+)") or tostring(NSRT.ReminderSettings.SpellDuration or 5)
     local existingGlowUnit = srcRaw:match("glowunit:([^;]+)") or ""
     local existingPhase    = isEdit and payload and tonumber(payload.phase)
         or (isEdit and tonumber(srcRaw:match("ph:(%d*%.?%d+)")))
@@ -3454,8 +3454,8 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
                 newRaw = newRaw:gsub(";text:[^;]+", "")
             end
             -- dur
-            if newRaw:find("dur:%d+") then
-                newRaw = newRaw:gsub("dur:%d+", "dur:" .. dur)
+            if newRaw:find("dur:%d*%.?%d+") then
+                newRaw = newRaw:gsub("dur:%d*%.?%d+", "dur:" .. dur)
             else
                 newRaw = newRaw .. ";dur:" .. dur
             end
