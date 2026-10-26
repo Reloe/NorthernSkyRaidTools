@@ -229,6 +229,7 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
             alertDef.enabled = existing.enabled
         end
         alertDef.UserModifiedEnabled = existing.UserModifiedEnabled
+        self:TranslateEncounterAlert(encId, alertDef.internalID, alertDef)
         diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
         return
     elseif existing then
@@ -252,10 +253,12 @@ function NSI:InsertEncounterAlert(encId, diffID, alertDef, ReloeReminder)
         end
         if ShouldApplyVersionUpdate(existing, alertDef) then
             ApplyVersionFieldUpdates(existing, alertDef)
+            self:TranslateEncounterAlert(encId, alertDef.internalID, existing)
         end
         existing.Version = alertDef.Version
         return
     end
+    self:TranslateEncounterAlert(encId, alertDef.internalID, alertDef)
     diffTable[self:UniqueAlertID(diffTable, ReloeReminder, alertDef.internalID)] = alertDef
 end
 

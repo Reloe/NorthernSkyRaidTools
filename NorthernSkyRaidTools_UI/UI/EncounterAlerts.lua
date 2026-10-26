@@ -1086,9 +1086,6 @@ local function BuildEncounterAlertsUI(parentFrame)
                                     local diffTable = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid] and NSRT.EncounterAlerts[eid][did]
                                     if diffTable then diffTable[akey] = nil end
                                     NSI:ImportReloeReminders(eid)
-                                    if NSRT.Alerts.Language ~= "enUS" then
-                                        NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
-                                    end
                                     RebuildList()
                                     local stillExists = NSRT.EncounterAlerts and NSRT.EncounterAlerts[eid]
                                                     and NSRT.EncounterAlerts[eid][did]
@@ -1341,9 +1338,6 @@ local function BuildEncounterAlertsUI(parentFrame)
                 end
             end
             NSI:ImportReloeReminders()
-            if NSRT.Alerts.Language ~= "enUS" then
-                NSI:TranslateAllEncounterAlerts(NSRT.Alerts.Language)
-            end
             RebuildList()
             if selectedEncID and selectedKey then
                 SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
@@ -1412,16 +1406,6 @@ local function BuildEncounterAlertsUI(parentFrame)
             zhTW = { text = "繁體中文",       font = "Fonts\\ARHei.ttf" },
         }
 
-        local function ApplyAlertLanguage(locale)
-            NSI:TranslateAllEncounterAlerts(locale)
-            NSRT.Alerts.Language = locale
-        end
-
-        if NSRT.Alerts.Language == "Auto" then
-            local locale = GetLocale()
-            NSRT.Alerts.Language = languagesAvailable[locale] and locale or "enUS"
-        end
-
         local languageLabel = CreateLabel(addOptFrame, NSI:Loc("Alerts Language"), ADDOPT_INNER_W, 16)
         languageLabel:SetPoint("TOPLEFT", disableAllBtn.frame, "BOTTOMLEFT", 0, -8)
 
@@ -1433,7 +1417,8 @@ local function BuildEncounterAlertsUI(parentFrame)
                 local info = languagesAvailable[locale]
                 local loc = locale
                 table.insert(opts, { label = info.text, font = info.font, value = loc, onclick = function()
-                    ApplyAlertLanguage(loc)
+                    NSRT.Alerts.Language = loc
+                    NSI:TranslateAllEncounterAlerts(loc)
                     RebuildList()
                     if selectedEncID and selectedKey then
                         SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
@@ -1443,7 +1428,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             return opts
         end
         local function getLanguageSelected()
-            local lang = NSRT.Alerts.Language
+            local lang = NSI:GetEncounterAlertLanguage()
             return languagesAvailable[lang] and languagesAvailable[lang].text or languagesAvailable.enUS.text
         end
         local languageDD = CreateDropdown(addOptFrame, nil, BuildLanguageOptions, getLanguageSelected,
