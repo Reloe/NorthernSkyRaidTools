@@ -425,6 +425,7 @@ local function BuildReminderOptions()
                     if charkey then
                         NSRT.StoredPersonalReminder[charkey] = nil
                         NSRT.ActivePersonalReminder[charkey] = {}
+                        NSRT.ActivePersonalReminderSpecs[charkey] = nil
                     end
                 end
             end,

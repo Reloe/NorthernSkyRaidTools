@@ -2089,25 +2089,114 @@ function NSI:GetAllReminderNames(personal)
 end
 
 function NSI:EncIDFromReminder(name, personal)
-    local str = personal and NSRT.PersonalReminders[name] or NSRT.Reminders[name]
+    local reminders = personal and NSRT.PersonalReminders or NSRT.Reminders
+    local str = reminders[name]
     if not str then return end
     local encID = str:match("EncounterID:(%d+)")
     return encID and tonumber(encID)
 end
 
-function NSI:GetActivePersonalReminders()
+function NSI:GetActivePersonalReminders(specID)
     local charKey = self:GetProfileKey()
     if not charKey then return {} end
+    if specID then
+        NSRT.ActivePersonalReminderSpecs[charKey] = NSRT.ActivePersonalReminderSpecs[charKey] or {}
+        local specs = NSRT.ActivePersonalReminderSpecs[charKey]
+        specs[specID] = specs[specID] or {}
+        return specs[specID]
+    end
     NSRT.ActivePersonalReminder[charKey] = NSRT.ActivePersonalReminder[charKey] or {}
     return NSRT.ActivePersonalReminder[charKey]
 end
 
+function NSI:GetPersonalReminderForEncounter(encID)
+    local specID = self:GetMySpecID()
+    local name = self:GetActivePersonalReminders(specID)[encID]
+    if name and NSRT.PersonalReminders[name] and NSRT.PersonalReminderSpecs[name] == specID then
+        return name
+    end
+    name = self:GetActivePersonalReminders()[encID]
+    if name and NSRT.PersonalReminders[name] and not NSRT.PersonalReminderSpecs[name] then
+        return name
+    end
+end
+
+function NSI:RestorePersonalReminder(skipupdate)
+    local charKey = self:GetProfileKey()
+    if not charKey then return end
+    local name = NSRT.StoredPersonalReminder[charKey]
+    local encID = self:EncIDFromReminder(name, true)
+    local specID = NSRT.PersonalReminderSpecs[name]
+    if specID and specID ~= self:GetMySpecID() then name = nil end
+    if encID then name = self:GetPersonalReminderForEncounter(encID) or name end
+    self:SetReminder(name, true, skipupdate)
+end
+
+function NSI:UpdatePersonalReminderAssignments(name)
+    local assignedCharacters = {}
+    for charKey, reminders in pairs(NSRT.ActivePersonalReminder) do
+        for encID, activeName in pairs(reminders) do
+            if activeName == name then
+                reminders[encID] = nil
+                assignedCharacters[charKey] = true
+            end
+        end
+    end
+    for charKey, specs in pairs(NSRT.ActivePersonalReminderSpecs) do
+        for specID, reminders in pairs(specs) do
+            for encID, activeName in pairs(reminders) do
+                if activeName == name then
+                    reminders[encID] = nil
+                    assignedCharacters[charKey] = true
+                end
+            end
+        end
+    end
+    local encID = self:EncIDFromReminder(name, true)
+    if not encID then return end
+    local specID = NSRT.PersonalReminderSpecs[name]
+    if specID then
+        local replacedNotes = {}
+        for otherName, otherSpecID in pairs(NSRT.PersonalReminderSpecs) do
+            if otherName ~= name and otherSpecID == specID and self:EncIDFromReminder(otherName, true) == encID then
+                NSRT.PersonalReminderSpecs[otherName] = nil
+                replacedNotes[otherName] = true
+            end
+        end
+        for charKey, specs in pairs(NSRT.ActivePersonalReminderSpecs) do
+            local reminders = specs[specID]
+            if reminders and replacedNotes[reminders[encID]] then
+                reminders[encID] = nil
+            end
+        end
+    end
+    for charKey in pairs(assignedCharacters) do
+        local reminders
+        if specID then
+            NSRT.ActivePersonalReminderSpecs[charKey] = NSRT.ActivePersonalReminderSpecs[charKey] or {}
+            local specs = NSRT.ActivePersonalReminderSpecs[charKey]
+            specs[specID] = specs[specID] or {}
+            reminders = specs[specID]
+        else
+            NSRT.ActivePersonalReminder[charKey] = NSRT.ActivePersonalReminder[charKey] or {}
+            reminders = NSRT.ActivePersonalReminder[charKey]
+        end
+        if not reminders[encID] then reminders[encID] = name end
+    end
+end
+
 function NSI:LoadPersReminder(encID)
     if not encID then return end
-    local name = self:GetActivePersonalReminders()[encID]
-    if not name then return end
+    local name = self:GetPersonalReminderForEncounter(encID)
+    if not name then
+        local loadedSpec = NSRT.PersonalReminderSpecs[self.LoadedPersonalReminder]
+        if loadedSpec and loadedSpec ~= self:GetMySpecID() and self:EncIDFromReminder(self.LoadedPersonalReminder, true) == encID then
+            self:SetReminder(nil, true)
+        end
+        return
+    end
     -- Skip if the note for this encounter is already the active personal reminder
-    if self.PersonalReminder == NSRT.PersonalReminders[name] then return end
+    if self.LoadedPersonalReminder == name and self.PersonalReminder == NSRT.PersonalReminders[name] then return end
     self:SetReminder(name, true)
 end
 
@@ -2118,10 +2207,12 @@ function NSI:GetEncounterIDFromCurrentZone()
     end
 end
 
-function NSI:SetReminder(name, personal, skipupdate, encIDHint)
+function NSI:SetReminder(name, personal, skipupdate, encIDHint, specIDHint)
     if personal then
         local charkey = self:GetProfileKey()
         local encID = self:EncIDFromReminder(name, true) or encIDHint
+        local specID = NSRT.PersonalReminderSpecs[name or self.LoadedPersonalReminder]
+        if specIDHint ~= nil then specID = specIDHint ~= 0 and specIDHint or nil end
         if name and NSRT.PersonalReminders[name] then
             self.PersonalReminder = NSRT.PersonalReminders[name]
             self.LoadedPersonalReminder = name
@@ -2129,14 +2220,14 @@ function NSI:SetReminder(name, personal, skipupdate, encIDHint)
                 NSRT.StoredPersonalReminder[charkey] = name
             end
             NSRT.ReminderSettings.PersNote = true
-            if encID then self:GetActivePersonalReminders()[encID] = name end
+            if encID then self:GetActivePersonalReminders(specID)[encID] = name end
         else
             self.PersonalReminder = ""
             self.LoadedPersonalReminder = nil
             if charkey then
                 NSRT.StoredPersonalReminder[charkey] = nil
             end
-            if encID then self:GetActivePersonalReminders()[encID] = nil end
+            if encID then self:GetActivePersonalReminders(specID)[encID] = nil end
         end
     elseif name and NSRT.Reminders[name] then
         self.Reminder = NSRT.Reminders[name]
@@ -2157,18 +2248,15 @@ end
 function NSI:RemoveReminder(name, personal)
     if personal then
         if name and NSRT.PersonalReminders[name] then
-            local encID = self:EncIDFromReminder(name, true)
-            local charReminders = self:GetActivePersonalReminders()
-            local activePersNote = charReminders[encID]
-            if activePersNote and activePersNote == name then
-                if self.PersonalReminder == NSRT.PersonalReminders[name] then
-                    self:SetReminder(nil, true, nil, encID)
-                else
-                    -- Note is active in the table but not currently displayed; just clear the slot
-                    if encID then charReminders[encID] = nil end
-                end
+            if self.LoadedPersonalReminder == name then
+                self:SetReminder(nil, true)
             end
             NSRT.PersonalReminders[name] = nil
+            NSRT.PersonalReminderSpecs[name] = nil
+            self:UpdatePersonalReminderAssignments(name)
+            for charKey, storedName in pairs(NSRT.StoredPersonalReminder) do
+                if storedName == name then NSRT.StoredPersonalReminder[charKey] = nil end
+            end
         end
     elseif name and NSRT.Reminders[name] then
         NSRT.Reminders[name] = nil
@@ -2201,6 +2289,8 @@ function NSI:RenamePersonalNote(oldName, newName)
 
     NSRT.PersonalReminders[newName] = newContent
     NSRT.PersonalReminders[oldName] = nil
+    NSRT.PersonalReminderSpecs[newName] = NSRT.PersonalReminderSpecs[oldName]
+    NSRT.PersonalReminderSpecs[oldName] = nil
 
     for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
         for eid, name in pairs(charTable) do
@@ -2210,8 +2300,12 @@ function NSI:RenamePersonalNote(oldName, newName)
     for charkey, name in pairs(NSRT.StoredPersonalReminder or {}) do
         if name == oldName then NSRT.StoredPersonalReminder[charkey] = newName end
     end
-    if encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[tonumber(encID)] == oldName then
-        NSRT.AutoLoadNote[tonumber(encID)] = newName
+    for charKey, specs in pairs(NSRT.ActivePersonalReminderSpecs) do
+        for specID, reminders in pairs(specs) do
+            for eid, name in pairs(reminders) do
+                if name == oldName then reminders[eid] = newName end
+            end
+        end
     end
     if self.LoadedPersonalReminder == oldName then
         self.LoadedPersonalReminder = newName
@@ -2294,7 +2388,11 @@ function NSI:ImportReminder(name, values, activate, personal, IsUpdate, diff)
             self:ImportReminder(name.." 2", values, activate, personal, IsUpdate, diff)
             return
         end
+        local oldEncID = self:EncIDFromReminder(newname, true)
         NSRT.PersonalReminders[newname] = values
+        if oldEncID ~= self:EncIDFromReminder(newname, true) then
+            self:UpdatePersonalReminderAssignments(newname)
+        end
         if activate then
             self:SetReminder(newname, true)
         end
@@ -2708,7 +2806,7 @@ end
 function NSAPI:GetReminderString(encID)
     local personal = NSI.PersonalReminder
     if encID then
-        local name = NSI:GetActivePersonalReminders()[encID]
+        local name = NSI:GetPersonalReminderForEncounter(encID)
         if name and NSRT.PersonalReminders[name] then
             personal = NSRT.PersonalReminders[name]
         end
@@ -2928,6 +3026,7 @@ function NSI:ImportReloeReminders(id, applyAutoEnable)
         if self.InitializeAlerts[id] then
             self.InitializeAlerts[id](self)
         end
+        self:UpdateEncounterAlertTranslations()
         self:FireCallback("NSRT_ALERT_ENCOUNTER_UPDATE", id)
     else
         for encID, _ in pairs(NSI.CurrentEncounterIDs) do
@@ -2935,6 +3034,7 @@ function NSI:ImportReloeReminders(id, applyAutoEnable)
                 self.InitializeAlerts[encID](self)
             end
         end
+        self:UpdateEncounterAlertTranslations()
         self:FireCallback("NSRT_ALERT_FULL_UPDATE")
     end
     self._ApplyReloeAutoEnable = previousAutoEnable

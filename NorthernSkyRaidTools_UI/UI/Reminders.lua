@@ -287,8 +287,8 @@ local function ImportPersonalReminderString(name, IsUpdate)
                 NSI:ImportFullReminderString(import_string, true, false, popup._name)
             end
             local encID = NSI:EncIDFromReminder(popup._name, true)
-            if popup._isUpdate and NSI:GetActivePersonalReminders()[encID] then
-                NSI:SetReminder(NSI:GetActivePersonalReminders()[encID], true)
+            if popup._isUpdate and encID then
+                NSI:LoadPersReminder(encID)
             end
             popup.test_string_text_box:SetText("")
             if NSUI.personal_reminders_frame then
@@ -611,6 +611,52 @@ local function BuildReminderScreen(personal, parentFrame)
     timelineBtn:SetPoint("LEFT", nameEntry.widget, "RIGHT", metaGap, 0)
     screen.timelineBtn = timelineBtn
 
+    if personal then
+        local specLabel = DF:CreateLabel(screen, NSI:Loc("Auto-load specialization:"), 12)
+        NSI:SetUIFont(specLabel.widget, 12)
+        specLabel.widget:SetTextColor(1, 1, 1, 1)
+        specLabel:SetPoint("TOPLEFT", screen, "TOPLEFT", editorLeft, topY - 31)
+        local function BuildSpecOptions()
+            local options = {
+                { label = NSI:Loc("All Specs"), value = 0 },
+            }
+            local specs = {}
+            for className, classSpecs in pairs(NSI.CLASS_SPECIALIZATION_MAP) do
+                if className ~= "ALL" then
+                    for index, specID in ipairs(classSpecs) do
+                        specs[#specs + 1] = { className = className, specID = specID }
+                    end
+                end
+            end
+            table.sort(specs, function(a, b)
+                if a.className == b.className then return a.specID < b.specID end
+                return a.className < b.className
+            end)
+            for index, spec in ipairs(specs) do
+                options[#options + 1] = { label = NSI:SpecToName(spec.specID), value = spec.specID }
+            end
+            for index, option in ipairs(options) do
+                option.onclick = function(dropdown, fixedparam, value)
+                    if not screen.selectedName then return end
+                    NSRT.PersonalReminderSpecs[screen.selectedName] = value ~= 0 and value or nil
+                    NSI:UpdatePersonalReminderAssignments(screen.selectedName)
+                    if value ~= 0 then
+                        local encID = NSI:EncIDFromReminder(screen.selectedName, true)
+                        if encID then NSI:GetActivePersonalReminders(value)[encID] = screen.selectedName end
+                    end
+                    screen.scrollbox:MasterRefresh()
+                end
+            end
+            return options
+        end
+        local specDropdown = DF:CreateDropDown(screen, BuildSpecOptions, 0, 200, 22, nil,
+            screenName .. "SpecDropdown", options_dropdown_template)
+        specDropdown:SetPoint("LEFT", specLabel.widget, "RIGHT", 8, 0)
+        specDropdown.tooltip = NSI:Loc("Selecting a specialization saves this note for auto-loading on this character. A matching specialization note takes priority over an All Specs note.")
+        specDropdown:Disable()
+        screen.specDropdown = specDropdown
+    end
+
     local function SaveNameEntryRename(editBox)
         -- When viewing a received note, update its first line in place without touching stored notes
         if screen.viewingReceivedNote then
@@ -620,6 +666,7 @@ local function BuildReminderScreen(personal, parentFrame)
         end
         local oldname = screen.selectedName
         local newname = editBox:GetText()
+        if personal then newname = strtrim(newname) end
         if not oldname or newname == "" or newname == oldname then
             editBox:ClearFocus()
             nameEntry:SetText(oldname or "")
@@ -635,25 +682,27 @@ local function BuildReminderScreen(personal, parentFrame)
         local encID, _, diff = ParseFirstLine(oldContent)
         local newFirstLine = BuildFirstLine(encID, newname, diff)
         local newContent = newFirstLine and (newFirstLine .. "\n" .. StripFirstLine(oldContent)) or oldContent
-        store[newname] = newContent
-        store[oldname] = nil
+        if personal then
+            local renamed = NSI:RenamePersonalNote(oldname, newname)
+            if not renamed then
+                editBox:ClearFocus()
+                nameEntry:SetText(oldname)
+                return
+            end
+        else
+            store[newname] = newContent
+            store[oldname] = nil
+        end
         if screen.editor then screen.editor:SetText(newContent) end
         if not personal and NSRT.InviteList then
             NSRT.InviteList[newname] = NSRT.InviteList[oldname]
             NSRT.InviteList[oldname] = nil
         end
-        if personal then
-            for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
-                for encID, name in pairs(charTable) do
-                    if name == oldname then charTable[encID] = newname end
-                end
-            end
-            if NSI.LoadedPersonalReminder == oldname then NSI.LoadedPersonalReminder = newname end
-        else
+        if not personal then
             if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
         end
         local renameEncID = encID  -- encID was already parsed from oldContent above
-        if renameEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[renameEncID] == oldname then
+        if not personal and renameEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[renameEncID] == oldname then
             NSRT.AutoLoadNote[renameEncID] = newname
         end
         screen.selectedName = newname
@@ -690,7 +739,7 @@ local function BuildReminderScreen(personal, parentFrame)
         end
     end
     local editor = DF:NewSpecialLuaEditorEntry(screen, 600, 400, nil, screenName .. "Editor", true, true, true)
-    editor:SetPoint("TOPLEFT", screen, "TOPLEFT", editorLeft, topY - 26)
+    editor:SetPoint("TOPLEFT", screen, "TOPLEFT", editorLeft, topY - (personal and 52 or 26))
     editor:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -25, 45)
     DF:ApplyStandardBackdrop(editor)
     editor.__background:SetVertexColor(63/255, 63/255, 63/255)
@@ -724,6 +773,7 @@ local function BuildReminderScreen(personal, parentFrame)
         -- Strip any existing metadata first line from the editor, then rebuild from controls
         local bodyText = StripFirstLine(editorText)
         local newName = screen.nameEntry and screen.nameEntry:GetText()
+        if personal and newName then newName = strtrim(newName) end
         if not newName or newName == "" then newName = screen.selectedName end
         -- Capture the old encID before we overwrite the stored note, so we can clear
         -- the ActivePersonalReminder slot if the boss assignment changes.
@@ -736,20 +786,19 @@ local function BuildReminderScreen(personal, parentFrame)
         local oldName = screen.selectedName
         if newName ~= oldName then
             if not store[newName] then
-                store[newName] = fullText
-                store[oldName] = nil
+                if personal then
+                    local renamed = NSI:RenamePersonalNote(oldName, newName)
+                    if not renamed then return end
+                    NSI:ImportReminder(newName, fullText, false, true, true)
+                else
+                    store[newName] = fullText
+                    store[oldName] = nil
+                end
                 if not personal and NSRT.InviteList then
                     NSRT.InviteList[newName] = NSI:InviteListFromReminder(fullText)
                     NSRT.InviteList[oldName] = nil
                 end
-                if personal then
-                    for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
-                        for encID, name in pairs(charTable) do
-                            if name == oldName then charTable[encID] = newName end
-                        end
-                    end
-                    if NSI.LoadedPersonalReminder == oldName then NSI.LoadedPersonalReminder = newName end
-                else
+                if not personal then
                     if NSRT[activeKey] == oldName then NSRT[activeKey] = newName end
                 end
                 screen.selectedName = newName
@@ -761,17 +810,7 @@ local function BuildReminderScreen(personal, parentFrame)
         end
         local isCurrentlyActive
         if personal then
-            local newEncID = NSI:EncIDFromReminder(screen.selectedName, true)
-            local activeTable = NSI:GetActivePersonalReminders()
-            -- If the boss changed and this note was active under the old encID, migrate it
-            -- to the new encID (unless the new encID already has a different active note).
-            if oldEncID and oldEncID ~= newEncID and activeTable[oldEncID] == screen.selectedName then
-                activeTable[oldEncID] = nil
-                if newEncID and not activeTable[newEncID] then
-                    activeTable[newEncID] = screen.selectedName
-                end
-            end
-            isCurrentlyActive = newEncID and activeTable[newEncID] == screen.selectedName
+            isCurrentlyActive = NSI.LoadedPersonalReminder == screen.selectedName
         else
             local newEncID = NSI:EncIDFromReminder(screen.selectedName, false)
             if oldEncID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[oldEncID] == oldName then
@@ -958,7 +997,8 @@ local function BuildReminderScreen(personal, parentFrame)
             NSI:Broadcast("NSI_REM_SHARE", "RAID", " ", nil, true)
         else
             local encID = screen.selectedName and NSI:EncIDFromReminder(screen.selectedName, true)
-            NSI:SetReminder(nil, true, nil, encID)
+            local specID = NSRT.PersonalReminderSpecs[screen.selectedName] or 0
+            NSI:SetReminder(nil, true, nil, encID, specID)
         end
         screen.selectedName = nil
         editor:SetText("")
@@ -1082,6 +1122,10 @@ local function BuildReminderScreen(personal, parentFrame)
         if screen.nameEntry then screen.nameEntry:SetText(type(name) == "string" and name or "") end
         if screen.diffDropdown and diff then screen.diffDropdown:Select(diff) end
         if screen.bossDropdown then screen.bossDropdown:Select(encID or 0) end
+        if screen.specDropdown then
+            screen.specDropdown:Select(NSRT.PersonalReminderSpecs[name] or 0)
+            if name and store[name] then screen.specDropdown:Enable() else screen.specDropdown:Disable() end
+        end
 
         -- Show full content including the metadata first line
         editor:SetText(rawContent)
@@ -1108,6 +1152,15 @@ local function BuildReminderScreen(personal, parentFrame)
         end
         self:SetData(data)
         self:Refresh()
+        if screen.specDropdown then
+            if screen.selectedName and NSRT.PersonalReminders[screen.selectedName] then
+                screen.specDropdown:Select(NSRT.PersonalReminderSpecs[screen.selectedName] or 0)
+                screen.specDropdown:Enable()
+            else
+                screen.specDropdown:Select(0)
+                screen.specDropdown:Disable()
+            end
+        end
         if screen.UpdateReceivedBar then screen.UpdateReceivedBar() end
         if not personal and screen.UpdateButtonAccess then screen.UpdateButtonAccess() end
     end
@@ -1134,16 +1187,18 @@ local function BuildReminderScreen(personal, parentFrame)
             local isActive = false
             local isLoaded = false
             if personal then
-                local activeTable = NSI:GetActivePersonalReminders()
-                if activeTable then
-                    for _, activeName in pairs(activeTable) do
-                        if activeName == line.name then
-                            isActive = true
-                            break
-                        end
-                    end
-                end
+                local specID = NSRT.PersonalReminderSpecs[line.name]
+                local activeTable = NSI:GetActivePersonalReminders(specID)
+                isActive = encID and activeTable[encID] == line.name
                 isLoaded = (line.name == NSI.LoadedPersonalReminder)
+                if specID then
+                    line.specIcon:SetTexture(select(4, GetSpecializationInfoByID(specID)))
+                    line.specIcon:Show()
+                    line.nameLabel:SetPoint("RIGHT", line, "RIGHT", -58, 0)
+                else
+                    line.specIcon:Hide()
+                    line.nameLabel:SetPoint("RIGHT", line, "RIGHT", -38, 0)
+                end
             else
                 isActive = (line.name == NSRT.ActiveReminder)
             end
@@ -1232,6 +1287,14 @@ local function BuildReminderScreen(personal, parentFrame)
         line.editButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\pencil.png]])
         line.editButton:GetNormalTexture():SetDesaturated(true)
 
+        if personal then
+            line.specIcon = line:CreateTexture(nil, "OVERLAY")
+            line.specIcon:SetSize(16, 16)
+            line.specIcon:SetPoint("RIGHT", line.editButton, "LEFT", -3, 0)
+            line.specIcon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+            line.specIcon:Hide()
+        end
+
         -- Hidden text entry for renaming
         line.renameEntry = DF:CreateTextEntry(line, function() end, line:GetWidth() - 2, line:GetHeight())
         line.renameEntry:SetTemplate(options_dropdown_template)
@@ -1251,33 +1314,33 @@ local function BuildReminderScreen(personal, parentFrame)
         local function SaveNewName(editBox)
             local oldname = line.name
             local newname = editBox:GetText()
+            if personal then newname = strtrim(newname) end
             ExitRename()
             if not oldname or oldname == newname then return end
             local store = NSRT[storeKey]
             if store[newname] then return end
-            store[newname] = store[oldname]
+            if personal then
+                local renamed = NSI:RenamePersonalNote(oldname, newname)
+                if not renamed then return end
+            else
+                store[newname] = store[oldname]
+            end
             if not personal and NSRT.InviteList then
                 NSRT.InviteList[newname] = NSRT.InviteList[oldname]
                 NSRT.InviteList[oldname] = nil
             end
-            if personal then
-                for _, charTable in pairs(NSRT.ActivePersonalReminder or {}) do
-                    for eid, name in pairs(charTable) do
-                        if name == oldname then charTable[eid] = newname end
-                    end
-                end
-                if NSI.LoadedPersonalReminder == oldname then NSI.LoadedPersonalReminder = newname end
-            else
+            if not personal then
                 if NSRT[activeKey] == oldname then NSRT[activeKey] = newname end
             end
             local encID = ParseFirstLine(store[oldname] or "")  -- read before nil-ing
-            if encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID] == oldname then
+            if not personal and encID and NSRT.AutoLoadNote and NSRT.AutoLoadNote[encID] == oldname then
                 NSRT.AutoLoadNote[encID] = newname
             end
             store[oldname] = nil
             if screen.selectedName == oldname then
                 screen.selectedName = newname
                 if screen.nameEntry then screen.nameEntry:SetText(newname) end
+                if personal then editor:SetText(store[newname]) end
             end
             line.name = newname
             parent:MasterRefresh()
@@ -1361,9 +1424,7 @@ local function BuildReminderScreen(personal, parentFrame)
             end
         end
         local activeName = NSRT[activeKey]
-        if personal and type(activeName) == "table" then
-            activeName = next(activeName) and (select(2, next(activeName))) or nil
-        end
+        if personal then activeName = NSI.LoadedPersonalReminder end
         if activeName and type(activeName) == "string" and activeName ~= "" then
             SelectReminder(activeName)
         end

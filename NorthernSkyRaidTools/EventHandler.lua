@@ -95,8 +95,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         else
             self:SetReminder(NSRT.ActiveReminder, false, true) -- loading active reminder from last session
         end
-        local charkey = self:GetProfileKey()
-        self:SetReminder(NSRT.StoredPersonalReminder[charkey], true, true) -- loading active personal reminder from last session
+        self:RestorePersonalReminder(true)
         self:ProcessReminder()
         self:UpdateReminderFrame(true)
         if NSRT.Settings["Debug"] then
@@ -435,6 +434,9 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self:RefreshDebuffOverviewContainers()
     elseif e == "ACTIVE_PLAYER_SPECIALIZATION_CHANGED" and wowevent then
+        if not self.EncounterID then
+            self:LoadPersReminder(self:GetEncounterIDFromCurrentZone() or self:EncIDFromReminder(self.LoadedPersonalReminder, true))
+        end
         self:InitAuraTracking()
         self.AuraGlowLoadCache = nil
         self:InitAuraGlows()
