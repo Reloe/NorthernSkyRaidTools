@@ -19,22 +19,23 @@ local TextDisplays = {
     LootBoss = CrestIcon..NSI:Loc("Loot Boss")..CrestIcon,
     SoulwellDropped = SoulwellIcon..NSI:Loc("%s Dropped a Soulwell")..SoulwellIcon,
     FeastDropped = FeastIcon..NSI:Loc("%s Dropped a Feast")..FeastIcon,
+    HeartyFeastDropped = FeastIcon..NSI:Loc("%s Dropped a |cff00ff00Hearty|r Feast")..FeastIcon,
     RepairDropped = RepairIcon..NSI:Loc("%s Dropped a Repair")..RepairIcon,
     CauldronDropped = CauldronIcon..NSI:Loc("%s Dropped a Cauldron")..CauldronIcon,
 }
 
 local ConsumableSpells = {
     [1259657] = "FEAST", -- Quel'dorei Medley
-    [1278915] = "FEAST", -- Hearty Quel'dorei Medley
+    [1278915] = "HEARTY_FEAST", -- Hearty Quel'dorei Medley
 
     [1259658] = "FEAST", -- Harandar Celebration
-    [1278929] = "FEAST", -- Hearty Harandar Celebration
+    [1278929] = "HEARTY_FEAST", -- Hearty Harandar Celebration
 
     [1237104] = "FEAST", -- Blooming Feast
-    [1278909] = "FEAST", -- Hearty Blooming Feast
+    [1278909] = "HEARTY_FEAST", -- Hearty Blooming Feast
 
     [1259659] = "FEAST", -- Silvermoon Parade
-    [1278895] = "FEAST", -- Hearty Silvermoon Parade
+    [1278895] = "HEARTY_FEAST", -- Hearty Silvermoon Parade
 
     [1240267] = "CAULDRON", -- Voidlight Potion Cauldron
     [1240195] = "CAULDRON", -- Voidlight of Sin'dorei Flasks
@@ -44,6 +45,14 @@ local ConsumableSpells = {
     [199109] = "REPAIR", -- Auto-Hammer
     [67826] = "REPAIR", -- Jeeves
 }
+
+local ConsumableSpeech = {
+    SOULWELL = {SettingsName = "SoulwellDropped", text = "Soulwell"},
+    FEAST = {SettingsName = "FeastDropped", text = "Feast"},
+    HEARTY_FEAST = {SettingsName = "FeastDropped", text = "Hearty Feast"},
+    CAULDRON = {SettingsName = "CauldronDropped", text = "Cauldron"},
+}
+local LastConsumableSpeech = {}
 
 local LustDebuffs = {
     57723, -- Exhaustion
@@ -374,7 +383,7 @@ function NSI:HandleQoLComm(unitName, type)
 
     local displayTimerSeconds = NSRT.QoL.ConsumableNotificationDurationSeconds or 5
     local displayName = NSAPI:Shorten(unitName, 8, false, "GlobalNickNames")
-    if type == "FEAST" then
+    if type == "FEAST" or type == "HEARTY_FEAST" then
         -- can't check buff duration/presence in combat
         if self:Restricted() then
             return
@@ -386,7 +395,8 @@ function NSI:HandleQoLComm(unitName, type)
             return
         end
 
-        self.QoLTextDisplays.FeastDropped = {SettingsName = "FeastDropped", text = string.format(TextDisplays.FeastDropped, displayName)}
+        local text = type == "HEARTY_FEAST" and TextDisplays.HeartyFeastDropped or TextDisplays.FeastDropped
+        self.QoLTextDisplays.FeastDropped = {SettingsName = "FeastDropped", text = string.format(text, displayName)}
         self:UpdateQoLTextDisplay()
         C_Timer.After(displayTimerSeconds, function()
             self.QoLTextDisplays.FeastDropped = nil
@@ -433,6 +443,16 @@ function NSI:HandleQoLComm(unitName, type)
             self.QoLTextDisplays.RepairDropped = nil
             self:UpdateQoLTextDisplay()
         end)
+    end
+
+    local speech = ConsumableSpeech[type]
+    if speech and NSRT.QoL.ConsumableNotificationTTS and NSRT.QoL[speech.SettingsName] and NSRT.Settings.TTS then
+        local now = GetTime()
+        local lastPlayed = LastConsumableSpeech[type]
+        if not lastPlayed or now - lastPlayed >= 10 then
+            LastConsumableSpeech[type] = now
+            NSAPI:TTS(self:Loc(speech.text))
+        end
     end
 end
 

@@ -8,3 +8,4 @@
 - Add an option to display DBM and BigWigs break timers
 - Automatically apply the selected encounter alert language when alerts or translations are updated or imported
 - Add LibLatency and LibDurability
+- Separate normal from Hearty Feasts for QoL Display and add default off option to TTS QoL Notifications

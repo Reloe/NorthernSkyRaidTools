@@ -311,6 +311,16 @@ local function BuildQoLOptions()
             iconsize = {16, 16},
         },
         {
+            type = "toggle",
+            boxfirst = true,
+            name = "Read Consumable Notifications",
+            desc = "Read Soulwell, Feast, Hearty Feast, and Cauldron notifications aloud using your TTS settings. Each notification type can be read once every 10 seconds. Repair notifications are excluded.",
+            get = function() return NSRT.QoL.ConsumableNotificationTTS end,
+            set = function(self, fixedparam, value)
+                NSRT.QoL.ConsumableNotificationTTS = value
+            end,
+        },
+        {
             type = "range",
             name = "Duration Seconds",
             desc = "Show dropped consumable notifications for the selected number of seconds.",

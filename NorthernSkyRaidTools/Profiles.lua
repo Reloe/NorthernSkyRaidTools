@@ -513,6 +513,7 @@ function NSI:AddMissingDefaults()
             AutoAcceptGuildInvite = false,
             AddSpellIDToTooltips = false,
             ConsumableNotificationDurationSeconds = 5,
+            ConsumableNotificationTTS = false,
             TextDisplay = {
                 Anchor = "CENTER",
                 relativeTo = "CENTER",
