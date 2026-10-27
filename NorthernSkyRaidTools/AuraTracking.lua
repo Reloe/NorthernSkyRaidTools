@@ -320,6 +320,8 @@ NSI.AuraTrackingBuiltins = {
 }
 
 NSI.AuraTrackingBossBuiltins = {}
+local AuraTrackingTriggerFields = { "TrackingMode", "SpellIDPlayerFilter", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" }
+local AuraTrackingBuiltinTriggerSources = setmetatable({}, {__mode = "k"})
 
 function NSI:RegisterBuiltinAuraTracking(key, definition)
     assert(type(key) == "string" and key ~= "", "built-in aura tracking key must be a non-empty string")
@@ -328,12 +330,25 @@ function NSI:RegisterBuiltinAuraTracking(key, definition)
     for index, info in ipairs(self.AuraTrackingBuiltins) do
         assert(info.key ~= key, "built-in aura tracking key is reserved: " .. key)
     end
+    local defaults = self:CreateAuraTrackingSettingsDefaults(CopyTable(definition.defaults or {}))
+    definition.triggerSettings = {}
+    for index, field in ipairs(AuraTrackingTriggerFields) do
+        definition.triggerSettings[field] = defaults[field]
+    end
     self.AuraTrackingBossBuiltins[key] = definition
 end
 
-function NSI:ApplyBuiltinAuraTrackingEncounter(settings)
+function NSI:ApplyBuiltinAuraTrackingSettings(settings)
     local definition = settings and self.AuraTrackingBossBuiltins[settings.builtin]
     if not definition then return end
+    -- Keep registered trigger tables stable across routine getters and refreshes.
+    if AuraTrackingBuiltinTriggerSources[settings] ~= definition.triggerSettings then
+        for index, field in ipairs(AuraTrackingTriggerFields) do
+            local value = definition.triggerSettings[field]
+            settings[field] = type(value) == "table" and CopyTable(value) or value
+        end
+        AuraTrackingBuiltinTriggerSources[settings] = definition.triggerSettings
+    end
     settings.loadConditions = settings.loadConditions or {}
     settings.loadConditions.EncounterIDs = {[definition.encounterID] = true}
 end
@@ -344,7 +359,7 @@ function NSI:CreateBuiltinAuraTrackingSettings(key)
     settings.Name = settings.Name or definition.name or key
     settings.group = settings.group or definition.group
     settings.builtin = key
-    self:ApplyBuiltinAuraTrackingEncounter(settings)
+    self:ApplyBuiltinAuraTrackingSettings(settings)
     return settings
 end
 
@@ -356,7 +371,7 @@ function NSI:EnsureBuiltinAuraTrackings()
     for index, settings in ipairs(root.Custom) do
         if self.AuraTrackingBossBuiltins[settings.builtin] then
             existing[settings.builtin] = true
-            self:ApplyBuiltinAuraTrackingEncounter(settings)
+            self:ApplyBuiltinAuraTrackingSettings(settings)
         end
     end
     local keys = {}
@@ -670,6 +685,13 @@ end
 
 function NSI:DuplicateAuraTrackingGroup(groupName)
     if not groupName or groupName == self.AuraTrackingMatrixGroup then return end
+    local entries = GetOrderedAuraTrackingGroupEntries(groupName)
+    for index = #entries, 1, -1 do
+        if self.AuraTrackingBossBuiltins[entries[index].settings.builtin] then
+            table.remove(entries, index)
+        end
+    end
+    if #entries == 0 then return end
     local root = NSRT.AuraTrackingSettings
     root.Custom = root.Custom or {}
     root.Groups = root.Groups or {}
@@ -689,7 +711,7 @@ function NSI:DuplicateAuraTrackingGroup(groupName)
     end
 
     root.Groups[newName] = { collapsed = false }
-    for order, entry in ipairs(GetOrderedAuraTrackingGroupEntries(groupName)) do
+    for order, entry in ipairs(entries) do
         local settings = CopyTable(entry.settings)
         settings.builtin = nil
         settings.pinned = nil
@@ -751,10 +773,9 @@ function NSI:SetAuraTrackingPinned(settingsKey, pinned)
     self:RefreshAuraTrackingUI()
 end
 
--- Duplicate any entry into a new custom entry (deep copy, fresh name).
 function NSI:DuplicateCustomAuraTracking(settingsKey)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings then return end
+    if not settings or self.AuraTrackingBossBuiltins[settings.builtin] then return end
     NSRT.AuraTrackingSettings.Custom = NSRT.AuraTrackingSettings.Custom or {}
     local copy = CopyTable(settings)
     copy.builtin = nil
@@ -773,7 +794,7 @@ end
 -- state are never copied accidentally. Display fields are listed below
 -- alongside the settings defaults.
 local AuraTrackingSectionFields = {
-    Trigger = { "TrackingMode", "SpellIDPlayerFilter", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
+    Trigger = AuraTrackingTriggerFields,
     Load    = { "loadConditions" },
 }
 
@@ -803,6 +824,7 @@ end
 function NSI:CopyAuraTrackingSection(settingsKey, section)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings then return end
+    if section == "Trigger" and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     local data = {}
     if section == "Display" then
         for _, key in ipairs(AuraTrackingDisplayFields) do
@@ -818,7 +840,9 @@ function NSI:CopyAuraTrackingSection(settingsKey, section)
     self._AuraTrackingSectionClipboard = { section = section, data = data }
 end
 
-function NSI:CanPasteAuraTrackingSection(section)
+function NSI:CanPasteAuraTrackingSection(section, settingsKey)
+    local settings = settingsKey and self:GetAuraTrackingSettings(settingsKey)
+    if section == "Trigger" and settings and self.AuraTrackingBossBuiltins[settings.builtin] then return false end
     local clip = self._AuraTrackingSectionClipboard
     return clip ~= nil and clip.section == section
 end
@@ -827,10 +851,11 @@ function NSI:PasteAuraTrackingSection(settingsKey, section)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     local clip = self._AuraTrackingSectionClipboard
     if not settings or not clip or clip.section ~= section then return end
+    if section == "Trigger" and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     for key, value in pairs(clip.data) do
         settings[key] = CopyAuraTrackingValue(value)
     end
-    self:ApplyBuiltinAuraTrackingEncounter(settings)
+    self:ApplyBuiltinAuraTrackingSettings(settings)
     self:InitAuraTracking()
     self:RefreshAuraTrackingUI()
 end
@@ -924,7 +949,7 @@ function NSI:GetAuraTrackingSettings(settingsKey)
     local customIndex = tostring(settingsKey or ""):match("^Custom:(%d+)$")
     if customIndex then
         local settings = NSRT.AuraTrackingSettings.Custom and NSRT.AuraTrackingSettings.Custom[tonumber(customIndex)]
-        self:ApplyBuiltinAuraTrackingEncounter(settings)
+        self:ApplyBuiltinAuraTrackingSettings(settings)
         return settings
     end
     return NSRT.AuraTrackingSettings[settingsKey]
@@ -1227,7 +1252,7 @@ end
 -- merges any newly-valid ones into the entry's existing SpellIDs.
 function NSI:AddAuraTrackingSpellIDs(settingsKey, value)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings then return end
+    if not settings or self.AuraTrackingBossBuiltins[settings.builtin] then return end
     local newIDs = ParseAuraTrackingSpellIDs(value)
     if #newIDs == 0 then return end
     settings.SpellIDs = settings.SpellIDs or {}
@@ -1246,6 +1271,7 @@ end
 
 function NSI:RemoveAuraTrackingSpellID(settingsKey, spellID)
     local settings = self:GetAuraTrackingSettings(settingsKey)
+    if settings and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     if not settings or not settings.SpellIDs then return end
     spellID = tonumber(spellID)
     for i, id in ipairs(settings.SpellIDs) do
@@ -1260,7 +1286,7 @@ end
 
 function NSI:SetAuraTrackingPreviewSpellID(settingsKey, value)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings then return end
+    if not settings or self.AuraTrackingBossBuiltins[settings.builtin] then return end
     settings.PreviewSpellID = tonumber(value) or nil
     self:RefreshAuraTrackingUI()
 end
@@ -1377,7 +1403,7 @@ local function NormalizeAuraTrackingImport(settings, builtinKey, groupName)
     else
         data.Name = data.Name or "Imported Aura Tracking"
     end
-    NSI:ApplyBuiltinAuraTrackingEncounter(data)
+    NSI:ApplyBuiltinAuraTrackingSettings(data)
     return NSI:CreateAuraTrackingSettingsDefaults(data)
 end
 
@@ -1444,7 +1470,7 @@ function NSI:ImportAuraTrackingString(text)
     for _, entry in ipairs(payload.entries) do
         local bossBuiltin = self.AuraTrackingBossBuiltins[entry.builtin]
         local builtinKey = (AuraTrackingBuiltinKeys[entry.builtin] or bossBuiltin) and entry.builtin or nil
-        local settings = NormalizeAuraTrackingImport(entry.settings, builtinKey, groupName)
+        local settings = (not entry.builtin or builtinKey) and NormalizeAuraTrackingImport(entry.settings, builtinKey, groupName)
         if settings then
             if bossBuiltin then
                 local existingIndex

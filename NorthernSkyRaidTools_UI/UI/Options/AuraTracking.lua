@@ -643,6 +643,13 @@ local function BuildAuraTrackingUI(screen)
 
     local function GroupContextMenu(groupName)
         local previewKeys = GetGroupPreviewKeys(groupName)
+        local canDuplicateGroup = false
+        for index, entry in ipairs(NSI:IterateAuraTrackingEntries()) do
+            if entry.group == groupName and not NSI.AuraTrackingBossBuiltins[entry.builtin] then
+                canDuplicateGroup = true
+                break
+            end
+        end
         local groupPreviewLocked = #previewKeys > 0
         for _, key in ipairs(previewKeys) do
             if NSI[PreviewFlag(key)] ~= true then
@@ -658,7 +665,7 @@ local function BuildAuraTrackingUI(screen)
                 ShowAuraTrackingExportPopup(NSI:ExportAuraTrackingGroup(groupName), string.format(NSI:Loc("Exporting Aura Tracking group: |cFF00FFFF%s|r"), groupName))
             end },
         }
-        if groupName ~= NSI.AuraTrackingMatrixGroup then
+        if groupName ~= NSI.AuraTrackingMatrixGroup and canDuplicateGroup then
             table.insert(items, 3, { type = "button", label = NSI:Loc("Duplicate Group"), fnc = function() NSI:DuplicateAuraTrackingGroup(groupName); RebuildList() end })
         end
         if groupName ~= NSI.AuraTrackingBuiltinGroup and groupName ~= NSI.AuraTrackingMatrixGroup then
@@ -698,6 +705,7 @@ local function BuildAuraTrackingUI(screen)
     local function EntryContextMenu(item)
         local sk = item.settingsKey
         local s  = item.settings
+        local bossBuiltin = NSI.AuraTrackingBossBuiltins[item.builtin]
         local items = {}
 
         items[#items + 1] = { type = "button", label = s.pinned and NSI:Loc("Unpin") or NSI:Loc("Pin to Top"),
@@ -714,11 +722,13 @@ local function BuildAuraTrackingUI(screen)
             end }
         end
 
-        if not item.builtin or NSI.AuraTrackingBossBuiltins[item.builtin] then
+        if not item.builtin then
             items[#items + 1] = { type = "button", label = NSI:Loc("Duplicate"), fnc = function()
                 local newKey = NSI:DuplicateCustomAuraTracking(sk)
                 RebuildList(); if newKey then SelectEntry(newKey) end
             end }
+        end
+        if not item.builtin or bossBuiltin then
             local groupSub = {
                 { type = "button", label = NSI:Loc("— No Group —"), fnc = function() NSI:SetAuraTrackingEntryGroup(sk, "") end },
             }
@@ -741,17 +751,19 @@ local function BuildAuraTrackingUI(screen)
 
         local copySub = {}
         for _, section in ipairs(SECTIONS) do
-            local sec = section
-            copySub[#copySub + 1] = { type = "button", label = NSI:Loc(sec), fnc = function()
-                NSI:CopyAuraTrackingSection(sk, sec)
-                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Copied %s settings from '%s'."), NSI:Loc(sec), s.Name or NSI:Loc("Unnamed")))
-            end }
+            if section ~= "Trigger" or not bossBuiltin then
+                local sec = section
+                copySub[#copySub + 1] = { type = "button", label = NSI:Loc(sec), fnc = function()
+                    NSI:CopyAuraTrackingSection(sk, sec)
+                    print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Copied %s settings from '%s'."), NSI:Loc(sec), s.Name or NSI:Loc("Unnamed")))
+                end }
+            end
         end
         items[#items + 1] = { type = "submenu", label = NSI:Loc("Copy") .. "...", items = copySub }
 
         local pasteSub = {}
         for _, section in ipairs(SECTIONS) do
-            if NSI:CanPasteAuraTrackingSection(section) then
+            if NSI:CanPasteAuraTrackingSection(section, sk) then
                 local sec = section
                 pasteSub[#pasteSub + 1] = { type = "button", label = NSI:Loc(sec), fnc = function()
                     NSI:PasteAuraTrackingSection(sk, sec)
@@ -1552,6 +1564,10 @@ local function BuildAuraTrackingUI(screen)
     end
 
     local function BuildTriggerDefs(s, key)
+        if NSI.AuraTrackingBossBuiltins[s.builtin] then
+            return { { Type = "Label", text = "This built-in display uses encounter-specific aura tracking. Its trigger is controlled by the addon and cannot be edited or copied.",
+                height = 58, textColor = {0.9, 0.9, 0.9, 1} } }
+        end
         if key == "AuraMatrix" then
             return { { Type = "Label", text = "Aura Matrix tracks ten HARMFUL filters for both player and target. Display settings and the position apply to all twenty rows. Each row always shows its filter label. Use Lock Preview to move the entire matrix.",
                 height = 72, textColor = {0.9, 0.9, 0.9, 1} } }
