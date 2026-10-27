@@ -148,7 +148,7 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         end
         self.TestingReminder = false
         self.IsInPreview = false
-        self:UpdateAuraTrackingEncounterVisibility()
+        self:InitAuraTracking(true)
         self.AuraGlowManualState = {}
         self.AuraGlowLoadCache = {}
         self:InitAuraGlows()
@@ -206,9 +206,8 @@ function NSI:EventHandler(e, wowevent, internal, ...) -- internal checks whether
         self:RunEncounterAlertHooks("onEncounterEnd", encID, diff, encID, encounterName, eventDifficultyID, groupSize, success)
         self:EncounterRegister(nil, nil, nil, nil, true)
         self:StopPaceComparison()
-        self:InitAuraSystem()
         self:HideAllReminders(true)
-        self:UpdateAuraTrackingEncounterVisibility()
+        self:InitAuraSystem()
         self.AuraGlowManualState = {}
         self.AuraGlowLoadCache = nil
         self:UpdateAuraGlowVisibility()

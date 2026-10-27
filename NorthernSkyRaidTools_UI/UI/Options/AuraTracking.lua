@@ -125,6 +125,12 @@ local TEXT_ALIGNMENTS = {
     { label = "Left", value = "LEFT" }, { label = "Center", value = "CENTER" }, { label = "Right", value = "RIGHT" },
 }
 
+local DifficultyData = {
+    { id = 14, label = "Normal", color = {0.2, 0.8, 1} },
+    { id = 15, label = "Heroic", color = {0.7, 0.3, 1} },
+    { id = 16, label = "Mythic", color = {1, 0.2, 0.2} },
+}
+
 local ROLE_DATA = {
     { key = "TANK", label = "Tank" }, { key = "HEALER", label = "Healer" },
     { key = "DAMAGER", label = "DPS" }, { key = "MELEE", label = "Melee" }, { key = "RANGED", label = "Ranged" },
@@ -838,7 +844,7 @@ local function BuildAuraTrackingUI(screen)
                 row:Show()
 
                 local settings = item.settings
-                local willLoad = NSI:EvaluateLoad(settings, true)
+                local willLoad = NSI:EvaluateAuraTrackingLoad(settings, true)
                 if selectedKey == item.settingsKey then
                     row.__background:SetVertexColor(0, 1, 1); row.__background:SetAlpha(1)
                 else
@@ -1815,7 +1821,7 @@ local function BuildAuraTrackingUI(screen)
     lockedEncounterLabel:SetTextColor(1, 0.82, 0, 1)
     lockedEncounterLabel:Hide()
 
-    local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true }
+    local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true, Difficulties = true }
     local loadRowW = tabScrollW - 22
     local hdrPool, chkPool = {}, {}
 
@@ -2060,7 +2066,7 @@ local function BuildAuraTrackingUI(screen)
         end
         s.loadConditions = s.loadConditions or {}
         local cond = s.loadConditions
-        cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}; cond.EncounterIDs = cond.EncounterIDs or {}
+        cond.Roles = cond.Roles or {}; cond.Classes = cond.Classes or {}; cond.SpecIDs = cond.SpecIDs or {}; cond.Names = cond.Names or {}; cond.EncounterIDs = cond.EncounterIDs or {}; cond.Difficulties = cond.Difficulties or {}
 
         local chkIdx = 0
         local function CountSel(tbl) local n = 0; for _ in pairs(tbl) do n = n + 1 end; return n end
@@ -2115,6 +2121,19 @@ local function BuildAuraTrackingUI(screen)
                     y = AddCheck(y, encounter.label, cond.EncounterIDs[encounterID],
                         function() cond.EncounterIDs[encounterID] = (not cond.EncounterIDs[encounterID]) or nil end,
                         0.2, 0.8, 1, encounter.icon, encounter.texcoord)
+                end
+            end
+            y = y + 4
+        end
+        if next(cond.EncounterIDs) then
+            y = LoadSection(y, "Difficulties", NSI:Loc("Difficulties (leave all unchecked for any difficulty)"), CountSel(cond.Difficulties))
+            if not loadCollapsed.Difficulties then
+                for difficultyIndex = 1, #DifficultyData do
+                    local difficulty = DifficultyData[difficultyIndex]
+                    local difficultyID = difficulty.id
+                    y = AddCheck(y, NSI:Loc(difficulty.label), cond.Difficulties[difficultyID],
+                        function() cond.Difficulties[difficultyID] = (not cond.Difficulties[difficultyID]) or nil end,
+                        difficulty.color[1], difficulty.color[2], difficulty.color[3])
                 end
             end
             y = y + 4
