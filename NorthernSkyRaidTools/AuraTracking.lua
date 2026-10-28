@@ -253,7 +253,7 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
         UnitType = "Automatic",
         OnlyShowFirstTank = false,
         MultiTankGrow = "Same",
-        loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {} },
+        loadConditions = { Roles = {}, Classes = {}, SpecIDs = {}, Names = {}, EncounterIDs = {}, Difficulties = {} },
     }
     local displayType = overrides and overrides.DisplayType or settings.DisplayType
     if displayType == "Bar" then
@@ -300,6 +300,13 @@ function NSI:CreateAuraTrackingSettingsDefaults(overrides)
     return settings
 end
 
+function NSI:EvaluateAuraTrackingLoad(settings, ignoreEncounter)
+    local conditions = settings.loadConditions
+    local encounters = conditions and conditions.EncounterIDs
+    local ignoreDifficulty = ignoreEncounter or not encounters or not next(encounters)
+    return self:EvaluateLoad(settings, ignoreEncounter, ignoreDifficulty)
+end
+
 -- Reserved, always-present group that holds the locked built-in displays.
 NSI.AuraTrackingBuiltinGroup = "Built-in"
 NSI.AuraTrackingMatrixGroup = "Aura Matrix"
@@ -313,6 +320,8 @@ NSI.AuraTrackingBuiltins = {
 }
 
 NSI.AuraTrackingBossBuiltins = {}
+local AuraTrackingTriggerFields = { "TrackingMode", "SpellIDPlayerFilter", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" }
+local AuraTrackingBuiltinTriggerSources = setmetatable({}, {__mode = "k"})
 
 function NSI:RegisterBuiltinAuraTracking(key, definition)
     assert(type(key) == "string" and key ~= "", "built-in aura tracking key must be a non-empty string")
@@ -321,12 +330,25 @@ function NSI:RegisterBuiltinAuraTracking(key, definition)
     for index, info in ipairs(self.AuraTrackingBuiltins) do
         assert(info.key ~= key, "built-in aura tracking key is reserved: " .. key)
     end
+    local defaults = self:CreateAuraTrackingSettingsDefaults(CopyTable(definition.defaults or {}))
+    definition.triggerSettings = {}
+    for index, field in ipairs(AuraTrackingTriggerFields) do
+        definition.triggerSettings[field] = defaults[field]
+    end
     self.AuraTrackingBossBuiltins[key] = definition
 end
 
-function NSI:ApplyBuiltinAuraTrackingEncounter(settings)
+function NSI:ApplyBuiltinAuraTrackingSettings(settings)
     local definition = settings and self.AuraTrackingBossBuiltins[settings.builtin]
     if not definition then return end
+    -- Keep registered trigger tables stable across routine getters and refreshes.
+    if AuraTrackingBuiltinTriggerSources[settings] ~= definition.triggerSettings then
+        for index, field in ipairs(AuraTrackingTriggerFields) do
+            local value = definition.triggerSettings[field]
+            settings[field] = type(value) == "table" and CopyTable(value) or value
+        end
+        AuraTrackingBuiltinTriggerSources[settings] = definition.triggerSettings
+    end
     settings.loadConditions = settings.loadConditions or {}
     settings.loadConditions.EncounterIDs = {[definition.encounterID] = true}
 end
@@ -337,7 +359,7 @@ function NSI:CreateBuiltinAuraTrackingSettings(key)
     settings.Name = settings.Name or definition.name or key
     settings.group = settings.group or definition.group
     settings.builtin = key
-    self:ApplyBuiltinAuraTrackingEncounter(settings)
+    self:ApplyBuiltinAuraTrackingSettings(settings)
     return settings
 end
 
@@ -349,7 +371,7 @@ function NSI:EnsureBuiltinAuraTrackings()
     for index, settings in ipairs(root.Custom) do
         if self.AuraTrackingBossBuiltins[settings.builtin] then
             existing[settings.builtin] = true
-            self:ApplyBuiltinAuraTrackingEncounter(settings)
+            self:ApplyBuiltinAuraTrackingSettings(settings)
         end
     end
     local keys = {}
@@ -663,6 +685,13 @@ end
 
 function NSI:DuplicateAuraTrackingGroup(groupName)
     if not groupName or groupName == self.AuraTrackingMatrixGroup then return end
+    local entries = GetOrderedAuraTrackingGroupEntries(groupName)
+    for index = #entries, 1, -1 do
+        if self.AuraTrackingBossBuiltins[entries[index].settings.builtin] then
+            table.remove(entries, index)
+        end
+    end
+    if #entries == 0 then return end
     local root = NSRT.AuraTrackingSettings
     root.Custom = root.Custom or {}
     root.Groups = root.Groups or {}
@@ -682,7 +711,7 @@ function NSI:DuplicateAuraTrackingGroup(groupName)
     end
 
     root.Groups[newName] = { collapsed = false }
-    for order, entry in ipairs(GetOrderedAuraTrackingGroupEntries(groupName)) do
+    for order, entry in ipairs(entries) do
         local settings = CopyTable(entry.settings)
         settings.builtin = nil
         settings.pinned = nil
@@ -744,10 +773,9 @@ function NSI:SetAuraTrackingPinned(settingsKey, pinned)
     self:RefreshAuraTrackingUI()
 end
 
--- Duplicate any entry into a new custom entry (deep copy, fresh name).
 function NSI:DuplicateCustomAuraTracking(settingsKey)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings then return end
+    if not settings or self.AuraTrackingBossBuiltins[settings.builtin] then return end
     NSRT.AuraTrackingSettings.Custom = NSRT.AuraTrackingSettings.Custom or {}
     local copy = CopyTable(settings)
     copy.builtin = nil
@@ -766,7 +794,7 @@ end
 -- state are never copied accidentally. Display fields are listed below
 -- alongside the settings defaults.
 local AuraTrackingSectionFields = {
-    Trigger = { "TrackingMode", "SpellIDPlayerFilter", "SpellIDs", "SpellIDsEdited", "AuraFilters", "CandidateFilters", "Unit", "UnitType", "PreviewSpellID" },
+    Trigger = AuraTrackingTriggerFields,
     Load    = { "loadConditions" },
 }
 
@@ -796,6 +824,7 @@ end
 function NSI:CopyAuraTrackingSection(settingsKey, section)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     if not settings then return end
+    if section == "Trigger" and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     local data = {}
     if section == "Display" then
         for _, key in ipairs(AuraTrackingDisplayFields) do
@@ -811,7 +840,9 @@ function NSI:CopyAuraTrackingSection(settingsKey, section)
     self._AuraTrackingSectionClipboard = { section = section, data = data }
 end
 
-function NSI:CanPasteAuraTrackingSection(section)
+function NSI:CanPasteAuraTrackingSection(section, settingsKey)
+    local settings = settingsKey and self:GetAuraTrackingSettings(settingsKey)
+    if section == "Trigger" and settings and self.AuraTrackingBossBuiltins[settings.builtin] then return false end
     local clip = self._AuraTrackingSectionClipboard
     return clip ~= nil and clip.section == section
 end
@@ -820,10 +851,11 @@ function NSI:PasteAuraTrackingSection(settingsKey, section)
     local settings = self:GetAuraTrackingSettings(settingsKey)
     local clip = self._AuraTrackingSectionClipboard
     if not settings or not clip or clip.section ~= section then return end
+    if section == "Trigger" and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     for key, value in pairs(clip.data) do
         settings[key] = CopyAuraTrackingValue(value)
     end
-    self:ApplyBuiltinAuraTrackingEncounter(settings)
+    self:ApplyBuiltinAuraTrackingSettings(settings)
     self:InitAuraTracking()
     self:RefreshAuraTrackingUI()
 end
@@ -917,7 +949,7 @@ function NSI:GetAuraTrackingSettings(settingsKey)
     local customIndex = tostring(settingsKey or ""):match("^Custom:(%d+)$")
     if customIndex then
         local settings = NSRT.AuraTrackingSettings.Custom and NSRT.AuraTrackingSettings.Custom[tonumber(customIndex)]
-        self:ApplyBuiltinAuraTrackingEncounter(settings)
+        self:ApplyBuiltinAuraTrackingSettings(settings)
         return settings
     end
     return NSRT.AuraTrackingSettings[settingsKey]
@@ -1220,7 +1252,7 @@ end
 -- merges any newly-valid ones into the entry's existing SpellIDs.
 function NSI:AddAuraTrackingSpellIDs(settingsKey, value)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings then return end
+    if not settings or self.AuraTrackingBossBuiltins[settings.builtin] then return end
     local newIDs = ParseAuraTrackingSpellIDs(value)
     if #newIDs == 0 then return end
     settings.SpellIDs = settings.SpellIDs or {}
@@ -1239,6 +1271,7 @@ end
 
 function NSI:RemoveAuraTrackingSpellID(settingsKey, spellID)
     local settings = self:GetAuraTrackingSettings(settingsKey)
+    if settings and self.AuraTrackingBossBuiltins[settings.builtin] then return end
     if not settings or not settings.SpellIDs then return end
     spellID = tonumber(spellID)
     for i, id in ipairs(settings.SpellIDs) do
@@ -1253,7 +1286,7 @@ end
 
 function NSI:SetAuraTrackingPreviewSpellID(settingsKey, value)
     local settings = self:GetAuraTrackingSettings(settingsKey)
-    if not settings then return end
+    if not settings or self.AuraTrackingBossBuiltins[settings.builtin] then return end
     settings.PreviewSpellID = tonumber(value) or nil
     self:RefreshAuraTrackingUI()
 end
@@ -1370,7 +1403,7 @@ local function NormalizeAuraTrackingImport(settings, builtinKey, groupName)
     else
         data.Name = data.Name or "Imported Aura Tracking"
     end
-    NSI:ApplyBuiltinAuraTrackingEncounter(data)
+    NSI:ApplyBuiltinAuraTrackingSettings(data)
     return NSI:CreateAuraTrackingSettingsDefaults(data)
 end
 
@@ -1437,7 +1470,7 @@ function NSI:ImportAuraTrackingString(text)
     for _, entry in ipairs(payload.entries) do
         local bossBuiltin = self.AuraTrackingBossBuiltins[entry.builtin]
         local builtinKey = (AuraTrackingBuiltinKeys[entry.builtin] or bossBuiltin) and entry.builtin or nil
-        local settings = NormalizeAuraTrackingImport(entry.settings, builtinKey, groupName)
+        local settings = (not entry.builtin or builtinKey) and NormalizeAuraTrackingImport(entry.settings, builtinKey, groupName)
         if settings then
             if bossBuiltin then
                 local existingIndex
@@ -1795,7 +1828,7 @@ end
 
 function NSI:RefreshAuraMatrixVisibility(refreshTargetAuras)
     local settings = NSRT.AuraTrackingSettings.AuraMatrix
-    local matrixShown = settings.enabled and self:EvaluateLoad(settings)
+    local matrixShown = settings.enabled and self:EvaluateAuraTrackingLoad(settings)
     local playerShown = matrixShown and not (self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player"))
     local targetShown = matrixShown and not settings.DisableTargetTracking
         and UnitCanAssist("player", "target", true, true)
@@ -1807,6 +1840,7 @@ function NSI:RefreshAuraMatrixVisibility(refreshTargetAuras)
         if row.unit == "target" then shouldShow = targetShown end
         local state = self.AuraTrackingState and self.AuraTrackingState[row.key]
         if state then
+            shouldShow = shouldShow and state.sourceSettings == settings
             state.container:SetEnabled(shouldShow)
             state.container:SetShown(shouldShow)
             state.anchorFrame:SetShown(shouldShow)
@@ -3009,13 +3043,13 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     state.currentMaxFrameCountByGroup[groupKey] = maxFrameCount
 end
 
-local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons, unitSetKey, matrixRow)
+local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons, unitSetKey, matrixRow, sourceSettings)
     if not unit or not settings or not settings.enabled then return end
+    local loadMatches = self:EvaluateAuraTrackingLoad(settings)
+    if not loadMatches then return end
+    sourceSettings = sourceSettings or settings
+    local state = self.AuraTrackingState and self.AuraTrackingState[key]
     settings.Limit = GetAuraTrackingDisplayLimit(settings)
-    local loadMatches = self:EvaluateLoad(settings)
-    local encounterConditions = settings.loadConditions and settings.loadConditions.EncounterIDs
-    local hasEncounterConditions = encounterConditions and next(encounterConditions) ~= nil
-    if not loadMatches and not hasEncounterConditions then return end
     if not C_AddOns.IsAddOnLoaded("Blizzard_AuraContainer") then
         C_AddOns.LoadAddOn("Blizzard_AuraContainer")
     end
@@ -3036,9 +3070,21 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local customFilterString = customUsesFilters and BuildAuraTrackingCustomFilterString(settings) or nil
     if customUsesFilters and not customFilterString then return end
 
+    -- Existing containers cannot be reconfigured under restrictions; newly created ones can.
+    if self:Restricted() and state and state.container then
+        if state.sourceSettings ~= sourceSettings or state.unit ~= unit then return end
+        state.active = true
+        state.unitSetKey = unitSetKey
+        state.configurationDeferred = true
+        self.AuraTrackingStateOrder[#self.AuraTrackingStateOrder + 1] = key
+        return state
+    end
+
     self.AuraTrackingState = self.AuraTrackingState or {}
     self.AuraTrackingState[key] = self.AuraTrackingState[key] or {}
-    local state = self.AuraTrackingState[key]
+    state = self.AuraTrackingState[key]
+    state.sourceSettings = sourceSettings
+    state.configurationDeferred = nil
     reconfigureButtons = reconfigureButtons or state.buttonSettingsDirty or state.settings ~= settings
     if not state.container then
         state.container = CreateFrame("AuraContainer", nil, self.NSRTFrame, "CustomAuraContainerTemplate, DisableUntrustedLayoutScriptsTemplate")
@@ -3068,7 +3114,6 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     if state.requiresAssist ~= nil then
         state.unitCanAssist = GetAuraTrackingUnitCanAssist(unit, state.requiresAssist)
     end
-    state.encounterConditioned = hasEncounterConditions
     state.width = width
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
@@ -3310,8 +3355,9 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     return state
 end
 
-function NSI:LayoutAuraTrackingUnitSet(unitSetKey)
-    if self:Restricted() then return end
+function NSI:LayoutAuraTrackingUnitSet(unitSetKey, allowRestrictedLayout)
+    local restricted = self:Restricted()
+    if restricted and not allowRestrictedLayout then return end
     local unitSet = self.AuraTrackingUnitSets and self.AuraTrackingUnitSets[unitSetKey]
     if not unitSet or #unitSet.states < 2 then return end
 
@@ -3340,27 +3386,30 @@ function NSI:LayoutAuraTrackingUnitSet(unitSetKey)
     local previous
     for _, state in ipairs(activeStates) do
         local container = state.container
-        container:ClearAllPoints()
-        if not previous then
-            container:SetPoint(anchorPoint, anchorFrame, anchorPoint)
-        elseif growDirection == "LEFT" then
-            container:SetPoint("TOPRIGHT", previous.container, "TOPLEFT", -spacing, 0)
-        elseif growDirection == "UP" then
-            container:SetPoint("BOTTOMLEFT", previous.container, "TOPLEFT", 0, spacing)
-        elseif growDirection == "DOWN" then
-            container:SetPoint("TOPLEFT", previous.container, "BOTTOMLEFT", 0, -spacing)
-        else
-            container:SetPoint("TOPLEFT", previous.container, "TOPRIGHT", spacing, 0)
+        if not restricted or not state.configurationDeferred then
+            container:ClearAllPoints()
+            if not previous then
+                container:SetPoint(anchorPoint, anchorFrame, anchorPoint)
+            elseif growDirection == "LEFT" then
+                container:SetPoint("TOPRIGHT", previous.container, "TOPLEFT", -spacing, 0)
+            elseif growDirection == "UP" then
+                container:SetPoint("BOTTOMLEFT", previous.container, "TOPLEFT", 0, spacing)
+            elseif growDirection == "DOWN" then
+                container:SetPoint("TOPLEFT", previous.container, "BOTTOMLEFT", 0, -spacing)
+            else
+                container:SetPoint("TOPLEFT", previous.container, "TOPRIGHT", spacing, 0)
+            end
         end
         previous = state
     end
 end
 
-function NSI:UpdateAuraTrackingEncounterVisibility()
+function NSI:UpdateAuraTrackingEncounterVisibility(allowRestrictedLayout)
     local playerVehicleDisabled = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
     for _, state in pairs(self.AuraTrackingState or {}) do
-        if state.encounterConditioned and state.container and not AuraMatrixRowsByKey[state.key] then
-            local shouldShow = self:EvaluateLoad(state.settings)
+        if state.container and not AuraMatrixRowsByKey[state.key] then
+            local settings = state.sourceSettings
+            local shouldShow = state.active and settings.enabled and self:EvaluateAuraTrackingLoad(settings)
             if state.unit == "player" and playerVehicleDisabled then
                 shouldShow = false
             end
@@ -3377,7 +3426,7 @@ function NSI:UpdateAuraTrackingEncounterVisibility()
         end
     end
     for unitSetKey in pairs(self.AuraTrackingUnitSets or {}) do
-        self:LayoutAuraTrackingUnitSet(unitSetKey)
+        self:LayoutAuraTrackingUnitSet(unitSetKey, allowRestrictedLayout)
     end
     self:RefreshAuraMatrixVisibility()
 end
@@ -3396,11 +3445,11 @@ local function InitAuraTrackingTankSet(self, settings, firstKey, reconfigureButt
             containerSettings.GrowDirection = multiTankGrow == "Same" and settings.GrowDirection or multiTankGrow
             containerSettings.CustomAnchorFrame = nil
         end
-        local tankState = InitAuraTrackingContainer(self, tankUnit, containerSettings, tankKey, reconfigureButtons)
+        local tankState = InitAuraTrackingContainer(self, tankUnit, containerSettings, tankKey, reconfigureButtons, nil, nil, settings)
         if tankState then
             if not firstTankState then
                 firstTankState = tankState
-            elseif firstTankState.anchorFrame then
+            elseif firstTankState.anchorFrame and not tankState.configurationDeferred then
                 local frame = tankState.anchorFrame
                 local xOffset = settings.MultiTankXOffset
                 local yOffset = settings.MultiTankYOffset
@@ -3416,7 +3465,7 @@ end
 local function SetAuraTrackingPlayerVehicleState(self, disabled)
     for _, state in pairs(self.AuraTrackingState or {}) do
         if state.active and state.unit == "player" and not AuraMatrixRowsByKey[state.key] then
-            local shouldShow = not disabled and state.settings.enabled and self:EvaluateLoad(state.settings)
+            local shouldShow = not disabled and state.settings.enabled and self:EvaluateAuraTrackingLoad(state.settings)
             if state.requiresAssist ~= nil then
                 state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                 shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
@@ -3436,15 +3485,16 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     if self.IsBuilding then return end
     self:EnsureBuiltinAuraTrackings()
     reconfigureButtons = reconfigureButtons or self.PendingAuraTrackingReconfigure
-    if self:Restricted() and (not allowRestrictedCreate or self.AuraTrackingState) then
+    local restricted = self:Restricted()
+    if restricted and not allowRestrictedCreate then
         self.PendingAuraTrackingUpdate = true
         self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
         self:RefreshAuraMatrixVisibility()
         return
     end
 
-    self.PendingAuraTrackingUpdate = nil
-    self.PendingAuraTrackingReconfigure = nil
+    self.PendingAuraTrackingUpdate = restricted or nil
+    self.PendingAuraTrackingReconfigure = restricted and reconfigureButtons or nil
     self.AuraTrackingStateOrder = {}
     self.AuraTrackingUnitSets = {}
     local playerControlLost = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
@@ -3459,38 +3509,43 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     InitAuraTrackingContainer(self, "player", NSRT.AuraTrackingSettings.External, "External", reconfigureButtons)
 
     local matrixSettings = NSRT.AuraTrackingSettings.AuraMatrix
-    self:UpdateAuraMatrixAnchor(matrixSettings)
-    for _, row in ipairs(AuraMatrixRows) do
-        if row.unit ~= "target" or not matrixSettings.DisableTargetTracking then
-            InitAuraTrackingContainer(self, row.unit, matrixSettings, row.key, reconfigureButtons, nil, row)
+    if matrixSettings.enabled and self:EvaluateAuraTrackingLoad(matrixSettings) then
+        if not restricted or not self.AuraMatrixAnchor then
+            self:UpdateAuraMatrixAnchor(matrixSettings)
+        end
+        for _, row in ipairs(AuraMatrixRows) do
+            if row.unit ~= "target" or not matrixSettings.DisableTargetTracking then
+                InitAuraTrackingContainer(self, row.unit, matrixSettings, row.key, reconfigureButtons, nil, row)
+            end
         end
     end
 
     local rosterRefreshStates = {}
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
-        local key = "Custom" .. index
-        local units, needsRosterUpdate = ResolveAuraTrackingUnits(self, settings)
-        local isCustomCotank = type(settings.Unit) == "string" and string.lower(strtrim(settings.Unit)) == "cotank"
-        if needsRosterUpdate then
-            rosterRefreshStates[#rosterRefreshStates + 1] = {
-                key = key,
-                settings = settings,
-                multiTank = isCustomCotank,
-            }
-        end
-        if isCustomCotank then
-            InitAuraTrackingTankSet(self, settings, key, reconfigureButtons)
-        else
-            local unitSetKey = key .. "Units"
-            local unitSet = { settings = settings, states = {} }
-            self.AuraTrackingUnitSets[unitSetKey] = unitSet
-            for unitIndex, unit in ipairs(units) do
-                local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, #units > 1 and unitSetKey)
-                if state then
-                    unitSet.states[#unitSet.states + 1] = state
+        if settings.enabled and self:EvaluateAuraTrackingLoad(settings) then
+            local key = "Custom" .. index
+            local units, needsRosterUpdate = ResolveAuraTrackingUnits(self, settings)
+            local isCustomCotank = type(settings.Unit) == "string" and string.lower(strtrim(settings.Unit)) == "cotank"
+            if needsRosterUpdate then
+                rosterRefreshStates[#rosterRefreshStates + 1] = {
+                    key = key,
+                    settings = settings,
+                    multiTank = isCustomCotank,
+                }
+            end
+            if isCustomCotank then
+                InitAuraTrackingTankSet(self, settings, key, reconfigureButtons)
+            else
+                local unitSetKey = key .. "Units"
+                local unitSet = { settings = settings, states = {} }
+                self.AuraTrackingUnitSets[unitSetKey] = unitSet
+                for unitIndex, unit in ipairs(units) do
+                    local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, #units > 1 and unitSetKey)
+                    if state then
+                        unitSet.states[#unitSet.states + 1] = state
+                    end
                 end
             end
-            self:LayoutAuraTrackingUnitSet(unitSetKey)
         end
     end
 
@@ -3505,7 +3560,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     for _, key in ipairs(self.AuraTrackingStateOrder) do
         local state = self.AuraTrackingState[key]
         local settings = state and state.settings
-        if state and state.active and settings and not AuraMatrixRowsByKey[key] and settings.CustomAnchorFrame and settings.CustomAnchorFrame:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) == AURA_TRACKING_FRAME_ANCHOR_PREFIX then
+        if state and state.active and not state.configurationDeferred and settings and not AuraMatrixRowsByKey[key] and settings.CustomAnchorFrame and settings.CustomAnchorFrame:sub(1, #AURA_TRACKING_FRAME_ANCHOR_PREFIX) == AURA_TRACKING_FRAME_ANCHOR_PREFIX then
             local anchorFrame = GetAuraTrackingAnchorFrame(self, settings, UIParent, state.anchorFrame)
             state.anchorFrame:ClearAllPoints()
             state.anchorFrame:SetPoint(settings.Anchor or "CENTER", anchorFrame, settings.relativeTo or "CENTER", settings.xOffset or 0, settings.yOffset or 0)
@@ -3515,8 +3570,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
             state.container:SetPoint(containerAnchorPoint, state.anchorFrame, containerAnchorPoint, 0, 0)
         end
     end
-
-    SetAuraTrackingPoint(self.AuraMatrixAnchor, matrixSettings, UIParent)
 
     for _, state in pairs(self.AuraTrackingState or {}) do
         if not state.active then
@@ -3561,7 +3614,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     end
 
     for _, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
-        if settings.enabled then
+        if settings.enabled and self:EvaluateAuraTrackingLoad(settings) then
             local units = ResolveAuraTrackingUnits(self, settings)
             for _, unit in ipairs(units) do
                 if unit == "player" then
@@ -3627,7 +3680,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 local unitSetsToLayout = {}
                 for _, state in ipairs(states) do
                     if state.container and state.active and event == "INSTANCE_ENCOUNTER_ENGAGE_UNIT" then
-                        local shouldShow = state.settings.enabled and NSI:EvaluateLoad(state.settings) and UnitExists(state.unit)
+                        local shouldShow = state.settings.enabled and NSI:EvaluateAuraTrackingLoad(state.settings) and UnitExists(state.unit)
                         if state.requiresAssist ~= nil then
                             state.unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                             shouldShow = shouldShow and state.unitCanAssist == state.requiresAssist
@@ -3639,7 +3692,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                         local unitCanAssist = GetAuraTrackingUnitCanAssist(state.unit, state.requiresAssist)
                         if state.unitCanAssist ~= unitCanAssist then
                             state.unitCanAssist = unitCanAssist
-                            local shouldShow = state.settings.enabled and NSI:EvaluateLoad(state.settings)
+                            local shouldShow = state.settings.enabled and NSI:EvaluateAuraTrackingLoad(state.settings)
                             shouldShow = shouldShow and unitCanAssist == state.requiresAssist
                             state.container:SetEnabled(shouldShow)
                             state.container:SetShown(shouldShow)
@@ -3686,6 +3739,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     elseif AuraTrackingUnitRefreshFrame then
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
     end
+    self:UpdateAuraTrackingEncounterVisibility(true)
 end
 
 function NSI:InitAuraSystem(firstcall, reconfigureButtons)

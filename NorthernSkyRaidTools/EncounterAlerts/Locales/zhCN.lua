@@ -273,7 +273,7 @@ L[3492] = {
     ["Debuffs"]             = {group = "乌拉特克", name = "毒蛇之咬（点名）", text = "点名吸圈"},
     ["Eggs"]                = {group = "乌拉特克", name = "毒蛇呼唤（蛋）", text = "蛋刷新"},
     ["EggDeadline"]         = {group = "乌拉特克", name = "搬蛋时限", text = "搬蛋时限"},
-    ["AddSoak"]             = {group = "乌拉特克", name = "溃烂爆发（分摊）", text = "大怪分摊"},
+    ["AddSoak"]             = {group = "乌拉特克", name = "溃烂爆发（进圈）", text = "大怪进圈"},
     ["Adds"]                = {group = "乌拉特克", name = "毒蛇呼唤（小怪）", text = "小怪刷新"},
     ["BossSpawn"]           = {group = "乌拉特克", name = "首领刷新", text = "首领刷新"},
     ["FirstBreak"]          = {group = "乌拉特克", name = "攫取毒牙（1拉断）", text = "1 拉断"},
