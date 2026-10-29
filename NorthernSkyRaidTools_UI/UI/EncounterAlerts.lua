@@ -2779,18 +2779,18 @@ end]]
     local timeRowH  = 22
     local timeRows  = {}
 
-    RebuildTimeRows = function()
+    RebuildTimeRows = function(alert)
         for _, row in ipairs(timeRows) do row:Hide() end
-        if not trigF._alert then return end
+        if not alert then return end
         local rows = {}
-        if trigF._alert.phaseTimers then
-            for _, phase in ipairs(NSI:GetSortedPhaseKeys(trigF._alert.phaseTimers)) do
-                for timeIndex, time in ipairs(trigF._alert.phaseTimers[phase] or {}) do
+        if alert.phaseTimers then
+            for _, phase in ipairs(NSI:GetSortedPhaseKeys(alert.phaseTimers)) do
+                for timeIndex, time in ipairs(alert.phaseTimers[phase] or {}) do
                     rows[#rows + 1] = {phase = phase, timeIndex = timeIndex, time = time}
                 end
             end
         else
-            for timeIndex, time in ipairs(trigF._alert.timers or {}) do
+            for timeIndex, time in ipairs(alert.timers or {}) do
                 rows[#rows + 1] = {timeIndex = timeIndex, time = time}
             end
         end
@@ -2838,7 +2838,7 @@ end]]
                         table.remove(trigF._alert.timers, rowData.timeIndex)
                         NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
                     end
-                    RebuildTimeRows()
+                    RebuildTimeRows(trigF._alert)
                 end
             end)
 
@@ -2891,7 +2891,7 @@ end]]
                 NSI:SaveAlertData(trigF._alert, "timers", trigF._alert.timers)
             end
             addTimeEntry:SetValue("")
-            RebuildTimeRows()
+            RebuildTimeRows(trigF._alert)
         end
     end
 
@@ -2920,7 +2920,7 @@ end]]
             NSI:SaveAlertData(trigF._alert, "phaseTimers", nil)
         end
         RefreshPhaseSpecificControls()
-        RebuildTimeRows()
+        RebuildTimeRows(trigF._alert)
     end, 190, 22, "NSUIEncAlertPhaseSpecificTimers",
         { title = "Phase-specific timers", desc = "When enabled, adding new timers will add them for the specified phase on the right." })
     phaseSpecificCB:SetPoint("LEFT", addTimeBtn.frame, "RIGHT", 8, 0)
@@ -4270,7 +4270,7 @@ end]]
         trigF.phaseSpecificCB:SetValue(entry.phaseTimers ~= nil)
         trigF.phaseSpecificEntry:SetValue(tostring(NSI:GetPrimaryPhase(entry.phase) or 1))
         if trigF.RefreshPhaseSpecificControls then trigF.RefreshPhaseSpecificControls() end
-        trigF.RebuildTimeRows()
+        trigF.RebuildTimeRows(entry)
         trigF.conditionBtn:SetText(NSI:Loc(entry.isConditional and "Edit Condition" or "Add Condition"))
         trigF.encounterStartCodeBtn:SetText(NSI:Loc(entry.onEncounterStart and "Edit Encounter Start Code" or "Add Encounter Start Code"))
         trigF.encounterEndCodeBtn:SetText(NSI:Loc(entry.onEncounterEnd and "Edit Encounter End Code" or "Add Encounter End Code"))
