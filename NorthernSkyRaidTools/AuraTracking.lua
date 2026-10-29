@@ -55,6 +55,7 @@ NSI.AuraTrackingCandidateDispelTypes = {
 
 local AuraTrackingUnitRefreshFrame
 local AuraTrackingButtonRefreshFrame
+local AuraTrackingBuildFrame
 local AuraTrackingVehicleStateTimer
 local GetAuraTrackingPreviewOffset
 local AuraTrackingUnitRefreshStates = {
@@ -2372,6 +2373,7 @@ local function QueueAuraTrackingButtonRefresh(self, state)
                     remaining = remaining - 1
                 else
                     refreshState.buttonSettingsDirty = true
+                    refreshState.appliedButtonSettings = nil
                 end
                 if not refreshState.active or refresh.nextIndex > #refresh.buttons then
                     refreshState.buttonRefresh = nil
@@ -3035,6 +3037,18 @@ function NSI:PreviewDebuffOverviewContainers(regularFilter, candidateFilters, co
     end
 end
 
+local function AuraTrackingConfigurationsMatch(previous, current)
+    if previous == current then return true end
+    if type(previous) ~= "table" or type(current) ~= "table" then return false end
+    for key, value in pairs(current) do
+        if not AuraTrackingConfigurationsMatch(previous[key], value) then return false end
+    end
+    for key in pairs(previous) do
+        if current[key] == nil then return false end
+    end
+    return true
+end
+
 local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
     if not state or not state.container or not groupKey then return end
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
@@ -3044,6 +3058,7 @@ local function SetAuraTrackingGroupMaxFrameCount(state, groupKey, maxFrameCount)
 end
 
 local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureButtons, unitSetKey, matrixRow, sourceSettings)
+    coroutine.yield()
     if not unit or not settings or not settings.enabled then return end
     local loadMatches = self:EvaluateAuraTrackingLoad(settings)
     if not loadMatches then return end
@@ -3101,6 +3116,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     local groupKeyPrefix = "NSRT_" .. key
     local layoutAnchorPoint = GetAuraTrackingLayoutAnchorPoint(settings)
     local frameStrata = GetAuraTrackingFrameStrata(settings)
+    local unitChanged = container:GetUnit() ~= unit
     state.settings = settings
     state.unit = unit
     state.key = key
@@ -3117,6 +3133,7 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
     state.width = width
     state.height = height
     state.currentMaxFrameCountByGroup = state.currentMaxFrameCountByGroup or {}
+    state.appliedGroupSettings = state.appliedGroupSettings or {}
     state.active = true
     self.AuraTrackingStateOrder[#self.AuraTrackingStateOrder + 1] = key
 
@@ -3126,21 +3143,13 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         local policy = processedAuraType and processedAuraType ~= "Disabled"
             and CustomAuraContainerAuraProcessingPolicy.ProcessAura
             or CustomAuraContainerAuraProcessingPolicy.None
-        container:SetAuraProcessingPolicy(policy)
+        if state.appliedProcessingPolicy ~= policy then
+            container:SetAuraProcessingPolicy(policy)
+            state.appliedProcessingPolicy = policy
+        end
     end
 
-    container:Hide()
-    container:SetFrameStrata(frameStrata)
-    anchorFrame:SetFrameStrata(frameStrata)
-    anchorFrame:SetSize(width, height)
-    SetAuraTrackingPoint(anchorFrame, settings, UIParent, matrixRow)
-    anchorFrame:Show()
-
-    container:ClearAllPoints()
-    container:SetSize(width, height)
-    local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
-    container:SetPoint(containerAnchorPoint, anchorFrame, containerAnchorPoint, 0, 0)
-    container:SetUnit(unit)
+    if unitChanged then container:SetUnit(unit) end
     local isCotankTracking = settings.Unit and string.lower(strtrim(settings.Unit)) == "cotank"
     local isGroupUnitTracking = isCustom and self:IsAuraTrackingGroupUnitInput(settings.Unit)
     local showUnitName = (tostring(key):match("^Tank") or isCotankTracking) and settings.NameEnabled
@@ -3190,10 +3199,41 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
             lineSpacing = lineSpacing - unitSpacing
         end
     end
-    container:SetFlowLayoutAxis(layoutAxis)
-    container:SetFlowLayoutAnchorPoint(layoutAnchorPoint)
-    container:SetFlowLayoutGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
-    container:SetFlowLayoutMaximumLineSize(rowWidth)
+    local containerLayout = {
+        width = width,
+        height = height,
+        frameStrata = frameStrata,
+        anchor = settings.Anchor,
+        relativeTo = settings.relativeTo,
+        xOffset = settings.xOffset,
+        yOffset = settings.yOffset,
+        matrixXOffset = matrixRow and matrixRow.xOffset,
+        matrixYOffset = matrixRow and matrixRow.yOffset,
+        layoutAxis = layoutAxis,
+        layoutAnchorPoint = layoutAnchorPoint,
+        horizontalGrowthDirection = horizontalGrowthDirection,
+        verticalGrowthDirection = verticalGrowthDirection,
+        rowWidth = rowWidth,
+        unitSetKey = unitSetKey,
+    }
+    local anchorTarget = matrixRow and self.AuraMatrixAnchor or GetAuraTrackingAnchorFrame(self, settings, UIParent, anchorFrame)
+    if state.appliedAnchorTarget ~= anchorTarget or not AuraTrackingConfigurationsMatch(state.appliedContainerLayout, containerLayout) then
+        container:Hide()
+        container:SetFrameStrata(frameStrata)
+        anchorFrame:SetFrameStrata(frameStrata)
+        anchorFrame:SetSize(width, height)
+        SetAuraTrackingPoint(anchorFrame, settings, UIParent, matrixRow)
+        container:ClearAllPoints()
+        container:SetSize(width, height)
+        local containerAnchorPoint = GetAuraTrackingContainerAnchorPoint(settings)
+        container:SetPoint(containerAnchorPoint, anchorFrame, containerAnchorPoint, 0, 0)
+        container:SetFlowLayoutAxis(layoutAxis)
+        container:SetFlowLayoutAnchorPoint(layoutAnchorPoint)
+        container:SetFlowLayoutGrowthDirection(horizontalGrowthDirection, verticalGrowthDirection)
+        container:SetFlowLayoutMaximumLineSize(rowWidth)
+        state.appliedContainerLayout = containerLayout
+        state.appliedAnchorTarget = anchorTarget
+    end
 
     local auraGroups = {}
     if matrixRow then
@@ -3244,25 +3284,23 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
         end
     end
     if reconfigureButtons then
-        -- New buttons are configured by initializeFrame; only refresh the existing buttons here.
-        QueueAuraTrackingButtonRefresh(self, state)
+        local buttonSettings = { Unit = settings.Unit, fontPath = GetAuraTrackingFontPath(self, settings) }
+        for _, field in ipairs(AuraTrackingDisplayFields) do
+            buttonSettings[field] = settings[field]
+        end
+        if not AuraTrackingConfigurationsMatch(state.appliedButtonSettings, buttonSettings) then
+            -- Settings are edited in place; keep a snapshot rather than the live color/text tables.
+            QueueAuraTrackingButtonRefresh(self, state)
+            state.appliedButtonSettings = CopyTable(buttonSettings)
+        end
+        state.buttonSettingsDirty = nil
     end
+    local activeGroups = {}
+    local filterCanAssist = UnitCanAssist("player", unit, true, true)
+    local filterIsGroupMember = UnitIsPlayerControlledOrGroupMember(unit)
     for index, group in ipairs(auraGroups) do
         local groupKey = group.customGroup and state.customAuraGroupKey or (groupKeyPrefix .. index)
-        if isCustom and group.customGroup then
-            if container:HasAuraGroup(groupKeyPrefix .. "1") then
-                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "1", 0)
-            end
-            if container:HasAuraGroup(groupKeyPrefix .. "_helpful") then
-                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_helpful", 0)
-            end
-            if container:HasAuraGroup(groupKeyPrefix .. "_harmful") then
-                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_harmful", 0)
-            end
-            if container:HasAuraGroup(groupKeyPrefix .. "_filters") then
-                SetAuraTrackingGroupMaxFrameCount(state, groupKeyPrefix .. "_filters", 0)
-            end
-        end
+        activeGroups[groupKey] = true
         local candidateFilters
         if matrixRow then
             candidateFilters = {}
@@ -3323,18 +3361,41 @@ local function InitAuraTrackingContainer(self, unit, settings, key, reconfigureB
             },
         }
 
+        local previous = state.appliedGroupSettings[groupKey]
+        local candidatesChanged = not previous or previous.canAssist ~= filterCanAssist or previous.isGroupMember ~= filterIsGroupMember
+            or not AuraTrackingConfigurationsMatch(previous.candidateFilters, options.candidateFilters)
         if container:HasAuraGroup(groupKey) then
             SetAuraTrackingGroupMaxFrameCount(state, groupKey, options.maxFrameCount)
-            -- Matrix filters are fixed; resetting candidate filters forces another full aura scan.
-            if not matrixRow then
+            if not previous or previous.filter ~= group.filter then
                 container:SetAuraGroupFilterString(groupKey, group.filter)
+            end
+            -- Reapplying identical candidates forces a full scan; reaction changes still need a fresh evaluation.
+            if candidatesChanged then
                 container:SetAuraGroupCandidateFilters(groupKey, options.candidateFilters)
             end
-            container:SetAuraGroupLayout(groupKey, options.layout)
-            container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
+            if not previous or not AuraTrackingConfigurationsMatch(previous.layout, options.layout) then
+                container:SetAuraGroupLayout(groupKey, options.layout)
+            end
+            if not previous or previous.sortMethod ~= options.sortMethod or previous.sortDirection ~= options.sortDirection then
+                container:SetAuraGroupSortMethod(groupKey, options.sortMethod, options.sortDirection)
+            end
         else
             container:AddAuraGroup(groupKey, group.filter, options)
             state.currentMaxFrameCountByGroup[groupKey] = options.maxFrameCount
+        end
+        local applied = previous or {}
+        applied.filter = group.filter
+        if candidatesChanged then applied.candidateFilters = CopyTable(options.candidateFilters) end
+        applied.layout = options.layout
+        applied.sortMethod = options.sortMethod
+        applied.sortDirection = options.sortDirection
+        applied.canAssist = filterCanAssist
+        applied.isGroupMember = filterIsGroupMember
+        state.appliedGroupSettings[groupKey] = applied
+    end
+    for groupKey in pairs(state.appliedGroupSettings) do
+        if not activeGroups[groupKey] then
+            SetAuraTrackingGroupMaxFrameCount(state, groupKey, 0)
         end
     end
 
@@ -3481,20 +3542,7 @@ local function SetAuraTrackingPlayerVehicleState(self, disabled)
     self:RefreshAuraMatrixVisibility()
 end
 
-function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
-    if self.IsBuilding then return end
-    self:EnsureBuiltinAuraTrackings()
-    reconfigureButtons = reconfigureButtons or self.PendingAuraTrackingReconfigure
-    local restricted = self:Restricted()
-    if restricted and not allowRestrictedCreate then
-        self.PendingAuraTrackingUpdate = true
-        self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
-        self:RefreshAuraMatrixVisibility()
-        return
-    end
-
-    self.PendingAuraTrackingUpdate = restricted or nil
-    self.PendingAuraTrackingReconfigure = restricted and reconfigureButtons or nil
+local function BuildAuraTracking(self, reconfigureButtons)
     self.AuraTrackingStateOrder = {}
     self.AuraTrackingUnitSets = {}
     local playerControlLost = self.AuraTrackingPlayerVehicleDisabled or UnitHasVehicleUI("player")
@@ -3510,7 +3558,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
 
     local matrixSettings = NSRT.AuraTrackingSettings.AuraMatrix
     if matrixSettings.enabled and self:EvaluateAuraTrackingLoad(matrixSettings) then
-        if not restricted or not self.AuraMatrixAnchor then
+        if not self:Restricted() or not self.AuraMatrixAnchor then
             self:UpdateAuraMatrixAnchor(matrixSettings)
         end
         for _, row in ipairs(AuraMatrixRows) do
@@ -3521,8 +3569,10 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     end
 
     local rosterRefreshStates = {}
+    local tracksPlayer = false
     for index, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
         if settings.enabled and self:EvaluateAuraTrackingLoad(settings) then
+            coroutine.yield()
             local key = "Custom" .. index
             local units, needsRosterUpdate = ResolveAuraTrackingUnits(self, settings)
             local isCustomCotank = type(settings.Unit) == "string" and string.lower(strtrim(settings.Unit)) == "cotank"
@@ -3540,6 +3590,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 local unitSet = { settings = settings, states = {} }
                 self.AuraTrackingUnitSets[unitSetKey] = unitSet
                 for unitIndex, unit in ipairs(units) do
+                    if unit == "player" then tracksPlayer = true end
                     local state = InitAuraTrackingContainer(self, unit, settings, key .. "Unit" .. unitIndex, reconfigureButtons, #units > 1 and unitSetKey)
                     if state then
                         unitSet.states[#unitSet.states + 1] = state
@@ -3596,7 +3647,7 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
     }
     if (NSRT.AuraTrackingSettings.Player and NSRT.AuraTrackingSettings.Player.enabled)
         or (NSRT.AuraTrackingSettings.External and NSRT.AuraTrackingSettings.External.enabled)
-        or matrixSettings.enabled or matrixPlayerState then
+        or matrixSettings.enabled or matrixPlayerState or tracksPlayer then
         AuraTrackingUnitRefreshStates.playerControl = true
     end
 
@@ -3609,21 +3660,6 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
                 elseif unit:match("^boss%d+$") then
                     AuraTrackingUnitRefreshStates.boss[#AuraTrackingUnitRefreshStates.boss + 1] = state
                 end
-            end
-        end
-    end
-
-    for _, settings in ipairs(NSRT.AuraTrackingSettings.Custom or {}) do
-        if settings.enabled and self:EvaluateAuraTrackingLoad(settings) then
-            local units = ResolveAuraTrackingUnits(self, settings)
-            for _, unit in ipairs(units) do
-                if unit == "player" then
-                    AuraTrackingUnitRefreshStates.playerControl = true
-                    break
-                end
-            end
-            if AuraTrackingUnitRefreshStates.playerControl then
-                break
             end
         end
     end
@@ -3740,6 +3776,56 @@ function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
         AuraTrackingUnitRefreshFrame:UnregisterAllEvents()
     end
     self:UpdateAuraTrackingEncounterVisibility(true)
+end
+
+function NSI:InitAuraTracking(allowRestrictedCreate, reconfigureButtons)
+    if self.IsBuilding then return end
+    self:EnsureBuiltinAuraTrackings()
+    reconfigureButtons = reconfigureButtons or self.PendingAuraTrackingReconfigure
+        or (AuraTrackingBuildFrame and AuraTrackingBuildFrame.reconfigureButtons)
+    local restricted = self:Restricted()
+    if restricted and not allowRestrictedCreate then
+        self.PendingAuraTrackingUpdate = true
+        self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or reconfigureButtons
+        self:RefreshAuraMatrixVisibility()
+        return
+    end
+
+    self.PendingAuraTrackingUpdate = restricted or nil
+    self.PendingAuraTrackingReconfigure = restricted and reconfigureButtons or nil
+    if not AuraTrackingBuildFrame then
+        AuraTrackingBuildFrame = CreateFrame("Frame")
+        AuraTrackingBuildFrame:SetScript("OnUpdate", function(frame)
+            if self.IsBuilding then return end
+            if self:Restricted() then
+                self.PendingAuraTrackingUpdate = true
+                self.PendingAuraTrackingReconfigure = self.PendingAuraTrackingReconfigure or frame.reconfigureButtons
+                if not frame.allowRestrictedCreate then
+                    frame.buildCoroutine = nil
+                    frame:Hide()
+                    return
+                end
+            end
+            -- Limit container setup across all trackers, including raid units and Matrix rows.
+            for index = 1, 3 do
+                local ok, errorMessage = coroutine.resume(frame.buildCoroutine)
+                if not ok or coroutine.status(frame.buildCoroutine) == "dead" then
+                    frame.buildCoroutine = nil
+                    frame.reconfigureButtons = nil
+                    frame:Hide()
+                    if not ok then error(errorMessage, 0) end
+                    break
+                end
+            end
+        end)
+    end
+    -- A newer refresh replaces unfinished work and keeps its pending display edits.
+    AuraTrackingBuildFrame.buildCoroutine = coroutine.create(function()
+        BuildAuraTracking(self, reconfigureButtons)
+    end)
+    AuraTrackingBuildFrame.allowRestrictedCreate = allowRestrictedCreate
+    AuraTrackingBuildFrame.reconfigureButtons = reconfigureButtons
+    AuraTrackingBuildFrame:Show()
 end
 
 function NSI:InitAuraSystem(firstcall, reconfigureButtons)
