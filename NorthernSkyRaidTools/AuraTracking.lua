@@ -354,6 +354,9 @@ function NSI:ApplyBuiltinAuraTrackingSettings(settings)
     end
     settings.loadConditions = settings.loadConditions or {}
     settings.loadConditions.EncounterIDs = {[definition.encounterID] = true}
+    if not settings.enabledEdited then
+        settings.enabled = NSRT.AuraTrackingSettings.UseBuiltinAuraTrackings == true or definition.enabled == true
+    end
 end
 
 function NSI:CreateBuiltinAuraTrackingSettings(key)
@@ -385,6 +388,12 @@ function NSI:EnsureBuiltinAuraTrackings()
             root.Custom[#root.Custom + 1] = self:CreateBuiltinAuraTrackingSettings(key)
         end
     end
+end
+
+function NSI:SetUseBuiltinAuraTrackings(enabled)
+    NSRT.AuraTrackingSettings.UseBuiltinAuraTrackings = enabled == true
+    self:InitAuraTracking()
+    self:RefreshAuraTrackingUI()
 end
 
 local AuraMatrixFilters = {
@@ -763,6 +772,9 @@ function NSI:SetAuraTrackingGroupEnabled(name, enabled)
     for _, item in ipairs(self:IterateAuraTrackingEntries()) do
         if item.group == name then
             item.settings.enabled = enabled and true or false
+            if self.AuraTrackingBossBuiltins[item.builtin] then
+                item.settings.enabledEdited = true
+            end
         end
     end
     self:InitAuraTracking()

@@ -386,6 +386,14 @@ local function BuildAuraTrackingUI(screen)
     searchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateSearchHint(self) end)
     searchEntry.editBox:HookScript("OnEditFocusLost",   function(self) UpdateSearchHint(self) end)
 
+    local useBuiltinsCheckbox = CreateCheckButton(screen, NSI:Loc("Enable All Built-in Boss Trackings"), function()
+        return NSRT.AuraTrackingSettings.UseBuiltinAuraTrackings
+    end, function(_, enabled)
+        NSI:SetUseBuiltinAuraTrackings(enabled)
+    end, leftWidth - pad * 2, 22, "NSUIAuraTrackUseBuiltins", NSI:Loc("Automatically enables all current and future built-in boss Aura Trackings. Manual enabled-state changes are kept."))
+    useBuiltinsCheckbox:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 50)
+    NSI:SetUIFont(useBuiltinsCheckbox.label, 11, "")
+
     -- ── Left: bottom buttons ────────────────────────────────────────────────
     local createBtn = CreateLocalizedButton(screen, "Create Aura", function()
         local key = NSI:AddCustomAuraTracking()
@@ -414,7 +422,7 @@ local function BuildAuraTrackingUI(screen)
     stopBtn:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
     -- ── Left: scroll list ───────────────────────────────────────────────────
-    local scrollTop    = topY - 24 - 22 - 6
+    local scrollTop    = topY - 24 - 22 - 6 - 26
     local scrollHeight = tab_content_height + scrollTop - pad - 72 - 6
     local listW        = leftWidth - pad * 2
 
@@ -875,6 +883,9 @@ local function BuildAuraTrackingUI(screen)
                 row.enabledCB:SetOnChange(function(_, v)
                     local es = NSI:GetAuraTrackingSettings(sk)
                     if es then
+                        if NSI.AuraTrackingBossBuiltins[es.builtin] then
+                            es.enabledEdited = true
+                        end
                         es.enabled = v; NSI:InitAuraTracking(false, sk ~= "AuraMatrix")
                         RebuildList()
                     end
