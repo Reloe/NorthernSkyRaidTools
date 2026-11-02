@@ -345,8 +345,28 @@ local function BuildEncounterAlertsUI(parentFrame)
     searchEntry.editBox:HookScript("OnEditFocusGained", function(self) UpdateSearchHint(self) end)
     searchEntry.editBox:HookScript("OnEditFocusLost",   function(self) UpdateSearchHint(self) end)
 
+    local reloeImportCB = CreateCheckButton(screen, NSI:Loc("Automatically Enable New Alerts"),
+        function() return NSRT.Alerts.ReloeReminders end,
+        function(_, v)
+            local wasEnabled = NSRT.Alerts.ReloeReminders == true
+            NSRT.Alerts.ReloeReminders = v
+            if v and not wasEnabled then
+                NSI:PromptReloeReminderImport(function()
+                    RebuildList()
+                    if selectedEncID and selectedKey then
+                        SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
+                    end
+                end)
+            end
+            RebuildList()
+        end,
+        leftWidth - pad * 2, 22, "NSUIEncAlertReloeImportCB")
+    reloeImportCB:SetLocaleKey("Automatically Enable New Alerts")
+    reloeImportCB:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, topY - 20 - 22 - 4 - 22 - 6)
+    NSI:SetUIFont(reloeImportCB.label, 11, "")
+
     -- ── Native ScrollFrame list ─────────────────────────────────────────────
-    local scrollTop    = topY - 20 - 22 - 4 - 22 - 6   -- below title + filter row + search + gaps = -84
+    local scrollTop    = topY - 20 - 22 - 4 - 22 - 6 - 26
     local scrollHeight = tab_content_height + scrollTop - 18 - pad * 2 - 20 - 20 - 2  -- extra rows: import/export(18+2), additional-options(18+2)
     local listW        = leftWidth - pad * 2   -- 220
 
@@ -1296,29 +1316,10 @@ local function BuildEncounterAlertsUI(parentFrame)
     local ADDOPT_PAD = 12
     local ADDOPT_W   = listW + ADDOPT_PAD * 2 + 10
     local ADDOPT_INNER_W = ADDOPT_W - ADDOPT_PAD * 2
-    local ADDOPT_H   = 300
+    local ADDOPT_H   = 270
     local addOptFrame = CreateStyledFrame(NSUI, ADDOPT_W, ADDOPT_H, "NSRTEncAlertAddOptFrame")
     addOptFrame:SetPoint("TOPLEFT", NSUI, "TOPRIGHT", 4, 0)
     addOptFrame:Hide()
-
-    local reloeImportCB = CreateCheckButton(addOptFrame, NSI:Loc("Automatically Enable New Alerts"),
-        function() return NSRT.Alerts.ReloeReminders end,
-        function(_, v)
-            local wasEnabled = NSRT.Alerts.ReloeReminders == true
-            NSRT.Alerts.ReloeReminders = v
-            if v and not wasEnabled then
-                NSI:PromptReloeReminderImport(function()
-                    RebuildList()
-                    if selectedEncID and selectedKey then
-                        SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
-                    end
-                end)
-            end
-            RebuildList()
-        end,
-        ADDOPT_INNER_W, 22, "NSUIEncAlertReloeImportCB")
-    reloeImportCB:SetLocaleKey("Automatically Enable New Alerts")
-    reloeImportCB:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
 
     local importSelectedBossBtn = CreateLocalizedButton(addOptFrame, "Import Selected Boss Alerts", function()
         if not filterEncID or filterEncID == 0 then
@@ -1331,7 +1332,7 @@ local function BuildEncounterAlertsUI(parentFrame)
             SelectAlert(selectedKey, selectedDiffID or filterDiffID, selectedEncID)
         end
     end, ADDOPT_INNER_W, 22)
-    importSelectedBossBtn:SetPoint("TOPLEFT", reloeImportCB.frame, "BOTTOMLEFT", 0, -8)
+    importSelectedBossBtn:SetPoint("TOPLEFT", addOptFrame, "TOPLEFT", ADDOPT_PAD, -30)
 
     local fullResetBtn = CreateLocalizedButton(addOptFrame, "Full Reset", function()
         local function DoReset()

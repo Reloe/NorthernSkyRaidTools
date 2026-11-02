@@ -440,6 +440,7 @@ function NSI:AddMissingDefaults()
         },
 
         AuraTrackingSettings = {
+            UseBuiltinAuraTrackings = false,
             UI = {
                 Selected = "Player",
                 StyleCopySource = "Player",
