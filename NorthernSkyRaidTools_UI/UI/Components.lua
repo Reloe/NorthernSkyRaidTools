@@ -73,19 +73,21 @@ local STYLE = {
 -- ============================================================
 -- Registry of every label created by this module so RefreshFonts() can
 -- update them all in one call when the player changes the addon language.
--- Stored as {label = FontString, size = number} plain entries — buttons are
--- never destroyed mid-session so no weak table needed.
-local labelRegistry = {}
-local localizedTextRegistry = {}
+-- All registries are weak-keyed so they never keep a dead widget's table alive:
+-- label -> font size (plain number, so no value can reference its own key).
+local WEAK_KEYS = { __mode = "k" }
+local labelRegistry = setmetatable({}, WEAK_KEYS)
+local localizedTextRegistry = setmetatable({}, WEAK_KEYS)
 
+-- Component objects, one weak set per type: registry[Type][obj] = true.
 local componentRegistry = {
-    Slider    = {},
-    Dropdown  = {},
-    Color     = {},
-    Checkbox  = {},
-    TextEntry = {},
-    Label     = {},
-    Breakline = {},
+    Slider    = setmetatable({}, WEAK_KEYS),
+    Dropdown  = setmetatable({}, WEAK_KEYS),
+    Color     = setmetatable({}, WEAK_KEYS),
+    Checkbox  = setmetatable({}, WEAK_KEYS),
+    TextEntry = setmetatable({}, WEAK_KEYS),
+    Label     = setmetatable({}, WEAK_KEYS),
+    Breakline = setmetatable({}, WEAK_KEYS),
 }
 
 local function ValidateFont(path)
@@ -95,8 +97,8 @@ end
 local function RefreshFonts()
     local fontPath = ValidateFont(NSI:GetUIFontPath())
     local fontFlags = NSI:GetUIFontFlags()
-    for _, entry in ipairs(labelRegistry) do
-        entry.label:SetFont(fontPath, entry.size, fontFlags)
+    for label, size in pairs(labelRegistry) do
+        label:SetFont(fontPath, size, fontFlags)
     end
 end
 
@@ -138,7 +140,7 @@ end
 local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip, condition)
     -- ---- base frame -------------------------------------------
     -- Width is resolved after measuring the label; start with a stub size.
-    local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
+    local btn = NSI.UI.Pixel.CreateBoxFrame("Button", name, parent)
     local btnHeight = height or 26
     btn:SetSize(1, btnHeight)
     btn:EnableMouse(true)
@@ -187,7 +189,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
     label:SetJustifyV("MIDDLE")
     label:SetJustifyH("CENTER")
     label:SetAllPoints(labelFrame)
-    labelRegistry[#labelRegistry + 1] = {label = label, size = labelSize}
+    labelRegistry[label] = labelSize
 
     -- ---- compute final button width & lay out content ---------
     local iconSize  = 14
@@ -425,7 +427,7 @@ local function MakeFontString(parent, size)
     local fs = parent:CreateFontString(nil, "OVERLAY")
     fs:SetFont(ValidateFont(NSI:GetUIFontPath()), size, NSI:GetUIFontFlags())
     fs:SetTextColor(unpack(STYLE.text_color))
-    labelRegistry[#labelRegistry + 1] = {label = fs, size = size}
+    labelRegistry[fs] = size
     return fs
 end
 
@@ -467,7 +469,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     btn:SetFrameLevel(baseLevel)
 
     -- Checkbox square background
-    local box = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+    local box = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, btn)
     box:SetSize(BOX, BOX)
     box:SetPoint("LEFT", btn, "LEFT", 0, 0)
     box:SetFrameLevel(baseLevel + 1)
@@ -569,7 +571,7 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
 
     function obj:IsEnabled() return not isDisabled end
 
-    componentRegistry.Checkbox[#componentRegistry.Checkbox + 1] = obj
+    componentRegistry.Checkbox[obj] = true
     return obj
 end
 
@@ -630,7 +632,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     local inputW = hasLabel and BOX_W or totalW
 
     -- Input frame (backdrop + EditBox stacked inside)
-    local inputFrame = CreateFrame("Frame", nil, container, "BackdropTemplate")
+    local inputFrame = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, container)
     inputFrame:SetSize(inputW, totalH)
     if hasLabel then
         inputFrame:SetPoint("RIGHT", container, "RIGHT", 0, 0)
@@ -641,7 +643,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     MakeControlBackdrop(inputFrame)
 
     -- Cyan-border overlay when focused (same layer trick as hoverBg)
-    local focusBorder = CreateFrame("Frame", nil, inputFrame, "BackdropTemplate")
+    local focusBorder = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, inputFrame)
     focusBorder:SetAllPoints(inputFrame)
     focusBorder:SetFrameLevel(baseLevel + 2)
     focusBorder:EnableMouse(false)
@@ -656,7 +658,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
     edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
     edit:SetTextColor(1, 1, 1, 1)
-    labelRegistry[#labelRegistry + 1] = {label = edit, size = 12}
+    labelRegistry[edit] = 12
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
     edit:SetMaxLetters(numeric and 8 or 200)
@@ -730,7 +732,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
 
     function obj:IsEnabled() return not self._disabled end
 
-    componentRegistry.TextEntry[#componentRegistry.TextEntry + 1] = obj
+    componentRegistry.TextEntry[obj] = true
     return obj
 end
 
@@ -790,7 +792,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     end
 
     -- Dropdown button — same backdrop & hover pattern as CreateButton
-    local dropBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
+    local dropBtn = NSI.UI.Pixel.CreateBoxFrame("Button", nil, container)
     dropBtn:SetSize(dropW, totalH)
     dropBtn:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     dropBtn:SetFrameLevel(baseLevel + 1)
@@ -823,7 +825,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
     -- ---- Popup (parented to UIParent so it floats above everything) ----
     local SB_W = 6   -- scrollbar width
-    local popup = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    local popup = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, UIParent)
     popup:SetFrameStrata("TOOLTIP")
     popup:Hide()
     popup:SetBackdrop({
@@ -838,7 +840,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     local SEARCH_H = 20
     local searchBox
     if searchable then
-        searchBox = CreateFrame("EditBox", nil, popup, "BackdropTemplate")
+        searchBox = NSI.UI.Pixel.CreateBoxFrame("EditBox", nil, popup)
         searchBox:SetHeight(SEARCH_H)
         searchBox:SetPoint("TOPLEFT", popup, "TOPLEFT", 2, -2)
         searchBox:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -2, -2)
@@ -848,7 +850,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         searchBox:SetTextColor(1, 1, 1, 1)
         searchBox:SetTextInsets(6, 6, 0, 0)
         searchBox:SetMaxLetters(100)
-        labelRegistry[#labelRegistry + 1] = {label = searchBox, size = 12}
+        labelRegistry[searchBox] = 12
     end
 
     -- Scrollbar track (right strip inside popup)
@@ -1168,7 +1170,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
 
     function obj:IsEnabled() return not self._disabled end
 
-    componentRegistry.Dropdown[#componentRegistry.Dropdown + 1] = obj
+    componentRegistry.Dropdown[obj] = true
     return obj
 end
 
@@ -1263,7 +1265,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     valText:SetWidth(VAL_W)
     valText:SetHeight(totalH)
 
-    local valueBorder = CreateFrame("Frame", nil, container, "BackdropTemplate")
+    local valueBorder = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, container)
     valueBorder:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     valueBorder:SetSize(VAL_W, totalH)
     valueBorder:SetFrameLevel(baseLevel + 1)
@@ -1376,7 +1378,7 @@ local function CreateSlider(parent, label, getValue, setValue,
         valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
     end)
 
-    local typeBox = CreateFrame("EditBox", nil, container, "BackdropTemplate")
+    local typeBox = NSI.UI.Pixel.CreateBoxFrame("EditBox", nil, container)
     typeBox:SetSize(VAL_W, totalH - 4)
     typeBox:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     typeBox:SetFrameLevel(baseLevel + 5)
@@ -1470,7 +1472,7 @@ local function CreateSlider(parent, label, getValue, setValue,
 
     function obj:IsEnabled() return not self._disabled end
 
-    componentRegistry.Slider[#componentRegistry.Slider + 1] = obj
+    componentRegistry.Slider[obj] = true
     return obj
 end
 
@@ -1520,7 +1522,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
     lbl:SetHeight(totalH)
 
     -- Swatch button (same backdrop pattern as CreateButton)
-    local swatchBtn = CreateFrame("Button", nil, container, "BackdropTemplate")
+    local swatchBtn = NSI.UI.Pixel.CreateBoxFrame("Button", nil, container)
     swatchBtn:SetSize(SWATCH_W, totalH)
     swatchBtn:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     swatchBtn:SetFrameLevel(baseLevel + 1)
@@ -1634,7 +1636,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
 
     function obj:IsEnabled() return not self._disabled end
 
-    componentRegistry.Color[#componentRegistry.Color + 1] = obj
+    componentRegistry.Color[obj] = true
     return obj
 end
 
@@ -1689,7 +1691,7 @@ local function CreateLabel(parent, text, width, height, name, highlighted, textC
         RegisterLocalizedText(self.label, key)
     end
 
-    componentRegistry.Label[#componentRegistry.Label + 1] = obj
+    componentRegistry.Label[obj] = true
     return obj
 end
 
@@ -1727,7 +1729,7 @@ local function CreateBreakline(parent, width, height, name)
     function obj:SetSize(w,h)  self.frame:SetSize(w, h)    end
     function obj:GetWidth()    return self.frame:GetWidth() end
 
-    componentRegistry.Breakline[#componentRegistry.Breakline + 1] = obj
+    componentRegistry.Breakline[obj] = true
     return obj
 end
 
@@ -1883,7 +1885,7 @@ local function CreateScrollBox(parent, width, height)
 end
 
 -- ============================================================
---  BuildWidgets
+--  BuildWidgets / CreateWidgetHost
 --
 --  Lays out an ordered list of component descriptors inside
 --  a parent frame, stacking them top-to-bottom with a uniform
@@ -1902,13 +1904,42 @@ end
 --    {Type="TextEntry", label=s, get=fn, set=fn, numeric=bool, min=n, max=n}
 --    {Type="Label",     text=s}
 --    {Type="Breakline"}
---    {Type="Custom",    build=fn}
---       build(parent, width, wName) → frame, height
+--    {Type="Custom",    build=fn, cacheId=s, refresh=fn}
+--       build(parent, width) → frame, height
+--       cacheId / refresh only matter to a WidgetHost, see below.
 --
 --    "Scale" is accepted as an alias for "Slider".
 --    Any descriptor may include height=n to override the default row height.
---    Pass namePrefix to give each created frame a unique global WoW name of
---    the form namePrefix .. "_" .. gen .. Type .. index (e.g. "NSRTOpt_1Slider1").
+--
+--  BuildWidgets(parent, definitions, width) builds the widgets once
+--  and returns the height. Use it for panels whose definitions never
+--  change. (A trailing namePrefix argument is still accepted and
+--  ignored: widgets no longer get generated global names.)
+--
+--  CreateWidgetHost(parent, width) is for panels whose definitions
+--  change while the window is open (selecting another entry, switching
+--  tabs, filtering). Frames are never freed in WoW, so rebuilding on
+--  every change leaks. A host builds each distinct widget layout once,
+--  caches it, and on every later Apply re-binds the cached widgets to
+--  the new descriptors (callbacks, label text, dropdown values) and
+--  refreshes their displayed values in place.
+--
+--    host = C.CreateWidgetHost(scrollChild, width)
+--    height = host:Apply(definitions [, isVisible(def, index)])
+--
+--  Two descriptor lists share a cached layout when their widgets
+--  have the same types and the same static fields (height, min, max,
+--  step, decimals, tooltip, ...). Label text, get/set, dropdown values
+--  and button functions may differ freely; they are re-bound.
+--  isVisible hides descriptors without rebuilding (live search).
+--
+--  Custom descriptors are matched by cacheId, or by their build function
+--  when there is none. A descriptor table that is created once and reused
+--  (static content) therefore caches by itself. One that is created fresh
+--  on every call (a new closure each time) MUST set cacheId or it is
+--  rebuilt on every Apply, which leaks. On a cache hit the host calls
+--  def.refresh(frame, width) from the NEW descriptor so the widget can
+--  re-point itself at the new data; it returns the new height.
 -- ============================================================
 local WIDGET_H = {
     Slider    = 22, Scale     = 22,
@@ -1918,7 +1949,6 @@ local WIDGET_H = {
     Link      = 22,
 }
 local WIDGET_GAP = 4
-local buildGen = 0
 
 -- Accepts a function or a loadstring-compatible string ("return function(...) end").
 -- Returns a callable, or nil if the input is nil.
@@ -1934,111 +1964,258 @@ local function ResolveCallback(v)
     return v          -- already a function (or nil)
 end
 
-local function BuildWidgets(parent, definitions, width, namePrefix)
-    local C = NSI.UI.Components
-    local y = 0
-    local gen
-    if namePrefix then
-        buildGen = buildGen + 1
-        gen = buildGen
+-- ---- signature --------------------------------------------------
+-- Everything that shapes a widget when it is created. Label text, callbacks,
+-- dropdown values and button functions are not part of it: they are re-bound.
+local function TooltipKey(tooltip)
+    if type(tooltip) == "table" then
+        return (tooltip.title or "") .. "\1" .. (tooltip.desc or "")
     end
-    local typeCounts = {}
+    return tooltip or ""
+end
 
+local function DefSignature(def)
+    local t = def.Type
+    if t == "Custom" then
+        -- Identified by cacheId, or by its build function: a descriptor table that is
+        -- built once and reused (static content) hits the cache without any opt-in.
+        return "Custom:" .. (def.cacheId or tostring(def.build))
+    end
+    local tc = def.textColor
+    return table.concat({
+        t, def.height or "", def.min or "", def.max or "", def.step or "", def.decimals or "",
+        tostring(def.usedecimals or def.useDecimals or false), tostring(def.liveDrag or false),
+        tostring(def.numeric or false), def.inputWidth or "", def.width or "",
+        tostring(def.highlight or false),
+        def.get and "g" or "", def.set and "s" or "", def.func and "f" or "",
+        (def.label and def.label ~= "") and "L" or "",
+        (t == "Button") and (def.label or "") or "",
+        (t == "Link") and ((def.label or "") .. "\1" .. (def.url or "")) or "",
+        TooltipKey(def.tooltip),
+        tc and (tc[1] .. "," .. tc[2] .. "," .. tc[3] .. "," .. (tc[4] or 1)) or "",
+    }, "|")
+end
+
+local sigBuffer = {}
+local function LayoutSignature(definitions, width)
+    local n = 0
     for _, def in ipairs(definitions) do
+        n = n + 1
+        sigBuffer[n] = DefSignature(def)
+    end
+    for i = n + 1, #sigBuffer do sigBuffer[i] = nil end
+    return table.concat(sigBuffer, "\n", 1, n) .. "@" .. tostring(width)
+end
+
+-- ---- binding ----------------------------------------------------
+-- A slot is the one place a widget's callbacks live. Widgets are created with
+-- thin wrappers that read the slot, so a cached widget can be pointed at a
+-- different entry by filling the slot again.
+local function BindSlot(slot, def)
+    slot.get    = ResolveCallback(def.get)
+    slot.set    = ResolveCallback(def.set)
+    slot.values = ResolveCallback(def.values)
+    slot.func   = ResolveCallback(def.func)
+end
+
+local function SlotCall(slot, field, present)
+    if not present then return nil end
+    return function(...)
+        local fn = slot[field]
+        if fn then return fn(...) end
+    end
+end
+
+local function SlotValues(slot)
+    local v = slot.values
+    if type(v) == "function" then v = v(NSI) end
+    return v or {}
+end
+
+-- Re-point a cached widget at a new descriptor and redraw its value.
+local function RebindItem(item, def)
+    local slot, ctrl, t = item.slot, item.ctrl, item.type
+    BindSlot(slot, def)
+
+    local key = def.label or def.text
+    if key and ctrl.SetLocaleKey then ctrl:SetLocaleKey(key) end
+
+    if t == "Slider" or t == "Scale" then
+        local v = slot.get and slot.get(NSI)
+        if type(v) == "number" then ctrl:SetValue(v) end
+    elseif t == "Checkbox" then
+        ctrl:SetValue(slot.get and slot.get(NSI) or false)
+    elseif t == "TextEntry" then
+        ctrl:SetValue(slot.get and slot.get(NSI) or "")
+    elseif t == "Dropdown" or t == "Color" then
+        ctrl:Refresh()
+    end
+end
+
+-- ---- building ---------------------------------------------------
+local function BuildSet(parent, definitions, width)
+    local C = NSI.UI.Components
+    local items, byIndex = {}, {}
+    local y = 0
+
+    for index, def in ipairs(definitions) do
         local t    = def.Type
         local h    = def.height or WIDGET_H[t] or 22
+        local slot = {}
         local ctrl
+        BindSlot(slot, def)
 
-        local wName
-        if namePrefix then
-            typeCounts[t] = (typeCounts[t] or 0) + 1
-            wName = namePrefix .. "_" .. gen .. t .. typeCounts[t]
-        end
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
-                ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.min, def.max, def.step, wName, def.tooltip, def.liveDrag, def.decimals, def.usedecimals or def.useDecimals)
+                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set),
+                width, h, def.min, def.max, def.step, nil, def.tooltip, def.liveDrag, def.decimals, def.usedecimals or def.useDecimals)
 
         elseif t == "Dropdown" then
-            local resolvedGet    = ResolveCallback(def.get)
-            local resolvedSet    = ResolveCallback(def.set)
-            local resolvedValues = ResolveCallback(def.values)
             local function getItems()
-                local vals = type(resolvedValues) == "function"
-                    and resolvedValues(NSI) or (resolvedValues or {})
                 local out = {}
-                for _, v in ipairs(vals) do
+                for _, v in ipairs(SlotValues(slot)) do
                     out[#out + 1] = {
                         label   = v.label and NSI:Loc(v.label) or nil,
                         value   = v.value,
                         onclick = function(_, _, val)
-                            if resolvedSet then resolvedSet(NSI, val) end
+                            local set = slot.set
+                            if set then set(NSI, val) end
                         end,
                     }
                 end
                 return out
             end
             local function getSelected()
-                local cur  = resolvedGet and resolvedGet(NSI)
-                local vals = type(resolvedValues) == "function"
-                    and resolvedValues(NSI) or (resolvedValues or {})
-                for _, v in ipairs(vals) do
+                local get = slot.get
+                local cur = get and get(NSI)
+                for _, v in ipairs(SlotValues(slot)) do
                     if v.value == cur then return v.label and NSI:Loc(v.label) or "" end
                 end
                 return cur ~= nil and tostring(cur) or ""
             end
             ctrl = C.CreateDropdown(parent, def.label,
-                getItems, getSelected, width, h, wName, def.tooltip, nil, def.highlight)
+                getItems, getSelected, width, h, nil, def.tooltip, nil, def.highlight)
 
         elseif t == "Color" then
             ctrl = C.CreateColorPicker(parent, def.label,
-                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName, def.tooltip)
+                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set), width, h, nil, def.tooltip)
 
         elseif t == "Checkbox" then
             ctrl = C.CreateCheckButton(parent, def.label,
-                ResolveCallback(def.get), ResolveCallback(def.set), width, h, wName, def.tooltip)
+                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set), width, h, nil, def.tooltip)
 
         elseif t == "TextEntry" then
             ctrl = C.CreateTextEntry(parent, def.label,
-                ResolveCallback(def.get), ResolveCallback(def.set),
-                width, h, def.numeric, def.min, def.max, wName, def.tooltip, def.inputWidth)
+                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set),
+                width, h, def.numeric, def.min, def.max, nil, def.tooltip, def.inputWidth)
 
         elseif t == "Label" then
-            ctrl = C.CreateLabel(parent, def.text, width, h, wName, def.highlight, def.textColor)
+            ctrl = C.CreateLabel(parent, def.text, width, h, nil, def.highlight, def.textColor)
 
         elseif t == "Breakline" then
-            ctrl = C.CreateBreakline(parent, width, h, wName)
+            ctrl = C.CreateBreakline(parent, width, h, nil)
 
         elseif t == "Link" then
-            ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, wName, def.tooltip)
+            ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, nil, def.tooltip)
 
         elseif t == "Button" then
-            local resolvedFunc = ResolveCallback(def.func)
             ctrl = C.CreateButton(parent, def.label, function()
-                if resolvedFunc then resolvedFunc(NSI) end
-            end, def.width or width, h, wName, nil, nil, def.tooltip)
+                local func = slot.func
+                if func then func(NSI) end
+            end, def.width or width, h, nil, nil, nil, def.tooltip)
 
         elseif t == "Custom" then
-            local resolvedBuild = ResolveCallback(def.build)
-            if resolvedBuild then
+            local build = ResolveCallback(def.build)
+            if build then
                 local builtHeight
-                ctrl, builtHeight = resolvedBuild(parent, width, wName)
+                ctrl, builtHeight = build(parent, width)
                 h = builtHeight or h
             end
         end
 
         if ctrl then
-            if def.label and ctrl.SetLocaleKey then
-                ctrl:SetLocaleKey(def.label)
-            elseif def.text and ctrl.SetLocaleKey then
-                ctrl:SetLocaleKey(def.text)
-            end
+            local key = def.label or def.text
+            if key and ctrl.SetLocaleKey then ctrl:SetLocaleKey(key) end
+            local item = {
+                ctrl = ctrl, frame = ctrl.frame or ctrl, type = t,
+                slot = slot, h = h, index = index,
+            }
+            items[#items + 1] = item
+            byIndex[index] = item
             ctrl:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
             y = y + h + WIDGET_GAP
         end
     end
 
-    return y > 0 and (y - WIDGET_GAP) or 0
+    return { items = items, byIndex = byIndex, height = y > 0 and (y - WIDGET_GAP) or 0 }
+end
+
+local function BuildWidgets(parent, definitions, width)
+    return BuildSet(parent, definitions, width).height
+end
+
+-- ---- widget host ------------------------------------------------
+local WidgetHost = {}
+WidgetHost.__index = WidgetHost
+
+local function CreateWidgetHost(parent, width)
+    return setmetatable({ parent = parent, width = width, sets = {} }, WidgetHost)
+end
+
+function WidgetHost:Apply(definitions, isVisible)
+    local parent = self.parent
+    local width  = self.width or parent:GetWidth()
+    local sig    = LayoutSignature(definitions, width)
+    local set    = self.sets[sig]
+
+    -- Hide what is showing first. A focused edit box commits when it hides, and
+    -- that commit must reach the entry it was editing, before anything is re-bound.
+    if self.current then self.current.container:Hide() end
+
+    if not set then
+        local container = CreateFrame("Frame", nil, parent)
+        container:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
+        container:SetSize(width, 1)
+        container:Hide()
+        set = BuildSet(container, definitions, width)
+        set.container = container
+        self.sets[sig] = set
+    else
+        for _, item in ipairs(set.items) do
+            local def = definitions[item.index]
+            RebindItem(item, def)
+            if item.type == "Custom" and def.refresh then
+                local h = def.refresh(item.ctrl, width)
+                if h then item.h = h end
+            end
+        end
+    end
+
+    local container = set.container
+    local y = 0
+    for index, def in ipairs(definitions) do
+        local item = set.byIndex[index]
+        if item then
+            if not isVisible or isVisible(def, index) then
+                item.frame:ClearAllPoints()
+                item.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -y)
+                item.frame:Show()
+                y = y + item.h + WIDGET_GAP
+            else
+                item.frame:Hide()
+            end
+        end
+    end
+    local height = y > 0 and (y - WIDGET_GAP) or 0
+    container:SetHeight(math.max(height, 1))
+    container:Show()
+    self.current = set
+    return height
+end
+
+-- Hide whatever the host is showing (e.g. when its tab is hidden by other means).
+function WidgetHost:Hide()
+    if self.current then self.current.container:Hide() end
 end
 
 -- ============================================================
@@ -2075,7 +2252,8 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
     end
 
     local frameName = "NSRTDialog_" .. name
-    local f = CreateFrame("Frame", frameName, UIParent, "BackdropTemplate")
+    local f = NSI.UI.Pixel.CreateBoxFrame("Frame", frameName, UIParent)
+    NSI.UI.Pixel.PixelSpace(f, 1)
     f:SetSize(DIALOG_W, DIALOG_H)
     f:SetPoint("CENTER", UIParent, "CENTER")
     f:SetFrameStrata("DIALOG")
@@ -2179,7 +2357,8 @@ end
 --  widgets. Call :Hide() / :Show() to toggle visibility.
 -- ============================================================
 local function CreateStyledFrame(parent, width, height, name)
-    local f = CreateFrame("Frame", name, parent or UIParent, "BackdropTemplate")
+    local f = NSI.UI.Pixel.CreateBoxFrame("Frame", name, parent or UIParent)
+    if (parent or UIParent) == UIParent then NSI.UI.Pixel.PixelSpace(f, 1) end
     f:SetSize(width or 400, height or 300)
     f:SetMovable(true)
     f:SetClampedToScreen(true)
@@ -2297,7 +2476,7 @@ end
 
 local function GetOrCreateCtxFrame(level)
     if ctxFrames[level] then return ctxFrames[level] end
-    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    local f = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, UIParent)
     f:SetFrameStrata("TOOLTIP")
     f:SetFrameLevel(200 + level * 5)
     f:Hide()
@@ -2739,7 +2918,8 @@ local linkPopup
 local function EnsureLinkPopup()
     if linkPopup then return end
 
-    local f = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+    local f = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, UIParent)
+    NSI.UI.Pixel.PixelSpace(f, 1)
     f:SetSize(LINK_POPUP_W, LINK_POPUP_H)
     f:SetFrameStrata("TOOLTIP")
     f:SetMovable(true)
@@ -2786,13 +2966,13 @@ local function EnsureLinkPopup()
     hint:SetPoint("TOPLEFT", f, "TOPLEFT", LINK_PAD, -LINK_PAD)
 
     -- Input frame (same dark-box + focus-border pattern as CreateTextEntry)
-    local inputFrame = CreateFrame("Frame", nil, f, "BackdropTemplate")
+    local inputFrame = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, f)
     inputFrame:SetPoint("TOPLEFT",     f, "TOPLEFT",     LINK_PAD,  -(LINK_PAD + 18 + 4))
     inputFrame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -LINK_PAD, LINK_PAD)
     inputFrame:SetFrameLevel(f:GetFrameLevel() + 1)
     MakeControlBackdrop(inputFrame)
 
-    local focusBorder = CreateFrame("Frame", nil, inputFrame, "BackdropTemplate")
+    local focusBorder = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, inputFrame)
     focusBorder:SetAllPoints(inputFrame)
     focusBorder:SetFrameLevel(inputFrame:GetFrameLevel() + 1)
     focusBorder:EnableMouse(false)
@@ -2804,7 +2984,7 @@ local function EnsureLinkPopup()
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
     edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
     edit:SetTextColor(1, 1, 1, 1)
-    labelRegistry[#labelRegistry + 1] = {label = edit, size = 12}
+    labelRegistry[edit] = 12
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
     edit:SetJustifyH("CENTER")
@@ -2864,6 +3044,173 @@ local function CreateLink(parent, label, url, width, height, name, tooltip)
 end
 
 -- ============================================================
+--  CreateSpellIDList
+--
+--  A spell-ID picker: an add row (text entry + Add button) followed
+--  by one row per spell (icon, name, remove button).  Rows are pooled,
+--  so Refresh() re-dresses them for another key instead of building
+--  new frames; pair it with a WidgetHost Custom descriptor.
+--
+--  Params
+--    parent – WoW frame
+--    width  – number
+--    cfg    – table
+--      getList(key)    → array of spell IDs
+--      add(key, text)  add the IDs typed into the entry
+--      remove(key, id) remove one spell ID
+--      onChange()      called after an add/remove, so the owning panel refreshes
+--      defaultIcon     texture for unknown spells (default 134400)
+--
+--  Returned object
+--    .frame         container Frame
+--    :Refresh(key) → height   show the list for `key`
+-- ============================================================
+local SPELL_ROW_H = 20
+
+local function SpellRowHover(self)
+    local row = self.spellRow or self
+    if row:IsMouseOver() then row.highlight:Show() else row.highlight:Hide() end
+end
+
+local function SpellIconEnter(self)
+    SpellRowHover(self)
+    local spellID = self.spellRow.spellID
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetSpellByID(spellID)
+    if GameTooltip:NumLines() == 0 then
+        GameTooltip:SetText("Spell ID: " .. spellID)
+    end
+    GameTooltip:Show()
+end
+
+local function SpellIconLeave(self)
+    SpellRowHover(self)
+    GameTooltip:Hide()
+end
+
+local function CreateSpellIDList(parent, width, cfg)
+    local frame = CreateFrame("Frame", nil, parent)
+    frame:SetWidth(width)
+
+    local list = { frame = frame, rows = {} }
+    local rows = list.rows
+    local defaultIcon = cfg.defaultIcon or 134400
+
+    local input = CreateTextEntry(frame, nil, nil, nil, width - 70, 22)
+    input:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+
+    local function AddFromInput()
+        local text = strtrim(input.editBox:GetText() or "")
+        if text == "" then return end
+        cfg.add(list.key, text)
+        input.editBox:SetText("")
+        cfg.onChange()
+    end
+    input.editBox:SetScript("OnEnterPressed", function(self) AddFromInput(); self:ClearFocus() end)
+
+    local addButton = CreateLocalizedSubButton(frame, "Add", AddFromInput, 54)
+    addButton:SetPoint("LEFT", input.frame, "RIGHT", 6, 0)
+
+    local function RemoveClicked(self)
+        cfg.remove(list.key, self.spellRow.spellID)
+        cfg.onChange()
+    end
+
+    local function NewRow()
+        local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, frame)
+        row:SetHeight(SPELL_ROW_H)
+        row:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]] })
+        row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+        row.highlight = row:CreateTexture(nil, "BACKGROUND")
+        row.highlight:SetAllPoints()
+        row.highlight:SetColorTexture(0.08, 0.32, 0.40, 0.45)
+        row.highlight:Hide()
+        row:EnableMouse(true)
+        row:SetScript("OnEnter", SpellRowHover)
+        row:SetScript("OnLeave", SpellRowHover)
+
+        local iconFrame = CreateFrame("Frame", nil, row)
+        iconFrame:SetSize(16, 16)
+        iconFrame:SetPoint("LEFT", row, "LEFT", 3, 0)
+        iconFrame:EnableMouse(true)
+        iconFrame.spellRow = row
+        iconFrame:SetScript("OnEnter", SpellIconEnter)
+        iconFrame:SetScript("OnLeave", SpellIconLeave)
+        row.icon = iconFrame:CreateTexture(nil, "ARTWORK")
+        row.icon:SetAllPoints()
+        row.icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
+
+        row.label = row:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(row.label, 12, "")
+        row.label:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
+        row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
+        row.label:SetJustifyH("LEFT")
+        row.label:SetWordWrap(false)
+
+        local removeBtn = CreateFrame("Button", nil, row)
+        removeBtn:SetSize(14, 14)
+        removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+        removeBtn:SetNormalTexture(ICON_PATH .. "x.png")
+        removeBtn:SetHighlightTexture(ICON_PATH .. "x.png")
+        removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        removeBtn.spellRow = row
+        removeBtn:SetScript("OnEnter", SpellRowHover)
+        removeBtn:SetScript("OnLeave", SpellRowHover)
+        removeBtn:SetScript("OnClick", RemoveClicked)
+        return row
+    end
+
+    function list:Refresh(key)
+        self.key = key
+        local ids = cfg.getList(key) or {}
+        local y = 30
+        for i, spellID in ipairs(ids) do
+            local row = rows[i]
+            if not row then
+                row = NewRow()
+                rows[i] = row
+            end
+            row.spellID = spellID
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
+            row:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -y)
+            row.highlight:Hide()
+            local spell = C_Spell.GetSpellInfo(spellID)
+            if spell then
+                row.icon:SetTexture(spell.iconID or defaultIcon)
+                row.label:SetText(spell.name .. "  |cFF808080(" .. spellID .. ")|r")
+            else
+                row.icon:SetTexture(defaultIcon)
+                row.label:SetText(NSI:Loc("|cFFFF4040Unknown spell|r") .. "  |cFF808080(" .. spellID .. ")|r")
+            end
+            row:Show()
+            y = y + SPELL_ROW_H
+        end
+        for i = #ids + 1, #rows do rows[i]:Hide() end
+
+        if #ids == 0 then
+            if not self.empty then
+                self.empty = frame:CreateFontString(nil, "OVERLAY")
+                NSI:SetUIFont(self.empty, 12, "")
+                self.empty:SetTextColor(0.5, 0.5, 0.5, 1)
+                RegisterLocalizedText(self.empty, "No spell IDs added yet.")
+            end
+            self.empty:ClearAllPoints()
+            self.empty:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -y - 2)
+            self.empty:Show()
+            y = y + SPELL_ROW_H
+        elseif self.empty then
+            self.empty:Hide()
+        end
+
+        frame:SetHeight(y)
+        return y
+    end
+
+    return list
+end
+
+-- ============================================================
 --  Export
 -- ============================================================
 NSI.UI = NSI.UI or {}
@@ -2884,12 +3231,16 @@ NSI.UI.Components = {
     CreateScrollBox     = CreateScrollBox,
     ReskinScrollbar     = ReskinScrollbar,
     BuildWidgets        = BuildWidgets,
+    CreateWidgetHost    = CreateWidgetHost,
+    CreateSpellIDList   = CreateSpellIDList,
     RefreshFonts        = RefreshFonts,
     CreateDialog        = CreateDialog,
     CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
     ShowContextMenuAtFrame = ShowContextMenuAtFrame,
     CreateLink          = CreateLink,
+    Solid               = NSI.UI.Pixel.Solid,
+    Border              = NSI.UI.Pixel.Border,
     STYLE               = STYLE,
     registry            = componentRegistry,
     Dialogs             = Dialogs,

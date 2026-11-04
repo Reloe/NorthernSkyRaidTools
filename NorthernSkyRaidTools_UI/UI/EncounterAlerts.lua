@@ -149,7 +149,7 @@ end
 
 local function ShowExportPopup(str, label)
     if not alertsExportPopup then
-        alertsExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r",
+        alertsExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r",
             "NSUIEncAlertExportString", { UseScaleBar = false })
         alertsExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsExportPopup:SetFrameLevel(100)
@@ -182,7 +182,7 @@ end
 
 local function ShowImportPopup()
     if not alertsImportPopup then
-        alertsImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
+        alertsImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
             "NSUIEncAlertImportString", { UseScaleBar = false })
         alertsImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         alertsImportPopup:SetFrameLevel(100)
@@ -376,7 +376,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
     ReskinScrollbar(listScroll)
 
-    local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
+    local listChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listScroll)
     listChild:SetSize(listW, 1)   -- 18px for the native scrollbar
     listChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
@@ -388,7 +388,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local groupHeaderRows = {}
 
     local function CreateListRow()
-        local row = CreateFrame("Frame", nil, listChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -453,7 +453,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     end
 
     local function CreateGroupHeaderRow()
-        local row = CreateFrame("Frame", nil, listChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.05, 0.30, 0.40)
@@ -2072,7 +2072,7 @@ end]]
     -- transparent=true → invisible background (blocks clicks but content is visible)
     -- ================================================================
     local function MakeLockOverlay(parent, messageKey, transparent)
-        local ov = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        local ov = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, parent)
         ov:SetAllPoints(parent)
         ov:SetFrameLevel(parent:GetFrameLevel() + 10)
         ov:EnableMouse(true)
@@ -2166,7 +2166,7 @@ end]]
     spellEntry:SetPoint("TOPLEFT", dispF, "TOPLEFT", 0, -106)
 
     -- Spell icon preview: shown immediately to the right of the entry
-    local spellIconFrame = CreateFrame("Frame", nil, dispF, "BackdropTemplate")
+    local spellIconFrame = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, dispF)
     spellIconFrame:SetSize(22, 22)
     spellIconFrame:SetPoint("LEFT", spellEntry.frame, "RIGHT", 4, 0)
     DF:ApplyStandardBackdrop(spellIconFrame)
@@ -2461,7 +2461,7 @@ end]]
     ticksBg:SetAllPoints(ticksScroll)
     ticksBg:SetColorTexture(0.04, 0.04, 0.04, 0.85)
 
-    local ticksChild = CreateFrame("Frame", nil, ticksScroll, "BackdropTemplate")
+    local ticksChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, ticksScroll)
     ticksChild:SetSize(ticksListW - 18, 1)
     ticksChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
@@ -2778,7 +2778,7 @@ end]]
     timesBg:SetAllPoints(timesScroll)
     timesBg:SetColorTexture(0.04, 0.04, 0.04, 0.85)
 
-    local timesChild = CreateFrame("Frame", nil, timesScroll, "BackdropTemplate")
+    local timesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, timesScroll)
     timesChild:SetSize(timesListW - 18, 1)
     timesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
@@ -3246,7 +3246,7 @@ end]]
     end)
     ReskinScrollbar(loadScroll)
 
-    local loadScrollChild = CreateFrame("Frame", nil, loadScroll, "BackdropTemplate")
+    local loadScrollChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadScrollChild:SetSize(loadListW - 18, loadListH)
     loadScrollChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
@@ -3258,7 +3258,7 @@ end]]
     local RebuildLoadTab  -- forward declaration
 
     local function MakeSectionHdr(label, sectionKey)
-        local btn = CreateFrame("Button", nil, loadScrollChild, "BackdropTemplate")
+        local btn = NSI.UI.Pixel.CreateBoxFrame("Button", nil, loadScrollChild)
         btn:SetBackdrop({
             bgFile   = [[Interface\Tooltips\UI-Tooltip-Background]],
             tile     = true,
@@ -3306,7 +3306,7 @@ end]]
         row.hoverBg = hoverBg
 
         -- Checkbox box (styled like Components.lua CreateCheckButton)
-        local checkBox = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        local checkBox = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, row)
         checkBox:SetSize(BOX, BOX)
         checkBox:SetPoint("LEFT", row, "LEFT", 4, 0)
         checkBox:SetFrameLevel(baseLevel + 2)
@@ -3443,7 +3443,7 @@ end]]
     namesBg:SetAllPoints(namesScroll)
     namesBg:SetColorTexture(0.04, 0.04, 0.04, 0.85)
 
-    local namesChild = CreateFrame("Frame", nil, namesScroll, "BackdropTemplate")
+    local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
     namesChild:SetSize(loadListW - 18, 1)
     namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]],
         tile = true, tileSize = 64 })
@@ -3638,7 +3638,6 @@ end]]
     -- ================================================================
     do
     local optF = innerTabFrames["Options"]
-    local optionsContentFrame = nil
 
     local CUSTOM_PREVIEW_DEFAULT = [[return function(self, alertData, alertTable)
 -- local alert = self:CreateReminder(alertData)
@@ -3951,89 +3950,157 @@ end]]
         customOptionEditorPopup:Show()
     end
 
-    RebuildOptionsContent = function(entry)
-        if optionsContentFrame then
-            optionsContentFrame:Hide()
-            optionsContentFrame = nil
+    -- The Options tab is built once. Its scroll box, buttons and widget hosts are
+    -- created on first use and re-dressed for each entry; building them per
+    -- selection leaked a scroll box and every widget on each click.
+    local optScroll, optReloeHost, optCustomHost, optCustomFrame
+    local optAuthorButton, optPreviewButton, optAddOptionButton
+    local optAuthorRows = {}
+    local optEntry, optScrollEntry
+    local optContentWidth = 0
+
+    local function OptionsAuthorRowRemove(self)
+        local row = self.authorRow
+        local entry, definition = optEntry, row.definition
+        if not entry or not definition then return end
+        for index, savedDefinition in ipairs(entry.customOptionDefinitions) do
+            if savedDefinition.id == definition.id then
+                table.remove(entry.customOptionDefinitions, index)
+                break
+            end
         end
-        if not entry then return end
+        if entry.customOptionValues then entry.customOptionValues[definition.id] = nil end
+        NSI:SaveAlertData(entry, "customOptionDefinitions", entry.customOptionDefinitions)
+        NSI:SaveAlertData(entry, "customOptionValues", entry.customOptionValues or {})
+        RebuildOptionsContent(entry)
+    end
+
+    local function NewOptionsAuthorRow(scrollChild)
+        local row = {}
+        row.label = CreateLabel(scrollChild, "", optContentWidth - 76, 20)
+        row.edit = CreateLocalizedSubButton(scrollChild, "Edit", function()
+            if optEntry and row.definition then OpenCustomOptionEditor(optEntry, row.definition) end
+        end, 48)
+        local removeButton = CreateFrame("Button", nil, scrollChild)
+        removeButton:SetSize(14, 14)
+        removeButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
+        removeButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
+        removeButton:GetNormalTexture():SetDesaturated(true)
+        removeButton:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        removeButton:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(NSI:Loc("Remove"))
+            GameTooltip:Show()
+        end)
+        removeButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        removeButton.authorRow = row
+        removeButton:SetScript("OnClick", OptionsAuthorRowRemove)
+        row.remove = removeButton
+        return row
+    end
+
+    local function EnsureOptionsUI()
+        if optScroll then return end
+        optScroll = NSI.UI.Components.CreateScrollBox(optF, rightW - 11, optF:GetHeight())
+        optScroll.frame:SetPoint("TOPLEFT", optF, "TOPLEFT", 0, 0)
+        local scrollChild = optScroll.scrollChild
+        optContentWidth = scrollChild:GetWidth()
+        optReloeHost = NSI.UI.Components.CreateWidgetHost(scrollChild, optContentWidth)
+
+        optAuthorButton = CreateLocalizedSubButton(scrollChild, "Enable Author Mode", function()
+            authorMode = not authorMode
+            if optEntry then RebuildOptionsContent(optEntry) end
+        end, 160)
+        optAuthorButton:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, 0)
+
+        optPreviewButton = CreateLocalizedSubButton(scrollChild, "Add Custom Preview Code", function()
+            if optEntry then OpenCustomPreviewEditor(optEntry) end
+        end, 190)
+        optPreviewButton:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -26)
+
+        optAddOptionButton = CreateLocalizedSubButton(scrollChild, "Add Custom Option", function()
+            if optEntry then OpenCustomOptionEditor(optEntry) end
+        end, 150)
+        optAddOptionButton:SetPoint("LEFT", optPreviewButton.frame, "RIGHT", 8, 0)
+
+        optCustomFrame = CreateFrame("Frame", nil, scrollChild)
+        optCustomFrame:SetWidth(optContentWidth)
+        optCustomHost = NSI.UI.Components.CreateWidgetHost(optCustomFrame, optContentWidth)
+    end
+
+    -- Everything the custom-alert layout shows, hidden for built-in alerts.
+    local function HideCustomOptionsUI()
+        optAuthorButton.frame:Hide()
+        optPreviewButton.frame:Hide()
+        optAddOptionButton.frame:Hide()
+        optCustomHost:Hide()
+        optCustomFrame:Hide()
+        for _, row in ipairs(optAuthorRows) do
+            row.label.frame:Hide(); row.edit.frame:Hide(); row.remove:Hide()
+        end
+    end
+
+    RebuildOptionsContent = function(entry)
+        if not entry then
+            if optScroll then optScroll.frame:Hide() end
+            return
+        end
         if authorModeAlert ~= entry then
             authorModeAlert = entry
             authorMode = false
         end
-        local scrollObj = NSI.UI.Components.CreateScrollBox(optF, rightW - 11, optF:GetHeight())
-        scrollObj.frame:SetPoint("TOPLEFT", optF, "TOPLEFT", 0, 0)
+        EnsureOptionsUI()
+        optEntry = entry
+        optScroll.frame:Show()
+        local scrollChild = optScroll.scrollChild
+        local contentWidth = optContentWidth
         local totalH = 0
-        local contentWidth = scrollObj.scrollChild:GetWidth()
 
         if entry.ReloeReminder then
-            totalH = NSI.UI.Components.BuildWidgets(
-                scrollObj.scrollChild, entry.extraOptions or {},
-                contentWidth, "NSRTEncOptContent")
+            HideCustomOptionsUI()
+            totalH = optReloeHost:Apply(entry.extraOptions or {})
         else
-            local authorModeButton = CreateLocalizedSubButton(scrollObj.scrollChild,
-                authorMode and "Disable Author Mode" or "Enable Author Mode", function()
-                    authorMode = not authorMode
-                    RebuildOptionsContent(entry)
-                end, 160)
-            authorModeButton:SetPoint("TOPLEFT", scrollObj.scrollChild, "TOPLEFT", 0, 0)
+            optReloeHost:Hide()
+            optAuthorButton:SetLocaleKey(authorMode and "Disable Author Mode" or "Enable Author Mode")
+            optAuthorButton.frame:Show()
 
             local y = 26
             if authorMode then
-                local previewLabel = entry.customPreview and "Edit Custom Preview Code" or "Add Custom Preview Code"
-                local previewButton = CreateLocalizedSubButton(scrollObj.scrollChild, previewLabel, function()
-                    OpenCustomPreviewEditor(entry)
-                end, 190)
-                previewButton:SetPoint("TOPLEFT", scrollObj.scrollChild, "TOPLEFT", 0, -y)
-
-                local addOptionButton = CreateLocalizedSubButton(scrollObj.scrollChild, "Add Custom Option", function()
-                    OpenCustomOptionEditor(entry)
-                end, 150)
-                addOptionButton:SetPoint("LEFT", previewButton.frame, "RIGHT", 8, 0)
+                optPreviewButton:SetLocaleKey(entry.customPreview and "Edit Custom Preview Code" or "Add Custom Preview Code")
+                optPreviewButton.frame:Show()
+                optAddOptionButton.frame:Show()
                 y = y + 26
+            else
+                optPreviewButton.frame:Hide()
+                optAddOptionButton.frame:Hide()
             end
 
             entry.customOptionDefinitions = entry.customOptionDefinitions or {}
-            for definitionIndex, definition in ipairs(entry.customOptionDefinitions) do
-                local currentDefinition = definition
-                if authorMode then
-                    local optionLabel = CreateLabel(scrollObj.scrollChild,
-                        (currentDefinition.name or NSI:Loc("Unnamed Option")) .. " (" .. NSI:Loc(currentDefinition.type or "Text") .. ")",
-                        contentWidth - 76, 20)
-                    optionLabel:SetPoint("TOPLEFT", scrollObj.scrollChild, "TOPLEFT", 0, -y)
-
-                    local editButton = CreateLocalizedSubButton(scrollObj.scrollChild, "Edit", function()
-                        OpenCustomOptionEditor(entry, currentDefinition)
-                    end, 48)
-                    editButton:SetPoint("TOPRIGHT", scrollObj.scrollChild, "TOPRIGHT", -24, -y)
-
-                    local removeButton = CreateFrame("Button", nil, scrollObj.scrollChild)
-                    removeButton:SetSize(14, 14)
-                    removeButton:SetPoint("TOPRIGHT", scrollObj.scrollChild, "TOPRIGHT", -2, -y - 3)
-                    removeButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
-                    removeButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
-                    removeButton:GetNormalTexture():SetDesaturated(true)
-                    removeButton:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
-                    removeButton:SetScript("OnEnter", function(self)
-                        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                        GameTooltip:SetText(NSI:Loc("Remove"))
-                        GameTooltip:Show()
-                    end)
-                    removeButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
-                    removeButton:SetScript("OnClick", function()
-                        for index, savedDefinition in ipairs(entry.customOptionDefinitions) do
-                            if savedDefinition.id == currentDefinition.id then
-                                table.remove(entry.customOptionDefinitions, index)
-                                break
-                            end
-                        end
-                        if entry.customOptionValues then entry.customOptionValues[currentDefinition.id] = nil end
-                        NSI:SaveAlertData(entry, "customOptionDefinitions", entry.customOptionDefinitions)
-                        NSI:SaveAlertData(entry, "customOptionValues", entry.customOptionValues or {})
-                        RebuildOptionsContent(entry)
-                    end)
+            local authorRowCount = 0
+            if authorMode then
+                for _, definition in ipairs(entry.customOptionDefinitions) do
+                    authorRowCount = authorRowCount + 1
+                    local row = optAuthorRows[authorRowCount]
+                    if not row then
+                        row = NewOptionsAuthorRow(scrollChild)
+                        optAuthorRows[authorRowCount] = row
+                    end
+                    row.definition = definition
+                    row.label:SetText((definition.name or NSI:Loc("Unnamed Option")) .. " (" .. NSI:Loc(definition.type or "Text") .. ")")
+                    row.label.frame:ClearAllPoints()
+                    row.label:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -y)
+                    row.edit.frame:ClearAllPoints()
+                    row.edit:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -24, -y)
+                    row.remove:ClearAllPoints()
+                    row.remove:SetPoint("TOPRIGHT", scrollChild, "TOPRIGHT", -2, -y - 3)
+                    row.label.frame:Show(); row.edit.frame:Show(); row.remove:Show()
                     y = y + 24
                 end
+            end
+            for i = authorRowCount + 1, #optAuthorRows do
+                local row = optAuthorRows[i]
+                row.definition = nil
+                row.label.frame:Hide(); row.edit.frame:Hide(); row.remove:Hide()
             end
 
             local widgetDefinitions = {}
@@ -4104,21 +4171,24 @@ end]]
                 end
             end
 
-            local optionsFrame = CreateFrame("Frame", nil, scrollObj.scrollChild)
-            optionsFrame:SetPoint("TOPLEFT", scrollObj.scrollChild, "TOPLEFT", 0, -y)
-            optionsFrame:SetWidth(contentWidth)
-            local optionWidgetsHeight = NSI.UI.Components.BuildWidgets(
-                optionsFrame, widgetDefinitions, contentWidth, "NSRTCustomAlertOption")
-            optionsFrame:SetHeight(optionWidgetsHeight)
+            optCustomFrame:ClearAllPoints()
+            optCustomFrame:SetPoint("TOPLEFT", scrollChild, "TOPLEFT", 0, -y)
+            optCustomFrame:Show()
+            local optionWidgetsHeight = optCustomHost:Apply(widgetDefinitions)
+            optCustomFrame:SetHeight(math.max(optionWidgetsHeight, 1))
             totalH = y + optionWidgetsHeight
             if customOptionDefaultsAdded then
                 NSI:SaveAlertData(entry, "customOptionValues", entry.customOptionValues)
             end
         end
 
-        scrollObj.scrollChild:SetHeight(totalH)
-        scrollObj:UpdateScrollBar()
-        optionsContentFrame = scrollObj.frame
+        scrollChild:SetHeight(math.max(totalH, 1))
+        -- Another alert starts at the top; edits to the same alert keep the scroll position.
+        if optScrollEntry ~= entry then
+            optScrollEntry = entry
+            optScroll.frame:SetVerticalScroll(0)
+        end
+        optScroll:UpdateScrollBar()
     end
     end -- OPTIONS TAB
 

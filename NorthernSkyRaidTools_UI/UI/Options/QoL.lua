@@ -75,7 +75,7 @@ function NSI:ToggleBreakTimerSettingsWindow(frame)
     end
 
     local settings = NSRT.BreakTimer
-    local window = CreateFrame("Frame", "NSRTBreakTimerSettings", frame, "BackdropTemplate")
+    local window = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTBreakTimerSettings", frame)
     window:SetFrameStrata("DIALOG")
     window:SetFrameLevel(frame:GetFrameLevel() + 10)
     window:SetSize(frame:GetWidth() + 16, 100)

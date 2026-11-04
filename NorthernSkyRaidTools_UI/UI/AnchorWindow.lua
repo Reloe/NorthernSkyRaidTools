@@ -316,34 +316,42 @@ local function PositionSettingsWindow(win, moverFrame, settingsName)
     end
 end
 
+-- Width follows the mover, rounded up to a multiple of WIN_W_STEP. The widgets inside
+-- are cached per width (see RebuildWindowContent), so a continuous width would build
+-- a new set for every pixel the mover is resized by.
+local WIN_W_STEP = 24
 local function GetAnchorWindowWidth(moverFrame)
-    return math.max(MIN_WIN_W, moverFrame:GetWidth() + DRAG_BORDER_INSET * 2)
+    local wanted = math.max(MIN_WIN_W, moverFrame:GetWidth() + DRAG_BORDER_INSET * 2)
+    return math.ceil(wanted / WIN_W_STEP) * WIN_W_STEP
 end
 
+-- The scroll box and its widget host are created once per window. Re-opening the
+-- window or refreshing it re-binds the cached widgets in place instead of building
+-- a new scroll box and a new set of widgets each time (frames are never freed).
 local function RebuildWindowContent(win, settingsName, rowW)
-    if win.Content then
-        win.Content:Hide()
-        win.Content:SetParent(nil)
-    end
-
     if win.Title then
         win.Title:SetText(T(settingsName:gsub("Settings", " Settings")))
     end
 
-    local scrollBox
     local visibleHeight = 420
-
-    scrollBox = NSI.UI.Components.CreateScrollBox(win, rowW, visibleHeight)
-    scrollBox:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
+    local scrollBox = win.ScrollBox
+    if not scrollBox then
+        scrollBox = NSI.UI.Components.CreateScrollBox(win, rowW, visibleHeight)
+        scrollBox:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -PAD_TOP)
+        win.ScrollBox = scrollBox
+        win.ScrollBoxInset = rowW - scrollBox.scrollChild:GetWidth()   -- scrollbar gutter
+        win.Host = NSI.UI.Components.CreateWidgetHost(scrollBox.scrollChild)
+    end
     local content = scrollBox.scrollChild
+    content:SetWidth(rowW - win.ScrollBoxInset)
+    win.Host.width = content:GetWidth()
 
-    local contentH = NSI.UI.Components.BuildWidgets(content, GetWidgetDefs(settingsName), content:GetWidth())
+    local contentH = win.Host:Apply(GetWidgetDefs(settingsName))
     content:SetHeight(contentH)
     local scrollHeight = math.min(visibleHeight, math.max(contentH, 1))
     scrollBox:SetSize(rowW, scrollHeight)
     scrollBox:UpdateScrollBar()
     win:SetHeight(PAD_TOP + scrollHeight + 8)
-    win.Content = scrollBox.frame
 end
 
 function NSI:RefreshAnchorSettingsWindows()
@@ -375,7 +383,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     local winWidth = GetAnchorWindowWidth(moverFrame)
     local rowW     = winWidth - PAD_X * 2
 
-    local win = CreateFrame("Frame", "NSRTAnchorWin_" .. settingsName, moverFrame, "BackdropTemplate")
+    local win = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTAnchorWin_" .. settingsName, moverFrame)
     win:SetSize(winWidth, 100)   -- height filled in below
     win:SetFrameStrata("DIALOG")
     win:SetFrameLevel(moverFrame:GetFrameLevel() + 10)

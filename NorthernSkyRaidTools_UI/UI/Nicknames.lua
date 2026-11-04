@@ -20,7 +20,7 @@ local function ApplyUIFont(object, size, flags)
 end
 
 local function BuildNicknameEditUI()
-    local nicknames_edit_frame = DF:CreateSimplePanel(UIParent, 485, 420, T("Nicknames Management"), "NicknamesEditFrame", {
+    local nicknames_edit_frame = NSI.UI.Pixel.CreateSimplePanel(UIParent, 485, 420, T("Nicknames Management"), "NicknamesEditFrame", {
         DontRightClickClose = true
     })
     ApplyUIFont(nicknames_edit_frame.Title, 12)
@@ -69,7 +69,7 @@ local function BuildNicknameEditUI()
 
     local function createLineFunc(self, index)
         local parent = self
-        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", "$parentLine" .. index, self)
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * (self.LineHeight)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)

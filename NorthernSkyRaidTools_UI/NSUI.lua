@@ -150,7 +150,7 @@ function NSUI:Init()
     -- --------------------------------------------------------
     -- Sidebar background
     -- --------------------------------------------------------
-    local sidebarBg = CreateFrame("frame", "NSUISidebar", NSUI, "BackdropTemplate")
+    local sidebarBg = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUISidebar", NSUI)
     sidebarBg:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 2, -25)
     sidebarBg:SetSize(158, content_height)
     sidebarBg:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
@@ -173,7 +173,7 @@ function NSUI:Init()
         local groupHasButtons = false
         for _, tab in ipairs(group) do
             -- Content frame – occupies the right portion below the shared header, hidden by default
-            local contentFrame = CreateFrame("frame", "NSUI_TabFrame_" .. tab.name, NSUI, "BackdropTemplate")
+            local contentFrame = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUI_TabFrame_" .. tab.name, NSUI)
             contentFrame:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 162, tab_content_y)
             contentFrame:SetSize(content_width, tab_content_height)
             contentFrame:Hide()
@@ -230,7 +230,7 @@ function NSUI:Init()
 
     for i, nt in ipairs(notesTabs) do
         -- Content frame (same geometry as every other tab)
-        local notesFrame = CreateFrame("frame", "NSUI_TabFrame_" .. nt.name, NSUI, "BackdropTemplate")
+        local notesFrame = NSI.UI.Pixel.CreateBoxFrame("frame", "NSUI_TabFrame_" .. nt.name, NSUI)
         notesFrame:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 162, tab_content_y)
         notesFrame:SetSize(content_width, tab_content_height)
         notesFrame:Hide()

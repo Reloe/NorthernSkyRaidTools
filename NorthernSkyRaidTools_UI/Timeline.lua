@@ -910,7 +910,7 @@ function NSI:CreateTimelineWindow()
     local window_width = 1100
     local window_height = 550
 
-    local timelineWindow = DF:CreateSimplePanel(UIParent, window_width, window_height,
+    local timelineWindow = NSI.UI.Pixel.CreateSimplePanel(UIParent, window_width, window_height,
         T("|cFF00FFFFNorthern Sky|r Timeline"), "NSUITimelineWindow", {
         DontRightClickClose = true,
         UseStatusBar = false,
@@ -1942,7 +1942,7 @@ function NSI:CreateTimelineWindow()
     end
 
     -- Create cursor line that follows mouse and shows time
-    local cursorLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    local cursorLine = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, timelineFrame.body)
     cursorLine:SetWidth(1)
     cursorLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 150)
     cursorLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
@@ -2018,7 +2018,7 @@ function NSI:CreateTimelineWindow()
     end)
 
     -- Preview line (green, animated during play preview)
-    local previewLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    local previewLine = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, timelineFrame.body)
     previewLine:SetWidth(2)
     previewLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 200)
     previewLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
@@ -2096,7 +2096,7 @@ function NSI:CreateTimelineWindow()
     end)
 
     -- Ghost line + icon for block drag (snaps to whole seconds)
-    local dragGhostLine = CreateFrame("Frame", nil, timelineFrame.body, "BackdropTemplate")
+    local dragGhostLine = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, timelineFrame.body)
     dragGhostLine:SetWidth(2)
     dragGhostLine:SetFrameLevel(timelineFrame.body:GetFrameLevel() + 180)
     dragGhostLine:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
@@ -2768,7 +2768,7 @@ function NSI:UpdatePhaseMarkers()
             local marker = window.phaseMarkers[phaseNum]
             if not marker then
                 -- Create new marker
-                marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
+                marker = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, body)
                 marker:SetSize(2, body:GetHeight() - elapsedHeight)
                 marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
 
@@ -3059,7 +3059,7 @@ function NSI:UpdateEmbeddedPhaseMarkers(tab)
         if phaseNum > 1 then
             local marker = tab.phaseMarkers[phaseNum]
             if not marker then
-                marker = CreateFrame("Frame", nil, body, "BackdropTemplate")
+                marker = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, body)
                 marker:SetSize(2, body:GetHeight() - elapsedHeight)
                 marker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8"})
 
@@ -3541,7 +3541,7 @@ local BOOKTYPE_SPELL = BOOKTYPE_SPELL or (Enum.SpellBookSpellBank and Enum.Spell
 
 function NSI:ShowSpellbookPicker(targetPopup)
     if not self.SpellbookPickerPopup then
-        local picker = CreateFrame("Frame", "NSRTSpellbookPicker", UIParent, "BackdropTemplate")
+        local picker = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTSpellbookPicker", UIParent)
         picker:SetSize(300, 400)
         picker:SetFrameStrata("TOOLTIP")
         picker:SetMovable(true)

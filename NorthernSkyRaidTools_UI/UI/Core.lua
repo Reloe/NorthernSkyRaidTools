@@ -91,6 +91,11 @@ local NSUI_panel_options = {
 }
 local NSUI = DF:CreateSimplePanel(UIParent, window_width, window_height, "|cFF00FFFFNorthern Sky|r Raid Tools", "NSUI",
     NSUI_panel_options)
+-- Pixel-space scale x the user's own window scale (DF's scale bar and NSUI:SetScale
+-- are redirected through the shim, so they keep driving the user part).
+NSI.UI.Pixel.PixelSpace(NSUI, function()
+    return NSRT and NSRT.NSUI and tonumber(NSRT.NSUI.scale) or 1
+end)
 NSUI:SetPoint("CENTER")
 NSUI:SetFrameStrata("HIGH")
 NSUI:SetFrameLevel(1)

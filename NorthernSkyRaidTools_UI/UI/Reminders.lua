@@ -136,7 +136,7 @@ function NSI:TogglePreviewMode()
 
     -- Build the floating preview bar once
     if not self.PreviewBar then
-        local bar = CreateFrame("Frame", "NSRTPreviewBar", UIParent, "BackdropTemplate")
+        local bar = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTPreviewBar", UIParent)
         bar:SetSize(230, 30)
         bar:SetPoint("TOP", UIParent, "TOP", 0, -150)
         bar:SetFrameStrata("DIALOG")
@@ -338,7 +338,7 @@ local function BuildReminderScreen(personal, parentFrame)
         if contentHeight == 0 then contentHeight = tab_content_height end
     else
         local contentArea = NSUI.ContentArea
-        screen = CreateFrame("Frame", screenName, NSUI, "BackdropTemplate")
+        screen = NSI.UI.Pixel.CreateBoxFrame("Frame", screenName, NSUI)
         screen:SetPoint("TOPLEFT", contentArea, "TOPLEFT", 0, 0)
         screen:SetPoint("BOTTOMRIGHT", contentArea, "BOTTOMRIGHT", 0, 0)
         screen:SetFrameLevel(NSUI:GetFrameLevel() + 20)
@@ -887,7 +887,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local function ShowDeleteConfirm(toDelete)
         if not toDelete then return end
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, NSI:Loc("Confirm Deletion"), "NSRTDeleteReminderConfirm")
+        local popup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 300, 150, NSI:Loc("Confirm Deletion"), "NSRTDeleteReminderConfirm")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER")
         local label = DF:CreateLabel(popup, string.format(NSI:Loc("Delete \"%s\"?"), toDelete), 12, "orange")
@@ -1008,7 +1008,7 @@ local function BuildReminderScreen(personal, parentFrame)
     ClearButton:SetPoint("LEFT", ImportButton.frame, "RIGHT", listButtonGap, 0)
 
     local DeleteAllButton = CreateLocalizedButton(screen, "Delete All", function()
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, NSI:Loc("Confirm Clear All"), "NSRTClearAllConfirm")
+        local popup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 300, 150, NSI:Loc("Confirm Clear All"), "NSRTClearAllConfirm")
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER")
         local label = DF:CreateLabel(popup, NSI:Loc("Delete ALL reminders?"), 12, "orange")
@@ -1229,7 +1229,7 @@ local function BuildReminderScreen(personal, parentFrame)
 
     local function createLineFunc(self, index)
         local parent = self
-        local line = CreateFrame("Button", "$parentLine" .. index, self, "BackdropTemplate")
+        local line = NSI.UI.Pixel.CreateBoxFrame("Button", "$parentLine" .. index, self)
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * self.LineHeight) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)

@@ -250,7 +250,7 @@ local function BuildVersionCheckUI(parent)
     end
 
     local function createLineFunc(self, index)
-        local line = CreateFrame("button", "$parentLine" .. index, self, "BackdropTemplate")
+        local line = NSI.UI.Pixel.CreateBoxFrame("button", "$parentLine" .. index, self)
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * self.LineHeight) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)
@@ -480,7 +480,7 @@ local function BuildVersionCheckUI(parent)
 
     local function createPresetLineFunc(self, index)
         local parent = self
-        local line = CreateFrame("Frame", "$parentLine" .. index, self, "BackdropTemplate")
+        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", "$parentLine" .. index, self)
         line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
         line:SetSize(self:GetWidth() - 2, self.LineHeight)
         DF:ApplyStandardBackdrop(line)

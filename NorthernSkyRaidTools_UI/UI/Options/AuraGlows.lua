@@ -22,7 +22,7 @@ local auraGlowImportPopup
 
 local function ShowAuraGlowExportPopup(text)
     if not auraGlowExportPopup then
-        auraGlowExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Glows") .. "|r", "NSRTAuraGlowExportPopup", { UseScaleBar = false })
+        auraGlowExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Glows") .. "|r", "NSRTAuraGlowExportPopup", { UseScaleBar = false })
         auraGlowExportPopup:SetPoint("CENTER")
         auraGlowExportPopup:SetFrameLevel(100)
         auraGlowExportPopup.infoLabel = auraGlowExportPopup:CreateFontString(nil, "OVERLAY")
@@ -47,7 +47,7 @@ end
 
 local function ShowAuraGlowImportPopup(onImport)
     if not auraGlowImportPopup then
-        auraGlowImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Glows") .. "|r", "NSRTAuraGlowImportPopup", { UseScaleBar = false })
+        auraGlowImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Glows") .. "|r", "NSRTAuraGlowImportPopup", { UseScaleBar = false })
         auraGlowImportPopup:SetPoint("CENTER")
         auraGlowImportPopup:SetFrameLevel(100)
         auraGlowImportPopup.status = auraGlowImportPopup:CreateFontString(nil, "OVERLAY")
@@ -161,6 +161,8 @@ local function BuildAuraGlowsUI(screen)
     local activeTab = "Display"
     local listRows, headerRows = {}, {}
     local tabScroll = {}
+    local tabHost = {}   -- tab -> WidgetHost (cached widget layouts, see Components)
+    local tabScrollKey = {}   -- tab -> glow key the scroll position belongs to
     local RebuildList, RebuildTab, RebuildLoadTab, SelectEntry
     local auraGlowRefreshTimer
 
@@ -199,7 +201,7 @@ local function BuildAuraGlowsUI(screen)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -86)
     listScroll:SetPoint("BOTTOMRIGHT", createButton.frame, "TOPRIGHT", 0, 6)
     ReskinScrollbar(listScroll)
-    local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
+    local listChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listScroll)
     listChild:SetSize(leftWidth - pad * 2, 1)
     listChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     listChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
@@ -367,7 +369,7 @@ local function BuildAuraGlowsUI(screen)
                 headerIndex = headerIndex + 1
                 local header = headerRows[headerIndex]
                 if not header then
-                    header = CreateFrame("Button", nil, listChild, "BackdropTemplate")
+                    header = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
                     header:SetSize(listChild:GetWidth(), 22)
                     DF:ApplyStandardBackdrop(header)
                     header.__background:SetVertexColor(0.05, 0.30, 0.40)
@@ -401,7 +403,7 @@ local function BuildAuraGlowsUI(screen)
                 rowIndex = rowIndex + 1
                 local row = listRows[rowIndex]
             if not row then
-                row = CreateFrame("Button", nil, listChild, "BackdropTemplate")
+                row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
                 row:SetSize(listChild:GetWidth(), 22)
                 DF:ApplyStandardBackdrop(row)
                 row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -583,84 +585,22 @@ local function BuildAuraGlowsUI(screen)
         return defs
     end
 
+    -- Cached, pooled spell-ID picker (Components.CreateSpellIDList). Switching glows
+    -- re-points it at the new key through `refresh`; add/remove just refresh the tab.
     local function BuildAuraGlowSpellIDListWidget(key)
-        return { Type = "Custom", build = function(parent, width, widgetName)
-            local frame = CreateFrame("Frame", widgetName, parent)
-            frame:SetWidth(width)
-
-            local input = CreateTextEntry(frame, nil, nil, nil, width - 70, 22, nil, nil, nil, widgetName and (widgetName .. "Input") or nil)
-            input:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-
-            local function AddFromInput()
-                local value = strtrim(input.editBox:GetText() or "")
-                if value == "" then return end
-                NSI:AddAuraGlowSpellIDs(key, value)
-                input.editBox:SetText("")
-                RebuildList()
-                RebuildTab()
-            end
-            input.editBox:SetScript("OnEnterPressed", function(self) AddFromInput(); self:ClearFocus() end)
-
-            local addButton = CreateLocalizedSubButton(frame, "Add", AddFromInput, 54, widgetName and (widgetName .. "Add") or nil)
-            addButton:SetPoint("LEFT", input.frame, "RIGHT", 6, 0)
-
-            local spellIDs = NSI:GetAuraGlowSpellIDList(key)
-            local y = 30
-            for _, spellID in ipairs(spellIDs) do
-                local row = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-                row:SetSize(width, 20)
-                row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
-                row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-                row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
-
-                local icon = row:CreateTexture(nil, "ARTWORK")
-                icon:SetSize(16, 16)
-                icon:SetPoint("LEFT", row, "LEFT", 3, 0)
-                icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
-
-                local label = row:CreateFontString(nil, "OVERLAY")
-                NSI:SetUIFont(label, 12, "")
-                label:SetPoint("LEFT", icon, "RIGHT", 6, 0)
-                label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
-                label:SetJustifyH("LEFT")
-                label:SetWordWrap(false)
-
-                local spell = C_Spell.GetSpellInfo(spellID)
-                if spell then
-                    icon:SetTexture(spell.iconID or DefaultIcon)
-                    label:SetText(spell.name .. "  |cFF808080(" .. spellID .. ")|r")
-                else
-                    icon:SetTexture(DefaultIcon)
-                    label:SetText(NSI:Loc("|cFFFF4040Unknown spell|r") .. "  |cFF808080(" .. spellID .. ")|r")
-                end
-
-                local removeButton = CreateFrame("Button", nil, row)
-                removeButton:SetSize(14, 14)
-                removeButton:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-                removeButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-                removeButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-                removeButton:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
-                removeButton:SetScript("OnClick", function()
-                    NSI:RemoveAuraGlowSpellID(key, spellID)
-                    RebuildList()
-                    RebuildTab()
-                end)
-
-                y = y + 20
-            end
-
-            if #spellIDs == 0 then
-                local empty = frame:CreateFontString(nil, "OVERLAY")
-                NSI:SetUIFont(empty, 12, "")
-                empty:SetTextColor(0.5, 0.5, 0.5, 1)
-                empty:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -y - 2)
-                empty:SetText(NSI:Loc("No spell IDs added yet."))
-                y = y + 20
-            end
-
-            frame:SetHeight(y)
-            return frame, y
-        end }
+        return { Type = "Custom", cacheId = "SpellIDList",
+            build = function(parent, width)
+                local list = NSI.UI.Components.CreateSpellIDList(parent, width, {
+                    getList     = function(listKey) return NSI:GetAuraGlowSpellIDList(listKey) end,
+                    add         = function(listKey, text) NSI:AddAuraGlowSpellIDs(listKey, text) end,
+                    remove      = function(listKey, spellID) NSI:RemoveAuraGlowSpellID(listKey, spellID) end,
+                    onChange    = function() RebuildList(); RebuildTab() end,
+                    defaultIcon = DefaultIcon,
+                })
+                list.frame.spellList = list
+                return list.frame, list:Refresh(key)
+            end,
+            refresh = function(frame) return frame.spellList:Refresh(key) end }
     end
 
     local function BuildTriggerDefs(settings, builtin, key)
@@ -774,7 +714,7 @@ local function BuildAuraGlowsUI(screen)
         if bar then local cur = bar:GetValue(); local mn, mx = bar:GetMinMaxValues(); bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24))) end
     end)
     ReskinScrollbar(loadScroll)
-    local loadChild = CreateFrame("Frame", nil, loadScroll, "BackdropTemplate")
+    local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadChild:SetSize(tabScrollW - 18, 1)
     loadChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
@@ -785,7 +725,7 @@ local function BuildAuraGlowsUI(screen)
     local headerPool, checkPool = {}, {}
 
     local function MakeLoadHeader()
-        local button = CreateFrame("Button", nil, loadChild, "BackdropTemplate")
+        local button = NSI.UI.Pixel.CreateBoxFrame("Button", nil, loadChild)
         button:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
         button:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
         button:SetSize(loadRowWidth, 18)
@@ -816,7 +756,7 @@ local function BuildAuraGlowsUI(screen)
         hoverTexture:SetColorTexture(0, 1, 1, 0.13)
         hoverBackground:SetAlpha(0)
         row.hoverBackground = hoverBackground
-        row.box = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        row.box = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, row)
         row.box:SetSize(12, 12)
         row.box:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.box:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
@@ -898,7 +838,7 @@ local function BuildAuraGlowsUI(screen)
     end)
     ReskinScrollbar(namesScroll)
 
-    local namesChild = CreateFrame("Frame", nil, namesScroll, "BackdropTemplate")
+    local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
     namesChild:SetSize(loadRowWidth - 18, 1)
     namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     namesChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
@@ -1144,21 +1084,22 @@ local function BuildAuraGlowsUI(screen)
             defs = BuildDisplayDefs(settings, not defaultSettings, not builtin and not defaultSettings)
             if defaultSettings then
                 table.insert(defs, 2, { Type = "Label", text = "Any new builtin or custom made glow will start with these settings" })
-                defs[#defs + 1] = { Type = "Custom", build = function(parent, width, widgetName)
-                    local frame = CreateFrame("Frame", widgetName, parent)
+                -- Static (the buttons don't depend on the selected glow), so no `refresh` is needed.
+                defs[#defs + 1] = { Type = "Custom", cacheId = "GlowDefaultsButtons", build = function(parent, width)
+                    local frame = CreateFrame("Frame", nil, parent)
                     frame:SetSize(width, 28)
                     local buttonWidth = (width - 6) / 2
                     local resetButton = CreateLocalizedButton(frame, "Reset to Defaults", function()
                         NSI:ResetDefaultAuraGlowSettings()
                         RebuildList()
                         RebuildTab()
-                    end, buttonWidth, 22, widgetName and (widgetName .. "Reset") or nil)
+                    end, buttonWidth, 22)
                     resetButton:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
                     local applyButton = CreateLocalizedButton(frame, "Apply to All Glows now", function()
                         NSI:ApplyDefaultAuraGlowSettingsToAll()
                         RebuildList()
                         RebuildTab()
-                    end, buttonWidth, 22, widgetName and (widgetName .. "ApplyAll") or nil)
+                    end, buttonWidth, 22)
                     applyButton:SetPoint("TOPLEFT", resetButton.frame, "TOPRIGHT", 6, 0)
                     return frame, 28
                 end }
@@ -1171,16 +1112,17 @@ local function BuildAuraGlowsUI(screen)
             scroll = CreateScrollBox(tabFrames[activeTab], rightWidth - 16, tabFrames[activeTab]:GetHeight())
             scroll:SetPoint("TOPLEFT", tabFrames[activeTab], "TOPLEFT", 0, 0)
             tabScroll[activeTab] = scroll
+            -- Built once per tab; every later RebuildTab re-binds the cached widgets in place.
+            tabHost[activeTab] = NSI.UI.Components.CreateWidgetHost(scroll.scrollChild, rightWidth - 34)
         end
-        scroll.scrollChild:Hide()
-        local child = CreateFrame("Frame", nil, scroll.frame)
-        child:SetWidth(rightWidth - 34)
-        child:SetHeight(1)
-        scroll.frame:SetScrollChild(child)
-        scroll.scrollChild = child
-        local height = BuildWidgets(child, defs, child:GetWidth(), "NSUIAuraGlow" .. activeTab)
-        child:SetHeight(math.max(1, height))
+        local height = tabHost[activeTab]:Apply(defs)
+        scroll.scrollChild:SetHeight(math.max(1, height))
         scroll.frame:Show()
+        -- Another glow starts at the top; edits to the same glow keep the scroll position.
+        if tabScrollKey[activeTab] ~= selectedKey then
+            tabScrollKey[activeTab] = selectedKey
+            scroll.frame:SetVerticalScroll(0)
+        end
         scroll:UpdateScrollBar()
     end
 

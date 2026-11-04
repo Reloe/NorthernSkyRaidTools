@@ -196,7 +196,7 @@ local auraTrackingImportPopup
 
 local function ShowAuraTrackingExportPopup(text, label)
     if not auraTrackingExportPopup then
-        auraTrackingExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Tracking") .. "|r",
+        auraTrackingExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Tracking") .. "|r",
             "NSRTAuraTrackingExportPopup", { UseScaleBar = false })
         auraTrackingExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         auraTrackingExportPopup:SetFrameLevel(100)
@@ -229,7 +229,7 @@ end
 
 local function ShowAuraTrackingImportPopup(onImport)
     if not auraTrackingImportPopup then
-        auraTrackingImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Tracking") .. "|r",
+        auraTrackingImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Tracking") .. "|r",
             "NSRTAuraTrackingImportPopup", { UseScaleBar = false })
         auraTrackingImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         auraTrackingImportPopup:SetFrameLevel(100)
@@ -431,7 +431,7 @@ local function BuildAuraTrackingUI(screen)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
     ReskinScrollbar(listScroll)
 
-    local listChild = CreateFrame("Frame", nil, listScroll, "BackdropTemplate")
+    local listChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listScroll)
     listChild:SetSize(listW, 1)
     listChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     listChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
@@ -440,7 +440,7 @@ local function BuildAuraTrackingUI(screen)
     local entryRows, headerRows = {}, {}
 
     local function CreateEntryRow()
-        local row = CreateFrame("Button", nil, listChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -491,7 +491,7 @@ local function BuildAuraTrackingUI(screen)
     end
 
     local function CreateHeaderRow()
-        local row = CreateFrame("Button", nil, listChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.05, 0.30, 0.40)
@@ -975,6 +975,7 @@ local function BuildAuraTrackingUI(screen)
 
     -- ── Inner tab bar ────────────────────────────────────────────────────────
     local tabBtns, tabFrames, tabScroll = {}, {}, {}
+    local tabHost = {}   -- inner tab -> WidgetHost (cached widget layouts, see Components)
     local activeTab = "Display"
     local tabRowY   = -44
     local contentY  = tabRowY - 24
@@ -1503,121 +1504,24 @@ local function BuildAuraTrackingUI(screen)
         return defs
     end
 
-    -- Scrollbox-style Spell ID picker for the Trigger tab: an add-row (text
-    -- entry + button) followed by one row per tracked spell showing its
-    -- fetched icon/name, with an "x" to remove it. Rebuilt (via
-    -- RebuildCurrentTab) on every add/remove so the row count stays in sync.
-    local SPELL_ROW_H = 20
+    -- Spell ID picker for the Trigger tab: an add row (text entry + button)
+    -- followed by one row per tracked spell. The widget is cached and pooled
+    -- (see Components.CreateSpellIDList): switching entries re-points it at
+    -- the new key via `refresh`, and add/remove just refresh the tab.
     local function BuildSpellIDListWidget(key)
-        return { Type = "Custom", build = function(parent, width, wName)
-            local frame = CreateFrame("Frame", wName, parent)
-            frame:SetWidth(width)
-
-            local input = CreateTextEntry(frame, nil, nil, nil, width - 70, 22, nil, nil, nil,
-                wName and (wName .. "Input") or nil)
-            input:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-
-            local function AddFromInput()
-                local v = strtrim(input.editBox:GetText() or "")
-                if v == "" then return end
-                NSI:AddAuraTrackingSpellIDs(key, v)
-                input.editBox:SetText("")
-                RebuildList(); RebuildCurrentTab()
-            end
-            input.editBox:SetScript("OnEnterPressed", function(self) AddFromInput(); self:ClearFocus() end)
-
-            local addBtn = CreateLocalizedSubButton(frame, "Add", AddFromInput, 54,
-                wName and (wName .. "Add") or nil)
-            addBtn:SetPoint("LEFT", input.frame, "RIGHT", 6, 0)
-
-            local spellIDs = NSI:GetAuraTrackingSpellIDList(key)
-            local y = 30
-            for _, spellID in ipairs(spellIDs) do
-                local row = CreateFrame("Frame", nil, frame, "BackdropTemplate")
-                row:SetSize(width, SPELL_ROW_H)
-                row:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -y)
-                row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-                row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
-                row.highlight = row:CreateTexture(nil, "BACKGROUND")
-                row.highlight:SetAllPoints()
-                row.highlight:SetColorTexture(0.08, 0.32, 0.40, 0.45)
-                row.highlight:Hide()
-                local function SetHovered(hovered)
-                    if hovered then
-                        row.highlight:Show()
-                    else
-                        row.highlight:Hide()
-                    end
-                end
-                row:EnableMouse(true)
-                row:SetScript("OnEnter", function() SetHovered(true) end)
-                row:SetScript("OnLeave", function() SetHovered(false) end)
-
-                local iconFrame = CreateFrame("Frame", nil, row)
-                iconFrame:SetSize(16, 16)
-                iconFrame:SetPoint("LEFT", row, "LEFT", 3, 0)
-                iconFrame:EnableMouse(true)
-
-                local icon = iconFrame:CreateTexture(nil, "ARTWORK")
-                icon:SetAllPoints()
-                icon:SetTexCoord(0.09, 0.91, 0.09, 0.91)
-
-                local label = row:CreateFontString(nil, "OVERLAY")
-                NSI:SetUIFont(label, 12, "")
-                label:SetPoint("LEFT", iconFrame, "RIGHT", 6, 0)
-                label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
-                label:SetJustifyH("LEFT")
-                label:SetWordWrap(false)
-
-                local spell = C_Spell.GetSpellInfo(spellID)
-                if spell then
-                    icon:SetTexture(spell.iconID or DEFAULT_ICON)
-                    label:SetText(spell.name .. "  |cFF808080(" .. spellID .. ")|r")
-                else
-                    icon:SetTexture(DEFAULT_ICON)
-                    label:SetText(NSI:Loc("|cFFFF4040Unknown spell|r") .. "  |cFF808080(" .. spellID .. ")|r")
-                end
-
-                iconFrame:SetScript("OnEnter", function(self)
-                    SetHovered(true)
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetSpellByID(spellID)
-                    if GameTooltip:NumLines() == 0 then
-                        GameTooltip:SetText("Spell ID: " .. spellID)
-                    end
-                    GameTooltip:Show()
-                end)
-                iconFrame:SetScript("OnLeave", function()
-                    GameTooltip:Hide()
-                end)
-
-                local removeBtn = CreateFrame("Button", nil, row)
-                removeBtn:SetSize(14, 14)
-                removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-                removeBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-                removeBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-                removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
-                removeBtn:SetScript("OnEnter", function() SetHovered(true) end)
-                removeBtn:SetScript("OnClick", function()
-                    NSI:RemoveAuraTrackingSpellID(key, spellID)
-                    RebuildList(); RebuildCurrentTab()
-                end)
-
-                y = y + SPELL_ROW_H
-            end
-
-            if #spellIDs == 0 then
-                local empty = frame:CreateFontString(nil, "OVERLAY")
-                NSI:SetUIFont(empty, 12, "")
-                empty:SetTextColor(0.5, 0.5, 0.5, 1)
-                empty:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -y - 2)
-                empty:SetText(NSI:Loc("No spell IDs added yet."))
-                y = y + SPELL_ROW_H
-            end
-
-            frame:SetHeight(y)
-            return frame, y
-        end }
+        return { Type = "Custom", cacheId = "SpellIDList",
+            build = function(parent, width)
+                local list = NSI.UI.Components.CreateSpellIDList(parent, width, {
+                    getList     = function(listKey) return NSI:GetAuraTrackingSpellIDList(listKey) end,
+                    add         = function(listKey, text) NSI:AddAuraTrackingSpellIDs(listKey, text) end,
+                    remove      = function(listKey, spellID) NSI:RemoveAuraTrackingSpellID(listKey, spellID) end,
+                    onChange    = function() RebuildList(); RebuildCurrentTab() end,
+                    defaultIcon = DEFAULT_ICON,
+                })
+                list.frame.spellList = list
+                return list.frame, list:Refresh(key)
+            end,
+            refresh = function(frame) return frame.spellList:Refresh(key) end }
     end
 
     local function BuildTriggerDefs(s, key)
@@ -1810,10 +1714,6 @@ local function BuildAuraTrackingUI(screen)
             scrollPosition = 0
             resetTriggerScroll = false
         end
-        local previousScroll = tabScroll[activeTab]
-        if previousScroll then
-            previousScroll.frame:Hide()
-        end
         local topPad = 0
         local search = string.lower(displaySearchText)
         if activeTab == "Display" then
@@ -1831,47 +1731,39 @@ local function BuildAuraTrackingUI(screen)
             if showAttach then topPad = topPad + DISPLAY_TOP end
         end
         local defs = DEF_BUILDERS[activeTab](settings, selectedKey)
+        local isVisible
         if activeTab == "Display" and search ~= "" then
-            local filteredDefs = {}
+            -- Live filter: hide non-matching rows (and headers with no match) inside
+            -- the cached layout. Rebuilding per keystroke is what used to leak frames.
+            local visible = {}
             local currentHeader
-            local headerAdded = false
             for _, def in ipairs(defs) do
                 if def.Type == "Label" and def.highlight then
                     currentHeader = def
-                    headerAdded = false
                 else
                     local label = def.label and NSI:Loc(def.label) or ""
                     if string.find(string.lower(label), search, 1, true) then
-                        if currentHeader and not headerAdded then
-                            filteredDefs[#filteredDefs + 1] = currentHeader
-                            headerAdded = true
-                        end
-                        filteredDefs[#filteredDefs + 1] = def
+                        if currentHeader then visible[currentHeader] = true end
+                        visible[def] = true
                     end
                 end
             end
-            defs = filteredDefs
+            isVisible = function(def) return visible[def] end
         end
         local scrollObj = tabScroll[activeTab]
         if not scrollObj then
             scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
             tabScroll[activeTab] = scrollObj
+            tabHost[activeTab] = NSI.UI.Components.CreateWidgetHost(scrollObj.scrollChild, scrollObj.scrollChild:GetWidth())
         else
             scrollObj:SetSize(tabScrollW, tabContentH - topPad)
-            scrollObj.scrollChild:Hide()
-            local newScrollChild = CreateFrame("Frame", nil, scrollObj.frame)
-            newScrollChild:SetWidth(tabScrollW - 18)
-            newScrollChild:SetHeight(1)
-            scrollObj.frame:SetScrollChild(newScrollChild)
-            scrollObj.scrollChild = newScrollChild
-            scrollObj.frame:Show()
         end
         scrollObj.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -topPad)
-        local totalH = BuildWidgets(scrollObj.scrollChild, defs, scrollObj.scrollChild:GetWidth(), "NSRTAuraTrack" .. activeTab)
+        scrollObj.frame:Show()
+        local totalH = tabHost[activeTab]:Apply(defs, isVisible)
         scrollObj.scrollChild:SetHeight(math.max(totalH, 1))
         scrollObj:UpdateScrollBar()
         scrollObj.frame:SetVerticalScroll(math.min(scrollPosition, math.max(0, scrollObj.scrollChild:GetHeight() - scrollObj.frame:GetHeight())))
-        tabScroll[activeTab] = scrollObj
     end
 
     -- ========================================================================
@@ -1890,7 +1782,7 @@ local function BuildAuraTrackingUI(screen)
         if bar then local cur = bar:GetValue(); local mn, mx = bar:GetMinMaxValues(); bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24))) end
     end)
     ReskinScrollbar(loadScroll)
-    local loadChild = CreateFrame("Frame", nil, loadScroll, "BackdropTemplate")
+    local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadChild:SetSize(tabScrollW - 18, 1)
     loadChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
@@ -1907,7 +1799,7 @@ local function BuildAuraTrackingUI(screen)
     local hdrPool, chkPool = {}, {}
 
     local function MakeLoadHeader()
-        local btn = CreateFrame("Button", nil, loadChild, "BackdropTemplate")
+        local btn = NSI.UI.Pixel.CreateBoxFrame("Button", nil, loadChild)
         btn:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
         btn:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
         btn:SetSize(loadRowW, 18)
@@ -1938,7 +1830,7 @@ local function BuildAuraTrackingUI(screen)
         hoverTex:SetColorTexture(0, 1, 1, 0.13)
         hoverBg:SetAlpha(0)
         row.hoverBg = hoverBg
-        row.box = CreateFrame("Frame", nil, row, "BackdropTemplate")
+        row.box = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, row)
         row.box:SetSize(12, 12)
         row.box:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.box:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
@@ -2021,7 +1913,7 @@ local function BuildAuraTrackingUI(screen)
     end)
     ReskinScrollbar(namesScroll)
 
-    local namesChild = CreateFrame("Frame", nil, namesScroll, "BackdropTemplate")
+    local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
     namesChild:SetSize(loadRowW - 18, 1)
     namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
     namesChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)

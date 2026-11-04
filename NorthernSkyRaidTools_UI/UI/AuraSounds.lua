@@ -267,7 +267,7 @@ local auraSoundsImportPopup
 
 local function ShowAuraSoundsExportPopup(text, label)
     if not auraSoundsExportPopup then
-        auraSoundsExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Export Aura Sounds") .. "|r",
+        auraSoundsExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Export Aura Sounds") .. "|r",
             "NSRTAuraSoundsExportPopup", { UseScaleBar = false })
         auraSoundsExportPopup:SetPoint("CENTER", UIParent, "CENTER")
         auraSoundsExportPopup:SetFrameLevel(100)
@@ -295,7 +295,7 @@ end
 
 local function ShowAuraSoundsImportPopup(onImport)
     if not auraSoundsImportPopup then
-        auraSoundsImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Import Aura Sounds") .. "|r",
+        auraSoundsImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Import Aura Sounds") .. "|r",
             "NSRTAuraSoundsImportPopup", { UseScaleBar = false })
         auraSoundsImportPopup:SetPoint("CENTER", UIParent, "CENTER")
         auraSoundsImportPopup:SetFrameLevel(100)
@@ -332,7 +332,7 @@ local function ShowAuraSoundsImportPopup(onImport)
 end
 
 local function BuildAuraSoundsUI(parent)
-    local screen = CreateFrame("Frame", "$parentAuraSounds", parent, "BackdropTemplate")
+    local screen = NSI.UI.Pixel.CreateBoxFrame("Frame", "$parentAuraSounds", parent)
     screen:SetAllPoints()
     screen.categoryType = NSI:IsForever() and "Custom" or "Raid"
     local firstCategory = GetAuraSoundCategories(screen.categoryType)[1]
@@ -404,7 +404,7 @@ local function BuildAuraSoundsUI(parent)
     end
 
     local function ConfirmResetAllAuraSounds()
-        local popup = DF:CreateSimplePanel(UIParent, 300, 150, T("Confirm Resetting ALL Aura Sounds"), "NSRTResetALLAuraSoundsPopup")
+        local popup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 300, 150, T("Confirm Resetting ALL Aura Sounds"), "NSRTResetALLAuraSoundsPopup")
         ApplyUIFont(popup.Title, 12)
         popup:SetFrameStrata("FULLSCREEN_DIALOG")
         popup:SetPoint("CENTER", UIParent, "CENTER")
@@ -445,7 +445,7 @@ local function BuildAuraSoundsUI(parent)
     leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 78)
     leftScroll:SetWidth(leftWidth)
     NSI.UI.Components.ReskinScrollbar(leftScroll)
-    local leftChild = CreateFrame("Frame", nil, leftScroll, "BackdropTemplate")
+    local leftChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, leftScroll)
     leftChild:SetWidth(leftWidth)
     leftChild:SetHeight(1)
     leftChild:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
@@ -478,7 +478,7 @@ local function BuildAuraSoundsUI(parent)
     end
 
     local function CreateCategoryRow()
-        local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -498,7 +498,7 @@ local function BuildAuraSoundsUI(parent)
     end
 
     local function CreateSectionRow()
-        local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
         row:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
         row:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
@@ -1007,7 +1007,7 @@ local function BuildAuraSoundsUI(parent)
 
     local function CreateAuraRow(index)
         local rowWidth = scrollbox.scrollChild:GetWidth()
-        local row = CreateFrame("Frame", nil, scrollbox.scrollChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, scrollbox.scrollChild)
         row:SetSize(rowWidth, ROW_HEIGHT)
         row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
         row:SetBackdropColor(unpack(NSI.UI.Components.STYLE.bg_color))

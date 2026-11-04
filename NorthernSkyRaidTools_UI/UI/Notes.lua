@@ -126,7 +126,7 @@ local function BuildNotesTabUI(parent, notesTable)
     end
 
     -- ── Left panel: note list ─────────────────────────────────────────────────
-    local listBg = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local listBg = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, parent)
     listBg:SetPoint("TOPLEFT", parent, "TOPLEFT", 5, -8)
     listBg:SetSize(LIST_W, panelH)
     listBg:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
@@ -213,7 +213,7 @@ local function BuildNotesTabUI(parent, notesTable)
     local edX = LIST_W + 10
     local edW = content_width - LIST_W - 20
 
-    local editorBg = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+    local editorBg = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, parent)
     editorBg:SetPoint("TOPLEFT", parent, "TOPLEFT", edX, -8)
     editorBg:SetSize(edW, panelH)
     editorBg:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })

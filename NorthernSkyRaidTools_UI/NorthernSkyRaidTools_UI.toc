@@ -9,6 +9,7 @@
 ## Category: Dungeons & Raids
 
 UI\Bootstrap.lua [Bootstrap]
+UI\Pixel.lua
 UI\Core.lua
 UI\Components.lua
 UI\BossData.lua

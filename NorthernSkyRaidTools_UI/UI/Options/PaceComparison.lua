@@ -40,7 +40,7 @@ local paceImportPopup
 
 local function ShowPaceComparisonExportPopup(text, label)
     if not paceExportPopup then
-        paceExportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r",
+        paceExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r",
             "NSUIPaceComparisonExportString", { UseScaleBar = false })
         paceExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         paceExportPopup:SetFrameLevel(100)
@@ -73,7 +73,7 @@ end
 
 local function ShowPaceComparisonImportPopup(onImport)
     if not paceImportPopup then
-        paceImportPopup = DF:CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
+        paceImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
             "NSUIPaceComparisonImportString", { UseScaleBar = false })
         paceImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
         paceImportPopup:SetFrameLevel(100)
@@ -148,7 +148,7 @@ local function GetEditorData(screen)
 end
 
 local function BuildPaceComparisonEditorUI(parent)
-    local screen = CreateFrame("Frame", "NSUIPaceComparisonEditor", parent, "BackdropTemplate")
+    local screen = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSUIPaceComparisonEditor", parent)
     screen:SetAllPoints()
     screen:SetFrameLevel(parent:GetFrameLevel() + 20)
     screen.selectedBoss = GetSelectedBoss()
@@ -163,7 +163,7 @@ local function BuildPaceComparisonEditorUI(parent)
     leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 10)
     leftScroll:SetWidth(leftWidth)
     ReskinScrollbar(leftScroll)
-    local leftChild = CreateFrame("Frame", nil, leftScroll, "BackdropTemplate")
+    local leftChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, leftScroll)
     leftChild:SetWidth(leftWidth)
     leftChild:SetHeight(1)
     leftChild:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
@@ -179,7 +179,7 @@ local function BuildPaceComparisonEditorUI(parent)
     local RefreshBossList
 
     local function CreateBossRow()
-        local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
         DF:ApplyStandardBackdrop(row)
         row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -194,7 +194,7 @@ local function BuildPaceComparisonEditorUI(parent)
         row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.name:SetJustifyH("LEFT")
         row.name:SetWordWrap(false)
-        row.enabled = CreateFrame("Button", nil, row, "BackdropTemplate")
+        row.enabled = NSI.UI.Pixel.CreateBoxFrame("Button", nil, row)
         row.enabled:SetSize(16, 16)
         row.enabled:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.enabled:SetBackdrop({
@@ -211,7 +211,7 @@ local function BuildPaceComparisonEditorUI(parent)
     end
 
     local function CreateSeasonRow()
-        local row = CreateFrame("Button", nil, leftChild, "BackdropTemplate")
+        local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
         row:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
         row:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
@@ -401,7 +401,7 @@ local function BuildPaceComparisonEditorUI(parent)
     end
 
     local function createLine(scrollbox, index)
-        local line = CreateFrame("Frame", "NSUIPaceComparisonThresholdLine" .. index, scrollbox, "BackdropTemplate")
+        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSUIPaceComparisonThresholdLine" .. index, scrollbox)
         line:SetPoint("TOPLEFT", GetUIObject(scrollbox), "TOPLEFT", 1, -((index - 1) * scrollbox.LineHeight) - 1)
         line:SetSize(scrollbox:GetWidth() - 2, scrollbox.LineHeight)
         DF:ApplyStandardBackdrop(line)
@@ -486,7 +486,7 @@ function NSI:TogglePaceComparisonSettingsWindow(frame)
     end
 
     local display = NSRT.PaceComparison.Display
-    local window = CreateFrame("Frame", "NSRTPaceComparisonSettings", frame, "BackdropTemplate")
+    local window = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTPaceComparisonSettings", frame)
     window:SetFrameStrata("DIALOG")
     window:SetFrameLevel(frame:GetFrameLevel() + 10)
     window:SetWidth(330)
