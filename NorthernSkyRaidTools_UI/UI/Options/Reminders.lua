@@ -546,9 +546,7 @@ local function BuildReminderNoteOptions()
             type = "label",
             get = function() return "All Reminders Note" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
+            headerButton = {
             type = "button",
             name = "Unlock All Reminders",
             desc = "Locks/Unlocks the All Reminders Note to be moved around",
@@ -569,7 +567,7 @@ local function BuildReminderNoteOptions()
                 end
             end,
             nocombat = true,
-            spacement = true
+        },
         },
         {
             type = "range",
@@ -757,9 +755,7 @@ local function BuildReminderNoteOptions()
             type = "label",
             get = function() return "Personal Reminder-Note" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
+            headerButton = {
             type = "button",
             name = "Unlock Pers Reminder",
             desc = "Locks/Unlocks the Personal Reminders Note to be moved around",
@@ -780,7 +776,7 @@ local function BuildReminderNoteOptions()
                 end
             end,
             nocombat = true,
-            spacement = true
+        },
         },
         {
             type = "range",
@@ -920,9 +916,7 @@ local function BuildReminderNoteOptions()
             type = "label",
             get = function() return "Text-Note" end,
             text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE"),
-        },
-
-        {
+            headerButton = {
             type = "button",
             name = "Unlock Text Note",
             desc = "Locks/Unlocks the Text Note to be moved around. This Note shows anything from the reminders that it is not an actual reminder string. So you can put any text in there to be displayed.",
@@ -943,7 +937,7 @@ local function BuildReminderNoteOptions()
                 end
             end,
             nocombat = true,
-            spacement = true
+        },
         },
         {
             type = "range",

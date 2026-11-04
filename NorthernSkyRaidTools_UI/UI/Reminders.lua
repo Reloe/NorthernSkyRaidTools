@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 local L = DF.Language.GetLanguageTable(addonId)
 
@@ -146,22 +148,22 @@ function NSI:TogglePreviewMode()
             edgeFile = "Interface\\Buttons\\WHITE8x8",
             edgeSize = 1,
         })
-        bar:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-        bar:SetBackdropBorderColor(1, 0.55, 0, 1)
+        bar:SetBackdropColor(unpack(STYLE.surface_panel))
+        bar:SetBackdropBorderColor(Accent(1))
 
         local lbl = bar:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         lbl:SetPoint("LEFT", bar, "LEFT", 10, 0)
         lbl:SetText(NSI:Loc("Preview Mode"))
-        lbl:SetTextColor(1, 0.75, 0.2, 1)
+        lbl:SetTextColor(Accent(1))
 
         local exitBtn = CreateFrame("Button", nil, bar)
         exitBtn:SetSize(70, 22)
         exitBtn:SetPoint("RIGHT", bar, "RIGHT", -10, 0)
         exitBtn:SetNormalFontObject("GameFontNormalSmall")
         exitBtn:SetText(NSI:Loc("Exit Preview"))
-        exitBtn:GetFontString():SetTextColor(0.9, 0.3, 0.3)
+        exitBtn:GetFontString():SetTextColor(unpack(STYLE.danger))
         exitBtn:SetScript("OnEnter", function(b) b:GetFontString():SetTextColor(1, 0.1, 0.1) end)
-        exitBtn:SetScript("OnLeave", function(b) b:GetFontString():SetTextColor(0.9, 0.3, 0.3) end)
+        exitBtn:SetScript("OnLeave", function(b) b:GetFontString():SetTextColor(unpack(STYLE.danger)) end)
         exitBtn:SetScript("OnClick", function() NSI:TogglePreviewMode() end)
 
         bar:Hide()
@@ -614,7 +616,7 @@ local function BuildReminderScreen(personal, parentFrame)
     if personal then
         local specLabel = DF:CreateLabel(screen, NSI:Loc("Auto-load specialization:"), 12)
         NSI:SetUIFont(specLabel.widget, 12)
-        specLabel.widget:SetTextColor(1, 1, 1, 1)
+        specLabel.widget:SetTextColor(unpack(STYLE.text_color))
         specLabel:SetPoint("TOPLEFT", screen, "TOPLEFT", editorLeft, topY - 31)
         local function BuildSpecOptions()
             local options = {
@@ -946,7 +948,7 @@ local function BuildReminderScreen(personal, parentFrame)
         local recvTimeLabel = screen:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(recvTimeLabel, 11, "")
         recvTimeLabel:SetPoint("BOTTOMRIGHT", screen, "BOTTOMRIGHT", -25, 14)
-        recvTimeLabel:SetTextColor(0.55, 0.55, 0.55, 1)
+        recvTimeLabel:SetTextColor(unpack(STYLE.text_muted))
         recvTimeLabel:Hide()
 
         local function UpdateRecvTimeLabel()
@@ -1207,22 +1209,22 @@ local function BuildReminderScreen(personal, parentFrame)
                 line:SetBackdropBorderColor(0, 1, 0, 1)
                 line.__background:SetVertexColor(0, 1, 0)
                 line.__background:SetAlpha(1)
-                line.nameLabel:SetTextColor(1, 1, 1)
+                line.nameLabel:SetTextColor(unpack(STYLE.text_color))
             elseif isActive then
                 line:SetBackdropBorderColor(1, 0.8, 0, 1)
                 line.__background:SetVertexColor(1, 0.8, 0)
                 line.__background:SetAlpha(1)
-                line.nameLabel:SetTextColor(1, 1, 1)
+                line.nameLabel:SetTextColor(unpack(STYLE.text_color))
             elseif line.name == screen.selectedName then
                 line:SetBackdropBorderColor(0.3, 0.5, 1, 1)
                 line.__background:SetVertexColor(100/255, 100/255, 100/255)
                 line.__background:SetAlpha(0.60)
-                line.nameLabel:SetTextColor(1, 1, 1)
+                line.nameLabel:SetTextColor(unpack(STYLE.text_color))
             else
                 line:SetBackdropBorderColor(0, 0, 0, 1)
                 line.__background:SetVertexColor(100/255, 100/255, 100/255)
                 line.__background:SetAlpha(0.60)
-                line.nameLabel:SetTextColor(0.85, 0.85, 0.85)
+                line.nameLabel:SetTextColor(unpack(STYLE.text_soft))
             end
         end
     end
@@ -1274,7 +1276,7 @@ local function BuildReminderScreen(personal, parentFrame)
         line.deleteButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
         line.deleteButton:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
         line.deleteButton:GetNormalTexture():SetDesaturated(true)
-        line.deleteButton:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        line.deleteButton:GetNormalTexture():SetVertexColor(unpack(STYLE.danger))
         line.deleteButton:SetScript("OnClick", function()
             ShowDeleteConfirm(line.name)
         end)

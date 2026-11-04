@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 
 local Core = NSI.UI.Core
@@ -199,7 +201,7 @@ local function BuildVersionCheckUI(parent)
                 line.ignorelist:SetText(ignore and T("Yes") or T("No"))
 
                 if version and version == "Offline" then
-                    line.version:SetTextColor(0.5, 0.5, 0.5, 1)
+                    line.version:SetTextColor(unpack(STYLE.text_hint))
                 elseif version == "Alert Missing" then
                     line.version:SetTextColor(1, 0.65, 0, 1)
                 elseif version and NSI.VersionCheckData and version == NSI.VersionCheckData.version then
@@ -242,8 +244,8 @@ local function BuildVersionCheckUI(parent)
                 line.name:SetText("")
                 line.version:SetText("")
                 line.ignorelist:SetText("")
-                line.version:SetTextColor(1, 1, 1, 1)
-                line.ignorelist:SetTextColor(1, 1, 1, 1)
+                line.version:SetTextColor(unpack(STYLE.text_color))
+                line.ignorelist:SetTextColor(unpack(STYLE.text_color))
                 line:SetScript("OnClick", nil)
             end
         end

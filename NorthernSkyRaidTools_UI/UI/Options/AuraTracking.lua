@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 
 local Core                     = NSI.UI.Core
@@ -203,7 +205,7 @@ local function ShowAuraTrackingExportPopup(text, label)
 
         auraTrackingExportPopup.infoLabel = auraTrackingExportPopup:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(auraTrackingExportPopup.infoLabel, 13, "")
-        auraTrackingExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraTrackingExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
         auraTrackingExportPopup.infoLabel:SetPoint("TOPLEFT", auraTrackingExportPopup, "TOPLEFT", 10, -30)
 
         auraTrackingExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraTrackingExportPopup, 280, 80, nil,
@@ -236,7 +238,7 @@ local function ShowAuraTrackingImportPopup(onImport)
 
         auraTrackingImportPopup.statusLabel = auraTrackingImportPopup:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(auraTrackingImportPopup.statusLabel, 13, "")
-        auraTrackingImportPopup.statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraTrackingImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
         auraTrackingImportPopup.statusLabel:SetPoint("TOPLEFT", auraTrackingImportPopup, "TOPLEFT", 10, -30)
 
         auraTrackingImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraTrackingImportPopup, 280, 80, nil,
@@ -434,7 +436,7 @@ local function BuildAuraTrackingUI(screen)
     local listChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listScroll)
     listChild:SetSize(listW, 1)
     listChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-    listChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+    listChild:SetBackdropColor(unpack(STYLE.surface_inset_soft))
     listScroll:SetScrollChild(listChild)
 
     local entryRows, headerRows = {}, {}
@@ -482,7 +484,7 @@ local function BuildAuraTrackingUI(screen)
         row.deleteBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
         row.deleteBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
         row.deleteBtn:GetNormalTexture():SetDesaturated(true)
-        row.deleteBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        row.deleteBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.danger))
         row.deleteBtn:Hide()
 
         row:EnableMouse(true)
@@ -512,7 +514,7 @@ local function BuildAuraTrackingUI(screen)
 
         row.count = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.count, 12, NSI:GetUIFontFlags())
-        row.count:SetTextColor(0.5, 0.5, 0.5, 1)
+        row.count:SetTextColor(unpack(STYLE.text_hint))
         row.count:SetPoint("RIGHT", row, "RIGHT", -4, 0)
 
         row:EnableMouse(true)
@@ -826,7 +828,7 @@ local function BuildAuraTrackingUI(screen)
 
                 local statSettings = NSRT.PlayerStatsDisplay
                 if isStatsSelected then
-                    row.__background:SetVertexColor(0, 1, 1); row.__background:SetAlpha(1)
+                    row.__background:SetVertexColor(Accent()); row.__background:SetAlpha(1)
                 else
                     row.__background:SetVertexColor(0.4, 0.4, 0.4); row.__background:SetAlpha(0.5)
                 end
@@ -866,7 +868,7 @@ local function BuildAuraTrackingUI(screen)
                 local settings = item.settings
                 local willLoad = NSI:EvaluateAuraTrackingLoad(settings, true)
                 if selectedKey == item.settingsKey then
-                    row.__background:SetVertexColor(0, 1, 1); row.__background:SetAlpha(1)
+                    row.__background:SetVertexColor(Accent()); row.__background:SetAlpha(1)
                 else
                     row.__background:SetVertexColor(0.4, 0.4, 0.4); row.__background:SetAlpha(willLoad and 0.5 or 0.2)
                 end
@@ -920,7 +922,7 @@ local function BuildAuraTrackingUI(screen)
 
     local nameLbl = rightPanel:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(nameLbl, 11, "")
-    nameLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    nameLbl:SetTextColor(unpack(STYLE.text_muted))
     nameLbl:SetText(NSI:Loc("Aura Name"))
     nameLbl:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
 
@@ -932,7 +934,7 @@ local function BuildAuraTrackingUI(screen)
 
     local groupLbl = rightPanel:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(groupLbl, 11, "")
-    groupLbl:SetTextColor(0.55, 0.55, 0.55, 1)
+    groupLbl:SetTextColor(unpack(STYLE.text_muted))
     groupLbl:SetText(NSI:Loc("Group"))
     groupLbl:SetPoint("BOTTOMLEFT", nameEntry.frame, "BOTTOMRIGHT", 12, 22)
 
@@ -1040,7 +1042,7 @@ local function BuildAuraTrackingUI(screen)
     -- ── Fixed anchor row below the display type selector ────────────────────
     local anchorLbl = displayF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(anchorLbl, 11, "")
-    anchorLbl:SetTextColor(1, 0.82, 0, 1)
+    anchorLbl:SetTextColor(unpack(STYLE.text_gold))
     anchorLbl:SetText(NSI:Loc("Anchor Frame"))
     anchorLbl:SetPoint("TOPLEFT", displayF, "TOPLEFT", 0, -displayTypeHeight)
 
@@ -1064,7 +1066,7 @@ local function BuildAuraTrackingUI(screen)
 
     local attachLbl = displayF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(attachLbl, 11, "")
-    attachLbl:SetTextColor(1, 0.82, 0, 1)
+    attachLbl:SetTextColor(unpack(STYLE.text_gold))
     attachLbl:SetText(NSI:Loc("Attach to"))
     attachEntry = CreateTextEntry(displayF, nil,
         function() local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey); return s and s.AttachTo or "" end,
@@ -1785,13 +1787,13 @@ local function BuildAuraTrackingUI(screen)
     local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadChild:SetSize(tabScrollW - 18, 1)
     loadChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-    loadChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
+    loadChild:SetBackdropColor(unpack(STYLE.surface_inset))
     loadScroll:SetScrollChild(loadChild)
 
     local lockedEncounterLabel = loadChild:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(lockedEncounterLabel, 12, "")
     lockedEncounterLabel:SetPoint("TOPLEFT", loadChild, "TOPLEFT", 4, -2)
-    lockedEncounterLabel:SetTextColor(1, 0.82, 0, 1)
+    lockedEncounterLabel:SetTextColor(unpack(STYLE.text_gold))
     lockedEncounterLabel:Hide()
 
     local loadCollapsed = { Roles = true, Classes = true, Specs = true, Encounters = true, Difficulties = true }
@@ -1801,18 +1803,18 @@ local function BuildAuraTrackingUI(screen)
     local function MakeLoadHeader()
         local btn = NSI.UI.Pixel.CreateBoxFrame("Button", nil, loadChild)
         btn:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-        btn:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
+        btn:SetBackdropColor(unpack(STYLE.selected_fill))
         btn:SetSize(loadRowW, 18)
         btn.arrow = btn:CreateTexture(nil, "OVERLAY")
         btn.arrow:SetSize(10, 10)
         btn.arrow:SetPoint("LEFT", btn, "LEFT", 2, 0)
-        btn.arrow:SetVertexColor(0.6, 0.6, 0.6, 1)
+        btn.arrow:SetVertexColor(unpack(STYLE.text_muted))
         btn.text = btn:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(btn.text, 11, "")
-        btn.text:SetTextColor(0.55, 0.55, 0.55, 1)
+        btn.text:SetTextColor(unpack(STYLE.text_muted))
         btn.text:SetPoint("LEFT", btn, "LEFT", 16, 0)
-        btn:SetScript("OnEnter", function() btn.text:SetTextColor(0.85, 0.85, 0.85, 1) end)
-        btn:SetScript("OnLeave", function() btn.text:SetTextColor(0.55, 0.55, 0.55, 1) end)
+        btn:SetScript("OnEnter", function() btn.text:SetTextColor(unpack(STYLE.text_soft)) end)
+        btn:SetScript("OnLeave", function() btn.text:SetTextColor(unpack(STYLE.text_muted)) end)
         btn:Hide()
         return btn
     end
@@ -1827,7 +1829,7 @@ local function BuildAuraTrackingUI(screen)
         hoverBg:EnableMouse(false)
         local hoverTex = hoverBg:CreateTexture(nil, "BACKGROUND")
         hoverTex:SetAllPoints()
-        hoverTex:SetColorTexture(0, 1, 1, 0.13)
+        hoverTex:SetColorTexture(Accent(0.13))
         hoverBg:SetAlpha(0)
         row.hoverBg = hoverBg
         row.box = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, row)
@@ -1835,11 +1837,11 @@ local function BuildAuraTrackingUI(screen)
         row.box:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.box:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
         row.box:SetBackdropColor(0.10, 0.10, 0.10, 0.9)
-        row.box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+        row.box:SetBackdropBorderColor(unpack(STYLE.border_subtle))
         row.fill = row.box:CreateTexture(nil, "ARTWORK")
         row.fill:SetPoint("TOPLEFT", row.box, "TOPLEFT", 2, -2)
         row.fill:SetPoint("BOTTOMRIGHT", row.box, "BOTTOMRIGHT", -2, 2)
-        row.fill:SetColorTexture(0, 1, 1, 0.85)
+        row.fill:SetColorTexture(Accent(0.85))
         row.fill:Hide()
         local lblFrame = CreateFrame("Frame", nil, row)
         row.labelFrame = lblFrame
@@ -1884,7 +1886,7 @@ local function BuildAuraTrackingUI(screen)
 
     local namesLabel = loadF:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(namesLabel, 11, "")
-    namesLabel:SetTextColor(0.55, 0.55, 0.55, 1)
+    namesLabel:SetTextColor(unpack(STYLE.text_muted))
     namesLabel:SetText(NSI:Loc("Character Names (no server name)"))
     namesLabel:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, NAMES_SEC_H - 14)
 
@@ -1916,7 +1918,7 @@ local function BuildAuraTrackingUI(screen)
     local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
     namesChild:SetSize(loadRowW - 18, 1)
     namesChild:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-    namesChild:SetBackdropColor(0.04, 0.04, 0.04, 0.85)
+    namesChild:SetBackdropColor(unpack(STYLE.surface_inset))
     namesScroll:SetScrollChild(namesChild)
 
     local nameRowPool = {}
@@ -1930,13 +1932,13 @@ local function BuildAuraTrackingUI(screen)
         row.label:SetPoint("LEFT", row, "LEFT", 8, 0)
         row.label:SetPoint("RIGHT", row, "RIGHT", -24, 0)
         row.label:SetJustifyH("LEFT")
-        row.label:SetTextColor(1, 1, 1, 1)
+        row.label:SetTextColor(unpack(STYLE.text_color))
         row.removeBtn = CreateFrame("Button", nil, row)
         row.removeBtn:SetSize(14, 14)
         row.removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.removeBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
         row.removeBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\x.png]])
-        row.removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        row.removeBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.danger))
         row:Hide()
         return row
     end
@@ -2063,10 +2065,10 @@ local function BuildAuraTrackingUI(screen)
                 row.icon:Hide()
             end
             if checked then
-                row.fill:Show(); row.box:SetBackdropBorderColor(0, 1, 1, 0.9)
+                row.fill:Show(); row.box:SetBackdropBorderColor(Accent(0.9))
                 row.bg:SetColorTexture((r or 0) * 0.3, (g or 0) * 0.3, (b or 0) * 0.3, 0.85)
             else
-                row.fill:Hide(); row.box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+                row.fill:Hide(); row.box:SetBackdropBorderColor(unpack(STYLE.border_subtle))
                 row.bg:SetColorTexture(
                     chkIdx % 2 == 0 and 0.12 or 0,
                     chkIdx % 2 == 0 and 0.12 or 0,
@@ -2302,7 +2304,7 @@ local function BuildAuraTrackingUI(screen)
 
         local descLbl = statsPanel:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(descLbl, 12, "")
-        descLbl:SetTextColor(0.75, 0.75, 0.75, 1)
+        descLbl:SetTextColor(unpack(STYLE.text_soft))
         descLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -22)
         descLbl:SetPoint("RIGHT", statsPanel, "RIGHT", 0, 0)
         descLbl:SetJustifyH("LEFT")
@@ -2311,7 +2313,7 @@ local function BuildAuraTrackingUI(screen)
 
         local anchorLbl = statsPanel:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(anchorLbl, 11, "")
-        anchorLbl:SetTextColor(1, 0.82, 0, 1)
+        anchorLbl:SetTextColor(unpack(STYLE.text_gold))
         anchorLbl:SetText(NSI:Loc("Anchor Frame"))
         anchorLbl:SetPoint("TOPLEFT", statsPanel, "TOPLEFT", 0, -60)
 

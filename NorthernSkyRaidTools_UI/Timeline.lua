@@ -1,4 +1,6 @@
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 
 local function T(key)
@@ -3181,7 +3183,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
 
         -- Thin cyan separator below the title
         local sep = popup:CreateTexture(nil, "ARTWORK")
-        sep:SetColorTexture(0, 1, 1, 0.20)
+        sep:SetColorTexture(Accent(0.20))
         sep:SetHeight(1)
         sep:SetPoint("TOPLEFT",  popup, "TOPLEFT",  1, -28)
         sep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -28)
@@ -3286,7 +3288,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
                     fnc   = function()
                         popup._pendingEncID = eid
                         popup.selectedBossLabel.label:SetText(T(NSI.BossNames[eid]) or (T("Encounter") .. " " .. eid))
-                        popup.selectedBossLabel.label:SetTextColor(1, 1, 1, 1)
+                        popup.selectedBossLabel.label:SetTextColor(unpack(STYLE.text_color))
                     end,
                 }
             end
@@ -3376,7 +3378,7 @@ function NSI:ShowReminderDialog(window, absoluteTime, block)
     popup.selectBossBtn.frame:SetShown(showBossRow)
     if showBossRow then
         popup.selectedBossLabel.label:SetText(T("None selected"))
-        popup.selectedBossLabel.label:SetTextColor(0.5, 0.5, 0.5, 1)
+        popup.selectedBossLabel.label:SetTextColor(unpack(STYLE.text_hint))
         if not hasBossContext then popup._pendingEncID = nil end
     end
     popup:SetHeight(showBossRow and 300 or 260)
@@ -3548,8 +3550,8 @@ function NSI:ShowSpellbookPicker(targetPopup)
         picker:SetClampedToScreen(true)
         picker:EnableMouse(true)
         picker:SetBackdrop({bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1})
-        picker:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-        picker:SetBackdropBorderColor(0, 1, 1, 0.7)
+        picker:SetBackdropColor(unpack(STYLE.surface_panel))
+        picker:SetBackdropBorderColor(Accent(0.7))
 
         -- Title bar / drag handle
         local titleBar = CreateFrame("Frame", nil, picker)
@@ -3731,7 +3733,7 @@ function NSI:ShowRenameNoteDialog(window, oldName)
 
         local errorFS = popup:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         errorFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 12, -60)
-        errorFS:SetTextColor(1, 0.35, 0.35, 1)
+        errorFS:SetTextColor(unpack(STYLE.text_danger))
         popup.errorFS = errorFS
 
         local confirmBtn = C.CreateButton(popup, T("Rename"), function()

@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 local Core = NSI.UI.Core
 local BossData = NSI.UI.BossData
@@ -47,7 +49,7 @@ local function ShowPaceComparisonExportPopup(text, label)
 
         paceExportPopup.infoLabel = paceExportPopup:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(paceExportPopup.infoLabel, 13, "")
-        paceExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        paceExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
         paceExportPopup.infoLabel:SetPoint("TOPLEFT", paceExportPopup, "TOPLEFT", 10, -30)
 
         paceExportPopup.textbox = DF:NewSpecialLuaEditorEntry(paceExportPopup, 280, 80, nil,
@@ -80,7 +82,7 @@ local function ShowPaceComparisonImportPopup(onImport)
 
         paceImportPopup.statusLabel = paceImportPopup:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(paceImportPopup.statusLabel, 13, "")
-        paceImportPopup.statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        paceImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
         paceImportPopup.statusLabel:SetText(NSI:Loc("Paste a Pace Comparison export below and click Import."))
         paceImportPopup.statusLabel:SetPoint("TOPLEFT", paceImportPopup, "TOPLEFT", 10, -30)
 
@@ -126,7 +128,7 @@ local function CreateEditorLabel(parent, text, size, color)
     if color == "orange" then
         label:SetTextColor(1, 0.65, 0.1, 1)
     else
-        label:SetTextColor(0.8, 0.8, 0.8, 1)
+        label:SetTextColor(unpack(STYLE.text_soft))
     end
     label:SetJustifyH("LEFT")
     label:SetJustifyV("MIDDLE")
@@ -155,7 +157,7 @@ local function BuildPaceComparisonEditorUI(parent)
 
     local leftWidth = 220
     local title = CreateEditorLabel(screen, "|cFF00FFFFPace|r-Comparison", 14)
-    title:SetTextColor(1, 1, 1, 1)
+    title:SetTextColor(unpack(STYLE.text_color))
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
     local leftScroll = CreateFrame("ScrollFrame", "$parentPaceComparisonBossScroll", screen, "UIPanelScrollFrameTemplate")
@@ -167,7 +169,7 @@ local function BuildPaceComparisonEditorUI(parent)
     leftChild:SetWidth(leftWidth)
     leftChild:SetHeight(1)
     leftChild:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
-    leftChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+    leftChild:SetBackdropColor(unpack(STYLE.surface_inset_soft))
     leftScroll:SetScrollChild(leftChild)
 
     local rightPanel = CreateFrame("Frame", "$parentPaceComparisonEditor", screen)
@@ -206,7 +208,7 @@ local function BuildPaceComparisonEditorUI(parent)
         row.enabled.fill = row.enabled:CreateTexture(nil, "ARTWORK")
         row.enabled.fill:SetPoint("TOPLEFT", row.enabled, "TOPLEFT", 2, -2)
         row.enabled.fill:SetPoint("BOTTOMRIGHT", row.enabled, "BOTTOMRIGHT", -2, 2)
-        row.enabled.fill:SetColorTexture(0, 1, 1, 0.85)
+        row.enabled.fill:SetColorTexture(Accent(0.85))
         return row
     end
 
@@ -214,7 +216,7 @@ local function BuildPaceComparisonEditorUI(parent)
         local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
         row:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
-        row:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
+        row:SetBackdropColor(unpack(STYLE.selected_fill))
         row.arrow = row:CreateTexture(nil, "OVERLAY")
         row.arrow:SetSize(10, 10)
         row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
@@ -287,7 +289,7 @@ local function BuildPaceComparisonEditorUI(parent)
                         RefreshBossList()
                     end)
                     if screen.selectedBoss == encID then
-                        row.__background:SetVertexColor(0, 1, 1)
+                        row.__background:SetVertexColor(Accent())
                         row.__background:SetAlpha(1)
                     else
                         row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -495,13 +497,13 @@ function NSI:TogglePaceComparisonSettingsWindow(frame)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    window:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    window:SetBackdropBorderColor(0, 1, 1, 0.9)
+    window:SetBackdropColor(unpack(STYLE.surface_panel))
+    window:SetBackdropBorderColor(Accent(0.9))
     window:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", -8, -10)
 
     local title = window:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 11, "")
-    title:SetTextColor(0, 1, 1, 0.85)
+    title:SetTextColor(Accent(0.85))
     title:SetText(NSI:Loc("Pace Comparison Display"))
     title:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -7)
 

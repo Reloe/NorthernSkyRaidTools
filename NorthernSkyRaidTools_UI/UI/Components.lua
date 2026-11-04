@@ -10,20 +10,36 @@ local DF = _G["DetailsFramework"]
 -- ============================================================
 
 local STYLE = {
+    -- Brand accent (RGB). Change it only through STYLE.SetAccent so everything re-tints.
+    accent = { 0, 1, 1 },
+
     -- Normal state
     bg_color       = { 0.3, 0.3, 0.3, 0.8 },
     -- Input control background (text entries, sliders, color pickers, checkboxes)
     input_bg_color = { 0.3, 0.3, 0.3, 0.9 },
 
-    -- Hover overlay (fades in/out on mouse enter/leave)
+    -- Hover overlay (fades in/out on mouse enter/leave); tinted by the accent
     hover_color     = {0,    1,    1,    0.13},
 
-    -- Selected state (solid background)
+    -- Selected state (solid background); tinted by the accent
     selected_color  = {0,    1,    1,    0.20},
 
-    -- Text defaults
+    -- Surfaces
+    surface_panel      = { 0.05, 0.05, 0.08, 0.97 },  -- windows, popups, menus
+    surface_inset      = { 0.04, 0.04, 0.04, 0.85 },  -- lists, edit areas
+    surface_inset_soft = { 0.04, 0.04, 0.04, 0.60 },
+    selected_fill      = { 0.05, 0.30, 0.40, 0.90 },  -- selected row / tab
+    border_subtle      = { 0.25, 0.25, 0.25, 1 },
+
+    -- Text tiers
     text_color      = {1, 1, 1, 1},
+    text_soft       = {0.8, 0.8, 0.8, 1},
+    text_muted      = {0.6, 0.6, 0.6, 1},
+    text_hint       = {0.5, 0.5, 0.5, 1},
     text_disabled   = {0.45, 0.45, 0.45, 0.70},
+    text_gold       = {1, 0.82, 0, 1},
+    text_danger     = {1, 0.35, 0.35, 1},
+    danger          = {0.9, 0.3, 0.3, 1},
     text_size       = 14,
     text_left_pad   = 10,
 
@@ -33,6 +49,46 @@ local STYLE = {
     select_in       = 0.10,
     deselect_out    = 0.15,
 }
+
+-- ---- accent registry ---------------------------------------
+--  Accent(a)                  r, g, b, a  using the current accent
+--  PaintAccent(obj, "SetX", a) paints now and again whenever the accent changes
+--  SetAccent(r, g, b)         retheme; OnAccentChanged(fn) for custom drawing
+local accentPainted   = setmetatable({}, { __mode = "k" })
+local accentListeners = {}
+
+function STYLE.Accent(alpha)
+    local c = STYLE.accent
+    return c[1], c[2], c[3], alpha or 1
+end
+
+function STYLE.PaintAccent(obj, method, alpha)
+    obj[method](obj, STYLE.Accent(alpha))
+    local methods = accentPainted[obj]
+    if not methods then methods = {}; accentPainted[obj] = methods end
+    methods[method] = alpha
+    return obj
+end
+
+function STYLE.OnAccentChanged(fn)
+    accentListeners[#accentListeners + 1] = fn
+end
+
+function STYLE.SetAccent(r, g, b)
+    local c = STYLE.accent
+    c[1], c[2], c[3] = r, g, b
+    for _, token in ipairs({ STYLE.hover_color, STYLE.selected_color }) do
+        token[1], token[2], token[3] = r, g, b
+    end
+    for obj, methods in pairs(accentPainted) do
+        for method, alpha in pairs(methods) do obj[method](obj, r, g, b, alpha or 1) end
+    end
+    for _, fn in ipairs(accentListeners) do fn(r, g, b) end
+end
+
+NSI.UI = NSI.UI or {}
+NSI.UI.Style = STYLE
+local Accent, PaintAccent = STYLE.Accent, STYLE.PaintAccent
 
 -- ============================================================
 --  CreateButton
@@ -219,7 +275,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
             iconTex:SetTexture(texture_info .. ".png")
         end
         iconTex:SetTexCoord(0.12, 0.88, 0.11, 0.89)
-        iconTex:SetVertexColor(1, 1, 1)
+        iconTex:SetVertexColor(unpack(STYLE.text_color))
         btn.icon = iconTex
         btn.iconFrame = iconFrame
 
@@ -345,7 +401,7 @@ local function CreateButton(parent, text, onClick, width, height, name, icon, te
         self.frame:Enable()
         self.label:SetTextColor(unpack(STYLE.text_color))
         if self.frame.icon then
-            self.frame.icon:SetVertexColor(1, 1, 1, 1)
+            self.frame.icon:SetVertexColor(unpack(STYLE.text_color))
         end
     end
 
@@ -456,7 +512,7 @@ end
 --    :Disable()       also dims label and box, blocks toggling
 --    :IsEnabled() → bool
 -- ============================================================
-local function CreateCheckButton(parent, label, getValue, setValue, width, height, name, tooltip)
+local function CreateCheckButton(parent, label, getValue, setValue, width, height, name, tooltip, icon, iconSize)
     local totalW = width  or 180
     local totalH = height or 22
     local BOX    = 14
@@ -479,13 +535,13 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
         edgeSize = 1,
     })
     box:SetBackdropColor(unpack(STYLE.bg_color))
-    box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+    box:SetBackdropBorderColor(unpack(STYLE.border_subtle))
 
     -- Cyan fill shown when checked
     local checkFill = box:CreateTexture(nil, "ARTWORK")
     checkFill:SetPoint("TOPLEFT",     box, "TOPLEFT",     2, -2)
     checkFill:SetPoint("BOTTOMRIGHT", box, "BOTTOMRIGHT", -2,  2)
-    checkFill:SetColorTexture(0, 1, 1, 0.85)
+    PaintAccent(checkFill, "SetColorTexture", 0.85)
     checkFill:Hide()
 
     -- Hover overlay on the whole row (same fade pattern as CreateButton)
@@ -500,6 +556,20 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
     lbl:SetPoint("RIGHT", btn, "RIGHT",   0,   0)
     lbl:SetHeight(totalH)
 
+    -- Optional icon between the box and the label (a texture file ID or path)
+    if icon then
+        local size = iconSize or 16
+        local iconTex = btn:CreateTexture(nil, "ARTWORK")
+        iconTex:SetSize(size, size)
+        iconTex:SetPoint("LEFT", box, "RIGHT", GAP, 0)
+        iconTex:SetTexture(icon)
+        iconTex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        lbl:ClearAllPoints()
+        lbl:SetPoint("LEFT",  iconTex, "RIGHT", GAP, 0)
+        lbl:SetPoint("RIGHT", btn, "RIGHT", 0, 0)
+        lbl:SetHeight(totalH)
+    end
+
     local isChecked  = getValue and getValue(NSI) or false
     local isDisabled = false
 
@@ -510,12 +580,12 @@ local function CreateCheckButton(parent, label, getValue, setValue, width, heigh
                 checkFill:SetColorTexture(0.45, 0.45, 0.45, 0.6)
                 box:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
             else
-                checkFill:SetColorTexture(0, 1, 1, 0.85)
-                box:SetBackdropBorderColor(0, 1, 1, 0.9)
+                checkFill:SetColorTexture(Accent(0.85))
+                box:SetBackdropBorderColor(Accent(0.9))
             end
         else
             checkFill:Hide()
-            box:SetBackdropBorderColor(0.25, 0.25, 0.25, 1)
+            box:SetBackdropBorderColor(unpack(STYLE.border_subtle))
         end
     end
     Refresh()
@@ -605,11 +675,13 @@ end
 --    :IsEnabled() → bool
 -- ============================================================
 local function CreateTextEntry(parent, label, getValue, setValue,
-                               width, height, numeric, minVal, maxVal, name, tooltip, inputWidth)
+                               width, height, numeric, minVal, maxVal, name, tooltip, inputWidth, hooks, labelWidth)
     local totalW    = width or 220
     local totalH    = height or 22
-    local BOX_W     = inputWidth or 60
+    local BOX_W     = labelWidth and (totalW - 8 - labelWidth) or inputWidth or 60
     local GAP       = 8
+    local MIN_BOX_W = 90
+    local fitInput  = inputWidth ~= nil and not labelWidth   -- inputWidth is then a maximum, shrunk so the label fits
     local hasLabel  = label and label ~= ""
     local baseLevel = parent:GetFrameLevel() + 1
 
@@ -651,13 +723,13 @@ local function CreateTextEntry(parent, label, getValue, setValue,
         edgeFile = [[Interface\Buttons\WHITE8x8]],
         edgeSize = 1,
     })
-    focusBorder:SetBackdropBorderColor(0, 1, 1, 0)   -- hidden until focused
+    focusBorder:SetBackdropBorderColor(Accent(0))   -- hidden until focused
 
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4,  -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
     edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
-    edit:SetTextColor(1, 1, 1, 1)
+    edit:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[edit] = 12
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
@@ -699,8 +771,29 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     edit:SetScript("OnLeave", function()
         HideTooltip(tooltip)
     end)
+    -- Extra script hooks ({ OnEnterPressed = fn, ... }) run after the built-in handlers,
+    -- so the value has already been committed when they fire.
+    if hooks then
+        for scriptName, fn in pairs(hooks) do edit:HookScript(scriptName, fn) end
+    end
 
     local obj = {frame = container, editBox = edit, label = lbl}
+
+    -- Give the label the room it needs and the input the rest (between MIN_BOX_W and
+    -- the requested width), so neither is cut off inside the available row.
+    local function FitInput()
+        if not (hasLabel and fitInput) then return end
+        local labelW = math.ceil(lbl:GetStringWidth() or 0) + 2
+        local box = math.max(MIN_BOX_W, math.min(inputWidth, totalW - GAP - labelW))
+        box = math.min(box, totalW - GAP - 40)
+        BOX_W = box
+        lbl:ClearAllPoints()
+        lbl:SetPoint("LEFT",  container, "LEFT",  0, 0)
+        lbl:SetPoint("RIGHT", container, "RIGHT", -(box + GAP), 0)
+        lbl:SetHeight(totalH)
+        inputFrame:SetWidth(box)
+    end
+    FitInput()
 
     function obj:SetValue(v)   edit:SetText(tostring(v))                                    end
     function obj:GetValue()    return numeric and tonumber(edit:GetText()) or edit:GetText() end
@@ -709,13 +802,14 @@ local function CreateTextEntry(parent, label, getValue, setValue,
     function obj:GetWidth()    return self.frame:GetWidth()                                  end
     function obj:SetLocaleKey(key)
         if self.label then RegisterLocalizedText(self.label, key) end
+        FitInput()
     end
 
     function obj:Enable()
         self._disabled = false
         edit:SetEnabled(true)
         edit:EnableMouse(true)
-        edit:SetTextColor(1, 1, 1, 1)
+        edit:SetTextColor(unpack(STYLE.text_color))
         if lbl then lbl:SetTextColor(unpack(STYLE.text_color)) end
         MakeControlBackdrop(inputFrame)
     end
@@ -761,7 +855,7 @@ end
 --    :Disable()   also dims label/value and closes the popup if open
 --    :IsEnabled() → bool
 -- ============================================================
-local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted, searchable)
+local function CreateDropdown(parent, label, getItems, getSelected, width, height, name, tooltip, maxRows, highlighted, searchable, labelWidth)
     local totalW   = width  or 220
     local totalH   = height or 22
     local ROW_H    = 20
@@ -773,7 +867,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     container:SetFrameLevel(baseLevel)
 
     local hasLabel = label and label ~= ""
-    local labelW   = hasLabel and math.floor(totalW * 0.5) or 0
+    local labelW   = hasLabel and (labelWidth or math.floor(totalW * 0.5)) or 0
     local dropW    = totalW - labelW - (hasLabel and 8 or 0)
 
     -- Optional label
@@ -781,7 +875,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     if hasLabel then
         lbl = MakeFontString(container, highlighted and 14 or 13)
         if highlighted then
-            lbl:SetTextColor(1, 0.82, 0, 1)
+            lbl:SetTextColor(unpack(STYLE.text_gold))
         end
         lbl:SetText(label)
         lbl:SetJustifyH("LEFT")
@@ -833,8 +927,8 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         edgeFile = [[Interface\Buttons\WHITE8x8]],
         edgeSize = 1,
     })
-    popup:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    popup:SetBackdropBorderColor(0, 1, 1, 0.7)
+    popup:SetBackdropColor(unpack(STYLE.surface_panel))
+    PaintAccent(popup, "SetBackdropBorderColor", 0.7)
 
     -- Optional search box pinned to the top of the popup
     local SEARCH_H = 20
@@ -847,7 +941,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         MakeControlBackdrop(searchBox)
         searchBox:SetAutoFocus(false)
         searchBox:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
-        searchBox:SetTextColor(1, 1, 1, 1)
+        searchBox:SetTextColor(unpack(STYLE.text_color))
         searchBox:SetTextInsets(6, 6, 0, 0)
         searchBox:SetMaxLetters(100)
         labelRegistry[searchBox] = 12
@@ -871,7 +965,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     sbThumb:SetFrameLevel(popup:GetFrameLevel() + 5)
     local sbTex = sbThumb:CreateTexture(nil, "OVERLAY")
     sbTex:SetAllPoints(sbThumb)
-    sbTex:SetColorTexture(0, 1, 1, 0.45)
+    PaintAccent(sbTex, "SetColorTexture", 0.45)
     sbThumb:Hide()
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, popup)
@@ -1003,7 +1097,7 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
     if searchable then
         noResultsLabel = MakeFontString(content, 12)
         noResultsLabel:SetText("No matches")
-        noResultsLabel:SetTextColor(0.6, 0.6, 0.6, 1)
+        noResultsLabel:SetTextColor(unpack(STYLE.text_muted))
         noResultsLabel:SetPoint("TOPLEFT", content, "TOPLEFT", 6, 0)
         noResultsLabel:Hide()
     end
@@ -1153,9 +1247,9 @@ local function CreateDropdown(parent, label, getItems, getSelected, width, heigh
         self._disabled = false
         dropBtn:Enable()
         valText:SetTextColor(unpack(STYLE.text_color))
-        arrowTexture:SetVertexColor(1, 1, 1, 1)
+        arrowTexture:SetVertexColor(unpack(STYLE.text_color))
         if lbl then
-            if highlighted then lbl:SetTextColor(1, 0.82, 0, 1) else lbl:SetTextColor(unpack(STYLE.text_color)) end
+            if highlighted then lbl:SetTextColor(unpack(STYLE.text_gold)) else lbl:SetTextColor(unpack(STYLE.text_color)) end
         end
     end
 
@@ -1205,10 +1299,10 @@ end
 --    :IsEnabled() → bool
 -- ============================================================
 local function CreateSlider(parent, label, getValue, setValue,
-                            width, height, minVal, maxVal, step, name, tooltip, liveDrag, decimals, useDecimals)
+                            width, height, minVal, maxVal, step, name, tooltip, liveDrag, decimals, useDecimals, labelWidth)
     local totalW  = width  or 220
     local totalH  = height or 22
-    local LABEL_W = math.floor(totalW * 0.38)
+    local LABEL_W = labelWidth or math.floor(totalW * 0.38)
     local VAL_W   = 38
     local TRACK_W = totalW - LABEL_W - VAL_W - 8
     local baseLevel = parent:GetFrameLevel() + 1
@@ -1235,7 +1329,7 @@ local function CreateSlider(parent, label, getValue, setValue,
 
     -- Cyan fill that grows left → thumb position
     local fillTex = container:CreateTexture(nil, "ARTWORK")
-    fillTex:SetColorTexture(0, 1, 1, 0.45)
+    PaintAccent(fillTex, "SetColorTexture", 0.45)
     fillTex:SetHeight(3)
     fillTex:SetPoint("LEFT", container, "LEFT", LABEL_W + 4, 0)
     fillTex:SetWidth(1)
@@ -1254,11 +1348,11 @@ local function CreateSlider(parent, label, getValue, setValue,
     slider:SetThumbTexture([[Interface\Buttons\WHITE8x8]])
     local thumb = slider:GetThumbTexture()
     thumb:SetSize(8, 14)
-    thumb:SetVertexColor(0, 1, 1, 1)
+    PaintAccent(thumb, "SetVertexColor", 1)
 
     -- Value text (right side)
     local valText = MakeFontString(container, 11)
-    valText:SetTextColor(1, 1, 1, 1)
+    valText:SetTextColor(unpack(STYLE.text_color))
     valText:SetJustifyH("RIGHT")
     valText:SetJustifyV("MIDDLE")
     valText:SetPoint("RIGHT", container, "RIGHT", 0, 0)
@@ -1270,7 +1364,7 @@ local function CreateSlider(parent, label, getValue, setValue,
     valueBorder:SetSize(VAL_W, totalH)
     valueBorder:SetFrameLevel(baseLevel + 1)
     valueBorder:SetBackdrop({ edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
-    valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
+    PaintAccent(valueBorder, "SetBackdropBorderColor", 0.45)
     valueBorder:EnableMouse(false)
 
     local function GetDecimalPlaces(v)
@@ -1341,7 +1435,7 @@ local function CreateSlider(parent, label, getValue, setValue,
         ShowTooltip(self, tooltip)
     end)
     slider:SetScript("OnLeave", function()
-        thumb:SetVertexColor(0,   1, 1, 1)
+        thumb:SetVertexColor(Accent(1))
         HideTooltip(tooltip)
     end)
     local function RefreshThumb()
@@ -1349,7 +1443,7 @@ local function CreateSlider(parent, label, getValue, setValue,
             slider:SetThumbTexture([[Interface\Buttons\WHITE8x8]])
             thumb = slider:GetThumbTexture()
             thumb:SetSize(8, 14)
-            thumb:SetVertexColor(0, 1, 1, 1)
+            thumb:SetVertexColor(Accent(1))
         end)
     end
     slider:HookScript("OnShow", RefreshThumb)
@@ -1372,10 +1466,10 @@ local function CreateSlider(parent, label, getValue, setValue,
     valBtn:SetFrameLevel(baseLevel + 4)
     valBtn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     valBtn:SetScript("OnEnter", function()
-        valueBorder:SetBackdropBorderColor(0, 1, 1, 1)
+        valueBorder:SetBackdropBorderColor(Accent(1))
     end)
     valBtn:SetScript("OnLeave", function()
-        valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
+        valueBorder:SetBackdropBorderColor(Accent(0.45))
     end)
 
     local typeBox = NSI.UI.Pixel.CreateBoxFrame("EditBox", nil, container)
@@ -1386,11 +1480,11 @@ local function CreateSlider(parent, label, getValue, setValue,
     typeBox:SetNumeric(false)
     typeBox:SetMaxLetters(10)
     typeBox:SetFont(ValidateFont(NSI:GetFallbackUIFontPath()), 11, "")
-    typeBox:SetTextColor(0, 1, 1, 1)
+    PaintAccent(typeBox, "SetTextColor", 1)
     typeBox:SetJustifyH("RIGHT")
     typeBox:SetBackdrop({bgFile=[[Interface\Buttons\WHITE8x8]], edgeFile=[[Interface\Buttons\WHITE8x8]], edgeSize=1})
     typeBox:SetBackdropColor(0.04, 0.04, 0.06, 1)
-    typeBox:SetBackdropBorderColor(0, 1, 1, 0.8)
+    PaintAccent(typeBox, "SetBackdropBorderColor", 0.8)
     typeBox:Hide()
 
     local function CommitTypeBox()
@@ -1449,10 +1543,10 @@ local function CreateSlider(parent, label, getValue, setValue,
         slider:EnableMouse(true)
         valBtn:EnableMouse(true)
         lbl:SetTextColor(unpack(STYLE.text_color))
-        valText:SetTextColor(1, 1, 1, 1)
-        valueBorder:SetBackdropBorderColor(0, 1, 1, 0.45)
-        thumb:SetVertexColor(0, 1, 1, 1)
-        fillTex:SetColorTexture(0, 1, 1, 0.45)
+        valText:SetTextColor(unpack(STYLE.text_color))
+        valueBorder:SetBackdropBorderColor(Accent(0.45))
+        thumb:SetVertexColor(Accent(1))
+        fillTex:SetColorTexture(Accent(0.45))
     end
 
     function obj:Disable()
@@ -1501,7 +1595,7 @@ end
 --    :Disable()   also dims label/swatch and blocks opening the picker
 --    :IsEnabled() → bool
 -- ============================================================
-local function CreateColorPicker(parent, label, getValue, setValue, width, height, name, tooltip)
+local function CreateColorPicker(parent, label, getValue, setValue, width, height, name, tooltip, labelWidth)
     local totalW   = width  or 220
     local totalH   = height or 22
     local SWATCH_W = 40
@@ -1524,6 +1618,14 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
     -- Swatch button (same backdrop pattern as CreateButton)
     local swatchBtn = NSI.UI.Pixel.CreateBoxFrame("Button", nil, container)
     swatchBtn:SetSize(SWATCH_W, totalH)
+    if labelWidth then
+        -- Label takes the shared label column; the swatch stays right-aligned so its
+        -- right edge lines up with the other inputs.
+        lbl:ClearAllPoints()
+        lbl:SetPoint("LEFT", container, "LEFT", 0, 0)
+        lbl:SetWidth(labelWidth)
+        lbl:SetHeight(totalH)
+    end
     swatchBtn:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     swatchBtn:SetFrameLevel(baseLevel + 1)
     MakeControlBackdrop(swatchBtn)
@@ -1623,7 +1725,7 @@ local function CreateColorPicker(parent, label, getValue, setValue, width, heigh
         self._disabled = false
         swatchBtn:Enable()
         lbl:SetTextColor(unpack(STYLE.text_color))
-        colorTex:SetVertexColor(1, 1, 1, 1)
+        colorTex:SetVertexColor(unpack(STYLE.text_color))
         UpdateSwatch()
     end
 
@@ -1669,11 +1771,11 @@ local function CreateLabel(parent, text, width, height, name, highlighted, textC
 
     local lbl = MakeFontString(container, highlighted and 14 or 12)
     if highlighted then
-        lbl:SetTextColor(0, 1, 1, 1)
+        lbl:SetTextColor(Accent(1))
     elseif textColor then
         lbl:SetTextColor(unpack(textColor))
     else
-        lbl:SetTextColor(0.55, 0.55, 0.55, 1)
+        lbl:SetTextColor(unpack(STYLE.text_muted))
     end
     lbl:SetText(text or "")
     lbl:SetWordWrap(true)
@@ -1718,7 +1820,7 @@ local function CreateBreakline(parent, width, height, name)
     container:SetSize(totalW, totalH)
 
     local line = container:CreateTexture(nil, "ARTWORK")
-    line:SetColorTexture(0, 1, 1, 0.12)
+    PaintAccent(line, "SetColorTexture", 0.12)
     line:SetHeight(1)
     line:SetPoint("LEFT",  container, "LEFT",  0, 0)
     line:SetPoint("RIGHT", container, "RIGHT", 0, 0)
@@ -1797,15 +1899,15 @@ local function StyleArrowButton(btn, iconFile)
     local icon = iconFrame:CreateTexture(nil, "ARTWORK")
     icon:SetAllPoints()
     icon:SetTexture(ICON_PATH .. iconFile)
-    icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+    icon:SetVertexColor(unpack(STYLE.text_soft))
 
     btn:SetScript("OnEnter", function()
         UIFrameFadeIn(hoverBg, STYLE.hover_in, hoverBg:GetAlpha(), 1)
-        icon:SetVertexColor(0, 1, 1, 1)
+        icon:SetVertexColor(Accent(1))
     end)
     btn:SetScript("OnLeave", function()
         UIFrameFadeOut(hoverBg, STYLE.hover_out, hoverBg:GetAlpha(), 0)
-        icon:SetVertexColor(0.7, 0.7, 0.7, 1)
+        icon:SetVertexColor(unpack(STYLE.text_soft))
     end)
 end
 
@@ -1824,7 +1926,7 @@ local function ReskinScrollbar(scrollFrame)
     if bar.GetThumbTexture then
         local thumb = bar:GetThumbTexture()
         if thumb then
-            thumb:SetColorTexture(0, 1, 1, 0.45)
+            thumb:SetColorTexture(Accent(0.45))
             thumb:SetWidth(6)
         end
     end
@@ -1974,6 +2076,14 @@ local function TooltipKey(tooltip)
     return tooltip or ""
 end
 
+local function HookKey(hooks)
+    if not hooks then return "" end
+    local names = {}
+    for name in pairs(hooks) do names[#names + 1] = name end
+    table.sort(names)
+    return table.concat(names, ",")
+end
+
 local function DefSignature(def)
     local t = def.Type
     if t == "Custom" then
@@ -1986,7 +2096,8 @@ local function DefSignature(def)
         t, def.height or "", def.min or "", def.max or "", def.step or "", def.decimals or "",
         tostring(def.usedecimals or def.useDecimals or false), tostring(def.liveDrag or false),
         tostring(def.numeric or false), def.inputWidth or "", def.width or "",
-        tostring(def.highlight or false),
+        tostring(def.highlight or false), tostring(def.nocombat or false),
+        tostring(def.icon or ""), def.iconSize or "", def.labelW or "", tostring(def.autoWidth or false), def.textSize or "", HookKey(def.hooks), def.getText and "t" or "",
         def.get and "g" or "", def.set and "s" or "", def.func and "f" or "",
         (def.label and def.label ~= "") and "L" or "",
         (t == "Button") and (def.label or "") or "",
@@ -2016,6 +2127,8 @@ local function BindSlot(slot, def)
     slot.set    = ResolveCallback(def.set)
     slot.values = ResolveCallback(def.values)
     slot.func   = ResolveCallback(def.func)
+    slot.hooks  = def.hooks
+    slot.getText = def.getText
 end
 
 local function SlotCall(slot, field, present)
@@ -2049,11 +2162,34 @@ local function RebindItem(item, def)
         ctrl:SetValue(slot.get and slot.get(NSI) or "")
     elseif t == "Dropdown" or t == "Color" then
         ctrl:Refresh()
+    elseif t == "Label" and slot.getText then
+        ctrl:SetText(NSI:Loc(slot.getText() or ""))
     end
 end
 
+-- ---- combat lock ------------------------------------------------
+-- Descriptors with nocombat = true are disabled while the player is in combat
+-- (settings that rebuild frames or touch protected state).
+local combatLocked = setmetatable({}, WEAK_KEYS)
+local combatWatcher = CreateFrame("Frame")
+combatWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+combatWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+combatWatcher:SetScript("OnEvent", function(_, event)
+    local entering = event == "PLAYER_REGEN_DISABLED"
+    for ctrl in pairs(combatLocked) do
+        if entering then ctrl:Disable() else ctrl:Enable() end
+    end
+end)
+
+local function LockInCombat(ctrl)
+    if not (ctrl.Enable and ctrl.Disable) then return end
+    combatLocked[ctrl] = true
+    if InCombatLockdown() then ctrl:Disable() end
+end
+
 -- ---- building ---------------------------------------------------
-local function BuildSet(parent, definitions, width)
+local function BuildSet(parent, definitions, width, gap)
+    gap = gap or WIDGET_GAP
     local C = NSI.UI.Components
     local items, byIndex = {}, {}
     local y = 0
@@ -2068,7 +2204,7 @@ local function BuildSet(parent, definitions, width)
         if t == "Slider" or t == "Scale" then
             ctrl = C.CreateSlider(parent, def.label,
                 SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set),
-                width, h, def.min, def.max, def.step, nil, def.tooltip, def.liveDrag, def.decimals, def.usedecimals or def.useDecimals)
+                width, h, def.min, def.max, def.step, nil, def.tooltip, def.liveDrag, def.decimals, def.usedecimals or def.useDecimals, def.labelW)
 
         elseif t == "Dropdown" then
             local function getItems()
@@ -2094,23 +2230,36 @@ local function BuildSet(parent, definitions, width)
                 return cur ~= nil and tostring(cur) or ""
             end
             ctrl = C.CreateDropdown(parent, def.label,
-                getItems, getSelected, width, h, nil, def.tooltip, nil, def.highlight)
+                getItems, getSelected, width, h, nil, def.tooltip, nil, def.highlight, nil, def.labelW)
 
         elseif t == "Color" then
             ctrl = C.CreateColorPicker(parent, def.label,
-                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set), width, h, nil, def.tooltip)
+                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set), width, h, nil, def.tooltip, def.labelW)
 
         elseif t == "Checkbox" then
             ctrl = C.CreateCheckButton(parent, def.label,
-                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set), width, h, nil, def.tooltip)
+                SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set), width, h, nil, def.tooltip,
+                def.icon, def.iconSize)
 
         elseif t == "TextEntry" then
+            local hooks
+            if def.hooks then
+                hooks = {}
+                for hookName in pairs(def.hooks) do
+                    hooks[hookName] = function(...)
+                        local fn = slot.hooks and slot.hooks[hookName]
+                        if fn then return fn(...) end
+                    end
+                end
+            end
             ctrl = C.CreateTextEntry(parent, def.label,
                 SlotCall(slot, "get", def.get), SlotCall(slot, "set", def.set),
-                width, h, def.numeric, def.min, def.max, nil, def.tooltip, def.inputWidth)
+                width, h, def.numeric, def.min, def.max, nil, def.tooltip, def.inputWidth, hooks, def.labelW)
 
         elseif t == "Label" then
-            ctrl = C.CreateLabel(parent, def.text, width, h, nil, def.highlight, def.textColor)
+            local text = def.text
+            if def.getText then text = NSI:Loc(def.getText() or "") end
+            ctrl = C.CreateLabel(parent, text, width, h, nil, def.highlight, def.textColor)
 
         elseif t == "Breakline" then
             ctrl = C.CreateBreakline(parent, width, h, nil)
@@ -2119,10 +2268,12 @@ local function BuildSet(parent, definitions, width)
             ctrl = C.CreateLink(parent, def.label, def.url, def.width or width, h, nil, def.tooltip)
 
         elseif t == "Button" then
-            ctrl = C.CreateButton(parent, def.label, function()
+            -- autoWidth sizes the button to its (localized) label instead of the row.
+            local text = def.autoWidth and NSI:Loc(def.label or "") or def.label
+            ctrl = C.CreateButton(parent, text, function()
                 local func = slot.func
                 if func then func(NSI) end
-            end, def.width or width, h, nil, nil, nil, def.tooltip)
+            end, (not def.autoWidth) and (def.width or width) or nil, h, nil, nil, def.textSize, def.tooltip)
 
         elseif t == "Custom" then
             local build = ResolveCallback(def.build)
@@ -2136,18 +2287,19 @@ local function BuildSet(parent, definitions, width)
         if ctrl then
             local key = def.label or def.text
             if key and ctrl.SetLocaleKey then ctrl:SetLocaleKey(key) end
+            if def.nocombat then LockInCombat(ctrl) end
             local item = {
                 ctrl = ctrl, frame = ctrl.frame or ctrl, type = t,
                 slot = slot, h = h, index = index,
             }
             items[#items + 1] = item
             byIndex[index] = item
-            ctrl:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -y)
-            y = y + h + WIDGET_GAP
+            ctrl:SetPoint("TOPLEFT", parent, "TOPLEFT", def.indent or 0, -y)
+            y = y + h + gap
         end
     end
 
-    return { items = items, byIndex = byIndex, height = y > 0 and (y - WIDGET_GAP) or 0 }
+    return { items = items, byIndex = byIndex, height = y > 0 and (y - gap) or 0 }
 end
 
 local function BuildWidgets(parent, definitions, width)
@@ -2158,8 +2310,8 @@ end
 local WidgetHost = {}
 WidgetHost.__index = WidgetHost
 
-local function CreateWidgetHost(parent, width)
-    return setmetatable({ parent = parent, width = width, sets = {} }, WidgetHost)
+local function CreateWidgetHost(parent, width, gap)
+    return setmetatable({ parent = parent, width = width, gap = gap or WIDGET_GAP, sets = {} }, WidgetHost)
 end
 
 function WidgetHost:Apply(definitions, isVisible)
@@ -2177,7 +2329,7 @@ function WidgetHost:Apply(definitions, isVisible)
         container:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
         container:SetSize(width, 1)
         container:Hide()
-        set = BuildSet(container, definitions, width)
+        set = BuildSet(container, definitions, width, self.gap)
         set.container = container
         self.sets[sig] = set
     else
@@ -2198,15 +2350,15 @@ function WidgetHost:Apply(definitions, isVisible)
         if item then
             if not isVisible or isVisible(def, index) then
                 item.frame:ClearAllPoints()
-                item.frame:SetPoint("TOPLEFT", container, "TOPLEFT", 0, -y)
+                item.frame:SetPoint("TOPLEFT", container, "TOPLEFT", def.indent or 0, -y)
                 item.frame:Show()
-                y = y + item.h + WIDGET_GAP
+                y = y + item.h + self.gap
             else
                 item.frame:Hide()
             end
         end
     end
-    local height = y > 0 and (y - WIDGET_GAP) or 0
+    local height = y > 0 and (y - self.gap) or 0
     container:SetHeight(math.max(height, 1))
     container:Show()
     self.current = set
@@ -2216,6 +2368,354 @@ end
 -- Hide whatever the host is showing (e.g. when its tab is hidden by other means).
 function WidgetHost:Hide()
     if self.current then self.current.container:Hide() end
+end
+
+-- ============================================================
+--  BuildMenu
+--
+--  Builds a Details Framework BuildMenu-style option table with NSRT
+--  components, so every options page looks and behaves the same.
+--
+--    menu = C.BuildMenu(tabFrame, optionTable [, onChange])
+--
+--  The page scrolls vertically and is built once; breaklines split it into columns. tabFrame.RefreshOptions()
+--  re-reads every value in place (the tab system calls it when a tab is shown).
+--  onChange(nil, nil, value) runs after any control commits a value.
+--
+--  Entry fields understood:
+--    type      toggle | range | select | color | button | label | textentry
+--              | breakline | blank
+--    name, desc, get, set(self, fixedparam, value), nocombat (disabled in combat)
+--    toggle    icontexture / iconsize
+--    range     min, max, step, usedecimals
+--    select    values (table or function) of { label, value, onclick }
+--    color     get() -> r, g, b, a   set(self, r, g, b, a)
+--    button    func(self)
+--    label     get() -> text; a text_template marks it as a heading when short
+--    textentry hooks = { OnEnterPressed = fn, OnEditFocusLost = fn }
+--  spacement, boxfirst, phraseId and hasAlpha need no mapping.
+-- ============================================================
+local MENU_MIN_COL    = 340
+local MENU_MAX_COL    = 480
+local MENU_COL_GAP    = 28
+local MENU_ROW_GAP    = 18
+local MENU_PAD        = 14
+local MENU_HEADING_MAX = 48
+local MENU_BUTTON_H   = 20   -- option buttons are compact; tab buttons set their own size
+local MENU_BUTTON_TEXT = 12
+
+local function MenuTooltip(o)
+    if not o.desc then return nil end
+    return { title = o.name, desc = o.desc }
+end
+
+local function MenuEntries(o)
+    local v = o.values
+    if type(v) == "function" then v = v(NSI) end
+    return v or {}
+end
+
+local function ConvertMenuEntry(o, onChange, columnWidth)
+    local t = o.type
+    local function Changed(value)
+        if onChange then onChange(nil, nil, value) end
+    end
+
+    if t == "toggle" then
+        return {
+            Type = "Checkbox", label = o.name or "", tooltip = MenuTooltip(o), nocombat = o.nocombat,
+            icon = o.icontexture, iconSize = o.iconsize and o.iconsize[1],
+            get = function() return o.get and o.get(NSI) end,
+            set = function(_, value)
+                if o.set then o.set(nil, nil, value) end
+                Changed(value)
+            end,
+        }
+    elseif t == "range" then
+        return {
+            Type = "Slider", label = o.name or "", tooltip = MenuTooltip(o), nocombat = o.nocombat,
+            min = o.min, max = o.max, step = o.step, usedecimals = o.usedecimals,
+            get = function() return o.get and o.get(NSI) end,
+            set = function(_, value)
+                if o.set then o.set(nil, nil, value) end
+                Changed(value)
+            end,
+        }
+    elseif t == "select" then
+        return {
+            Type = "Dropdown", label = o.name or "", tooltip = MenuTooltip(o), nocombat = o.nocombat,
+            get = function() return o.get and o.get(NSI) end,
+            values = function()
+                local out = {}
+                for _, v in ipairs(MenuEntries(o)) do
+                    out[#out + 1] = { label = v.label, value = v.value, font = v.font }
+                end
+                return out
+            end,
+            set = function(_, value)
+                for _, v in ipairs(MenuEntries(o)) do
+                    if v.value == value then
+                        if v.onclick then v.onclick(nil, nil, value)
+                        elseif o.set then o.set(nil, nil, value) end
+                        break
+                    end
+                end
+                Changed(value)
+            end,
+        }
+    elseif t == "color" then
+        return {
+            Type = "Color", label = o.name or "", tooltip = MenuTooltip(o), nocombat = o.nocombat,
+            -- Getters return r, g, b, a or one { r, g, b, a } / { r =, g =, b =, a = } table.
+            get = function()
+                if not o.get then return 1, 1, 1, 1 end
+                local r, g, b, a = o.get(NSI)
+                if type(r) == "table" then
+                    local c = r
+                    return c[1] or c.r or 1, c[2] or c.g or 1, c[3] or c.b or 1, c[4] or c.a or 1
+                end
+                return r or 1, g or 1, b or 1, a or 1
+            end,
+            set = function(_, r, g, b, a)
+                if o.set then o.set(nil, r, g, b, a) end
+                Changed(r)
+            end,
+        }
+    elseif t == "button" then
+        return {
+            Type = "Button", label = o.name or "", tooltip = MenuTooltip(o), nocombat = o.nocombat,
+            autoWidth = true, height = MENU_BUTTON_H, textSize = MENU_BUTTON_TEXT,
+            func = function()
+                if o.func then o.func(nil) end
+                Changed()
+            end,
+        }
+    elseif t == "textentry" then
+        return {
+            Type = "TextEntry", label = o.name or "", tooltip = MenuTooltip(o), nocombat = o.nocombat,
+            inputWidth = 200, hooks = o.hooks,
+            get = function() return o.get and o.get(NSI) end,
+            set = function(_, value)
+                if o.set then o.set(nil, nil, value) end
+                Changed(value)
+            end,
+        }
+    elseif t == "label" then
+        local text = NSI:Loc((o.get and o.get(NSI)) or "")
+        if text == "" then return nil end   -- spacer labels carry no content
+        local def = { Type = "Label", getText = function() return o.get and o.get(NSI) end }
+        if o.headerButton then def.headerButton = ConvertMenuEntry(o.headerButton, onChange, columnWidth) end
+        if o.text_template and #text <= MENU_HEADING_MAX then
+            def.highlight = true
+            def.height = 22
+        elseif o.text_template then
+            -- A long emphasised line is a note: wrap it and size the row to fit.
+            def.textColor = { 0.8, 0.8, 0.8, 1 }
+            def.height = math.max(1, math.ceil(#text * 6.4 / columnWidth)) * 15 + 1
+        end
+        return def
+    elseif t == "breakline" then
+        return { Type = "Breakline" }
+    elseif t == "blank" then
+        return { Type = "Label", text = "", height = 8 }
+    end
+end
+
+local function ConvertMenu(options, onChange, columnWidth)
+    local defs = {}
+    for _, o in ipairs(options) do
+        local def = ConvertMenuEntry(o, onChange, columnWidth)
+        if def then defs[#defs + 1] = def end
+    end
+    return defs
+end
+
+-- Sections: a heading label (the orange ones in the old menus) opens a section that
+-- runs to the next heading or breakline. Each section is drawn as a card, and its
+-- sliders, dropdowns, text boxes and colour swatches share one label column and one
+-- control column so they line up and have the same width.
+local MENU_CARD_PAD    = 10
+local MENU_HEADER_ROW  = 18                                 -- title/button row height
+local MENU_HEADER_H    = MENU_HEADER_ROW + MENU_CARD_PAD * 2 -- equal padding above and below
+local MENU_SECTION_GAP = 12
+local MENU_LABEL_GAP   = 8
+local MENU_ROW_SPACING = 9   -- vertical gap between rows inside a card
+local MENU_LABELED     = { Slider = true, Scale = true, Dropdown = true, TextEntry = true, Color = true }
+
+-- Split converted definitions into { title = getText|nil, defs = {...} } sections.
+-- A heading label opens a section. A heading that comes straight after another one
+-- (nothing in between) is a note belonging to that section, not a new heading, and a
+-- section with no widgets at all is dropped.
+local function SplitSections(defs, contentW)
+    local sections, current = {}, { defs = {} }
+    local function Close()
+        if #current.defs > 0 then sections[#sections + 1] = current end
+    end
+    for _, def in ipairs(defs) do
+        if def.Type == "Label" and def.highlight then
+            if current.title and #current.defs == 0 then
+                -- demote to a wrapped note under the section title
+                local text = NSI:Loc(def.getText and def.getText() or def.text or "")
+                def.highlight = nil
+                def.textColor = { 0.8, 0.8, 0.8, 1 }
+                def.height = math.max(1, math.ceil(#text * 6.4 / contentW)) * 15 + 1
+                current.defs[#current.defs + 1] = def
+            else
+                Close()
+                current = { title = def.getText or function() return def.text end, headerButton = def.headerButton, defs = {} }
+            end
+        else
+            current.defs[#current.defs + 1] = def
+        end
+    end
+    Close()
+    return sections
+end
+
+-- Label gets the left half of the section, the input (box, slider, dropdown, swatch,
+-- button) the right half.
+local function AssignHalves(defs, contentW)
+    local labelW = math.floor(contentW / 2) - MENU_LABEL_GAP
+    local controlX = labelW + MENU_LABEL_GAP
+    for _, def in ipairs(defs) do
+        if MENU_LABELED[def.Type] then
+            def.labelW = labelW
+        elseif def.Type == "Button" then
+            def.indent = controlX
+            def.width  = contentW - controlX
+            def.autoWidth = false
+        end
+    end
+end
+
+local function CreateSectionCard(parent, width, hasTitle, headerButton)
+    local card = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, parent)
+    card:SetWidth(width)
+    card:SetBackdrop({
+        bgFile   = [[Interface\Buttons\WHITE8x8]],
+        edgeFile = [[Interface\Buttons\WHITE8x8]],
+        edgeSize = 1,
+    })
+    card:SetBackdropColor(unpack(STYLE.surface_inset_soft))
+    card:SetBackdropBorderColor(unpack(STYLE.border_subtle))
+
+    local headerH = 0
+    if hasTitle then
+        headerH = MENU_HEADER_H
+        local title = MakeFontString(card, 14)
+        title:SetPoint("TOPLEFT", card, "TOPLEFT", MENU_CARD_PAD, -MENU_CARD_PAD)
+        title:SetHeight(MENU_HEADER_ROW)
+        if headerButton then
+            -- Optional action button in the header row, right-aligned.
+            local func = headerButton.func
+            local button = CreateButton(card, NSI:Loc(headerButton.label or ""), function()
+                if func then func(NSI) end
+            end, nil, MENU_HEADER_ROW, nil, nil, MENU_BUTTON_TEXT, headerButton.tooltip)
+            button:SetPoint("TOPRIGHT", card, "TOPRIGHT", -MENU_CARD_PAD, -MENU_CARD_PAD)
+            if headerButton.nocombat then LockInCombat(button) end
+            title:SetPoint("RIGHT", button.frame, "LEFT", -8, 0)
+            card.headerButton = button
+        else
+            title:SetPoint("TOPRIGHT", card, "TOPRIGHT", -MENU_CARD_PAD, -MENU_CARD_PAD)
+        end
+        title:SetJustifyH("LEFT")
+        title:SetJustifyV("MIDDLE")
+        PaintAccent(title, "SetTextColor", 1)
+        card.title = title
+
+        local rule = card:CreateTexture(nil, "ARTWORK")
+        rule:SetHeight(1)
+        rule:SetPoint("TOPLEFT", card, "TOPLEFT", 1, -headerH)
+        rule:SetPoint("TOPRIGHT", card, "TOPRIGHT", -1, -headerH)
+        PaintAccent(rule, "SetColorTexture", 0.20)
+    end
+
+    local content = CreateFrame("Frame", nil, card)
+    content:SetPoint("TOPLEFT", card, "TOPLEFT", MENU_CARD_PAD, -(headerH + MENU_CARD_PAD))
+    content:SetSize(width - MENU_CARD_PAD * 2, 1)
+    card.content = content
+    card.headerH = headerH
+    return card
+end
+
+-- Columns: every breakline in the option table starts a new column, as it did in the
+-- Details Framework menus. Columns share one width, chosen so that as many fit side by
+-- side as the page allows (between MENU_MIN_COL and MENU_MAX_COL); extra columns wrap
+-- onto a new row below.
+local function BuildMenu(parent, options, onChange)
+    local scroll = CreateScrollBox(parent, parent:GetWidth() - MENU_PAD, parent:GetHeight())
+    scroll.frame:SetPoint("TOPLEFT", parent, "TOPLEFT", MENU_PAD, 0)
+    local child = scroll.scrollChild
+
+    -- Split the raw entries at breaklines.
+    local groups, current = {}, {}
+    for _, o in ipairs(options) do
+        if o.type == "breakline" then
+            if #current > 0 then groups[#groups + 1] = current; current = {} end
+        else
+            current[#current + 1] = o
+        end
+    end
+    if #current > 0 then groups[#groups + 1] = current end
+
+    local avail   = child:GetWidth() - MENU_PAD * 2
+    local fit     = math.max(1, math.floor((avail + MENU_COL_GAP) / (MENU_MIN_COL + MENU_COL_GAP)))
+    local perRow  = math.max(1, math.min(#groups, fit))
+    local colW    = math.min(MENU_MAX_COL, math.floor((avail - (perRow - 1) * MENU_COL_GAP) / perRow))
+    local contentW = colW - MENU_CARD_PAD * 2
+
+    -- Each breakline group is a stack of section cards. Groups are laid out on a grid of
+    -- perRow columns: a group goes into the shortest column, so the gap between cards in
+    -- a column is always MENU_SECTION_GAP and no column is left with a big empty block.
+    local stacks = {}
+    for index, group in ipairs(groups) do
+        local sections = {}
+        for _, section in ipairs(SplitSections(ConvertMenu(group, onChange, contentW), contentW)) do
+            AssignHalves(section.defs, contentW)
+            local card = CreateSectionCard(child, colW, section.title ~= nil, section.headerButton)
+            sections[#sections + 1] = {
+                card     = card,
+                getTitle = section.title,
+                defs     = section.defs,
+                host     = CreateWidgetHost(card.content, contentW, MENU_ROW_SPACING),
+            }
+        end
+        stacks[index] = sections
+    end
+
+    local menu = { scroll = scroll, stacks = stacks }
+
+    function menu:Refresh()
+        local heights = {}
+        for c = 1, perRow do heights[c] = 0 end
+        for _, sections in ipairs(stacks) do
+            local column = 1
+            for c = 2, perRow do
+                if heights[c] < heights[column] then column = c end
+            end
+            local x = MENU_PAD + (column - 1) * (colW + MENU_COL_GAP)
+            local y = heights[column]
+            for _, section in ipairs(sections) do
+                local card = section.card
+                if card.title then card.title:SetText(NSI:Loc(section.getTitle() or "")) end
+                local height = section.host:Apply(section.defs)
+                card.content:SetHeight(math.max(height, 1))
+                card:SetHeight(card.headerH + MENU_CARD_PAD * 2 + height)
+                card:ClearAllPoints()
+                card:SetPoint("TOPLEFT", child, "TOPLEFT", x, -(MENU_PAD + y))
+                y = y + card:GetHeight() + MENU_SECTION_GAP
+            end
+            heights[column] = y
+        end
+        local tallest = 0
+        for c = 1, perRow do tallest = math.max(tallest, heights[c]) end
+        child:SetHeight(MENU_PAD * 2 + math.max(tallest - MENU_SECTION_GAP, 0))
+        scroll:UpdateScrollBar()
+    end
+
+    parent.RefreshOptions = function() menu:Refresh() end
+    menu:Refresh()
+    return menu
 end
 
 -- ============================================================
@@ -2267,8 +2767,8 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
         tile     = true,
         tileSize = 64,
     })
-    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+    f:SetBackdropColor(unpack(STYLE.surface_panel))
+    PaintAccent(f, "SetBackdropBorderColor", 0.7)
 
     -- ── Title bar (drag handle) ──────────────────────────────────
     local titleBar = CreateFrame("Frame", nil, f)
@@ -2290,7 +2790,7 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
     titleFS:SetHeight(DIALOG_TITLE_H)
 
     local titleSep = f:CreateTexture(nil, "ARTWORK")
-    titleSep:SetColorTexture(0, 1, 1, 0.20)
+    PaintAccent(titleSep, "SetColorTexture", 0.20)
     titleSep:SetHeight(1)
     titleSep:SetPoint("TOPLEFT",  f, "TOPLEFT",  1, -(DIALOG_TITLE_H + 1))
     titleSep:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -(DIALOG_TITLE_H + 1))
@@ -2301,9 +2801,9 @@ local function CreateDialog(name, title, body, btn1Text, btn1Fn, btn2Text, btn2F
     xBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -8)
     xBtn:SetFrameLevel(f:GetFrameLevel() + 3)
     xBtn:SetNormalTexture(ICON_PATH .. "x.png")
-    xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1)
-    xBtn:SetScript("OnEnter", function() xBtn:GetNormalTexture():SetVertexColor(0, 1, 1, 1) end)
-    xBtn:SetScript("OnLeave", function() xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1) end)
+    xBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.text_muted))
+    xBtn:SetScript("OnEnter", function() xBtn:GetNormalTexture():SetVertexColor(Accent(1)) end)
+    xBtn:SetScript("OnLeave", function() xBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.text_muted)) end)
     xBtn:SetScript("OnClick", function() f:Hide() end)
 
     -- ── Body text ────────────────────────────────────────────────
@@ -2374,17 +2874,17 @@ local function CreateStyledFrame(parent, width, height, name)
         tile     = true,
         tileSize = 64,
     })
-    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+    f:SetBackdropColor(unpack(STYLE.surface_panel))
+    PaintAccent(f, "SetBackdropBorderColor", 0.7)
 
     local xBtn = CreateFrame("Button", nil, f)
     xBtn:SetSize(14, 14)
     xBtn:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -8)
     xBtn:SetFrameLevel(f:GetFrameLevel() + 3)
     xBtn:SetNormalTexture(ICON_PATH .. "x.png")
-    xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1)
-    xBtn:SetScript("OnEnter", function() xBtn:GetNormalTexture():SetVertexColor(0, 1, 1, 1) end)
-    xBtn:SetScript("OnLeave", function() xBtn:GetNormalTexture():SetVertexColor(0.55, 0.55, 0.55, 1) end)
+    xBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.text_muted))
+    xBtn:SetScript("OnEnter", function() xBtn:GetNormalTexture():SetVertexColor(Accent(1)) end)
+    xBtn:SetScript("OnLeave", function() xBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.text_muted)) end)
     xBtn:SetScript("OnClick", function() f:Hide() end)
 
     if name then tinsert(UISpecialFrames, name) end
@@ -2487,8 +2987,8 @@ local function GetOrCreateCtxFrame(level)
         tile     = true,
         tileSize = 64,
     })
-    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+    f:SetBackdropColor(unpack(STYLE.surface_panel))
+    PaintAccent(f, "SetBackdropBorderColor", 0.7)
 
     -- Rows live in this clipped child so a long menu can be scrolled as a
     -- block; its right edge is pulled in when the scrollbar is shown.
@@ -2506,7 +3006,7 @@ local function GetOrCreateCtxFrame(level)
     f._scrollTrack = track
 
     local thumb = f:CreateTexture(nil, "OVERLAY")
-    thumb:SetColorTexture(0, 1, 1, 0.45)
+    PaintAccent(thumb, "SetColorTexture", 0.45)
     thumb:SetWidth(CTX_SCROLL_W)
     thumb:Hide()
     f._scrollThumb = thumb
@@ -2620,14 +3120,14 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
         row.hoverBg = hoverBg
 
         local sepTex = row:CreateTexture(nil, "ARTWORK")
-        sepTex:SetColorTexture(0, 1, 1, 0.15)
+        sepTex:SetColorTexture(Accent(0.15))
         sepTex:SetHeight(1)
         row.sepTex = sepTex
 
         -- Second stub, used only by labelled separators: sepTex runs from the
         -- left edge to the text, this one from the text to the right edge.
         local sepTex2 = row:CreateTexture(nil, "ARTWORK")
-        sepTex2:SetColorTexture(0, 1, 1, 0.15)
+        sepTex2:SetColorTexture(Accent(0.15))
         sepTex2:SetHeight(1)
         row.sepTex2 = sepTex2
 
@@ -2650,7 +3150,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
         arrowTex:SetSize(8, 8)
         arrowTex:SetPoint("RIGHT", row, "RIGHT", -(CTX_PAD_H - 2), 0)
         arrowTex:SetTexture(ICON_PATH .. "chevron-right.png")
-        arrowTex:SetVertexColor(0.6, 0.6, 0.6, 1)
+        arrowTex:SetVertexColor(unpack(STYLE.text_muted))
         row.arrowTex = arrowTex
 
         rowPool[i] = row
@@ -2692,7 +3192,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
                 -- width and the line stubs can butt up against it.
                 row.labelFS:SetWordWrap(false)
                 row.labelFS:SetJustifyH("CENTER")
-                row.labelFS:SetTextColor(0.55, 0.55, 0.55, 1)
+                row.labelFS:SetTextColor(unpack(STYLE.text_muted))
                 row.labelFS:SetText(text)
                 row.labelFS:ClearAllPoints()
                 row.labelFS:SetPoint("CENTER", row, "CENTER", 0, 0)
@@ -2723,7 +3223,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
         elseif itype == "label" then
             row:SetSize(contentW, CTX_LABEL_H)
             layout[rowCount] = {row = row, y = curY, h = CTX_LABEL_H}
-            row.labelFS:SetTextColor(0.55, 0.55, 0.55, 1)
+            row.labelFS:SetTextColor(unpack(STYLE.text_muted))
             row.labelFS:SetText(item.text or "")
             row.labelFS:ClearAllPoints()
             row.labelFS:SetPoint("LEFT",  row, "LEFT",  CTX_PAD_H,  0)
@@ -2753,7 +3253,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
                 rightX = -(CTX_PAD_H + CTX_ARROW_W - 4)
             end
 
-            row.labelFS:SetTextColor(1, 1, 1, 1)
+            row.labelFS:SetTextColor(unpack(STYLE.text_color))
             row.labelFS:SetText(item.label or "")
             row.labelFS:ClearAllPoints()
             row.labelFS:SetPoint("LEFT",  row, "LEFT",  leftX,  0)
@@ -2791,7 +3291,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
                 local subItems = item.items or {}
                 row:SetScript("OnEnter", function()
                     UIFrameFadeIn(row.hoverBg, STYLE.hover_in, row.hoverBg:GetAlpha(), 1)
-                    row.arrowTex:SetVertexColor(0, 1, 1, 1)
+                    row.arrowTex:SetVertexColor(Accent(1))
                     local rRight = f:GetRight()
                     local rLeft  = f:GetLeft()
                     local rTop   = row:GetTop()
@@ -2801,7 +3301,7 @@ ShowContextAtLevel = function(items, level, xNormal, xFlip, yTop, width, maxRows
                 end)
                 row:SetScript("OnLeave", function()
                     UIFrameFadeOut(row.hoverBg, STYLE.hover_out, row.hoverBg:GetAlpha(), 0)
-                    row.arrowTex:SetVertexColor(0.6, 0.6, 0.6, 1)
+                    row.arrowTex:SetVertexColor(unpack(STYLE.text_muted))
                 end)
             end
 
@@ -2935,8 +3435,8 @@ local function EnsureLinkPopup()
         tile     = true,
         tileSize = 64,
     })
-    f:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    f:SetBackdropBorderColor(0, 1, 1, 0.7)
+    f:SetBackdropColor(unpack(STYLE.surface_panel))
+    PaintAccent(f, "SetBackdropBorderColor", 0.7)
 
     local closeBtn = CreateFrame("Button", nil, f)
     closeBtn:SetSize(16, 16)
@@ -2944,15 +3444,15 @@ local function EnsureLinkPopup()
     closeBtn:SetFrameLevel(f:GetFrameLevel() + 2)
     local closeText = MakeFontString(closeBtn, 12)
     closeText:SetText("x")
-    closeText:SetTextColor(0.75, 0.75, 0.75, 1)
+    closeText:SetTextColor(unpack(STYLE.text_soft))
     closeText:SetJustifyH("CENTER")
     closeText:SetJustifyV("MIDDLE")
     closeText:SetAllPoints(closeBtn)
     closeBtn:SetScript("OnEnter", function()
-        closeText:SetTextColor(1, 1, 1, 1)
+        closeText:SetTextColor(unpack(STYLE.text_color))
     end)
     closeBtn:SetScript("OnLeave", function()
-        closeText:SetTextColor(0.75, 0.75, 0.75, 1)
+        closeText:SetTextColor(unpack(STYLE.text_soft))
     end)
     closeBtn:SetScript("OnClick", function()
         f:Hide()
@@ -2977,13 +3477,13 @@ local function EnsureLinkPopup()
     focusBorder:SetFrameLevel(inputFrame:GetFrameLevel() + 1)
     focusBorder:EnableMouse(false)
     focusBorder:SetBackdrop({ edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
-    focusBorder:SetBackdropBorderColor(0, 1, 1, 0)
+    PaintAccent(focusBorder, "SetBackdropBorderColor", 0)
 
     local edit = CreateFrame("EditBox", nil, inputFrame)
     edit:SetPoint("TOPLEFT",     inputFrame, "TOPLEFT",     4, -2)
     edit:SetPoint("BOTTOMRIGHT", inputFrame, "BOTTOMRIGHT", -4,  2)
     edit:SetFont(ValidateFont(NSI:GetUIFontPath()), 12, NSI:GetUIFontFlags())
-    edit:SetTextColor(1, 1, 1, 1)
+    edit:SetTextColor(unpack(STYLE.text_color))
     labelRegistry[edit] = 12
     edit:SetAutoFocus(false)
     edit:SetMultiLine(false)
@@ -3120,7 +3620,7 @@ local function CreateSpellIDList(parent, width, cfg)
         local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, frame)
         row:SetHeight(SPELL_ROW_H)
         row:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]] })
-        row:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+        row:SetBackdropColor(unpack(STYLE.surface_inset_soft))
         row.highlight = row:CreateTexture(nil, "BACKGROUND")
         row.highlight:SetAllPoints()
         row.highlight:SetColorTexture(0.08, 0.32, 0.40, 0.45)
@@ -3152,7 +3652,7 @@ local function CreateSpellIDList(parent, width, cfg)
         removeBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         removeBtn:SetNormalTexture(ICON_PATH .. "x.png")
         removeBtn:SetHighlightTexture(ICON_PATH .. "x.png")
-        removeBtn:GetNormalTexture():SetVertexColor(0.9, 0.3, 0.3)
+        removeBtn:GetNormalTexture():SetVertexColor(unpack(STYLE.danger))
         removeBtn.spellRow = row
         removeBtn:SetScript("OnEnter", SpellRowHover)
         removeBtn:SetScript("OnLeave", SpellRowHover)
@@ -3192,7 +3692,7 @@ local function CreateSpellIDList(parent, width, cfg)
             if not self.empty then
                 self.empty = frame:CreateFontString(nil, "OVERLAY")
                 NSI:SetUIFont(self.empty, 12, "")
-                self.empty:SetTextColor(0.5, 0.5, 0.5, 1)
+                self.empty:SetTextColor(unpack(STYLE.text_hint))
                 RegisterLocalizedText(self.empty, "No spell IDs added yet.")
             end
             self.empty:ClearAllPoints()
@@ -3232,6 +3732,7 @@ NSI.UI.Components = {
     ReskinScrollbar     = ReskinScrollbar,
     BuildWidgets        = BuildWidgets,
     CreateWidgetHost    = CreateWidgetHost,
+    BuildMenu           = BuildMenu,
     CreateSpellIDList   = CreateSpellIDList,
     RefreshFonts        = RefreshFonts,
     CreateDialog        = CreateDialog,

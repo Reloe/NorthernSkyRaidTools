@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 local L = DF.Language.GetLanguageTable(addonId)
 local Core = NSI.UI.Core
@@ -392,13 +394,13 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    win:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    win:SetBackdropBorderColor(0, 1, 1, 0.9)
+    win:SetBackdropColor(unpack(STYLE.surface_panel))
+    win:SetBackdropBorderColor(Accent(0.9))
 
     -- Title
     local title = win:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 11, "")
-    title:SetTextColor(0, 1, 1, 0.85)
+    title:SetTextColor(Accent(0.85))
     title:SetText(T(ANCHOR_SETTING_TITLES[settingsName] or settingsName:gsub("Settings", " Settings")))
     title:SetPoint("TOPLEFT", win, "TOPLEFT", PAD_X, -7)
     win.Title = title
@@ -409,9 +411,9 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
     closeBtn:SetPoint("TOPRIGHT", win, "TOPRIGHT", -3, -3)
     closeBtn:SetNormalFontObject("GameFontNormalSmall")
     closeBtn:SetText("×")
-    closeBtn:GetFontString():SetTextColor(0.7, 0.7, 0.7)
+    closeBtn:GetFontString():SetTextColor(unpack(STYLE.text_soft))
     closeBtn:SetScript("OnEnter", function(self) self:GetFontString():SetTextColor(1, 0.3, 0.3) end)
-    closeBtn:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(0.7, 0.7, 0.7) end)
+    closeBtn:SetScript("OnLeave", function(self) self:GetFontString():SetTextColor(unpack(STYLE.text_soft)) end)
     closeBtn:SetScript("OnClick", function() win:Hide() end)
 
     win.SettingsName = settingsName

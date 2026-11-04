@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 
 local BossData = NSI.UI.BossData
@@ -273,7 +275,7 @@ local function ShowAuraSoundsExportPopup(text, label)
         auraSoundsExportPopup:SetFrameLevel(100)
 
         auraSoundsExportPopup.infoLabel = CreateLabel(auraSoundsExportPopup, "", 13)
-        auraSoundsExportPopup.infoLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraSoundsExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
         auraSoundsExportPopup.infoLabel:SetPoint("TOPLEFT", auraSoundsExportPopup, "TOPLEFT", 10, -30)
         auraSoundsExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraSoundsExportPopup, 280, 80, nil,
             "NSRTAuraSoundsExportTextBox", true, false, true)
@@ -301,7 +303,7 @@ local function ShowAuraSoundsImportPopup(onImport)
         auraSoundsImportPopup:SetFrameLevel(100)
 
         auraSoundsImportPopup.statusLabel = CreateLabel(auraSoundsImportPopup, T("Paste an Aura Sounds export string below and click Import."), 13)
-        auraSoundsImportPopup.statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+        auraSoundsImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
         auraSoundsImportPopup.statusLabel:SetPoint("TOPLEFT", auraSoundsImportPopup, "TOPLEFT", 10, -30)
         auraSoundsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraSoundsImportPopup, 280, 80, nil,
             "NSRTAuraSoundsImportTextBox", true, false, true)
@@ -449,7 +451,7 @@ local function BuildAuraSoundsUI(parent)
     leftChild:SetWidth(leftWidth)
     leftChild:SetHeight(1)
     leftChild:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
-    leftChild:SetBackdropColor(0.04, 0.04, 0.04, 0.6)
+    leftChild:SetBackdropColor(unpack(STYLE.surface_inset_soft))
     leftScroll:SetScrollChild(leftChild)
 
     screen.collapsedSections = {
@@ -501,7 +503,7 @@ local function BuildAuraSoundsUI(parent)
         local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
         row:SetBackdrop({bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64})
-        row:SetBackdropColor(0.05, 0.30, 0.40, 0.9)
+        row:SetBackdropColor(unpack(STYLE.selected_fill))
         row.arrow = row:CreateTexture(nil, "OVERLAY")
         row.arrow:SetSize(10, 10)
         row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
@@ -655,7 +657,7 @@ local function BuildAuraSoundsUI(parent)
                         row.name:SetText(NSI:Loc(category.label or tostring(category.key)))
                     end
                     if screen.categoryKey == category.key then
-                        row.__background:SetVertexColor(0, 1, 1)
+                        row.__background:SetVertexColor(Accent())
                         row.__background:SetAlpha(1)
                     else
                         row.__background:SetVertexColor(0.4, 0.4, 0.4)
@@ -735,12 +737,12 @@ local function BuildAuraSoundsUI(parent)
         popup:SetPoint("CENTER", UIParent, "CENTER")
 
         local titleFS = CreateLabel(popup, title, 13)
-        titleFS:SetTextColor(1, 0.82, 0, 1)
+        titleFS:SetTextColor(unpack(STYLE.text_gold))
         titleFS:SetPoint("TOPLEFT", popup, "TOPLEFT", 14, -10)
         titleFS:SetPoint("RIGHT", popup, "RIGHT", -24, 0)
 
         local titleSep = popup:CreateTexture(nil, "ARTWORK")
-        titleSep:SetColorTexture(0, 1, 1, 0.20)
+        titleSep:SetColorTexture(Accent(0.20))
         titleSep:SetHeight(1)
         titleSep:SetPoint("TOPLEFT", popup, "TOPLEFT", 1, -TITLE_H)
         titleSep:SetPoint("TOPRIGHT", popup, "TOPRIGHT", -1, -TITLE_H)
@@ -985,7 +987,7 @@ local function BuildAuraSoundsUI(parent)
         local header = CreateLabel(columnHeaders, T(text), 10)
         header:SetPoint("LEFT", columnHeaders, "LEFT", x, 0)
         header:SetWidth(width)
-        header:SetTextColor(0, 1, 1, 1)
+        header:SetTextColor(Accent(1))
         return header
     end
     AddColumnHeader("Spell Name", 28, 175)

@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -84,13 +86,13 @@ function NSI:ToggleBreakTimerSettingsWindow(frame)
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    window:SetBackdropColor(0.05, 0.05, 0.08, 0.97)
-    window:SetBackdropBorderColor(0, 1, 1, 0.9)
+    window:SetBackdropColor(unpack(STYLE.surface_panel))
+    window:SetBackdropBorderColor(Accent(0.9))
     window:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", -8, -11)
 
     local title = window:CreateFontString(nil, "OVERLAY")
     NSI:SetUIFont(title, 11, "")
-    title:SetTextColor(0, 1, 1, 0.85)
+    title:SetTextColor(Accent(0.85))
     title:SetText(NSI:Loc("Break Timer"))
     title:SetPoint("TOPLEFT", window, "TOPLEFT", 8, -7)
 
@@ -99,9 +101,9 @@ function NSI:ToggleBreakTimerSettingsWindow(frame)
     closeButton:SetPoint("TOPRIGHT", window, "TOPRIGHT", -3, -3)
     closeButton:SetNormalFontObject("GameFontNormalSmall")
     closeButton:SetText("×")
-    closeButton:GetFontString():SetTextColor(0.7, 0.7, 0.7)
+    closeButton:GetFontString():SetTextColor(unpack(STYLE.text_soft))
     closeButton:SetScript("OnEnter", function(button) button:GetFontString():SetTextColor(1, 0.3, 0.3) end)
-    closeButton:SetScript("OnLeave", function(button) button:GetFontString():SetTextColor(0.7, 0.7, 0.7) end)
+    closeButton:SetScript("OnLeave", function(button) button:GetFontString():SetTextColor(unpack(STYLE.text_soft)) end)
     closeButton:SetScript("OnClick", function() window:Hide() end)
 
     local function RefreshDisplay()

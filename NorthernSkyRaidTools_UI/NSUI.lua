@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 
 local function GetLocalizedText(key)
@@ -37,7 +39,6 @@ local BuildAuraSoundsUI            = NSI.UI.AuraSounds.BuildAuraSoundsUI
 -- Get options builders from modules
 local BuildGeneralOptions          = NSI.UI.Options.General.BuildOptions
 local BuildGeneralCallback         = NSI.UI.Options.General.BuildCallback
-local BuildLanguageSelector        = NSI.UI.Options.General.BuildLanguageSelector
 local BuildNicknamesOptions        = NSI.UI.Options.Nicknames.BuildOptions
 local BuildNicknamesCallback       = NSI.UI.Options.Nicknames.BuildCallback
 local BuildReminderOptions         = NSI.UI.Options.Reminders.BuildOptions
@@ -90,7 +91,7 @@ table.insert(TABS_GROUPS[3], { name = "PaceComparison", textKey = "Pace-Comparis
 
 -- Sidebar visual constants
 local SIDEBAR_BTN_WIDTH            = 148
-local SIDEBAR_BTN_HEIGHT           = 22
+local SIDEBAR_BTN_HEIGHT           = 26
 local SIDEBAR_BTN_GAP              = 0  -- px between consecutive buttons
 local SIDEBAR_GROUP_GAP            = 14 -- extra px between groups
 
@@ -98,6 +99,7 @@ local SIDEBAR_GROUP_GAP            = 14 -- extra px between groups
 local tab_content_y                = -25 - TAB_HEADER_HEIGHT  -- -80
 
 local CreateButton                 = NSI.UI.Components.CreateButton
+local BuildMenu                    = NSI.UI.Components.BuildMenu
 
 function NSUI:Init()
     if self.Initialized or self.Initializing then
@@ -158,7 +160,7 @@ function NSUI:Init()
 
     -- Thin cyan vertical separator between sidebar and content area
     local sidebarSep = NSUI:CreateTexture(nil, "artwork")
-    sidebarSep:SetColorTexture(0, 1, 1, 0.25)
+    sidebarSep:SetColorTexture(Accent(0.25))
     sidebarSep:SetWidth(1)
     sidebarSep:SetPoint("TOPLEFT", NSUI, "TOPLEFT", 160, -25)
     sidebarSep:SetPoint("BOTTOMLEFT", NSUI, "BOTTOMLEFT", 160, 22)
@@ -188,7 +190,7 @@ function NSUI:Init()
                 if not groupHasButtons and #tabSystem.AllButtons > 0 then
                     btnY = btnY - SIDEBAR_GROUP_GAP
                     local rule = sidebarBg:CreateTexture(nil, "artwork")
-                    rule:SetColorTexture(0, 1, 1, 0.12)
+                    rule:SetColorTexture(Accent(0.12))
                     rule:SetHeight(1)
                     rule:SetPoint("TOPLEFT", sidebarBg, "TOPLEFT", 8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
                     rule:SetPoint("TOPRIGHT", sidebarBg, "TOPRIGHT", -8, btnY + math.floor(SIDEBAR_GROUP_GAP / 2))
@@ -413,37 +415,19 @@ function NSUI:Init()
     -- startX=10 : left margin within the content frame
     -- startY=-10 : just below the top of the content frame (no tab bar to skip)
     -- --------------------------------------------------------
-    DF:BuildMenu(general_tab, general_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        general_callback)
+    BuildMenu(general_tab, general_options1_table, general_callback)
     coroutine.yield()
-    if general_tab.widgetids and general_tab.widgetids.current_profile_label then
-        NSI:SetUIFont(general_tab.widgetids.current_profile_label.widget, 10)
-    end
-    BuildLanguageSelector(general_tab)
-    DF:BuildMenu(nicknames_tab, nicknames_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        nicknames_callback)
+    BuildMenu(nicknames_tab, nicknames_options1_table, nicknames_callback)
     coroutine.yield()
-    DF:BuildMenu(reminder_tab, reminder_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        reminder_callback)
+    BuildMenu(reminder_tab, reminder_options1_table, reminder_callback)
     coroutine.yield()
-    DF:BuildMenu(reminder_note_tab, reminder_note_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        reminder_note_callback)
+    BuildMenu(reminder_note_tab, reminder_note_options1_table, reminder_note_callback)
     coroutine.yield()
-    DF:BuildMenu(assignments_tab, assignments_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        assignments_callback)
+    BuildMenu(assignments_tab, assignments_options1_table, assignments_callback)
     coroutine.yield()
-    DF:BuildMenu(interruptdisplay_tab, interruptdisplay_options1_table, 10, -10, tab_content_height, false,
-        options_text_template, options_dropdown_template, options_switch_template, true, options_slider_template,
-        options_button_template, interruptdisplay_callback)
+    BuildMenu(interruptdisplay_tab, interruptdisplay_options1_table, interruptdisplay_callback)
     coroutine.yield()
-    DF:BuildMenu(readycheck_tab, readycheck_options1_table, 10, -10, tab_content_height, false, options_text_template,
-        options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-        readycheck_callback)
+    BuildMenu(readycheck_tab, readycheck_options1_table, readycheck_callback)
     coroutine.yield()
     if RaidBuffMenu then
         DF:BuildMenu(NSI.RaidBuffCheck, RaidBuffMenu, 2, -30, 40, false, options_text_template, options_dropdown_template,
@@ -456,9 +440,7 @@ function NSUI:Init()
     coroutine.yield()
     NSUI.pacecomparison_frame = BuildPaceComparisonEditorUI(pacecomparison_tab)
     if QoL_options1_table then
-        DF:BuildMenu(QoL_tab, QoL_options1_table, 10, -10, tab_content_height, false, options_text_template,
-            options_dropdown_template, options_switch_template, true, options_slider_template, options_button_template,
-            QoL_callback)
+        BuildMenu(QoL_tab, QoL_options1_table, QoL_callback)
         coroutine.yield()
     end
     C_Timer.After(0.1, function()
@@ -539,7 +521,10 @@ function NSUI:Init()
         local ok, errorMessage = coroutine.resume(initCoroutine)
         if not ok then
             frame:SetScript("OnUpdate", nil)
-            error(errorMessage, 0)
+            -- The coroutine's stack is still intact after an error: include it so the
+            -- failing widget can be found (a bare C-function error has no location).
+            local haveStack, stack = pcall(debugstack, initCoroutine, 0, 12, 0)
+            error(tostring(errorMessage) .. (haveStack and ("\n" .. stack) or ""), 0)
         elseif coroutine.status(initCoroutine) == "dead" then
             frame:SetScript("OnUpdate", nil)
             self.InitCoroutine = nil

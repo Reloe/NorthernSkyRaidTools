@@ -7,16 +7,42 @@ local LDBIcon = Core.LDBIcon
 local build_media_options = Core.build_media_options
 local build_fontflag_options = Core.build_fontflag_options
 
-local function BuildLanguageSelector(parent)
-    local onLanguageChangedCallback = function(languageId)
-        NSRT.Settings.Language = languageId
-        NSI:ApplySelectedLanguage(true)
-    end
+-- Languages the addon ships locales for. CJK fonts only exist on a client running that
+-- locale, so the native name (and its font) is used only when the client can draw it;
+-- every other client sees a plain Latin name that always renders.
+local LATIN_FONT = "Fonts\\FRIZQT__.TTF"
+local LANGUAGE_CHOICES = {
+    { id = "enUS", text = "English (US)", font = LATIN_FONT },
+    { id = "deDE", text = "Deutsch",      font = LATIN_FONT },
+    { id = "ruRU", text = "Русский",      font = "Fonts\\FRIZQT___CYR.TTF", latin = "Russian" },
+    { id = "koKR", native = "한국어",      latin = "Korean" },
+    { id = "zhCN", native = "简体中文",    latin = "Chinese (Simplified)" },
+    { id = "zhTW", native = "繁體中文",    latin = "Chinese (Traditional)" },
+}
 
-    local selector = DF.Language.CreateLanguageSelector(addonId, parent, onLanguageChangedCallback, NSI:GetSelectedLanguage())
-    selector:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -20, -12)
-    parent.NSRTLanguageSelector = selector
-    return selector
+local function BuildLanguageValues()
+    local clientLocale = GetLocale()
+    local values = {}
+    for _, lang in ipairs(LANGUAGE_CHOICES) do
+        local label, font = lang.text, lang.font
+        if lang.native then
+            if clientLocale == lang.id then
+                label, font = lang.native, STANDARD_TEXT_FONT
+            else
+                label, font = lang.latin, LATIN_FONT
+            end
+        end
+        values[#values + 1] = {
+            label = label,
+            value = lang.id,
+            font = font,
+            onclick = function()
+                NSRT.Settings.Language = lang.id
+                NSI:ApplySelectedLanguage()
+            end,
+        }
+    end
+    return values
 end
 
 local function BuildGeneralOptions()
@@ -24,6 +50,13 @@ local function BuildGeneralOptions()
 
     return {
         { type = "label", get = function() return "General Options" end, text_template = DF:GetTemplate("font", "ORANGE_FONT_TEMPLATE") },
+        {
+            type = "select",
+            name = "Language",
+            desc = "Language used by the addon's interface and alerts.",
+            get = function() return NSI:GetSelectedLanguage() end,
+            values = BuildLanguageValues,
+        },
         {
             type = "toggle",
             boxfirst = true,
@@ -372,6 +405,5 @@ NSI.UI.Options = NSI.UI.Options or {}
 NSI.UI.Options.General = {
     BuildOptions = BuildGeneralOptions,
     BuildCallback = BuildGeneralCallback,
-    BuildLanguageSelector = BuildLanguageSelector,
     GetSelectedLanguage = function() return NSI:GetSelectedLanguage() end,
 }

@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 local Core = NSI.UI.Core
 local NSUI = Core.NSUI
@@ -34,7 +36,7 @@ function NSI:ConfirmApplyProfileToAllCharacters(name)
         applyProfileToAllPopup:SetFrameLevel(110)
 
         local label = CreateLabel(applyProfileToAllPopup, "", 13)
-        label:SetTextColor(0.8, 0.8, 0.8, 1)
+        label:SetTextColor(unpack(STYLE.text_soft))
         label:SetPoint("TOPLEFT", applyProfileToAllPopup, "TOPLEFT", 15, -35)
         label:SetPoint("RIGHT", applyProfileToAllPopup, "RIGHT", -15, 0)
         label:SetWordWrap(true)
@@ -70,7 +72,7 @@ local function BuildExportStringUI()
     popup.IncludeSharedData = false
 
     local profileLabel = CreateLabel(popup, "", 13)
-    profileLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+    profileLabel:SetTextColor(unpack(STYLE.text_soft))
     profileLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
     profileLabel:SetPoint("RIGHT", popup, "RIGHT", -10, 0)
     profileLabel:SetWordWrap(true)
@@ -111,7 +113,7 @@ local function BuildImportStringUI()
     local popup = CreateProfilePopup(800, 400, "NSUIImportString", T("Import Profile"))
 
     local statusLabel = CreateLabel(popup, T("Paste a profile string below and click Import."), 13)
-    statusLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+    statusLabel:SetTextColor(unpack(STYLE.text_soft))
     statusLabel:SetPoint("TOPLEFT", popup, "TOPLEFT", 10, -30)
 
     popup.test_string_text_box = DF:NewSpecialLuaEditorEntry(popup, 280, 80, nil, "ImportStringTextEdit", true, false, true)
@@ -132,7 +134,7 @@ local function BuildImportStringUI()
     sharedImportPopup:SetFrameLevel(110)
 
     local sharedImportLabel = CreateLabel(sharedImportPopup, T("This import includes extra data that will overwrite your Encounter Alerts, Aura Sounds, Aura Tracking and Aura Glows. Choose what to import."), 13)
-    sharedImportLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+    sharedImportLabel:SetTextColor(unpack(STYLE.text_soft))
     sharedImportLabel:SetPoint("TOPLEFT", sharedImportPopup, "TOPLEFT", 15, -35)
     sharedImportLabel:SetPoint("RIGHT", sharedImportPopup, "RIGHT", -15, 0)
     sharedImportLabel:SetJustifyH("LEFT")
@@ -165,7 +167,7 @@ local function BuildImportStringUI()
     conflictImportPopup:SetFrameLevel(110)
 
     local conflictImportLabel = CreateLabel(conflictImportPopup, "", 13)
-    conflictImportLabel:SetTextColor(0.8, 0.8, 0.8, 1)
+    conflictImportLabel:SetTextColor(unpack(STYLE.text_soft))
     conflictImportLabel:SetPoint("TOPLEFT", conflictImportPopup, "TOPLEFT", 15, -35)
     conflictImportLabel:SetPoint("RIGHT", conflictImportPopup, "RIGHT", -15, 0)
     conflictImportLabel:SetJustifyH("LEFT")

@@ -1,5 +1,7 @@
 local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
+local STYLE = NSI.UI.Style
+local Accent = STYLE.Accent
 local DF = _G["DetailsFramework"]
 
 local Core                    = NSI.UI.Core
@@ -49,7 +51,7 @@ local function BuildNotesTabUI(parent, notesTable)
         for i, ro in ipairs(rowObjects) do
             if i == selectedIdx then
                 ro.sel:SetAlpha(1)
-                ro.lbl:SetTextColor(0, 1, 1, 1)
+                ro.lbl:SetTextColor(Accent(1))
             else
                 ro.sel:SetAlpha(0)
                 ro.lbl:SetTextColor(1, 1, 1, 0.85)
@@ -94,7 +96,7 @@ local function BuildNotesTabUI(parent, notesTable)
             -- Selected background (cyan tint, manually toggled)
             local sel = btn:CreateTexture(nil, "background")
             sel:SetAllPoints()
-            sel:SetColorTexture(0, 1, 1, 0.22)
+            sel:SetColorTexture(Accent(0.22))
             sel:SetAlpha(i == selectedIdx and 1 or 0)
 
             -- Row label
@@ -134,7 +136,7 @@ local function BuildNotesTabUI(parent, notesTable)
 
     -- Thin cyan right-edge divider matching the sidebar separator style
     local listDivider = listBg:CreateTexture(nil, "overlay")
-    listDivider:SetColorTexture(0, 1, 1, 0.25)
+    listDivider:SetColorTexture(Accent(0.25))
     listDivider:SetWidth(1)
     listDivider:SetPoint("TOPRIGHT",    listBg, "TOPRIGHT",    0, 0)
     listDivider:SetPoint("BOTTOMRIGHT", listBg, "BOTTOMRIGHT", 0, 0)
@@ -142,12 +144,12 @@ local function BuildNotesTabUI(parent, notesTable)
     -- Header label
     local hdr = listBg:CreateFontString(nil, "overlay")
     NSI:SetUIFont(hdr, 14, "")
-    hdr:SetTextColor(0, 1, 1, 1)
+    hdr:SetTextColor(Accent(1))
     SetLocalizedText(hdr, "Notes")
     hdr:SetPoint("TOPLEFT", listBg, "TOPLEFT", PAD, -PAD)
 
     local hdrSep = listBg:CreateTexture(nil, "artwork")
-    hdrSep:SetColorTexture(0, 1, 1, 0.20)
+    hdrSep:SetColorTexture(Accent(0.20))
     hdrSep:SetHeight(1)
     hdrSep:SetPoint("TOPLEFT",  listBg, "TOPLEFT",  PAD,  -(PAD + 12 + 4))
     hdrSep:SetPoint("TOPRIGHT", listBg, "TOPRIGHT", -PAD, -(PAD + 12 + 4))
@@ -236,7 +238,7 @@ local function BuildNotesTabUI(parent, notesTable)
     end)
 
     local edSep = editorBg:CreateTexture(nil, "artwork")
-    edSep:SetColorTexture(0, 1, 1, 0.20)
+    edSep:SetColorTexture(Accent(0.20))
     edSep:SetHeight(1)
     edSep:SetPoint("TOPLEFT",  editorBg, "TOPLEFT",  PAD,  -(PAD + 22 + 4))
     edSep:SetPoint("TOPRIGHT", editorBg, "TOPRIGHT", -PAD, -(PAD + 22 + 4))
