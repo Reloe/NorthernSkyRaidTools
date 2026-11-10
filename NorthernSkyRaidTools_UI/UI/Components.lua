@@ -29,6 +29,12 @@ local STYLE = {
     surface_inset      = { 0.04, 0.04, 0.04, 0.85 },  -- lists, edit areas
     surface_inset_soft = { 0.04, 0.04, 0.04, 0.60 },
     selected_fill      = { 0.05, 0.30, 0.40, 0.90 },  -- selected row / tab
+    selected_row_alpha = 0.32,                        -- accent tint on a selected list row (keeps text and checkbox readable)
+    row_stripe_dark    = { 0.08, 0.08, 0.08, 0.92 },  -- alternating rows in long lists
+    row_stripe_light   = { 0.15, 0.15, 0.15, 0.92 },
+    row_fill           = { 0.4, 0.4, 0.4, 0.5 },      -- list row
+    row_dark           = { 0.02, 0.02, 0.02, 0.82 },  -- overlay / read-only cover
+    row_plain          = { 0.1215, 0.1176, 0.1294, 0.8 },  -- editable row (inputs inside)
     border_subtle      = { 0.25, 0.25, 0.25, 1 },
 
     -- Text tiers
@@ -40,6 +46,8 @@ local STYLE = {
     text_gold       = {1, 0.82, 0, 1},
     text_danger     = {1, 0.35, 0.35, 1},
     danger          = {0.9, 0.3, 0.3, 1},
+    success         = {0.2, 0.9, 0.3, 1},
+    warning         = {1, 0.65, 0, 1},
     text_left_pad   = 10,
 
     -- Type scale in px. Use the names, not literal sizes: MakeFontString, CreateButton's
@@ -191,20 +199,11 @@ end
 
 local function ShowTooltip(frame, tooltip, anchor)
     if not tooltip then return end
-    GameTooltip:SetOwner(frame, anchor or "ANCHOR_TOP")
-    if type(tooltip) == "table" then
-        GameTooltip:SetText(tooltip.title and NSI:Loc(tooltip.title) or "")
-        if tooltip.desc then
-            GameTooltip:AddLine(NSI:Loc(tooltip.desc), 1, 1, 1, true)
-        end
-    else
-        GameTooltip:SetText(NSI:Loc(tooltip))
-    end
-    GameTooltip:Show()
+    NSI.UI.Tooltip.Show(frame, tooltip, anchor)
 end
 
 local function HideTooltip(tooltip)
-    if tooltip then GameTooltip:Hide() end
+    if tooltip then NSI.UI.Tooltip.Hide() end
 end
 
 local function CreateButton(parent, text, onClick, width, height, name, icon, textSize, tooltip, condition)
@@ -725,6 +724,7 @@ local function CreateTextEntry(parent, label, getValue, setValue,
         inputFrame:SetPoint("RIGHT", container, "RIGHT", 0, 0)
     else
         inputFrame:SetPoint("LEFT", container, "LEFT", 0, 0)
+        inputFrame:SetPoint("RIGHT", container, "RIGHT", 0, 0)   -- follows the container when it is resized
     end
     inputFrame:SetFrameLevel(baseLevel + 1)
     MakeControlBackdrop(inputFrame)
@@ -1950,6 +1950,51 @@ local function ReskinScrollbar(scrollFrame)
     StyleArrowButton(_G[name .. "ScrollBarScrollUpButton"], "chevron-up.png")
     StyleArrowButton(_G[name .. "ScrollBarScrollDownButton"], "chevron-down.png")
 end
+-- Eased mouse-wheel scrolling for any UIPanelScrollFrameTemplate frame (CreateScrollBox uses it,
+-- and so do the hand-built list scrolls).
+local function EnableSmoothScroll(scrollFrame)
+    scrollFrame:EnableMouseWheel(true)
+    -- Eased wheel scrolling: each notch moves a target, and the bar glides toward it.
+    -- The OnUpdate only exists while the glide runs. If the bar was moved by anything
+    -- else (dragging it, ScrollToFrame, a rebuild), the next notch starts from where
+    -- it actually is.
+    local function GetBar() return scrollFrame.ScrollBar or _G[(scrollFrame:GetName() or "") .. "ScrollBar"] end
+    local WHEEL_STEP, EASE, SETTLE = 40, 18, 0.5
+    local glideTarget, lastSet
+    local function StopGlide()
+        glideTarget, lastSet = nil, nil
+        scrollFrame:SetScript("OnUpdate", nil)
+    end
+    local function Glide(_, elapsed)
+        local bar = GetBar()
+        if not bar or not glideTarget then return StopGlide() end
+        local cur = bar:GetValue()
+        if lastSet and math.abs(cur - lastSet) > 0.01 then return StopGlide() end   -- moved elsewhere
+        local nextValue = cur + (glideTarget - cur) * math.min(1, elapsed * EASE)
+        if math.abs(glideTarget - nextValue) <= SETTLE then
+            bar:SetValue(glideTarget)
+            return StopGlide()
+        end
+        bar:SetValue(nextValue)
+        lastSet = bar:GetValue()
+        if lastSet == cur then                      -- bar rounded the step away: finish
+            bar:SetValue(glideTarget)
+            return StopGlide()
+        end
+    end
+    scrollFrame:SetScript("OnMouseWheel", function(_, delta)
+        local bar = GetBar()
+        if not bar then return end
+        local mn, mx = bar:GetMinMaxValues()
+        local cur = bar:GetValue()
+        if not glideTarget or (lastSet and math.abs(cur - lastSet) > 0.01) then glideTarget = cur end
+        glideTarget = math.max(mn, math.min(mx, glideTarget - delta * WHEEL_STEP))
+        lastSet = cur
+        scrollFrame:SetScript("OnUpdate", Glide)
+    end)
+    scrollFrame:HookScript("OnHide", StopGlide)
+end
+
 local scrollBoxCounter = 0
 local SB_W = 16 -- native UIPanelScrollFrameTemplate scrollbar width
 
@@ -1960,15 +2005,7 @@ local function CreateScrollBox(parent, width, height)
     local scrollFrame = CreateFrame("ScrollFrame", boxName, parent,
         "UIPanelScrollFrameTemplate")
     scrollFrame:SetSize(width, height)
-    scrollFrame:EnableMouseWheel(true)
-    scrollFrame:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G[boxName .. "ScrollBar"]
-        if bar then
-            local cur    = bar:GetValue()
-            local mn, mx = bar:GetMinMaxValues()
-            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 20)))
-        end
-    end)
+    EnableSmoothScroll(scrollFrame)
 
     local child = CreateFrame("Frame", boxName .. "Child", scrollFrame)
     child:SetWidth(width - SB_W - 2)
@@ -2667,6 +2704,83 @@ local function CreateSectionCard(parent, width, hasTitle, headerButton)
     return card
 end
 
+-- ============================================================
+--  CardHost
+--
+--  A WidgetHost whose definition list is drawn as a stack of section cards, like the
+--  General tab: a highlighted Label opens a card (its text is the card title), and the
+--  widgets after it up to the next highlighted Label sit inside it on the shared
+--  label/control columns. Same Apply(defs, isVisible) -> height contract as WidgetHost,
+--  so a detail panel only swaps the constructor. Each distinct definition layout is
+--  built once and re-bound afterwards. A card whose widgets are all hidden by
+--  isVisible is hidden too.
+--
+--  host.current.byIndex[i] is the item for the i-th definition passed to Apply, which
+--  is what the header search uses to scroll to and pulse a row.
+-- ============================================================
+local CardHost = {}
+CardHost.__index = CardHost
+
+local function CreateCardHost(parent, width)
+    return setmetatable({ parent = parent, width = width, sets = {} }, CardHost)
+end
+
+function CardHost:Hide()
+    local current = self.current
+    if current then
+        for _, entry in ipairs(current.cards) do entry.card:Hide() end
+    end
+end
+
+function CardHost:Apply(defs, isVisible)
+    local width    = self.width or self.parent:GetWidth()
+    local contentW = width - MENU_CARD_PAD * 2
+    for index, def in ipairs(defs) do def._cardIndex = index end
+
+    local sections = SplitSections(defs, contentW)
+    local sig = LayoutSignature(defs, width)
+    local set = self.sets[sig]
+
+    local previous = self.current
+    if previous and previous ~= set then
+        for _, entry in ipairs(previous.cards) do entry.card:Hide() end
+    end
+    if not set then
+        set = { cards = {} }
+        for i, section in ipairs(sections) do
+            local card = CreateSectionCard(self.parent, width, section.title ~= nil, section.headerButton)
+            card:Hide()
+            set.cards[i] = { card = card, host = CreateWidgetHost(card.content, contentW, MENU_ROW_SPACING) }
+        end
+        self.sets[sig] = set
+    end
+
+    local byIndex, y = {}, 0
+    for i, section in ipairs(sections) do
+        local entry = set.cards[i]
+        local card, host = entry.card, entry.host
+        AssignHalves(section.defs, contentW)
+        local height = host:Apply(section.defs, isVisible)
+        if height > 0 then
+            if card.title then card.title:SetText(NSI:Loc(section.title() or "")) end
+            card.content:SetHeight(math.max(height, 1))
+            card:SetHeight(card.headerH + MENU_CARD_PAD * 2 + height)
+            card:ClearAllPoints()
+            card:SetPoint("TOPLEFT", self.parent, "TOPLEFT", 0, -y)
+            card:Show()
+            y = y + card:GetHeight() + MENU_SECTION_GAP
+            for k, def in ipairs(section.defs) do
+                byIndex[def._cardIndex] = host.current and host.current.byIndex[k]
+            end
+        else
+            card:Hide()
+        end
+    end
+    set.byIndex = byIndex
+    self.current = set
+    return y > 0 and (y - MENU_SECTION_GAP) or 0
+end
+
 -- Columns: every breakline in the option table starts a new column, as it did in the
 -- Details Framework menus. Columns share one width, chosen so that as many fit side by
 -- side as the page allows (between MENU_MIN_COL and MENU_MAX_COL); extra columns wrap
@@ -2994,6 +3108,207 @@ local function CreateStyledFrame(parent, width, height, name)
 
     if name then tinsert(UISpecialFrames, name) end
 
+    return f
+end
+
+-- ============================================================
+--  FadeTo(region, target, duration)
+--
+--  Native alpha fade for a frame or texture: one AnimationGroup per region, no
+--  per-frame Lua, no garbage (UIFrameFade allocates a table per call and needs a
+--  wrapper frame around a texture). A fade started mid-fade continues from the
+--  current alpha at constant speed; a hidden region snaps. Only writes fields onto our
+--  own regions.
+-- ============================================================
+local function FadeTo(region, target, duration)
+    local g = region._fade
+    if not g then
+        g = region:CreateAnimationGroup()
+        g:SetToFinalAlpha(true)
+        g.anim = g:CreateAnimation("Alpha")
+        region._fade = g
+    end
+    local cur = region:GetAlpha()
+    if g:IsPlaying() then
+        if region._fadeTarget == target then return end
+        g:Stop()
+        region:SetAlpha(cur)
+    end
+    region._fadeTarget = target
+    if (duration or 0) <= 0 or cur == target or not region:IsVisible() then
+        region:SetAlpha(target)
+        return
+    end
+    g.anim:SetFromAlpha(cur)
+    g.anim:SetToAlpha(target)
+    g.anim:SetDuration(duration * math.abs(target - cur))
+    g:Play()
+end
+
+-- ============================================================
+--  StyleRow(frame, fill, alpha)
+--
+--  The list-row surface: a white texture on frame.__background (tinted with the fill
+--  colour and alpha, so rows can recolour it with SetVertexColor / SetAlpha) and a 1px
+--  black pixel-snapped border. Replaces DF:ApplyStandardBackdrop. Safe to call on any
+--  frame; it only adds regions.
+--    fill   {r, g, b[, a]}  default STYLE.row_fill      alpha  default fill[4] or 1
+-- ============================================================
+local function StyleRow(frame, fill, alpha)
+    fill = fill or STYLE.row_fill
+    local bg = frame.__background
+    if not bg then
+        bg = frame:CreateTexture(nil, "BACKGROUND", nil, -7)
+        bg:SetAllPoints()
+        bg:SetColorTexture(1, 1, 1, 1)
+        frame.__background = bg
+        frame.__border = NSI.UI.Pixel.Border(frame, { 0, 0, 0, 1 })
+    end
+    bg:SetVertexColor(fill[1], fill[2], fill[3])
+    bg:SetAlpha(alpha or fill[4] or 1)
+    return frame
+end
+
+-- ============================================================
+--  CreateTextBoxDialog(name, title, opts)
+--
+--  A movable dialog with a multi-line, scrolling text box: import and export strings,
+--  or any block of text. One frame per name, built on first use and reused. Replaces
+--  the Details Framework Lua editor popups.
+--
+--    opts: width / height   default 800 x 400
+--          readOnly         the text can be selected and copied but not edited
+--          okText           primary button label (default "Done")
+--          cancelText       when set, a Cancel button is added left of the primary one
+--          onOk             function(text, dialog): called by the primary button; return
+--                           false to keep the dialog open (use dialog:SetStatus first)
+--
+--  dialog:Open(text, info, onOk)   show it with this text and an info line above the box
+--  dialog:SetStatus(message, isError)
+--  dialog:GetText()
+--
+--  A read-only box selects everything on open, so Ctrl+C copies it at once.
+-- ============================================================
+local TB_TITLE_H, TB_INFO_H, TB_PAD, TB_BTN_H, TB_BTN_W = 30, 22, 12, 26, 110
+
+local function CreateTextBoxDialog(name, title, opts)
+    opts = opts or {}
+    local key = "TextBox_" .. name
+    local f = Dialogs[key]
+    if f then
+        f.titleFS:SetText(title or "")
+        return f
+    end
+
+    local W, H = opts.width or 800, opts.height or 400
+    f = CreateStyledFrame(UIParent, W, H, "NSRTTextBox_" .. name)
+    f:SetPoint("CENTER", UIParent, "CENTER")
+    f:SetFrameStrata("DIALOG")
+    Dialogs[key] = f
+
+    f.titleFS = MakeFontString(f, "body")
+    f.titleFS:SetText(title or "")
+    f.titleFS:SetPoint("TOPLEFT", f, "TOPLEFT", TB_PAD, -8)
+
+    local sep = f:CreateTexture(nil, "ARTWORK")
+    PaintAccent(sep, "SetColorTexture", 0.20)
+    sep:SetHeight(1)
+    sep:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -(TB_TITLE_H + 1))
+    sep:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -(TB_TITLE_H + 1))
+
+    f.info = MakeFontString(f, "label")
+    f.info:SetTextColor(unpack(STYLE.text_soft))
+    f.info:SetJustifyH("LEFT")
+    f.info:SetPoint("TOPLEFT", f, "TOPLEFT", TB_PAD, -(TB_TITLE_H + 8))
+    f.info:SetPoint("RIGHT", f, "RIGHT", -TB_PAD, 0)
+
+    -- the text area: an inset surface holding a scroll box holding the edit box
+    local areaTop = TB_TITLE_H + TB_INFO_H + 12
+    local area = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, f)
+    area:SetPoint("TOPLEFT", f, "TOPLEFT", TB_PAD, -areaTop)
+    area:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -TB_PAD, TB_BTN_H + TB_PAD * 2)
+    area:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
+    area:SetBackdropColor(unpack(STYLE.surface_inset))
+    area:SetBackdropBorderColor(unpack(STYLE.border_subtle))
+
+    local areaW, areaH = W - TB_PAD * 2 - 2, H - areaTop - TB_BTN_H - TB_PAD * 2 - 2
+    local scroll = CreateScrollBox(area, areaW, areaH)
+    scroll.frame:SetPoint("TOPLEFT", area, "TOPLEFT", 1, -1)
+    local child = scroll.scrollChild
+
+    local edit = CreateFrame("EditBox", nil, child)
+    edit:SetMultiLine(true)
+    edit:SetAutoFocus(false)
+    edit:SetTextInsets(6, 6, 4, 4)
+    edit:SetPoint("TOPLEFT", child, "TOPLEFT")
+    edit:SetWidth(child:GetWidth())
+    NSI:SetUIFont(edit, "label")
+    edit:SetTextColor(unpack(STYLE.text_color))
+    f.edit = edit
+
+    local locked, pending = opts.readOnly and true or false, false
+    local function FitHeight()
+        pending = false
+        child:SetHeight(math.max(edit:GetHeight(), scroll.frame:GetHeight()))
+        scroll:UpdateScrollBar()
+    end
+    edit:SetScript("OnTextChanged", function(self, userInput)
+        if locked and userInput then            -- read-only: put the text back
+            self:SetText(f._text or "")
+            self:HighlightText()
+            return
+        end
+        if not pending then pending = true; C_Timer.After(0, FitHeight) end
+    end)
+    edit:SetScript("OnCursorChanged", function(_, _, y, _, h)   -- keep the caret in view
+        y = -y
+        local top, view = scroll.frame:GetVerticalScroll(), scroll.frame:GetHeight()
+        if y < top then
+            scroll.frame:SetVerticalScroll(y)
+        elseif y + h > top + view then
+            scroll.frame:SetVerticalScroll(y + h - view)
+        end
+    end)
+    edit:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    child:EnableMouse(true)
+    child:SetScript("OnMouseDown", function() edit:SetFocus() end)
+
+    -- buttons
+    local function Primary()
+        local ok = true
+        if f._onOk then ok = f._onOk(edit:GetText(), f) end
+        if ok ~= false then f:Hide() end
+    end
+    local primary = CreateButton(f, opts.okText or NSI:Loc("Done"), Primary, TB_BTN_W, TB_BTN_H)
+    primary:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -TB_PAD, TB_PAD)
+    if opts.cancelText then
+        local cancel = CreateButton(f, opts.cancelText, function() f:Hide() end, TB_BTN_W, TB_BTN_H)
+        cancel:SetPoint("RIGHT", primary.frame, "LEFT", -8, 0)
+    end
+
+    function f:SetStatus(message, isError)
+        f.info:SetText(message or "")
+        if isError then f.info:SetTextColor(unpack(STYLE.text_danger))
+        else f.info:SetTextColor(unpack(STYLE.text_soft)) end
+    end
+    function f:GetText() return edit:GetText() end
+    function f:Open(text, info, onOk)
+        f._text = text or ""
+        f._onOk = onOk or opts.onOk
+        f:SetStatus(info, false)
+        edit:SetText(f._text)
+        scroll.frame:SetVerticalScroll(0)
+        f:Show()
+        C_Timer.After(0, function()
+            if not f:IsShown() then return end
+            FitHeight()
+            edit:SetFocus()
+            if locked then edit:HighlightText() end
+        end)
+        return f
+    end
+
+    f:Hide()
     return f
 end
 
@@ -3833,15 +4148,23 @@ NSI.UI.Components = {
     CreateColorPicker   = CreateColorPicker,
     CreateLabel         = CreateLabel,
     CreateBreakline     = CreateBreakline,
+    EnableSmoothScroll  = EnableSmoothScroll,
     CreateScrollBox     = CreateScrollBox,
     ReskinScrollbar     = ReskinScrollbar,
     BuildWidgets        = BuildWidgets,
     CreateWidgetHost    = CreateWidgetHost,
+    CreateCardHost      = CreateCardHost,
+    CreateSectionCard   = CreateSectionCard,
+    CardPad             = MENU_CARD_PAD,
+    CardGap             = MENU_SECTION_GAP,
     BuildMenu           = BuildMenu,
     CreateSpellIDList   = CreateSpellIDList,
     RefreshFonts        = RefreshFonts,
     CreateDialog        = CreateDialog,
     CreateInputDialog   = CreateInputDialog,
+    CreateTextBoxDialog = CreateTextBoxDialog,
+    FadeTo              = FadeTo,
+    StyleRow            = StyleRow,
     CreateFrame         = CreateStyledFrame,
     ShowContextMenu     = ShowContextMenu,
     ShowContextMenuAtFrame = ShowContextMenuAtFrame,

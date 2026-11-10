@@ -377,6 +377,7 @@ function NSI:CreateAnchorSettingsWindow(moverFrame, settingsName)
             win.RowWidth = win:GetWidth() - PAD_X * 2
             RebuildWindowContent(win, settingsName, win.RowWidth)
             PositionSettingsWindow(win, moverFrame, settingsName)
+            win:SetFrameStrata(NSI.LayoutEditorActive and "FULLSCREEN_DIALOG" or "DIALOG")
             win:Show()
         end
         return

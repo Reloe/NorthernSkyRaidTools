@@ -2,16 +2,13 @@ local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
 local STYLE = NSI.UI.Style
 local Accent = STYLE.Accent
-local DF = _G["DetailsFramework"]
 local Core = NSI.UI.Core
 local BossData = NSI.UI.BossData
 local C = NSI.UI.Components
 local CreateTextEntry = C.CreateTextEntry
-local CreateLocalizedButton = C.CreateLocalizedButton
 local CreateLocalizedSubButton = C.CreateLocalizedSubButton
 local ReskinScrollbar = C.ReskinScrollbar
 local BuildWidgets = C.BuildWidgets
-local options_button_template = Core.options_button_template
 
 local function GetSelectedBoss()
     local selected = tonumber(NSRT.PaceComparison.SelectedBoss) or 0
@@ -28,93 +25,24 @@ local function GetSelectedBoss()
     return selected
 end
 
-local function ApplyUIFont(object, size, flags)
-    if not object then return end
-    if object.SetFont then
-        NSI:SetUIFont(object, size, flags or "")
-    elseif object.widget and object.widget.SetFont then
-        NSI:SetUIFont(object.widget, size, flags or "")
-    end
-end
-
-local paceExportPopup
-local paceImportPopup
-
 local function ShowPaceComparisonExportPopup(text, label)
-    if not paceExportPopup then
-        paceExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r",
-            "NSUIPaceComparisonExportString", { UseScaleBar = false })
-        paceExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        paceExportPopup:SetFrameLevel(100)
-
-        paceExportPopup.infoLabel = paceExportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(paceExportPopup.infoLabel, "label", "")
-        paceExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
-        paceExportPopup.infoLabel:SetPoint("TOPLEFT", paceExportPopup, "TOPLEFT", 10, -30)
-
-        paceExportPopup.textbox = DF:NewSpecialLuaEditorEntry(paceExportPopup, 280, 80, nil,
-            "PaceComparisonExportTextEdit", true, false, true)
-        paceExportPopup.textbox:SetPoint("TOPLEFT", paceExportPopup, "TOPLEFT", 10, -50)
-        paceExportPopup.textbox:SetPoint("BOTTOMRIGHT", paceExportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(paceExportPopup.textbox)
-        DF:ReskinSlider(paceExportPopup.textbox.scroll)
-        paceExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(paceExportPopup.textbox.editbox, "label")
-
-        local doneBtn = CreateLocalizedButton(paceExportPopup, "Done", function()
-            paceExportPopup:Hide()
-        end, 280, 20)
-        doneBtn:SetPoint("BOTTOM", paceExportPopup, "BOTTOM", 0, 10)
-    end
-
-    paceExportPopup.infoLabel:SetText(label or "")
-    paceExportPopup.textbox:SetText(text or "")
-    paceExportPopup.textbox:SetFocus()
-    paceExportPopup:Show()
+    C.CreateTextBoxDialog("PaceExport", "|cFF00FFFF" .. NSI:Loc("Export Pace Comparison") .. "|r", { readOnly = true })
+        :Open(text or "", label)
 end
 
 local function ShowPaceComparisonImportPopup(onImport)
-    if not paceImportPopup then
-        paceImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
-            "NSUIPaceComparisonImportString", { UseScaleBar = false })
-        paceImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        paceImportPopup:SetFrameLevel(100)
-
-        paceImportPopup.statusLabel = paceImportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(paceImportPopup.statusLabel, "label", "")
-        paceImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
-        paceImportPopup.statusLabel:SetText(NSI:Loc("Paste a Pace Comparison export below and click Import."))
-        paceImportPopup.statusLabel:SetPoint("TOPLEFT", paceImportPopup, "TOPLEFT", 10, -30)
-
-        paceImportPopup.textbox = DF:NewSpecialLuaEditorEntry(paceImportPopup, 280, 80, nil,
-            "PaceComparisonImportTextEdit", true, false, true)
-        paceImportPopup.textbox:SetPoint("TOPLEFT", paceImportPopup, "TOPLEFT", 10, -50)
-        paceImportPopup.textbox:SetPoint("BOTTOMRIGHT", paceImportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(paceImportPopup.textbox)
-        DF:ReskinSlider(paceImportPopup.textbox.scroll)
-        paceImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(paceImportPopup.textbox.editbox, "label")
-
-        local importBtn = CreateLocalizedButton(paceImportPopup, "Import", function()
-            local success, bossCount, thresholdCount = NSI:ImportPaceComparisonString(paceImportPopup.textbox:GetText())
-            if success then
-                paceImportPopup:Hide()
-                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Pace Comparison boss(es) with %d threshold(s)."), bossCount, thresholdCount))
-                if paceImportPopup.onImport then
-                    paceImportPopup.onImport()
-                end
-            else
-                paceImportPopup.statusLabel:SetText("|cFFFF0000" .. NSI:Loc("Invalid Pace Comparison import string.") .. "|r")
-            end
-        end, 280, 20)
-        importBtn:SetPoint("BOTTOM", paceImportPopup, "BOTTOM", 0, 10)
-    end
-
-    paceImportPopup.onImport = onImport
-    paceImportPopup.statusLabel:SetText(NSI:Loc("Paste a Pace Comparison export below and click Import."))
-    paceImportPopup.textbox:SetText("")
-    paceImportPopup.textbox:SetFocus()
-    paceImportPopup:Show()
+    local dialog = C.CreateTextBoxDialog("PaceImport", "|cFF00FFFF" .. NSI:Loc("Import Pace Comparison") .. "|r",
+        { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
+    dialog:Open("", NSI:Loc("Paste a Pace Comparison export below and click Import."), function(text, d)
+        local success, bossCount, thresholdCount = NSI:ImportPaceComparisonString(text)
+        if success then
+            print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Pace Comparison boss(es) with %d threshold(s)."), bossCount, thresholdCount))
+            if onImport then onImport() end
+            return true
+        end
+        d:SetStatus(NSI:Loc("Invalid Pace Comparison import string."), true)
+        return false
+    end)
 end
 
 local function GetUIObject(object)
@@ -161,6 +89,7 @@ local function BuildPaceComparisonEditorUI(parent)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
     local leftScroll = CreateFrame("ScrollFrame", "$parentPaceComparisonBossScroll", screen, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(leftScroll)
     leftScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -36)
     leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 10)
     leftScroll:SetWidth(leftWidth)
@@ -183,9 +112,7 @@ local function BuildPaceComparisonEditorUI(parent)
     local function CreateBossRow()
         local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
-        DF:ApplyStandardBackdrop(row)
-        row.__background:SetVertexColor(0.4, 0.4, 0.4)
-        row.__background:SetAlpha(0.5)
+        C.StyleRow(row)
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(16, 16)
         row.icon:SetPoint("LEFT", row, "LEFT", 24, 0)
@@ -221,18 +148,36 @@ local function BuildPaceComparisonEditorUI(parent)
         row.arrow:SetSize(10, 10)
         row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
         row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.arrow:SetVertexColor(0, 0.9, 1, 1)
+        row.arrow:SetVertexColor(Accent(1))
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, "small", "")
         row.name:SetPoint("LEFT", row.arrow, "RIGHT", 4, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.name:SetTextColor(0.2, 0.85, 1, 1)
+        row.name:SetTextColor(Accent(1))
         row.name:SetJustifyH("LEFT")
         return row
     end
 
-    local bossLabel = CreateEditorLabel(rightPanel, "Expected HP Thresholds", 14, "orange")
-    bossLabel:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
+    -- Three cards, like the other tabs: boss actions, add a threshold, the threshold list.
+    local CARD_W = 628
+    local CARD_PAD, CARD_GAP = C.CardPad, C.CardGap
+    local cardActions = C.CreateSectionCard(rightPanel, CARD_W, true)
+    local cardAdd     = C.CreateSectionCard(rightPanel, CARD_W, true)
+    local cardList    = C.CreateSectionCard(rightPanel, CARD_W, true)
+    -- Cards fill the right panel: full width, and the list card runs to the bottom, so
+    -- nothing can spill out of the window whatever its size.
+    cardActions:SetPoint("TOPLEFT", rightPanel, "TOPLEFT", 0, 0)
+    cardActions:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, 0)
+    cardAdd:SetPoint("TOPLEFT", cardActions, "BOTTOMLEFT", 0, -CARD_GAP)
+    cardAdd:SetPoint("TOPRIGHT", cardActions, "BOTTOMRIGHT", 0, -CARD_GAP)
+    cardList:SetPoint("TOPLEFT", cardAdd, "BOTTOMLEFT", 0, -CARD_GAP)
+    cardList:SetPoint("BOTTOMRIGHT", rightPanel, "BOTTOMRIGHT", 0, 0)
+    for _, card in ipairs({ cardActions, cardAdd, cardList }) do
+        card.content:SetPoint("TOPRIGHT", card, "TOPRIGHT", -CARD_PAD, -(card.headerH + CARD_PAD))
+    end
+    cardAdd.title:SetText(NSI:Loc("Add Threshold"))
+    cardList.title:SetText(NSI:Loc("Thresholds"))
+    local bossLabel = cardActions.title
 
     RefreshBossList = function()
         local current, previous = {}, {}
@@ -290,7 +235,7 @@ local function BuildPaceComparisonEditorUI(parent)
                     end)
                     if screen.selectedBoss == encID then
                         row.__background:SetVertexColor(Accent())
-                        row.__background:SetAlpha(1)
+                        row.__background:SetAlpha(STYLE.selected_row_alpha)
                     else
                         row.__background:SetVertexColor(0.4, 0.4, 0.4)
                         row.__background:SetAlpha(0.5)
@@ -309,13 +254,13 @@ local function BuildPaceComparisonEditorUI(parent)
         leftChild:SetHeight(math.max(1, slot * 23))
     end
 
-    local resetButton = CreateLocalizedSubButton(screen, "Reset Boss Defaults", function()
+    local resetButton = CreateLocalizedSubButton(cardActions.content, "Reset Boss Defaults", function()
         NSI:ResetPaceComparisonBoss(screen.selectedBoss)
         screen:Refresh()
     end, 160, "NSUIPaceComparisonReset")
-    resetButton:SetPoint("TOPLEFT", GetUIObject(bossLabel), "BOTTOMLEFT", 0, -10)
+    resetButton:SetPoint("TOPLEFT", cardActions.content, "TOPLEFT", 0, 0)
 
-    local importButton = CreateLocalizedSubButton(screen, "Import", function()
+    local importButton = CreateLocalizedSubButton(cardActions.content, "Import", function()
         ShowPaceComparisonImportPopup(function()
             screen.selectedBoss = GetSelectedBoss()
             screen:Refresh()
@@ -323,96 +268,114 @@ local function BuildPaceComparisonEditorUI(parent)
     end, 70, "NSUIPaceComparisonImport")
     importButton:SetPoint("LEFT", resetButton.frame, "RIGHT", 8, 0)
 
-    local exportBossButton = CreateLocalizedSubButton(screen, "Export Boss", function()
+    local exportBossButton = CreateLocalizedSubButton(cardActions.content, "Export Boss", function()
         local export = NSI:ExportPaceComparisonString(screen.selectedBoss)
         ShowPaceComparisonExportPopup(export, NSI:Loc("Selected Boss"))
     end, 95, "NSUIPaceComparisonExportBoss")
     exportBossButton:SetPoint("LEFT", importButton.frame, "RIGHT", 8, 0)
 
-    local exportAllButton = CreateLocalizedSubButton(screen, "Export All", function()
+    local exportAllButton = CreateLocalizedSubButton(cardActions.content, "Export All", function()
         ShowPaceComparisonExportPopup(NSI:ExportAllPaceComparisonString(), NSI:Loc("All Bosses"))
     end, 80, "NSUIPaceComparisonExportAll")
     exportAllButton:SetPoint("LEFT", exportBossButton.frame, "RIGHT", 8, 0)
 
-    local previewButton = CreateLocalizedSubButton(screen, "Preview", function()
+    local previewButton = CreateLocalizedSubButton(cardActions.content, "Preview", function()
         NSI:PreviewPaceComparison()
     end, 70, "NSUIPaceComparisonPreview")
     previewButton:SetPoint("LEFT", exportAllButton.frame, "RIGHT", 8, 0)
 
-    local addLabel = CreateEditorLabel(screen, "Add Threshold", 12, "orange")
-    addLabel:SetPoint("TOPLEFT", resetButton.frame, "BOTTOMLEFT", 0, -16)
-
     NSRT.PaceComparison.NewThreshold = NSRT.PaceComparison.NewThreshold or {}
     local newThreshold = NSRT.PaceComparison.NewThreshold
-    local phaseEntry = CreateTextEntry(screen, NSI:Loc("Phase"), function() return newThreshold.phase or 1 end, function(_, value) newThreshold.phase = tonumber(value) or 1 end, 105, 22, true, nil, nil, "NSUIPaceComparisonNewPhase")
-    phaseEntry:SetPoint("TOPLEFT", GetUIObject(addLabel), "BOTTOMLEFT", 0, -8)
-    local timeEntry = CreateTextEntry(screen, NSI:Loc("Time"), function() return newThreshold.time or 0 end, function(_, value) newThreshold.time = tonumber(value) or 0 end, 110, 22, true, nil, nil, "NSUIPaceComparisonNewTime")
+    local phaseEntry = CreateTextEntry(cardAdd.content, NSI:Loc("Phase"), function() return newThreshold.phase or 1 end, function(_, value) newThreshold.phase = tonumber(value) or 1 end, 105, 22, true, nil, nil, "NSUIPaceComparisonNewPhase")
+    phaseEntry:SetPoint("TOPLEFT", cardAdd.content, "TOPLEFT", 0, 0)
+    local timeEntry = CreateTextEntry(cardAdd.content, NSI:Loc("Time"), function() return newThreshold.time or 0 end, function(_, value) newThreshold.time = tonumber(value) or 0 end, 110, 22, true, nil, nil, "NSUIPaceComparisonNewTime")
     timeEntry:SetPoint("LEFT", phaseEntry.frame, "RIGHT", 8, 0)
-    local unitEntry = CreateTextEntry(screen, NSI:Loc("Boss Unit"), function() return newThreshold.unit or "boss1" end, function(_, value) newThreshold.unit = value ~= "" and value or "boss1" end, 145, 22, false, nil, nil, "NSUIPaceComparisonNewUnit")
+    local unitEntry = CreateTextEntry(cardAdd.content, NSI:Loc("Boss Unit"), function() return newThreshold.unit or "boss1" end, function(_, value) newThreshold.unit = value ~= "" and value or "boss1" end, 145, 22, false, nil, nil, "NSUIPaceComparisonNewUnit")
     unitEntry:SetPoint("LEFT", timeEntry.frame, "RIGHT", 8, 0)
-    local expectedEntry = CreateTextEntry(screen, NSI:Loc("Expected"), function() return newThreshold.expected or 100 end, function(_, value)
+    local expectedEntry = CreateTextEntry(cardAdd.content, NSI:Loc("Expected"), function() return newThreshold.expected or 100 end, function(_, value)
         local expected = tonumber(value) or 100
         newThreshold.expected = math.max(0, math.min(expected, 100))
     end, 145, 22, true, 0, 100, "NSUIPaceComparisonNewExpected")
     expectedEntry:SetPoint("LEFT", unitEntry.frame, "RIGHT", 8, 0)
 
-    local addButton = DF:CreateButton(screen, function()
+    local addButton = C.CreateButton(cardAdd.content, NSI:Loc("Add"), function()
         NSI:AddPaceComparisonThreshold(screen.selectedBoss, newThreshold)
         screen:Refresh()
-    end, 55, 20, NSI:Loc("Add"))
+    end, 55, 20, nil, nil, "tiny")
     addButton:SetPoint("LEFT", expectedEntry.frame, "RIGHT", 8, 0)
-    addButton:SetTemplate(options_button_template)
-    ApplyUIFont(addButton, 11)
 
-    local header = CreateFrame("Frame", nil, screen)
-    header:SetPoint("TOPLEFT", phaseEntry.frame, "BOTTOMLEFT", 0, -14)
-    header:SetSize(610, 18)
+    local header = CreateFrame("Frame", nil, cardList.content)
+    header:SetPoint("TOPLEFT", cardList.content, "TOPLEFT", 0, 0)
+    header:SetPoint("TOPRIGHT", cardList.content, "TOPRIGHT", 0, 0)
+    header:SetHeight(18)
 
-    local function HeaderText(text, x, width)
+    -- Columns share the row width: Phase, Time, Boss Unit, Expected, then Delete.
+    local COL_FRACTIONS = { 0.17, 0.17, 0.30, 0.24 }
+    local COL_PAD, COL_GAP, DELETE_W = 6, 12, 55
+    local function ColumnLayout(width)
+        local usable = width - COL_PAD * 2 - DELETE_W - COL_GAP * 4
+        local xs, ws, x = {}, {}, COL_PAD
+        for i, fraction in ipairs(COL_FRACTIONS) do
+            ws[i] = math.max(30, math.floor(usable * fraction / 0.88))
+            xs[i] = x
+            x = x + ws[i] + COL_GAP
+        end
+        return xs, ws
+    end
+
+    local headerLabels = {}
+    for i, text in ipairs({ "Phase", "Time", "Boss Unit", "Expected" }) do
         local label = header:CreateFontString(nil, "OVERLAY")
-        label:SetPoint("LEFT", header, "LEFT", x, 0)
-        label:SetWidth(width)
         label:SetJustifyH("LEFT")
         NSI:SetUIFont(label, 10, "")
         label:SetText(NSI:Loc(text))
+        headerLabels[i] = label
     end
-    HeaderText("Phase", 8, 55)
-    HeaderText("Time", 98, 55)
-    HeaderText("Boss Unit", 188, 80)
-    HeaderText("Expected", 318, 90)
-
-    local function refresh(scrollbox, data, offset, totalLines)
-        for i = 1, totalLines do
-            local rowData = data[i + offset]
-            if rowData then
-                local line = scrollbox:GetLine(i)
-                line:Show()
-                line.index = rowData.index
-                line.entry = rowData.entry
-                line.phaseEntry:SetValue(rowData.entry.phase or 1)
-                line.timeEntry:SetValue(rowData.entry.time or 0)
-                line.unitEntry:SetValue(rowData.entry.unit or "boss1")
-                line.expectedEntry:SetValue(rowData.entry.expected or 100)
-            else
-                local line = scrollbox.Frames[i]
-                line.entry = nil
-                line.index = nil
-                line:Hide()
-            end
+    header:SetScript("OnSizeChanged", function(_, width)
+        local xs, ws = ColumnLayout(width)
+        for i, label in ipairs(headerLabels) do
+            label:ClearAllPoints()
+            label:SetPoint("LEFT", header, "LEFT", xs[i] + 2, 0)
+            label:SetWidth(ws[i])
         end
-    end
+    end)
 
-    local function createLine(scrollbox, index)
-        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSUIPaceComparisonThresholdLine" .. index, scrollbox)
-        line:SetPoint("TOPLEFT", GetUIObject(scrollbox), "TOPLEFT", 1, -((index - 1) * scrollbox.LineHeight) - 1)
-        line:SetSize(scrollbox:GetWidth() - 2, scrollbox.LineHeight)
-        DF:ApplyStandardBackdrop(line)
+    local LINE_H = 24
+    local LIST_H = 300   -- initial; follows the card once it is laid out
+    local scrollObj = C.CreateScrollBox(cardList.content, CARD_W - CARD_PAD * 2, LIST_H)
+    scrollObj.frame:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
+    local lines = {}
+    local MasterRefresh
+
+    -- Card heights follow their content.
+    local function SizeCard(card, contentH)
+        card.content:SetHeight(contentH)
+        card:SetHeight(card.headerH + CARD_PAD * 2 + contentH)
+    end
+    SizeCard(cardActions, resetButton.frame:GetHeight())
+    SizeCard(cardAdd, math.max(phaseEntry.frame:GetHeight(), 22))
+    -- The list card's height comes from its anchors; the scroll box takes what is left
+    -- under the column header, and rows stretch to the scroll width.
+    cardList.content:SetPoint("BOTTOMLEFT", cardList, "BOTTOMLEFT", CARD_PAD, CARD_PAD)
+    cardList.content:SetScript("OnSizeChanged", function(_, width, height)
+        if width < 1 or height < 30 then return end
+        scrollObj:SetSize(width, height - 22)
+        scrollObj.scrollChild:SetWidth(width - 18)
+        scrollObj:UpdateScrollBar()
+    end)
+
+    local function createLine(index)
+        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, scrollObj.scrollChild)
+        line:SetPoint("TOPLEFT", scrollObj.scrollChild, "TOPLEFT", 1, -((index - 1) * LINE_H) - 1)
+        line:SetPoint("TOPRIGHT", scrollObj.scrollChild, "TOPRIGHT", -1, -((index - 1) * LINE_H) - 1)
+        line:SetHeight(LINE_H)
+        C.StyleRow(line, STYLE.row_plain)
 
         line.phaseEntry = CreateTextEntry(line, nil, function() return line.entry and line.entry.phase or 1 end, function(_, value)
             if not line.entry then return end
             line.entry.phase = tonumber(value) or 1
             NSI:SetPaceComparisonBossModified(screen.selectedBoss)
-            scrollbox:MasterRefresh()
+            MasterRefresh()
         end, 70, 20, true)
         line.phaseEntry:SetPoint("LEFT", line, "LEFT", 6, 0)
 
@@ -420,7 +383,7 @@ local function BuildPaceComparisonEditorUI(parent)
             if not line.entry then return end
             line.entry.time = tonumber(value) or 0
             NSI:SetPaceComparisonBossModified(screen.selectedBoss)
-            scrollbox:MasterRefresh()
+            MasterRefresh()
         end, 70, 20, true)
         line.timeEntry:SetPoint("LEFT", line.phaseEntry.frame, "RIGHT", 20, 0)
 
@@ -428,7 +391,7 @@ local function BuildPaceComparisonEditorUI(parent)
             if not line.entry then return end
             line.entry.unit = value ~= "" and value or "boss1"
             NSI:SetPaceComparisonBossModified(screen.selectedBoss)
-            scrollbox:MasterRefresh()
+            MasterRefresh()
         end, 105, 20, false)
         line.unitEntry:SetPoint("LEFT", line.timeEntry.frame, "RIGHT", 20, 0)
 
@@ -437,42 +400,57 @@ local function BuildPaceComparisonEditorUI(parent)
             local expected = tonumber(value) or 100
             line.entry.expected = math.max(0, math.min(expected, 100))
             NSI:SetPaceComparisonBossModified(screen.selectedBoss)
-            scrollbox:MasterRefresh()
+            MasterRefresh()
         end, 90, 20, true, 0, 100)
         line.expectedEntry:SetPoint("LEFT", line.unitEntry.frame, "RIGHT", 20, 0)
 
-        line.deleteButton = DF:CreateButton(line, function()
+        line.deleteButton = C.CreateButton(line, NSI:Loc("Delete"), function()
             NSI:DeletePaceComparisonThreshold(screen.selectedBoss, line.index)
             screen:Refresh()
-        end, 55, 18, NSI:Loc("Delete"))
+        end, 55, 18, nil, nil, "tiny")
         line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -6, 0)
-        line.deleteButton:SetTemplate(options_button_template)
-        ApplyUIFont(line.deleteButton, 11)
+
+        -- Columns stretch with the row (same fractions as the header).
+        local columnEntries = { line.phaseEntry, line.timeEntry, line.unitEntry, line.expectedEntry }
+        line:SetScript("OnSizeChanged", function(_, width)
+            local xs, ws = ColumnLayout(width)
+            for i, entry in ipairs(columnEntries) do
+                entry.frame:ClearAllPoints()
+                entry.frame:SetPoint("LEFT", line, "LEFT", xs[i], 0)
+                entry.frame:SetWidth(ws[i])
+            end
+        end)
 
         return line
     end
 
-    local scrollLines = 15
-    local scrollbox = DF:CreateScrollBox(screen, "NSUIPaceComparisonThresholdScrollBox", refresh, {}, 610, 300, scrollLines, 24, createLine)
-    screen.scrollbox = scrollbox
-    scrollbox:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
-    DF:ReskinSlider(scrollbox)
-    scrollbox.MasterRefresh = function(self)
-        for _, line in ipairs(self.Frames) do
-            line.entry = nil
-            line.index = nil
+    -- Lines are created on demand and reused; the list is short, so no virtualisation.
+    MasterRefresh = function()
+        local data = GetEditorData(screen)
+        for i, rowData in ipairs(data) do
+            local line = lines[i]
+            if not line then line = createLine(i); lines[i] = line end
+            line:Show()
+            line.index = rowData.index
+            line.entry = rowData.entry
+            line.phaseEntry:SetValue(rowData.entry.phase or 1)
+            line.timeEntry:SetValue(rowData.entry.time or 0)
+            line.unitEntry:SetValue(rowData.entry.unit or "boss1")
+            line.expectedEntry:SetValue(rowData.entry.expected or 100)
+        end
+        for i = #data + 1, #lines do
+            local line = lines[i]
+            line.entry, line.index = nil, nil
             line:Hide()
         end
-        self:SetData(GetEditorData(screen))
-        self:Refresh()
+        scrollObj.scrollChild:SetHeight(math.max(#data * LINE_H + 2, 1))
+        scrollObj:UpdateScrollBar()
     end
-    for i = 1, scrollLines do
-        scrollbox:CreateLine(createLine)
-    end
+    screen.scrollbox = { MasterRefresh = function() MasterRefresh() end }
 
     function screen:Refresh()
         bossLabel:SetText(NSI:Loc("Expected HP Thresholds"))
-        self.scrollbox:MasterRefresh()
+        MasterRefresh()
         RefreshBossList()
     end
 
@@ -483,13 +461,15 @@ end
 function NSI:TogglePaceComparisonSettingsWindow(frame)
     if not frame then return end
     if frame.SettingsWindow then
-        frame.SettingsWindow:SetShown(not frame.SettingsWindow:IsShown())
+        local win = frame.SettingsWindow
+        win:SetFrameStrata(NSI.LayoutEditorActive and "FULLSCREEN_DIALOG" or "DIALOG")   -- above the editor overlays
+        win:SetShown(not win:IsShown())
         return
     end
 
     local display = NSRT.PaceComparison.Display
     local window = NSI.UI.Pixel.CreateBoxFrame("Frame", "NSRTPaceComparisonSettings", frame)
-    window:SetFrameStrata("DIALOG")
+    window:SetFrameStrata(NSI.LayoutEditorActive and "FULLSCREEN_DIALOG" or "DIALOG")
     window:SetFrameLevel(frame:GetFrameLevel() + 10)
     window:SetWidth(330)
     window:SetBackdrop({

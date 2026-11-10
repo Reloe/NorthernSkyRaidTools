@@ -10,6 +10,7 @@
 
 UI\Bootstrap.lua [Bootstrap]
 UI\Pixel.lua
+UI\Tooltip.lua
 UI\Core.lua
 UI\Components.lua
 UI\Window.lua

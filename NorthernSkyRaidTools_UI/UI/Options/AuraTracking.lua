@@ -2,7 +2,6 @@ local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
 local STYLE = NSI.UI.Style
 local Accent = STYLE.Accent
-local DF = _G["DetailsFramework"]
 
 local Core                     = NSI.UI.Core
 local NSUI                     = Core.NSUI
@@ -193,83 +192,23 @@ local function EntryIcon(settingsKey, settings)
     return DEFAULT_ICON
 end
 
-local auraTrackingExportPopup
-local auraTrackingImportPopup
-
 local function ShowAuraTrackingExportPopup(text, label)
-    if not auraTrackingExportPopup then
-        auraTrackingExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Tracking") .. "|r",
-            "NSRTAuraTrackingExportPopup", { UseScaleBar = false })
-        auraTrackingExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        auraTrackingExportPopup:SetFrameLevel(100)
-
-        auraTrackingExportPopup.infoLabel = auraTrackingExportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(auraTrackingExportPopup.infoLabel, "label", "")
-        auraTrackingExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
-        auraTrackingExportPopup.infoLabel:SetPoint("TOPLEFT", auraTrackingExportPopup, "TOPLEFT", 10, -30)
-
-        auraTrackingExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraTrackingExportPopup, 280, 80, nil,
-            "NSRTAuraTrackingExportPopupTextBox", "$parentTextBox")
-        auraTrackingExportPopup.textbox:SetPoint("TOPLEFT", auraTrackingExportPopup, "TOPLEFT", 10, -50)
-        auraTrackingExportPopup.textbox:SetPoint("BOTTOMRIGHT", auraTrackingExportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(auraTrackingExportPopup.textbox)
-        DF:ReskinSlider(auraTrackingExportPopup.textbox.scroll)
-        auraTrackingExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraTrackingExportPopup.textbox.editbox, "label")
-
-        local doneBtn = CreateLocalizedButton(auraTrackingExportPopup, "Done", function()
-            auraTrackingExportPopup:Hide()
-        end, 280, 20)
-        doneBtn:SetPoint("BOTTOM", auraTrackingExportPopup, "BOTTOM", 0, 10)
-    end
-
-    auraTrackingExportPopup.infoLabel:SetText(label or "")
-    auraTrackingExportPopup.textbox:SetText(text or "")
-    auraTrackingExportPopup.textbox:SetFocus()
-    auraTrackingExportPopup:Show()
+    NSI.UI.Components.CreateTextBoxDialog("AuraTrackingExport", "|cFF00FFFF" .. NSI:Loc("Export Aura Tracking") .. "|r", { readOnly = true }):Open(text or "", label)
 end
 
 local function ShowAuraTrackingImportPopup(onImport)
-    if not auraTrackingImportPopup then
-        auraTrackingImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Tracking") .. "|r",
-            "NSRTAuraTrackingImportPopup", { UseScaleBar = false })
-        auraTrackingImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        auraTrackingImportPopup:SetFrameLevel(100)
-
-        auraTrackingImportPopup.statusLabel = auraTrackingImportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(auraTrackingImportPopup.statusLabel, "label", "")
-        auraTrackingImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
-        auraTrackingImportPopup.statusLabel:SetPoint("TOPLEFT", auraTrackingImportPopup, "TOPLEFT", 10, -30)
-
-        auraTrackingImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraTrackingImportPopup, 280, 80, nil,
-            "NSRTAuraTrackingImportPopupTextBox", "$parentTextBox")
-        auraTrackingImportPopup.textbox:SetPoint("TOPLEFT", auraTrackingImportPopup, "TOPLEFT", 10, -50)
-        auraTrackingImportPopup.textbox:SetPoint("BOTTOMRIGHT", auraTrackingImportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(auraTrackingImportPopup.textbox)
-        DF:ReskinSlider(auraTrackingImportPopup.textbox.scroll)
-        auraTrackingImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraTrackingImportPopup.textbox.editbox, "label")
-
-        local importBtn = CreateLocalizedButton(auraTrackingImportPopup, "Import", function()
-            local success, imported = NSI:ImportAuraTrackingString(auraTrackingImportPopup.textbox:GetText())
-            if success then
-                auraTrackingImportPopup:Hide()
-                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Aura Tracking display(s)."), imported or 0))
-                if auraTrackingImportPopup.onImport then
-                    auraTrackingImportPopup.onImport()
-                end
-            else
-                auraTrackingImportPopup.statusLabel:SetText("|cFFFF0000" .. NSI:Loc("Invalid Aura Tracking import string.") .. "|r")
-            end
-        end, 280, 20)
-        importBtn:SetPoint("BOTTOM", auraTrackingImportPopup, "BOTTOM", 0, 10)
-    end
-
-    auraTrackingImportPopup.onImport = onImport
-    auraTrackingImportPopup.statusLabel:SetText(NSI:Loc("Paste an Aura Tracking export string below and click Import."))
-    auraTrackingImportPopup.textbox:SetText("")
-    auraTrackingImportPopup.textbox:SetFocus()
-    auraTrackingImportPopup:Show()
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraTrackingImport", "|cFF00FFFF" .. NSI:Loc("Import Aura Tracking") .. "|r",
+        { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
+    dialog:Open("", NSI:Loc("Paste an Aura Tracking export string below and click Import."), function(text, d)
+        local success, imported = NSI:ImportAuraTrackingString(text)
+        if success then
+            print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d Aura Tracking display(s)."), imported or 0))
+            if onImport then onImport() end
+            return true
+        end
+        d:SetStatus(NSI:Loc("Invalid Aura Tracking import string."), true)
+        return false
+    end)
 end
 
 local function ClassColor(class)
@@ -379,7 +318,7 @@ local function BuildAuraTrackingUI(screen)
     local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
-    searchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
+    searchHint:SetTextColor(unpack(STYLE.text_hint))
     NSI:SetUIFont(searchHint, "body", "")
     local function UpdateSearchHint(eb) searchHint:SetShown(eb:GetText() == "" and not eb:HasFocus()) end
     searchEntry.editBox:SetScript("OnTextChanged", function(self)
@@ -429,6 +368,7 @@ local function BuildAuraTrackingUI(screen)
     local listW        = leftWidth - pad * 2
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackListScroll", screen, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(listScroll)
     listScroll:SetSize(listW, scrollHeight)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
     ReskinScrollbar(listScroll)
@@ -444,9 +384,7 @@ local function BuildAuraTrackingUI(screen)
     local function CreateEntryRow()
         local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
-        DF:ApplyStandardBackdrop(row)
-        row.__background:SetVertexColor(0.4, 0.4, 0.4)
-        row.__background:SetAlpha(0.5)
+        NSI.UI.Components.StyleRow(row)
 
         local cb = CreateCheckButton(row, "", nil, nil, 14, 14)
         cb:SetPoint("LEFT", row, "LEFT", 3, 0)
@@ -495,18 +433,16 @@ local function BuildAuraTrackingUI(screen)
     local function CreateHeaderRow()
         local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
-        DF:ApplyStandardBackdrop(row)
-        row.__background:SetVertexColor(0.05, 0.30, 0.40)
-        row.__background:SetAlpha(0.90)
+        NSI.UI.Components.StyleRow(row, STYLE.selected_fill)
 
         row.arrow = row:CreateTexture(nil, "OVERLAY")
         row.arrow:SetSize(12, 12)
         row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.arrow:SetVertexColor(0.4, 0.85, 1, 1)
+        row.arrow:SetVertexColor(Accent(1))
 
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, "label")
-        row.name:SetTextColor(0.2, 0.85, 1, 1)
+        row.name:SetTextColor(Accent(1))
         row.name:SetPoint("LEFT", row, "LEFT", 20, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -34, 0)
         row.name:SetJustifyH("LEFT")
@@ -724,7 +660,7 @@ local function BuildAuraTrackingUI(screen)
         end
         if not item.builtin or bossBuiltin then
             local groupSub = {
-                { type = "button", label = NSI:Loc("— No Group —"), fnc = function() NSI:SetAuraTrackingEntryGroup(sk, "") end },
+                { type = "button", label = NSI:Loc("\226\128\148 No Group \226\128\148"), fnc = function() NSI:SetAuraTrackingEntryGroup(sk, "") end },
             }
             for _, gname in ipairs(NSI:GetAuraTrackingGroups()) do
                 local gn = gname
@@ -812,7 +748,7 @@ local function BuildAuraTrackingUI(screen)
 
                 local statSettings = NSRT.PlayerStatsDisplay
                 if isStatsSelected then
-                    row.__background:SetVertexColor(Accent()); row.__background:SetAlpha(1)
+                    row.__background:SetVertexColor(Accent()); row.__background:SetAlpha(STYLE.selected_row_alpha)
                 else
                     row.__background:SetVertexColor(0.4, 0.4, 0.4); row.__background:SetAlpha(0.5)
                 end
@@ -852,7 +788,7 @@ local function BuildAuraTrackingUI(screen)
                 local settings = item.settings
                 local willLoad = NSI:EvaluateAuraTrackingLoad(settings, true)
                 if selectedKey == item.settingsKey then
-                    row.__background:SetVertexColor(Accent()); row.__background:SetAlpha(1)
+                    row.__background:SetVertexColor(Accent()); row.__background:SetAlpha(STYLE.selected_row_alpha)
                 else
                     row.__background:SetVertexColor(0.4, 0.4, 0.4); row.__background:SetAlpha(willLoad and 0.5 or 0.2)
                 end
@@ -925,7 +861,7 @@ local function BuildAuraTrackingUI(screen)
     local function BuildGroupItems()
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         if not s or (s.builtin and not NSI.AuraTrackingBossBuiltins[s.builtin]) then return {} end
-        local items = { { label = NSI:Loc("— No Group —"), value = "", onclick = function()
+        local items = { { label = NSI:Loc("\226\128\148 No Group \226\128\148"), value = "", onclick = function()
             NSI:SetAuraTrackingEntryGroup(selectedKey, ""); groupDD:Refresh(); RebuildList()
         end } }
         for _, name in ipairs(NSI:GetAuraTrackingGroups()) do
@@ -943,7 +879,7 @@ local function BuildAuraTrackingUI(screen)
         local s = selectedKey and NSI:GetAuraTrackingSettings(selectedKey)
         if not s then return "" end
         if s.builtin and not NSI.AuraTrackingBossBuiltins[s.builtin] then return NSI:Loc(s.builtin == "AuraMatrix" and NSI.AuraTrackingMatrixGroup or NSI.AuraTrackingBuiltinGroup) end
-        return (s.group and s.group ~= "") and s.group or NSI:Loc("— No Group —")
+        return (s.group and s.group ~= "") and s.group or NSI:Loc("\226\128\148 No Group \226\128\148")
     end
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected, 130, 22, "NSUIAuraTrackGroupDD")
     groupDD:SetPoint("LEFT", nameEntry.frame, "RIGHT", 12, 0)
@@ -967,7 +903,7 @@ local function BuildAuraTrackingUI(screen)
     local contentY  = tabRowY - 24
 
     local sep = rightPanel:CreateTexture(nil, "ARTWORK")
-    sep:SetColorTexture(0.3, 0.3, 0.3, 0.8)
+    sep:SetColorTexture(unpack(STYLE.border_subtle))
     sep:SetHeight(1)
     sep:SetPoint("TOPLEFT",  rightPanel, "TOPLEFT",  0, tabRowY - 20)
     sep:SetPoint("TOPRIGHT", rightPanel, "TOPRIGHT", 0, tabRowY - 20)
@@ -1740,7 +1676,7 @@ local function BuildAuraTrackingUI(screen)
         if not scrollObj then
             scrollObj = CreateScrollBox(container, tabScrollW, tabContentH - topPad)
             tabScroll[activeTab] = scrollObj
-            tabHost[activeTab] = NSI.UI.Components.CreateWidgetHost(scrollObj.scrollChild, scrollObj.scrollChild:GetWidth())
+            tabHost[activeTab] = NSI.UI.Components.CreateCardHost(scrollObj.scrollChild, scrollObj.scrollChild:GetWidth())
         else
             scrollObj:SetSize(tabScrollW, tabContentH - topPad)
         end
@@ -1760,13 +1696,10 @@ local function BuildAuraTrackingUI(screen)
     local namesListH = 112
     local loadScrollH = tabContentH - NAMES_SEC_H - 4
     local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackLoadScroll", loadF, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(loadScroll)
     loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
     loadScroll:SetSize(tabScrollW, loadScrollH)
     loadScroll:EnableMouseWheel(true)
-    loadScroll:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G["NSUIAuraTrackLoadScrollScrollBar"]
-        if bar then local cur = bar:GetValue(); local mn, mx = bar:GetMinMaxValues(); bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24))) end
-    end)
     ReskinScrollbar(loadScroll)
     local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadChild:SetSize(tabScrollW - 18, 1)
@@ -1820,7 +1753,7 @@ local function BuildAuraTrackingUI(screen)
         row.box:SetSize(12, 12)
         row.box:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.box:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
-        row.box:SetBackdropColor(0.10, 0.10, 0.10, 0.9)
+        row.box:SetBackdropColor(unpack(STYLE.input_bg_color))
         row.box:SetBackdropBorderColor(unpack(STYLE.border_subtle))
         row.fill = row.box:CreateTexture(nil, "ARTWORK")
         row.fill:SetPoint("TOPLEFT", row.box, "TOPLEFT", 2, -2)
@@ -1843,10 +1776,10 @@ local function BuildAuraTrackingUI(screen)
         row.icon:SetPoint("LEFT", row, "LEFT", 22, 0)
         row.icon:Hide()
         row:SetScript("OnEnter", function()
-            UIFrameFadeIn(hoverBg, 0.12, hoverBg:GetAlpha(), 1)
+            NSI.UI.Components.FadeTo(hoverBg, 1, 0.12)
         end)
         row:SetScript("OnLeave", function()
-            UIFrameFadeOut(hoverBg, 0.20, hoverBg:GetAlpha(), 0)
+            NSI.UI.Components.FadeTo(hoverBg, 0, 0.2)
         end)
         row:Hide()
         return row
@@ -1886,17 +1819,10 @@ local function BuildAuraTrackingUI(screen)
     nameAddBtn:SetPoint("LEFT", nameInput.frame, "RIGHT", 6, 0)
 
     local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraTrackNamesScroll", loadF, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(namesScroll)
     namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
     namesScroll:SetSize(loadRowW, namesListH)
     namesScroll:EnableMouseWheel(true)
-    namesScroll:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G["NSUIAuraTrackNamesScrollScrollBar"]
-        if bar then
-            local cur = bar:GetValue()
-            local mn, mx = bar:GetMinMaxValues()
-            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24)))
-        end
-    end)
     ReskinScrollbar(namesScroll)
 
     local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
@@ -2164,7 +2090,7 @@ local function BuildAuraTrackingUI(screen)
     local displaySearchHint = displaySearchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     displaySearchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     displaySearchHint:SetPoint("LEFT", displaySearchEntry.editBox, "LEFT", 2, 0)
-    displaySearchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
+    displaySearchHint:SetTextColor(unpack(STYLE.text_hint))
     NSI:SetUIFont(displaySearchHint, "body", "")
     local function UpdateDisplaySearchHint(editBox)
         displaySearchHint:SetShown(editBox:GetText() == "" and not editBox:HasFocus())
@@ -2410,6 +2336,22 @@ local function BuildAuraTrackingUI(screen)
         if activeTab ~= "Display" then return end
         anchorEntry:SetValue(NSI:GetAuraTrackingSettings(selectedKey).CustomAnchorFrame or "UIParent")
         RebuildWidgetTab()
+    end
+
+    -- Header search: expose the selected display's Display/Trigger definitions (see Search.lua).
+    screen.SearchPanels = function()
+        if not selectedKey then return nil end
+        local settings = NSI:GetAuraTrackingSettings(selectedKey)
+        if not settings then return nil end
+        return {
+            { id = "Display", title = "Display", defs = DEF_BUILDERS.Display(settings, selectedKey) },
+            { id = "Trigger", title = "Trigger", defs = DEF_BUILDERS.Trigger(settings, selectedKey) },
+        }
+    end
+    screen.SearchReveal = function(id)
+        activeTab = id
+        RebuildWidgetTab()
+        return tabHost[id], tabScroll[id]
     end
 
     RebuildList()

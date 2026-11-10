@@ -2,7 +2,6 @@ local NSI = _G.NorthernSkyRaidTools
 local STYLE = NSI.UI.Style
 local Accent = STYLE.Accent
 
-local DF = _G["DetailsFramework"]
 
 local Core = NSI.UI.Core
 local contentWidth = Core.content_width
@@ -19,66 +18,21 @@ local BossData = NSI.UI.BossData
 local ChevronDown = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]]
 local ChevronUp = [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]]
 
-local auraGlowExportPopup
-local auraGlowImportPopup
-
 local function ShowAuraGlowExportPopup(text)
-    if not auraGlowExportPopup then
-        auraGlowExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Aura Glows") .. "|r", "NSRTAuraGlowExportPopup", { UseScaleBar = false })
-        auraGlowExportPopup:SetPoint("CENTER")
-        auraGlowExportPopup:SetFrameLevel(100)
-        auraGlowExportPopup.infoLabel = auraGlowExportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(auraGlowExportPopup.infoLabel, "label", "")
-        auraGlowExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
-        auraGlowExportPopup.infoLabel:SetPoint("TOPLEFT", auraGlowExportPopup, "TOPLEFT", 10, -30)
-        auraGlowExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraGlowExportPopup, 280, 80, nil, "NSRTAuraGlowExportTextBox", "$parentTextBox")
-        auraGlowExportPopup.textbox:SetPoint("TOPLEFT", auraGlowExportPopup, "TOPLEFT", 10, -50)
-        auraGlowExportPopup.textbox:SetPoint("BOTTOMRIGHT", auraGlowExportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(auraGlowExportPopup.textbox)
-        DF:ReskinSlider(auraGlowExportPopup.textbox.scroll)
-        auraGlowExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraGlowExportPopup.textbox.editbox, "label")
-        local done = CreateLocalizedButton(auraGlowExportPopup, "Done", function() auraGlowExportPopup:Hide() end, 280, 20)
-        done:SetPoint("BOTTOM", auraGlowExportPopup, "BOTTOM", 0, 10)
-    end
-    auraGlowExportPopup.infoLabel:SetText("")
-    auraGlowExportPopup.textbox:SetText(text)
-    auraGlowExportPopup.textbox:SetFocus()
-    auraGlowExportPopup:Show()
+    NSI.UI.Components.CreateTextBoxDialog("AuraGlowExport", "|cFF00FFFF" .. NSI:Loc("Export Aura Glows") .. "|r", { readOnly = true }):Open(text or "")
 end
 
 local function ShowAuraGlowImportPopup(onImport)
-    if not auraGlowImportPopup then
-        auraGlowImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Aura Glows") .. "|r", "NSRTAuraGlowImportPopup", { UseScaleBar = false })
-        auraGlowImportPopup:SetPoint("CENTER")
-        auraGlowImportPopup:SetFrameLevel(100)
-        auraGlowImportPopup.status = auraGlowImportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(auraGlowImportPopup.status, "label", "")
-        auraGlowImportPopup.status:SetTextColor(unpack(STYLE.text_soft))
-        auraGlowImportPopup.status:SetPoint("TOPLEFT", auraGlowImportPopup, "TOPLEFT", 10, -30)
-        auraGlowImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraGlowImportPopup, 280, 80, nil, "NSRTAuraGlowImportTextBox", "$parentTextBox")
-        auraGlowImportPopup.textbox:SetPoint("TOPLEFT", auraGlowImportPopup, "TOPLEFT", 10, -50)
-        auraGlowImportPopup.textbox:SetPoint("BOTTOMRIGHT", auraGlowImportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(auraGlowImportPopup.textbox)
-        DF:ReskinSlider(auraGlowImportPopup.textbox.scroll)
-        auraGlowImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraGlowImportPopup.textbox.editbox, "label")
-        local import = CreateLocalizedButton(auraGlowImportPopup, "Import", function()
-            local success = NSI:ImportAuraGlowString(auraGlowImportPopup.textbox:GetText())
-            if success then
-                auraGlowImportPopup:Hide()
-                if auraGlowImportPopup.onImport then auraGlowImportPopup.onImport() end
-            else
-                auraGlowImportPopup.status:SetText("|cFFFF0000" .. NSI:Loc("Invalid Aura Glow import string.") .. "|r")
-            end
-        end, 280, 20)
-        import:SetPoint("BOTTOM", auraGlowImportPopup, "BOTTOM", 0, 10)
-    end
-    auraGlowImportPopup.onImport = onImport
-    auraGlowImportPopup.status:SetText(NSI:Loc("Paste an Aura Glow export string below and click Import."))
-    auraGlowImportPopup.textbox:SetText("")
-    auraGlowImportPopup.textbox:SetFocus()
-    auraGlowImportPopup:Show()
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraGlowImport", "|cFF00FFFF" .. NSI:Loc("Import Aura Glows") .. "|r",
+        { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
+    dialog:Open("", NSI:Loc("Paste an Aura Glow export string below and click Import."), function(text, d)
+        if NSI:ImportAuraGlowString(text) then
+            if onImport then onImport() end
+            return true
+        end
+        d:SetStatus(NSI:Loc("Invalid Aura Glow import string."), true)
+        return false
+    end)
 end
 
 local FilterStates = {
@@ -200,6 +154,7 @@ local function BuildAuraGlowsUI(screen)
     importButton:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", pad, pad)
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowListScroll", screen, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(listScroll)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, -86)
     listScroll:SetPoint("BOTTOMRIGHT", createButton.frame, "TOPRIGHT", 0, 6)
     ReskinScrollbar(listScroll)
@@ -295,7 +250,7 @@ local function BuildAuraGlowsUI(screen)
                 RebuildList()
                 if newKey then SelectEntry(newKey) end
             end }
-            local groups = { { type = "button", label = NSI:Loc("— No Group —"), fnc = function() NSI:SetAuraGlowEntryGroup(key, ""); RebuildList() end } }
+            local groups = { { type = "button", label = NSI:Loc("\226\128\148 No Group \226\128\148"), fnc = function() NSI:SetAuraGlowEntryGroup(key, ""); RebuildList() end } }
             for _, group in ipairs(NSI:GetAuraGlowGroups()) do
                 local groupName = group
                 groups[#groups + 1] = { type = "button", label = groupName, fnc = function() NSI:SetAuraGlowEntryGroup(key, groupName); RebuildList() end }
@@ -370,16 +325,14 @@ local function BuildAuraGlowsUI(screen)
                 if not header then
                     header = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
                     header:SetSize(listChild:GetWidth(), 22)
-                    DF:ApplyStandardBackdrop(header)
-                    header.__background:SetVertexColor(0.05, 0.30, 0.40)
-                    header.__background:SetAlpha(0.90)
+                    NSI.UI.Components.StyleRow(header, STYLE.selected_fill)
                     header.arrow = header:CreateTexture(nil, "OVERLAY")
                     header.arrow:SetSize(12, 12)
                     header.arrow:SetPoint("LEFT", header, "LEFT", 4, 0)
-                    header.arrow:SetVertexColor(0.4, 0.85, 1, 1)
+                    header.arrow:SetVertexColor(Accent(1))
                     header.label = header:CreateFontString(nil, "OVERLAY")
                     NSI:SetUIFont(header.label, "small")
-                    header.label:SetTextColor(0.2, 0.85, 1, 1)
+                    header.label:SetTextColor(Accent(1))
                     header.label:SetPoint("LEFT", header, "LEFT", 20, 0)
                     header.count = header:CreateFontString(nil, "OVERLAY")
                     NSI:SetUIFont(header.count, "small", "")
@@ -404,9 +357,7 @@ local function BuildAuraGlowsUI(screen)
             if not row then
                 row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, listChild)
                 row:SetSize(listChild:GetWidth(), 22)
-                DF:ApplyStandardBackdrop(row)
-                row.__background:SetVertexColor(0.4, 0.4, 0.4)
-                row.__background:SetAlpha(0.5)
+                NSI.UI.Components.StyleRow(row)
                 row.check = CreateCheckButton(row, "", nil, nil, 14, 14)
                 row.check:SetPoint("LEFT", row, "LEFT", 3, 0)
                 row.icon = row:CreateTexture(nil, "ARTWORK")
@@ -470,8 +421,13 @@ local function BuildAuraGlowsUI(screen)
             row.label:SetTextColor(1, 1, 1, entry.defaultSettings and 1 or willLoad and (entry.settings.enabled and 1 or 0.45) or 0.35)
             row.lock:SetAlpha(willLoad and 1 or 0.35)
             row.trash:SetAlpha(willLoad and 1 or 0.35)
-            row.__background:SetVertexColor(selectedKey == entry.key and 0 or 0.4, selectedKey == entry.key and 1 or 0.4, selectedKey == entry.key and 1 or 0.4)
-            row.__background:SetAlpha(selectedKey == entry.key and 1 or willLoad and 0.5 or 0.2)
+            if selectedKey == entry.key then
+                row.__background:SetVertexColor(Accent())
+                row.__background:SetAlpha(STYLE.selected_row_alpha)
+            else
+                row.__background:SetVertexColor(0.4, 0.4, 0.4)
+                row.__background:SetAlpha(willLoad and 0.5 or 0.2)
+            end
             row:SetScript("OnMouseDown", function(_, button)
                 if row.check.frame:IsMouseOver() or row.trash:IsMouseOver() then return end
                 if button == "RightButton" then EntryContextMenu(row.entry) else SelectEntry(row.entry.key) end
@@ -705,13 +661,10 @@ local function BuildAuraGlowsUI(screen)
     local namesListHeight = 112
     local loadScrollHeight = tabContentH - namesSectionHeight - 4
     local loadScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowLoadScroll", loadF, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(loadScroll)
     loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
     loadScroll:SetSize(tabScrollW, loadScrollHeight)
     loadScroll:EnableMouseWheel(true)
-    loadScroll:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G["NSUIAuraGlowLoadScrollScrollBar"]
-        if bar then local cur = bar:GetValue(); local mn, mx = bar:GetMinMaxValues(); bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24))) end
-    end)
     ReskinScrollbar(loadScroll)
     local loadChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
     loadChild:SetSize(tabScrollW - 18, 1)
@@ -759,7 +712,7 @@ local function BuildAuraGlowsUI(screen)
         row.box:SetSize(12, 12)
         row.box:SetPoint("LEFT", row, "LEFT", 4, 0)
         row.box:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
-        row.box:SetBackdropColor(0.10, 0.10, 0.10, 0.9)
+        row.box:SetBackdropColor(unpack(STYLE.input_bg_color))
         row.box:SetBackdropBorderColor(unpack(STYLE.border_subtle))
         row.fill = row.box:CreateTexture(nil, "ARTWORK")
         row.fill:SetPoint("TOPLEFT", row.box, "TOPLEFT", 2, -2)
@@ -782,10 +735,10 @@ local function BuildAuraGlowsUI(screen)
         row.icon:SetPoint("LEFT", row, "LEFT", 22, 0)
         row.icon:Hide()
         row:SetScript("OnEnter", function()
-            UIFrameFadeIn(hoverBackground, 0.12, hoverBackground:GetAlpha(), 1)
+            NSI.UI.Components.FadeTo(hoverBackground, 1, 0.12)
         end)
         row:SetScript("OnLeave", function()
-            UIFrameFadeOut(hoverBackground, 0.20, hoverBackground:GetAlpha(), 0)
+            NSI.UI.Components.FadeTo(hoverBackground, 0, 0.2)
         end)
         row:Hide()
         return row
@@ -824,17 +777,10 @@ local function BuildAuraGlowsUI(screen)
     nameAddButton:SetPoint("LEFT", nameInput.frame, "RIGHT", 6, 0)
 
     local namesScroll = CreateFrame("ScrollFrame", "NSUIAuraGlowNamesScroll", loadF, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(namesScroll)
     namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 0)
     namesScroll:SetSize(loadRowWidth, namesListHeight)
     namesScroll:EnableMouseWheel(true)
-    namesScroll:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G["NSUIAuraGlowNamesScrollScrollBar"]
-        if bar then
-            local cur = bar:GetValue()
-            local mn, mx = bar:GetMinMaxValues()
-            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 24)))
-        end
-    end)
     ReskinScrollbar(namesScroll)
 
     local namesChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, namesScroll)
@@ -1112,7 +1058,7 @@ local function BuildAuraGlowsUI(screen)
             scroll:SetPoint("TOPLEFT", tabFrames[activeTab], "TOPLEFT", 0, 0)
             tabScroll[activeTab] = scroll
             -- Built once per tab; every later RebuildTab re-binds the cached widgets in place.
-            tabHost[activeTab] = NSI.UI.Components.CreateWidgetHost(scroll.scrollChild, rightWidth - 34)
+            tabHost[activeTab] = NSI.UI.Components.CreateCardHost(scroll.scrollChild, rightWidth - 34)
         end
         local height = tabHost[activeTab]:Apply(defs)
         scroll.scrollChild:SetHeight(math.max(1, height))
@@ -1136,6 +1082,22 @@ local function BuildAuraGlowsUI(screen)
         RebuildList()
         RebuildTab()
     end
+    -- Header search: expose the selected glow's Display/Trigger definitions (see Search.lua).
+    screen.SearchPanels = function()
+        local settings = GetSelectedSettings()
+        if not settings or selectedKey == NSI.AuraGlowDefaultSettingsKey then return nil end
+        local builtin = NSI.AuraGlowBuiltins[selectedKey] ~= nil
+        return {
+            { id = "Display", title = "Display", defs = BuildDisplayDefs(settings, true, not builtin) },
+            { id = "Trigger", title = "Trigger", defs = BuildTriggerDefs(settings, builtin, selectedKey) },
+        }
+    end
+    screen.SearchReveal = function(id)
+        activeTab = id
+        RebuildTab()
+        return tabHost[id], tabScroll[id]
+    end
+
     RebuildList()
     if selectedKey and NSI:GetAuraGlowSettings(selectedKey) then RebuildTab() else rightPanel:Hide() end
     return screen

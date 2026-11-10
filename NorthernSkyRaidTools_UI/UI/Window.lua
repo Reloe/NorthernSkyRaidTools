@@ -244,6 +244,35 @@ function Window.Create(opts)
     end
     window:SetDiscordUrl(opts.discordUrl)
 
+    -- ---- combat banner (right end of the footer) ------------------------
+    -- The window stays usable in combat; controls that change protected or restricted
+    -- state are disabled by their `nocombat` flag. This says why. Combat flips on
+    -- PLAYER_REGEN_*, and the truth is re-read every time the window opens, so a missed
+    -- event while it was closed cannot leave it stale. Events are registered only while
+    -- the window is shown.
+    local banner = footer:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(banner, "small")
+    banner:SetTextColor(1, 0.75, 0.25, 1)
+    banner:SetPoint("RIGHT", footer, "RIGHT", -10, 0)
+    banner:Hide()
+    window.CombatBanner = banner
+    local combatWatcher = CreateFrame("Frame", nil, window)
+    local function RefreshBanner()
+        if InCombatLockdown() then
+            banner:SetText(NSI:Loc("In combat: some settings are locked until combat ends"))
+            banner:Show()
+        else
+            banner:Hide()
+        end
+    end
+    combatWatcher:SetScript("OnEvent", RefreshBanner)
+    window:HookScript("OnShow", function()
+        combatWatcher:RegisterEvent("PLAYER_REGEN_DISABLED")
+        combatWatcher:RegisterEvent("PLAYER_REGEN_ENABLED")
+        RefreshBanner()
+    end)
+    window:HookScript("OnHide", function() combatWatcher:UnregisterAllEvents() end)
+
     -- ---- pixel space ----------------------------------------------------
     if opts.userScale ~= nil then
         Pixel.PixelSpace(window, opts.userScale)

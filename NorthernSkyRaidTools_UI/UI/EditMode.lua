@@ -344,15 +344,15 @@ end
 
 local function MoverEnter(m)
     PaintMover(m)
-    GameTooltip:SetOwner(m, "ANCHOR_TOP")
-    GameTooltip:SetText(Loc(specs[m.key].label))
-    GameTooltip:AddLine(Loc("Drag to move. Shift locks an axis and skips snapping. Arrow keys nudge."), 0.8, 0.8, 0.8, true)
-    GameTooltip:Show()
+    NSI.UI.Tooltip.Show(m, {
+        title = specs[m.key].label,
+        desc = "Drag to move. Shift locks an axis and skips snapping. Arrow keys nudge.",
+    }, "ANCHOR_TOP")
 end
 
 local function MoverLeave(m)
     PaintMover(m)
-    GameTooltip:Hide()
+    NSI.UI.Tooltip.Hide()
 end
 
 local function MoverHide(m)

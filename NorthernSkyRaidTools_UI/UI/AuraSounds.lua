@@ -2,7 +2,6 @@ local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
 local STYLE = NSI.UI.Style
 local Accent = STYLE.Accent
-local DF = _G["DetailsFramework"]
 
 local BossData = NSI.UI.BossData
 local CreateCheckButton = NSI.UI.Components.CreateCheckButton
@@ -264,73 +263,23 @@ local function PrepareAuraSoundData(screen)
     return data
 end
 
-local auraSoundsExportPopup
-local auraSoundsImportPopup
-
 local function ShowAuraSoundsExportPopup(text, label)
-    if not auraSoundsExportPopup then
-        auraSoundsExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Export Aura Sounds") .. "|r",
-            "NSRTAuraSoundsExportPopup", { UseScaleBar = false })
-        auraSoundsExportPopup:SetPoint("CENTER", UIParent, "CENTER")
-        auraSoundsExportPopup:SetFrameLevel(100)
-
-        auraSoundsExportPopup.infoLabel = CreateLabel(auraSoundsExportPopup, "", 13)
-        auraSoundsExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
-        auraSoundsExportPopup.infoLabel:SetPoint("TOPLEFT", auraSoundsExportPopup, "TOPLEFT", 10, -30)
-        auraSoundsExportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraSoundsExportPopup, 280, 80, nil,
-            "NSRTAuraSoundsExportTextBox", true, false, true)
-        auraSoundsExportPopup.textbox:SetPoint("TOPLEFT", auraSoundsExportPopup, "TOPLEFT", 10, -50)
-        auraSoundsExportPopup.textbox:SetPoint("BOTTOMRIGHT", auraSoundsExportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(auraSoundsExportPopup.textbox)
-        DF:ReskinSlider(auraSoundsExportPopup.textbox.scroll)
-        auraSoundsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraSoundsExportPopup.textbox.editbox, "label")
-
-        local doneButton = CreateLocalizedButton(auraSoundsExportPopup, "Done", function() auraSoundsExportPopup:Hide() end, 280, 20)
-        doneButton:SetPoint("BOTTOM", auraSoundsExportPopup, "BOTTOM", 0, 10)
-    end
-    auraSoundsExportPopup.infoLabel:SetText(label or "")
-    auraSoundsExportPopup.textbox:SetText(text or "")
-    auraSoundsExportPopup:Show()
-    auraSoundsExportPopup.textbox:SetFocus()
+    NSI.UI.Components.CreateTextBoxDialog("AuraSoundsExport", "|cFF00FFFF" .. T("Export Aura Sounds") .. "|r", { readOnly = true }):Open(text or "", label)
 end
 
 local function ShowAuraSoundsImportPopup(onImport)
-    if not auraSoundsImportPopup then
-        auraSoundsImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. T("Import Aura Sounds") .. "|r",
-            "NSRTAuraSoundsImportPopup", { UseScaleBar = false })
-        auraSoundsImportPopup:SetPoint("CENTER", UIParent, "CENTER")
-        auraSoundsImportPopup:SetFrameLevel(100)
-
-        auraSoundsImportPopup.statusLabel = CreateLabel(auraSoundsImportPopup, T("Paste an Aura Sounds export string below and click Import."), 13)
-        auraSoundsImportPopup.statusLabel:SetTextColor(unpack(STYLE.text_soft))
-        auraSoundsImportPopup.statusLabel:SetPoint("TOPLEFT", auraSoundsImportPopup, "TOPLEFT", 10, -30)
-        auraSoundsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(auraSoundsImportPopup, 280, 80, nil,
-            "NSRTAuraSoundsImportTextBox", true, false, true)
-        auraSoundsImportPopup.textbox:SetPoint("TOPLEFT", auraSoundsImportPopup, "TOPLEFT", 10, -50)
-        auraSoundsImportPopup.textbox:SetPoint("BOTTOMRIGHT", auraSoundsImportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(auraSoundsImportPopup.textbox)
-        DF:ReskinSlider(auraSoundsImportPopup.textbox.scroll)
-        auraSoundsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(auraSoundsImportPopup.textbox.editbox, "label")
-
-        local importButton = CreateLocalizedButton(auraSoundsImportPopup, "Import", function()
-            local success, count = NSI:ImportAuraSoundString(auraSoundsImportPopup.textbox:GetText())
-            if success then
-                auraSoundsImportPopup:Hide()
-                print("|cFF00FFFFNSRT:|r " .. string.format(T("Imported %d Aura Sound(s)."), count or 0))
-                if auraSoundsImportPopup.onImport then auraSoundsImportPopup.onImport() end
-            else
-                auraSoundsImportPopup.statusLabel:SetText("|cFFFF0000" .. T("Invalid Aura Sounds import string.") .. "|r")
-            end
-        end, 280, 20)
-        importButton:SetPoint("BOTTOM", auraSoundsImportPopup, "BOTTOM", 0, 10)
-    end
-    auraSoundsImportPopup.onImport = onImport
-    auraSoundsImportPopup.statusLabel:SetText(T("Paste an Aura Sounds export string below and click Import."))
-    auraSoundsImportPopup.textbox:SetText("")
-    auraSoundsImportPopup:Show()
-    auraSoundsImportPopup.textbox:SetFocus()
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AuraSoundsImport", "|cFF00FFFF" .. T("Import Aura Sounds") .. "|r",
+        { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
+    dialog:Open("", T("Paste an Aura Sounds export string below and click Import."), function(text, d)
+        local success, count = NSI:ImportAuraSoundString(text)
+        if success then
+            print("|cFF00FFFFNSRT:|r " .. string.format(T("Imported %d Aura Sound(s)."), count or 0))
+            if onImport then onImport() end
+            return true
+        end
+        d:SetStatus(T("Invalid Aura Sounds import string."), true)
+        return false
+    end)
 end
 
 local function BuildAuraSoundsUI(parent)
@@ -406,32 +355,12 @@ local function BuildAuraSoundsUI(parent)
     end
 
     local function ConfirmResetAllAuraSounds()
-        local popup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 300, 150, T("Confirm Resetting ALL Aura Sounds"), "NSRTResetALLAuraSoundsPopup")
-        ApplyUIFont(popup.Title, 12)
-        popup:SetFrameStrata("FULLSCREEN_DIALOG")
-        popup:SetPoint("CENTER", UIParent, "CENTER")
-
-        local text = DF:CreateLabel(popup, T("Are you sure you want to reset all Aura Sounds?"), 12, "orange")
-        ApplyUIFont(text, 12)
-        text:SetPoint("TOP", popup, "TOP", 0, -34)
-        text:SetJustifyH("CENTER")
-        text:SetWidth(260)
-
-        local confirmButton = DF:CreateButton(popup, function()
-            ResetAllAuraSounds()
-            popup:Hide()
-        end, 100, 30, T("Confirm"))
-        ApplyUIFont(confirmButton, 12)
-        confirmButton:SetPoint("BOTTOMLEFT", popup, "BOTTOM", 5, 10)
-        confirmButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
-
-        local cancelButton = DF:CreateButton(popup, function()
-            popup:Hide()
-        end, 100, 30, T("Cancel"))
-        ApplyUIFont(cancelButton, 12)
-        cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOM", -5, 10)
-        cancelButton:SetTemplate(DF:GetTemplate("button", "OPTIONS_BUTTON_TEMPLATE"))
-        popup:Show()
+        -- Dialog frames are cached by name; route through a holder so a rebuilt screen is never stale.
+        NSI.UI._AuraSoundsResetFn = ResetAllAuraSounds
+        NSI.UI.Components.CreateDialog("ResetAllAuraSounds", T("Confirm Resetting ALL Aura Sounds"),
+            T("Are you sure you want to reset all Aura Sounds?"),
+            T("Confirm"), function() if NSI.UI._AuraSoundsResetFn then NSI.UI._AuraSoundsResetFn() end end,
+            T("Cancel"))
     end
 
     local leftWidth = 190
@@ -443,6 +372,7 @@ local function BuildAuraSoundsUI(parent)
     title:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -8)
 
     local leftScroll = CreateFrame("ScrollFrame", "$parentAuraSoundCategoryScroll", screen, "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(leftScroll)
     leftScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", 10, -62)
     leftScroll:SetPoint("BOTTOMLEFT", screen, "BOTTOMLEFT", 10, 78)
     leftScroll:SetWidth(leftWidth)
@@ -482,9 +412,7 @@ local function BuildAuraSoundsUI(parent)
     local function CreateCategoryRow()
         local row = NSI.UI.Pixel.CreateBoxFrame("Button", nil, leftChild)
         row:SetHeight(23)
-        DF:ApplyStandardBackdrop(row)
-        row.__background:SetVertexColor(0.4, 0.4, 0.4)
-        row.__background:SetAlpha(0.5)
+        NSI.UI.Components.StyleRow(row)
 
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(16, 16)
@@ -508,12 +436,12 @@ local function BuildAuraSoundsUI(parent)
         row.arrow:SetSize(10, 10)
         row.arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
         row.arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
-        row.arrow:SetVertexColor(0, 0.9, 1, 1)
+        row.arrow:SetVertexColor(Accent(1))
         row.name = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(row.name, "small", "")
         row.name:SetPoint("LEFT", row.arrow, "RIGHT", 4, 0)
         row.name:SetPoint("RIGHT", row, "RIGHT", -4, 0)
-        row.name:SetTextColor(0.2, 0.85, 1, 1)
+        row.name:SetTextColor(Accent(1))
         row.name:SetJustifyH("LEFT")
         return row
     end
@@ -658,7 +586,7 @@ local function BuildAuraSoundsUI(parent)
                     end
                     if screen.categoryKey == category.key then
                         row.__background:SetVertexColor(Accent())
-                        row.__background:SetAlpha(1)
+                        row.__background:SetAlpha(STYLE.selected_row_alpha)
                     else
                         row.__background:SetVertexColor(0.4, 0.4, 0.4)
                         row.__background:SetAlpha(0.5)
@@ -1011,8 +939,7 @@ local function BuildAuraSoundsUI(parent)
         local rowWidth = scrollbox.scrollChild:GetWidth()
         local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, scrollbox.scrollChild)
         row:SetSize(rowWidth, ROW_HEIGHT)
-        row:SetBackdrop({ bgFile = [[Interface\Tooltips\UI-Tooltip-Background]], tile = true, tileSize = 64 })
-        row:SetBackdropColor(unpack(NSI.UI.Components.STYLE.bg_color))
+        row:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]] })   -- colour set per row (striping) on refresh
 
         row.icon = row:CreateTexture(nil, "ARTWORK")
         row.icon:SetSize(18, 18)
@@ -1122,11 +1049,9 @@ local function BuildAuraSoundsUI(parent)
             RefreshAuraScrollbox()
         end)
         row.deleteButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(T("Delete"))
-            GameTooltip:Show()
+            NSI.UI.Tooltip.Show(self, "Delete", "ANCHOR_TOP")
         end)
-        row.deleteButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        row.deleteButton:SetScript("OnLeave", NSI.UI.Tooltip.Hide)
 
         row.resetButton = CreateFrame("Button", nil, row)
         row.resetButton:SetSize(16, 16)
@@ -1141,11 +1066,9 @@ local function BuildAuraSoundsUI(parent)
             RefreshAuraScrollbox()
         end)
         row.resetButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_TOP")
-            GameTooltip:SetText(T("Reset"))
-            GameTooltip:Show()
+            NSI.UI.Tooltip.Show(self, "Reset", "ANCHOR_TOP")
         end)
-        row.resetButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        row.resetButton:SetScript("OnLeave", NSI.UI.Tooltip.Hide)
 
         return row
     end
@@ -1178,6 +1101,7 @@ local function BuildAuraSoundsUI(parent)
         for i, entry in ipairs(data) do
             local row = auraRows[i]
             row:SetPoint("TOPLEFT", scrollbox.scrollChild, "TOPLEFT", 0, -(i - 1) * ROW_HEIGHT)
+            row:SetBackdropColor(unpack(i % 2 == 0 and STYLE.row_stripe_light or STYLE.row_stripe_dark))
             UpdateAuraRow(row, entry)
             row:Show()
         end

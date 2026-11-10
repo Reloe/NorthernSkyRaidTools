@@ -4,6 +4,7 @@
 - Add aura name text and two customizable text fields to Aura Tracking
 - Add option to "attach" one aura tracking to another. This means the new one will belong to the same "dynamic group" but can use different settings.
 - Add Encounter Alert Version Check through right click context Menu & Selection in Version Check Menu
+- Rework the Version Check tab with the new card layout, striped response list, built-in addon-name suggestions and a restyled preset manager
 - Add spec-based auto-loading for personal notes
 - Add X/Y offset controls for reminder displays and note frames
 - Support fractional seconds for reminder durations and TTS timers
@@ -16,3 +17,6 @@
 - Add a search box to the options window header that finds any setting across all tabs, shows where it lives, and jumps to it, scrolls it into view and highlights it
 - Replace Blizzard's text-entry popups (new/rename group) with an addon dialog
 - New layout editor (the anchor button in the options header, or "Edit Layout" on each note): move and resize reminder anchors, all three notes, Interrupt Display, Pace Comparison, Break Timer, Player Stats, QoL Text and the generic text display in one place, with a grid, snapping and alignment guides, arrow-key nudging, per-display show/hide checkboxes and Save / Cancel. Aura Tracking anchors and encounter alert frames keep their own anchoring
+- Options window: smooth mouse-wheel scrolling, a themed tooltip for setting descriptions, a notice in the footer while in combat (locked settings), and an entry under Esc > Options > AddOns that opens the window
+- Encounter Alerts, Aura Sounds, Aura Tracking, Aura Glows and Pace Comparison now use the shared dialogs, rows, tooltips and fades (import/export windows, reset confirmation); header search also finds settings in the Aura Tracking and Aura Glows detail panels
+- Aura Tracking and Aura Glows detail panels now group their settings into cards like the General tab; Aura Sounds and Pace Comparison use card surfaces too; wheel scrolling is eased on every list

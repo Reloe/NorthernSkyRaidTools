@@ -2,18 +2,10 @@ local addonId = "NorthernSkyRaidTools"
 local NSI = _G.NorthernSkyRaidTools
 local STYLE = NSI.UI.Style
 local Accent = STYLE.Accent
-local DF = _G["DetailsFramework"]
+local C = NSI.UI.Components
 
 local Core = NSI.UI.Core
-local NSUI = Core.NSUI
-local window_height        = Core.window_height
-local content_width        = Core.content_width
-local content_height       = Core.content_height
-local tab_content_height   = Core.tab_content_height
-local options_text_template     = Core.options_text_template
-local options_dropdown_template = Core.options_dropdown_template
-local options_switch_template   = Core.options_switch_template
-local options_button_template   = Core.options_button_template
+local window_height = Core.window_height
 
 local function T(key)
     return NSI:Loc(key)
@@ -27,9 +19,8 @@ local function build_checkable_components_options(onSelect, forPresets)
         if not forPresets or checkable_components[i] ~= "Encounter Alert" then
             tinsert(t, {
                 label = T(checkable_components[i]),
-                phraseId = checkable_components[i],
                 value = checkable_components[i],
-                onclick = function(dropdown, fixedValue, value)
+                onclick = function(_, _, value)
                     if onSelect then onSelect(value) end
                 end
             })
@@ -38,68 +29,116 @@ local function build_checkable_components_options(onSelect, forPresets)
     return t
 end
 
+local ROW_H   = 22      -- one row of controls / one result row
+local ROW_GAP = 8       -- between control rows inside a card
+local COLUMNS = { 0.30, 0.40, 0.30 }   -- character, version, ignore: shares of the row width
+
 local function BuildVersionCheckUI(parent)
-    local UpdateComponentType
+    local PAD, CARD_PAD, CARD_GAP = 10, C.CardPad, C.CardGap
+    local componentType = checkable_components[1]
     local selectedEncID, selectedAlertID
     local selectedDiffID = 16
+    local UpdateComponentType, RefreshAlertSelection, RunVersionCheck, SelectEncounterAlert
+    local typeDropdown, encounterDropdown, difficultyDropdown, alertDropdown, presetDropdown
+    local nameEntry
 
-    local hide_version_response_button = DF:CreateSwitch(parent,
-        function(self, _, value) NSRT.Settings["VersionCheckRemoveResponse"] = value end,
-        NSRT.Settings["VersionCheckRemoveResponse"], 20, 20, nil, nil, nil, "VersionCheckResponseToggle", nil, nil, nil,
-        T("Hide Version Check Responses"), options_switch_template, options_text_template)
-    hide_version_response_button:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)
-    hide_version_response_button:SetAsCheckBox()
-    hide_version_response_button:SetTooltip(
-        T("Hides Version Check Responses of Users that are on the correct version"))
-    local hide_version_response_label = DF:CreateLabel(parent, T("Hide Version Check Responses"), 10, "white", "", nil,
-        "VersionCheckResponseLabel", "overlay")
-    hide_version_response_label:SetTemplate(options_text_template)
-    hide_version_response_label:SetPoint("LEFT", hide_version_response_button, "RIGHT", 2, 0)
-    local component_type_label = DF:CreateLabel(parent, T("Component Type"), 9.5, "white")
-    component_type_label:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -40)
+    -- ------------------------------------------------------------------
+    --  Card 1: what to check
+    -- ------------------------------------------------------------------
+    local cardCheck = C.CreateSectionCard(parent, 400, true)
+    cardCheck:SetPoint("TOPLEFT", parent, "TOPLEFT", PAD, -PAD)
+    cardCheck:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -PAD, -PAD)
+    cardCheck.content:SetPoint("TOPRIGHT", cardCheck, "TOPRIGHT", -CARD_PAD, -(cardCheck.headerH + CARD_PAD))
+    cardCheck.title:SetText(T("Version Check"))
+    local content = cardCheck.content
 
-    local component_type_dropdown = DF:CreateDropDown(parent, function()
-        return build_checkable_components_options(function() UpdateComponentType() end)
-    end, checkable_components[1], 140)
-    component_type_dropdown.addonId = addonId
-    component_type_dropdown:Select(checkable_components[1])
-    component_type_dropdown:SetTemplate(options_dropdown_template)
-    component_type_dropdown:SetPoint("LEFT", component_type_label, "RIGHT", 5, 0)
+    -- Row 1: component type, addon name (or the encounter pickers on row 2), Check Versions
+    typeDropdown = C.CreateDropdown(content, T("Component Type"), function()
+        return build_checkable_components_options(function(value)
+            componentType = value
+            typeDropdown:Refresh()
+            UpdateComponentType()
+        end)
+    end, function() return T(componentType) end, 270, ROW_H, "NSRTVersionCheckType", nil, nil, nil, nil, 120)
+    typeDropdown:SetPoint("TOPLEFT", content, "TOPLEFT", 0, 0)
 
-    local component_name_label = DF:CreateLabel(parent, T("Addon Name"), 9.5, "white")
-    component_name_label:SetPoint("LEFT", component_type_dropdown, "RIGHT", 10, 0)
+    -- Known addon names are suggested while typing in the Addon Name box.
+    nameEntry = C.CreateTextEntry(content, T("Addon Name"), nil, nil, 360, ROW_H, false, nil, nil,
+        "NSRTVersionCheckName", nil, 250)
+    nameEntry:SetPoint("LEFT", typeDropdown.frame, "RIGHT", 16, 0)
 
-    local component_name_entry = DF:CreateTextEntry(parent, function() end, 250, 18)
-    component_name_entry:SetTemplate(options_button_template)
-    component_name_entry:SetPoint("LEFT", component_name_label, "RIGHT", 5, 0)
-    component_name_entry:SetHook("OnEditFocusGained", function(self)
-        component_name_entry.AddonAutoCompleteList = NSRT.NSUI.AutoComplete["Addon"] or {}
-        local component_type = component_type_dropdown:GetValue()
-        if component_type == "Addon" then
-            component_name_entry:SetAsAutoComplete("AddonAutoCompleteList", nil, true)
+    local suggestions = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, UIParent)
+    suggestions:SetFrameStrata("TOOLTIP")
+    suggestions:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]], edgeFile = [[Interface\Buttons\WHITE8x8]], edgeSize = 1 })
+    suggestions:SetBackdropColor(unpack(STYLE.surface_panel))
+    STYLE.PaintAccent(suggestions, "SetBackdropBorderColor", 0.7)
+    suggestions:Hide()
+    local SUGGEST_MAX = 8
+    local suggestRows = {}
+    local function HideSuggestions() suggestions:Hide() end
+    local function ShowSuggestions()
+        if componentType ~= "Addon" then return HideSuggestions() end
+        local text = (nameEntry.editBox:GetText() or ""):lower()
+        local known = NSRT.NSUI.AutoComplete["Addon"] or {}
+        local shown = 0
+        for _, name in ipairs(known) do
+            if text == "" or name:lower():find(text, 1, true) then
+                if name:lower() ~= text then
+                    shown = shown + 1
+                    if shown > SUGGEST_MAX then shown = SUGGEST_MAX; break end
+                    local row = suggestRows[shown]
+                    if not row then
+                        row = CreateFrame("Button", nil, suggestions)
+                        row:SetHeight(ROW_H)
+                        row:SetPoint("TOPLEFT", suggestions, "TOPLEFT", 1, -((shown - 1) * ROW_H) - 1)
+                        row:SetPoint("TOPRIGHT", suggestions, "TOPRIGHT", -1, -((shown - 1) * ROW_H) - 1)
+                        row.text = row:CreateFontString(nil, "OVERLAY")
+                        NSI:SetUIFont(row.text, "small", "")
+                        row.text:SetPoint("LEFT", row, "LEFT", 6, 0)
+                        row.hover = row:CreateTexture(nil, "BACKGROUND")
+                        row.hover:SetAllPoints()
+                        row.hover:SetColorTexture(Accent(0.25))
+                        row.hover:Hide()
+                        row:SetScript("OnEnter", function(self) self.hover:Show() end)
+                        row:SetScript("OnLeave", function(self) self.hover:Hide() end)
+                        row:SetScript("OnClick", function(self)
+                            nameEntry:SetValue(self.value)
+                            suggestions:Hide()
+                        end)
+                        suggestRows[shown] = row
+                    end
+                    row.value = name
+                    row.text:SetText(name)
+                    row:Show()
+                end
+            end
         end
-    end)
+        for i = shown + 1, #suggestRows do suggestRows[i]:Hide() end
+        if shown == 0 then return HideSuggestions() end
+        suggestions:SetSize(nameEntry.frame:GetWidth() - 8, shown * ROW_H + 2)
+        suggestions:ClearAllPoints()
+        suggestions:SetPoint("TOPRIGHT", nameEntry.frame, "BOTTOMRIGHT", 0, -2)
+        suggestions:Show()
+    end
+    nameEntry.editBox:HookScript("OnEditFocusGained", ShowSuggestions)
+    nameEntry.editBox:HookScript("OnTextChanged", function(_, userInput) if userInput then ShowSuggestions() end end)
+    nameEntry.editBox:HookScript("OnEditFocusLost", function() C_Timer.After(0.15, HideSuggestions) end)
+    nameEntry.editBox:HookScript("OnEnterPressed", HideSuggestions)
+    parent:HookScript("OnHide", HideSuggestions)
 
-    local version_check_button = DF:CreateButton(parent, function()
-    end, 120, 18, T("Check Versions"))
-    version_check_button:SetTemplate(options_button_template)
-    version_check_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -40)
-    version_check_button:SetHook("OnShow", function(self)
-        if (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"]) then
-            self:Enable()
-        else
-            self:Disable()
-        end
-    end)
+    local checkButton = C.CreateButton(content, T("Check Versions"), function() RunVersionCheck() end, 140, ROW_H,
+        nil, nil, nil, nil, function()
+            return UnitIsGroupLeader("player") or UnitIsGroupAssistant("player") or NSRT.Settings["Debug"] and true or false
+        end)
+    checkButton:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, 0)
 
-    local encounterSelectors = CreateFrame("Frame", nil, parent)
-    encounterSelectors:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -68)
-    encounterSelectors:SetSize(content_width - 40, 22)
-    encounterSelectors:Hide()
+    -- Row 2 (Encounter Alert only): encounter, difficulty, alert
+    local encounterRow = CreateFrame("Frame", nil, content)
+    encounterRow:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -(ROW_H + ROW_GAP))
+    encounterRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -(ROW_H + ROW_GAP))
+    encounterRow:SetHeight(ROW_H)
+    encounterRow:Hide()
 
-    local encounterLabel = DF:CreateLabel(encounterSelectors, T("Encounter"), 9.5, "white")
-    encounterLabel:SetPoint("LEFT", encounterSelectors, "LEFT", 0, 0)
-    local alertDropdown
     local function BuildAlertOptions()
         local options = {}
         local alerts = NSRT.EncounterAlerts[selectedEncID] and NSRT.EncounterAlerts[selectedEncID][selectedDiffID]
@@ -108,309 +147,92 @@ local function BuildVersionCheckUI(parent)
             options[#options + 1] = {
                 label = alert.group and (alert.group .. " - " .. name) or name,
                 value = alert.internalID or alertKey,
-                onclick = function(dropdown, fixedValue, value) selectedAlertID = value end,
+                onclick = function(_, _, value)
+                    selectedAlertID = value
+                    alertDropdown:Refresh()
+                end,
             }
         end
         table.sort(options, function(a, b)
-            if a.label == b.label then return a.value < b.value end
+            if a.label == b.label then return tostring(a.value) < tostring(b.value) end
             return a.label < b.label
         end)
         return options
     end
 
-    local function RefreshAlertSelection(internalID)
+    RefreshAlertSelection = function(internalID)
         local options = BuildAlertOptions()
-        selectedAlertID = internalID or (options[1] and options[1].value)
-        local selectedIndex
-        for index, option in ipairs(options) do
-            if option.value == selectedAlertID then
-                selectedIndex = index
-                break
+        selectedAlertID = nil
+        if internalID then
+            for _, option in ipairs(options) do
+                if option.value == internalID then selectedAlertID = internalID break end
             end
         end
+        selectedAlertID = selectedAlertID or (options[1] and options[1].value)
         alertDropdown:Refresh()
-        alertDropdown:Select(selectedIndex or false, true)
     end
 
-    local encounterDropdown = DF:CreateDropDown(encounterSelectors, function()
+    encounterDropdown = C.CreateDropdown(encounterRow, T("Encounter"), function()
         return NSI.UI.BossData.BuildBossDropdownOptions(function(value)
             selectedEncID = value
+            encounterDropdown:Refresh()
             RefreshAlertSelection()
         end, false)
-    end, nil, 230)
-    encounterDropdown:SetTemplate(options_dropdown_template)
-    encounterDropdown:SetPoint("LEFT", encounterLabel, "RIGHT", 5, 0)
+    end, function()
+        if not selectedEncID then return "" end
+        for _, option in ipairs(NSI.UI.BossData.BuildBossDropdownOptions(nil, false)) do
+            if option.value == selectedEncID then return option.label end
+        end
+        return tostring(selectedEncID)
+    end, 320, ROW_H, "NSRTVersionCheckEncounter", nil, 9, nil, nil, 80)
+    encounterDropdown:SetPoint("TOPLEFT", encounterRow, "TOPLEFT", 0, 0)
 
-    local difficultyLabel = DF:CreateLabel(encounterSelectors, T("Difficulty"), 9.5, "white")
-    difficultyLabel:SetPoint("LEFT", encounterDropdown, "RIGHT", 10, 0)
-    local difficultyDropdown = DF:CreateDropDown(encounterSelectors, function()
+    local DIFFICULTIES = { {16, "Mythic"}, {15, "Heroic"}, {14, "Normal"} }
+    difficultyDropdown = C.CreateDropdown(encounterRow, T("Difficulty"), function()
         local options = {}
-        for index, difficulty in ipairs({{16, "Mythic"}, {15, "Heroic"}, {14, "Normal"}}) do
+        for index, difficulty in ipairs(DIFFICULTIES) do
             options[index] = {
                 label = T(difficulty[2]), value = difficulty[1],
-                onclick = function(dropdown, fixedValue, value)
+                onclick = function(_, _, value)
                     selectedDiffID = value
+                    difficultyDropdown:Refresh()
                     RefreshAlertSelection()
                 end,
             }
         end
         return options
-    end, selectedDiffID, 100)
-    difficultyDropdown:SetTemplate(options_dropdown_template)
-    difficultyDropdown:SetPoint("LEFT", difficultyLabel, "RIGHT", 5, 0)
-
-    local alertLabel = DF:CreateLabel(encounterSelectors, T("Alert"), 9.5, "white")
-    alertLabel:SetPoint("LEFT", difficultyDropdown, "RIGHT", 10, 0)
-    alertDropdown = DF:CreateDropDown(encounterSelectors, BuildAlertOptions, nil, 300)
-    alertDropdown:SetTemplate(options_dropdown_template)
-    alertDropdown:SetNoOptionsText(T("No alerts available"))
-    alertDropdown:SetEmptyTextAndIcon(T("Alert Missing"))
-    alertDropdown:SetPoint("LEFT", alertLabel, "RIGHT", 5, 0)
-
-    local character_name_header = DF:CreateLabel(parent, T("Character Name"), 11)
-    character_name_header:SetPoint("TOPLEFT", component_type_label, "BOTTOMLEFT", 10, -20)
-
-    local version_number_header = DF:CreateLabel(parent, T("Version Number"), 11)
-    version_number_header:SetPoint("LEFT", character_name_header, "RIGHT", 120, 0)
-
-    local ignore_header = DF:CreateLabel(parent, T("Ignore Check"), 11)
-    ignore_header:SetPoint("LEFT", version_number_header, "RIGHT", 50, 0)
-
-    local function RebuildNameMap(scrollbox)
-        wipe(scrollbox.name_map)
-        for index, data in ipairs(scrollbox:GetData()) do
-            if data.name then
-                scrollbox.name_map[data.name] = index
-            end
+    end, function()
+        for _, difficulty in ipairs(DIFFICULTIES) do
+            if difficulty[1] == selectedDiffID then return T(difficulty[2]) end
         end
-    end
+        return ""
+    end, 210, ROW_H, "NSRTVersionCheckDifficulty", nil, nil, nil, nil, 80)
+    difficultyDropdown:SetPoint("LEFT", encounterDropdown.frame, "RIGHT", 16, 0)
 
-    local function refresh(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local index = i + offset
-            local thisData = data[index]
-            local line = self:GetLine(i)
-            if thisData then
-                local name = thisData.name
-                local version = thisData.version
-                local ignore = thisData.ignoreCheck
-                local nickname = NSAPI:Shorten(name)
-
-                line.name:SetText(nickname)
-                line.version:SetText(version and T(version) or "")
-                line.ignorelist:SetText(ignore and T("Yes") or T("No"))
-
-                if version and version == "Offline" then
-                    line.version:SetTextColor(unpack(STYLE.text_hint))
-                elseif version == "Alert Missing" then
-                    line.version:SetTextColor(1, 0.65, 0, 1)
-                elseif version and NSI.VersionCheckData and version == NSI.VersionCheckData.version then
-                    line.version:SetTextColor(0, 1, 0, 1)
-                else
-                    line.version:SetTextColor(1, 0, 0, 1)
-                end
-
-                if ignore then
-                    line.ignorelist:SetTextColor(1, 0, 0, 1)
-                else
-                    line.ignorelist:SetTextColor(0, 1, 0, 1)
-                end
-
-                line:SetScript("OnClick", function(self)
-                    local message = ""
-                    local now = GetTime()
-                    if (NSI.VersionCheckData.lastclick[name] and now < NSI.VersionCheckData.lastclick[name] + 5) or (thisData.version == NSI.VersionCheckData.version and (not thisData.ignoreCheck)) or thisData.version == "No Response" then return end
-                    NSI.VersionCheckData.lastclick[name] = now
-                    if NSI.VersionCheckData.type == "Addon" then
-                        if thisData.version == "Addon not enabled" then message = "Please enable the Addon: '"..NSI.VersionCheckData.name.."'"
-                        elseif thisData.version == "Addon Missing" then message = "Please install the Addon: '"..NSI.VersionCheckData.name.."'"
-                        else message = "Please update the Addon: '"..NSI.VersionCheckData.name.."'" end
-                    elseif NSI.VersionCheckData.type == "Note" then
-                        if thisData.version == "MRT not enabled" then message = "Please enable MRT"
-                        elseif thisData.version == "MRT not installed" then message = "Please install MRT"
-                        else return end
-                    end
-                    if thisData.ignoreCheck then
-                        if message == "" then
-                            message = "You have someone from the raid on your ignore list. Please remove them fron the list."
-                        else
-                            message = message.." You also have someone from the raid on your ignore list."
-                        end
-                    end
-                    NSI.VersionCheckData.lastclick[name] = GetTime()
-                    if message ~= "" then SendChatMessage(message, "WHISPER", nil, name) end
-                end)
-            elseif line then
-                line.name:SetText("")
-                line.version:SetText("")
-                line.ignorelist:SetText("")
-                line.version:SetTextColor(unpack(STYLE.text_color))
-                line.ignorelist:SetTextColor(unpack(STYLE.text_color))
-                line:SetScript("OnClick", nil)
-            end
+    alertDropdown = C.CreateDropdown(encounterRow, T("Alert"), BuildAlertOptions, function()
+        for _, option in ipairs(BuildAlertOptions()) do
+            if option.value == selectedAlertID then return option.label end
         end
-    end
+        return T("No alerts available")
+    end, 340, ROW_H, "NSRTVersionCheckAlert", nil, 12, nil, nil, 50)
+    alertDropdown:SetPoint("LEFT", difficultyDropdown.frame, "RIGHT", 16, 0)
 
-    local function createLineFunc(self, index)
-        local line = NSI.UI.Pixel.CreateBoxFrame("button", "$parentLine" .. index, self)
-        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index-1) * self.LineHeight) - 1)
-        line:SetSize(self:GetWidth() - 2, self.LineHeight)
-        DF:ApplyStandardBackdrop(line)
-        DF:CreateHighlightTexture(line)
-        line.index = index
+    -- Row 3: hide responses, presets
+    local optionRow = CreateFrame("Frame", nil, content)
+    optionRow:SetHeight(ROW_H)
+    optionRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -(ROW_H + ROW_GAP))
 
-        local name = line:CreateFontString(nil, "OVERLAY")
-        name:SetWidth(100)
-        name:SetJustifyH("LEFT")
-        NSI:SetUIFont(name, "small")
-        name:SetPoint("LEFT", line, "LEFT", 5, 0)
-        line.name = name
+    local hideResponses = C.CreateCheckButton(optionRow, T("Hide Version Check Responses"),
+        function() return NSRT.Settings["VersionCheckRemoveResponse"] end,
+        function(_, value) NSRT.Settings["VersionCheckRemoveResponse"] = value end,
+        300, ROW_H, "VersionCheckResponseToggle",
+        { title = "Hide Version Check Responses", desc = "Hides Version Check Responses of Users that are on the correct version" })
+    hideResponses:SetPoint("LEFT", optionRow, "LEFT", 0, 0)
 
-        local version = line:CreateFontString(nil, "OVERLAY")
-        version:SetWidth(100)
-        version:SetJustifyH("LEFT")
-        NSI:SetUIFont(version, "small")
-        version:SetPoint("LEFT", name, "RIGHT", 115, 0)
-        line.version = version
+    local presetsEditButton = C.CreateButton(optionRow, T("Edit Version Presets"), nil, 150, ROW_H)
+    presetsEditButton:SetPoint("RIGHT", optionRow, "RIGHT", 0, 0)
 
-        local ignorelist = line:CreateFontString(nil, "OVERLAY")
-        ignorelist:SetWidth(100)
-        ignorelist:SetJustifyH("LEFT")
-        NSI:SetUIFont(ignorelist, "small")
-        ignorelist:SetPoint("LEFT", version, "RIGHT", 50, 0)
-        line.ignorelist = ignorelist
-
-        return line
-    end
-
-    local scrollLines = 22
-    local sample_data = {
-        { name = "Player1",  version = "1.0.0" },
-        { name = "Player2",  version = "1.0.5" },
-        { name = "Player3",  version = "1.0.1" },
-        { name = "Player4",  version = "0.9.9" },
-        { name = "Player5",  version = "1.0.0" },
-        { name = "Player6",  version = "Addon Missing" },
-        { name = "Player7",  version = "1.0.0" },
-        { name = "Player8",  version = "0.9.8" },
-        { name = "Player9",  version = "1.0.0" },
-        { name = "Player10", version = "Note Missing" },
-        { name = "Player11", version = "1.0.0" },
-        { name = "Player12", version = "0.9.9" },
-        { name = "Player13", version = "1.0.0" },
-        { name = "Player14", version = "Note Missing" },
-        { name = "Player15", version = "1.0.0" },
-        { name = "Player16", version = "0.9.7" },
-        { name = "Player17", version = "1.0.0" },
-        { name = "Player18", version = "Addon Missing" },
-        { name = "Player19", version = "1.0.0" },
-        { name = "Player20", version = "0.9.9" }
-    }
-    local version_check_scrollbox = DF:CreateScrollBox(parent, "VersionCheckScrollBox", refresh, {},
-        content_width - 36,
-        tab_content_height - 90, scrollLines, 20, createLineFunc)
-    DF:ReskinSlider(version_check_scrollbox)
-    version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -80)
-    for i = 1, scrollLines do
-        version_check_scrollbox:CreateLine(createLineFunc)
-    end
-    version_check_scrollbox:Refresh()
-
-    version_check_scrollbox.name_map = {}
-    local addData = function(self, data, url)
-        local currentData = self:GetData()
-        local index = self.name_map[data.name]
-        local matches = NSI.VersionCheckData and data.version == NSI.VersionCheckData.version
-        if NSRT.Settings["VersionCheckRemoveResponse"] and matches and data.name ~= UnitName("player")
-            and data.version ~= "Addon Missing" and data.version ~= "Note Missing" and data.version ~= "Reminder Missing"
-            and data.version ~= "Alert Missing" and not data.ignoreCheck then
-            if index then table.remove(currentData, index) end
-        elseif index then
-            currentData[index] = data
-        else
-            tinsert(currentData, data)
-        end
-        RebuildNameMap(self)
-        self:Refresh()
-    end
-
-    local wipeData = function(self)
-        self:SetData({})
-        wipe(self.name_map)
-        self:Refresh()
-    end
-
-    version_check_scrollbox.AddData = addData
-    version_check_scrollbox.WipeData = wipeData
-
-    UpdateComponentType = function()
-        local isEncounterAlert = component_type_dropdown:GetValue() == "Encounter Alert"
-        component_name_label:SetShown(not isEncounterAlert)
-        component_name_entry:SetShown(not isEncounterAlert)
-        encounterSelectors:SetShown(isEncounterAlert)
-        version_number_header:SetText(T(isEncounterAlert and "Enabled Status" or "Version Number"))
-        local extraHeight = isEncounterAlert and 30 or 0
-        character_name_header:ClearAllPoints()
-        character_name_header:SetPoint("TOPLEFT", component_type_label, "BOTTOMLEFT", 10, -20 - extraHeight)
-        version_check_scrollbox:ClearAllPoints()
-        version_check_scrollbox:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -80 - extraHeight)
-        version_check_scrollbox:SetHeight(tab_content_height - 90 - extraHeight)
-        version_check_scrollbox:SetNumFramesShown(isEncounterAlert and 20 or scrollLines)
-        version_check_scrollbox:Refresh()
-        if isEncounterAlert then
-            if not selectedEncID then
-                local encounters = NSI.UI.BossData.BuildBossDropdownOptions(nil, false)
-                selectedEncID = encounters[1] and encounters[1].value
-            end
-            encounterDropdown:Select(selectedEncID or false)
-            difficultyDropdown:Select(selectedDiffID)
-            RefreshAlertSelection(selectedAlertID)
-        end
-    end
-
-    local function SelectEncounterAlert(encID, diffID, internalID)
-        selectedEncID, selectedDiffID, selectedAlertID = encID, diffID, internalID
-        component_type_dropdown:Select("Encounter Alert")
-        UpdateComponentType()
-    end
-
-    local function RunVersionCheck()
-        local text = component_name_entry:GetText()
-        local component_type = component_type_dropdown:GetValue()
-        if component_type == "Encounter Alert" then
-            if not selectedEncID or not selectedDiffID or not selectedAlertID then return end
-            text = selectedAlertID
-        elseif text and text ~= "" and component_type == "Addon" and not tContains(NSRT.NSUI.AutoComplete[component_type], text) then
-            tinsert(NSRT.NSUI.AutoComplete[component_type], text)
-        end
-
-        if not text or text == "" and component_type ~= "Note" and component_type ~= "Reminder" then return end
-
-        local now = GetTime()
-        if NSI.LastVersionCheck and NSI.LastVersionCheck > now-2 then return end
-        NSI.LastVersionCheck = now
-        version_check_scrollbox:WipeData()
-        local userData, url = NSI:RequestVersionNumber(component_type, text, selectedEncID, selectedDiffID)
-        if userData then
-            version_check_scrollbox:AddData(userData, url)
-        end
-    end
-
-    version_check_button:SetScript("OnClick", RunVersionCheck)
-    version_check_scrollbox.CheckEncounterAlert = function(self, encID, diffID, internalID)
-        if not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then return end
-        SelectEncounterAlert(encID, diffID, internalID)
-        RunVersionCheck()
-    end
-
-    -- version check presets
-    local preset_label = DF:CreateLabel(parent, T("Preset:"), 9.5, "white")
-
-    local sample_presets = {
-        { "Addon: Plater",                            { "Addon", "Plater" } }
-    }
-
-    local function build_version_check_presets_options()
+    local function BuildPresetOptions()
         NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or {}
         local t = {}
         for i = 1, #NSRT.Settings["VersionCheckPresets"] do
@@ -418,12 +240,13 @@ local function BuildVersionCheckUI(parent)
             tinsert(t, {
                 label = v[1],
                 value = v[2],
-                onclick = function(dropdown, fixedValue, value)
+                onclick = function(_, _, value)
                     if value[1] == "Encounter Alert" then
                         SelectEncounterAlert(value[3], value[4], value[2])
                     else
-                        component_type_dropdown:Select(value[1])
-                        component_name_entry:SetText(value[2])
+                        componentType = value[1]
+                        typeDropdown:Refresh()
+                        nameEntry:SetValue(value[2])
                         UpdateComponentType()
                     end
                 end
@@ -431,133 +254,365 @@ local function BuildVersionCheckUI(parent)
         end
         return t
     end
-    local version_check_preset_dropdown = DF:CreateDropDown(parent,
-        function() return build_version_check_presets_options() end)
-    version_check_preset_dropdown:SetTemplate(options_dropdown_template)
+    presetDropdown = C.CreateDropdown(optionRow, T("Preset:"), BuildPresetOptions, function() return "" end,
+        330, ROW_H, "NSRTVersionCheckPreset", nil, 10, nil, nil, 60)
+    presetDropdown:SetPoint("RIGHT", presetsEditButton.frame, "LEFT", -12, 0)
 
-    local version_presets_edit_frame = DF:CreateSimplePanel(parent, 400, window_height / 2, T("Version Preset Management"),
-        "VersionPresetsEditFrame", {
-            DontRightClickClose = true,
-            NoScripts = true
-        })
-    version_presets_edit_frame:ClearAllPoints()
-    version_presets_edit_frame:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 2)
-    version_presets_edit_frame:Hide()
+    -- ------------------------------------------------------------------
+    --  Card 2: responses
+    -- ------------------------------------------------------------------
+    local cardList = C.CreateSectionCard(parent, 400, true)
+    cardList:SetPoint("TOPLEFT", cardCheck, "BOTTOMLEFT", 0, -CARD_GAP)
+    cardList:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -PAD, PAD)
+    cardList.title:SetText(T("Responses"))
+    local listContent = cardList.content
+    listContent:SetPoint("TOPRIGHT", cardList, "TOPRIGHT", -CARD_PAD, -(cardList.headerH + CARD_PAD))
+    listContent:SetPoint("BOTTOMLEFT", cardList, "BOTTOMLEFT", CARD_PAD, CARD_PAD)
 
-    local version_presets_edit_button = DF:CreateButton(parent, function()
-        if version_presets_edit_frame:IsShown() then
-            version_presets_edit_frame:Hide()
-        else
-            version_presets_edit_frame:Show()
-        end
-    end, 120, 18, T("Edit Version Presets"))
-    version_presets_edit_button:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -30, -10)
-    version_presets_edit_button:SetTemplate(options_button_template)
-    version_check_preset_dropdown:SetPoint("RIGHT", version_presets_edit_button, "LEFT", -10, 0)
-    preset_label:SetPoint("RIGHT", version_check_preset_dropdown, "LEFT", -5, 0)
-
-    local function refreshPresets(self, data, offset, totalLines)
-        for i = 1, totalLines do
-            local index = i + offset
-            local presetData = data[index]
-            if presetData then
-                local line = self:GetLine(i)
-
-                local label = presetData[1]
-                local value = presetData[2]
-                local component_type = value[1]
-                local component_name = value[2]
-
-                line.index = index
-
-                line.value = value
-                line.component_type = component_type
-                line.component_name = component_name
-
-                line.type:SetText(T(component_type))
-                line.name:SetText(component_type == "Encounter Alert" and label or component_name)
-            end
+    local header = CreateFrame("Frame", nil, listContent)
+    header:SetPoint("TOPLEFT", listContent, "TOPLEFT", 0, 0)
+    header:SetPoint("TOPRIGHT", listContent, "TOPRIGHT", 0, 0)
+    header:SetHeight(18)
+    local headerLabels = {}
+    for i = 1, 3 do
+        local label = header:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(label, "tiny", "")
+        label:SetJustifyH("LEFT")
+        label:SetTextColor(Accent(1))
+        headerLabels[i] = label
+    end
+    headerLabels[1]:SetText(T("Character Name"))
+    headerLabels[2]:SetText(T("Version Number"))
+    headerLabels[3]:SetText(T("Ignore Check"))
+    local function LayoutColumns(width, fontStrings, inset)
+        local x = inset
+        for i, share in ipairs(COLUMNS) do
+            local fs = fontStrings[i]
+            local w = math.floor((width - inset) * share)
+            fs:ClearAllPoints()
+            fs:SetPoint("LEFT", fs:GetParent(), "LEFT", x, 0)
+            fs:SetWidth(w - 8)
+            x = x + w
         end
     end
+    header:SetScript("OnSizeChanged", function(_, width) LayoutColumns(width, headerLabels, 8) end)
 
-    local function createPresetLineFunc(self, index)
-        local parent = self
-        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", "$parentLine" .. index, self)
-        line:SetPoint("TOPLEFT", self, "TOPLEFT", 1, -((index - 1) * (self.LineHeight)) - 1)
-        line:SetSize(self:GetWidth() - 2, self.LineHeight)
-        DF:ApplyStandardBackdrop(line)
+    local scroll = C.CreateScrollBox(listContent, 400, 300)
+    scroll.frame:ClearAllPoints()
+    scroll.frame:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
+    scroll.frame:SetPoint("BOTTOMRIGHT", listContent, "BOTTOMRIGHT", 0, 0)
+    scroll.frame:SetScript("OnSizeChanged", function(_, width)
+        scroll.scrollChild:SetWidth(math.max(1, width - 18))
+        scroll:UpdateScrollBar()
+    end)
 
-        line.type = DF:CreateLabel(line, "", 9.5, "white")
-        line.type:SetPoint("LEFT", line, "LEFT", 5, 0)
-        line.type:SetTemplate(options_text_template)
+    local emptyHint = listContent:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(emptyHint, "small", "")
+    emptyHint:SetTextColor(unpack(STYLE.text_hint))
+    emptyHint:SetText(T("Run a check to see who is on the right version."))
+    emptyHint:SetPoint("CENTER", scroll.frame, "CENTER", 0, 0)
 
-        line.name = DF:CreateLabel(line, "", 9.5, "white")
-        line.name:SetTemplate(options_text_template)
-        line.name:SetPoint("LEFT", line, "LEFT", 110, 0)
-        line.name:SetWidth(225)
+    -- ------------------------------------------------------------------
+    --  Results data + rows
+    -- ------------------------------------------------------------------
+    local data, nameMap, lines = {}, {}, {}
 
-        line.deleteButton = DF:CreateButton(line, function()
-            tremove(NSRT.Settings["VersionCheckPresets"], line.index)
-            self:SetData(NSRT.Settings["VersionCheckPresets"])
-            self:Refresh()
-            version_check_preset_dropdown:Refresh()
-        end, 12, 12)
-        line.deleteButton:SetNormalTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-        line.deleteButton:SetHighlightTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
-        line.deleteButton:SetPushedTexture([[Interface\GLUES\LOGIN\Glues-CheckBox-Check]])
+    local function WhisperMissing(row)
+        local info = NSI.VersionCheckData
+        if not info or not row then return end
+        local name = row.name
+        local now = GetTime()
+        if (info.lastclick[name] and now < info.lastclick[name] + 5)
+            or (row.version == info.version and (not row.ignoreCheck)) or row.version == "No Response" then return end
+        info.lastclick[name] = now
+        local message = ""
+        if info.type == "Addon" then
+            if row.version == "Addon not enabled" then message = "Please enable the Addon: '" .. info.name .. "'"
+            elseif row.version == "Addon Missing" then message = "Please install the Addon: '" .. info.name .. "'"
+            else message = "Please update the Addon: '" .. info.name .. "'" end
+        elseif info.type == "Note" then
+            if row.version == "MRT not enabled" then message = "Please enable MRT"
+            elseif row.version == "MRT not installed" then message = "Please install MRT"
+            else return end
+        end
+        if row.ignoreCheck then
+            if message == "" then
+                message = "You have someone from the raid on your ignore list. Please remove them fron the list."
+            else
+                message = message .. " You also have someone from the raid on your ignore list."
+            end
+        end
+        if message ~= "" then SendChatMessage(message, "WHISPER", nil, name) end
+    end
 
-        line.deleteButton:GetNormalTexture():SetDesaturated(true)
-        line.deleteButton:GetHighlightTexture():SetDesaturated(true)
-        line.deleteButton:GetPushedTexture():SetDesaturated(true)
-        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -5, 0)
+    local function CreateLine(index)
+        local line = NSI.UI.Pixel.CreateBoxFrame("Button", nil, scroll.scrollChild)
+        line:SetPoint("TOPLEFT", scroll.scrollChild, "TOPLEFT", 0, -(index - 1) * ROW_H)
+        line:SetPoint("TOPRIGHT", scroll.scrollChild, "TOPRIGHT", 0, -(index - 1) * ROW_H)
+        line:SetHeight(ROW_H)
+        line:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]] })
+        line:SetBackdropColor(unpack(index % 2 == 0 and STYLE.row_stripe_light or STYLE.row_stripe_dark))
 
+        local hover = line:CreateTexture(nil, "ARTWORK")
+        hover:SetAllPoints()
+        hover:SetColorTexture(Accent(0.13))
+        hover:SetAlpha(0)
+        line:SetScript("OnEnter", function() C.FadeTo(hover, 1, STYLE.hover_in) end)
+        line:SetScript("OnLeave", function() C.FadeTo(hover, 0, STYLE.hover_out) end)
+        line:HookScript("OnHide", function() hover:SetAlpha(0) end)
+
+        line.fields = {}
+        for i = 1, 3 do
+            local fs = line:CreateFontString(nil, "OVERLAY")
+            NSI:SetUIFont(fs, "small", "")
+            fs:SetJustifyH("LEFT")
+            fs:SetWordWrap(false)
+            line.fields[i] = fs
+        end
+        line.name, line.version, line.ignorelist = line.fields[1], line.fields[2], line.fields[3]
+        line:SetScript("OnSizeChanged", function(_, width) LayoutColumns(width, line.fields, 8) end)
+        line:SetScript("OnClick", function(self) WhisperMissing(self.row) end)
         return line
     end
 
-    local presetScrollLines = 9
-    local version_presets_edit_scrollbox = DF:CreateScrollBox(version_presets_edit_frame,
-        "$parentVersionPresetsEditScrollBox", refreshPresets, NSRT.Settings["VersionCheckPresets"], 360,
-        window_height / 2 - 75, presetScrollLines, 20, createPresetLineFunc)
-    version_presets_edit_scrollbox:SetPoint("TOPLEFT", version_presets_edit_frame, "TOPLEFT", 10, -30)
-    DF:ReskinSlider(version_presets_edit_scrollbox)
+    local function RefreshList()
+        for i, row in ipairs(data) do
+            local line = lines[i]
+            if not line then line = CreateLine(i); lines[i] = line end
+            line.row = row
+            line:Show()
+            line.name:SetText(NSAPI:Shorten(row.name))
+            line.version:SetText(row.version and T(row.version) or "")
+            line.ignorelist:SetText(row.ignoreCheck and T("Yes") or T("No"))
 
-    for i = 1, presetScrollLines do
-        version_presets_edit_scrollbox:CreateLine(createPresetLineFunc)
+            local version = row.version
+            if version == "Offline" then
+                line.version:SetTextColor(unpack(STYLE.text_hint))
+            elseif version == "Alert Missing" then
+                line.version:SetTextColor(unpack(STYLE.warning))
+            elseif version and NSI.VersionCheckData and version == NSI.VersionCheckData.version then
+                line.version:SetTextColor(unpack(STYLE.success))
+            else
+                line.version:SetTextColor(unpack(STYLE.text_danger))
+            end
+            line.ignorelist:SetTextColor(unpack(row.ignoreCheck and STYLE.text_danger or STYLE.success))
+        end
+        for i = #data + 1, #lines do
+            lines[i].row = nil
+            lines[i]:Hide()
+        end
+        emptyHint:SetShown(#data == 0)
+        scroll.scrollChild:SetHeight(math.max(1, #data * ROW_H))
+        scroll:UpdateScrollBar()
     end
 
-    version_presets_edit_scrollbox:Refresh()
+    local function RebuildNameMap()
+        wipe(nameMap)
+        for index, row in ipairs(data) do
+            if row.name then nameMap[row.name] = index end
+        end
+    end
 
-    local new_preset_type_label = DF:CreateLabel(version_presets_edit_frame, T("Type:"), 11)
-    new_preset_type_label:SetPoint("TOPLEFT", version_presets_edit_scrollbox, "BOTTOMLEFT", 0, -20)
+    -- The object NSUI.version_scrollbox points at; the core calls AddData / the
+    -- Encounter Alerts list calls CheckEncounterAlert.
+    local box = { frame = parent }
 
-    local new_preset_type_dropdown = DF:CreateDropDown(version_presets_edit_frame,
-        function() return build_checkable_components_options(nil, true) end, checkable_components[1], 65)
-    new_preset_type_dropdown.addonId = addonId
-    new_preset_type_dropdown:Select(checkable_components[1])
-    new_preset_type_dropdown:SetPoint("LEFT", new_preset_type_label, "RIGHT", 5, 0)
-    new_preset_type_dropdown:SetTemplate(options_dropdown_template)
+    function box:AddData(row)
+        local index = nameMap[row.name]
+        local matches = NSI.VersionCheckData and row.version == NSI.VersionCheckData.version
+        if NSRT.Settings["VersionCheckRemoveResponse"] and matches and row.name ~= UnitName("player")
+            and row.version ~= "Addon Missing" and row.version ~= "Note Missing" and row.version ~= "Reminder Missing"
+            and row.version ~= "Alert Missing" and not row.ignoreCheck then
+            if index then table.remove(data, index) end
+        elseif index then
+            data[index] = row
+        else
+            tinsert(data, row)
+        end
+        RebuildNameMap()
+        RefreshList()
+    end
 
-    local new_preset_name_label = DF:CreateLabel(version_presets_edit_frame, T("Name:"), 11)
-    new_preset_name_label:SetPoint("LEFT", new_preset_type_dropdown, "RIGHT", 10, 0)
+    function box:WipeData()
+        wipe(data)
+        wipe(nameMap)
+        RefreshList()
+    end
 
-    local new_preset_name_entry = DF:CreateTextEntry(version_presets_edit_frame, function() end, 165, 20)
-    new_preset_name_entry:SetPoint("LEFT", new_preset_name_label, "RIGHT", 5, 0)
-    new_preset_name_entry:SetTemplate(options_dropdown_template)
+    -- ------------------------------------------------------------------
+    --  Behaviour
+    -- ------------------------------------------------------------------
+    local function SizeCheckCard(isEncounterAlert)
+        local rows = isEncounterAlert and 3 or 2
+        local height = rows * ROW_H + (rows - 1) * ROW_GAP
+        content:SetHeight(height)
+        cardCheck:SetHeight(cardCheck.headerH + CARD_PAD * 2 + height)
+        optionRow:ClearAllPoints()
+        optionRow:SetPoint("TOPLEFT", content, "TOPLEFT", 0, -((rows - 1) * (ROW_H + ROW_GAP)))
+        optionRow:SetPoint("TOPRIGHT", content, "TOPRIGHT", 0, -((rows - 1) * (ROW_H + ROW_GAP)))
+    end
 
-    local add_button = DF:CreateButton(version_presets_edit_frame, function()
-        local name = new_preset_name_entry:GetText()
-        local type = new_preset_type_dropdown:GetValue()
-        tinsert(NSRT.Settings["VersionCheckPresets"], { T(type) .. ": " .. name, {type, name} })
-        version_presets_edit_scrollbox:SetData(NSRT.Settings["VersionCheckPresets"])
-        version_presets_edit_scrollbox:Refresh()
-        version_check_preset_dropdown:Refresh()
-        new_preset_name_entry:SetText("")
-        new_preset_type_dropdown:Select(checkable_components[1])
-    end, 60, 20, T("New"))
-    add_button:SetPoint("LEFT", new_preset_name_entry, "RIGHT", 10, 0)
-    add_button:SetTemplate(options_button_template)
+    UpdateComponentType = function()
+        local isEncounterAlert = componentType == "Encounter Alert"
+        nameEntry.frame:SetShown(not isEncounterAlert)
+        encounterRow:SetShown(isEncounterAlert)
+        headerLabels[2]:SetText(T(isEncounterAlert and "Enabled Status" or "Version Number"))
+        if not isEncounterAlert then HideSuggestions() end
+        SizeCheckCard(isEncounterAlert)
+        if isEncounterAlert then
+            if not selectedEncID then
+                local encounters = NSI.UI.BossData.BuildBossDropdownOptions(nil, false)
+                selectedEncID = encounters[1] and encounters[1].value
+            end
+            encounterDropdown:Refresh()
+            difficultyDropdown:Refresh()
+            RefreshAlertSelection(selectedAlertID)
+        end
+    end
+
+    SelectEncounterAlert = function(encID, diffID, internalID)
+        selectedEncID, selectedDiffID, selectedAlertID = encID, diffID, internalID
+        componentType = "Encounter Alert"
+        typeDropdown:Refresh()
+        UpdateComponentType()
+    end
+
+    RunVersionCheck = function()
+        local text = nameEntry.editBox:GetText()
+        if componentType == "Encounter Alert" then
+            if not selectedEncID or not selectedDiffID or not selectedAlertID then return end
+            text = selectedAlertID
+        elseif text and text ~= "" and componentType == "Addon" and not tContains(NSRT.NSUI.AutoComplete[componentType], text) then
+            tinsert(NSRT.NSUI.AutoComplete[componentType], text)
+        end
+
+        if not text or text == "" and componentType ~= "Note" and componentType ~= "Reminder" then return end
+
+        local now = GetTime()
+        if NSI.LastVersionCheck and NSI.LastVersionCheck > now - 2 then return end
+        NSI.LastVersionCheck = now
+        box:WipeData()
+        local userData = NSI:RequestVersionNumber(componentType, text, selectedEncID, selectedDiffID)
+        if userData then box:AddData(userData) end
+    end
+
+    function box:CheckEncounterAlert(encID, diffID, internalID)
+        if not (UnitIsGroupLeader("player") or UnitIsGroupAssistant("player")) then return end
+        SelectEncounterAlert(encID, diffID, internalID)
+        RunVersionCheck()
+    end
+
+    -- ------------------------------------------------------------------
+    --  Preset manager
+    -- ------------------------------------------------------------------
+    local presetsFrame = C.CreateFrame(parent, 440, math.floor(window_height / 2), "NSRTVersionPresetsFrame")
+    presetsFrame:SetFrameStrata("DIALOG")
+    presetsFrame:ClearAllPoints()
+    presetsFrame:SetPoint("TOPLEFT", parent, "TOPRIGHT", 2, 2)
+    presetsFrame:Hide()
+    local presetsTitle = presetsFrame:CreateFontString(nil, "OVERLAY")
+    NSI:SetUIFont(presetsTitle, "body", "")
+    presetsTitle:SetTextColor(Accent(1))
+    presetsTitle:SetText(T("Version Preset Management"))
+    presetsTitle:SetPoint("TOPLEFT", presetsFrame, "TOPLEFT", 12, -10)
+
+    presetsEditButton.frame:SetScript("OnClick", function()
+        presetsFrame:SetShown(not presetsFrame:IsShown())
+    end)
+
+    local presetList = C.CreateScrollBox(presetsFrame, 416, 300)
+    presetList.frame:SetPoint("TOPLEFT", presetsFrame, "TOPLEFT", 12, -38)
+    presetList.frame:SetPoint("BOTTOMRIGHT", presetsFrame, "BOTTOMRIGHT", -12, 52)
+    presetList.frame:SetScript("OnSizeChanged", function(_, width)
+        presetList.scrollChild:SetWidth(math.max(1, width - 18))
+        presetList:UpdateScrollBar()
+    end)
+    local presetLines = {}
+    local RefreshPresetList
+
+    local function CreatePresetLine(index)
+        local line = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, presetList.scrollChild)
+        line:SetPoint("TOPLEFT", presetList.scrollChild, "TOPLEFT", 0, -(index - 1) * ROW_H)
+        line:SetPoint("TOPRIGHT", presetList.scrollChild, "TOPRIGHT", 0, -(index - 1) * ROW_H)
+        line:SetHeight(ROW_H)
+        line:SetBackdrop({ bgFile = [[Interface\Buttons\WHITE8x8]] })
+        line:SetBackdropColor(unpack(index % 2 == 0 and STYLE.row_stripe_light or STYLE.row_stripe_dark))
+
+        line.type = line:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(line.type, "small", "")
+        line.type:SetTextColor(unpack(STYLE.text_muted))
+        line.type:SetPoint("LEFT", line, "LEFT", 6, 0)
+        line.type:SetWidth(96)
+        line.type:SetJustifyH("LEFT")
+
+        line.name = line:CreateFontString(nil, "OVERLAY")
+        NSI:SetUIFont(line.name, "small", "")
+        line.name:SetPoint("LEFT", line.type, "RIGHT", 6, 0)
+        line.name:SetPoint("RIGHT", line, "RIGHT", -28, 0)
+        line.name:SetJustifyH("LEFT")
+        line.name:SetWordWrap(false)
+
+        line.deleteButton = CreateFrame("Button", nil, line)
+        line.deleteButton:SetSize(14, 14)
+        line.deleteButton:SetPoint("RIGHT", line, "RIGHT", -6, 0)
+        line.deleteButton:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\trash-2.png]])
+        line.deleteButton:GetNormalTexture():SetVertexColor(unpack(STYLE.danger))
+        line.deleteButton:SetScript("OnClick", function()
+            tremove(NSRT.Settings["VersionCheckPresets"], line.index)
+            RefreshPresetList()
+            presetDropdown:Refresh()
+        end)
+        line.deleteButton:SetScript("OnEnter", function(self) NSI.UI.Tooltip.Show(self, "Delete", "ANCHOR_TOP") end)
+        line.deleteButton:SetScript("OnLeave", NSI.UI.Tooltip.Hide)
+        return line
+    end
+
+    RefreshPresetList = function()
+        NSRT.Settings["VersionCheckPresets"] = NSRT.Settings["VersionCheckPresets"] or {}
+        local presets = NSRT.Settings["VersionCheckPresets"]
+        for i, preset in ipairs(presets) do
+            local line = presetLines[i]
+            if not line then line = CreatePresetLine(i); presetLines[i] = line end
+            local value = preset[2]
+            line.index = i
+            line.type:SetText(T(value[1]))
+            line.name:SetText(value[1] == "Encounter Alert" and preset[1] or value[2])
+            line:Show()
+        end
+        for i = #presets + 1, #presetLines do presetLines[i]:Hide() end
+        presetList.scrollChild:SetHeight(math.max(1, #presets * ROW_H))
+        presetList:UpdateScrollBar()
+    end
+
+    local newType = checkable_components[1]
+    local newTypeDropdown = C.CreateDropdown(presetsFrame, nil, function()
+        return build_checkable_components_options(function(value)
+            newType = value
+            presetsFrame.newTypeDropdown:Refresh()
+        end, true)
+    end, function() return T(newType) end, 110, ROW_H, "NSRTVersionPresetType")
+    presetsFrame.newTypeDropdown = newTypeDropdown
+    newTypeDropdown:SetPoint("BOTTOMLEFT", presetsFrame, "BOTTOMLEFT", 12, 14)
+
+    local newName = C.CreateTextEntry(presetsFrame, nil, nil, nil, 200, ROW_H, false, nil, nil, "NSRTVersionPresetName")
+    newName:SetPoint("LEFT", newTypeDropdown.frame, "RIGHT", 8, 0)
+
+    local addButton = C.CreateButton(presetsFrame, T("New"), function()
+        local name = newName.editBox:GetText()
+        if name == "" then return end
+        tinsert(NSRT.Settings["VersionCheckPresets"], { T(newType) .. ": " .. name, {newType, name} })
+        RefreshPresetList()
+        presetDropdown:Refresh()
+        newName:SetValue("")
+        newType = checkable_components[1]
+        newTypeDropdown:Refresh()
+    end, 70, ROW_H)
+    addButton:SetPoint("LEFT", newName.frame, "RIGHT", 8, 0)
+    presetsFrame:HookScript("OnShow", RefreshPresetList)
+
     UpdateComponentType()
-    return version_check_scrollbox
+    RefreshList()
+    return box
 end
 
 -- Export to namespace

@@ -130,8 +130,6 @@ end
 -- ============================================================================
 -- Alert Export / Import popups
 -- ============================================================================
-local alertsExportPopup
-local alertsImportPopup
 
 function NSI:PromptReloeReminderImport(onImport)
     local function DoImport()
@@ -150,88 +148,27 @@ function NSI:PromptReloeReminderImport(onImport)
 end
 
 local function ShowExportPopup(str, label)
-    if not alertsExportPopup then
-        alertsExportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r",
-            "NSUIEncAlertExportString", { UseScaleBar = false })
-        alertsExportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        alertsExportPopup:SetFrameLevel(100)
-
-        alertsExportPopup.infoLabel = alertsExportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(alertsExportPopup.infoLabel, "label", "")
-        alertsExportPopup.infoLabel:SetTextColor(unpack(STYLE.text_soft))
-        alertsExportPopup.infoLabel:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -30)
-
-        alertsExportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsExportPopup, 280, 80, nil,
-            "EncAlertExportTextEdit", true, false, true)
-        alertsExportPopup.textbox:SetPoint("TOPLEFT", alertsExportPopup, "TOPLEFT", 10, -50)
-        alertsExportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsExportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(alertsExportPopup.textbox)
-        DF:ReskinSlider(alertsExportPopup.textbox.scroll)
-        alertsExportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(alertsExportPopup.textbox.editbox, "label")
-
-        local doneBtn = CreateLocalizedButton(alertsExportPopup, "Done", function()
-            alertsExportPopup:Hide()
-        end, 280, 20)
-        doneBtn:SetPoint("BOTTOM", alertsExportPopup, "BOTTOM", 0, 10)
-    end
-
-    alertsExportPopup.infoLabel:SetText(label or "")
-    alertsExportPopup.textbox:SetText(str or "")
-    alertsExportPopup.textbox:SetFocus()
-    alertsExportPopup:Show()
+    NSI.UI.Components.CreateTextBoxDialog("AlertsExport", "|cFF00FFFF" .. NSI:Loc("Export Alerts") .. "|r", { readOnly = true }):Open(str or "", label)
 end
 
 local function ShowImportPopup()
-    if not alertsImportPopup then
-        alertsImportPopup = NSI.UI.Pixel.CreateSimplePanel(UIParent, 800, 400, "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
-            "NSUIEncAlertImportString", { UseScaleBar = false })
-        alertsImportPopup:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
-        alertsImportPopup:SetFrameLevel(100)
-
-        local statusLabel = alertsImportPopup:CreateFontString(nil, "OVERLAY")
-        NSI:SetUIFont(statusLabel, "label", "")
-        statusLabel:SetTextColor(unpack(STYLE.text_soft))
-        SetLocalizedText(statusLabel, "Paste an alerts export string below and click Import.")
-        statusLabel:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -30)
-
-        alertsImportPopup.textbox = DF:NewSpecialLuaEditorEntry(alertsImportPopup, 280, 80, nil,
-            "EncAlertImportTextEdit", true, false, true)
-        alertsImportPopup.textbox:SetPoint("TOPLEFT", alertsImportPopup, "TOPLEFT", 10, -50)
-        alertsImportPopup.textbox:SetPoint("BOTTOMRIGHT", alertsImportPopup, "BOTTOMRIGHT", -25, 40)
-        DF:ApplyStandardBackdrop(alertsImportPopup.textbox)
-        DF:ReskinSlider(alertsImportPopup.textbox.scroll)
-        alertsImportPopup.textbox:SetScript("OnMouseDown", function(self) self:SetFocus() end)
-        NSI:SetUIFont(alertsImportPopup.textbox.editbox, "label")
-
-        local importBtn = CreateLocalizedButton(alertsImportPopup, "Import", function()
-            local str = alertsImportPopup.textbox:GetText()
-            local count, overwriteCount = NSAPI:ImportAlertsString(str)
-            if count then
-                print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d alert(s)."), count))
-                if overwriteCount and overwriteCount > 0 then
-                    print("|cFFFFFF00NSRT:|r " .. string.format(NSI:Loc("Overwritten %d alert(s)."), overwriteCount))
-                end
-                alertsImportPopup:Hide()
-                local enc = NSUI.encounters_frame
-                if enc and enc.RebuildList then enc.RebuildList() end
-                if enc and enc.RefreshSelected then enc.RefreshSelected() end
-            else
-                statusLabel:SetText(
-                    "|cFFFF0000" .. NSI:Loc("Invalid import string. Please check and try again.") .. "|r")
-            end
-        end, 280, 20)
-        importBtn:SetPoint("BOTTOM", alertsImportPopup, "BOTTOM", 0, 10)
-
-        alertsImportPopup:HookScript("OnShow", function()
-            SetLocalizedText(statusLabel, "Paste an alerts export string below and click Import.")
-            alertsImportPopup.textbox:SetText("")
-            alertsImportPopup.textbox:SetFocus()
-        end)
-    end
-
-    alertsImportPopup:Show()
-    alertsImportPopup.textbox:SetFocus()
+    local dialog = NSI.UI.Components.CreateTextBoxDialog("AlertsImport", "|cFF00FFFF" .. NSI:Loc("Import Alerts") .. "|r",
+        { okText = NSI:Loc("Import"), cancelText = NSI:Loc("Cancel") })
+    dialog:Open("", NSI:Loc("Paste an alerts export string below and click Import."), function(text, d)
+        local count, overwriteCount = NSAPI:ImportAlertsString(text)
+        if not count then
+            d:SetStatus(NSI:Loc("Invalid import string. Please check and try again."), true)
+            return false
+        end
+        print("|cFF00FFFFNSRT:|r " .. string.format(NSI:Loc("Imported %d alert(s)."), count))
+        if overwriteCount and overwriteCount > 0 then
+            print("|cFFFFFF00NSRT:|r " .. string.format(NSI:Loc("Overwritten %d alert(s)."), overwriteCount))
+        end
+        local enc = NSUI.encounters_frame
+        if enc and enc.RebuildList then enc.RebuildList() end
+        if enc and enc.RefreshSelected then enc.RefreshSelected() end
+        return true
+    end)
 end
 
 -- ============================================================================
@@ -332,7 +269,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local searchHint = searchEntry.editBox:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     searchHint:SetText("|TInterface\\Common\\UI-Searchbox-Icon:16:16:0:-2|t  " .. NSI:Loc("Search..."))
     searchHint:SetPoint("LEFT", searchEntry.editBox, "LEFT", 2, 0)
-    searchHint:SetTextColor(0.5, 0.5, 0.5, 0.6)
+    searchHint:SetTextColor(unpack(STYLE.text_hint))
     NSI:SetUIFont(searchHint, "body", "")
 
     local function UpdateSearchHint(eb)
@@ -374,6 +311,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
     local listScroll = CreateFrame("ScrollFrame", "NSUIEncAlertListScroll", screen,
         "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(listScroll)
     listScroll:SetSize(listW, scrollHeight)
     listScroll:SetPoint("TOPLEFT", screen, "TOPLEFT", pad, scrollTop)
     ReskinScrollbar(listScroll)
@@ -392,9 +330,7 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function CreateListRow()
         local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
-        DF:ApplyStandardBackdrop(row)
-        row.__background:SetVertexColor(0.4, 0.4, 0.4)
-        row.__background:SetAlpha(0.5)
+        NSI.UI.Components.StyleRow(row)
 
         -- Enabled toggle checkbox using the shared component
         local cb = CreateCheckButton(row, "", nil, nil, 14, 14)
@@ -438,7 +374,7 @@ local function BuildEncounterAlertsUI(parentFrame)
         row.ungroupBtn:SetPoint("RIGHT", row, "RIGHT", -4, 0)
         row.ungroupBtn:SetNormalTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\minus.png]])
         row.ungroupBtn:SetHighlightTexture([[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\minus.png]])
-        row.ungroupBtn:GetNormalTexture():SetVertexColor(0.4, 0.85, 1, 1)
+        row.ungroupBtn:GetNormalTexture():SetVertexColor(Accent(1))
         row.ungroupBtn:GetHighlightTexture():SetVertexColor(0.7, 1, 1, 1)
         row.ungroupBtn:Hide()
 
@@ -457,15 +393,13 @@ local function BuildEncounterAlertsUI(parentFrame)
     local function CreateGroupHeaderRow()
         local row = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, listChild)
         row:SetSize(listChild:GetWidth(), lineHeight)
-        DF:ApplyStandardBackdrop(row)
-        row.__background:SetVertexColor(0.05, 0.30, 0.40)
-        row.__background:SetAlpha(0.90)
+        NSI.UI.Components.StyleRow(row, STYLE.selected_fill)
 
         local arrow = row:CreateTexture(nil, "OVERLAY")
         arrow:SetSize(12, 12)
         arrow:SetPoint("LEFT", row, "LEFT", 4, 0)
         arrow:SetTexture([[Interface\Buttons\Arrow-Down-Up]])
-        arrow:SetVertexColor(0, 0.9, 1, 1)
+        arrow:SetVertexColor(Accent(1))
         row.collapseArrow = arrow
 
         local bossIcon = row:CreateTexture(nil, "ARTWORK")
@@ -477,7 +411,7 @@ local function BuildEncounterAlertsUI(parentFrame)
 
         local nameLabel = row:CreateFontString(nil, "OVERLAY")
         NSI:SetUIFont(nameLabel, "label")
-        nameLabel:SetTextColor(0.2, 0.85, 1, 1)
+        nameLabel:SetTextColor(Accent(1))
         nameLabel:SetPoint("LEFT", row, "LEFT", 18, 0)  -- repositioned dynamically
         nameLabel:SetPoint("RIGHT", row, "RIGHT", -36, 0)
         nameLabel:SetJustifyH("LEFT")
@@ -795,7 +729,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                 row.collapseArrow:SetTexture(entry._collapsed and
                     [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-down.png]] or
                     [[Interface\AddOns\NorthernSkyRaidTools\Media\Icons\chevron-up.png]])
-                row.collapseArrow:SetVertexColor(0.4, 0.85, 1, 1)
+                row.collapseArrow:SetVertexColor(Accent(1))
                 row.nameLabel:SetText(gname)
                 row.countLabel:SetText("(" .. entry._count .. ")")
 
@@ -924,7 +858,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                     or  (not isReloe and selectedKey == entry.alertKey and selectedEncID == entry.encID)
                 if isSelected then
                     row.__background:SetVertexColor(Accent())
-                    row.__background:SetAlpha(1)
+                    row.__background:SetAlpha(STYLE.selected_row_alpha)
                 else
                     row.__background:SetVertexColor(0.4, 0.4, 0.4)
                     row.__background:SetAlpha(willLoad and 0.5 or 0.2)
@@ -1478,7 +1412,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                   and NSRT.EncounterAlerts[eid][did]
                   and NSRT.EncounterAlerts[eid][did][akey]
         local items = {}
-        table.insert(items, { label = NSI:Loc("— No Group —"), onclick = function()
+        table.insert(items, { label = NSI:Loc("\226\128\148 No Group \226\128\148"), onclick = function()
             if alert then
                 alert.group = nil
                 if alert.ReloeReminder == true then alert.UserModifiedGroup = true end
@@ -1524,7 +1458,7 @@ local function BuildEncounterAlertsUI(parentFrame)
                   and NSRT.EncounterAlerts[eid]
                   and NSRT.EncounterAlerts[eid][did]
                   and NSRT.EncounterAlerts[eid][did][akey]
-        return (alert and alert.group) or NSI:Loc("— No Group —")
+        return (alert and alert.group) or NSI:Loc("\226\128\148 No Group \226\128\148")
     end
 
     groupDD = CreateDropdown(rightPanel, nil, BuildGroupItems, GetGroupSelected,
@@ -2059,9 +1993,7 @@ end]]
             end)
             badge:SetPoint("TOPRIGHT", ov, "TOPRIGHT", 0, 0)
         else
-            DF:ApplyStandardBackdrop(ov)
-            ov.__background:SetVertexColor(0.02, 0.02, 0.02)
-            ov.__background:SetAlpha(0.82)
+            NSI.UI.Components.StyleRow(ov, STYLE.row_dark)
 
             local lbl = ov:CreateFontString(nil, "OVERLAY")
             NSI:SetUIFont(lbl, "label", "")
@@ -2141,7 +2073,7 @@ end]]
     local spellIconFrame = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, dispF)
     spellIconFrame:SetSize(22, 22)
     spellIconFrame:SetPoint("LEFT", spellEntry.frame, "RIGHT", 4, 0)
-    DF:ApplyStandardBackdrop(spellIconFrame)
+    NSI.UI.Components.StyleRow(spellIconFrame, STYLE.row_plain)
     local spellIconTex = spellIconFrame:CreateTexture(nil, "ARTWORK")
     spellIconTex:SetPoint("TOPLEFT",     spellIconFrame, "TOPLEFT",     1,  -1)
     spellIconTex:SetPoint("BOTTOMRIGHT", spellIconFrame, "BOTTOMRIGHT", -1,  1)
@@ -2426,6 +2358,7 @@ end]]
 
     local ticksScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTicksScroll", barsSection,
         "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(ticksScroll)
     ticksScroll:SetSize(ticksListW, ticksListH)
     ticksScroll:SetPoint("TOPLEFT", barsSection, "TOPLEFT", 0, -16)
     ReskinScrollbar(ticksScroll)
@@ -2743,6 +2676,7 @@ end]]
 
     local timesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertTimesScroll", trigF,
         "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(timesScroll)
     timesScroll:SetSize(timesListW, timesListH)
     timesScroll:SetPoint("TOPLEFT", trigF, "TOPLEFT", 0, -114)
     ReskinScrollbar(timesScroll)
@@ -3205,17 +3139,10 @@ end]]
     local loadScrollH = tab_content_height - 20 - 68 - NAMES_SEC_H - 4
     local loadScroll = CreateFrame("ScrollFrame", "NSUIEncAlertLoadScroll", loadF,
         "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(loadScroll)
     loadScroll:SetPoint("TOPLEFT", loadF, "TOPLEFT", 0, 0)
     loadScroll:SetSize(loadListW, loadScrollH)
     loadScroll:EnableMouseWheel(true)
-    loadScroll:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G["NSUIEncAlertLoadScrollScrollBar"]
-        if bar then
-            local cur = bar:GetValue()
-            local mn, mx = bar:GetMinMaxValues()
-            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 20)))
-        end
-    end)
     ReskinScrollbar(loadScroll)
 
     local loadScrollChild = NSI.UI.Pixel.CreateBoxFrame("Frame", nil, loadScroll)
@@ -3287,7 +3214,7 @@ end]]
             edgeFile = [[Interface\Buttons\WHITE8x8]],
             edgeSize = 1,
         })
-        checkBox:SetBackdropColor(0.10, 0.10, 0.10, 0.9)
+        checkBox:SetBackdropColor(unpack(STYLE.input_bg_color))
         checkBox:SetBackdropBorderColor(unpack(STYLE.border_subtle))
         row.checkBox = checkBox
 
@@ -3314,10 +3241,10 @@ end]]
         row.nameLbl:SetJustifyV("MIDDLE")
 
         row:SetScript("OnEnter", function()
-            UIFrameFadeIn(hoverBg, 0.12, hoverBg:GetAlpha(), 1)
+            NSI.UI.Components.FadeTo(hoverBg, 1, 0.12)
         end)
         row:SetScript("OnLeave", function()
-            UIFrameFadeOut(hoverBg, 0.20, hoverBg:GetAlpha(), 0)
+            NSI.UI.Components.FadeTo(hoverBg, 0, 0.2)
         end)
         return row
     end
@@ -3399,17 +3326,10 @@ end]]
 
     local namesScroll = CreateFrame("ScrollFrame", "NSUIEncAlertNamesScroll", loadF,
         "UIPanelScrollFrameTemplate")
+    NSI.UI.Components.EnableSmoothScroll(namesScroll)
     namesScroll:SetSize(loadListW, namesListH)
     namesScroll:SetPoint("BOTTOMLEFT", loadF, "BOTTOMLEFT", 0, 4)
     namesScroll:EnableMouseWheel(true)
-    namesScroll:SetScript("OnMouseWheel", function(_, delta)
-        local bar = _G["NSUIEncAlertNamesScrollScrollBar"]
-        if bar then
-            local cur = bar:GetValue()
-            local mn, mx = bar:GetMinMaxValues()
-            bar:SetValue(math.max(mn, math.min(mx, cur - delta * 20)))
-        end
-    end)
     ReskinScrollbar(namesScroll)
     local namesBg = namesScroll:CreateTexture(nil, "BACKGROUND")
     namesBg:SetAllPoints(namesScroll)
@@ -3960,11 +3880,9 @@ end]]
         removeButton:GetNormalTexture():SetDesaturated(true)
         removeButton:GetNormalTexture():SetVertexColor(unpack(STYLE.danger))
         removeButton:SetScript("OnEnter", function(self)
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(NSI:Loc("Remove"))
-            GameTooltip:Show()
+            NSI.UI.Tooltip.Show(self, "Remove", "ANCHOR_RIGHT")
         end)
-        removeButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        removeButton:SetScript("OnLeave", NSI.UI.Tooltip.Hide)
         removeButton.authorRow = row
         removeButton:SetScript("OnClick", OptionsAuthorRowRemove)
         row.remove = removeButton
@@ -3977,7 +3895,7 @@ end]]
         optScroll.frame:SetPoint("TOPLEFT", optF, "TOPLEFT", 0, 0)
         local scrollChild = optScroll.scrollChild
         optContentWidth = scrollChild:GetWidth()
-        optReloeHost = NSI.UI.Components.CreateWidgetHost(scrollChild, optContentWidth)
+        optReloeHost = NSI.UI.Components.CreateCardHost(scrollChild, optContentWidth)
 
         optAuthorButton = CreateLocalizedSubButton(scrollChild, "Enable Author Mode", function()
             authorMode = not authorMode

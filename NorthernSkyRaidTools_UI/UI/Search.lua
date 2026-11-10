@@ -97,6 +97,19 @@ local function BuildIndex()
         AddEntry("page", tabName, tabTitle, nil, button._textKey)
 
         local frame = tabSystem.AllFramesByName[tabName]
+        -- Master/detail screens (Aura Tracking, Aura Glows) have no menu; they publish the
+        -- selected entry's definition lists instead. Indexed as they stand now.
+        if frame and frame.SearchPanels then
+            local ok, panels = pcall(frame.SearchPanels)
+            for _, panel in ipairs(ok and panels or {}) do
+                for defIndex, def in ipairs(panel.defs) do
+                    if def.Type ~= "Label" and def.Type ~= "Breakline" and (def.label or def.text) then
+                        AddEntry("row", tabName, tabTitle, Localized(panel.title), def.label or def.text, def.tooltip,
+                            { panel = panel.id, screen = frame }, defIndex)
+                    end
+                end
+            end
+        end
         local menu = frame and frame.menu
         if menu then
             for _, sections in ipairs(menu.stacks) do
@@ -228,6 +241,20 @@ local function Jump(e)
     tabSystem:SelectTabByName(e.tab)
     if e.kind == "page" then return end
     -- A tab shown this frame has no layout yet: measure on the next one.
+    if e.section and e.section.screen then
+        local screen, id = e.section.screen, e.section.panel
+        C_Timer.After(0, function()
+            if not screen:IsShown() or not screen.SearchReveal then return end
+            local host, scroll = screen.SearchReveal(id)
+            local set = host and host.current
+            local item = set and set.byIndex[e.defIndex]
+            if item and item.frame:IsShown() then
+                if scroll then scroll:ScrollToFrame(item.frame) end
+                Pulse(item.frame)
+            end
+        end)
+        return
+    end
     C_Timer.After(0, function()
         local frame = tabSystem.AllFramesByName[e.tab]
         local menu = frame and frame.menu

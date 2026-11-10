@@ -158,6 +158,44 @@ function NSI:InitLDB()
 
         self.databroker = databroker
     end
+    self:RegisterSettingsStub()
+end
+
+-- Esc > Options > AddOns entry: a small page with a button that opens our own window.
+-- (The real settings are far too large for a canvas panel; this only makes the addon
+-- findable where players look for addon options.)
+function NSI:RegisterSettingsStub()
+    if self.SettingsStubRegistered then return end
+    if not (Settings and Settings.RegisterCanvasLayoutCategory and Settings.RegisterAddOnCategory) then return end
+    self.SettingsStubRegistered = true
+
+    local panel = CreateFrame("Frame")
+    panel.name = "Northern Sky Raid Tools"
+
+    local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalHuge")
+    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetText("Northern Sky Raid Tools")
+
+    local desc = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+    desc:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -12)
+    desc:SetJustifyH("LEFT")
+    desc:SetText(self:Loc("The settings have their own window."))
+
+    local button = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+    button:SetSize(200, 26)
+    button:SetPoint("TOPLEFT", desc, "BOTTOMLEFT", 0, -16)
+    button:SetText(self:Loc("Open Options"))
+    button:SetScript("OnClick", function()
+        if not NSI:LoadUI(true) then
+            NSI:ShowUIDisabledMessage()
+            return
+        end
+        if SettingsPanel and not InCombatLockdown() then HideUIPanel(SettingsPanel) end
+        if not NSI.NSUI:IsShown() then NSI.NSUI:ToggleOptions() end
+    end)
+
+    local category = Settings.RegisterCanvasLayoutCategory(panel, panel.name)
+    Settings.RegisterAddOnCategory(category)
 end
 
 
